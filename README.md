@@ -2,6 +2,8 @@
 
 保存本项目当前使用的插件、个人修改及历史维护依据，便于后续优化、回退和整合包更新时迁移改动。
 
+GitHub 私有仓库：[StoneChyi/wow-1.18-addon-maintenance](https://github.com/StoneChyi/wow-1.18-addon-maintenance)。本地主分支 `main` 已关联 `origin/main`，维护历史及基线标签均已同步。访问仓库需要登录有权限的 GitHub 账号。
+
 ## 内容
 
 - `Interface/AddOns`：现用插件的完整文件，包含个人修改和配套依赖。
@@ -24,3 +26,5 @@
 部分插件原有独立仓库的历史已导出为 `PluginHistory/Evidence/nested-repositories` 内的 bundle；主仓库保存其实际文件，不依赖子模块恢复。
 
 第三方插件及资源的版权与许可归原作者，保留各插件现有许可文件。本仓库用于个人维护，不改变第三方授权。
+
+本机同步方式、上传检查和账号恢复说明见 [GitHub 同步说明](PluginHistory/GitHub同步说明.md)。
