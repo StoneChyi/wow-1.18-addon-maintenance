@@ -1,0 +1,956 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
+	<Script file="Localization.lua" />
+	<Script file="ArchiTotem.lua" />
+	<Include file="Bindings.xml"/>
+	
+	<Button name="ArchiTotem_ButtonTemplate" movable="true" virtual="true" inherits="ActionBarButtonTemplate">
+		<Size>
+			<AbsDimension x="40" y="40"/>
+		</Size>
+		<Scripts>
+			<OnLoad>
+				this:RegisterForDrag("RightButton")
+				this:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+				this.TimeSinceLastUpdate = 0
+			</OnLoad>
+			<OnDragStart>
+				ArchiTotem_OnDragStart()
+			</OnDragStart>
+			<OnDragStop>
+				ArchiTotem_OnDragStop()
+			</OnDragStop>
+			<OnReceiveDrag>
+				ArchiTotem_Noop()
+			</OnReceiveDrag>
+			<OnClick>
+				ArchiTotem_OnClick(arg1)
+			</OnClick>
+			<OnEnter>
+				ArchiTotem_OnEnter()
+			</OnEnter>
+			<OnLeave>
+				this.updateTooltip = nil
+				GameTooltip:Hide()
+				ArchiTotem_OnLeave()
+			</OnLeave>
+		</Scripts>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentTexture"/>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture name="$parentCooldownBg" file="Interface\Tooltips\UI-Tooltip-Background" hidden="true">
+					<Size>
+						<AbsDimension x="34" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER">
+							<Offset>
+								<AbsDimension x="0" y="-5"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="$parentCooldownText" inherits="GameFontNormal" text="">
+					<Anchors>
+						<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="0" y="-5"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
+	</Button>
+	
+	<!-- 说明: 父框体之前宽度较大且启用鼠标, 会在左侧产生一大片不可见但可点击区域, 挡住 NPC 交互。
+	     这里关闭父框体鼠标, 只让各个按钮自身可交互, 以消除遮挡。若需要再次启用, 可把 enableMouse 改回 true。 -->
+	<Frame name="ArchiTotemFrame" toplevel="true" frameStrata="LOW" enableMouse="false" movable="true" parent="UIParent" visible="true">
+		<Size>
+			<!-- 初始宽度按 7 个按钮 (4 元素 + 一键 + 召回 + 组合) 计算: 7*40=280, 会在 Lua 中动态调整 -->
+			<AbsDimension x="280" y="80"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				ArchiTotem_OnLoad()
+			</OnLoad>
+			<OnEvent>
+				ArchiTotem_OnEvent(event, arg1)
+			</OnEvent>
+			<OnUpdate>
+				ArchiTotem_OnUpdate(arg1)
+			</OnUpdate>
+		</Scripts>
+		<Frames>
+			
+			<!--						EARTH -->
+			
+			<Button name="ArchiTotemButton_Earth1" inherits="ArchiTotem_ButtonTemplate">
+				<Anchors>
+					<!-- 第一个元素锚在父框体左侧, 不再居中, 以缩短整体宽度 -->
+					<Anchor point="LEFT" relativePoint="LEFT">
+						<Offset><AbsDimension x="0" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="EarthDurationText" inherits="GameFontNormal" text="">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="-26"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			<Button name="ArchiTotemButton_Earth2" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Earth3" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Earth4" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Earth5" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			
+			<!--					FIRE -->
+			
+			<Button name="ArchiTotemButton_Fire1" inherits="ArchiTotem_ButtonTemplate">
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="FireDurationText" inherits="GameFontNormal" text="">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="-26"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			<Button name="ArchiTotemButton_Fire2" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Fire3" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Fire4" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Fire5" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			
+			<!--					WATER -->
+			
+			<Button name="ArchiTotemButton_Water1" inherits="ArchiTotem_ButtonTemplate">
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="WaterDurationText" inherits="GameFontNormal" text="">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="-26"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			<Button name="ArchiTotemButton_Water2" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Water3" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Water4" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Water5" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			
+			<!--					AIR  -->
+			
+			<Button name="ArchiTotemButton_Air1" inherits="ArchiTotem_ButtonTemplate">
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="AirDurationText" inherits="GameFontNormal" text="">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="-26"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			<Button name="ArchiTotemButton_Air2" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Air3" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Air4" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Air5" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Air6" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			<Button name="ArchiTotemButton_Air7" inherits="ArchiTotem_ButtonTemplate" hidden="true"/>
+			
+			<!-- 一键图腾按钮 -->
+			<Button name="ArchiTotemButton_AllTotems" inherits="ArchiTotem_ButtonTemplate">
+				<!-- 具体位置在 Lua 中通过 ArchiTotem_PositionSpecialButtons 动态设置 -->
+				<Anchors>
+					<Anchor point="CENTER"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="AllTotemsButtonText" inherits="GameFontNormal" text="一键">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+					<Layer level="ARTWORK">
+						<FontString name="AllTotemsDurationText" inherits="GameFontNormal" text="">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="-26"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			
+			<!-- 拖拽小球: 实际位置由 Lua 动态放在第4元素与一键按钮之间 -->
+			<Button name="ArchiTotemDragHandle" enableMouse="true" movable="false" hidden="false">
+				<Size>
+					<AbsDimension x="20" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBackground" file="Interface\AddOns\ArchiTotem\Data\DragButton">
+							<Size>
+								<AbsDimension x="15" y="15"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+							<Color r="0.1" g="0.1" b="0.1" a="0.9"/>
+						</Texture>
+					</Layer>
+					<Layer level="BORDER">
+						<Texture name="$parentBorder" file="Interface\AddOns\ArchiTotem\Data\DragButton">
+							<Size>
+								<AbsDimension x="13" y="13"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+							<Color r="0.4" g="0.4" b="0.4" a="0.8"/>
+						</Texture>
+					</Layer>
+					<Layer level="ARTWORK">
+						<Texture name="$parentDot" file="Interface\AddOns\ArchiTotem\Data\DragButton">
+							<Size>
+								<AbsDimension x="5" y="5"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+							<Color r="0.8" g="0.8" b="0.8" a="1.0"/>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						this:RegisterForDrag("LeftButton")
+						this:RegisterForClicks("LeftButtonUp")
+						ArchiTotem_DragHandle_OnLoad()
+					</OnLoad>
+					<OnDragStart>
+						ArchiTotem_DragHandle_OnDragStart()
+					</OnDragStart>
+					<OnDragStop>
+						ArchiTotem_DragHandle_OnDragStop()
+					</OnDragStop>
+					<OnClick>
+						ArchiTotem_DragHandle_OnClick(arg1)
+					</OnClick>
+					<OnEnter>
+						ArchiTotem_DragHandle_OnEnter()
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide()
+					</OnLeave>
+				</Scripts>
+			</Button>
+			
+			<!-- 召回图腾按钮 -->
+			<Button name="ArchiTotemButton_Recall" inherits="ArchiTotem_ButtonTemplate">
+				<!-- 位置由 Lua 动态设置 -->
+				<Anchors>
+					<Anchor point="CENTER"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RecallButtonText" inherits="GameFontNormal" text="召回">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+					<Layer level="ARTWORK">
+						<FontString name="RecallDurationText" inherits="GameFontNormal" text="">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="-26"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			
+			<!-- 图腾组合管理按钮 -->
+			<Button name="ArchiTotemButton_PresetManager" inherits="ArchiTotem_ButtonTemplate">
+				<!-- 位置由 Lua 动态设置 -->
+				<Anchors>
+					<Anchor point="CENTER"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="PresetManagerButtonText" inherits="GameFontNormal" text="组合">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+		</Frames>
+	</Frame>
+	
+	<!-- 图腾组合管理界面 -->
+	<Frame name="ArchiTotemPresetFrame" toplevel="true" frameStrata="DIALOG" enableMouse="true" movable="true" parent="UIParent" hidden="true">
+		<Size>
+			<AbsDimension x="350" y="450"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset>
+					<AbsDimension x="200" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Backdrop bgFile="Interface\TutorialFrame\TutorialFrameBackground" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="false">
+			<BackdropInsets>
+				<AbsInset left="8" right="8" top="8" bottom="8"/>
+			</BackdropInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+			<BackdropColor r="0" g="0" b="0" a="0.9"/>
+			<BackdropBorderColor r="0.5" g="0.5" b="0.5" a="1"/>
+		</Backdrop>
+		<Scripts>
+			<OnLoad>
+				this:RegisterForDrag("LeftButton")
+			</OnLoad>
+			<OnDragStart>
+				this:StartMoving()
+			</OnDragStart>
+			<OnDragStop>
+				this:StopMovingOrSizing()
+			</OnDragStop>
+			<OnShow>
+				ArchiTotem_CreatePresetButtons()
+				ArchiTotem_UpdateCurrentTotemDisplay()
+				ArchiTotem_PresetScaleSync()
+			</OnShow>
+		</Scripts>
+		<Frames>
+			<!-- 标题栏 -->
+			<Frame name="ArchiTotemPresetTitleFrame">
+				<Size>
+					<AbsDimension x="330" y="30"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="0" y="-15"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="ArchiTotemPresetTitle" inherits="GameFontNormalLarge" text="图腾组合管理">
+							<Color r="1" g="0.8" b="0"/>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<!-- 关闭按钮 -->
+			<Button name="ArchiTotemPresetCloseButton" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-8" y="-8"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ArchiTotemPresetFrame:Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- 当前图腾显示区域 -->
+			<Frame name="ArchiTotemCurrentFrame">
+				<Size>
+					<AbsDimension x="310" y="100"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="0" y="-55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="">
+							<Color r="0.05" g="0.05" b="0.05" a="0.8"/>
+							<Anchors>
+								<Anchor point="TOPLEFT"/>
+								<Anchor point="BOTTOMRIGHT"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="ARTWORK">
+						<FontString name="ArchiTotemCurrentTitle" inherits="GameFontNormal" text="当前图腾配置">
+							<Color r="0.9" g="0.9" b="1"/>
+							<Anchors>
+								<Anchor point="TOP">
+									<Offset>
+										<AbsDimension x="0" y="-8"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<!-- 当前图腾图标显示 - 重新布局 -->
+					<Frame name="ArchiTotemCurrent_Earth">
+						<Size>
+							<AbsDimension x="60" y="60"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="25" y="-30"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="ArchiTotemCurrent_EarthTexture">
+									<Size>
+										<AbsDimension x="50" y="50"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOP"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="OVERLAY">
+								<FontString name="ArchiTotemCurrent_EarthText" inherits="GameFontTiny" text="">
+									<Color r="1" g="1" b="1"/>
+									<Size>
+										<AbsDimension x="60" y="12"/>
+									</Size>
+									<Anchors>
+										<Anchor point="BOTTOM">
+											<Offset>
+												<AbsDimension x="0" y="2"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+					
+					<Frame name="ArchiTotemCurrent_Fire">
+						<Size>
+							<AbsDimension x="60" y="60"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="95" y="-30"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="ArchiTotemCurrent_FireTexture">
+									<Size>
+										<AbsDimension x="50" y="50"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOP"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="OVERLAY">
+								<FontString name="ArchiTotemCurrent_FireText" inherits="GameFontTiny" text="">
+									<Color r="1" g="1" b="1"/>
+									<Size>
+										<AbsDimension x="60" y="12"/>
+									</Size>
+									<Anchors>
+										<Anchor point="BOTTOM">
+											<Offset>
+												<AbsDimension x="0" y="2"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+					
+					<Frame name="ArchiTotemCurrent_Water">
+						<Size>
+							<AbsDimension x="60" y="60"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="165" y="-30"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="ArchiTotemCurrent_WaterTexture">
+									<Size>
+										<AbsDimension x="50" y="50"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOP"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="OVERLAY">
+								<FontString name="ArchiTotemCurrent_WaterText" inherits="GameFontTiny" text="">
+									<Color r="1" g="1" b="1"/>
+									<Size>
+										<AbsDimension x="60" y="12"/>
+									</Size>
+									<Anchors>
+										<Anchor point="BOTTOM">
+											<Offset>
+												<AbsDimension x="0" y="2"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+					
+					<Frame name="ArchiTotemCurrent_Air">
+						<Size>
+							<AbsDimension x="60" y="60"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="235" y="-30"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="ArchiTotemCurrent_AirTexture">
+									<Size>
+										<AbsDimension x="50" y="50"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOP"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="OVERLAY">
+								<FontString name="ArchiTotemCurrent_AirText" inherits="GameFontTiny" text="">
+									<Color r="1" g="1" b="1"/>
+									<Size>
+										<AbsDimension x="60" y="12"/>
+									</Size>
+									<Anchors>
+										<Anchor point="BOTTOM">
+											<Offset>
+												<AbsDimension x="0" y="2"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+				</Frames>
+			</Frame>
+			
+			<!-- 保存按钮 -->
+			<Button name="ArchiTotemSavePresetButton" inherits="UIPanelButtonTemplate">
+				<Size>
+					<AbsDimension x="140" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="0" y="-168"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ArchiTotem_SaveCurrentAsPreset()
+					</OnClick>
+				</Scripts>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="ArchiTotemSavePresetButtonText" inherits="GameFontNormal" text="保存当前配置">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="1"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+
+			<!-- 缩放滑块（竖排） -->
+			<Slider name="ArchiTotemPresetScaleSlider" inherits="OptionsSliderTemplate" orientation="VERTICAL" minValue="0.3" maxValue="3.0" valueStep="0.01">
+				<Size><AbsDimension x="22" y="180"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="ArchiTotemPresetScrollFrame" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="32" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						this:SetOrientation("VERTICAL")
+						this:SetMinMaxValues(0.3, 3.0)
+						this:SetValueStep(0.01)
+						_G[this:GetName() .. "Low"]:SetText("0.3")
+						_G[this:GetName() .. "High"]:SetText("3.0")
+						_G[this:GetName() .. "Text"]:SetText("界\n面\n缩\n放")
+					</OnLoad>
+					<OnShow>
+						ArchiTotem_PresetScaleSync()
+					</OnShow>
+					<OnValueChanged>
+						ArchiTotem_PresetScale_OnValueChanged(this:GetValue())
+					</OnValueChanged>
+				</Scripts>
+			</Slider>
+			<FontString name="ArchiTotemPresetScaleValue" inherits="GameFontNormal" text="1.00">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="ArchiTotemPresetScaleSlider" relativePoint="RIGHT">
+						<Offset><AbsDimension x="10" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>
+
+			<!-- 预设滚动区域 -->
+			<ScrollFrame name="ArchiTotemPresetScrollFrame" inherits="UIPanelScrollFrameTemplate" enableMouseWheel="true" hidden="false">
+				<Size>
+					<AbsDimension x="200" y="160"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="25" y="-240"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						this:EnableMouseWheel(true)
+					</OnLoad>
+					<OnMouseWheel>
+						ArchiTotem_PresetScroll(arg1)
+					</OnMouseWheel>
+					<OnShow>
+						ArchiTotem_ResetPresetScroll(); ArchiTotem_CreatePresetButtons()
+					</OnShow>
+				</Scripts>
+				<ScrollChild>
+					<Frame name="ArchiTotemPresetScrollChild">
+						<Size>
+							<AbsDimension x="200" y="10"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT"/>
+						</Anchors>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+
+			<!-- 向上滚动按钮 -->
+			<Button name="ArchiTotemPresetScrollUp" inherits="UIPanelButtonTemplate">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="ArchiTotemPresetScrollFrame" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="4" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture file="Interface\Buttons\UI-ScrollBar-ScrollUpButton-Up"/>
+				<PushedTexture file="Interface\Buttons\UI-ScrollBar-ScrollUpButton-Down"/>
+				<DisabledTexture file="Interface\Buttons\UI-ScrollBar-ScrollUpButton-Disabled"/>
+				<HighlightTexture file="Interface\Buttons\UI-ScrollBar-ScrollUpButton-Highlight" alphaMode="ADD"/>
+				<Scripts>
+					<OnClick>ArchiTotem_PresetScroll(1)</OnClick>
+				</Scripts>
+			</Button>
+			<!-- 向下滚动按钮 -->
+			<Button name="ArchiTotemPresetScrollDown" inherits="UIPanelButtonTemplate">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="ArchiTotemPresetScrollFrame" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="4" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture file="Interface\Buttons\UI-ScrollBar-ScrollDownButton-Up"/>
+				<PushedTexture file="Interface\Buttons\UI-ScrollBar-ScrollDownButton-Down"/>
+				<DisabledTexture file="Interface\Buttons\UI-ScrollBar-ScrollDownButton-Disabled"/>
+				<HighlightTexture file="Interface\Buttons\UI-ScrollBar-ScrollDownButton-Highlight" alphaMode="ADD"/>
+				<Scripts>
+					<OnClick>ArchiTotem_PresetScroll(-1)</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="ArchiTotemPresetListTitle" inherits="GameFontNormal" text="可用预设组合:">
+					<Color r="0.9" g="0.9" b="1"/>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="25" y="-210"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="ArchiTotemPresetHelpText" inherits="GameFontTiny" text="左键: 切换预设 | Shift+左键: 召唤预设">
+					<Color r="0.7" g="0.7" b="0.8"/>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="25" y="-223"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+	<!-- 图腾覆盖详情窗口 -->
+	<Frame name="ArchiTotemCoverageFrame" toplevel="true" frameStrata="DIALOG" enableMouse="true" movable="true" parent="UIParent" hidden="true">
+		<Size>
+			<AbsDimension x="280" y="280"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset>
+					<AbsDimension x="200" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Backdrop bgFile="Interface\TutorialFrame\TutorialFrameBackground" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="false">
+			<BackdropInsets>
+				<AbsInset left="8" right="8" top="8" bottom="8"/>
+			</BackdropInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+			<BackdropColor r="0" g="0" b="0" a="0.85"/>
+			<BackdropBorderColor r="0.6" g="0.6" b="0.6" a="1"/>
+		</Backdrop>
+		<Scripts>
+			<OnLoad>
+				this:RegisterForDrag("LeftButton")
+			</OnLoad>
+			<OnDragStart>
+				this:StartMoving()
+			</OnDragStart>
+			<OnDragStop>
+				this:StopMovingOrSizing()
+			</OnDragStop>
+			<OnShow>
+				ArchiTotem_UpdateCoverageWindow()
+			</OnShow>
+		</Scripts>
+		<Frames>
+			<!-- 标题栏 -->
+			<Frame name="ArchiTotemCoverageTitle">
+				<Size>
+					<AbsDimension x="260" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="ArchiTotemCoverageFrame">
+						<Offset><AbsDimension x="0" y="-10"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="ArchiTotemCoverageTitleText" inherits="GameFontNormalLarge" text="图腾覆盖详情">
+							<Color r="1" g="0.8" b="0"/>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<!-- 关闭按钮 -->
+			<Button name="ArchiTotemCoverageCloseButton" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="ArchiTotemCoverageFrame">
+						<Offset><AbsDimension x="-8" y="-8"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ArchiTotemCoverageFrame:Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- 四个元素的标题和文本框（动态填充） -->
+			<!-- 大地 -->
+			<Frame name="ArchiTotemCoverage_Earth">
+				<Size><AbsDimension x="280" y="50"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="ArchiTotemCoverageFrame">
+						<Offset><AbsDimension x="10" y="-45"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="ArchiTotemCoverage_EarthTitle" inherits="GameFontNormal" text="|cFF8B4513大地|r 未覆盖:">
+							<Anchors><Anchor point="TOPLEFT"/></Anchors>
+						</FontString>
+						<FontString name="ArchiTotemCoverage_EarthNames" inherits="GameFontSmall" text="">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="ArchiTotemCoverage_EarthTitle" relativePoint="BOTTOMLEFT">
+									<Offset><AbsDimension x="0" y="-2"/></Offset>
+								</Anchor>
+							</Anchors>
+							<Size><AbsDimension x="260" y="30"/></Size>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<!-- 火焰 -->
+			<Frame name="ArchiTotemCoverage_Fire">
+				<Size><AbsDimension x="280" y="50"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="ArchiTotemCoverage_Earth" relativePoint="BOTTOMLEFT">
+						<Offset><AbsDimension x="0" y="-5"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="ArchiTotemCoverage_FireTitle" inherits="GameFontNormal" text="|cFFEE4000火焰|r 未覆盖:">
+							<Anchors><Anchor point="TOPLEFT"/></Anchors>
+						</FontString>
+						<FontString name="ArchiTotemCoverage_FireNames" inherits="GameFontSmall" text="">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="ArchiTotemCoverage_FireTitle" relativePoint="BOTTOMLEFT">
+									<Offset><AbsDimension x="0" y="-2"/></Offset>
+								</Anchor>
+							</Anchors>
+							<Size><AbsDimension x="260" y="30"/></Size>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<!-- 水流 -->
+			<Frame name="ArchiTotemCoverage_Water">
+				<Size><AbsDimension x="280" y="50"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="ArchiTotemCoverage_Fire" relativePoint="BOTTOMLEFT">
+						<Offset><AbsDimension x="0" y="-5"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="ArchiTotemCoverage_WaterTitle" inherits="GameFontNormal" text="|CFF0066FF水流|r 未覆盖:">
+							<Anchors><Anchor point="TOPLEFT"/></Anchors>
+						</FontString>
+						<FontString name="ArchiTotemCoverage_WaterNames" inherits="GameFontSmall" text="">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="ArchiTotemCoverage_WaterTitle" relativePoint="BOTTOMLEFT">
+									<Offset><AbsDimension x="0" y="-2"/></Offset>
+								</Anchor>
+							</Anchors>
+							<Size><AbsDimension x="260" y="30"/></Size>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<!-- 风暴 -->
+			<Frame name="ArchiTotemCoverage_Air">
+				<Size><AbsDimension x="280" y="50"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="ArchiTotemCoverage_Water" relativePoint="BOTTOMLEFT">
+						<Offset><AbsDimension x="0" y="-5"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="ArchiTotemCoverage_AirTitle" inherits="GameFontNormal" text="|CFFFFFF00风暴|r 未覆盖:">
+							<Anchors><Anchor point="TOPLEFT"/></Anchors>
+						</FontString>
+						<FontString name="ArchiTotemCoverage_AirNames" inherits="GameFontSmall" text="">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="ArchiTotemCoverage_AirTitle" relativePoint="BOTTOMLEFT">
+									<Offset><AbsDimension x="0" y="-2"/></Offset>
+								</Anchor>
+							</Anchors>
+							<Size><AbsDimension x="260" y="30"/></Size>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+		</Frames>
+	</Frame>
+	<Script file="Data\Coverage.lua" />
+</Ui>

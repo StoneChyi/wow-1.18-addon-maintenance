@@ -1,0 +1,1185 @@
+{
+  "captured_at": "2026-10-08T23:29:36+08:00",
+  "addons": [
+    {
+      "addon": "!Libs",
+      "tracking": "complete_current_snapshot",
+      "files": 93,
+      "bytes": 4984933,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [
+        "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua.20260918125911.bak"
+      ],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Accountant",
+      "tracking": "complete_current_snapshot",
+      "files": 18,
+      "bytes": 321673,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "ActionBarProfiles",
+      "tracking": "complete_current_snapshot",
+      "files": 4,
+      "bytes": 40936,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "AdvancedTradeSkillWindow2",
+      "tracking": "complete_current_snapshot",
+      "files": 44,
+      "bytes": 3515599,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "ArchiTotem",
+      "tracking": "complete_current_snapshot",
+      "files": 16,
+      "bytes": 162381,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Atlas",
+      "tracking": "complete_current_snapshot",
+      "files": 115,
+      "bytes": 28719549,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "AtlasLoot",
+      "tracking": "complete_current_snapshot",
+      "files": 61,
+      "bytes": 3940348,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "AtlasQuest",
+      "tracking": "complete_current_snapshot",
+      "files": 10,
+      "bytes": 4049284,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [
+        "Interface/AddOns/AtlasQuest/Locale/localization.cn.lua.bak"
+      ],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "AuldLangSyne",
+      "tracking": "complete_current_snapshot",
+      "files": 5,
+      "bytes": 40468,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "AutoBar",
+      "tracking": "complete_current_snapshot",
+      "files": 16,
+      "bytes": 305825,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "AutoMarker",
+      "tracking": "complete_current_snapshot",
+      "files": 10,
+      "bytes": 312367,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Automatonex",
+      "tracking": "complete_current_snapshot",
+      "files": 122,
+      "bytes": 3399502,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Bagshui",
+      "tracking": "complete_current_snapshot",
+      "files": 161,
+      "bytes": 2502922,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "BetterCharacterStats",
+      "tracking": "complete_current_snapshot",
+      "files": 9,
+      "bytes": 280067,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "BigWigs",
+      "tracking": "complete_current_snapshot",
+      "files": 339,
+      "bytes": 7830093,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [
+        "Interface/AddOns/BigWigs/Raids/BWL/Ezzel.lua.20260918125911.bak"
+      ],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_AuctionUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_BattlefieldMinimap",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_BindingUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_CombatText",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_CraftUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_GMSurveyUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_InspectUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_MacroUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_RaidUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_TalentUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_TradeSkillUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Blizzard_TrainerUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "BrainwasherPro",
+      "tracking": "complete_current_snapshot",
+      "files": 2,
+      "bytes": 65851,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "BuffTool",
+      "tracking": "complete_current_snapshot",
+      "files": 52,
+      "bytes": 7376549,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Capslock",
+      "tracking": "complete_current_snapshot",
+      "files": 6,
+      "bytes": 52027,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Cat",
+      "tracking": "complete_current_snapshot",
+      "files": 100,
+      "bytes": 2132417,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Cat2",
+      "tracking": "complete_current_snapshot",
+      "files": 708,
+      "bytes": 2161843,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "CatPotion",
+      "tracking": "complete_current_snapshot",
+      "files": 19,
+      "bytes": 309965,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/addons_tmp/catpotion-consumables-backup-20261006/Core.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-consumables-backup-20261006/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-consumables-backup-20261006/Settings.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-consumables-backup-20261006/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-drag-preview-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-drag-preview-backup-20261007/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-header-backup-20261006/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-menu-edge-backup-20261006/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-menu-edge-backup-20261006/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/Banana.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/Banana.xml",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/Core.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/test_srti_tools.py",
+        "PluginHistory/Evidence/addons_tmp/catpotion-row-order-backup-20261007/Core.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-row-order-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-row-order-backup-20261007/Settings.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-row-order-backup-20261007/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-shortcut-backup-20261007/ChatBar.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-shortcut-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-shortcut-backup-20261007/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/Core.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/Settings.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion_data.py",
+        "PluginHistory/Evidence/reports/CatPotion-常用消耗品更新-20261006.md",
+        "PluginHistory/Evidence/reports/CatPotion-魔法橘子沙漏与标记报错修复-20261007.md"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Cooline",
+      "tracking": "complete_current_snapshot",
+      "files": 5,
+      "bytes": 57999,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Cryolysis",
+      "tracking": "complete_current_snapshot",
+      "files": 273,
+      "bytes": 4584828,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Cursive",
+      "tracking": "complete_current_snapshot",
+      "files": 40,
+      "bytes": 789027,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "DPSMateX",
+      "tracking": "complete_current_snapshot",
+      "files": 105,
+      "bytes": 3071283,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "DPSMateXEncounters",
+      "tracking": "complete_current_snapshot",
+      "files": 5,
+      "bytes": 36917,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "DPSMateXExtend",
+      "tracking": "complete_current_snapshot",
+      "files": 100,
+      "bytes": 1359170,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "DPSMateXExtendMore",
+      "tracking": "complete_current_snapshot",
+      "files": 49,
+      "bytes": 709555,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "DPSMateXInsights",
+      "tracking": "complete_current_snapshot",
+      "files": 8,
+      "bytes": 80641,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "EavesDrop",
+      "tracking": "complete_current_snapshot",
+      "files": 16,
+      "bytes": 239908,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "ExtraResourceBars",
+      "tracking": "complete_current_snapshot",
+      "files": 41,
+      "bytes": 1106444,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "EzPoison",
+      "tracking": "complete_current_snapshot",
+      "files": 7,
+      "bytes": 122498,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "FishingBuddy",
+      "tracking": "complete_current_snapshot",
+      "files": 78,
+      "bytes": 399367,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Flyout",
+      "tracking": "complete_current_snapshot",
+      "files": 5,
+      "bytes": 30201,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "GoubayuHeal",
+      "tracking": "complete_current_snapshot",
+      "files": 12,
+      "bytes": 1102799,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "HolyHope",
+      "tracking": "complete_current_snapshot",
+      "files": 69,
+      "bytes": 1108537,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Interact",
+      "tracking": "complete_current_snapshot",
+      "files": 4,
+      "bytes": 1338,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "LoseControl",
+      "tracking": "complete_current_snapshot",
+      "files": 3,
+      "bytes": 11133,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Meeting",
+      "tracking": "complete_current_snapshot",
+      "files": 20,
+      "bytes": 182875,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "ModernMapMarkers",
+      "tracking": "complete_current_snapshot",
+      "files": 16,
+      "bytes": 127427,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "ModifiedPowerAuras",
+      "tracking": "complete_current_snapshot",
+      "files": 840,
+      "bytes": 36912465,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "MySlash",
+      "tracking": "complete_current_snapshot",
+      "files": 5,
+      "bytes": 46944,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "NotGrid",
+      "tracking": "complete_current_snapshot",
+      "files": 22,
+      "bytes": 505646,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "OneBag",
+      "tracking": "complete_current_snapshot",
+      "files": 30,
+      "bytes": 540619,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Outfitter",
+      "tracking": "complete_current_snapshot",
+      "files": 40,
+      "bytes": 1108308,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "PallyPower",
+      "tracking": "complete_current_snapshot",
+      "files": 77,
+      "bytes": 1625384,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "PizzaWorldBuffs",
+      "tracking": "complete_current_snapshot",
+      "files": 26,
+      "bytes": 236338,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "PlayTurtle",
+      "tracking": "complete_current_snapshot",
+      "files": 35,
+      "bytes": 7027723,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "PlayerLinkEnhance",
+      "tracking": "complete_current_snapshot",
+      "files": 5,
+      "bytes": 31778,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "QuickHeal",
+      "tracking": "complete_current_snapshot",
+      "files": 25,
+      "bytes": 746292,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "QuickReply",
+      "tracking": "complete_current_snapshot",
+      "files": 6,
+      "bytes": 21256,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "RaidCheck",
+      "tracking": "complete_current_snapshot",
+      "files": 11,
+      "bytes": 510017,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Rinse",
+      "tracking": "complete_current_snapshot",
+      "files": 4,
+      "bytes": 100424,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "STSMmayor",
+      "tracking": "complete_current_snapshot",
+      "files": 36,
+      "bytes": 1390646,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "S_ChatBar",
+      "tracking": "complete_current_snapshot",
+      "files": 8,
+      "bytes": 100951,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "S_ItemTip",
+      "tracking": "complete_current_snapshot",
+      "files": 24,
+      "bytes": 1503172,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "S_WorldMap",
+      "tracking": "complete_current_snapshot",
+      "files": 15,
+      "bytes": 94328,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "ShaguDPS",
+      "tracking": "complete_current_snapshot",
+      "files": 16,
+      "bytes": 999015,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "ShaguScan",
+      "tracking": "complete_current_snapshot",
+      "files": 21,
+      "bytes": 579963,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "SimpleRaidTargetIcons",
+      "tracking": "complete_current_snapshot",
+      "files": 30,
+      "bytes": 1929478,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/addons_tmp/srti-borderless-backup-20261007/Banana.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-borderless-backup-20261007/SimpleRaidTargetIcons.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-borderless-backup-20261007/SimpleRaidTargetIcons.toc",
+        "PluginHistory/Evidence/addons_tmp/srti-layout-health-backup-20261007/Banana.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-layout-health-backup-20261007/RaidTools.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/ChatBar.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/Banana.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/Banana.xml",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/BananaConfig.xml",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/Bindings.xml",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/Localization.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/SimpleRaidTargetIcons.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/SimpleRaidTargetIcons.toc",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/helper_version.ini",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/SRTIGlow.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/SRTIRing.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/blank.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/cross.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/diamond.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/huntermark.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/moon.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/nipple.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/skull.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/square.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/srti_mark.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/srti_save.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/star.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/triangle.tga",
+        "PluginHistory/Evidence/reports/SimpleRaidTargetIcons-20261007.md",
+        "PluginHistory/Evidence/reports/SimpleRaidTargetIcons-borderless-icons-20261007.md"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "SpecialTalent",
+      "tracking": "complete_current_snapshot",
+      "files": 10,
+      "bytes": 568085,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "SpiritSenseRec",
+      "tracking": "complete_current_snapshot",
+      "files": 3,
+      "bytes": 20225,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "StatCompare",
+      "tracking": "complete_current_snapshot",
+      "files": 25,
+      "bytes": 331396,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "SuperCleveRoidMacros",
+      "tracking": "complete_current_snapshot",
+      "files": 44,
+      "bytes": 2650357,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "SuperMacro",
+      "tracking": "complete_current_snapshot",
+      "files": 15,
+      "bytes": 518392,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "TWThreat",
+      "tracking": "complete_current_snapshot",
+      "files": 29,
+      "bytes": 10364512,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "TankBuddyEnh",
+      "tracking": "complete_current_snapshot",
+      "files": 8,
+      "bytes": 146288,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "TianYan",
+      "tracking": "complete_current_snapshot",
+      "files": 3,
+      "bytes": 31443,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Tmog",
+      "tracking": "complete_current_snapshot",
+      "files": 53,
+      "bytes": 4097113,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "TrainerSkills",
+      "tracking": "complete_current_snapshot",
+      "files": 36,
+      "bytes": 262108,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "TurtleMail",
+      "tracking": "complete_current_snapshot",
+      "files": 10,
+      "bytes": 129428,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Turtle_General",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "Turtle_GroupUI",
+      "tracking": "complete_current_snapshot",
+      "files": 1,
+      "bytes": 257,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "UnitXP_SP3_Addon",
+      "tracking": "complete_current_snapshot",
+      "files": 17,
+      "bytes": 330228,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "WIM",
+      "tracking": "complete_current_snapshot",
+      "files": 47,
+      "bytes": 1162079,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/CodexBackups/WIM/contacts-20261008/WIM.lua",
+        "PluginHistory/Evidence/CodexBackups/WIM/contacts-20261008/WIM_contact.lua",
+        "PluginHistory/Evidence/CodexBackups/WIM/input-focus-20261008/WIM.lua",
+        "PluginHistory/Evidence/CodexBackups/WIM/input-focus-20261008/WIM.xml",
+        "PluginHistory/Evidence/CodexBackups/WIM/input-focus-20261008/localization.cn.lua",
+        "PluginHistory/Evidence/CodexBackups/WIM/input-focus-20261008/localization.lua"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "WushuangLoot",
+      "tracking": "complete_current_snapshot",
+      "files": 8,
+      "bytes": 65361,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "XyTracker",
+      "tracking": "complete_current_snapshot",
+      "files": 38,
+      "bytes": 1267537,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "YGB_OTAlarm",
+      "tracking": "complete_current_snapshot",
+      "files": 152,
+      "bytes": 5335117,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "aux-addon",
+      "tracking": "complete_current_snapshot",
+      "files": 49,
+      "bytes": 348826,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "diminfo",
+      "tracking": "complete_current_snapshot",
+      "files": 17,
+      "bytes": 145983,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/CodexBackups/diminfo-click-through-20261008-162857/panel.lua"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "hyx",
+      "tracking": "complete_current_snapshot",
+      "files": 3,
+      "bytes": 101683,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-155425/hyx.lua",
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-155425/hyx.toc",
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-160930-c4a下bar/ChatBar.lua",
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-160930-c4a下bar/XinDispel.lua",
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-161523-settings-close/hyx.lua",
+        "PluginHistory/Evidence/reports/hyx-全职业驱散与滚轮列表-20261008.md"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "nampowersettings",
+      "tracking": "complete_current_snapshot",
+      "files": 19,
+      "bytes": 621695,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "perfboostsettings",
+      "tracking": "complete_current_snapshot",
+      "files": 18,
+      "bytes": 540199,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "pfExtend",
+      "tracking": "complete_current_snapshot",
+      "files": 36,
+      "bytes": 439769,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "pfQuest",
+      "tracking": "complete_current_snapshot",
+      "files": 256,
+      "bytes": 25535600,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "pfQuest-turtle",
+      "tracking": "complete_current_snapshot",
+      "files": 38,
+      "bytes": 28257499,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "pfUI",
+      "tracking": "complete_current_snapshot",
+      "files": 276,
+      "bytes": 8663385,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/CodexBackups/pfUI/chatcopy-partial-yy-20261008/chatcopy.lua",
+        "PluginHistory/Evidence/CodexBackups/pfUI/chatcopy-partial-yy-20261008/translations_zhCN.lua",
+        "PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/actionbar.lua",
+        "PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/config.lua",
+        "PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/gui.lua",
+        "PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/translations_zhCN.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-antialias-backup-20261008-194831/check_distance_status.py",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-antialias-backup-20261008-194831/unitxp.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-centering-backup-20261008/unitxp.lua.original",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-fixed-markers-backup-20261008-215432/check_distance_status.py",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-fixed-markers-backup-20261008-215432/unitxp.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-shape-alignment-backup-20261008-194146/check_distance_status.py",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-shape-alignment-backup-20261008-194146/unitxp.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/api/config.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/env/translations_zhCN.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/modules/gui.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/modules/unitxp.lua"
+      ],
+      "inline_backup_files": [
+        "Interface/AddOns/pfUI/init/modules.xml.20260924_195026.buyemall.bak",
+        "Interface/AddOns/pfUI/modules/eqcompare.20261004_093912.selfcompare.bak",
+        "Interface/AddOns/pfUI/modules/tooltip.20261002_212528.alwaysperc.bak"
+      ],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "pfUI-CustomMedia",
+      "tracking": "complete_current_snapshot",
+      "files": 37,
+      "bytes": 639572,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "pfUI-addonskinner",
+      "tracking": "complete_current_snapshot",
+      "files": 84,
+      "bytes": 941797,
+      "documented_modification_evidence": true,
+      "evidence": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"
+      ],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "pfUI-eliteoverlay",
+      "tracking": "complete_current_snapshot",
+      "files": 8,
+      "bytes": 422681,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "pfUI_ExtendedMerchant",
+      "tracking": "complete_current_snapshot",
+      "files": 3,
+      "bytes": 15887,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
+      "addon": "xNet",
+      "tracking": "complete_current_snapshot",
+      "files": 2,
+      "bytes": 2548,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    }
+  ]
+}

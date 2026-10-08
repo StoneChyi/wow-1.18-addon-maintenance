@@ -1,0 +1,556 @@
+-- 卡片注册中心：所有卡片文件在加载时向此处登记。
+-- TOC 必须在所有卡片文件之前加载本文件；界面只从此中心读取可用卡片。
+-- 本中心只保存“卡片定义”，不会保存玩家拖入流程后的 enabled 或 minimizedVisible 等运行时状态。
+Cat2 = Cat2 or {}
+-- 保存注册顺序的容器；Cards 中的每项是一个独立卡片定义表。
+Cat2.CardRegistry = Cat2.CardRegistry or {}
+Cat2.CardRegistry.Cards = Cat2.CardRegistry.Cards or {}
+-- 按稳定 ID 保存卡片定义，供无需加入流程的直接调用使用。
+Cat2.CardRegistry.ById = Cat2.CardRegistry.ById or {}
+
+-- 控制指令只在运行时使用，不进入配置存档。私有标记避免把旧卡片返回的普通表当成跳转。
+local jumpResultMarker = {}
+function Cat2.JumpTo(targetIndex)
+    return setmetatable({ action = "jump", target = targetIndex }, jumpResultMarker)
+end
+
+function Cat2.IsJumpResult(result)
+    return type(result) == "table" and getmetatable(result) == jumpResultMarker
+        and rawget(result, "action") == "jump"
+end
+
+function Cat2.NormalizeCardExecutionResult(result)
+    if Cat2.IsJumpResult(result) then return result end
+    return result == true
+end
+
+-- 运行时数据延迟到卡片第一次实际参与流程时再刷新。
+-- 脏状态保存在注册中心的唯一卡片定义上，避免同一卡片在多个配置中重复刷新。
+function Cat2.EnsureCardRuntimeData(card)
+    if not card or card.runtimeDataDirty ~= true then
+        return
+    end
+    if type(card.RefreshRuntimeData) == "function" then
+        card.RefreshRuntimeData()
+    end
+    card.runtimeDataDirty = false
+end
+
+-- 标记单张卡片的运行时数据失效；只改状态，不在事件回调中执行耗时刷新。
+function Cat2.MarkCardRuntimeDataDirty(cardId)
+    local card = Cat2.CardRegistry.ById[cardId]
+    if card and type(card.RefreshRuntimeData) == "function" then
+        card.runtimeDataDirty = true
+    end
+end
+
+-- 默认所有卡片都响应装备、技能和天赋变化。
+-- 卡片可通过 runtimeDataRefreshTriggers 表只声明自己关心的类型。
+function Cat2.MarkCardsRuntimeDataDirty(trigger)
+    local cards = Cat2.CardRegistry.Cards
+    local cardIndex = 1
+    local cardTotal = table.getn(cards)
+    while cardIndex <= cardTotal do
+        local card = cards[cardIndex]
+        if card and type(card.RefreshRuntimeData) == "function" then
+            local triggers = card.runtimeDataRefreshTriggers
+            if type(triggers) ~= "table" or triggers[trigger] == true then
+                card.runtimeDataDirty = true
+            end
+        end
+        cardIndex = cardIndex + 1
+    end
+end
+
+-- 旧版客户端的装备、法术书与天赋变化事件只负责开启脏标记。
+-- 下一次宏真正运行到卡片时，EnsureCardRuntimeData 才执行刷新。
+local runtimeDataEventFrame = CreateFrame("Frame", "Cat2CardRuntimeDataEventFrame")
+runtimeDataEventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+runtimeDataEventFrame:RegisterEvent("SPELLS_CHANGED")
+runtimeDataEventFrame:RegisterEvent("CHARACTER_POINTS_CHANGED")
+runtimeDataEventFrame:SetScript("OnEvent", function()
+    if event == "UNIT_INVENTORY_CHANGED" then
+        if arg1 == "player" then
+            Cat2.MarkCardsRuntimeDataDirty("equipment")
+        end
+    elseif event == "SPELLS_CHANGED" then
+        if Cat2.InvalidateSpellBookCache then
+            Cat2.InvalidateSpellBookCache()
+        end
+        Cat2.MarkCardsRuntimeDataDirty("spells")
+    elseif event == "CHARACTER_POINTS_CHANGED" then
+        -- 天赋变化可能改变可学习技能及其等级；与卡片运行时数据一起延迟刷新。
+        if Cat2.InvalidateSpellBookCache then
+            Cat2.InvalidateSpellBookCache()
+        end
+        Cat2.MarkCardsRuntimeDataDirty("talents")
+    end
+end)
+
+-- classes 统一保存“职业代码 = 天赋系序号”；单职业卡与共享卡使用同一种读取方式。
+function Cat2.GetCardSpecializationForClass(card, classFile)
+    if not card or type(card.classes) ~= "table" then
+        return nil
+    end
+    local specialization = card.classes[classFile]
+    if not specialization then
+        return nil
+    end
+
+    -- 将卡片原始系别编号转换为界面显示页序；没有定制顺序的职业保持原编号。
+    local order = Cat2.ClassSpecializationOrder and Cat2.ClassSpecializationOrder[classFile]
+    if type(order) == "table" then
+        local displayIndex = 1
+        local displayTotal = table.getn(order)
+        while displayIndex <= displayTotal do
+            if order[displayIndex] == specialization then
+                return displayIndex
+            end
+            displayIndex = displayIndex + 1
+        end
+    end
+
+    return specialization
+end
+
+-- 流程槽始终以角色真实职业为门禁；预览其他职业时，仅共享卡仍可拖入。
+function Cat2.CanAddCardForPlayer(card)
+    if not card then
+        return false
+    end
+    if card.category == "common" or card.category == "logic" or card.category == "item" then
+        return true
+    end
+    local actualClassFile = Cat2.PlayerInformation and Cat2.PlayerInformation.basic and Cat2.PlayerInformation.basic.classFile
+    if not actualClassFile then
+        local localizedClass, classFile = UnitClass("player")
+        actualClassFile = classFile
+    end
+    return Cat2.GetCardSpecializationForClass(card, actualClassFile) ~= nil
+end
+
+-- 统一修改流程卡启用状态；开启互斥组成员时，自动暂停同流程中的其他成员。
+function Cat2.SetFlowStepEnabled(steps, targetStep, enabled)
+    if type(steps) ~= "table" or type(targetStep) ~= "table" then
+        return
+    end
+    if enabled == 0 then
+        targetStep.enabled = 0
+        return
+    end
+
+    local exclusiveGroup = targetStep.exclusiveGroup
+    if type(exclusiveGroup) == "string" and exclusiveGroup ~= "" then
+        local stepIndex = 1
+        local stepTotal = table.getn(steps)
+        while stepIndex <= stepTotal do
+            local step = steps[stepIndex]
+            if step ~= targetStep and step.exclusiveGroup == exclusiveGroup then
+                step.enabled = 0
+            end
+            stepIndex = stepIndex + 1
+        end
+    end
+    targetStep.enabled = 1
+end
+
+-- 恢复或导入旧配置时统一互斥状态；同组多项开启时保留流程中最后一项。
+function Cat2.NormalizeExclusiveFlowSteps(steps)
+    if type(steps) ~= "table" then
+        return
+    end
+    local activeByGroup = {}
+    local stepIndex = 1
+    local stepTotal = table.getn(steps)
+    while stepIndex <= stepTotal do
+        local step = steps[stepIndex]
+        local exclusiveGroup = step and step.exclusiveGroup
+        if step and step.enabled ~= 0 and type(exclusiveGroup) == "string" and exclusiveGroup ~= "" then
+            local previousStep = activeByGroup[exclusiveGroup]
+            if previousStep then
+                previousStep.enabled = 0
+            end
+            activeByGroup[exclusiveGroup] = step
+        end
+        stepIndex = stepIndex + 1
+    end
+end
+
+-- 所有图标统一保存在 icons 数组中，第一项始终是主图标。
+function Cat2.GetCardPrimaryIcon(card)
+    if not card or type(card.icons) ~= "table" then
+        return "Interface\\Icons\\INV_Misc_QuestionMark"
+    end
+    return card.icons[1] or "Interface\\Icons\\INV_Misc_QuestionMark"
+end
+
+-- 卡片图标只使用卡片脚本内的 icons 定义。
+-- 未确定的图标应在卡片中明确写为问号，不再根据角色技能书自动替换。
+function Cat2.ResolveCardIcon(card)
+    return Cat2.GetCardPrimaryIcon(card)
+end
+
+-- 卡片参数定义使用数组保存顺序；流程实例只保存用户覆写过的值。
+-- 未覆写时可继承被动卡片写入 context.parameters 的共享参数，最后回退到默认值。
+function Cat2.GetCardOptionDefinition(card, optionKey)
+    if type(card) ~= "table" or type(card.optionSchema) ~= "table" then
+        return nil
+    end
+    local optionIndex = 1
+    local optionTotal = table.getn(card.optionSchema)
+    while optionIndex <= optionTotal do
+        local definition = card.optionSchema[optionIndex]
+        if type(definition) == "table" and definition.key == optionKey then
+            return definition
+        end
+        optionIndex = optionIndex + 1
+    end
+    return nil
+end
+
+-- 参数定义可通过“字段名Resolver”提供动态值；解析失败时回退静态字段。
+-- 例如 defaultResolver 与 maximumResolver 可随技能书变化实时更新。
+function Cat2.ResolveCardOptionDefinitionValue(definition, fieldName, card)
+    if type(definition) ~= "table" or type(fieldName) ~= "string" then
+        return nil
+    end
+    local resolver = definition[fieldName .. "Resolver"]
+    if type(resolver) == "function" then
+        local resolved = resolver(card, definition)
+        if resolved ~= nil then
+            return resolved
+        end
+    end
+    return definition[fieldName]
+end
+
+-- 下拉参数示例：
+-- { key = "mode", type = "string", control = "select", default = "a",
+--   choices = { { value = "a", label = "方案A" }, { value = "b", label = "方案B" } } }
+-- value 使用现有 string/number/boolean 基础类型保存，label 只负责展示；
+-- allowCustom = true 时下拉框同时允许手动输入 choices 之外的值；默认仍为不可编辑下拉框。
+-- 可选 choicesResolver(card, definition) 便于以后按技能书动态生成选项。
+function Cat2.GetCardOptionChoices(definition, card)
+    if type(definition) ~= "table" then
+        return {}
+    end
+    if type(definition.choicesResolver) == "function" then
+        local resolved = definition.choicesResolver(card, definition)
+        if type(resolved) == "table" then
+            return resolved
+        end
+    end
+    if type(definition.choices) == "table" then
+        return definition.choices
+    end
+    return {}
+end
+
+function Cat2.GetCardOptionChoice(definition, value, card)
+    local choices = Cat2.GetCardOptionChoices(definition, card)
+    local choiceIndex = 1
+    local choiceTotal = table.getn(choices)
+    while choiceIndex <= choiceTotal do
+        local choice = choices[choiceIndex]
+        if type(choice) == "table" and choice.value == value then
+            return choice
+        end
+        choiceIndex = choiceIndex + 1
+    end
+    return nil
+end
+
+function Cat2.GetCardOptionDisplayValue(definition, value, card)
+    if definition and definition.control == "select" then
+        local choice = Cat2.GetCardOptionChoice(definition, value, card)
+        if choice and choice.label ~= nil then
+            return tostring(choice.label)
+        end
+    end
+    if value == nil then
+        return nil
+    end
+    return tostring(value)
+end
+
+function Cat2.NormalizeCardOptionValue(definition, value, card)
+    if type(definition) ~= "table" then
+        return nil
+    end
+    local normalized = nil
+    if definition.type == "number" then
+        value = tonumber(value)
+        if not value then
+            return nil
+        end
+        if definition.integer ~= false then
+            value = math.floor(value + 0.5)
+        end
+        local minimum = Cat2.ResolveCardOptionDefinitionValue(definition, "minimum", card)
+        local maximum = Cat2.ResolveCardOptionDefinitionValue(definition, "maximum", card)
+        if minimum and value < minimum then
+            value = minimum
+        end
+        if maximum and value > maximum then
+            value = maximum
+        end
+        normalized = value
+    elseif definition.type == "boolean" then
+        normalized = value == true or value == 1
+    elseif definition.type == "string" and type(value) == "string" then
+        normalized = value
+    end
+    if normalized == nil then
+        return nil
+    end
+    -- select 只是展示控件，底层仍使用现有基础类型。兼容旧版可编辑下拉框曾把
+    -- 带颜色码的 label 误存为参数：先按稳定 value 查找，再按完整 label 反查并还原 value。
+    if definition.control == "select" then
+        local selectedChoice = Cat2.GetCardOptionChoice(definition, normalized, card)
+        if not selectedChoice and type(normalized) == "string" then
+            local choices = Cat2.GetCardOptionChoices(definition, card)
+            local choiceIndex = 1
+            local choiceTotal = table.getn(choices)
+            while choiceIndex <= choiceTotal do
+                local choice = choices[choiceIndex]
+                if type(choice) == "table" and choice.value ~= nil and choice.label ~= nil and
+                   tostring(choice.label) == normalized then
+                    normalized = choice.value
+                    selectedChoice = choice
+                    break
+                end
+                choiceIndex = choiceIndex + 1
+            end
+        end
+        -- 不允许自定义的下拉框遇到无效旧值时回退默认值。
+        if definition.allowCustom ~= true and definition.preserveUnknownValue ~= true and not selectedChoice then
+            return nil
+        end
+    end
+    return normalized
+end
+
+function Cat2.CopyCardOptionValues(values, card)
+    local result = {}
+    if type(values) ~= "table" then
+        return result
+    end
+    for optionKey, value in pairs(values) do
+        local definition = Cat2.GetCardOptionDefinition(card, optionKey)
+        local normalized = Cat2.NormalizeCardOptionValue(definition, value, card)
+        if normalized ~= nil then
+            result[optionKey] = normalized
+        end
+    end
+    return result
+end
+
+function Cat2.CopyRawCardOptionValues(values)
+    local result = {}
+    if type(values) ~= "table" then
+        return result
+    end
+    for optionKey, value in pairs(values) do
+        local valueType = type(value)
+        if type(optionKey) == "string" and (valueType == "number" or valueType == "string" or valueType == "boolean") then
+            result[optionKey] = value
+        end
+    end
+    return result
+end
+
+function Cat2.ResolveStepOption(step, optionKey, parameters)
+    local definition = Cat2.GetCardOptionDefinition(step, optionKey)
+    if not definition then
+        return nil
+    end
+    if type(step.optionValues) == "table" and step.optionValues[optionKey] ~= nil then
+        return Cat2.NormalizeCardOptionValue(definition, step.optionValues[optionKey], step)
+    end
+    if type(parameters) == "table" and type(definition.inheritParameter) == "string" then
+        local inherited = parameters[definition.inheritParameter]
+        if inherited ~= nil then
+            local normalized = Cat2.NormalizeCardOptionValue(definition, inherited, step)
+            if normalized ~= nil then
+                return normalized
+            end
+        end
+    end
+    local defaultValue = Cat2.ResolveCardOptionDefinitionValue(definition, "default", step)
+    return Cat2.NormalizeCardOptionValue(definition, defaultValue, step)
+end
+
+-- 创建技能等级参数。未独立设置时始终跟随当前最高已学等级。
+function Cat2.CreateSpellRankOption(spellName)
+    local function GetLearnedRank()
+        local highestRank = Cat2.GetHighestRankOfSpell(spellName)
+        if highestRank and highestRank > 0 then
+            return highestRank
+        end
+        return nil
+    end
+    local function GetDefaultRank()
+        local highestRank = GetLearnedRank()
+        if highestRank then
+            return highestRank
+        end
+        return 1
+    end
+    return {
+        key = "spellRank",
+        type = "number",
+        label = "技能等级",
+        shortLabel = "级",
+        unit = "级",
+        default = 1,
+        defaultResolver = GetDefaultRank,
+        minimum = 1,
+        -- 技能书尚未就绪或技能未学习时不限制保存值，避免登录恢复时误改用户配置。
+        maximumResolver = GetLearnedRank,
+    }
+end
+
+--[[
+卡片定义契约：
+- 必填：id、name、category；职业卡还应提供 classes = { CLASS_FILE = 原始天赋系序号 }。
+- category：common（通用）、logic（逻辑）、item（消耗品）、class（职业）；逻辑分页 ID 同为 logic。
+- 展示：description 是卡槽摘要，details 是右侧卡库 Tooltip，icons 第一项也是快捷窗图标。
+- 排序：sort 仅决定右侧卡库顺序，不决定流程执行顺序；流程顺序来自 profile.steps。
+- 普通卡：Execute 返回 false/nil 继续，true 终止，Cat2.JumpTo(编号) 跳转；其他返回值按 false 处理。
+- 逻辑卡：behavior = "logic"，使用橙色系，按流程位置执行 Execute，返回 true 才终止后续步骤；与 category 分类独立。
+- 被动卡：behavior = "passive"，可用 Apply 写入 context.parameters，用 Validate 阻止整轮执行。
+- 参数卡：optionSchema 描述可编辑参数；control = "select" 可声明不可编辑下拉框；
+  每个流程 step 的 optionValues 只保存稳定基础值，不保存下拉选项的显示文字。
+- 互斥卡：exclusiveGroup 相同的卡片在同一流程内最多启用一个。
+- 事件卡：events 与 OnEvent 配合；事件状态保存在 CardEventDispatcher，不进入 SavedVariables。
+- 施法能力：castProfile 只描述技能特征；是否中断由流程里的 castInterruptPolicy 被动卡决定。
+- 运行时缓存：RefreshRuntimeData 只在首次执行或脏标记后调用，注册阶段不得依赖未加载完成的游戏数据。
+
+注册中心会包装 Apply、Validate 和 Execute，因此流程 step 可安全复用卡片函数；
+不要把某个配置专属的 enabled、参数值或临时状态写回 card 定义。
+]]
+
+-- 注册单张卡片，并拒绝缺少核心字段或重复 ID 的定义。
+function Cat2.RegisterCard(card)
+    if not card or not card.id or not card.name or not card.category then
+        return
+    end
+    if Cat2.CardRegistry.ById[card.id] then
+        return
+    end
+
+    -- icons 同时保存主图标和辅助图标，最多保留三枚；第一枚用于快捷小窗。
+    if type(card.icons) == "table" then
+        local normalizedIcons = {}
+        local iconIndex = 1
+        local iconTotal = table.getn(card.icons)
+        while iconIndex <= iconTotal and iconIndex <= 3 do
+            if type(card.icons[iconIndex]) == "string" then
+                table.insert(normalizedIcons, card.icons[iconIndex])
+            end
+            iconIndex = iconIndex + 1
+        end
+        card.icons = normalizedIcons
+    else
+        card.icons = { "Interface\\Icons\\INV_Misc_QuestionMark" }
+    end
+    if table.getn(card.icons) == 0 then
+        card.icons[1] = "Interface\\Icons\\INV_Misc_QuestionMark"
+    end
+
+    -- 注册阶段只登记定义，不读取尚未就绪的装备、技能或天赋数据。
+    card.runtimeDataDirty = true
+
+    -- 被动卡片第一次参与流程时也要完成运行时数据刷新。
+    local originalApply = card.Apply
+    if type(originalApply) == "function" then
+        card.Apply = function(context, step)
+            Cat2.EnsureCardRuntimeData(card)
+            return originalApply(context, step)
+        end
+    end
+
+    local originalValidate = card.Validate
+    if type(originalValidate) == "function" then
+        card.Validate = function(context, step)
+            Cat2.EnsureCardRuntimeData(card)
+            return originalValidate(context, step)
+        end
+    end
+
+    -- 保留布尔返回契约并透传框架生成的跳转指令；目标范围由执行器结合当前流程校验。
+    local originalExecute = card.Execute
+    if type(originalExecute) == "function" then
+        card.Execute = function(context, step)
+            Cat2.EnsureCardRuntimeData(card)
+            return Cat2.NormalizeCardExecutionResult(originalExecute(context, step))
+        end
+    else
+        card.Execute = function()
+            return false
+        end
+    end
+
+    table.insert(Cat2.CardRegistry.Cards, card)
+    Cat2.CardRegistry.ById[card.id] = card
+    if Cat2.RegisterCardEvents then
+        Cat2.RegisterCardEvents(card)
+    end
+    if Cat2.RegisterCardCastProfile then
+        Cat2.RegisterCardCastProfile(card)
+    end
+end
+
+-- 直接执行注册中心里的普通卡片，不要求目标卡存在于当前流程。
+-- 调用方仍需传入本轮 context；返回值透传布尔或跳转指令，由外层流程处理。
+function Cat2.ExecuteCardById(cardId, context)
+    if type(cardId) ~= "string" or cardId == "" or type(context) ~= "table" then
+        return false
+    end
+
+    local targetCard = Cat2.CardRegistry.ById[cardId]
+    if not targetCard or type(targetCard.Execute) ~= "function" then
+        return false
+    end
+
+    -- 防止卡片直接或间接调用自身，造成无限递归。
+    local executionGuard = context.directCardExecutionGuard
+    if type(executionGuard) ~= "table" then
+        executionGuard = {}
+        context.directCardExecutionGuard = executionGuard
+    end
+    if executionGuard[cardId] then
+        return false
+    end
+
+    executionGuard[cardId] = true
+    local succeeded, result = pcall(targetCard.Execute, context)
+    executionGuard[cardId] = nil
+
+    if not succeeded then
+        error(result)
+    end
+
+    return Cat2.NormalizeCardExecutionResult(result)
+end
+
+-- 根据职业文件代码返回右侧列表可见的卡片。
+-- 通用、逻辑和道具卡始终返回；职业卡统一检查 classes 中是否包含当前职业。
+function Cat2.GetCardsForClass(classFile)
+    local cards = {}
+    local index = 1
+    local total = table.getn(Cat2.CardRegistry.Cards)
+    while index <= total do
+        local card = Cat2.CardRegistry.Cards[index]
+        local specialization = Cat2.GetCardSpecializationForClass(card, classFile)
+        if card.category == "common" or card.category == "logic" or card.category == "item" or specialization then
+            Cat2.ResolveCardIcon(card)
+            table.insert(cards, card)
+        end
+        index = index + 1
+    end
+    table.sort(cards, function(left, right)
+        return left.sort < right.sort
+    end)
+    return cards
+end

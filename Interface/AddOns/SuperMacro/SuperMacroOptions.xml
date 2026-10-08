@@ -1,0 +1,498 @@
+<!--
+    文件名: SuperMacroOptions.xml
+    描述: 超级宏插件的选项设置面板布局定义。
+    包含控制宏行为、外观等各项设置的复选框、输入框和颜色选择器。
+    版本: 3.19
+    作者: GIT, Sunelegy, 拉风武夫
+-->
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+    <!-- 加载选项面板逻辑（SM_Common.lua 已由 SuperMacro.xml 加载，此处不再重复加载 by 武藤纯子酱 2026.9.10） -->
+    <Script file="SM_Options.lua"/>
+
+    <!--
+        设置面板中的复选框模板。
+        每个复选框附带一个文本标签，用于显示选项名称。
+    -->
+    <CheckButton name="SMOptionsCheckButtonTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="25" y="25"/>
+        </Size>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentText" inherits="GameFontBlack">
+                    <Anchors>
+                        <Anchor point="LEFT" relativePoint="RIGHT">
+                            <Offset>
+                                <AbsDimension x="-2" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <!-- 复选框正常、按下、高亮、选中状态的纹理 -->
+        <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
+        <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
+        <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
+        <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
+        <DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
+        <Scripts>
+            <OnLeave>
+                GameTooltip:Hide();
+            </OnLeave>
+        </Scripts>
+    </CheckButton>
+
+    <!--
+        设置面板中的输入框模板。
+        用于输入窗口宽度、高度、字体大小等数值。
+    -->
+    <EditBox name="SMOptionsEditBoxTemplate" letters="4" autoFocus="true" historyLines="0" virtual="true">
+        <Size>
+            <AbsDimension x="30" y="25"/>
+        </Size>
+        <Layers>
+            <!-- 输入框边框纹理（左侧） -->
+            <Layer level="BACKGROUND">
+                <Texture name="$parentNameLeft" file="Interface\ClassTrainerFrame\UI-ClassTrainer-FilterBorder">
+                    <Size>
+                        <AbsDimension x="16" y="29"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="-11" y="-3"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <TexCoords left="0" right="0.09375" top="0" bottom="1.0"/>
+                </Texture>
+                <!-- 输入框边框纹理（中间） -->
+                <Texture name="$parentNameMiddle" file="Interface\ClassTrainerFrame\UI-ClassTrainer-FilterBorder">
+                    <Size>
+                        <AbsDimension x="20" y="29"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentNameLeft" relativePoint="RIGHT"/>
+                    </Anchors>
+                    <TexCoords left="0.09375" right="0.90625" top="0" bottom="1.0"/>
+                </Texture>
+                <!-- 输入框边框纹理（右侧） -->
+                <Texture name="$parentNameRight" file="Interface\ClassTrainerFrame\UI-ClassTrainer-FilterBorder">
+                    <Size>
+                        <AbsDimension x="12" y="29"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentNameMiddle" relativePoint="RIGHT"/>
+                    </Anchors>
+                    <TexCoords left="0.90625" right="1.0" top="0" bottom="1.0"/>
+                </Texture>
+            </Layer>
+            <!-- 输入框的标签文本 -->
+            <Layer level="ARTWORK">
+                <FontString name="$parentText" inherits="GameFontBlack">
+                    <Anchors>
+                        <Anchor point="LEFT" relativePoint="RIGHT">
+                            <Offset>
+                                <AbsDimension x="7" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnEscapePressed>
+                HideUIPanel(SuperMacroOptionsFrame)
+                this:ClearFocus()
+            </OnEscapePressed>
+        </Scripts>
+        <FontString inherits="ChatFontNormal"/>
+    </EditBox>
+
+    <!-- ==================== 选项设置主面板 ==================== -->
+    <Frame name="SuperMacroOptionsFrame" frameStrata="TOOLTIP" toplevel="true" movable="true" parent="UIParent" enableMouse="true" hidden="true">
+        <Size>
+            <AbsDimension x="384" y="512"/>
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="0" y="-104"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <HitRectInsets>
+            <AbsInset left="12" right="40" top="12" bottom="71"/>
+        </HitRectInsets>
+        <Layers>
+            <!-- 背景层：左上角的宏图标 -->
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\MacroFrame\MacroFrame-Icon">
+                    <Size>
+                        <AbsDimension x="58" y="58"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="10" y="-8"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <!-- 插图层：装饰面板四角和标题 -->
+            <Layer level="ARTWORK">
+                <Texture file="Interface\Spellbook\UI-SpellbookPanel-TopLeft">
+                    <Size>
+                        <AbsDimension x="256" y="256"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT"/>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\Spellbook\UI-SpellbookPanel-TopRight">
+                    <Size>
+                        <AbsDimension x="128" y="256"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPRIGHT"/>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\Spellbook\UI-SpellbookPanel-BotLeft">
+                    <Size>
+                        <AbsDimension x="256" y="256"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT"/>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\Spellbook\UI-SpellbookPanel-BotRight">
+                    <Size>
+                        <AbsDimension x="128" y="256"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="BOTTOMRIGHT"/>
+                    </Anchors>
+                </Texture>
+                <!-- 标题文本 -->
+                <FontString name="SuperMacroOptionsTitleText" inherits="GameFontNormal" text="SUPERMACRO_OPTIONS_TITLE">
+                    <Anchors>
+                        <Anchor point="CENTER">
+                            <Offset>
+                                <AbsDimension x="6" y="230"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <!-- 右上角的关闭按钮 -->
+            <Button name="SuperMacroOptionsCloseButton" inherits="UIPanelCloseButton">
+                <Anchors>
+                    <Anchor point="CENTER" relativeTo="SuperMacroOptionsFrame" relativePoint="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="-44" y="-25"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </Button>
+
+            <!-- 退出设置面板按钮 -->
+            <Button name="SuperMacroOptionsExitButton" inherits="UIPanelButtonTemplate" text="EXIT">
+                <Size>
+                    <AbsDimension x="80" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="CENTER" relativeTo="SuperMacroOptionsFrame" relativePoint="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="-80" y="-422"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        HideUIPanel(this:GetParent());
+                    </OnClick>
+                </Scripts>
+            </Button>
+
+            <!-- 选项复选框区域（共9个） -->
+
+            <!-- 复选框1：隐藏动作条宏名字 -->
+            <CheckButton name="SuperMacroOptionsFrameCheckButton1" inherits="SMOptionsCheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="50" y="-80"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SM_VARS.hideAction = this:GetChecked() and 1 or 0;
+                        HideActionText();
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 复选框2：显示技能和物品的鼠标提示 -->
+            <CheckButton name="SuperMacroOptionsFrameCheckButton2" inherits="SMOptionsCheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameCheckButton1" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SM_VARS.macroTip1 = this:GetChecked() and 1 or 0;
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 复选框3：显示宏脚本的鼠标提示 -->
+            <CheckButton name="SuperMacroOptionsFrameCheckButton3" inherits="SMOptionsCheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameCheckButton2" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SM_VARS.macroTip2 = this:GetChecked() and 1 or 0;
+                        GameTooltipTextLeft2:SetText('');
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 复选框4：小地图显示按钮 -->
+            <CheckButton name="SuperMacroOptionsFrameCheckButton4" inherits="SMOptionsCheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameCheckButton3" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SM_VARS.minimap = this:GetChecked() and 1 or 0;
+                        ToggleSMMinimap();
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 复选框5：自动替换技能图标 -->
+            <CheckButton name="SuperMacroOptionsFrameCheckButton5" inherits="SMOptionsCheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameCheckButton4" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SM_VARS.replaceIcon = this:GetChecked() and 1 or 0;
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 复选框6：自动检查CD -->
+            <CheckButton name="SuperMacroOptionsFrameCheckButton6" inherits="SMOptionsCheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameCheckButton5" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SM_VARS.checkCooldown = this:GetChecked() and 1 or 0;
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 复选框7：显示菜单超级宏按钮 -->
+            <CheckButton name="SuperMacroOptionsFrameCheckButton7" inherits="SMOptionsCheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameCheckButton6" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SM_VARS.showMenu = this:GetChecked() and 1 or 0;
+                        ToggleSMMenu();
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 复选框8：使用长句（自动换行） -->
+            <CheckButton name="SuperMacroOptionsFrameCheckButton8" inherits="SMOptionsCheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameCheckButton7" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SM_VARS.wordWrap = this:GetChecked() and 1 or 0;
+                        ToggleSMWordWrap();
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 复选框9：使用等宽字体 -->
+            <CheckButton name="SuperMacroOptionsFrameCheckButton9" inherits="SMOptionsCheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameCheckButton8" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SM_VARS.monoFont = this:GetChecked() and 1 or 0;
+                        SuperMacroUpdateConfig()
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 输入框1：窗口宽度 -->
+            <EditBox name="SuperMacroOptionsFrameEditBox1" inherits="SMOptionsEditBoxTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameCheckButton9" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="-12" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnTextChanged>
+                        SM_VARS.windowWidth = this:GetNumber()
+                        SuperMacroUpdateConfig()
+                    </OnTextChanged>
+                </Scripts>
+            </EditBox>
+
+            <!-- 输入框2：窗口高度 -->
+            <EditBox name="SuperMacroOptionsFrameEditBox2" inherits="SMOptionsEditBoxTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameEditBox1" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnTextChanged>
+                        SM_VARS.windowHeight = this:GetNumber()
+                        SuperMacroUpdateConfig()
+                    </OnTextChanged>
+                </Scripts>
+            </EditBox>
+
+            <!-- 输入框3：编辑框字体大小 -->
+            <EditBox name="SuperMacroOptionsFrameEditBox3" inherits="SMOptionsEditBoxTemplate">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameEditBox2" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnTextChanged>
+                        SM_VARS.editBoxFontSize = this:GetNumber()
+                        SuperMacroUpdateConfig()
+                    </OnTextChanged>
+                </Scripts>
+            </EditBox>
+
+            <!-- 颜色选择器按钮（颜色样本） -->
+            <Button name="$parentColorSwatch1">
+                <Size>
+                    <AbsDimension x="32" y="32"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="SuperMacroOptionsFrameEditBox3" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="5" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <!-- 颜色样本背景 -->
+                    <Layer level="BACKGROUND">
+                        <Texture name="$parentSwatchBg">
+                            <Size>
+                                <AbsDimension x="32" y="32"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <!-- 颜色选择器标签文本 -->
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentText" inherits="GameFontBlack">
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="RIGHT">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                    <!-- 示例文本，显示当前颜色效果 -->
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentExampleText" inherits="GameFontBlack">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeTo="$parentText" relativePoint="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="0" y="-10"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>
+                        CloseMenus();
+                        SuperMacroOptions_OpenColorPicker(this);
+                    </OnClick>
+                </Scripts>
+                <!-- 正常状态下显示颜色样本 -->
+                <NormalTexture name="$parentNormalTexture" file="Interface\ChatFrame\ChatFrameColorSwatch"/>
+            </Button>
+        </Frames>
+        <Scripts>
+            <!-- 面板显示和隐藏时的事件回调 -->
+            <OnShow>
+                SuperMacroOptionsFrame_OnShow();
+            </OnShow>
+            <OnHide>
+                SuperMacroOptionsFrame_OnHide();
+            </OnHide>
+        </Scripts>
+    </Frame>
+</Ui>

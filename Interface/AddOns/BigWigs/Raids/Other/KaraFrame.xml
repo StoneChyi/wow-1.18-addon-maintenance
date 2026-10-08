@@ -1,0 +1,20 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\..\FrameXML\UI.xsd">
+	<Script file="KaraSay.lua" />
+	<Frame name="SaySappedFrame" hidden="true">
+		<Scripts>
+			<OnLoad>
+				SaySapped_OnLoad();
+			</OnLoad>
+			<OnEvent>
+				SaySapped_OnEvent();
+			</OnEvent>
+		</Scripts>
+	</Frame>
+	<GameTooltip name="SaySappedTooltip" hidden="true" inherits="GameTooltipTemplate">
+		<Scripts>
+			<OnLoad>
+				this:SetOwner(WorldFrame, "ANCHOR_NONE");
+			</OnLoad>
+		</Scripts>
+	</GameTooltip>
+</Ui>

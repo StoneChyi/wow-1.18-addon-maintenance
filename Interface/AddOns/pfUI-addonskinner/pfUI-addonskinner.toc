@@ -1,0 +1,109 @@
+## Interface: 11200
+## Title:|CFFDD66DD[界面]|RpfUI|cffaaaaaa [第三方材质包]
+## Title-zhCN: |CFFDD66DD[界面]|RpfUI|cffaaaaaa [第三方材质包]
+## Author: dein0s and RoadBlock
+## Notes: External module for |cff33ffccpf|cffffffffUI
+## Version: 0.4
+## Dependencies: pfUI
+## X-LocalName: 皮肤扩展
+
+# main
+pfUI-addonskinner.lua
+pfUI-addonskinner-api.lua
+pfUI-addonskinner-config.lua
+pfUI-addonskinner-gui.lua
+
+# skins
+skins\aDF.lua
+skins\AdvancedTradeskillWindow.lua
+skins\AdvancedTradeSkillWindow2.lua
+skins\ArchiTotem.lua
+skins\Atlas.lua
+skins\AtlasLoot.lua
+skins\AtlasQuest.lua
+skins\BigWigs.lua
+skins\BookStore.lua
+skins\BugSack.lua
+skins\Clique.lua
+skins\Decursive.lua
+skins\DoiteAuras.lua
+skins\En_AutoEquip.lua
+skins\GearMenu.lua
+skins\guild_bank.lua
+skins\LoseControl.lua
+skins\ModifiedPowerAuras.lua
+skins\pfQuest.lua
+skins\PizzaSlices.lua
+skins\QuickHeal.lua
+skins\simpleAuras.lua
+skins\SP_SwingTimer.lua
+skins\SuperIgnore.lua
+skins\SuperMacro.lua
+skins\TrinketMenu.lua
+skins\YaHT.lua
+skins\KLHThreatMeter.lua
+skins\DoTimer.lua
+skins\WorldMap.lua
+skins\distancewarning.lua
+skins\MissingTradeSkillsList.lua
+skins\StatCompare.lua
+skins\SpecialTalent.lua
+skins\Autobar.lua
+skins\Accountant.lua
+skins\TrainerSkills.lua
+skins\lft.lua
+skins\Heart.lua
+skins\MySlash.lua
+skins\RaidCheck.lua
+skins\AutoMarker.lua
+skins\Cat.lua
+skins\WushuangLoot.lua
+
+# Create by 可可慕斯 20250823
+skins\Capslock.lua
+
+# Create by 可可慕斯 20260830
+skins\aux-addon.lua
+
+--skins\CooldownTimers.lua
+--skins\HunterBar_FeedButton.lua
+--skins\ExtraResourceBars.lua
+--skins\HonorSpy.lua
+--skins\CallOfElements.lua
+--skins\JIM_CooldownPulse.lua
+
+# Create by 可可慕斯 20250322
+skins\SpecialTalentUI.lua
+skins\SUCC-bag.lua
+
+# Create by 可可慕斯 20250324
+Locale\zh.lua
+
+# Create by 可可慕斯 20250325
+skins\QuickHeal.lua
+
+
+# Create by 可可慕斯 20250401
+skins\OneBag.lua
+
+# Create by 可可慕斯 20260824
+skins\BrainwasherPro.lua
+
+# Create by 可可慕斯 20260825
+skins\BuffTool.lua
+
+# Create by 可可慕斯 20260826
+skins\TankBuddyEnh.lua
+
+# Create by 可可慕斯 20260829
+skins\UnitXP_SP3_Addon.lua
+
+# Create by 可可慕斯 20260905
+skins\NosCursor.lua
+skins\PlayTurtle.lua
+
+# Create by 可可慕斯 20260927
+skins\PallyPower.lua
+
+# Create by 可可慕斯 20260928
+skins\Tmog.lua

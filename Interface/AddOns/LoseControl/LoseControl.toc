@@ -1,0 +1,10 @@
+## Interface: 11200
+## Title: |cff33ffccLoseControl|r
+## Title-zhCN:|CFF33AAFF[辅助]|RLostControl
+## Notes: Makes it easy to see the duration of crowd control spells by displaying them in a dedicated icon onscreen.
+## Notes-zhCN: 在屏幕上显示你受到的控制技能图标和持续时间
+## Author: |cffff3399CFM mod|r
+## Version: 1.0
+## SavedVariablesPerCharacter: LoseControlDB, SaySappedConfig
+
+LoseControl.lua

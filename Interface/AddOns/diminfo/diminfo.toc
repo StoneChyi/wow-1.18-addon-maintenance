@@ -1,0 +1,13 @@
+## Interface: 11200
+## Title: |cff777777dim|rinfo
+## Notes: Info Data Bar
+## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] diminfo信息条
+## Notes-zhCN:显示玩家的一些信息在屏幕上
+## Author: Loshine, EK, 1.12 modify by 狗血编剧男, Sunelegy, 闲逛的痞子
+## Version: 2.0
+## Dependencies: !Libs
+
+## SavedVariables: RaidCD_AccountData, DimInfo_Config
+
+panel.lua
+Modules\Modules.xml

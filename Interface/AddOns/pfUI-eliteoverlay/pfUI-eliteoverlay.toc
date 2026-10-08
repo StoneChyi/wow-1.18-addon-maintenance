@@ -1,0 +1,11 @@
+﻿## Interface: 11200
+## Title: |cff33ffccpf|cffffffffUI|cffaaaaaa [精英头像覆盖v3]
+## Title-zhCN:|CFFDD66DD[界面]|RpfUI|cffaaaaaa [精英头像覆盖]
+## Author: Shagu
+## Notes: Elite Overlay for pfUI unitframes
+## Notes-zhCN: Elite Overlay for pfUI unitframes
+## Version: 1.0
+## Dependencies: pfUI
+
+# main
+pfUI-eliteoverlay.lua

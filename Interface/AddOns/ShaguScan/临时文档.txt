@@ -1,0 +1,21 @@
+-- 【显示】按钮（文字按钮）
+  frame.showBtn = CreateFrame("Button", nil, frame)
+  frame.showBtn:SetPoint("RIGHT", frame.caption, "LEFT", -26, 0) -- 标题左侧
+  frame.showBtn:SetWidth(14) -- 文字按钮宽度
+  frame.showBtn:SetHeight(14) -- 文字按钮高度=
+
+
+ -- 【隐藏】按钮（文字按钮）
+  frame.hideBtn = CreateFrame("Button", nil, frame)
+  frame.hideBtn:SetPoint("RIGHT", frame.showBtn, "RIGHT", 13, 0) -- 显示按钮左侧
+  frame.hideBtn:SetWidth(14)
+  frame.hideBtn:SetHeight(14)
+
+
+-- 【锁定】按钮（文字按钮）
+frame.lockBtn = CreateFrame("Button", nil, frame)
+frame.lockBtn:SetPoint("RIGHT", frame.hideBtn, "RIGHT", 13, 0) -- 隐藏按钮左侧
+frame.lockBtn:SetWidth(14)
+frame.lockBtn:SetHeight(14)
+
+

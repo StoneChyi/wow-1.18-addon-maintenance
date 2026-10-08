@@ -1,0 +1,15 @@
+## Interface: 11200
+## Title: |cffff0000[战斗]|rPlayTurtle战斗数字高清显示
+## Author: 12345
+## Notes: 战斗数字插件  命令 /pt
+## Version: 1.5
+## SavedVariables: PTURTLE_Combat_DB
+## SavedVariablesPerCharacter: PTURTLE_Combat_CharDB
+## X-License: CC BY-NC-SA 4.0 (非商业性使用)
+
+Core.lua      
+Display.lua   
+Parser.lua        
+UI_Utils.lua 
+UI.lua         
+Main.lua        

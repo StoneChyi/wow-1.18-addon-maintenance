@@ -1,0 +1,16 @@
+## Interface: 11200
+## Title-zhCN: |CFF00CD00[商业]|R 扩展商业制作面板
+## Notes-zhCN: AdvancedTradeSkillWindow 2 扩展默认制作界面，使之显示更多的信息，并提供过滤功能等;|N改进整合了乌龟服专业技能窗口。
+## Version: 2026.8.22
+## SavedVariables: ATSW_Characters, ATSW_Profession, ATSW_SelectedRecipe, ATSW_SortBy, ATSW_SearchString, ATSW_SubClassFilter, ATSW_InvSlotFilter, ATSW_ScrollOffset, ATSW_PreviousRecipes, ATSW_Tasks, ATSW_TimeCost, ATSW_NecessaryReagents, ATSW_ContractedCategories, ATSW_Amount, ATSW_Bags, ATSW_Bank, ATSW_Merchant, ATSW_Options, ATSW_CustomCategories, ATSW_CSOpenCategory, ATSW_CSSelected, ATSW_Attributes, ATSW_Debug, ATSW_FramePosition
+
+## X-ReleaseDate: $Date: 27/03/2026 $
+## X-Email: shellyoung@protonmail.com
+## X-Category: Tradeskill
+## X-Website: https://github.com/Shellyoung/AdvancedTradeSkillWindow2
+
+Localization.lua
+AdvancedTradeSkillWindow2.lua
+AdvancedTradeSkillWindow2.xml
+CustomSorting.lua
+CustomSorting.xml

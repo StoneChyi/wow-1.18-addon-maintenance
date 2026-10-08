@@ -1,0 +1,88 @@
+assert(BigWigs, "BigWigs not found!")
+
+------------------------------
+--      Are you local?      --
+------------------------------
+
+local throt, times = {}, {}
+local playerName = nil
+
+local coreSyncs = {
+	["BossEngaged"] = 5,
+}
+
+----------------------------------
+--      Module Declaration      --
+----------------------------------
+
+BigWigsComm = BigWigs:NewModule("Comm")
+
+------------------------------
+--      Initialization      --
+------------------------------
+
+function BigWigsComm:OnRegister()
+	playerName = UnitName("player")
+
+	for k, v in pairs(coreSyncs) do
+		self:BigWigs_ThrottleSync(k, v)
+	end
+end
+
+function BigWigsComm:OnEnable()
+	self:RegisterEvent("CHAT_MSG_ADDON")
+	self:RegisterEvent("BigWigs_SendSync")
+	self:RegisterEvent("BigWigs_ThrottleSync")
+end
+
+
+------------------------------
+--      Event Handlers      --
+------------------------------
+
+function BigWigsComm:CHAT_MSG_ADDON(prefix, message, type, sender)
+	-- RAID: 团队; PARTY: 小队（5人本等非团队场景也能收到）
+	if prefix ~= "BigWigs" or (type ~= "RAID" and type ~= "PARTY") then return end
+
+	local _, _, sync, rest = string.find(message, "(%S+)%s*(.*)$")
+	if not sync then return end
+
+	if throt[sync] == nil then throt[sync] = 1 end
+	if throt[sync] == 0 or not times[sync] or (times[sync] + throt[sync]) <= GetTime() then
+		self:TriggerEvent("BigWigs_RecvSync", sync, rest, sender)
+		times[sync] = GetTime()
+	end
+end
+
+
+function BigWigsComm:BigWigs_SendSync(msg)
+	local _, _, sync, rest = string.find(msg, "(%S+)%s*(.*)$")
+
+	if not sync then return end
+
+	if throt[sync] == nil then throt[sync] = 1 end
+	if throt[sync] == 0 or not times[sync] or (times[sync] + throt[sync]) <= GetTime() then
+		-- 团队走 RAID 频道; 小队走 PARTY 频道（RAID 频道在小队中无效）;
+		-- 单人无网络发送，仅保留本机回环
+		local channel = nil
+		if GetNumRaidMembers() > 0 then
+			channel = "RAID"
+		elseif GetNumPartyMembers() > 0 then
+			channel = "PARTY"
+		end
+		if channel then
+			SendAddonMessage("BigWigs", msg, channel)
+		end
+		self:CHAT_MSG_ADDON("BigWigs", msg, "RAID", playerName)
+	end
+end
+
+
+function BigWigsComm:BigWigs_ThrottleSync(msg, time)
+	assert(msg, "没有传递消息")
+	throt[msg] = time
+end
+
+function BigWigsComm:GetThrottleTable() return throt end
+function BigWigsComm:GetTimesTable() return times end
+

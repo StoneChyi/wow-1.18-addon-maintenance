@@ -1,0 +1,29 @@
+<Bindings>
+   		<Binding name="STEED" header="HOLYHOPE_BIND">
+    	 HolyHope_UseItem("Mount");
+    	</Binding>
+    	<Binding name="MIGHT" header="HOLYHOPE_BIND">
+    	 HolyHope_UseItem("Might");
+    	</Binding>
+    	<Binding name="WISDOM" header="HOLYHOPE_BIND">
+    	 HolyHope_UseItem("Wisdom");
+    	</Binding>
+    	<Binding name="SALVATION" header="HOLYHOPE_BIND">
+    	 HolyHope_UseItem("Salvation");
+    	</Binding>
+    	<Binding name="LIGHT" header="HOLYHOPE_BIND">
+    	 HolyHope_UseItem("Light");
+    	</Binding>
+    	<Binding name="KINGS" header="HOLYHOPE_BIND">
+    	 HolyHope_UseItem("Kings");
+    	</Binding>
+    	<Binding name="SANCTUARY" header="HOLYHOPE_BIND">
+    	 HolyHope_UseItem("Sanctuary");
+    	</Binding>
+    	<Binding name="FREEDOM" header="HOLYHOPE_BIND">
+    	 HolyHope_UseItem("Freedom");
+    	</Binding>
+    	<Binding name="SACRIFICE" header="HOLYHOPE_BIND">
+    	 HolyHope_UseItem("Sacrifice");
+    	</Binding>
+</Bindings>

@@ -1,0 +1,46 @@
+-- 治疗之泉图腾 技能卡片。
+local card = {
+    id = "shaman_healing_stream_totem",
+    name = "治疗之泉图腾",
+    description = "保持并施放|cff6bc7e0{spellRank}级|r治疗之泉图腾",
+    details = "保持并施放治疗之泉图腾。",
+    sort = 120,
+    exclusiveGroup = "shaman_water_totem",
+    duration = { type = "shaman_totem", slot = "water", name = "治疗之泉图腾", cacheKey = "shaman_totem:water:治疗之泉图腾" },
+    category = "class",
+    classes = {
+        SHAMAN = 4,
+    },
+    icons = {
+        "Interface\\Icons\\INV_Spear_04",
+    },
+    optionSchema = { Cat2.CreateSpellRankOption("治疗之泉图腾") },
+}
+
+function card.RefreshRuntimeData()
+end
+
+function card.Execute(context, step)
+
+    local spellRank = context:GetStepOption(step, "spellRank")
+
+    -- 图腾是否存在
+    if not Cat2.WaterTotem() then
+        Cat2.CastRankedWithNampower("治疗之泉图腾", spellRank)
+        return false
+    end
+
+    local Force = context and context.parameters and context.parameters.TotemForceOverride
+    if Force then
+        -- 图腾名字比对
+        if Cat2.WaterTotemName() ~= "治疗之泉图腾" then
+            Cat2.CastRankedWithNampower("治疗之泉图腾", spellRank)
+            return false
+        end
+    end
+
+    return false
+
+end
+
+Cat2.RegisterCard(card)

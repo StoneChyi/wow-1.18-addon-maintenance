@@ -1,0 +1,11 @@
+## Interface: 11200
+## Title: xNet
+## Title-zhCN: xNet 网络延迟提醒
+## Notes: Lag Notification
+## Notes-zhCN: HC必备，网络延迟高时在屏幕上醒目的提示
+## Version: 1.5
+## Author: 龟壳 iKun
+
+xNet.lua
+
+## X-Turtle-Shell-Version: 1698400905

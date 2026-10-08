@@ -1,0 +1,17 @@
+## Interface: 11200
+## Title: S_ChatBar
+## Notes: Gustave's Neavo_ChatBar
+## Title-zhCN:|CFF33AAFF[辅助]|R聊天快捷按钮-简洁
+## Notes-zhCN:|CFF33AAFFS_ChatBar|R|N简洁风格的聊天快捷按钮，能在聊天栏快捷切换频道和常用功能。|n按住Shift并点击骰子位置移动窗口位置。|n按TAB键可进行切换频道
+## Version: 1.6
+## Author: Gustave, 可可慕斯, 小鱼乖乖, 夜晨, Sunelegy
+## SavedVariablesPerCharacter: S_ChatBarDB
+
+ChatBar.lua
+EasyChannel.lua
+Tracking.lua
+
+## X-PluginId: 350
+## X-PublishTime: 2026-07-14 05:50:01
+## X-Version: 20260714001
+## X-OverrideMode: 2

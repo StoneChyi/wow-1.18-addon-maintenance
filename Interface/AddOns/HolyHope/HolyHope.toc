@@ -1,0 +1,14 @@
+## Interface: 11200
+## Title: |cFF8000FFHolyHope 骑士祝福助手 岛上小鱼 汉化版|r
+## Title-zhCN:|CFFFFFF00[职业]|R|cffF58CBA圣骑士|R祝福助手 岛上小鱼汉化|r |cffFF7D0A灵灵漆整理
+
+## Notes: Gestion des benedictions du Paladin.
+## OptionalDeps:
+## Dependencies:
+## DefaultState:
+## X-Repple: 职业
+## SavedVariables: HolyHope_Config
+HolyHope.xml
+
+
+## X-Turtle-Shell-Version: 1696774867

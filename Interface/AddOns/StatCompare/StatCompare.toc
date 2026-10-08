@@ -1,0 +1,23 @@
+﻿## Interface: 11200
+## Title:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 属性统计
+## Notes: Compare your equipments bonus of all status with other players.
+## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 属性统计
+## Notes-zhCN:|CFFDD66DDStatCompare|R|N显示角色装备提供的属性，并可以与其他玩家对比。|N左键点击小地图图标打开配置主窗口。|N右键点击小地图图标打开装备集窗口。|N命令：/statc
+## Author: slashboy, 九藜方舟, Dreamland, yyslash@gmail.com, lasthime, 幻物梵天, 艾森纳, 狗血编剧男, Sunelegy, 薄言织虹
+## Version: 1.2
+## OptionalDeps: BetterCharacterStats
+## SavedVariables: StatCompare_SaveVar, StatCompare_Info
+## SavedVariablesPerCharacter: StatCompare_Player
+Localization_zhCN.lua
+Localization_enUS.lua
+Localization.lua
+SCOptions.lua
+StatScanner.lua
+StatCompare.lua
+StatCompare.xml
+
+init\StatCompareBuff.xml
+init\StatCompareChar.xml
+init\StatCompareSpell.xml
+init\StatCompareUI.xml
+

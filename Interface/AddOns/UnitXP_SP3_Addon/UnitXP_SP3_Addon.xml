@@ -1,0 +1,814 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.blizzard.com/wow/ui/ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
+    <!-- $Id$ -->
+    
+    <!-- Script -->
+    <Script file="Local.lua"/>
+    <Script file="UnitXP_SP3_Addon.lua"/>
+    
+    <!-- Frames -->
+    <Frame name="xpsp3Frame" toplevel="true" movable="true" enableMouse="true" enableKeyboard="true" hidden="true">
+        <TitleRegion setAllPoints="true"/>
+        <Size>
+            <AbsDimension x="550" y="430"/>
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER" relativeTo="UIParent" />
+        </Anchors>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+            <BackgroundInsets>
+                <AbsInset left="11" right="12" top="12" bottom="11"/>
+            </BackgroundInsets>
+            <TileSize>
+                <AbsValue val="32"/>
+            </TileSize>
+            <EdgeSize>
+                <AbsValue val="32"/>
+            </EdgeSize>
+        </Backdrop>
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture name="xpsp3_title_texture" file="Interface\DialogFrame\UI-DialogBox-Header">
+                    <Size>
+                        <AbsDimension x="320" y="64"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="0" y="12"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString inherits="GameFontNormal" text="UnitXP Service Pack 3X_by:12345魔改版本">
+                    <Anchors>
+                        <Anchor point="TOP" relativeTo="xpsp3_title_texture">
+                            <Offset>
+                                <AbsDimension x="0" y="-14"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="xpsp3_fontStringFPSCap" inherits="GameFontNormal" justifyH="LEFT" justifyV="TOP">
+                    <Size x="200" y="440" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="xpsp3Frame">
+                            <Offset>
+                                <AbsDimension x="274" y="-40"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="xpsp3_fontStringBackgroundCap" inherits="GameFontNormal" justifyH="LEFT" justifyV="TOP">
+                    <Size x="200" y="440" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="xpsp3Frame">
+                            <Offset>
+                                <AbsDimension x="399" y="-40"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="xpsp3_fontString_combatTextSP3_fontName" inherits="GameFontNormal" justifyH="LEFT" justifyV="TOP">
+                    <Size x="200" y="440" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="xpsp3Frame">
+                            <Offset>
+                                <AbsDimension x="295" y="-335"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="xpsp3_fontStringTargetingInfo" inherits="GameFontNormal" justifyH="CENTER" justifyV="TOP">
+                    <Size x="550" y="430" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="xpsp3Frame">
+                            <Offset>
+                                <AbsDimension x="0" y="-370"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="xpsp3_buttonCancel_close" parent="xpsp3Frame" inherits="GameMenuButtonTemplate">
+                <Size>
+                    <AbsDimension x="100" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="-15" y="15"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetText(UNITXPSP3_LOCALE["Close"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="xpsp3_buttonCancel_resetCamera" parent="xpsp3Frame" inherits="GameMenuButtonTemplate">
+                <Size>
+                    <AbsDimension x="100" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="-115" y="15"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetText(UNITXPSP3_LOCALE["Reset Camera"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <CheckButton name="xpsp3_checkButton_minimapButton" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-30"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Show Minimap Button"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Toggle visibility of the minimap button"]);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_modernNameplate" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-70"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Proper Nameplates Occlusion"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Nameplates would also check camera's line of sight in addition to distance"]);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_prioritizeTargetNameplate" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-100"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Prioritize Target Nameplate"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Other nameplates would disappear when a target is selected"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Need Proper Nameplates Occlusion to be also enabled"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_prioritizeMarkedNameplate" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-130"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Prioritize Marked Nameplate"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Other nameplates would disappear when some nameplates are raid-marked"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Need Proper Nameplates Occlusion to be also enabled"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_nameplateCombatFilter" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-160"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Hide Healthy Nameplates"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Aside from prioritized nameplates, only those in-combat/damaged/PvP-flagged nameplates would be shown"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Need Proper Nameplates Occlusion to be also enabled"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_hideCritterNameplate" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-190"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Hide Critter Nameplates"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Aside from prioritized nameplates, only those in-combat critters would have nameplates"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Need Proper Nameplates Occlusion to be also enabled"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_showInCombatNameplatesNearPlayer" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-220"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Show In-combat Nameplates Nearby"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["In-combat nameplates in small range would be shown regardless of occlusion"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Need Proper Nameplates Occlusion to be also enabled"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_notify_flashTaskbarIcon" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-260"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Taskbar Notification"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Flash operating system's taskbar icon when the game requires attention"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["When the game is in background/minimized"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_notify_playSystemDefaultSound" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-290"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["System Sound Notification"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Play operating system's default sound when the game requires attention"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["When the game is in background/minimized"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_perfectScreenshot" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-320"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Perfect Screenshot"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Generate PNG screenshot"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["In-game screenshots would be in larger PNG files instead of JPEG files"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_selfHealthBar" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="-350"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Self Health Bar"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Always show self health bar out of combat"]);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_cameraPinHeight" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="274" y="-160"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Pin Camera Height"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Camera would keep its height during shapeshifting"]);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_weatherAlwaysClear" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="274" y="-190"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Keep Weather Clear"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["This would fix FPS-drop during bad weather at the cost of losing weather particles visual"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Toggling the switch would influence the next weather event but not the current one"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_combatTextSP3" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="274" y="-260"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Anti-aliased Combat Text"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Alternative style for floating combat text"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["It requires d3dx9_43.dll which is from DirectX End-User Runtimes"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <CheckButton name="xpsp3_checkButton_hideEXPtext" inherits="UICheckButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="274" y="-220"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        getglobal(this:GetName().."Text"):SetText(UNITXPSP3_LOCALE["Hide EXP Text"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                    <OnEnter>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_RIGHT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Don't show that purple message when gaining experience point"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Some people don't like it..."],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEnter>
+                    <OnLeave>
+                        xpsp3tooltip:Hide();
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <EditBox name="xpsp3_editBox_combatTextSP3_fontName" autoFocus="false" numeric="false">
+                <Size x="150" y="32" />
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="336" y="-325"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Left">
+                            <Size x="85" y="32" />
+                            <Anchors>
+                                <Anchor point="LEFT">
+                                    <Offset x="-10" y="0" />
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords left="0" right="0.4" top="0" bottom="1.0"/>
+                        </Texture>
+                        <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Right">
+                            <Size x="85" y="32" />
+                            <Anchors>
+                                <Anchor point="RIGHT">
+                                    <Offset x="10" y="0" />
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords left="0.6" right="1.0" top="0" bottom="1.0"/>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEditFocusGained>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_LEFT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Change the font of combat text"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Input a font name in operating system. Press Enter to confirm"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEditFocusGained>
+                    <OnEditFocusLost>
+                        xpsp3tooltip:Hide();
+                    </OnEditFocusLost>
+                    <OnEnterPressed>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnEnterPressed>
+                </Scripts>
+                <FontString inherits="ChatFontNormal" />
+            </EditBox>
+            <EditBox name="xpsp3_editBox_FPScap" letters="3" autoFocus="false" numeric="true">
+                <Size x="50" y="32" />
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="343" y="-30"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Left">
+                            <Size x="30" y="32" />
+                            <Anchors>
+                                <Anchor point="LEFT">
+                                    <Offset x="-17" y="0" />
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords left="0" right="0.12" top="0" bottom="1.0"/>
+                        </Texture>
+                        <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Right">
+                            <Size x="30" y="32" />
+                            <Anchors>
+                                <Anchor point="RIGHT">
+                                    <Offset x="-7" y="0" />
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords left="0.88" right="1.0" top="0" bottom="1.0"/>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEditFocusGained>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_LEFT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Limit frames-per-second to the specific value"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Zero means no limit. Press Enter to confirm"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEditFocusGained>
+                    <OnEditFocusLost>
+                        xpsp3tooltip:Hide();
+                    </OnEditFocusLost>
+                    <OnEnterPressed>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnEnterPressed>
+                </Scripts>
+                <FontString inherits="ChatFontNormal" />
+            </EditBox>
+            <EditBox name="xpsp3_editBox_backgroundFPScap" letters="3" autoFocus="false" numeric="true">
+                <Size x="50" y="32" />
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="490" y="-30"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Left">
+                            <Size x="30" y="32" />
+                            <Anchors>
+                                <Anchor point="LEFT">
+                                    <Offset x="-17" y="0" />
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords left="0" right="0.12" top="0" bottom="1.0"/>
+                        </Texture>
+                        <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Right">
+                            <Size x="30" y="32" />
+                            <Anchors>
+                                <Anchor point="RIGHT">
+                                    <Offset x="-7" y="0" />
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords left="0.88" right="1.0" top="0" bottom="1.0"/>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEditFocusGained>
+                        xpsp3tooltip:SetOwner(this, "ANCHOR_LEFT");
+                        xpsp3tooltip:SetText(UNITXPSP3_LOCALE["Limit background-frames-per-second to the specific value"]);
+                        xpsp3tooltip:AddLine(UNITXPSP3_LOCALE["Zero means no limit. Press Enter to confirm"],1,1,1);
+                        xpsp3tooltip:Show();
+                    </OnEditFocusGained>
+                    <OnEditFocusLost>
+                        xpsp3tooltip:Hide();
+                    </OnEditFocusLost>
+                    <OnEnterPressed>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnEnterPressed>
+                </Scripts>
+                <FontString inherits="ChatFontNormal" />
+            </EditBox>
+            <Button name="xpsp3_button_cameraHeight_raise" parent="xpsp3Frame" inherits="GameMenuButtonTemplate">
+                <Size>
+                    <AbsDimension x="110" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="274" y="-75"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetText(UNITXPSP3_LOCALE["Raise Camera"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="xpsp3_button_cameraHeight_lower" parent="xpsp3Frame" inherits="GameMenuButtonTemplate">
+                <Size>
+                    <AbsDimension x="110" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="390" y="-75"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetText(UNITXPSP3_LOCALE["Lower Camera"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="xpsp3_button_cameraPitch_up" parent="xpsp3Frame" inherits="GameMenuButtonTemplate">
+                <Size>
+                    <AbsDimension x="110" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="274" y="-105"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetText(UNITXPSP3_LOCALE["CamPitch Up"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="xpsp3_button_cameraPitch_down" parent="xpsp3Frame" inherits="GameMenuButtonTemplate">
+                <Size>
+                    <AbsDimension x="110" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="390" y="-105"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetText(UNITXPSP3_LOCALE["CamPitch Down"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="xpsp3_button_cameraHorizontalDisplacement_leftPlayer" parent="xpsp3Frame" inherits="GameMenuButtonTemplate">
+                <Size>
+                    <AbsDimension x="110" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="274" y="-135"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetText(UNITXPSP3_LOCALE["Left Player"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="xpsp3_button_cameraHorizontalDisplacement_rightPlayer" parent="xpsp3Frame" inherits="GameMenuButtonTemplate">
+                <Size>
+                    <AbsDimension x="110" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="390" y="-135"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetText(UNITXPSP3_LOCALE["Right Player"]);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="xpsp3_button_resourceBar_Texture" parent="xpsp3Frame" inherits="GameMenuButtonTemplate">
+                <Size>
+                    <AbsDimension x="120" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="150" y="-350"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        UnitXP_SP3_SetResourceBarTextureButtonText(this);
+                    </OnLoad>
+                    <OnClick>
+                        UnitXP_SP3_UI_OnClick(this);
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                UnitXP_SP3_OnLoad();
+            </OnLoad>
+            <OnEvent>
+                UnitXP_SP3_OnEvent(event);
+            </OnEvent>
+        </Scripts>
+    </Frame>
+    <GameTooltip name="xpsp3tooltip" frameStrata="TOOLTIP" hidden="true" parent="xpsp3Frame" inherits="GameTooltipTemplate" />
+</Ui>

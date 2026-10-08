@@ -1,0 +1,10 @@
+## Interface: 11200
+## Title: |CFFEE7600[模组增强]|R |cff00ffffInteract交互|cffff1450[需Interact模组]
+## Author: luskanek
+## Notes: Interact Key from Retail ported to Vanilla.
+## Notes-zhCN: 设置按键用来交互
+## Version: GIT
+
+Interact.lua
+
+Bindings.xml

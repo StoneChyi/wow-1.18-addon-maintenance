@@ -1,0 +1,49 @@
+{
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.runtime.builtin": {
+        "basic": "disable",
+        "debug": "disable",
+        "io": "disable",
+        "math": "disable",
+        "os": "disable",
+        "package": "disable",
+        "string": "disable",
+        "table": "disable",
+        "utf8": "disable"
+    },
+    "Lua.workspace.library": [
+        "~\\.vscode\\extensions\\ketho.wow-api-0.18.1\\Annotations"
+    ],
+    "Lua.diagnostics.globals": [
+        "ChatFrame1",
+        "GameTooltip_SetDefaultAnchor",
+        "TOOLTIP_UPDATE_TIME",
+        "DEFAULT_CHAT_FRAME",
+        "NONE",
+        "ReloadUI",
+        "SlashCmdList",
+        "ColorPickerFrame",
+        "FACTION_HORDE",
+        "FACTION_ALLIANCE",
+        "ChatTypeInfo",
+        "STANDARD_TEXT_FONT",
+        "UIDROPDOWNMENU_DEFAULT_TEXT_HEIGHT",
+        "DropDownList1",
+        "WorldFrame",
+        "CLOSE",
+        "UIErrorsFrame",
+        "MainMenuBar",
+        "FauxScrollFrame_Update",
+        "FauxScrollFrame_GetOffset",
+        "PanelTemplates_SetTab",
+        "PanelTemplates_UpdateTabs",
+        "PanelTemplates_SetNumTabs",
+        "UIDropDownMenu_Initialize",
+        "UIDropDownMenu_SetSelectedID",
+        "BuffFrame",
+        "UIDropDownMenu_AddButton",
+        "UIDropDownMenu_GetSelectedID",
+        "ToggleDropDownMenu",
+        "BUFF_WARNING_TIME"
+    ]
+}

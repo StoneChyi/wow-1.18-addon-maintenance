@@ -1,0 +1,10 @@
+## Interface: 11200
+## Title: Accountant会计插件
+## Title-zhCN:|CFF00CD00[商业]|R 账本
+## Notes-zhCN:|CFF00CD00Accountant|R|N记录玩家的收支明细。|N命令： /accountant
+## Description: Logs your WoW incomings / outgoings
+## DefaultState: enabled
+## SavedVariables: Accountant_SaveData,Accountant_Options
+Accountant.xml
+AccountantButton.xml
+AccountantOptions.xml

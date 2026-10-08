@@ -1,0 +1,24 @@
+## Interface: 11200
+## Title: ArchiTotem 图腾大师
+## Notes: All totems on 4 barslots!
+## Title-zhCN:|cffFF4500[职业]|r[|Cff0070DD萨满|r] 图腾大师
+## Notes-zhCN:|CFFFFFF00ArchiTotem|R|N一键图腾，管理，施放。|NCTRL+右键拖动|N命令： /at|N命令：/architotem 。 |cFFFFFF00|n 乌龟服定制版 by Sunelegy
+## X-Repple: 职业
+## Version: 1.7
+## Author: Nahoom, Sunelegy, 德兔
+## X-Credits: RoadBlock cleanup, Lichery - added localization, cleanup
+## SavedVariablesPerCharacter: ArchiTotem_Options
+## DefaultState: disabled
+
+Locale\Localization.xml
+
+Data\Data.lua
+Data\Core.lua
+Data\UI.lua
+Data\Presets.lua
+Data\PresetManager.lua
+Data\KeyBindings.lua
+Data\Commands.lua
+Data\Coverage.lua
+
+ArchiTotem.xml

@@ -1,0 +1,46 @@
+-- 抗火图腾 技能卡片。
+local card = {
+    id = "shaman_fire_resistance_totem",
+    name = "抗火图腾",
+    description = "保持并施放|cff6bc7e0{spellRank}级|r抗火图腾",
+    details = "保持并施放抗火图腾。",
+    sort = 110,
+    exclusiveGroup = "shaman_water_totem",
+    duration = { type = "shaman_totem", slot = "water", name = "抗火图腾", cacheKey = "shaman_totem:water:抗火图腾" },
+    category = "class",
+    classes = {
+        SHAMAN = 4,
+    },
+    icons = {
+        "Interface\\Icons\\Spell_FireResistanceTotem_01",
+    },
+    optionSchema = { Cat2.CreateSpellRankOption("抗火图腾") },
+}
+
+function card.RefreshRuntimeData()
+end
+
+function card.Execute(context, step)
+
+    local spellRank = context:GetStepOption(step, "spellRank")
+
+    -- 图腾是否存在
+    if not Cat2.WaterTotem() then
+        Cat2.CastRankedWithNampower("抗火图腾", spellRank)
+        return false
+    end
+
+    local Force = context and context.parameters and context.parameters.TotemForceOverride
+    if Force then
+        -- 图腾名字比对
+        if Cat2.WaterTotemName() ~= "抗火图腾" then
+            Cat2.CastRankedWithNampower("抗火图腾", spellRank)
+            return false
+        end
+    end
+
+    return false
+
+end
+
+Cat2.RegisterCard(card)

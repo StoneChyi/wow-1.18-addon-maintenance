@@ -1,0 +1,12 @@
+## Interface: 11200
+## Title: |cff33ffccpf|cffffffffUI|r Extended Merchant
+## Title-zhCN: |CFFDD66DD[界面]|RpfUI|cffaaaaaa [拓展商人界面]
+## Notes: Extends the merchant interface to show all items on one page with pfUI skin
+## Notes-zhCN: 扩展商人界面，在一页显示所有商品，使用pfUI皮肤
+## Author: Custom
+## Version: 1.0
+## RequiredDeps: pfUI
+## SavedVariables: pfUI_ExtendedMerchantDB
+
+pfUI_ExtendedMerchant.lua
+skin.lua

@@ -1,0 +1,14 @@
+## Interface: 11200
+## Title: |CFF33AAFF[辅助]|R自动标记|cffff1450[需SuperWoW+Unitxp模组]
+## Notes: Automatically mark raid mobs 缺德魔改 带图形界面
+## Author: Weird Vibes
+## SavedVariables: AutoMarkerDB
+## DefaultState: disabled
+## Version: 1.16.2
+
+Locale\Localization.xml
+AutoMarker.lua
+AutoMarkerUI.xml
+AutoMarkerUI.lua
+AutoMarkerTargetConfig.lua
+NPCList.lua

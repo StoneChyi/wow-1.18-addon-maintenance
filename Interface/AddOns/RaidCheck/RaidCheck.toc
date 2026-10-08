@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: Raid Check
+## Notes: Check raid buff and potion etc.
+## Title-zhCN:|cff33ffcc[团队工具]|cffffffffBUFF药剂检查及分配
+## Notes-zhCN:|CFFEE7600RaidCheck|R|N主要功能是团队检查 buff药剂，以及分配buff等。 |N命令：/rc 
+## X-Repple: 团队
+## DefaultState: disabled
+## SavedVariables: RCBA_TaskDB RCBA_AssignDB
+RaidCheck.xml

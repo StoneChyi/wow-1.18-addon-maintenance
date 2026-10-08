@@ -1,0 +1,15 @@
+## Titl: Capslock
+## Title-zhCN:|cffFF4500[职业]|r[|cff8570c2术士|R] 拉人助手
+## Notes-zhCN:队友在队伍中或者密语“求拉”，自动加入队列，输入命令打开队列按照顺序拉人。 |N命令：/caps 
+## X-Repple: 术士
+## Version: 0.3.1
+## Author: Mimma @ VanillaGaming.org
+## OptionalDeps: Titan Panel
+## Interface: 11200
+## SavedVariables: CAPSLOCK_KEYWORD, CAPSLOCK_ONLY_WHISPER
+## DefaultState: disabled
+Capslock.xml
+CapslockTitanPanel.xml
+148 130 201
+
+## X-Turtle-Shell-Version: 1693784534

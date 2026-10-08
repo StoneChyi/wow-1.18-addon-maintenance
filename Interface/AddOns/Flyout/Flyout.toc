@@ -1,0 +1,12 @@
+## Interface: 11200
+## Title: |cff777777Flyout
+## Author: luskanek
+## Notes: 允许在动作条上创建弹出菜单按钮
+## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 动作条菜单
+## Version: 1.1
+## SavedVariablesPerCharacter: Flyout_Config
+
+Templates.xml
+main.lua
+options.lua
+compat.lua

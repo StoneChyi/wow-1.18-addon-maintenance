@@ -1,0 +1,11 @@
+﻿## Interface: 11200
+## Version: 1.1
+## Author: 可可慕斯
+## Title:|CFF33AAFF[辅助]|R灵应录
+## Title-zhCN: |CFF33AAFF[辅助]|R灵应录
+## Notes:|CFF33AAFFSpiritSenseRec|R|N把其他玩家记录到灵应录中后，会在小队或团队侦测到被记录的玩家时进行屏幕提醒和团队通报。|N命令：/radd
+## Notes-zhCN: |CFF33AAFFSpiritSenseRec|R|N把其他玩家记录到灵应录中后，会在小队或团队侦测到被记录的玩家时进行屏幕提醒和团队通报。|N命令：/radd
+## SavedVariables: SpiritSenseRecData
+
+C_Timer.lua
+SpiritSenseRec.lua

@@ -1,0 +1,14 @@
+## Interface: 11200
+## Title: |cff00aaff[辅助]|r Cat - Potion  药剂管理
+## Title-zhCN: |cff00aaff[辅助]|r Cat - Potion  药剂管理
+## Notes: 独立的可点击药剂与烹饪管理窗口
+## Notes-zhCN: 独立的可点击药剂与烹饪管理窗口
+## Author: 妖姬变
+## Version: 1.1.6
+## SavedVariablesPerCharacter: CatPotionDB
+
+Core.lua
+Window.lua
+Settings.lua
+MinimapButton.lua
+Bindings.xml

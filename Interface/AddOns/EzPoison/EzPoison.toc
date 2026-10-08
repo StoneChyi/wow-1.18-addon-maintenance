@@ -1,0 +1,24 @@
+## Interface: 11200
+## Title: EzPoison
+## Author: Renew, Sunelegy
+## X-Website: https://github.com/Voidmenull
+## Notes: A simple poison helper for rogues, Sunelegy modified for TWOW.
+## Title-zhCN:|cffFF4500[职业]|r[|Cfffff569盗贼|R] 毒药助手
+## Notes-zhCN:乌龟服专用的毒药/磨刀石助手。 |cFFFFFF00|n 乌龟服定制版 by Sunelegy, qyj（来啦坐）增加毒药数量显示、制毒助手、锁定位置、移动位置、修复缩放、增加法力油选项
+## X-Repple: 职业
+## Version: 1.3.13
+## DefaultState: Enabled
+## SavedVariablesPerCharacter: EZPcfg, EZPBuyerData
+## DefaultState: disabled
+
+libs\AceLibrary\AceLibrary.lua
+libs\AceOO-2.0\AceOO-2.0.lua
+libs\AceAddon-2.0\AceAddon-2.0.lua
+libs\AceEvent-2.0\AceEvent-2.0.lua
+libs\Dewdrop-2.0\Dewdrop-2.0.lua
+libs\Tablet-2.0\Tablet-2.0.lua
+libs\FuBarPlugin-2.0\FuBarPlugin-2.0.lua
+
+
+EzPoison.lua
+buyer.lua

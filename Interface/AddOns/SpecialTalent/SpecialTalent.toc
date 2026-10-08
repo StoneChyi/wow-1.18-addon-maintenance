@@ -1,0 +1,20 @@
+# Do not delete the following line!
+## Interface: 11200
+## Title: SpecialTalent
+## Notes: Improved Talent Frame with all three talent trees shown at once and built-in talent planning.
+## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 天赋模拟器
+## Notes-zhCN:|CFFDD66DDSpecialTalent|R这是一个由Sunelegy大幅改进和优化的天赋框架。
+## Author: KrekoG, Wind, Sunelegy, 游侠
+## Version: 1.0.0
+## SavedVariables: SpecialTalentPlannedSaved SpecialTalentFrameSaved
+## First created: Apr 2006
+..\..\FrameXML\Fonts.xml
+..\..\FrameXML\UIPanelTemplates.xml
+..\..\FrameXML\CharacterFrameTemplates.xml
+..\..\FrameXML\ItemButtonTemplate.xml
+localization.lua
+Turtle_TalentsData_enUS.lua
+Turtle_TalentsData_zhCN.lua
+SpecialTalentTalentData.lua
+SpecialTalent.lua
+SpecialTalentUI.xml

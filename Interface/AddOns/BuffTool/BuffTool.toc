@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: |cffFF4500[C]|r[战斗] BuffTool特效触发
+## Author: Mythblack（最爱后期修改）
+## Notes: Monitor some combat buff（特效触发）
+## SavedVariablesPerCharacter:BuffToolConfig
+## DefaultState: disabled
+## Version: 0.0002
+
+BuffTool.lua

@@ -1,0 +1,23 @@
+## Interface: 11200
+## Title: |cff7fff7fModern|rMapMarkers
+## Notes: Shows dungeon, raid, world boss, boat, zeppelin, and tram locations on the world map
+## Title-zhCN:|CFF00FF00[|r|cffff7d0a地图|r|CFF00FF00] 乌龟服地图标记
+## Notes-zhCN: 在地图上显示所有的副本，团本，世界BOSS，飞艇，船，地铁等位置和相关信息。|n/mmm打开设置，点击副本图标可以链接掉落插件
+## Author: tilr & Heallios, Hengxin, Sunelegy
+## Version: 2.2
+## OptionalDeps: Atlas, Atlas-TW, pfUI, pfQuest
+## SavedVariables: ModernMapMarkersDB
+
+Localization.lua
+Locales\Locale_deDE.lua
+Locales\Locale_esES.lua
+Locales\Locale_ptBR.lua
+Locales\Locale_zhCN.lua
+MarkerData.lua
+ModernMapMarkers_UI.lua
+ModernMapMarkers.lua
+
+## X-PluginId: 350
+## X-PublishTime: 2026-07-14 05:50:01
+## X-Version: 20260714001
+## X-OverrideMode: 2

@@ -1,0 +1,5 @@
+<Bindings>
+	<Binding name="DPSMATEX_RESET" header="DPSMATEX">DPSMateX_PopUp:Show()</Binding>
+	<Binding name="DPSMATEX_TOGGLE">DPSMateX.Options:ToggleVisibility()</Binding>
+	<Binding name="DPSMATEX_REPORT">if not DPSMateX_Report:IsVisible() then DPSMateX_Report:Show() else DPSMateX_Report:Hide() end</Binding>
+</Bindings>

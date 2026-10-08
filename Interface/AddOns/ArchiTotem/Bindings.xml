@@ -1,0 +1,44 @@
+<Bindings>
+	<Binding name="一键召唤所有图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_CastAll()
+	</Binding>
+	<Binding name="召回所有图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_Recall()
+	</Binding>
+	<Binding name="召唤土系图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_CastEarth()
+	</Binding>
+	<Binding name="召唤火系图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_CastFire()
+	</Binding>
+	<Binding name="召唤水系图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_CastWater()
+	</Binding>
+	<Binding name="召唤风系图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_CastAir()
+	</Binding>
+	<Binding name="切换跳过土系图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_ToggleSkipEarth()
+	</Binding>
+	<Binding name="切换跳过火系图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_ToggleSkipFire()
+	</Binding>
+	<Binding name="切换跳过水系图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_ToggleSkipWater()
+	</Binding>
+	<Binding name="切换跳过风系图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_ToggleSkipAir()
+	</Binding>
+	<Binding name="召唤PVE预设图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_PresetPVE()
+	</Binding>
+	<Binding name="召唤PVP预设图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_PresetPVP()
+	</Binding>
+	<Binding name="召唤抗性预设图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_PresetResist()
+	</Binding>
+	<Binding name="召唤自定义预设图腾" header="ARCHITOTEM" runOnUp="true">
+		ArchiTotem_KeyBinding_PresetCustom()
+	</Binding>
+</Bindings>

@@ -1,0 +1,12 @@
+nampower.dll
+no1600x1200.dll
+transmogfix.dll
+UnitXP_SP3.dll
+VfPatcher.dll
+VanillaHelpers.dll
+wsloot.dll
+perf_boost.dll
+SuperWoWhook.dll
+dxvk
+weirdperformance.dll
+Interact.dll

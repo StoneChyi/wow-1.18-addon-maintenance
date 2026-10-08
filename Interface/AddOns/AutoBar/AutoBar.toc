@@ -1,0 +1,33 @@
+## Interface: 11200
+## Title: |cffFF4500[C]|R[增强] 消耗品动作条
+## Version: 1.31
+## DefaultState: enabled
+## Notes: 一组可配置的按钮，能自动从背包中寻找设定的物品供方便使用。
+## Author: Toadkiller (Updated by AHHH_REPTAR, Layt),部分功能增强优化：Jimmy
+## SavedVariables: AutoBar_Config
+## X-Category: Interface Enhancements
+## X-Credits: Saien the original author.  Sayclub (Korean), PDI175 (Chinese traditional and simplified), Teodred (German)
+## OptionalDeps: Ace2, OmniCC, oSkin, CompostLib, DewdropLib, PeriodicTable, TabletLib
+## X-Embeds: Ace2, CompostLib, DewdropLib, PeriodicTable, TabletLib
+
+
+# Core
+Locale.lua
+
+AutoBarItemList.lua
+Core.lua
+AutoBar.xml
+
+# Config
+AutoBarProfile.lua
+AutoBarConfig.lua
+AutoBarConfig.xml
+AutoBarConfigSlot.lua
+AutoBarConfigSlot.xml
+AutoBarChooseCategory.lua
+AutoBarChooseCategory.xml
+
+## X-PluginId: 69
+## X-PublishTime: 2026-03-21 15:28:47
+## X-Version: 20260321001
+## X-OverrideMode: 1

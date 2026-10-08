@@ -1,0 +1,17 @@
+<Bindings>
+  <!-- <Binding name="MOUSEOVERKEY" header="AUTOMARK">function () end</Binding> -->
+	<Binding name="快速标记" header="AUTOMARK">AutoMarker_MarkGroup();</Binding>
+  <Binding name="标记下一组" header="AUTOMARK">AutoMarker_MarkNextGroup();</Binding>
+  <Binding name="清除标记" header="AUTOMARK">AutoMarker_ClearMarks();</Binding>
+
+  <Binding name="距离标记" header="AUTOMARK">
+                        local distance = _G["AutoMarkerUIFrameMarkDistEditBox"]:GetText()
+                        local markDifferent = _G["AutoMarkerUIFrameMarkDifferentCheckBox"]:GetChecked()
+                        local name = ""
+                        if UnitExists("target") then
+                            name = UnitName("target")
+                        end
+                        local commandStr = "markdist " .. (distance or "20") .. " " .. (markDifferent and "1" or "0") .. " " .. name
+                        SlashCmdList["AUTOMARKER"](commandStr)
+</Binding>
+</Bindings>

@@ -1,0 +1,6 @@
+<Bindings>
+    <!-- 原生热键与 /catpotion 共用同一个全局入口，避免两套补药逻辑产生差异。 -->
+    <Binding name="一键补药" header="CATPOTION">
+        CatPotionUseCommand()
+    </Binding>
+</Bindings>

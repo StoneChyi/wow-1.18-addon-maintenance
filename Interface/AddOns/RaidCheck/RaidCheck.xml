@@ -1,0 +1,389 @@
+﻿<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
+	<Script file="localization.lua"/>
+	<Script file="RaidCheck.lua"/>
+	<Script file="RaidCheckBuffAssign.lua"/>
+	<GameTooltip name="RC_ChkBuffToolTip" frameStrata="TOOLTIP" inherits="GameTooltipTemplate">
+		<Scripts>
+			<OnLoad>
+				this:SetOwner(this, "ANCHOR_NONE");
+			</OnLoad>
+		</Scripts>
+	</GameTooltip>
+	<GameTooltip name="RC_ResultToolTip" frameStrata="TOOLTIP" hidden="true" inherits="GameTooltipTemplate">
+		<Scripts>
+			<OnLoad>
+				GameTooltip_OnLoad();
+				--"this:SetOwner(WorldFrame, "ANCHOR_NONE");"
+			</OnLoad>
+		</Scripts>
+	</GameTooltip>
+	
+	
+	
+	<Frame name="RC_MainFrame" parent="UIParent" movable="true" frameStrata="DIALOG" toplevel="true" hidden="true" enableMouse="true">
+		<Size><AbsDimension x="300" y="396"/></Size>
+		<Anchors><Anchor point="CENTER"/></Anchors>
+		
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" 
+			edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="10" right="10" top="10" bottom="10"/>
+			</BackgroundInsets>
+			<TileSize><AbsValue val="32"/></TileSize>
+			<EdgeSize><AbsValue val="24"/></EdgeSize>
+		</Backdrop>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture file="Interface\DialogFrame\UI-DialogBox-Header">
+					<Size><AbsDimension x="256" y="64"/></Size>
+					<Anchors>
+						<Anchor point="TOP">
+						<Offset><AbsDimension x="0" y="12"/></Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="$parentTitleText" inherits="GameFontNormal" text="RC_MainLabel">
+					<Anchors>
+						<Anchor point="TOP" relativeTo="$parent"></Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentCheckBuffaLabel" inherits="GameFontNormalSmall" text="CHECKBUFFA">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="12" y="-42"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentCheckBuffbLabel" inherits="GameFontNormalSmall" text="CHECKBUFFB">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentCheckBuffaLabel" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="0" y="-82"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentCheckBuffcLabel" inherits="GameFontNormalSmall" text="CHECKBUFFC">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentCheckBuffbLabel" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="0" y="-56"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentCheckBuffdLabel" inherits="GameFontNormalSmall" text="CHECKBUFFD">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentCheckBuffcLabel" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="0" y="-90"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentBuffAssignButton" inherits="OptionsButtonTemplate" text="分配">
+				<Size><AbsDimension x="40" y="18"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="12" y="-4"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						RCBA_Toggle();
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentCheckButton" inherits="OptionsButtonTemplate" text="CHECK">
+			<Size><AbsDimension x="60" y="24"/></Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="10" y="10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts><OnEnter>
+						RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");
+						RC_SetTip();
+						RC_ResultToolTip:Show();
+					</OnEnter>
+					<OnLeave>
+						RC_ResultToolTip:Hide();						
+					</OnLeave>
+					<OnClick> 
+						RC_Check()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentAllButton" inherits="OptionsButtonTemplate" text="ALL">
+			<Size><AbsDimension x="40" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentCheckBuffdLabel" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="-2" y="-45"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");
+						RC_SetTip();
+						RC_ResultToolTip:Show();
+					</OnEnter>
+					<OnLeave>
+						RC_ResultToolTip:Hide();						
+					</OnLeave>
+					<OnClick> 
+						RC_ClassAll()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentCloseButton">
+				<Size><AbsDimension x="32" y="32"/></Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-10" y="12"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						RC_MainFrame:Hide();
+					</OnClick>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Up"/>
+				<PushedTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Down"/>
+				<HighlightTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Highlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="$parentCleanButton" inherits="OptionsButtonTemplate" text="CLEAN">
+			<Size><AbsDimension x="60" y="24"/></Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="75" y="10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick> 
+						RC_Clean()
+					</OnClick>
+				</Scripts>
+			</Button>		
+			<Button name="$parentChannelsDropdown" inherits="UIDropDownMenuTemplate">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-60" y="4"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>	
+
+
+			
+			<Button name="$parentBuffa1Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA1"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="50" y="-40"/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>
+			<Button name="$parentBuffa2Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA2"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa1Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffa3Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA3"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa2Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffa4Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA4"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa3Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffa5Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA5"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa1Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="-26"/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>
+			<Button name="$parentBuffa6Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA6"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa5Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>
+			<Button name="$parentBuffa7Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA7"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa6Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffa8Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA8"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa7Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffa9Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA9"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa5Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="-26"/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffa10Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA10"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa9Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffa11Button" inherits="OptionsButtonTemplate" text="CHECKBUFFA11"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa10Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>		
+
+				
+			
+			<Button name="$parentBuffb1Button" inherits="OptionsButtonTemplate" text="合剂"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffa9Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="-30"/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffb2Button" inherits="OptionsButtonTemplate" text="CHECKBUFFB2"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffb1Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffb3Button" inherits="OptionsButtonTemplate" text="CHECKBUFFB3"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffb2Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffb4Button" inherits="OptionsButtonTemplate" text="CHECKBUFFB4"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffb3Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffb5Button" inherits="OptionsButtonTemplate" text="CHECKBUFFB5"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffb1Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="-26"/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffb6Button" inherits="OptionsButtonTemplate" text="CHECKBUFFB6"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffb5Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			<Button name="$parentBuffb7Button" inherits="OptionsButtonTemplate" text="CHECKBUFFB7"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffb6Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>			
+			
+			<Button name="$parentBuffc1Button" inherits="OptionsButtonTemplate" text="CHECKBUFFC1"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffb5Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="-30"/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>
+			<Button name="$parentBuffc2Button" inherits="OptionsButtonTemplate" text="CHECKBUFFC2"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffc1Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>
+			<Button name="$parentBuffc3Button" inherits="OptionsButtonTemplate" text="CHECKBUFFC3"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffc2Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>
+			<Button name="$parentBuffc4Button" inherits="OptionsButtonTemplate" text="CHECKBUFFC4"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffc1Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="-26"/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>
+			<Button name="$parentBuffc5Button" inherits="OptionsButtonTemplate" text="CHECKBUFFC5"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffc4Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>
+			<Button name="$parentBuffc6Button" inherits="OptionsButtonTemplate" text="CHECKBUFFC6"><Size><AbsDimension x="54" y="24"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffc5Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors>
+			<Scripts><OnEnter>RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");RC_SetTip();RC_ResultToolTip:Show();</OnEnter><OnLeave>RC_ResultToolTip:Hide();</OnLeave><OnClick>RC_Report();</OnClick></Scripts></Button>
+
+			<CheckButton name="$parentBuffd1CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffc4Button" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="-84"/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd1CheckBoxText:SetText(CHECKBUFFD1)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd2CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd1CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd2CheckBoxText:SetText(CHECKBUFFD2)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd3CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd2CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd3CheckBoxText:SetText(CHECKBUFFD3)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd4CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd3CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd4CheckBoxText:SetText(CHECKBUFFD4)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd5CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd1CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="-20"/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd5CheckBoxText:SetText(CHECKBUFFD5)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd6CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd5CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd6CheckBoxText:SetText(CHECKBUFFD6)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd7CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd6CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd7CheckBoxText:SetText(CHECKBUFFD7)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd8CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd7CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="60" y=""/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd8CheckBoxText:SetText(CHECKBUFFD8)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd11CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd4CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="20"/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd11CheckBoxText:SetText(CHECKBUFFD9)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd9CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd5CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="" y="-20"/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd9CheckBoxText:SetText(CHECKBUFFD10)</OnLoad></Scripts></CheckButton>
+			<CheckButton name="$parentBuffd10CheckBox" inherits="UICheckButtonTemplate"><Size><AbsDimension x="22" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffd9CheckBox" relativePoint="TOPLEFT"><Offset><AbsDimension x="120" y=""/></Offset></Anchor></Anchors><Scripts><OnLoad>RC_MainFrameBuffd10CheckBoxText:SetText(CHECKBUFFD11)</OnLoad></Scripts></CheckButton>
+
+			<!-- 新增按钮：位于 Buffc6Button 右侧 -->
+			<Button name="$parentBuffcHpButton" inherits="OptionsButtonTemplate" text="225">
+				<Size><AbsDimension x="54" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentBuffc6Button" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="60" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						RC_MainFrameBuffcHpButton:Hide();
+						RC_MainFrameBuffcHpEditBox:SetText(RC_MainFrameBuffcHpButton:GetText());
+						RC_MainFrameBuffcHpEditBox:Show();
+					</OnClick>
+				</Scripts>
+			</Button>
+			<!-- 新增编辑框：与按钮相同位置，初始隐藏 -->
+			<EditBox name="$parentBuffcHpEditBox" letters="5">
+				<Size><AbsDimension x="38" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentBuffc6Button" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="68" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface\ChatFrame\UI-ChatInputBorder-Left">
+							<Size><AbsDimension x="30" y="28"/></Size>
+							<Anchors><Anchor point="LEFT"><Offset><AbsDimension x="-8" y="0"/></Offset></Anchor></Anchors>
+							<TexCoords left="0" right="0.2" top="0" bottom="1.0"/>
+						</Texture>
+						<Texture file="Interface\ChatFrame\UI-ChatInputBorder-Right">
+							<Size><AbsDimension x="30" y="28"/></Size>
+							<Anchors><Anchor point="RIGHT"><Offset><AbsDimension x="8" y="0"/></Offset></Anchor></Anchors>
+							<TexCoords left="0.7" right="1.0" top="0" bottom="1.0"/>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						RC_MainFrameBuffcHpEditBox:SetNumeric();
+						RC_MainFrameBuffcHpEditBox:Hide();
+					</OnLoad>
+					<OnEnterPressed>
+						RC_MainFrameBuffcHpEditBox:Hide();
+						RC_MainFrameBuffcHpButton:SetText(RC_MainFrameBuffcHpEditBox:GetText());
+						RC_MainFrameBuffcHpButton:Show();
+					</OnEnterPressed>
+				</Scripts>
+				<FontString inherits="ChatFontNormal"/>
+			</EditBox>
+
+			
+			<Button name="$parentHpNowButton" inherits="OptionsButtonTemplate" text="75">
+			<Size><AbsDimension x="54" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentBuffc3Button" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="60" y=""/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						RC_ResultToolTip:SetOwner(this, "ANCHOR_RIGHT");
+						RC_SetTip();
+						RC_ResultToolTip:Show();
+					</OnEnter>
+					<OnLeave>
+						RC_ResultToolTip:Hide();						
+					</OnLeave>
+					<OnClick> 
+							RC_MainFrameHpNowButton:Hide();
+							RC_MainFrameEditBox:SetText(RC_MainFrameHpNowButton:GetText());
+							RC_MainFrameEditBox:Show();
+					</OnClick>
+				</Scripts>
+			</Button>
+			<EditBox name="$parentEditBox" letters="5">
+				<Size><AbsDimension x="38" y="24"></AbsDimension></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBuffc3Button" relativePoint="TOPLEFT">
+				<Offset><AbsDimension x="68" y=""></AbsDimension></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+					<Texture file="Interface\ChatFrame\UI-ChatInputBorder-Left">
+						<Size><AbsDimension x="30" y="28"></AbsDimension></Size>
+						<Anchors><Anchor point="LEFT">
+							<Offset><AbsDimension x="-8" y="0"></AbsDimension></Offset>
+						</Anchor></Anchors>
+						<TexCoords left="0" right="0.2" top="0" bottom="1.0"></TexCoords>
+					</Texture>
+					<Texture file="Interface\ChatFrame\UI-ChatInputBorder-Right">
+						<Size><AbsDimension x="30" y="28"></AbsDimension></Size>
+						<Anchors><Anchor point="RIGHT">
+						<Offset><AbsDimension x="8" y="0"></AbsDimension></Offset>
+						</Anchor></Anchors>
+						<TexCoords left="0.7" right="1.0" top="0" bottom="1.0"></TexCoords>
+					</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						RC_MainFrameEditBox:SetNumeric();
+						RC_MainFrameEditBox:Hide();
+					</OnLoad>
+					<OnEnterPressed>
+						RC_MainFrameEditBox:Hide();
+						RC_MainFrameHpNowButton:SetText(RC_MainFrameEditBox:GetText());
+						RC_MainFrameHpNowButton:Show();
+					</OnEnterPressed>
+				</Scripts>
+				<FontString inherits="ChatFontNormal"></FontString>
+			</EditBox>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				RC_OnLoad();
+				this:RegisterForDrag("LeftButton");					
+			</OnLoad>
+			<OnDragStart>
+				this:StartMoving();
+			</OnDragStart>
+			<OnDragStop>
+				this:StopMovingOrSizing();
+			</OnDragStop>
+			<OnEvent>
+				RC_OnEvent(event);
+			</OnEvent>
+		</Scripts>
+	</Frame>	
+</Ui>

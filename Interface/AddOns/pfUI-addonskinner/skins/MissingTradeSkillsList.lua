@@ -1,0 +1,8 @@
+pfUI.addonskinner:RegisterSkin("MissingTradeSkillsList", function()
+pfUI.api.SkinButton(MTSLUI_ToggleButton)
+pfUI.api.StripTextures(MTSLUI_MissingTradeSkillsFrame)
+pfUI.api.CreateBackdrop(MTSLUI_MissingTradeSkillsFrame,nil, nil, .75)
+pfUI.api.StripTextures(MTSLUI_Options_Menu_Frame)
+pfUI.api.CreateBackdrop(MTSLUI_Options_Menu_Frame,nil, nil, .75)
+  pfUI.addonskinner:UnregisterSkin("MissingTradeSkillsList")
+end)

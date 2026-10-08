@@ -1,0 +1,424 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+    <Frame name="AutoMarkerUIFrame" parent="UIParent" movable="true" enableMouse="true" hidden="true">
+        <Size>
+            <AbsDimension x="250" y="230"/>
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+            <BackgroundInsets>
+                <AbsInset left="11" right="12" top="12" bottom="11"/>
+            </BackgroundInsets>
+            <TileSize>
+                <AbsValue val="32"/>
+            </TileSize>
+            <EdgeSize>
+                <AbsValue val="32"/>
+            </EdgeSize>
+        </Backdrop>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentTitle" inherits="GameFontNormal" text="快捷标记">
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="0" y="-15"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <!-- 关闭按钮 -->
+            <Button name="$parentCloseButton" inherits="UIPanelCloseButton">
+                <Anchors>
+                    <Anchor point="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="-5" y="-5"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        AutoMarkerUIFrame:Hide()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            
+            <!-- 第一行：设置Pack + 输入框 + +1按钮 -->
+            <Button name="$parentSetPackButton" inherits="UIPanelButtonTemplate" text="目标配置">
+                <Size>
+                    <AbsDimension x="100" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="20" y="-30"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+       CreateAutoMarkerTargetConfigUI()
+        </OnClick>
+                </Scripts>
+            </Button>
+            
+            <EditBox name="$parentPackNameEditBox" autoFocus="false" inherits="InputBoxTemplate">
+                <Size>
+                    <AbsDimension x="60" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentSetPackButton" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="16" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        -- 注册区域变化事件以更新地图名称
+                        this:RegisterEvent("PLAYER_ENTERING_WORLD")
+                        this:RegisterEvent("ZONE_CHANGED")
+                        this:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+                        
+                        -- 事件处理函数
+                        this:SetScript("OnEvent", function()
+                        this:SetText(GetRealZoneText() or "")
+                        end)
+                        
+                        -- 初始加载时立即更新一次
+                        this:SetText(GetRealZoneText() or "")
+                        this:ClearFocus()
+                    </OnLoad>
+                    <OnEnterPressed>
+                        this:ClearFocus()
+                    </OnEnterPressed>
+                    <OnEscapePressed>
+                        this:ClearFocus()
+                    </OnEscapePressed>
+                </Scripts>
+            </EditBox>
+            
+            <!-- 添加 +1 按钮 -->
+            <Button name="$parentPackNamePlusButton" inherits="UIPanelButtonTemplate" text="+1">
+                <Size>
+                    <AbsDimension x="25" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentPackNameEditBox" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="5" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        local editBox = _G["AutoMarkerUIFramePackNameEditBox"]
+                        local text = editBox:GetText() or ""
+                        local baseText, num = string.match(text, "^(.-)(%d*)$")
+                        
+                        if num and num ~= "" then
+                            -- 如果已经有数字，增加1
+                            local newNum = tonumber(num) + 1
+                            editBox:SetText(baseText .. newNum)
+                        else
+                            -- 如果没有数字，添加1
+                            editBox:SetText(text .. "1")
+                        end
+                        
+                        -- 自动设置Pack名称
+                        local packName = editBox:GetText()
+                        SlashCmdList["AUTOMARKER"]("s "..packName)
+                    </OnClick>
+                </Scripts>
+            </Button>
+            
+            <!-- 第二行：启用/禁用 + 扫描 -->
+            <Button name="$parentEnableButton" inherits="UIPanelButtonTemplate" text="清空设置">
+                <Size>
+                    <AbsDimension x="100" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentSetPackButton" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="-10"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        local editBox = _G["AutoMarkerUIFramePackNameEditBox"]
+                        local packName = editBox:GetText() or ""
+                        SlashCmdList["AUTOMARKER"]("s " .. packName)
+                        SlashCmdList["AUTOMARKER"]("clear " .. packName)
+                        print(packName) 
+                   </OnClick>
+                </Scripts>
+            </Button>
+            
+            <Button name="$parentScanButton" inherits="UIPanelButtonTemplate" text="自动扫描">
+                <Scripts>
+                    <OnClick>
+                        local currentPack = AutoMarkerDB.currentPack or ""
+                        if currentPack ~= "" then
+                            SlashCmdList["AUTOMARKER"]("autosweep " .. currentPack)
+                        else
+                            DEFAULT_CHAT_FRAME:AddMessage("|cffff0000错误:|r 请先选择一个组")
+                        end
+                    </OnClick>
+                </Scripts>
+                <Size>
+                    <AbsDimension x="100" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentEnableButton" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="10" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        local editBox = _G["AutoMarkerUIFramePackNameEditBox"]
+                        local packName = editBox:GetText() or ""
+                        SlashCmdList["AUTOMARKER"]("autosweep "..packName)
+                        
+                        -- 自动增加数字部分
+                        local baseText, num = string.match(packName, "^(.-)(%d*)$")
+                        if num and num ~= "" then
+                            local newNum = tonumber(num) + 1
+                            editBox:SetText(baseText .. newNum)
+                        else
+                            editBox:SetText(packName .. "1")
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            
+            <!-- 第三行：标记距离 + 输入框 + 复选框 -->
+            <Button name="$parentMarkDistButton" inherits="UIPanelButtonTemplate" text="距离标记">
+                <Size>
+                    <AbsDimension x="100" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentEnableButton" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="-10"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        local distance = _G["AutoMarkerUIFrameMarkDistEditBox"]:GetText()
+                        local markDifferent = _G["AutoMarkerUIFrameMarkDifferentCheckBox"]:GetChecked()
+                        local name = ""
+                        if UnitExists("target") then
+                            name = UnitName("target")
+                        end
+                        local commandStr = "markdist " .. (distance or "20") .. " " .. (markDifferent and "1" or "0") .. " " .. name
+                        SlashCmdList["AUTOMARKER"](commandStr)
+                    </OnClick>
+                </Scripts>
+            </Button>
+
+            <EditBox name="$parentMarkDistEditBox" autoFocus="false" inherits="InputBoxTemplate" numeric="true">
+                <Size>
+                    <AbsDimension x="30" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentMarkDistButton" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="15" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        -- 初始化时读取数据库中的距离值，无则默认20码
+                        local savedDistance = AutoMarkerDB and AutoMarkerDB.settings and AutoMarkerDB.settings.distance or 20
+                        this:SetText(tostring(savedDistance))
+                        this:ClearFocus()
+                    </OnLoad>
+                    <OnEnterPressed>
+                        -- 输入后保存到数据库
+                        local input = this:GetText()
+                        if input and tonumber(input) then
+                            AutoMarkerDB.settings.distance = tonumber(input)
+                        end
+                        this:ClearFocus()
+                    </OnEnterPressed>
+                    <OnEscapePressed>
+                        this:ClearFocus()
+                    </OnEscapePressed>
+                    <OnTextChanged>
+                        -- 实时更新数据库（可选，根据需求决定是否保留）
+                        local input = this:GetText()
+                        if input and tonumber(input) then
+                            AutoMarkerDB.settings.distance = tonumber(input)
+                        end
+                    </OnTextChanged>
+                </Scripts>
+            </EditBox>
+
+            <CheckButton name="$parentMarkDifferentCheckBox" inherits="UICheckButtonTemplate">
+                <Size>
+                    <AbsDimension x="20" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentMarkDistEditBox" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="5" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        _G[this:GetName() .. "Text"]:SetText("不同名")
+                        this:SetChecked(true) -- 默认勾选
+                        if AutoMarkerDB and AutoMarkerDB.settings then AutoMarkerDB.settings.markDifferentMobs = true end
+                    </OnLoad>
+                    <OnClick>
+                        if AutoMarkerDB and AutoMarkerDB.settings then
+                            AutoMarkerDB.settings.markDifferentMobs = this:GetChecked()
+                        end
+                    </OnClick>
+                </Scripts>
+            </CheckButton>
+
+            <!-- 第四行：快速标记 + 清除标记 -->
+            <Button name="$parentQuickMarkButton" inherits="UIPanelButtonTemplate" text="快速标记">
+                <Size>
+                    <AbsDimension x="100" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentMarkDistButton" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="-10"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SlashCmdList["AUTOMARKER"]("mark")
+                    </OnClick>
+                </Scripts>
+            </Button>
+            
+            <Button name="$parentClearMarksButton" inherits="UIPanelButtonTemplate" text="清除标记">
+                <Size>
+                    <AbsDimension x="100" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentQuickMarkButton" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="10" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SlashCmdList["AUTOMARKER"]("clearmarks")
+                    </OnClick>
+                </Scripts>
+            </Button>
+            
+            <!-- 第四行：添加目标 + 移除目标 -->
+            <Button name="$parentAddTargetButton" inherits="UIPanelButtonTemplate" text="添加目标">
+                <Size>
+                    <AbsDimension x="100" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentQuickMarkButton" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="-10"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        local editBox = _G["AutoMarkerUIFramePackNameEditBox"]
+                        local packName = editBox:GetText() or ""
+                        SlashCmdList["AUTOMARKER"]("s " .. packName)
+                        SlashCmdList["AUTOMARKER"]("forceadd "..packName)
+                    </OnClick>
+                </Scripts>
+            </Button>
+            
+            <Button name="$parentRemoveTargetButton" inherits="UIPanelButtonTemplate" text="移除目标">
+                <Size>
+                    <AbsDimension x="100" y="22"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentAddTargetButton" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="10" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        SlashCmdList["AUTOMARKER"]("r")
+                    </OnClick>
+                </Scripts>
+            </Button>
+
+            <!-- 第六行：自动标记开关（点选目标时自动标记其所属组） -->
+            <CheckButton name="$parentAutoMarkCheckBox" inherits="UICheckButtonTemplate">
+                <Size>
+                    <AbsDimension x="20" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentAddTargetButton" relativePoint="BOTTOMLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="-8"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        _G[this:GetName() .. "Text"]:SetText("自动标记")
+                        if AutoMarkerDB and AutoMarkerDB.settings and AutoMarkerDB.settings.autoMarkGroup then
+                            this:SetChecked(true)
+                        end
+                    </OnLoad>
+                    <OnClick>
+                        if AutoMarkerDB and AutoMarkerDB.settings then
+                            AutoMarkerDB.settings.autoMarkGroup = this:GetChecked() and true or false
+                        end
+                    </OnClick>
+                    <OnEnter>
+                        GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+                        GameTooltip:AddLine("自动标记")
+                        GameTooltip:AddLine("开启后，点选目标时若该目标在 NPCList 或自定义标记数据中，自动标记其所属组。", 1, 1, 1, 1)
+                        GameTooltip:Show()
+                    </OnEnter>
+                    <OnLeave>
+                        GameTooltip:Hide()
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                this:RegisterForDrag("LeftButton")
+            </OnLoad>
+            <OnShow>
+                -- 同步自动标记复选框状态（SavedVariables 在插件文件加载后才可用，OnLoad 时读不到）
+                local autoMarkCb = _G["AutoMarkerUIFrameAutoMarkCheckBox"]
+                if autoMarkCb and AutoMarkerDB and AutoMarkerDB.settings then
+                    autoMarkCb:SetChecked(AutoMarkerDB.settings.autoMarkGroup and true or false)
+                end
+            </OnShow>
+            <OnDragStart>
+                this:StartMoving()
+            </OnDragStart>
+            <OnDragStop>
+                this:StopMovingOrSizing()
+            </OnDragStop>
+        </Scripts>
+    </Frame>
+</Ui>

@@ -1,0 +1,15 @@
+## Interface: 11200
+## Title: AuldLangSyne |cff7fff7f -Ace2-|r
+## Notes: Should auld acquaintance be forgot, you'll need something to remember them by.
+## Title-zhCN:|CFF33AAFF[辅助]|R好友备忘录
+## Notes-zhCN:|CFF33AAFFAuldLangSyne|R|N给你的好友添加额外的备忘信息。
+## X-Repple: 辅助
+## Version: 2.2
+## Author: 最爱
+## Dependencies: !Libs
+## OptionalDeps: !Libs
+## SavedVariables: AuldLangSyneDB
+
+locals\enUS.lua
+locals\zhCN.lua
+AuldLangSyne.lua

@@ -1,0 +1,5 @@
+<Bindings>
+    <Binding name="WSLootPick" header="WUSHUANGLOOT">
+        WSLootBindPick()
+    </Binding>
+</Bindings>

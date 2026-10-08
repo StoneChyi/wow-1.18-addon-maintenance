@@ -1,0 +1,10 @@
+## Interface: 11200
+## Title: |cffabd473TW Threatmeter |cff58ff00v9.9.9
+## Title-zhCN:|cff33ffcc[团队工具]|cffffffff仇恨统计
+## Author: Xerron/Er, Sunelegy，缺德
+## Version: 9.9.9
+## Notes: Turtle WoW's own Threatmeter !
+## Notes-zhCN: 仇恨统计插件乌龟服专用版。
+## SavedVariablesPerCharacter: TWT_CONFIG, TWTtargetGUIDCache
+TWThreat.xml
+

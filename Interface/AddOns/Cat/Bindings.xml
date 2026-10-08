@@ -1,0 +1,107 @@
+<Bindings>
+	<Binding name="德鲁伊-猫德-自动" header="CAT_PLUGINNAME">
+		MPCatCommand()
+	</Binding>
+	<Binding name="德鲁伊-猫德-撕碎流" header="CAT_PLUGINNAME">
+		MPCatShredCommand()
+	</Binding>
+	<Binding name="德鲁伊-熊德" header="CAT_PLUGINNAME">
+		MPBearCommand()
+	</Binding>
+	<Binding name="德鲁伊-鸟德" header="CAT_PLUGINNAME">
+		MPCooCommand()
+	</Binding>
+	<Binding name="德鲁伊-奶德" header="CAT_PLUGINNAME">
+		MPDHealCommand()
+	</Binding>
+	<Binding name="战士-武器战" header="CAT_PLUGINNAME">
+		MPWarriorArmsCommand()
+	</Binding>
+	<Binding name="战士-狂暴战" header="CAT_PLUGINNAME">
+		MPWarriorFuryCommand()
+	</Binding>
+	<Binding name="战士-邪修" header="CAT_PLUGINNAME">
+		MPWarriorEvilCommand()
+	</Binding>
+	<Binding name="战士-防御" header="CAT_PLUGINNAME">
+		MPWarriorTankCommand()
+	</Binding>
+	<Binding name="圣骑士-惩戒" header="CAT_PLUGINNAME">
+		MPPaladinDPSSpellCommand()
+	</Binding>
+	<Binding name="圣骑士-防骑" header="CAT_PLUGINNAME">
+		MPPaladinTankCommand()
+	</Binding>
+	<Binding name="圣骑士-奶骑" header="CAT_PLUGINNAME">
+		MPPaladinHealCommand()
+	</Binding>
+	<Binding name="圣骑士-近战奶" header="CAT_PLUGINNAME">
+		MPPaladinMeleeHealCommand()
+	</Binding>
+	<Binding name="盗贼-战斗贼" header="CAT_PLUGINNAME">
+		MPRogueCombatCommand()
+	</Binding>
+	<Binding name="盗贼-毒伤贼" header="CAT_PLUGINNAME">
+		MPRogueEnvenomCommand()
+	</Binding>
+	<Binding name="盗贼-破甲贼" header="CAT_PLUGINNAME">
+		MPRoguePJZCommand()
+	</Binding>
+	<Binding name="盗贼-自配置" header="CAT_PLUGINNAME">
+		MPRogueDPSCommand()
+	</Binding>
+	<Binding name="萨满-增强萨" header="CAT_PLUGINNAME">
+		MPShamanEnhanceCommand()
+	</Binding>
+	<Binding name="萨满-元素萨" header="CAT_PLUGINNAME">
+		MPShamanElementalCommand()
+	</Binding>
+	<Binding name="萨满-奶萨" header="CAT_PLUGINNAME">
+		MPShamanHealCommand()
+	</Binding>
+	<Binding name="术士-暗毁术" header="CAT_PLUGINNAME">
+		MPWarlockSDCommand()
+	</Binding>
+	<Binding name="术士-火毁术" header="CAT_PLUGINNAME">
+		MPWarlockFDCommand()
+	</Binding>
+	<Binding name="术士-痛苦术" header="CAT_PLUGINNAME">
+		MPWarlockAffCommand()
+	</Binding>
+	<Binding name="术士-恶魔术" header="CAT_PLUGINNAME">
+		MPWarlockDemoCommand()
+	</Binding>
+	<Binding name="牧师-暗牧" header="CAT_PLUGINNAME">
+		MPShadowPriestCommand()
+	</Binding>
+	<Binding name="牧师-戒律牧" header="CAT_PLUGINNAME">
+		MPDisciplinePriestCommand()
+	</Binding>
+	<Binding name="牧师-神牧" header="CAT_PLUGINNAME">
+		MPHolyPriestCommand()
+	</Binding>
+	<Binding name="法师-奥法" header="CAT_PLUGINNAME">
+		MPMageArcaneCommand()
+	</Binding>
+	<Binding name="法师-火法" header="CAT_PLUGINNAME">
+		MPMageFireCommand()
+	</Binding>
+	<Binding name="法师-冰法" header="CAT_PLUGINNAME">
+		MPMageFrostCommand()
+	</Binding>
+	<Binding name="猎人-兽王猎" header="CAT_PLUGINNAME">
+		MPHunterBeastCommand()
+	</Binding>
+	<Binding name="猎人-射击猎" header="CAT_PLUGINNAME">
+		MPHunterShotCommand()
+	</Binding>
+	<Binding name="猎人-生存猎" header="CAT_PLUGINNAME">
+		MPHunterMeleeCommand()
+	</Binding>
+	<Binding name="多线DOT(SuperWoW)" header="CAT_PLUGINNAME">
+		MPMDotCommand()
+	</Binding>
+	<Binding name="打断施法(SuperWoW)" header="CAT_PLUGINNAME">
+		MPINTCastCommand()
+	</Binding>
+</Bindings>

@@ -1,0 +1,10 @@
+﻿## Interface: 11200
+## Title: |CFF33AAFF[辅助]|R魔法能量怒气资源条
+## Title-zhCN: |CFF33AAFF[辅助]|R魔法能量怒气资源条
+## Notes: Displayed extra resource bars to show HP/MP or other power resources
+## Notes-zhCN: Displayed extra resource bars to show HP/MP or other power resources
+## SavedVariablesPerCharacter: ERB_options
+## LoadOnDemand: 0
+## Author: Fiur#8658
+
+ExtraResourceBars.xml

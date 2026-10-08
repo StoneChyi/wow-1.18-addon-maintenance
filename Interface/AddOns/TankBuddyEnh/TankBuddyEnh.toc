@@ -1,0 +1,14 @@
+## Interface: 11200
+## Title: Tank Buddy Enhanced
+## Notes: Notices Party/Raid members when you use last stand, challenging shout/roar, shield wall, lifegiving gem or when your taunt/growl/mocking blow fails. It can also remove chosen buffs automatically, either always or only in defensive stance/bear form.
+## Title-zhCN:|cffFF4500[职业]|r[|CFFC79C6E战士|r/|CFFFF7D0A德鲁伊|r/|Cfff58cba圣骑|r] MT助手
+## Notes-zhCN:坦克必备插件，当嘲讽等被抵抗向队伍/团队发送消息。|N破斧、盾墙、生命宝石、群嘲开启后向队伍/团队发送消息。|N命令：/tb|N命令：/tankbuddy
+## X-Repple: 职业
+## Version: 3.0
+## DefaultState: disabled
+## Dependencies: !Libs
+## OptionalDeps: !Libs
+## SavedVariables: TBSettings
+## DefaultState: disabled
+
+TankBuddyEnh.xml

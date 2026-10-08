@@ -1,0 +1,855 @@
+local _G = _G or getfenv(0)
+local CleveRoids = _G.CleveRoids or {}
+
+local Extension = CleveRoids.RegisterExtension("Compatibility_pfUI")
+Extension.RegisterEvent("ADDON_LOADED", "ADDON_LOADED")
+Extension.RegisterEvent("PLAYER_LOGIN", "PLAYER_LOGIN")
+Extension.Debug = false
+
+-- Track pfUI state
+Extension.pfUILoaded = false
+Extension.macrotweakLoaded = false
+Extension.slashCommandsOverridden = false
+
+function Extension.DLOG(msg)
+    if Extension.Debug then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffcccc33[R]: |cffffff55" .. ( msg ))
+    end
+end
+
+function Extension.FocusNameHook()
+    local hook = Extension.internal.memberHooks[CleveRoids]["GetFocusName"]
+    local target = hook.original()
+
+    if pfUI and pfUI.uf and pfUI.uf.focus and pfUI.uf.focus.unitname then
+        target = pfUI.uf.focus.unitname
+    end
+
+    --Extension.DLOG(target)
+
+    return target
+end
+
+-- Check if pfUI's macrotweak module is loaded
+function Extension.IsPfUIMacrotweakLoaded()
+    if not pfUI then return false end
+
+    -- pfUI loads modules and stores them in pfUI.modules
+    if pfUI.modules and pfUI.modules.macrotweak then
+        return true
+    end
+
+    -- Also check if the slash commands exist with pfUI's pattern
+    if SlashCmdList.PFUSE or SlashCmdList.PFEQUIP then
+        return true
+    end
+
+    return false
+end
+
+-- Override pfUI's /use and /equip with CleveRoids versions
+function Extension.OverridePfUISlashCommands()
+    if Extension.slashCommandsOverridden then return end
+
+    -- Save pfUI's original handlers as fallbacks
+    if SlashCmdList.PFUSE then
+        CleveRoids.Hooks.PFUI_USE = SlashCmdList.PFUSE
+    end
+    if SlashCmdList.PFEQUIP then
+        CleveRoids.Hooks.PFUI_EQUIP = SlashCmdList.PFEQUIP
+    end
+
+    -- Override with CleveRoids' conditional-aware handlers
+    -- 修复：仅当 DoUse 存在时覆盖，避免加载异常时把原生 /use、/equip 处理器置为 nil
+    -- by 武藤纯子酱 2026.9.11
+    if type(CleveRoids.DoUse) == "function" then
+        SlashCmdList.USE = CleveRoids.DoUse
+        SlashCmdList.EQUIP = CleveRoids.DoUse
+        SlashCmdList.PFUSE = CleveRoids.DoUse
+        SlashCmdList.PFEQUIP = CleveRoids.DoUse
+        SlashCmdList.SMEQUIP = CleveRoids.DoUse
+    end
+
+    Extension.slashCommandsOverridden = true
+
+    Extension.DLOG("Overrode /use and /equip commands for conditional support")
+end
+
+-- Check and handle SendChatMessage hook compatibility
+-- 删除：原 HandleSendChatMessageHook 只做日志、无任何链式处理或动作，为死逻辑 by 武藤纯子酱 2026.9.11
+
+-- Helper function to check for Carnage duration override
+-- Returns override duration and timeleft if found, nil otherwise
+local function GetCarnageOverride(effect)
+    if not effect or not CleveRoids.carnageDurationOverrides then
+        return nil, nil
+    end
+
+    for spellID, override in pairs(CleveRoids.carnageDurationOverrides) do
+        local spellName = GetSpellRecField(spellID, "name")
+        if spellName then
+            local baseName = CleveRoids.StripRank(spellName)
+            if baseName == effect and override.timestamp and (GetTime() - override.timestamp) < 5 then
+                local timeleft = override.duration - (GetTime() - override.timestamp)
+                if timeleft < 0 then timeleft = 0 end
+                return override.duration, timeleft
+            end
+        end
+    end
+    return nil, nil
+end
+
+-- Hook pfUI's libdebuff to use our combo-aware durations
+-- NOTE: pfUI 7.6+ (GetUnitField edition) handles combo durations and Carnage internally.
+-- We only inject when there's a mismatch between pfUI's data and ours.
+function Extension.HookPfUILibdebuff()
+    if not pfUI or not pfUI.api or not pfUI.api.libdebuff then
+        return false
+    end
+
+    local pflib = pfUI.api.libdebuff
+
+    -- Check if pfUI 7.6+ with GetUnitField-based libdebuff is active
+    -- If so, pfUI handles combo durations and Carnage internally - we only override on mismatch
+    local hasPfUI76 = CleveRoids.hasPfUI76
+
+    -- pfUI 7.6+ handles all durations internally - no hooks needed
+    if hasPfUI76 then
+        Extension.DLOG("Skipped all libdebuff hooks (pfUI 7.6+ handles internally)")
+        return false
+    end
+
+    -- Hook GetDuration if it exists
+    -- pfUI's GetDuration signature: function(effect, rank) where effect is spell NAME
+    if pflib.GetDuration and not Extension.pfLibDebuffHooked then
+        local originalGetDuration = pflib.GetDuration
+
+        pflib.GetDuration = function(self, effect, rank)
+            local pfuiDuration = originalGetDuration(self, effect, rank)
+
+            -- Check for Carnage duration overrides (only if pfUI doesn't have it)
+            local carnageDuration = GetCarnageOverride(effect)
+            if carnageDuration then
+                -- Only override if pfUI's duration is significantly different (>1s difference)
+                if not pfuiDuration or math.abs(carnageDuration - pfuiDuration) > 1 then
+                    if Extension.Debug then
+                        DEFAULT_CHAT_FRAME:AddMessage(
+                            string.format("|cff00aaff[pfUI Duration Override]|r %s: Carnage %.1fs (pfUI: %.1fs)",
+                                effect, carnageDuration, pfuiDuration or 0)
+                        )
+                    end
+                    return carnageDuration
+                end
+            end
+
+            -- Check name-based tracking for fresh combo casts (only if pfUI returned 0 or nil)
+            if (not pfuiDuration or pfuiDuration == 0) and CleveRoids.ComboPointTracking and CleveRoids.ComboPointTracking[effect] then
+                local tracking = CleveRoids.ComboPointTracking[effect]
+                if tracking.duration and tracking.confirmed and (GetTime() - tracking.cast_time) < 0.5 then
+                    if Extension.Debug then
+                        DEFAULT_CHAT_FRAME:AddMessage(
+                            string.format("|cff00aaff[pfUI Duration Override]|r %s: Combo tracking %.1fs (pfUI: %.1fs)",
+                                effect, tracking.duration, pfuiDuration or 0)
+                        )
+                    end
+                    return tracking.duration
+                end
+            end
+
+            return pfuiDuration
+        end
+
+        Extension.pfLibDebuffHooked = true
+        Extension.DLOG("Hooked pfUI.api.libdebuff.GetDuration (mismatch-only mode)")
+    end
+
+    -- Hook AddEffect if it exists (pre-7.6 only - 7.6+ returns early above)
+    if pflib.AddEffect and not Extension.pfLibAddEffectHooked then
+        local originalAddEffect = pflib.AddEffect
+
+        pflib.AddEffect = function(self, unit, unitlevel, effect, duration, caster)
+            -- RANK CHECKING: Preserve higher rank's remaining time if lower rank was cast
+            -- NOTE: 'unit' is a unit NAME (e.g., "Expert Training Dummy"), not a unit ID
+            -- Defensive: verify libdebuff is a table, not a function
+            if caster == "player" and type(CleveRoids.libdebuff) == "table" and duration and duration > 0 then
+                -- Try to find the GUID for this unit name
+                local unitGUID = nil
+
+                -- Check if this is the current target
+                if UnitName("target") == unit then
+                    unitGUID = CleveRoids.GetGUID("target")
+                end
+
+                -- If we couldn't match to current target, check guidToName mapping
+                if not unitGUID and CleveRoids.libdebuff.guidToName then
+                    for guid, name in pairs(CleveRoids.libdebuff.guidToName) do
+                        if name == unit then
+                            unitGUID = guid
+                            break
+                        end
+                    end
+                end
+
+                -- Check if a higher rank of this spell is already active
+                if unitGUID and CleveRoids.libdebuff.objects and CleveRoids.libdebuff.objects[unitGUID] then
+                    -- Find all spell IDs that match this effect name
+                    for spellID, rec in pairs(CleveRoids.libdebuff.objects[unitGUID]) do
+                        if rec and rec.start and rec.duration then
+                            -- Get spell name for this ID
+                            local spellName = GetSpellRecField(spellID, "name")
+                            if spellName then
+                                local baseName = CleveRoids.StripRank(spellName)
+                                if baseName == effect then
+                                    -- Same spell - check if still active
+                                    local remaining = rec.duration + rec.start - GetTime()
+                                    if remaining > 0 then
+                                        -- If incoming duration > remaining time, we're trying to add more time
+                                        -- This means either a refresh or lower rank cast - preserve existing timer
+                                        if duration > remaining then
+                                            if Extension.Debug then
+                                                DEFAULT_CHAT_FRAME:AddMessage(
+                                                    string.format("|cff00aaff[pfUI Rank Preserve]|r %s: Preserving timer (%.1fs remaining vs %.1fs incoming)",
+                                                        effect, remaining, duration)
+                                                )
+                                            end
+
+                                            -- Preserve the existing timer
+                                            duration = remaining
+                                        end
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- Check for Carnage duration overrides FIRST (highest priority)
+            local carnageDuration = GetCarnageOverride(effect)
+            if carnageDuration then
+                duration = duration or carnageDuration
+                caster = caster or "player"  -- Ensure caster is set for UnitOwnDebuff filtering
+            end
+
+            -- Check if this is a combo scaling spell by name
+            if not duration and CleveRoids.IsComboScalingSpell and CleveRoids.IsComboScalingSpell(effect) then
+                if CleveRoids.ComboPointTracking and CleveRoids.ComboPointTracking[effect] then
+                    local tracking = CleveRoids.ComboPointTracking[effect]
+                    if tracking.duration and tracking.confirmed and (GetTime() - tracking.cast_time) < 0.5 then
+                        duration = tracking.duration
+                        caster = caster or "player"
+                    end
+                end
+            end
+
+            return originalAddEffect(self, unit, unitlevel, effect, duration, caster)
+        end
+
+        Extension.pfLibAddEffectHooked = true
+        Extension.DLOG("Hooked pfUI.api.libdebuff.AddEffect")
+    end
+
+    -- Hook UnitDebuff to return Carnage override duration to display code
+    -- Only override when pfUI's duration differs significantly from ours
+    if pflib.UnitDebuff and not Extension.pfLibUnitDebuffHooked then
+        local originalUnitDebuff = pflib.UnitDebuff
+
+        pflib.UnitDebuff = function(self, unit, id)
+            local effect, rank, texture, stacks, dtype, duration, timeleft, caster = originalUnitDebuff(self, unit, id)
+
+            -- Only check Carnage override if pfUI returned data but duration might be wrong
+            if effect then
+                local carnageDuration, carnageTimeleft = GetCarnageOverride(effect)
+                if carnageDuration then
+                    -- Only override if there's a significant difference (>1s)
+                    if not duration or math.abs(carnageDuration - duration) > 1 then
+                        if Extension.Debug then
+                            DEFAULT_CHAT_FRAME:AddMessage(
+                                string.format("|cff00aaff[pfUI UnitDebuff Override]|r %s: Carnage %.1fs/%.1fs (pfUI: %.1fs/%.1fs)",
+                                    effect, carnageDuration, carnageTimeleft, duration or 0, timeleft or 0)
+                            )
+                        end
+                        duration = carnageDuration
+                        timeleft = carnageTimeleft
+                    end
+                end
+            end
+
+            return effect, rank, texture, stacks, dtype, duration, timeleft, caster
+        end
+
+        Extension.pfLibUnitDebuffHooked = true
+        Extension.DLOG("Hooked pfUI.api.libdebuff.UnitDebuff (mismatch-only mode)")
+    end
+
+    -- Hook UnitOwnDebuff to return Carnage override duration when selfdebuff is enabled
+    -- Only override when pfUI's duration differs significantly from ours
+    if pflib.UnitOwnDebuff and not Extension.pfLibUnitOwnDebuffHooked then
+        local originalUnitOwnDebuff = pflib.UnitOwnDebuff
+
+        pflib.UnitOwnDebuff = function(self, unit, id)
+            local effect, rank, texture, stacks, dtype, duration, timeleft, caster = originalUnitOwnDebuff(self, unit, id)
+
+            if effect then
+                local carnageDuration, carnageTimeleft = GetCarnageOverride(effect)
+                if carnageDuration then
+                    -- Only override if there's a significant difference (>1s)
+                    if not duration or math.abs(carnageDuration - duration) > 1 then
+                        if Extension.Debug then
+                            DEFAULT_CHAT_FRAME:AddMessage(
+                                string.format("|cff00aaff[pfUI UnitOwnDebuff Override]|r %s: Carnage %.1fs/%.1fs (pfUI: %.1fs/%.1fs)",
+                                    effect, carnageDuration, carnageTimeleft, duration or 0, timeleft or 0)
+                            )
+                        end
+                        duration = carnageDuration
+                        timeleft = carnageTimeleft
+                    end
+                end
+            -- If UnitOwnDebuff returned nil but we have a Carnage override, synthesize from UnitDebuff
+            -- This fallback is only needed for edge cases where pfUI doesn't track the debuff yet
+            elseif not effect and CleveRoids.carnageDurationOverrides then
+                -- Use pflib:UnitDebuff which includes our Carnage override hook
+                local baseEffect, baseRank, baseTex, baseStacks, baseDtype, baseDur, baseLeft, _ = pflib:UnitDebuff(unit, id)
+                if baseEffect then
+                    local carnageDuration2, carnageTimeleft2 = GetCarnageOverride(baseEffect)
+                    if carnageDuration2 then
+                        return baseEffect, baseRank, baseTex, baseStacks, baseDtype, carnageDuration2, carnageTimeleft2, "player"
+                    end
+                end
+            end
+
+            return effect, rank, texture, stacks, dtype, duration, timeleft, caster
+        end
+
+        Extension.pfLibUnitOwnDebuffHooked = true
+        Extension.DLOG("Hooked pfUI.api.libdebuff.UnitOwnDebuff (mismatch-only mode)")
+    end
+
+    return Extension.pfLibDebuffHooked or Extension.pfLibAddEffectHooked or Extension.pfLibUnitDebuffHooked or Extension.pfLibUnitOwnDebuffHooked
+end
+
+-- Synchronize combo durations to pfUI's libdebuff objects
+-- NOTE: pfUI 7.6+ handles combo durations internally - skip sync entirely
+function Extension.SyncComboDurationToPfUI(guid, spellID, duration)
+    if not pfUI or not pfUI.api or not pfUI.api.libdebuff then
+        return
+    end
+
+    -- pfUI 7.6+ handles all durations internally
+    if CleveRoids.hasPfUI76 then
+        return
+    end
+
+    -- Get unit name from GUID
+    local unitName = nil
+    local unitLevel = 0
+
+    -- Check if this is the current target
+    local targetGUID = CleveRoids.GetGUID("target")
+    if targetGUID == guid then
+        unitName = UnitName("target")
+        unitLevel = UnitLevel("target") or 0
+    end
+
+    -- If we couldn't find the unit, use GUID to name mapping from libdebuff
+    if not unitName and CleveRoids.libdebuff and CleveRoids.libdebuff.guidToName then
+        unitName = CleveRoids.libdebuff.guidToName[guid]
+        -- Default to level 0 if we don't have the unit targeted
+        unitLevel = 0
+    end
+
+    if not unitName then
+        if CleveRoids.debug then
+            DEFAULT_CHAT_FRAME:AddMessage("|cffff0000[pfUI Sync]|r Could not find unit name for GUID")
+        end
+        return
+    end
+
+    -- Get spell name from spell ID
+    -- 修复：spellID 为 nil 时 GetSpellRecField(nil,...) 引擎报错、debug 分支拼接 nil by 武藤纯子酱 2026.9.9
+    if not spellID then
+        if CleveRoids.debug then
+            DEFAULT_CHAT_FRAME:AddMessage("|cffff0000[pfUI Sync]|r Missing spell ID in hook payload")
+        end
+        return
+    end
+    local spellName = GetSpellRecField(spellID, "name")
+    if not spellName then
+        if CleveRoids.debug then
+            DEFAULT_CHAT_FRAME:AddMessage("|cffff0000[pfUI Sync]|r Could not find spell name for ID " .. tostring(spellID))
+        end
+        return
+    end
+
+    -- Remove rank from spell name to match pfUI's format
+    local effectName = CleveRoids.StripRank(spellName)
+
+    -- Update pfUI's stored debuff duration
+    local pflib = pfUI.api.libdebuff
+    if pflib.objects and pflib.objects[unitName] then
+        -- Try both the specific level and level 0 (fallback)
+        for _, level in ipairs({unitLevel, 0}) do
+            if pflib.objects[unitName][level] and pflib.objects[unitName][level][effectName] then
+                local old_duration = pflib.objects[unitName][level][effectName].duration
+                pflib.objects[unitName][level][effectName].duration = duration
+
+                if CleveRoids.debug then
+                    DEFAULT_CHAT_FRAME:AddMessage(
+                        string.format("|cff00ffaa[pfUI Sync]|r Updated %s on %s (L%d): %ds -> %ds",
+                            effectName, unitName, level, old_duration or 0, duration)
+                    )
+                end
+                return
+            end
+        end
+    end
+
+    if CleveRoids.debug then
+        DEFAULT_CHAT_FRAME:AddMessage(
+            string.format("|cffaaaa00[pfUI Sync]|r Effect not found in pfUI storage: %s on %s",
+                effectName, unitName)
+        )
+    end
+end
+
+-- Register action event handler for pfUI button updates
+function Extension.RegisterPfUIActionEventHandler()
+    if not pfUI or Extension.actionHandlerRegistered then
+        return
+    end
+
+    -- Register a handler that will be called whenever CleveRoids updates macro states
+    if CleveRoids.RegisterActionEventHandler then
+        Extension.DLOG("Registering pfUI action event handler")
+        CleveRoids.RegisterActionEventHandler(function(slot, event, ...)
+            local button = pfUI.bars and pfUI.bars.buttons and pfUI.bars.buttons[slot]
+
+            if Extension.Debug then
+                DEFAULT_CHAT_FRAME:AddMessage(string.format(
+                    "|cff00ff00[pfUI CD]|r slot=%s event=%s button=%s cd=%s",
+                    tostring(slot), tostring(event),
+                    button and "yes" or "no",
+                    (button and button.cd) and "yes" or "no"
+                ))
+            end
+
+            -- For slot change events, do a full button update
+            if event == "ACTIONBAR_SLOT_CHANGED" then
+                -- Trigger pfUI's button update for this slot
+                -- Mark the slot for update in pfUI's cache, which will be processed on next OnUpdate
+                if pfUI.bars and pfUI.bars.update then
+                    pfUI.bars.update[slot] = true
+                end
+
+                -- Also directly call ButtonFullUpdate if the button exists
+                if button and pfUI.bars.ButtonFullUpdate then
+                    pfUI.bars.ButtonFullUpdate(button)
+                end
+            end
+
+            -- COOLDOWN FIX: Always update cooldowns explicitly
+            -- pfUI's macro scanner caches spell info and doesn't know about
+            -- CleveRoids' conditional spell changes. Manually update the cooldown
+            -- using the active spell from CleveRoids.
+            -- Note: pfUI uses button.cd for cooldown frame (not button.cooldown)
+            if button and button.cd then
+                local start, duration, enable
+                local spellSlot, bookType = CleveRoids.GetActionSpellSlot(slot)
+
+                if spellSlot and bookType then
+                    -- Active spell found - get its cooldown
+                    start, duration, enable = GetSpellCooldown(spellSlot, bookType)
+                else
+                    -- No active spell - check for item cooldown
+                    local actions = CleveRoids.GetAction(slot)
+                    local actionToCheck = actions and (actions.active or actions.tooltip)
+                    if actionToCheck and actionToCheck.item then
+                        local item = actionToCheck.item
+                        if item.bagID and item.slot then
+                            start, duration, enable = GetContainerItemCooldown(item.bagID, item.slot)
+                        elseif item.inventoryID then
+                            start, duration, enable = GetInventoryItemCooldown("player", item.inventoryID)
+                        end
+                    elseif actionToCheck then
+                        -- Check for equipment slot (e.g., trinket)
+                        local slotId = tonumber(actionToCheck.action)
+                        if slotId and slotId >= 1 and slotId <= 19 then
+                            start, duration, enable = GetInventoryItemCooldown("player", slotId)
+                        end
+                    end
+
+                    -- Fallback: use the hooked GetActionCooldown for non-CleveRoids actions
+                    if not start then
+                        start, duration, enable = GetActionCooldown(slot)
+                    end
+                end
+
+                -- Apply cooldown if we have valid data
+                -- Ensure enable is at least 1 (0 can hide the cooldown)
+                if start and duration then
+                    CooldownFrame_SetTimer(button.cd, start, duration, (enable and enable > 0) and enable or 1)
+                end
+            end
+        end)
+
+        Extension.actionHandlerRegistered = true
+        Extension.DLOG("Registered action event handler for pfUI button updates")
+    end
+end
+
+-- Main compatibility check and setup
+function Extension.SetupCompatibility()
+    Extension.pfUILoaded = (pfUI ~= nil)
+    Extension.macrotweakLoaded = Extension.IsPfUIMacrotweakLoaded()
+
+    if Extension.pfUILoaded then
+        Extension.DLOG("pfUI detected")
+
+        -- Hook libdebuff for combo duration support
+        Extension.HookPfUILibdebuff()
+
+        -- Register action event handler for button updates
+        Extension.RegisterPfUIActionEventHandler()
+
+        if Extension.macrotweakLoaded then
+            Extension.DLOG("pfUI macrotweak module detected")
+
+            -- Override slash commands to ensure CleveRoids' conditional support works
+            Extension.OverridePfUISlashCommands()
+        end
+    end
+end
+
+-- ============================================================================
+-- API Functions for pfUI Integration
+-- These functions allow pfUI's actionbar module to query CleveRoids for
+-- the active spell data, enabling proper cooldown/tooltip/icon display.
+-- ============================================================================
+
+-- Get the spell slot and book type for a given action slot
+-- Returns: spellSlot, bookType (or nil, nil if not a CleveRoids-managed macro)
+-- This is used by pfUI's ButtonMacroScan to get spell data for macros
+function CleveRoids.GetActionSpellSlot(actionSlot)
+    if not actionSlot then return nil, nil end
+
+    local actions = CleveRoids.GetAction(actionSlot)
+    if not actions then return nil, nil end
+
+    -- Check if we have an active action with spell data
+    if actions.active and actions.active.spell then
+        local spell = actions.active.spell
+        if spell.spellSlot and spell.bookType then
+            return spell.spellSlot, spell.bookType
+        end
+    end
+
+    -- Fallback: check tooltip action
+    if actions.tooltip then
+        local action = actions.tooltip
+        if action.spell and action.spell.spellSlot and action.spell.bookType then
+            return action.spell.spellSlot, action.spell.bookType
+        end
+    end
+
+    return nil, nil
+end
+
+-- Get the spell slot and book type for a given macro name
+-- Returns: spellSlot, bookType (or nil, nil if not found)
+function CleveRoids.GetMacroSpellSlot(macroName)
+    if not macroName then return nil, nil end
+
+    local macro = CleveRoids.Macros[macroName]
+    if not macro or not macro.actions then return nil, nil end
+
+    local actions = macro.actions
+
+    -- Check if we have an active action with spell data
+    if actions.active and actions.active.spell then
+        local spell = actions.active.spell
+        if spell.spellSlot and spell.bookType then
+            return spell.spellSlot, spell.bookType
+        end
+    end
+
+    -- Fallback: check tooltip action
+    if actions.tooltip then
+        local action = actions.tooltip
+        if action.spell and action.spell.spellSlot and action.spell.bookType then
+            return action.spell.spellSlot, action.spell.bookType
+        end
+    end
+
+    return nil, nil
+end
+
+-- Check if CleveRoids is managing a given action slot
+-- Returns: true if CleveRoids has parsed this macro, false otherwise
+function CleveRoids.IsManagedAction(actionSlot)
+    if not actionSlot then return false end
+    local actions = CleveRoids.GetAction(actionSlot)
+    return actions ~= nil and (actions.tooltip ~= nil or actions.list ~= nil)
+end
+
+-- Check if CleveRoids is managing a given macro by name
+-- Returns: true if CleveRoids has parsed this macro, false otherwise
+function CleveRoids.IsManagedMacro(macroName)
+    if not macroName then return false end
+    return CleveRoids.Macros[macroName] ~= nil
+end
+
+-- Get the active spell name for a given action slot (for debugging/display)
+-- Returns: spellName (or nil if not found)
+function CleveRoids.GetActionActiveSpellName(actionSlot)
+    if not actionSlot then return nil end
+
+    local actions = CleveRoids.GetAction(actionSlot)
+    if not actions then return nil end
+
+    if actions.active and actions.active.action then
+        return actions.active.action
+    end
+
+    if actions.tooltip and actions.tooltip.action then
+        return actions.tooltip.action
+    end
+
+    return nil
+end
+
+-- ============================================================================
+-- pfUI Event Hook Management
+-- Centralizes all pfUI libdebuff event unregistration and hook registration.
+-- Called from lib:InitPfUIIntegration() in Utility.lua.
+-- ============================================================================
+
+-- Available hooks (registered on pfUI global tables):
+--   pfUI.libdebuff_spell_go_hooks["key"]               = fn(spellId, arg1..arg7)
+--   pfUI.libdebuff_spell_go_other_hooks["key"]          = fn(spellId, casterGuid, targetGuid)
+--   pfUI.libdebuff_spell_start_self_hooks["key"]        = fn(spellId, casterGuid, targetGuid, castTime)
+--   pfUI.libdebuff_spell_start_other_hooks["key"]       = fn(spellId, casterGuid, targetGuid, castTime)
+--   pfUI.libdebuff_spell_failed_other_hooks["key"]      = fn(casterGuid, spellId)
+--   pfUI.libdebuff_spell_cast_hooks["key"]              = fn(success, spellId, castType, targetGuid)
+--   pfUI.libdebuff_aura_cast_on_self_hooks["key"]       = fn(spellId, casterGuid, targetGuid)
+--   pfUI.libdebuff_aura_cast_on_other_hooks["key"]      = fn(spellId, casterGuid, targetGuid)
+--   pfUI.libdebuff_debuff_added_other_hooks["key"]      = fn(guid, luaSlot, spellId, stackCount)
+--   pfUI.libdebuff_debuff_removed_other_hooks["key"]    = fn(guid, luaSlot, spellId, stackCount)
+--   pfUI.libdebuff_unit_health_hooks["key"]             = fn(unitToken)
+--   pfUI.libdebuff_unit_died_hooks["key"]               = fn(guid)
+--   pfUI.libdebuff_player_target_changed_hooks["key"]   = fn()
+--
+-- Note: AURA_CAST hooks don't provide durationMs/auraCapStatus, so
+-- AllCasterAuraTracking and overflow buff tracking remain on their own
+-- event frame (CleveRoidsAutoAttackFrame in Conditionals.lua).
+
+function Extension.SetupPfUIEventHooks(lib)
+    if not pfUI or not lib then return end
+
+    -- ----------------------------------------------------------------
+    -- Part 1: Unregister Nampower events from CleveRoidsLibDebuffFrame
+    -- that pfUI handles. All these handlers early-return when
+    -- hasPfUIEnhanced, so unregistering avoids wasted event dispatch.
+    -- ----------------------------------------------------------------
+    local ev = CleveRoidsLibDebuffFrame
+    if ev then
+        -- Events whose handlers early-return when hasPfUIEnhanced
+        ev:UnregisterEvent("SPELL_GO_SELF")
+        ev:UnregisterEvent("SPELL_GO_OTHER")
+        ev:UnregisterEvent("AURA_CAST_ON_SELF")
+        ev:UnregisterEvent("AURA_CAST_ON_OTHER")
+        ev:UnregisterEvent("DEBUFF_ADDED_OTHER")
+        ev:UnregisterEvent("DEBUFF_REMOVED_OTHER")
+        ev:UnregisterEvent("BUFF_ADDED_OTHER")
+        ev:UnregisterEvent("BUFF_REMOVED_SELF")
+        ev:UnregisterEvent("BUFF_REMOVED_OTHER")
+
+        -- pfUI 7.6+ also handles cast tracking internally
+        if lib.hasPfUI76 then
+            ev:UnregisterEvent("SPELL_START_OTHER")
+            ev:UnregisterEvent("SPELL_FAILED_OTHER")
+        end
+
+        -- Keep registered: SPELL_START_SELF (channel duration capture before early return),
+        -- UNIT_DIED (AllCasterAuraTracking + OverflowBuff cleanup),
+        -- PLAYER_TARGET_CHANGED, UNIT_AURA (SeedUnit)
+
+        if CleveRoids.debug then
+            DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99[libdebuff]|r Unregistered redundant events (pfUI handles via hooks)")
+        end
+    end
+
+    -- ----------------------------------------------------------------
+    -- Part 2: Register pfUI libdebuff hooks for supplementary processing.
+    -- Hooks fire after pfUI processes each event, avoiding duplicate
+    -- event listeners.
+    -- ----------------------------------------------------------------
+    local HOOK_KEY = "SuperCleveRoidMacros"
+    local registered = 0
+
+    -- UNIT_DIED hook: supplementary cleanup for our private tables
+    -- (AllCasterAuraTracking, OverflowBuffs) that pfUI doesn't manage.
+    -- Our UNIT_DIED event handler on the libdebuff frame also does this,
+    -- but the hook provides a second path in case event ordering shifts.
+    if type(pfUI.libdebuff_unit_died_hooks) == "table" then
+        pfUI.libdebuff_unit_died_hooks[HOOK_KEY] = function(guid)
+            if not guid then return end
+            guid = CleveRoids.NormalizeGUID(guid)
+
+            -- Clean up AllCasterAuraTracking (our own table, not shared with pfUI)
+            if CleveRoids.AllCasterAuraTracking and CleveRoids.AllCasterAuraTracking[guid] then
+                CleveRoids.AllCasterAuraTracking[guid] = nil
+            end
+
+            -- Clean up OverflowBuffs on player death
+            local playerGUID = CleveRoids.GetGUID("player")
+            if playerGUID and guid == playerGUID then
+                if CleveRoids.OverflowBuffs then
+                    for k in pairs(CleveRoids.OverflowBuffs) do
+                        CleveRoids.OverflowBuffs[k] = nil
+                    end
+                end
+                if CleveRoids.AuraCapStatus then
+                    CleveRoids.AuraCapStatus.playerBuffCapped = false
+                    CleveRoids.AuraCapStatus.playerDebuffCapped = false
+                end
+            end
+        end
+        registered = registered + 1
+    end
+
+    lib.pfUIHooksRegistered = registered > 0
+
+    if CleveRoids.debug and registered > 0 then
+        DEFAULT_CHAT_FRAME:AddMessage(
+            string.format("|cff33ff99[libdebuff]|r Registered %d pfUI libdebuff hook(s)", registered)
+        )
+    end
+end
+
+function Extension.OnLoad()
+    Extension.DLOG("Extension pfUI Loaded.")
+    Extension.HookMethod(CleveRoids, "GetFocusName", "FocusNameHook", true)
+
+    -- Export extension for external access
+    CleveRoids.Compatibility_pfUI = Extension
+
+    -- Initial compatibility check
+    Extension.SetupCompatibility()
+
+    -- Add slash command to toggle pfUI cooldown debug
+    -- Usage: /pfuicd to toggle debug mode
+    SlashCmdList["PFUICD"] = function()
+        Extension.Debug = not Extension.Debug
+        DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[pfUI Compat]|r Debug mode: " .. (Extension.Debug and "ON" or "OFF"))
+        if Extension.Debug then
+            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[pfUI Compat]|r Handler registered: " .. (Extension.actionHandlerRegistered and "YES" or "NO"))
+            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[pfUI Compat]|r pfUI detected: " .. (Extension.pfUILoaded and "YES" or "NO"))
+            if pfUI and pfUI.bars then
+                DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[pfUI Compat]|r pfUI.bars exists: YES")
+                DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[pfUI Compat]|r pfUI.bars.buttons: " .. (pfUI.bars.buttons and "YES" or "NO"))
+            else
+                DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[pfUI Compat]|r pfUI.bars exists: NO")
+            end
+        end
+    end
+    SLASH_PFUICD1 = "/pfuicd"
+end
+
+function Extension.ADDON_LOADED()
+    -- Check if pfUI just loaded AND the global actually exists
+    -- (another addon could be named "pfUI" without being the real UI framework)
+    if arg1 == "pfUI" and pfUI then
+        Extension.pfUILoaded = true
+        -- pfUI modules load after ADDON_LOADED, so schedule a check
+        if CleveRoids.ScheduleTimer then
+            CleveRoids.ScheduleTimer(function()
+                Extension.SetupCompatibility()
+            end, 0.5)
+        end
+    end
+end
+
+function Extension.PLAYER_LOGIN()
+    -- If pfUI loaded before SCRM (alphabetical order), ADDON_LOADED for pfUI was missed.
+    -- Re-run InitPfUIIntegration here to ensure lib.objects is linked correctly.
+    if pfUI and not CleveRoids.hasPfUI76 then
+        local lib = CleveRoids.libdebuff
+        if lib and lib.InitPfUIIntegration then
+            lib:InitPfUIIntegration()
+        end
+    end
+
+    -- Register libdebuff downrank blocked hook now that pfUI is fully initialized.
+    -- Done here (not in Core.lua PLAYER_LOGIN) because pfUI.libdebuff_downrank_blocked_hooks
+    -- is only guaranteed to exist after InitPfUIIntegration has run.
+    if pfUI and pfUI.libdebuff_downrank_blocked_hooks then
+        table.insert(pfUI.libdebuff_downrank_blocked_hooks, function(spellName, castRank, activeRank, targetGuid, casterGuid)
+            -- 修复：payload 不完整时（spellName/targetGuid 为 nil）拼接/索引抛错 by 武藤纯子酱 2026.9.9
+            if not spellName or not targetGuid then return end
+            local playerGuid = CleveRoids.GetGUID("player")
+            if casterGuid ~= playerGuid then return end
+            CleveRoids.DownrankBlocked[targetGuid] = CleveRoids.DownrankBlocked[targetGuid] or {}
+            CleveRoids.DownrankBlocked[targetGuid][spellName] = {
+                castRank = castRank,
+                activeRank = activeRank,
+                time = GetTime()
+            }
+            CleveRoids.DebugChanged("downrank_hook_" .. spellName .. "_" .. tostring(targetGuid),
+                string.format("|cffff0000[DownrankBlocked]|r %s Rank %d blocked by active Rank %d",
+                    spellName, castRank, activeRank))
+        end)
+    end
+
+    -- Final check after everything is loaded
+    Extension.SetupCompatibility()
+
+    -- Print startup status only if pfUI global exists and compatibility was set up
+    if Extension.pfUILoaded and pfUI then
+        local statusMsg = "|cff00ff00[SCRM]|r pfUI compatibility loaded"
+        if CleveRoids.hasPfUI76 then
+            statusMsg = statusMsg .. " (7.6+ GUID cast tracking)"
+        end
+        -- statusMsg = statusMsg .. ". Use /pfuicd for debug."
+        DEFAULT_CHAT_FRAME:AddMessage(statusMsg)
+        if not Extension.actionHandlerRegistered then
+            DEFAULT_CHAT_FRAME:AddMessage("|cffff0000[SCRM]|r WARNING: pfUI action handler NOT registered!")
+        end
+    end
+end
+
+-- Utility: Schedule a delayed function call (if not already defined)
+if not CleveRoids.ScheduleTimer then
+    local timerFrame = CreateFrame("Frame")
+    local timers = {}
+
+    timerFrame:SetScript("OnUpdate", function()
+        -- Prevent mod API calls during shutdown (crash prevention)
+        if CleveRoids.isShuttingDown then return end
+
+        -- 性能优化：无待处理定时器时隐藏帧，避免整场会话每帧空转 by 武藤纯子酱 2026.9.11
+        if next(timers) == nil then
+            timerFrame:Hide()
+            return
+        end
+
+        local time = GetTime()
+        for i = table.getn(timers), 1, -1 do
+            local timer = timers[i]
+            if time >= timer.time then
+                timer.func()
+                table.remove(timers, i)
+            end
+        end
+    end)
+
+    CleveRoids.ScheduleTimer = function(func, delay)
+        table.insert(timers, {
+            func = func,
+            time = GetTime() + delay
+        })
+        timerFrame:Show() -- 性能优化：有任务时恢复帧（配合上面空表 Hide）by 武藤纯子酱 2026.9.11
+    end
+end
+
+_G["CleveRoids"] = CleveRoids

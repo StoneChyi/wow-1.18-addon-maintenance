@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title: |CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 天赋备注图形版
+## Notes: 天赋备注图形版
+## Author: Horyoshi
+## Version: 1.0
+## SavedVariablesPerCharacter: BrainwasherProDB
+
+BrainwasherPro.lua

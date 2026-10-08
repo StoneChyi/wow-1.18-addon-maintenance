@@ -1,0 +1,134 @@
+## Interface: 11200
+## Title: |CFFEE7600[DPS统计]|RDPSMateXExtend
+## Notes: DPSMateX is an advanced combat analyzation tool, providing helpful graphs and statistics to evaluate the fight.
+## Notes-deDE: DPSMateX ist ein Analysewerkzeug, das hilfreiche Graphen und Statistiken bereitstellt, um den Kampf zu evaluieren.
+## Title-zhCN:|CFFEE7600[DPS统计]|RDPSMateX扩展模块
+## Notes-zhCN:|CFFFF8080DPSMateX|R|NDPSMateX扩展模块包含了除输出和治疗之外的其他统计数据的模块，如驱散，死亡等等。
+## X-Repple: 战斗
+## Author: Shino, Kronos, Sunelegy
+## Version: 1.0.7
+## Dependencies: DPSMateX
+
+DPSMateX_Auras\DPSMateX_AurasGained.lua
+DPSMateX_Auras\DPSMateX_AurasLost.lua
+DPSMateX_Auras\DPSMateX_AuraUptimers.lua
+DPSMateX_Auras\DPSMateX_Details_Auras.lua
+DPSMateX_Auras\DPSMateX_Details_Auras.xml
+DPSMateX_Auras\DPSMateX_Details_AurasTotal.lua
+DPSMateX_Auras\DPSMateX_Details_AurasTotal.xml
+
+DPSMateX_CureDisease\DPSMateX_CureDisease.lua
+DPSMateX_CureDisease\DPSMateX_Details_CureDisease.lua
+DPSMateX_CureDisease\DPSMateX_Details_CureDisease.xml
+DPSMateX_CureDisease\DPSMateX_Details_CureDiseaseTotal.lua
+DPSMateX_CureDisease\DPSMateX_Details_CureDiseaseTotal.xml
+
+DPSMateX_CureDiseaseReceived\DPSMateX_CureDiseaseReceived.lua
+DPSMateX_CureDiseaseReceived\DPSMateX_Details_CureDiseaseReceived.lua
+DPSMateX_CureDiseaseReceived\DPSMateX_Details_CureDiseaseReceived.xml
+
+DPSMateX_CurePoison\DPSMateX_CurePoison.lua
+DPSMateX_CurePoison\DPSMateX_Details_CurePoison.lua
+DPSMateX_CurePoison\DPSMateX_Details_CurePoison.xml
+DPSMateX_CurePoison\DPSMateX_Details_CurePoisonTotal.lua
+DPSMateX_CurePoison\DPSMateX_Details_CurePoisonTotal.xml
+
+DPSMateX_CurePoisonReceived\DPSMateX_CurePoisonReceived.lua
+DPSMateX_CurePoisonReceived\DPSMateX_Details_CurePoisonReceived.lua
+DPSMateX_CurePoisonReceived\DPSMateX_Details_CurePoisonReceived.xml
+
+DPSMateX_DamageTaken\DPSMateX_DamageTaken.lua
+DPSMateX_DamageTaken\DPSMateX_DTPS.lua
+DPSMateX_DamageTaken\DPSMateX_Details_DamageTaken.lua
+DPSMateX_DamageTaken\DPSMateX_Details_DamageTaken.xml
+DPSMateX_DamageTaken\DPSMateX_Details_DamageTakenTotal.lua
+DPSMateX_DamageTaken\DPSMateX_Details_DamageTakenTotal.xml
+
+DPSMateX_Deaths\DPSMateX_Deaths.lua
+DPSMateX_Deaths\DPSMateX_Details_Deaths.lua
+DPSMateX_Deaths\DPSMateX_Details_Deaths.xml
+DPSMateX_Deaths\DPSMateX_Details_DeathsTotal.lua
+DPSMateX_Deaths\DPSMateX_Details_DeathsTotal.xml
+
+DPSMateX_Decurses\DPSMateX_Decurses.lua
+DPSMateX_Decurses\DPSMateX_Details_Decurses.lua
+DPSMateX_Decurses\DPSMateX_Details_Decurses.xml
+DPSMateX_Decurses\DPSMateX_Details_DecursesTotal.lua
+DPSMateX_Decurses\DPSMateX_Details_DecursesTotal.xml
+
+DPSMateX_DecursesReceived\DPSMateX_DecursesReceived.lua
+DPSMateX_DecursesReceived\DPSMateX_Details_DecursesReceived.lua
+DPSMateX_DecursesReceived\DPSMateX_Details_DecursesReceived.xml
+
+DPSMateX_Dispels\DPSMateX_Dispels.lua
+DPSMateX_Dispels\DPSMateX_Details_Dispels.lua
+DPSMateX_Dispels\DPSMateX_Details_Dispels.xml
+DPSMateX_Dispels\DPSMateX_Details_DispelsTotal.lua
+DPSMateX_Dispels\DPSMateX_Details_DispelsTotal.xml
+
+DPSMateX_DispelsReceived\DPSMateX_DispelsReceived.lua
+DPSMateX_DispelsReceived\DPSMateX_Details_DispelsReceived.lua
+DPSMateX_DispelsReceived\DPSMateX_Details_DispelsReceived.xml
+
+DPSMateX_EDD\DPSMateX_EDD.lua
+DPSMateX_EDD\DPSMateX_Details_EDD.lua
+DPSMateX_EDD\DPSMateX_Details_EDD.xml
+DPSMateX_EDD\DPSMateX_Details_EDDTotal.lua
+DPSMateX_EDD\DPSMateX_Details_EDDTotal.xml
+
+DPSMateX_EDT\DPSMateX_EDT.lua
+DPSMateX_EDT\DPSMateX_Details_EDT.lua
+DPSMateX_EDT\DPSMateX_Details_EDT.xml
+DPSMateX_EDT\DPSMateX_Details_EDTTotal.lua
+DPSMateX_EDT\DPSMateX_Details_EDTTotal.xml
+
+DPSMateX_Fails\DPSMateX_Fails.lua
+DPSMateX_Fails\DPSMateX_Details_Fails.lua
+DPSMateX_Fails\DPSMateX_Details_Fails.xml
+DPSMateX_Fails\DPSMateX_Details_FailsTotal.lua
+DPSMateX_Fails\DPSMateX_Details_FailsTotal.xml
+
+DPSMateX_FriendlyFire\DPSMateX_FriendlyFire.lua
+DPSMateX_FriendlyFire\DPSMateX_Details_FriendlyFire.lua
+DPSMateX_FriendlyFire\DPSMateX_Details_FriendlyFire.xml
+DPSMateX_FriendlyFire\DPSMateX_Details_FriendlyFireTotal.lua
+DPSMateX_FriendlyFire\DPSMateX_Details_FriendlyFireTotal.xml
+
+DPSMateX_HealingTaken\DPSMateX_HealingTaken.lua
+DPSMateX_HealingTaken\DPSMateX_Details_HealingTaken.lua
+DPSMateX_HealingTaken\DPSMateX_Details_HealingTaken.xml
+DPSMateX_HealingTaken\DPSMateX_Details_HealingTakenTotal.lua
+DPSMateX_HealingTaken\DPSMateX_Details_HealingTakenTotal.xml
+
+DPSMateX_LiftMagic\DPSMateX_LiftMagic.lua
+DPSMateX_LiftMagic\DPSMateX_Details_LiftMagic.lua
+DPSMateX_LiftMagic\DPSMateX_Details_LiftMagic.xml
+DPSMateX_LiftMagic\DPSMateX_Details_LiftMagicTotal.lua
+DPSMateX_LiftMagic\DPSMateX_Details_LiftMagicTotal.xml
+
+DPSMateX_LiftMagicReceived\DPSMateX_LiftMagicReceived.lua
+DPSMateX_LiftMagicReceived\DPSMateX_Details_LiftMagicReceived.lua
+DPSMateX_LiftMagicReceived\DPSMateX_Details_LiftMagicReceived.xml
+
+DPSMateX_Interrupts\DPSMateX_Interrupts.lua
+DPSMateX_Interrupts\DPSMateX_Details_Interrupts.lua
+DPSMateX_Interrupts\DPSMateX_Details_Interrupts.xml
+DPSMateX_Interrupts\DPSMateX_Details_InterruptsTotal.lua
+DPSMateX_Interrupts\DPSMateX_Details_InterruptsTotal.xml
+
+DPSMateX_Casts\DPSMateX_Casts.lua
+DPSMateX_Casts\DPSMateX_Details_Casts.lua
+DPSMateX_Casts\DPSMateX_Details_Casts.xml
+DPSMateX_Casts\DPSMateX_Details_CastsTotal.lua
+DPSMateX_Casts\DPSMateX_Details_CastsTotal.xml
+
+DPSMateX_SunderArmor\DPSMateX_SunderArmor.lua
+DPSMateX_SunderArmor\DPSMateX_Details_SunderArmor.lua
+DPSMateX_SunderArmor\DPSMateX_Details_SunderArmor.xml
+DPSMateX_SunderArmor\DPSMateX_Details_SunderArmorTotal.lua
+DPSMateX_SunderArmor\DPSMateX_Details_SunderArmorTotal.xml
+
+## X-PluginId: 267
+## X-PublishTime: 2026-06-07 03:49:51
+## X-Version: 20260607002
+## X-OverrideMode: 2

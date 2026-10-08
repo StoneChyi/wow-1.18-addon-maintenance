@@ -1,0 +1,10 @@
+## Interface: 11200
+## Title:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 角色面板属性统计
+## Notes:一款简单的角色三维属性的统计插件
+## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 角色面板属性统计
+## Notes-zhCN:一款简单的角色三维属性的统计插件
+## Author: moh, Qcat, 狗血编剧男, 薄言织虹
+## Version: 1.2
+## SavedVariablesPerCharacter: BCSConfig
+BetterCharacterStats.xml
+BCS_PropertiesPanel.lua

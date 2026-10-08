@@ -1,0 +1,20 @@
+## Interface: 11200
+## Title: WIM
+## Author: Pazza (Bronzebeard)，游侠修改
+## Version: 20260830
+## Notes: Give whispers an instant messenger feel.
+## Notes-ruRU: Интерфейс для шепота.
+## Title-zhCN: |CFF33AAFF[辅助]|R私聊窗口
+## Notes-zhCN: |CFF33AAFFWIM|R|N即时通讯风格的私聊管理器，把私聊集合到一个界面里。|N设置命令：/wim
+## X-Repple: 辅助
+## eMail: johnlangone@gmail.com
+## DefaultState: Enabled
+## OptionalDeps: Titan
+## SavedVariables: WIM_Data, WIM_Alias, WIM_Filters, WIM_History, WIM_CacheHistory, WIM_ContactClass
+WIM_contact.lua
+WIM.xml
+WIM_UrlCopy.xml
+WIM_Icon.xml
+WIM_Options.xml
+WIM_History.xml
+WIM_Titan.xml

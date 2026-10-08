@@ -1,0 +1,16 @@
+## Interface: 11200
+## Title: |cff33ffcc[团队工具]|cffffffff许愿监视/拍卖模块 无双0.14版
+## Version: 2026.8.4
+## Author: 无道暴君、宇然、天乖乖、缺德、游侠、最爱、无双孙尚香修改
+## Notes: 记录许愿和出分，团队频道输入xy+空格+许愿
+## SavedVariables: XyArray, DefaultDKP, XyTrackerOptions, XyTrackerDeclaration, LootList, SavedLootList, SavedWishList, CML_Vars, XYT_Blacklist, paipaiDB
+Bindings.xml
+XyTracker.lua
+xy_auction.lua
+XyTracker_Backup.lua
+XyTracker_QualityFilter.lua
+XyTracker.xml
+XyTracker_Blacklist.lua
+XyTracker_Blacklist.xml
+pfui-skin.lua
+

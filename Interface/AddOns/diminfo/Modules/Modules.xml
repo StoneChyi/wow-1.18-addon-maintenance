@@ -1,0 +1,13 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Include file="Positions.lua"/>
+	<Include file="Friend.lua"/>
+	<Include file="Time.lua"/>	
+	<Include file="RaidCD.lua"/>
+    <Include file="Quest.lua"/>
+    <Include file="Performance.lua"/>
+	<Include file="Loaddll.lua"/>
+	<Include file="Durability.lua"/>
+	<Include file="Bags.lua"/>
+	<Include file="Gold.lua"/>
+	<Include file="Calculat.lua"/>	
+</Ui>

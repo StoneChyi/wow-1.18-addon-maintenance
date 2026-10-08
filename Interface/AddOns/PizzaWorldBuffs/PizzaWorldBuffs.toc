@@ -1,0 +1,22 @@
+﻿## X-MrBCat-Version: 2025-09-02 07:38:04
+## Interface: 11200
+## Title-zhCN:|CFF33AAFF[辅助]|R世界buff跟踪计时
+## Notes-zhCN: 显示龙头BUff计时器和暗影马戏团位置。
+## Author: Pizzahawaii
+## Version: 1.6.11
+## SavedVariablesPerCharacter: PWB_config, PWB_timers, PWB_dmf
+
+translations\enUS.lua
+translations\zhCN.lua
+
+
+src\main.lua
+src\config.lua
+src\utils.lua
+src\core.lua
+src\map.lua
+src\share.lua
+src\frame.lua
+src\logoutframe.lua
+src\channel.lua
+src\slashcommands.lua

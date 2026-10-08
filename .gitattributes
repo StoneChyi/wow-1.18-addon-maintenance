@@ -1,0 +1,17 @@
+# Keep original bytes, encoding, BOM and line endings for every addon.
+* -text
+*.dll binary
+*.exe binary
+*.zip binary
+*.tga binary
+*.blp binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ttf binary
+*.otf binary
+*.mp3 binary
+*.ogg binary
+*.wav binary
+*.psd binary

@@ -1,0 +1,10 @@
+## Interface: 11200
+## Title: Tmog幻化试衣间 |cffc79c6e-Spit-|r
+## Title-zhCN: |CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] Tmog幻化试衣间
+## Author: Otari98
+## Version: 4.7
+## Notes: Adds item browser and info about your transmog collection on game tooltips v.4.7
+## Notes-zhCN: 添加幻化物品浏览器并在游戏提示框中显示你的幻化收藏信息v.4.7 游侠汉化
+## SavedVariablesPerCharacter: TMOG_CACHE, TMOG_PLAYER_OUTFITS, TMOG_TRANSMOG_STATUS, TMOG_POSITION, TMOG_LOCKED
+
+Tmog.xml

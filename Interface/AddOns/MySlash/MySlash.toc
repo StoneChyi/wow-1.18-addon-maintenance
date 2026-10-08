@@ -1,0 +1,12 @@
+﻿## Interface:11200
+## Title:|cffFF4500[C]|R[可选] 插件命令控制台
+## Title-zhCN: |cffFF4500[C]|R[可选] 插件命令控制台
+## Notes: 单体插件快速设置命令的控制台。|N命令：/cj
+## Notes-zhCN: 单体插件快速设置命令的控制台。|N命令：/cj
+## Author:原六魔包, 1.12 modify by 狗血编剧男
+## Version:1.0
+## X-Repple: 辅助
+## RequiredDeps: Blizzard_AuctionUI
+## SavedVariables: zSlashLibSavedData, Tab_Set, MySlashButtonState
+MySlash.xml
+MySlashList.xml

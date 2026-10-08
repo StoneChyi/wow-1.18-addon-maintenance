@@ -1,0 +1,14 @@
+## Interface: 11200
+## Title: QuickReply
+## Title-zhCN: |CFF33AAFF[辅助]|RWIM快速回复
+## Notes: 为 WIM 增加快速回复功能|N设置命令: /qr
+## Notes-zhCN: 为 WIM 增加快速回复功能|N设置命令: /qr
+## Author: XiongLiding
+## Version: 1.1
+## RequiredDeps: WIM
+## LoadWith: WIM
+## SavedVariables: QuickReplyDBC
+
+Utils.lua
+FlowUI.lua
+QuickReply.lua

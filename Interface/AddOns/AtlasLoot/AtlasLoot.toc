@@ -1,0 +1,53 @@
+## Interface: 11200
+## Title: |CFF33AAFF[辅助]|R副本掉落 |cffff1450[3.38]|R
+## Title-zhCN: |CFF33AAFF[辅助]|R副本掉落 |cffff1450[3.38]|R
+## Notes: 显示地下城/团队首领及其它来源的可能掉落
+## Notes-zhCN: |CFF33AAFFAtlasLoot |R显示地下城/团队首领及其它来源的可能掉落。|N命令：/atlasloot
+## Author: Otari（重制/改版、菜单修改、漏洞修复/更新）, Lexie（Turtle WoW 修复/更新）, Pepopo, MarcelineVQ（卡拉赞 40 人战利品）, Shagu, Sunelegy, 吊儿啷当
+## LegacyAuthor: Daviesh（最初作者）, Pompa（Turtle WoW 世界首领）, Xerron（Turtle WoW 世界首领）, Gurky（Turtle WoW 1.181副本）
+## Version: 3.3.8
+## SavedVariablesPerCharacter: AtlasLootCharDB
+## OptionalDeps: Alphamap, AtlasLoader, LootLink, ItemSync, HewdropLib, Ace2, EquipCompare, EQCompare
+
+Libs\AceLibrary\AceLibrary.lua
+Libs\AceOO\AceOO-2.0.lua
+Libs\AceEvent\AceEvent-2.0.lua
+Libs\AceDB\AceDB-2.0.lua
+Libs\AceLocale\AceLocale-2.2.lua
+Libs\AceAddon\AceAddon-2.0.lua
+Libs\Hewdrop\Hewdrop-2.0.lua
+
+Locale\locale.en.lua
+Locale\locale.ru.lua
+Locale\locale.de.lua
+Locale\locale.fr.lua
+Locale\locale.cn.lua
+Locale\locale.kr.lua
+Locale\locale.tw.lua
+Locale\locale.es.lua
+
+Database\TooltipStrings.lua
+Database\Sets.lua
+Database\Crafting.lua
+Database\PvP.lua
+Database\WorldEvents.lua
+Database\Factions.lua
+Database\Instances.lua
+Database\WorldBosses.lua
+Database\TableRegister.lua
+
+Core\ButtonRegistry.lua
+Core\TextParsing.lua
+Core\Spells.lua
+Core\Sets.lua
+Core\Factions.lua
+Core\WorldEvents.lua
+Core\PvP.lua
+Core\Crafting.lua
+Core\AtlasLoot.lua
+Core\WishList.lua
+Core\Search.lua
+Core\WorldBoss.lua
+Core\Dungeons.lua
+Core\Tooltip.lua
+Core\AtlasLoot.xml

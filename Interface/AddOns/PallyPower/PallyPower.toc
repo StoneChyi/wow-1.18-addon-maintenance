@@ -1,0 +1,13 @@
+﻿## Interface: 11200
+## Title:|cffFF4500[职业]|r[|Cfff58cba圣骑|R] 祝福助手
+## Title-zhCN: |cffFF4500[职业]|r[|Cfff58cba圣骑|R] 祝福助手
+## Notes-zhCN:按照预设的分配祝福。 |N命令：/pp 
+## Author: Relar Fix, Wind, Sunelegy
+## DefaultState: Enabled
+## LoadOnDemand: 0
+## SavedVariablesPerCharacter: PallyPower_Assignments, TenMinuteBlessingOn, PP_PerUser
+## DefaultState: disabled
+PallyPower.lua
+PallyPower.xml
+PallyPower-Extensions.lua
+Bindings.xml

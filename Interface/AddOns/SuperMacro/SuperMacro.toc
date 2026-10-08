@@ -1,0 +1,16 @@
+## Interface: 11200
+## Title: SuperMacro - SuperWoW Support
+## Notes: Unlimited 'Super' macros hold up to 50000 letters. Run macros with keybindings and through other macros and from events. In-game code extender editor. Item link into macros. Tooltips over macros on actionbars. Convenient slash commands and functions.
+## Title-zhCN:|cff00ffff[宏]|R超级宏
+## Notes-zhCN:|CFF33AAFFSuperMacro|R|N突破暴雪限制的256字符宏。
+## Author: GIT, Sunelegy, 拉风武夫, 武藤纯子酱, Crazydru
+## First created: Mar 2005
+## OptionalDeps: !Libs
+## SavedVariables: SM_VARS SM_EXTEND SM_ACTION_SUPER SM_SUPER
+##..\..\FrameXML\Fonts.xml
+##..\..\FrameXML\UIPanelTemplates.xml
+##..\..\FrameXML\ClassTrainerFrameTemplates.xml
+## Version: 3.24
+libs\KuBa-SlashDispatch-1.0\KuBa-SlashDispatch-1.0.lua
+SuperMacro.xml
+SuperMacroOptions.xml

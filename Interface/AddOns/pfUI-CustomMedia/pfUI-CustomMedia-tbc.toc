@@ -1,0 +1,12 @@
+﻿## Interface: 20400
+## Title: |cff33ffccpf|cffffffffUI|cffaaaaaa [Custom Media]
+## Title-zhCN: |cff33ffccpf|cffffffffUI|cffaaaaaa [自定义材质]
+## Author: dein0s, mr_rosh, shagu
+## Notes: External module for |cff33ffccpf|cffffffffUI
+## Notes-zhCN: External module for |cff33ffccpf|cffffffffUI
+## Version: 1.3
+## Dependencies: pfUI-tbc
+
+# main
+pfUI-CustomMedia-bars.lua
+pfUI-CustomMedia-gui.lua

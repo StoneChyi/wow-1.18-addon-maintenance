@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: 欣
+## Author: hyx
+## Version: 1.1
+## SavedVariables: xinDB
+## OptionalDeps: UnitXP_SP3_Addon
+
+XinDispel.lua
+hyx.lua

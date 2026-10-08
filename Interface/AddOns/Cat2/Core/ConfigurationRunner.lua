@@ -1,0 +1,569 @@
+-- 配置流程执行器与聊天指令入口。
+-- 本文件在 FlowEditor 之后加载，以便读取 Cat2.RuntimeConfigurations 的当前流程数据。
+-- 每次 /cat2 配置名 执行时，仅在整轮开始前刷新一次 PlayerInformation.temporary；
+-- 所有卡片共享这份快照，避免逐卡刷新造成额外 API 调用与前后状态不一致。
+--
+-- 执行阶段固定为：受保护的待处理中断 -> 玩家临时快照 -> context 索引 -> 全部被动 Apply ->
+-- 全部被动 Validate -> 从编号1开始执行，按布尔/跳转结果推进；每轮最多调用60次流程卡 Execute。
+-- context 仅在本轮宏调用中有效；卡片不得跨轮保存 context 或修改 teamSnapshot 中的成员对象。
+Cat2 = Cat2 or {}
+local maximumExecutionSteps = 60
+
+-- 去掉聊天指令参数首尾的空格与制表符。
+local function TrimCommandText(text)
+    local firstIndex = 1
+    local lastIndex = string.len(text)
+    while firstIndex <= lastIndex do
+        local character = string.sub(text, firstIndex, firstIndex)
+        if character ~= " " and character ~= "\t" then
+            break
+        end
+        firstIndex = firstIndex + 1
+    end
+    while lastIndex >= firstIndex do
+        local character = string.sub(text, lastIndex, lastIndex)
+        if character ~= " " and character ~= "\t" then
+            break
+        end
+        lastIndex = lastIndex - 1
+    end
+    return string.sub(text, firstIndex, lastIndex)
+end
+
+-- 按显示名称查找配置；遍历 profileOrder 可保证遵循仓库的正式顺序。
+function Cat2.FindConfigurationByName(configurationName)
+    if Cat2.EnsureConfigurationDataLoaded then
+        Cat2.EnsureConfigurationDataLoaded()
+    end
+    local repository = Cat2.RuntimeConfigurations
+    if not repository or not repository.profileOrder or not repository.profiles then
+        return nil
+    end
+    local orderIndex = 1
+    local orderTotal = table.getn(repository.profileOrder)
+    while orderIndex <= orderTotal do
+        local profileId = repository.profileOrder[orderIndex]
+        local profile = repository.profiles[profileId]
+        if profile and profile.name == configurationName then
+            return profile
+        end
+        orderIndex = orderIndex + 1
+    end
+    return nil
+end
+
+-- 每轮执行前只扫描一次流程，供普通卡片快速判断某个卡片 ID 是否存在。
+local function CreateCardLookup(steps)
+    local cardLookup = {}
+    local activeCardLookup = {}
+    local stepIndex = 1
+    local stepTotal = table.getn(steps)
+    while stepIndex <= stepTotal do
+        local step = steps[stepIndex]
+        local cardId = step and step.id
+        if type(cardId) == "string" and cardId ~= "" then
+            cardLookup[cardId] = true
+            if step.enabled ~= 0 then
+                activeCardLookup[cardId] = true
+            end
+        end
+        stepIndex = stepIndex + 1
+    end
+    return cardLookup, activeCardLookup
+end
+
+-- 调试窗口打开时，向聊天框记录本轮实际进入的流程步骤。
+-- 调试状态由 PlayerDebug.lua 提供；窗口关闭时本函数不产生任何输出。
+local function PrintDebugStep(phase, stepIndex, stepTotal, step)
+    if not Cat2.UI or not Cat2.UI.IsPlayerDebugWindowVisible then
+        return
+    end
+    if not Cat2.UI.IsPlayerDebugWindowVisible() then
+        return
+    end
+    local stepName = step and (step.name or step.id) or "未命名卡片"
+    local stepId = step and step.id or "未知ID"
+    DEFAULT_CHAT_FRAME:AddMessage("|cff6fc7ffCat2 调试|r " .. phase .. " " .. stepIndex .. "/" .. stepTotal .. "：|cffffff66" .. stepName .. "|r |cff8e9baa[" .. stepId .. "]|r")
+end
+
+-- 创建单个成员的本轮只读快照；同一 unit 在不同排序列表中共用这个对象。
+local function GetOrCreateTeamMember(snapshot, unit)
+    local existing = snapshot.units[unit]
+    if existing then
+        return existing
+    end
+
+    local health = UnitHealth(unit) or 0
+    local maxHealth = UnitHealthMax(unit) or 0
+    local healthPercent = 0
+    if maxHealth > 0 then
+        healthPercent = health / maxHealth * 100
+    end
+
+    local member = {
+        unit = unit,
+        name = UnitName(unit),
+        health = health,
+        maxHealth = maxHealth,
+        missingHealth = maxHealth - health,
+        healthPercent = healthPercent,
+        isPlayer = UnitIsUnit(unit, "player") and true or false,
+        dead = UnitIsDeadOrGhost(unit) and true or false,
+        visible = UnitIsVisible(unit) and true or false,
+        rangeChecked = false,
+        distance = nil,
+        inSight = nil
+    }
+    snapshot.units[unit] = member
+    return member
+end
+
+-- 小队与团队范围按需建立；没有治疗卡请求时不会扫描任何队伍成员。
+local function BuildTeamScope(snapshot, scope)
+    local cached = snapshot.base[scope]
+    if cached then
+        return cached
+    end
+
+    local members = {}
+    if scope == "party" then
+        table.insert(members, GetOrCreateTeamMember(snapshot, "player"))
+        local partyIndex = 1
+        local partyTotal = GetNumPartyMembers()
+        while partyIndex <= partyTotal do
+            local unit = "party" .. partyIndex
+            if UnitExists(unit) and UnitIsVisible(unit) then
+                table.insert(members, GetOrCreateTeamMember(snapshot, unit))
+            end
+            partyIndex = partyIndex + 1
+        end
+    elseif scope == "group" then
+        local raidTotal = GetNumRaidMembers()
+        if raidTotal > 0 then
+            local raidIndex = 1
+            while raidIndex <= raidTotal do
+                local unit = "raid" .. raidIndex
+                if UnitExists(unit) and UnitIsVisible(unit) then
+                    table.insert(members, GetOrCreateTeamMember(snapshot, unit))
+                end
+                raidIndex = raidIndex + 1
+            end
+        else
+            local partyIndex = 1
+            local partyTotal = GetNumPartyMembers()
+            while partyIndex <= partyTotal do
+                local unit = "party" .. partyIndex
+                if UnitExists(unit) and UnitIsVisible(unit) then
+                    table.insert(members, GetOrCreateTeamMember(snapshot, unit))
+                end
+                partyIndex = partyIndex + 1
+            end
+            table.insert(members, GetOrCreateTeamMember(snapshot, "player"))
+        end
+    end
+
+    snapshot.base[scope] = members
+    return members
+end
+
+local function CopyTeamMembers(source)
+    local result = {}
+    local memberIndex = 1
+    local memberTotal = table.getn(source)
+    while memberIndex <= memberTotal do
+        result[memberIndex] = source[memberIndex]
+        memberIndex = memberIndex + 1
+    end
+    return result
+end
+
+-- 返回本轮缓存的成员排列；返回表与成员对象均应按只读方式使用。
+local emptyTeamMembers = {}
+
+local function GetTeamMembers(context, scope, order)
+    if scope ~= "party" and scope ~= "group" then
+        return emptyTeamMembers
+    end
+    if order ~= "health" and order ~= "maxHealth" and order ~= "random" then
+        order = "original"
+    end
+
+    local snapshot = context.teamSnapshot
+    if not snapshot then
+        snapshot = {
+            units = {},
+            base = {},
+            ordered = {}
+        }
+        context.teamSnapshot = snapshot
+    end
+    local orders = snapshot.ordered[scope]
+    if not orders then
+        orders = {}
+        snapshot.ordered[scope] = orders
+    end
+    if orders[order] then
+        return orders[order]
+    end
+
+    local base = BuildTeamScope(snapshot, scope)
+    local result = base
+    if order ~= "original" then
+        result = CopyTeamMembers(base)
+    end
+
+    if order == "health" then
+        table.sort(result, function(left, right)
+            return left.healthPercent < right.healthPercent
+        end)
+    elseif order == "maxHealth" then
+        table.sort(result, function(left, right)
+            return left.maxHealth > right.maxHealth
+        end)
+    elseif order == "random" then
+        local shuffleIndex = table.getn(result)
+        while shuffleIndex >= 2 do
+            local targetIndex = math.random(1, shuffleIndex)
+            result[shuffleIndex], result[targetIndex] = result[targetIndex], result[shuffleIndex]
+            shuffleIndex = shuffleIndex - 1
+        end
+    end
+
+    orders[order] = result
+    return result
+end
+
+-- 距离与视野只在调用方真正需要时检查，并由所有排序列表共用结果。
+local function GetTeamMemberRange(member)
+    if type(member) ~= "table" or type(member.unit) ~= "string" then
+        return nil, nil
+    end
+    if member.rangeChecked then
+        return member.distance, member.inSight
+    end
+
+    member.rangeChecked = true
+    if member.unit == "player" then
+        member.distance = 0
+        member.inSight = true
+    elseif Cat2.UnitXP and type(UnitXP) == "function" then
+        member.distance = UnitXP("distanceBetween", "player", member.unit)
+        member.inSight = UnitXP("inSight", "player", member.unit)
+    else
+        member.distance = nil
+        member.inSight = true
+    end
+    return member.distance, member.inSight
+end
+
+-- 被动卡片先扫描整个配置并建立共享 context，因此其效果不受自身排列位置限制。
+-- 随后 Validate 统一决定流程能否运行，最后才从上往下调用普通卡片 Execute(context)。
+local RunProfile
+local function RunConfiguration(profile, session)
+    if Cat2.UI and Cat2.UI.TriggerShortcutWindowTitleLight then
+        Cat2.UI.TriggerShortcutWindowTitleLight(profile.id)
+    end
+    -- 事件监控只负责提出中断请求；在用户本次宏按键中执行受保护的停止施法。
+    -- 成功提交中断后结束本轮流程，避免紧接着执行下一张卡片再次施法。
+    if not session.started and Cat2.TryExecutePendingCastInterrupt and Cat2.TryExecutePendingCastInterrupt() then
+        return true, 0, 0, true, {}
+    end
+    -- 每次触发配置时统一刷新一次临时角色信息，供本轮所有卡片读取同一份最新快照。
+    if not session.started and Cat2.RefreshPlayerTemporaryInformation then
+        Cat2.RefreshPlayerTemporaryInformation()
+    end
+    session.started = true
+    local executedTotal = 0
+    local failedTotal = 0
+    local failedNames = {}
+    local stopped = false
+    local cardLookup, activeCardLookup = CreateCardLookup(profile.steps)
+    local context = {
+        profileId = profile.id,
+        profileName = profile.name,
+        profile = profile,
+        player = "player",
+        target = "target",
+        playerInformation = Cat2.PlayerInformation,
+        parameters = {},
+        passiveCards = {},
+        teamSnapshot = nil
+    }
+    -- 快速索引接口不会再次遍历流程；适合普通卡判断依赖卡是否存在及是否启用。
+    function context:HasCard(cardId)
+        return cardLookup[cardId] == true
+    end
+    function context:IsCardActive(cardId)
+        return activeCardLookup[cardId] == true
+    end
+    function context:GetStepOption(step, optionKey)
+        return Cat2.ResolveStepOption(step, optionKey, self.parameters)
+    end
+    function context:GetCardEventState(cardId)
+        if Cat2.GetCardEventState then
+            return Cat2.GetCardEventState(cardId)
+        end
+        return nil
+    end
+    -- 团队快照按需构建并在本轮复用。scope：party/group；order：original/health/maxHealth/random。
+    function context:GetTeamMembers(scope, order)
+        return GetTeamMembers(self, scope, order)
+    end
+    function context:GetTeamMemberRange(member)
+        return GetTeamMemberRange(member)
+    end
+    function context:FailConfigurationCall(message)
+        failedTotal = failedTotal + 1
+        table.insert(failedNames, "调用配置")
+        session.abort = true
+        DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Cat2：" .. message .. "；本轮已终止。|r")
+    end
+    function context:CallConfiguration(profileId)
+        local repository = Cat2.RuntimeConfigurations
+        local child = repository and repository.profiles and repository.profiles[profileId]
+        if not child then
+            self:FailConfigurationCall("调用的配置已不存在")
+            return true
+        end
+        if session.stack[profileId] then
+            self:FailConfigurationCall("禁止循环调用配置「" .. child.name .. "」")
+            return true
+        end
+        local found, total, failures, childStopped, names = RunProfile(child, session)
+        executedTotal = executedTotal + total
+        failedTotal = failedTotal + failures
+        for _, name in ipairs(names or {}) do table.insert(failedNames, name) end
+        -- 子流程可能改变队伍状态，返回后重新按需建立父流程的治疗快照。
+        self.teamSnapshot = nil
+        if childStopped or failures > 0 then session.abort = true end
+        return session.abort == true
+    end
+    -- 除函数参数外也保留本轮全局引用，便于旧卡片逐步迁移；执行结束后立即清除。
+    Cat2.CurrentExecutionContext = context
+
+    local stepTotal = table.getn(profile.steps)
+    local stepIndex = 1
+    while stepIndex <= stepTotal do
+        local step = profile.steps[stepIndex]
+        if step and step.enabled ~= 0 and step.behavior == "passive" then
+            PrintDebugStep("被动", stepIndex, stepTotal, step)
+            table.insert(context.passiveCards, step)
+            executedTotal = executedTotal + 1
+            if type(step.Apply) == "function" then
+                local succeeded, applyError = pcall(step.Apply, context, step)
+                if not succeeded then
+                    failedTotal = failedTotal + 1
+                    local stepName = step.name or step.id or "未命名被动卡片"
+                    table.insert(failedNames, stepName)
+                    DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Cat2：被动卡片「" .. stepName .. "」应用失败：|r" .. tostring(applyError))
+                    stopped = true
+                    return true, executedTotal, failedTotal, stopped, failedNames
+                end
+            end
+        end
+        stepIndex = stepIndex + 1
+    end
+
+    local passiveIndex = 1
+    local passiveTotal = table.getn(context.passiveCards)
+    while passiveIndex <= passiveTotal do
+        local passive = context.passiveCards[passiveIndex]
+        if type(passive.Validate) == "function" then
+            local succeeded, allowed, reason = pcall(passive.Validate, context, passive)
+            if not succeeded then
+                failedTotal = failedTotal + 1
+                local stepName = passive.name or passive.id or "未命名被动卡片"
+                table.insert(failedNames, stepName)
+                -- 错误标题和详细信息分行输出，避免较长的文件路径挤占标题空间。
+                DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Cat2：被动卡片「" .. stepName .. "」检查失败：|r")
+                DEFAULT_CHAT_FRAME:AddMessage("|cffffffff" .. tostring(allowed) .. "|r")
+                stopped = true
+                return true, executedTotal, failedTotal, stopped, failedNames
+            elseif allowed == false then
+                if type(reason) == "string" and reason ~= "" then
+                    DEFAULT_CHAT_FRAME:AddMessage("|cffffcc33Cat2：" .. reason .. "|r")
+                end
+                stopped = true
+                return true, executedTotal, failedTotal, stopped, failedNames
+            end
+        end
+        passiveIndex = passiveIndex + 1
+    end
+
+    -- 位置可以向前跳，计步只递增。暂停卡与被动卡跳过，不消耗主执行阶段的60步预算。
+    stepIndex = 1
+    while stepIndex <= stepTotal do
+        if session.abort or session.steps >= maximumExecutionSteps then
+            stopped = true
+            break
+        end
+        local nextStepIndex = stepIndex + 1
+        local step = profile.steps[stepIndex]
+        if step and step.enabled ~= 0 and step.behavior ~= "passive" and type(step.Execute) == "function" then
+            session.steps = session.steps + 1
+            context.currentStepIndex = stepIndex
+            context.executionStepCount = session.steps
+            PrintDebugStep("执行", stepIndex, stepTotal, step)
+            local succeeded, executeResult = pcall(step.Execute, context, step)
+            executedTotal = executedTotal + 1
+            if not succeeded then
+                failedTotal = failedTotal + 1
+                local stepName = step.name or step.id or "未命名卡片"
+                table.insert(failedNames, stepName)
+                -- 详细错误单独占一行，让聊天框可以按自身宽度完整换行。
+                DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Cat2：卡片「" .. stepName .. "」执行失败：|r")
+                DEFAULT_CHAT_FRAME:AddMessage("|cffffffff" .. tostring(executeResult) .. "|r")
+                if session.depth > 1 then session.abort = true end
+            elseif executeResult == true then
+                stopped = true
+                break
+            elseif Cat2.IsJumpResult(executeResult) then
+                local targetIndex = rawget(executeResult, "target")
+                if type(targetIndex) ~= "number" or not (targetIndex >= 1 and targetIndex <= stepTotal
+                    and targetIndex <= 60 and targetIndex == math.floor(targetIndex)) then
+                    failedTotal = failedTotal + 1
+                    local stepName = step.name or step.id or "未命名卡片"
+                    table.insert(failedNames, stepName)
+                    DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Cat2：卡片「" .. stepName .. "」的跳转编号无效，必须是当前流程内1至60的整数编号；本轮已终止。|r")
+                    stopped = true
+                    break
+                end
+                nextStepIndex = targetIndex
+            end
+            if session.abort or session.steps >= maximumExecutionSteps then
+                stopped = true
+                if session.steps >= maximumExecutionSteps then
+                    PrintDebugStep("已达到60步上限", stepIndex, stepTotal, step)
+                end
+                break
+            end
+        end
+        stepIndex = nextStepIndex
+    end
+    return true, executedTotal, failedTotal, stopped, failedNames
+end
+
+-- 每层进入/退出都恢复父上下文；预算和调用栈不暴露给卡片，避免被跳转或嵌套重置。
+RunProfile = function(profile, session)
+    if session.steps >= maximumExecutionSteps then
+        session.abort = true
+        return true, 0, 0, true, {}
+    end
+    local parentContext = Cat2.CurrentExecutionContext
+    session.depth = (session.depth or 0) + 1
+    session.stack[profile.id] = true
+    local ok, found, total, failures, stopped, names = pcall(RunConfiguration, profile, session)
+    session.stack[profile.id] = nil
+    session.depth = session.depth - 1
+    Cat2.CurrentExecutionContext = parentContext
+    if not ok then
+        session.abort = true
+        error(found)
+    end
+    return found, total, failures, stopped, names
+end
+
+local function RunRootConfiguration(configurationName)
+    local profile = Cat2.FindConfigurationByName(configurationName)
+    if not profile then return false, 0, 0 end
+    return RunProfile(profile, { steps = 0, stack = {} })
+end
+
+-- 统一前置入口。后续需要提升到整轮流程的临时设置，可由此返回原值交给后置恢复。
+local function BeginConfigurationExecution(configurationName)
+    Cat2.CurrentExecutionContext = nil
+
+    if not Cat2.Nampower then
+        return nil, nil, nil, nil
+    end
+
+    local castTimeSetting = GetCVar("NP_QueueCastTimeSpells")
+    local instantSetting = GetCVar("NP_QueueInstantSpells")
+    local channelingSetting = GetCVar("NP_QueueChannelingSpells")
+    local interruptChannelSetting
+    -- interruptChannelSetting = GetCVar("NP_InterruptChannelsOutsideQueueWindow")
+
+    SetCVar("NP_QueueCastTimeSpells", "0")
+    SetCVar("NP_QueueInstantSpells", "0")
+    SetCVar("NP_QueueChannelingSpells", "0")
+    -- SetCVar("NP_InterruptChannelsOutsideQueueWindow", "0")
+
+    return castTimeSetting, instantSetting, channelingSetting, interruptChannelSetting
+end
+
+-- 统一后置出口。无论流程正常结束、提前返回或抛出 Lua 错误，外层都会调用本函数。
+local function FinishConfigurationExecution(castTimeSetting, instantSetting, channelingSetting, interruptChannelSetting)
+    Cat2.CurrentExecutionContext = nil
+
+    if not Cat2.Nampower then
+        return
+    end
+    if castTimeSetting ~= nil then
+        SetCVar("NP_QueueCastTimeSpells", castTimeSetting)
+    end
+    if instantSetting ~= nil then
+        SetCVar("NP_QueueInstantSpells", instantSetting)
+    end
+    if channelingSetting ~= nil then
+        SetCVar("NP_QueueChannelingSpells", channelingSetting)
+    end
+    -- if interruptChannelSetting ~= nil then
+    --     SetCVar("NP_InterruptChannelsOutsideQueueWindow", interruptChannelSetting)
+    -- end
+end
+
+-- 对外执行入口只负责前置、保护调用和后置；实际流程允许保留清晰的提前 return。
+function Cat2.ExecuteConfiguration(configurationName)
+    local castTimeSetting, instantSetting, channelingSetting, interruptChannelSetting = BeginConfigurationExecution(configurationName)
+    local succeeded, found, executedTotal, failedTotal, stopped, failedNames = pcall(
+        RunRootConfiguration,
+        configurationName
+    )
+
+    FinishConfigurationExecution(castTimeSetting, instantSetting, channelingSetting, interruptChannelSetting)
+
+    if not succeeded then
+        error(found)
+    end
+    return found, executedTotal, failedTotal, stopped, failedNames
+end
+
+-- 注册旧版客户端聊天指令：/cat2 配置名
+SLASH_CAT2CONFIGURATION1 = "/cat2"
+SlashCmdList["CAT2CONFIGURATION"] = function(message)
+    local configurationName = TrimCommandText(message or "")
+    if configurationName == "" then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffffcc33Cat2：请输入配置名，例如 /cat2 配置1|r")
+        if Cat2.UI and Cat2.UI.ShowMainWindow then
+            Cat2.UI.ShowMainWindow()
+        end
+        return
+    end
+    -- debug 是保留参数，只控制玩家信息调试窗口。
+    if string.lower(configurationName) == "debug" then
+        local playerDebugVisible = Cat2.UI and Cat2.UI.IsPlayerDebugWindowVisible
+            and Cat2.UI.IsPlayerDebugWindowVisible()
+
+        if playerDebugVisible then
+            if Cat2.UI.HidePlayerDebugWindow then
+                Cat2.UI.HidePlayerDebugWindow()
+            end
+        elseif Cat2.UI and Cat2.UI.ShowPlayerDebugWindow then
+            Cat2.UI.ShowPlayerDebugWindow()
+        else
+            DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Cat2：调试窗尚未加载，请完整重启游戏。|r")
+        end
+        return
+    end
+    local found, executedTotal, failedTotal, stopped, failedNames = Cat2.ExecuteConfiguration(configurationName)
+    if not found then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffff5555Cat2：找不到配置「" .. configurationName .. "」。|r")
+        return
+    end
+    if failedTotal > 0 then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffffcc33Cat2：配置「" .. configurationName .. "」执行完成，共调用 " .. executedTotal .. " 张卡片，其中 " .. failedTotal .. " 张失败。|r")
+        if failedNames and table.getn(failedNames) > 0 then
+            DEFAULT_CHAT_FRAME:AddMessage("|cffff7777Cat2：失败卡片：|r|cffffaaaa「" .. table.concat(failedNames, "」、「") .. "」|r")
+        end
+    end
+end
