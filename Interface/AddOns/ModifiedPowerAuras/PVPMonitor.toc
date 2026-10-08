@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: ModifiedPowerAuras - PVPMonitor
+## Notes: 战场PVP玩家与技能CD监控模块
+## Author: YourName
+## Version: 1.0
+## Dependencies: ModifiedPowerAuras
+
+PVPMonitor.lua
+    

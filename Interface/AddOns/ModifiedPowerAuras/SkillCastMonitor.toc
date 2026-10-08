@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title: ModifiedPowerAuras - SkillCastMonitor
+## Notes: 监控玩家技能施放并播放声音提示，该模块由烟锅巴编写
+## Author: ModifiedPowerAuras Team  烟锅巴
+## Version: 1.0
+## Dependencies: ModifiedPowerAuras
+
+SkillCastMonitor.lua

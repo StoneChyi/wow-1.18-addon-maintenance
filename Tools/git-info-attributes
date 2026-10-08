@@ -1,0 +1,3 @@
+# Copy this file to .git/info/attributes when rebuilding this repository.
+# The info file overrides attributes supplied inside individual addons.
+* -text -filter -ident

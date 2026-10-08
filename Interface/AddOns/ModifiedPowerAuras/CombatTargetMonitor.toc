@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: ModifiedPowerAuras - CombatTargetMonitor
+## Notes: 实时监控40码内战斗中的敌对目标及其技能CD
+## Author: YourName
+## Version: 1.0
+## Dependencies: ModifiedPowerAuras
+
+CombatTargetMonitor.lua
+    

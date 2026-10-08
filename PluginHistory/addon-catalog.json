@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-10-08T23:29:36+08:00",
+  "captured_at": "2026-10-08T23:32:42+08:00",
   "addons": [
     {
       "addon": "!Libs",
@@ -525,6 +525,16 @@
       "upstream_status": "no_verified_complete_pristine_package"
     },
     {
+      "addon": "HideOutdoorWorldState",
+      "tracking": "complete_current_snapshot",
+      "files": 3,
+      "bytes": 2486,
+      "documented_modification_evidence": false,
+      "evidence": [],
+      "inline_backup_files": [],
+      "upstream_status": "no_verified_complete_pristine_package"
+    },
+    {
       "addon": "HolyHope",
       "tracking": "complete_current_snapshot",
       "files": 69,
@@ -577,8 +587,8 @@
     {
       "addon": "ModifiedPowerAuras",
       "tracking": "complete_current_snapshot",
-      "files": 840,
-      "bytes": 36912465,
+      "files": 403,
+      "bytes": 28461588,
       "documented_modification_evidence": false,
       "evidence": [],
       "inline_backup_files": [],
@@ -912,8 +922,8 @@
     {
       "addon": "TrainerSkills",
       "tracking": "complete_current_snapshot",
-      "files": 36,
-      "bytes": 262108,
+      "files": 19,
+      "bytes": 208956,
       "documented_modification_evidence": false,
       "evidence": [],
       "inline_backup_files": [],
@@ -999,8 +1009,8 @@
     {
       "addon": "YGB_OTAlarm",
       "tracking": "complete_current_snapshot",
-      "files": 152,
-      "bytes": 5335117,
+      "files": 7,
+      "bytes": 4868436,
       "documented_modification_evidence": true,
       "evidence": [
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json"

@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -17,12 +18,48 @@ def git(*args, data=None):
     return result.stdout
 
 
+def walk_files(directory):
+    for folder, directories, files in os.walk(directory):
+        directories[:] = [name for name in directories if name != ".git"]
+        for name in files:
+            if name != ".git":
+                yield Path(folder) / name
+
+
 def source_paths():
     paths = {p.relative_to(ROOT).as_posix()
-             for p in (ROOT / "Interface/AddOns").rglob("*") if p.is_file()}
+             for p in walk_files(ROOT / "Interface/AddOns") if p.is_file()}
     paths.update(p.name for p in ROOT.glob("*.dll") if p.is_file())
     paths.update(name for name in ("dlls.txt", "dxvk.conf") if (ROOT / name).is_file())
     return paths
+
+
+def stage_paths(paths):
+    """Store raw files even when a parent directory is an embedded repository."""
+    modes = {}
+    for entry in git("ls-files", "--stage", "-z").split(b"\0"):
+        if entry:
+            meta, name = entry.split(b"\t", 1)
+            mode, oid, stage = meta.split()
+            modes[name.decode("utf-8")] = mode
+    existing = sorted(p for p in paths if (ROOT / p).is_file())
+    missing = sorted(p for p in paths if not (ROOT / p).is_file() and p in modes)
+    records = [b"0 " + b"0" * 40 + b"\t" + p.encode("utf-8") + b"\0" for p in missing]
+    # Remove gitlinks before inserting their individual child files.
+    if records:
+        git("update-index", "-z", "--index-info", data=b"".join(records))
+    for start in range(0, len(existing), 100):
+        batch = existing[start:start + 100]
+        objects = git("hash-object", "-w", "--no-filters", "--", *batch).splitlines()
+        if len(objects) != len(batch):
+            raise RuntimeError("Unexpected number of stored blobs.")
+        records = []
+        for name, oid in zip(batch, objects):
+            mode = modes.get(name, b"100644")
+            if mode not in {b"100644", b"100755"}:
+                mode = b"100644"
+            records.append(mode + b" " + oid + b"\t" + name.encode("utf-8") + b"\0")
+        git("update-index", "-z", "--index-info", data=b"".join(records))
 
 
 def verify(ref):
@@ -72,7 +109,18 @@ def checkpoint(addons, runtime, message):
         scopes.append(name)
     if not scopes:
         raise RuntimeError("Specify --addon or --runtime; no unscoped commits.")
-    git("add", "--all", "--force", "--", *[":(literal)" + s for s in scopes])
+    # Explicit file paths flatten embedded repositories without touching their
+    # private .git data. Directory-based git add would store only gitlinks.
+    paths = set()
+    for scope in scopes:
+        paths.update(p.decode("utf-8") for p in
+                     git("ls-files", "-z", "--", ":(literal)" + scope).split(b"\0") if p)
+        directory = ROOT / scope
+        if directory.is_dir():
+            paths.update(p.relative_to(ROOT).as_posix() for p in walk_files(directory) if p.is_file())
+        elif directory.is_file():
+            paths.add(scope)
+    stage_paths(paths)
     if not git("diff", "--cached", "--name-only", "-z"):
         print("No changes in the selected plugins.")
         return 0

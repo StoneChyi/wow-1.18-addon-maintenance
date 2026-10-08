@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import sys
 from zoneinfo import ZoneInfo
+from plugin_git import walk_files
 
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "PluginHistory"
@@ -27,7 +28,8 @@ def digest(data):
 
 
 def main():
-    if (DEST / "Evidence").exists():
+    refresh = sys.argv[1:] == ["--refresh-current"]
+    if (DEST / "Evidence").exists() and not refresh:
         raise RuntimeError("Evidence already exists; refusing to overwrite the initial import.")
     legacy_meta = json.loads((LEGACY / "Manifest/baselines.json").read_text(encoding="utf-8-sig"))
     for name, item in legacy_meta["selected"].items():
@@ -40,8 +42,10 @@ def main():
         target = DEST / "Evidence" / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         if target.exists():
-            raise RuntimeError("Duplicate evidence destination: " + str(target))
-        target.write_bytes(content)
+            if not refresh or target.read_bytes() != content:
+                raise RuntimeError("Existing evidence differs: " + str(target))
+        else:
+            target.write_bytes(content)
         if source.read_bytes() != content or target.read_bytes() != content:
             raise RuntimeError("File changed during import: " + str(source))
         rows.append({"path": target.relative_to(ROOT).as_posix(), "source": str(source),
@@ -73,7 +77,7 @@ def main():
     timestamp = datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(timespec="seconds")
     baseline = []
     addon_files = defaultdict(list)
-    for source in sorted((ROOT / "Interface/AddOns").rglob("*")):
+    for source in sorted(walk_files(ROOT / "Interface/AddOns")):
         if source.is_file():
             content = source.read_bytes()
             name = source.relative_to(ROOT).as_posix()

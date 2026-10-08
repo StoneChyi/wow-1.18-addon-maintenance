@@ -1,0 +1,62 @@
+<EditBox name="$parent_Editbox_CustomSound2" autoFocus="false" inherits="InputBoxTemplate">
+							<Size x="190" y="20" />
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parent_Editbox_CustomSound" relativePoint="BOTTOMLEFT">
+									<Offset x="0" y="-105" />
+								</Anchor>
+							</Anchors>
+							<FontString inherits="ChatFontNormal" bytes="200" />
+							<Scripts>
+								<OnLoad>
+									this:SetMaxLetters(200)
+									this.aide = "这里输入外部音频文件的位置，默认位置为插件目录\\Sounds\\soundfile\\"
+									if MPOWA.SAVE[MPOWA.CurEdit] and MPOWA.SAVE[MPOWA.CurEdit].customsound2 then
+										this:SetText(MPOWA.SAVE[MPOWA.CurEdit].customsound2)
+									else
+										this:SetText("")
+									end
+								</OnLoad>
+								<OnShow>
+									this:ClearFocus()
+									if MPOWA.SAVE[MPOWA.CurEdit] and MPOWA.SAVE[MPOWA.CurEdit].customsound2 then
+										this:SetText(MPOWA.SAVE[MPOWA.CurEdit].customsound2)
+									else
+										this:SetText("")
+									end
+								</OnShow>
+								<OnTextChanged>
+									if MPOWA.SAVE[MPOWA.CurEdit] then
+										MPOWA.SAVE[MPOWA.CurEdit].customsound2 = this:GetText() or ""
+									end
+								</OnTextChanged>
+								<OnEnterPressed>
+									this:ClearFocus()
+								</OnEnterPressed>
+								<OnEnter>
+									GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+									GameTooltip:SetText(this.aide, nil, nil, nil, nil, 1)
+								</OnEnter>
+								<OnLeave>
+									GameTooltip:Hide()
+								</OnLeave>
+							</Scripts>
+						</EditBox>
+						<Button name="$parent_Button_PlaySound2" inherits="OptionsButtonTemplate">
+							<Size x="90" y="20" />
+							<Anchors>
+								<Anchor point="TOPRIGHT" relativeTo="$parent_Button_PlaySound" relativePoint="BOTTOMRIGHT">
+									<Offset x="0" y="-105" />
+								</Anchor>
+							</Anchors>
+							<Scripts>
+								<OnLoad>
+									getglobal(this:GetName().."Text"):SetText("音频试听")
+								</OnLoad>
+								<OnClick>
+									local fileName = getglobal("MPowa_ConfigFrame_Container_3_Editbox_CustomSound2"):GetText()
+									if fileName and fileName ~= "" then
+										PlaySoundFile("Interface\\AddOns\\ModifiedPowerAuras\\Sounds\\soundfile\\"..fileName, "Master", "throttle=false")
+									end
+								</OnClick>
+							</Scripts>
+						</Button>
