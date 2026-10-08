@@ -2433,9 +2433,11 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
     pfUI.bars.UpdateMonitorConfig = function(self)
       MonitorStopDrag()
       MonitorSyncProfile()
-      if C.bars.monitorhidetooltip == "1" and GameTooltip:GetOwner() then
+      -- WoW 1.12 provides IsOwned, but no GameTooltip:GetOwner method.
+      if C.bars.monitorhidetooltip == "1" then
         for i = 1, pfUI.bars.MONITOR_COUNT do
-          if GameTooltip:GetOwner() == mon.buttons[i] then GameTooltip:Hide(); break end
+          local button = mon.buttons[i]
+          if button and GameTooltip:IsOwned(button) then GameTooltip:Hide(); break end
         end
       end
       if C.bars.monitorautotalent == "1" and not mon.autoTalentEnabled then
