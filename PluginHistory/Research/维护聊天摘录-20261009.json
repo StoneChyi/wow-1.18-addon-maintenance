@@ -1,0 +1,125 @@
+{
+  "compiled_on": "2026-10-09",
+  "purpose": "补足 WIM、diminfo、pfUI 的维护说明。仅摘录对应维护完成报告；报告中的离线检查属于当时结果，不代表本次重新测试或游戏验收。",
+  "threads": [
+    {
+      "addon": "WIM",
+      "thread_id": "01a11bee-5e49-7941-a45d-c1c146372b61",
+      "title": "修改一下wim插件，右侧联系人会被其他界面遮挡，需要优化一下显示方式",
+      "turns": [
+        {
+          "turn_id": "01a11bf4-1a39-7de2-bb51-933a1ba01419",
+          "completed_at_unix": 1791470804,
+          "completion_report": [
+            "已改好，输入 `/reload` 后生效：\n\n- 战斗中收到私聊，弹窗不会抢走技能按键。\n- 手动进入私聊后，发送消息可继续输入。\n- 关闭窗口、点击别处或按 Esc，会退出输入。\n- 单窗口模式下，其他人的来信不会切走正在编辑的会话。\n\n旧配置会自动更新。已通过语法检查和模拟测试，尚未游戏内实测。"
+          ],
+          "reported_workspace_files": [
+            "Interface/AddOns/WIM/WIM.lua",
+            "Interface/AddOns/WIM/WIM.xml",
+            "Interface/AddOns/WIM/localization.cn.lua",
+            "Interface/AddOns/WIM/localization.lua",
+            "addons_tmp/test_wim_input_focus.py"
+          ]
+        },
+        {
+          "turn_id": "01a11bef-7efd-78e3-b4a4-5415f86efd3a",
+          "completed_at_unix": 1791470247,
+          "completion_report": [
+            "已修改 WIM：联系人面板提升为前景浮层，打开或切换依附窗口时自动置前，避免被普通界面遮挡。\n\n原文件已备份。考虑旧客户端兼容性，保留原有拖动边界。\n\n在游戏中输入 `/reload` 后生效；尚未进行游戏内实测。"
+          ],
+          "reported_workspace_files": [
+            "Interface/AddOns/WIM/WIM.lua",
+            "Interface/AddOns/WIM/WIM_contact.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "diminfo",
+      "thread_id": "01a11a9d-de34-74c3-ad8e-1e0aec9b1ed1",
+      "title": "目前我使用的diminfo信息条只要右键信息条任意空白位置都会进入设置界面，导致我经常误触，比如想右键地图，却不小心打…",
+      "turns": [
+        {
+          "turn_id": "01a11a9d-f377-7e33-8f8f-7b259536dbb6",
+          "completed_at_unix": 1791448165,
+          "completion_report": [
+            "已修改：信息条空白区域现在会让鼠标点击穿透，不再因右键误触打开设置，地图等模块原有的点击功能保留。\n\n输入 `/reload` 后生效。以后用 `/dim` 或 `/diminfo` 打开设置。\n\n原文件已备份，代码检查通过，游戏内效果尚未实测。"
+          ],
+          "reported_workspace_files": [
+            "Interface/AddOns/diminfo/panel.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "pfUI",
+      "thread_id": "01a11bf7-e813-7b40-83de-7af3616b0770",
+      "title": "检索一下这个聊天复制是哪个插件提供的功能",
+      "turns": [
+        {
+          "turn_id": "01a11c0a-f56f-7580-9350-96d68aee933a",
+          "completed_at_unix": 1791472575,
+          "completion_report": [
+            "已改好。游戏内输入 `/script ReloadUI()` 重载后生效：\n\n- **直接拖选文字**：在聊天复制窗口里拖动鼠标，选中任意部分后按 **Ctrl+C**，或点“复制选中”。\n- **自动提取团队 YY**：例如 `YY：123 456` 会识别为 `123456`，点击窗口底部的 YY 按钮即可准备复制；若提示，再按 Ctrl+C。\n- 世界频道广告不会覆盖团队号码，退团后会清除旧号码。\n\n已备份原文件并通过模拟测试，尚未进行游戏内实测。"
+          ],
+          "reported_workspace_files": [
+            "Interface/AddOns/pfUI/modules/chatcopy.lua",
+            "Interface/AddOns/pfUI/env/translations_zhCN.lua",
+            "CodexReports/chatcopy_partial_yy_test.py"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "pfUI",
+      "thread_id": "01a11b2c-51ab-7bc0-b3c0-ce373ed0bcaf",
+      "title": "这是pfui的特殊快捷动作条，会自动显示我的光环或者德鲁伊形态，但是存在一个问题，当该动作条技能数量发生变化时，动作条…",
+      "turns": [
+        {
+          "turn_id": "01a11c0e-d908-7613-9f2a-854634b00398",
+          "completed_at_unix": 1791472891,
+          "completion_report": [
+            "已加入。输入 `/reload` 后，在 **pfUI → 动作条 → 动作条监控** 中使用：\n\n- **隐藏技能描述**：关闭鼠标悬停提示。\n- **Shift 拖动排序**：解除监控锁定后，按住 Shift 将图标拖到另一图标上，顺序自动保存。\n- **多套监控方案**：每套独立保存技能列表、排序和外观，原设置保留为默认方案。\n- **随天赋切换**：分别为各方案点击“绑定当前天赋”，再开启“根据天赋自动切换方案”。\n\n天赋按完整加点匹配，调整加点后需重新绑定；没有匹配时保留当前方案。语法和模拟检查均已通过，尚未在游戏内验证。"
+          ],
+          "reported_workspace_files": [
+            "Interface/AddOns/pfUI/api/config.lua",
+            "Interface/AddOns/pfUI/env/translations_zhCN.lua",
+            "Interface/AddOns/pfUI/modules/gui.lua",
+            "Interface/AddOns/pfUI/modules/actionbar.lua",
+            "addons_tmp/check_action_monitor.py"
+          ]
+        },
+        {
+          "turn_id": "01a11bca-0d3b-7e80-9ca1-163474a3b5dd",
+          "completed_at_unix": 1791467830,
+          "completion_report": [
+            "已修正。两侧标记现在固定在框架中心两旁，距离数字宽度或位数变化都不会带动标记移动。\n\n模拟检查已通过，包含 9.9→10.0、99.9→100.0。游戏内输入 `/reload` 即可查看效果。"
+          ],
+          "reported_workspace_files": [
+            "addons_tmp/check_distance_status.py"
+          ]
+        },
+        {
+          "turn_id": "01a11b56-0ed0-71d1-9f47-e3139acad5e9",
+          "completed_at_unix": 1791460228,
+          "completion_report": [
+            "已修改，输入 `/reload` 生效：\n\n- 右侧改为宽高一致的圆角正方形。\n- 圆形和圆角正方形都加入边缘抗锯齿，内部保持实心，无黑边。\n- 保留现有配色和居中补偿。\n\n不同尺寸、缩放及状态检查已通过，实际显示效果需游戏内查看。"
+          ],
+          "reported_workspace_files": [
+            "addons_tmp/check_distance_status.py"
+          ]
+        },
+        {
+          "turn_id": "01a11b47-43d9-70b3-87f7-affe87c445f8",
+          "completed_at_unix": 1791459433,
+          "completion_report": [
+            "已修改插件，输入 `/reload` 生效。\n\n- **左侧实心圆**：绿色可见，红色遮挡。\n- **右侧实心方块**：绿色满足打背位置条件，橙黄色表示近战内条件未满足，红色表示距离过远。\n- 数字独立按距离变色，两侧对称排列。\n- 标记默认大小为 **15**，可在设置中调整。\n\n语法和状态模拟检查已通过，尚未进行游戏内实测。"
+          ],
+          "reported_workspace_files": [
+            "addons_tmp/check_distance_status.py"
+          ]
+        }
+      ]
+    }
+  ]
+}

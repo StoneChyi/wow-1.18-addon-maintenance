@@ -1,0 +1,50 @@
+# ActionBarProfiles 修改说明
+
+整理日期：2026-10-09。状态：**有维护记录**。
+
+[返回全部插件索引](README.md) · [待补充清单](../待补充清单.md)
+
+核对基准：仓库提交 `4feabd85022b` 中的个人使用版。它已包含早期修改，不是官方原版；本页是历史整理，不表示今天重新实施了下面的功能。
+
+## 修改目的
+
+让天赋切换后动作条完整恢复，减少残留和无效重复加载。
+
+## 记录中的修改
+
+- 保存和恢复覆盖 144 个动作槽，包括空槽；载入时清理不属于目标配置的旧动作。
+- 对缺失物品、技能和宏提供处理，避免中途错误破坏恢复；战斗或光标状态不合适时避免强行执行。
+- 与 BrainwasherPro 的天赋完成状态联动，并修正动作条配置优先级和重复载入提示。
+
+历史笔记可能来自迁移前的客户端目录。下列入口已核对为本仓库保存的文件；这能定位维护对象，不能代替每一项修改与官方原版的完整差异。
+
+## 主要维护入口
+
+以下是重点入口及有文件级变更依据的文件，不表示每个文件的每一行都是个人修改。
+
+- [ActionBarProfiles.lua](../../Interface/AddOns/ActionBarProfiles/ActionBarProfiles.lua)
+
+## 关联插件
+
+[BrainwasherPro](BrainwasherPro.md)、[Outfitter](Outfitter.md)、[BetterCharacterStats](BetterCharacterStats.md)。更新时同时检查对应入口与数据口径。
+
+## 验证与范围
+
+来源中有语法检查、模拟或用户反馈时，结果仅对应当时的版本与环境；不据此认定当前版本已完成游戏验收。本次仅核对历史、文件存在与文档链接，没有运行或修改插件功能。
+
+## 待补充
+
+早于 10-06 的个人改动尚无完整逐项记录；请补充额外配置需求。
+
+## 依据
+
+- [初始化插件清单（历史快照，未改写其原始证据标记）](../../PluginHistory/addon-catalog.json)
+- [历史归档来源与校验索引](../../PluginHistory/history-index.json)
+- [仓库内插件目录（目录缺失时查看核对基准提交）](../../Interface/AddOns/ActionBarProfiles)
+- [PluginHistory/Evidence/addons_tmp/talent-panel-actionbar-change-notes.md](../../PluginHistory/Evidence/addons_tmp/talent-panel-actionbar-change-notes.md)
+- [PluginHistory/Evidence/addons_tmp/actionbar-priority-backup-20261006-204629/README.md](../../PluginHistory/Evidence/addons_tmp/actionbar-priority-backup-20261006-204629/README.md)
+- [PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json](../../PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json)
+- [PluginHistory/Evidence/reports/20261006/适配指南草稿.md](../../PluginHistory/Evidence/reports/20261006/%E9%80%82%E9%85%8D%E6%8C%87%E5%8D%97%E8%8D%89%E7%A8%BF.md)
+- [PluginHistory/Evidence/legacy-20261006/Docs/Files/ActionBarProfiles](../../PluginHistory/Evidence/legacy-20261006/Docs/Files/ActionBarProfiles)
+
+没有完整官方原版、没有依据的改动日期与作者均不作推断；阶段备份只用于审查，不宜整份覆盖新版。

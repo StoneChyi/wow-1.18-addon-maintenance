@@ -1,0 +1,155 @@
+# pfUI 修改说明
+
+整理日期：2026-10-09。状态：**有维护记录**。
+
+[返回全部插件索引](README.md) · [待补充清单](../待补充清单.md)
+
+核对基准：仓库提交 `4feabd85022b` 中的个人使用版。它已包含早期修改，不是官方原版；本页是历史整理，不表示今天重新实施了下面的功能。
+
+## 修改目的
+
+整合个人界面、监控和旧客户端兼容修改。
+
+## 记录中的修改
+
+- 平砍计时修正猎人远程异常，目标平砍支持 Nampower/SuperWoW/无 DLL 回退；固定目标姓名板复刻血条、施法、减益和仇恨，支持移动及独立尺寸。
+- 团队宠物布局、反向填充、light/lightH 预设及自定义布局修复；后续 09-18 又拆分团队人数/宠物池并调整拖动，不能只恢复 08-18 中间方案。
+- 单位框队长/助理图标、焦点引导、GUID/名字兼容；提示生命/能量条的字体、排序、位置和百分比开关。
+- 玩家光环黑白名单、色盲品质文字、中文数值缩写；姓名板控制技能高亮及默认开关、堆叠兼容和图标签名缓存。
+- libdebuff 按 Cursive 等资料修正时长，处理 Nampower 实际光环槽、溢出减益标志、原始/紧凑索引、重复图标和悬停提示。
+- 分离/监控 Buff、Debuff：分别拖动，目标采用复制监控；取消未激活灰显方案，监控名单上限调整和动态布局。
+- 聊天复制入口稳定、自动 /who 静默与手动查询区分、密语非粘性开关及聊天标签调整。
+- 动作条冷却/触发高亮、姿态条物品计数及动作条监控；保留点击、锁定、外观、宏名/热键等能力。
+- 面板移植/扩展 diminfo 信息模块，顶部/底部信息条、按需刷新及团队冷却队列。
+- 全局材质批量选择、pfUI-Z 补全、材质下拉缩略图；自动下马、节日判断和商人批量购买队列等修复。
+- 2026-10-04 自身装备悬停不再做无意义的自我装备对比。
+- 2026-10-08 距离框左侧圆点表示视线、右侧圆角方块表示近战条件；图形抗锯齿、字号居中补偿及固定锚点，数字位数改变不推动标记。
+- 2026-10-08 聊天复制窗口支持任意拖选、Ctrl+C/复制选中；提取团队 YY，去空格保留前导零，退团清除，世界广告不覆盖。
+- 2026-10-08 动作监控增加隐藏技能描述、解锁后 Shift 拖动排序、多套独立方案和完整天赋加点绑定；未匹配时保留现方案。
+- 仇恨显示接入 ShaguDPS 坦克模式多目标数据，目标仇恨框采用连续渐变，最终文字只保留百分比。
+
+- 2026-10-09 修正动作监控配置使用旧客户端不存在的 GameTooltip:GetOwner 导致初始化中断，改用 IsOwned(button) 并跳过缺失按钮；提交 `4feabd8` 及独立报告记录六项离线回归通过，用户重载后确认头像、小地图和按钮收纳恢复。这个验收范围不扩大为所有 pfUI 功能已实测。
+
+历史笔记可能来自迁移前的客户端目录。下列入口已核对为本仓库保存的文件；这能定位维护对象，不能代替每一项修改与官方原版的完整差异。
+
+## 主要维护入口
+
+以下是重点入口及有文件级变更依据的文件，不表示每个文件的每一行都是个人修改。
+
+- [api/api.lua](../../Interface/AddOns/pfUI/api/api.lua)
+- [api/config.lua](../../Interface/AddOns/pfUI/api/config.lua)
+- [api/ui-widgets.lua](../../Interface/AddOns/pfUI/api/ui-widgets.lua)
+- [api/unitframes.lua](../../Interface/AddOns/pfUI/api/unitframes.lua)
+- [env/profiles.lua](../../Interface/AddOns/pfUI/env/profiles.lua)
+- [env/translations_zhCN.lua](../../Interface/AddOns/pfUI/env/translations_zhCN.lua)
+- [libs/libdebuff.lua](../../Interface/AddOns/pfUI/libs/libdebuff.lua)
+- [modules/actionbar.lua](../../Interface/AddOns/pfUI/modules/actionbar.lua)
+- [modules/actionbar_glow.lua](../../Interface/AddOns/pfUI/modules/actionbar_glow.lua)
+- [modules/buff.lua](../../Interface/AddOns/pfUI/modules/buff.lua)
+- [modules/buyemall.lua](../../Interface/AddOns/pfUI/modules/buyemall.lua)
+- [modules/chat.lua](../../Interface/AddOns/pfUI/modules/chat.lua)
+- [modules/chatcopy.lua](../../Interface/AddOns/pfUI/modules/chatcopy.lua)
+- [modules/energytick.lua](../../Interface/AddOns/pfUI/modules/energytick.lua)
+- [modules/eqcompare.lua](../../Interface/AddOns/pfUI/modules/eqcompare.lua)
+- [modules/gui.lua](../../Interface/AddOns/pfUI/modules/gui.lua)
+- [modules/nameplates.lua](../../Interface/AddOns/pfUI/modules/nameplates.lua)
+- [modules/panel.lua](../../Interface/AddOns/pfUI/modules/panel.lua)
+- [modules/raid.lua](../../Interface/AddOns/pfUI/modules/raid.lua)
+- [modules/swingtimer.lua](../../Interface/AddOns/pfUI/modules/swingtimer.lua)
+- [modules/target.lua](../../Interface/AddOns/pfUI/modules/target.lua)
+- [modules/tooltip.lua](../../Interface/AddOns/pfUI/modules/tooltip.lua)
+- [modules/unlock.lua](../../Interface/AddOns/pfUI/modules/unlock.lua)
+
+- [tests/monitor-tooltip-owner.lua](../../Interface/AddOns/pfUI/tests/monitor-tooltip-owner.lua)
+
+## 关联插件
+
+[pfUI-CustomMedia](pfUI-CustomMedia.md)、[pfUI-addonskinner](pfUI-addonskinner.md)、[Automatonex](Automatonex.md)、[ShaguDPS](ShaguDPS.md)、[diminfo](diminfo.md)、[WIM](WIM.md)、[Cat](Cat.md)。更新时同时检查对应入口与数据口径。
+
+## 已回退方案及更新注意
+
+09-14 的聊天按行拖选曾回退，10-08 采用新方案；灰显监控、固定姓名板光晕和 AGRO 差值后缀均曾被取消。最初关于特殊姿态条锚点的聊天仅给出设置建议，不记为已修代码。早期笔记中的多个客户端不能混为同一个当前安装。
+
+## 验证与范围
+
+日期笔记记录多轮语法、模拟和个别用户实测；10-08 聊天复制、动作监控与距离框完成报告明确仍需游戏验证。这里逐阶段保留来源，不将历史检查当作本次运行结果。
+
+## 待补充
+
+修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。
+
+## 依据
+
+- [初始化插件清单（历史快照，未改写其原始证据标记）](../../PluginHistory/addon-catalog.json)
+- [历史归档来源与校验索引](../../PluginHistory/history-index.json)
+- [仓库内插件目录（目录缺失时查看核对基准提交）](../../Interface/AddOns/pfUI)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-15.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-15.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-16.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-16.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-17.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-17.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-18.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-18.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-19.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-19.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-20.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-20.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-21.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-21.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-22.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-22.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-23.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-23.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-24.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-24.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-25.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-25.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-26.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-26.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-28.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-28.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-29.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-29.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-30.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-30.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-08-31.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-08-31.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-01.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-01.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-03.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-03.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-04.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-04.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-05.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-05.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-07.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-07.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-08.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-08.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-09.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-09.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-10.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-10.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-12.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-12.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-13.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-13.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-14.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-14.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-17.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-17.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-18.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-18.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-19.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-19.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-23.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-23.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-24.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-24.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-09-29.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-09-29.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-10-02.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-10-02.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/2026-10-04.md](../../Interface/AddOns/pfUI/.workbuddy/memory/2026-10-04.md)
+- [Interface/AddOns/pfUI/.workbuddy/memory/MEMORY.md](../../Interface/AddOns/pfUI/.workbuddy/memory/MEMORY.md)
+- [PluginHistory/Research/维护聊天摘录-20261009.json](../../PluginHistory/Research/%E7%BB%B4%E6%8A%A4%E8%81%8A%E5%A4%A9%E6%91%98%E5%BD%95-20261009.json)
+- [Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-03.md](../../Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-03.md)
+- [Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/2026-09-18.md](../../Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/2026-09-18.md)
+- [PluginHistory/Evidence/reports/chatcopy_partial_yy_test.py](../../PluginHistory/Evidence/reports/chatcopy_partial_yy_test.py)
+- [PluginHistory/Evidence/addons_tmp/check_action_monitor.py](../../PluginHistory/Evidence/addons_tmp/check_action_monitor.py)
+- [PluginHistory/Evidence/addons_tmp/check_distance_status.py](../../PluginHistory/Evidence/addons_tmp/check_distance_status.py)
+- [PluginHistory/Evidence/CodexBackups/pfUI/chatcopy-partial-yy-20261008/chatcopy.lua](../../PluginHistory/Evidence/CodexBackups/pfUI/chatcopy-partial-yy-20261008/chatcopy.lua)
+- [PluginHistory/Evidence/CodexBackups/pfUI/chatcopy-partial-yy-20261008/translations_zhCN.lua](../../PluginHistory/Evidence/CodexBackups/pfUI/chatcopy-partial-yy-20261008/translations_zhCN.lua)
+- [PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/actionbar.lua](../../PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/actionbar.lua)
+- [PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/config.lua](../../PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/config.lua)
+- [PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/gui.lua](../../PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/gui.lua)
+- [PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/translations_zhCN.lua](../../PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/translations_zhCN.lua)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-antialias-backup-20261008-194831/check_distance_status.py](../../PluginHistory/Evidence/addons_tmp/distanceindicator-antialias-backup-20261008-194831/check_distance_status.py)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-antialias-backup-20261008-194831/unitxp.lua](../../PluginHistory/Evidence/addons_tmp/distanceindicator-antialias-backup-20261008-194831/unitxp.lua)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-centering-backup-20261008/unitxp.lua.original](../../PluginHistory/Evidence/addons_tmp/distanceindicator-centering-backup-20261008/unitxp.lua.original)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-fixed-markers-backup-20261008-215432/check_distance_status.py](../../PluginHistory/Evidence/addons_tmp/distanceindicator-fixed-markers-backup-20261008-215432/check_distance_status.py)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-fixed-markers-backup-20261008-215432/unitxp.lua](../../PluginHistory/Evidence/addons_tmp/distanceindicator-fixed-markers-backup-20261008-215432/unitxp.lua)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-shape-alignment-backup-20261008-194146/check_distance_status.py](../../PluginHistory/Evidence/addons_tmp/distanceindicator-shape-alignment-backup-20261008-194146/check_distance_status.py)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-shape-alignment-backup-20261008-194146/unitxp.lua](../../PluginHistory/Evidence/addons_tmp/distanceindicator-shape-alignment-backup-20261008-194146/unitxp.lua)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/api/config.lua](../../PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/api/config.lua)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/env/translations_zhCN.lua](../../PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/env/translations_zhCN.lua)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/modules/gui.lua](../../PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/modules/gui.lua)
+- [PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/modules/unitxp.lua](../../PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/modules/unitxp.lua)
+- [Interface/AddOns/pfUI/init/modules.xml.20260924_195026.buyemall.bak](../../Interface/AddOns/pfUI/init/modules.xml.20260924_195026.buyemall.bak)
+- [Interface/AddOns/pfUI/modules/eqcompare.20261004_093912.selfcompare.bak](../../Interface/AddOns/pfUI/modules/eqcompare.20261004_093912.selfcompare.bak)
+- [Interface/AddOns/pfUI/modules/tooltip.20261002_212528.alwaysperc.bak](../../Interface/AddOns/pfUI/modules/tooltip.20261002_212528.alwaysperc.bak)
+
+- [PluginHistory/pfUI-tooltip-fix-20261009.md](../../PluginHistory/pfUI-tooltip-fix-20261009.md)
+
+没有完整官方原版、没有依据的改动日期与作者均不作推断；阶段备份只用于审查，不宜整份覆盖新版。
+
+## 2026-10-09 技能栏初始化兼容修复（本次确认）
+
+技能栏监控调用旧客户端缺少的 GameTooltip:GetOwner 导致后续模块未加载；已改用 IsOwned。六项离线模拟检查通过，用户执行 /reload 后确认头像、小地图和按钮收纳均恢复。主要文件：modules/actionbar.lua、tests/monitor-tooltip-owner.lua。详见[本次修复与验证记录](../pfUI-tooltip-fix-20261009.md)。此结论不代表所有监控方案均已实测；哨塔隐藏需求尚未重新实施。

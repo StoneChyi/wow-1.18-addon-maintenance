@@ -1,0 +1,63 @@
+# DPSMateXEncounters 修改说明
+
+整理日期：2026-10-09。状态：**有维护记录**。
+
+[返回全部插件索引](README.md) · [待补充清单](../待补充清单.md)
+
+核对基准：仓库提交 `4feabd85022b` 中的个人使用版。它已包含早期修改，不是官方原版；本页是历史整理，不表示今天重新实施了下面的功能。
+
+## 修改目的
+
+提供 Boss/小怪战斗分类与可靠汇总。
+
+## 记录中的修改
+
+- 新增 Encounter、Merge、Views 模块，记录战斗分类及入口。
+- 汇总时处理重复片段、历史数据、详情查询和数据结构；统一有效时间及统计语义。
+- 与核心、Extend、ExtendMore、Insights 协同显示。
+
+- 后续紧凑详情/中文改动继续适配 Views 与 Merge，汇总视图保留命中/暴击等分类统计，不重建时间图占位。
+
+历史笔记可能来自迁移前的客户端目录。下列入口已核对为本仓库保存的文件；这能定位维护对象，不能代替每一项修改与官方原版的完整差异。
+
+## 主要维护入口
+
+以下是重点入口及有文件级变更依据的文件，不表示每个文件的每一行都是个人修改。
+
+- [DPSMateXEncounters.toc](../../Interface/AddOns/DPSMateXEncounters/DPSMateXEncounters.toc)
+- [Encounter.lua](../../Interface/AddOns/DPSMateXEncounters/Encounter.lua)
+- [Merge.lua](../../Interface/AddOns/DPSMateXEncounters/Merge.lua)
+- [README.md](../../Interface/AddOns/DPSMateXEncounters/README.md)
+- [Views.lua](../../Interface/AddOns/DPSMateXEncounters/Views.lua)
+
+## 关联插件
+
+[DPSMateX](DPSMateX.md)、[DPSMateXExtend](DPSMateXExtend.md)、[DPSMateXExtendMore](DPSMateXExtendMore.md)、[DPSMateXInsights](DPSMateXInsights.md)。更新时同时检查对应入口与数据口径。
+
+## 已回退方案及更新注意
+
+可行性分析报告不等于实现；不能把不同战斗直接逐数相加而忽略时间、去重和数据类型。
+
+## 验证与范围
+
+来源中有语法检查、模拟或用户反馈时，结果仅对应当时的版本与环境；不据此认定当前版本已完成游戏验收。本次仅核对历史、文件存在与文档链接，没有运行或修改插件功能。
+
+## 待补充
+
+暂无发现会妨碍本页摘要的明确缺项。仍欢迎补充未被笔记覆盖的早期修改、实际游戏验收和个人保留需求。
+
+## 依据
+
+- [初始化插件清单（历史快照，未改写其原始证据标记）](../../PluginHistory/addon-catalog.json)
+- [历史归档来源与校验索引](../../PluginHistory/history-index.json)
+- [仓库内插件目录（目录缺失时查看核对基准提交）](../../Interface/AddOns/DPSMateXEncounters)
+- [PluginHistory/Evidence/addons_tmp/DPSMateX-Encounters-change-report-20261006.md](../../PluginHistory/Evidence/addons_tmp/DPSMateX-Encounters-change-report-20261006.md)
+- [PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json](../../PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json)
+- [PluginHistory/Evidence/reports/20261006/适配指南草稿.md](../../PluginHistory/Evidence/reports/20261006/%E9%80%82%E9%85%8D%E6%8C%87%E5%8D%97%E8%8D%89%E7%A8%BF.md)
+- [PluginHistory/Evidence/legacy-20261006/Docs/Files/DPSMateXEncounters](../../PluginHistory/Evidence/legacy-20261006/Docs/Files/DPSMateXEncounters)
+
+- [PluginHistory/Evidence/addons_tmp/DPSMateX-compact-details-changes-20261006.md](../../PluginHistory/Evidence/addons_tmp/DPSMateX-compact-details-changes-20261006.md)
+
+- [PluginHistory/Evidence/addons_tmp/DPSMateX-ui-localization-changes-20261006.md](../../PluginHistory/Evidence/addons_tmp/DPSMateX-ui-localization-changes-20261006.md)
+
+没有完整官方原版、没有依据的改动日期与作者均不作推断；阶段备份只用于审查，不宜整份覆盖新版。

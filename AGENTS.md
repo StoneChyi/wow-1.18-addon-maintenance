@@ -15,5 +15,6 @@
 - `WTF`、账号/角色设置、登录资料、日志、缓存、游戏数据和截图不纳入此代码仓库。需要时另做本地备份。没有用户明确要求，不创建远程仓库，不上传。
 - Git 可以恢复已提交内容，但不会阻止外部更新器覆盖工作目录。执行更新前必须保存提交；不要声称记录等同于更新器防覆盖。
 - 历史依据见 `PluginHistory/README.md`、`PluginHistory/history-index.json`；原有备份保持原位。后续新改动使用真实 Git 提交，不把整份旧文件无条件覆盖回新版。
+- 每项插件维护同时更新 `PluginHistory/Plugins/插件名.md`，写明目的、主要文件、关联功能、真实验证结果和未确认事项；新增插件或证据状态改变时同步 `PluginHistory/Plugins/README.md` 与 `PluginHistory/maintenance-index.json`。用户补充按实际确认日期记录，不伪造旧历史；不因新摘要而改写初始化清单或历史证据。
 - 用户已于 2026-10-09 完成 GitHub 登录并授权创建、同步私有仓库 `https://github.com/StoneChyi/wow-1.18-addon-maintenance`。本地 `origin` 指向该仓库，`main` 跟踪 `origin/main`。后续执行同步时确认目标与私有状态，不使用强制推送或镜像推送，不夹带未审查的其他任务内容。上传前可运行 `Tools/audit_github_upload.py` 检查所有可达历史中的常见凭据、私钥、排除目录与大文件。该检查不能保证发现所有敏感信息。
 - GitHub 登录凭据由官方 GitHub CLI 管理，不写入仓库、脚本、日志或提交说明。当前本机需通过已有系统代理访问 GitHub；此仓库的 Git 配置可使用同一代理，仅影响本仓库。不要修改系统 hosts 或全局代理。说明见 `PluginHistory/GitHub同步说明.md`。

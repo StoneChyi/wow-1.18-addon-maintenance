@@ -1,0 +1,1822 @@
+{
+  "schema_version": 1,
+  "compiled_on": "2026-10-09",
+  "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
+  "scope": "个人使用版的维护说明；不是官方原版对比",
+  "counts": {
+    "snapshot_difference": 2,
+    "unconfirmed": 59,
+    "documented_history": 42,
+    "related_skin_only": 2
+  },
+  "addons": [
+    {
+      "addon": "!Libs",
+      "status": "snapshot_difference",
+      "note": "PluginHistory/Plugins/!Libs.md",
+      "purpose": "补记可核对的共享词库差异。",
+      "sources": [
+        "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua.20260918125911.bak"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua"
+      ],
+      "tracked_files_at_reference": 93,
+      "pending": "这些词条是个人补充还是整合包更新，以及修改时间/原因，请补充；备份文件名日期不是可信提交时间。"
+    },
+    {
+      "addon": "Accountant",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Accountant.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 18,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "ActionBarProfiles",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/ActionBarProfiles.md",
+      "purpose": "让天赋切换后动作条完整恢复，减少残留和无效重复加载。",
+      "sources": [
+        "PluginHistory/Evidence/addons_tmp/talent-panel-actionbar-change-notes.md",
+        "PluginHistory/Evidence/addons_tmp/actionbar-priority-backup-20261006-204629/README.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/ActionBarProfiles"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/ActionBarProfiles/ActionBarProfiles.lua"
+      ],
+      "tracked_files_at_reference": 4,
+      "pending": "早于 10-06 的个人改动尚无完整逐项记录；请补充额外配置需求。"
+    },
+    {
+      "addon": "AdvancedTradeSkillWindow2",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/AdvancedTradeSkillWindow2.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 44,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "ArchiTotem",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/ArchiTotem.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 16,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Atlas",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/Atlas.md",
+      "purpose": "让木喉要塞地图编号与首领掉落保持一致。",
+      "sources": [
+        "Interface/AddOns/Atlas/.workbuddy/memory/2026-08-21.md",
+        "Interface/AddOns/Atlas/.workbuddy/memory/2026-08-28.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/Atlas/AtlasMaps.lua"
+      ],
+      "tracked_files_at_reference": 115,
+      "pending": ""
+    },
+    {
+      "addon": "AtlasLoot",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/AtlasLoot.md",
+      "purpose": "修正地图掉落映射和愿望清单的本地化错误。",
+      "sources": [
+        "Interface/AddOns/AtlasLoot/.workbuddy/memory/2026-09-15.md",
+        "Interface/AddOns/Atlas/.workbuddy/memory/2026-08-28.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/AtlasLoot/Core/WishList.lua",
+        "Interface/AddOns/AtlasLoot/Database/Instances.lua",
+        "Interface/AddOns/AtlasLoot/Locale/locale.cn.lua",
+        "Interface/AddOns/AtlasLoot/Locale/locale.en.lua"
+      ],
+      "tracked_files_at_reference": 61,
+      "pending": ""
+    },
+    {
+      "addon": "AtlasQuest",
+      "status": "snapshot_difference",
+      "note": "PluginHistory/Plugins/AtlasQuest.md",
+      "purpose": "补记可核对的任务本地化差异。",
+      "sources": [
+        "Interface/AddOns/AtlasQuest/Locale/localization.cn.lua.bak"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/AtlasQuest/Locale/localization.cn.lua"
+      ],
+      "tracked_files_at_reference": 10,
+      "pending": "请确认是否本人增加乌龟服任务资料，还是随整合包更新带入；旧备份不是官方原版。"
+    },
+    {
+      "addon": "AuldLangSyne",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/AuldLangSyne.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 5,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "AutoBar",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/AutoBar.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 16,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "AutoMarker",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/AutoMarker.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 10,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Automatonex",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/Automatonex.md",
+      "purpose": "完善模块配置、物品监控及与其他界面的协作。",
+      "sources": [
+        "Interface/AddOns/Automatonex/.workbuddy/memory/2026-09-07.md",
+        "Interface/AddOns/Automatonex/.workbuddy/memory/2026-09-09.md",
+        "Interface/AddOns/Automatonex/.workbuddy/memory/2026-09-12.md",
+        "Interface/AddOns/Automatonex/.workbuddy/memory/2026-09-17.md",
+        "Interface/AddOns/Automatonex/.workbuddy/memory/2026-09-27.md",
+        "Interface/AddOns/Automatonex/.workbuddy/memory/2026-09-30.md",
+        "Interface/AddOns/Automatonex/.workbuddy/memory/MEMORY.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-28.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-18.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/Automatonex/Core.lua",
+        "Interface/AddOns/Automatonex/Modules/AutoShout.lua",
+        "Interface/AddOns/Automatonex/Modules/Boomtime.lua",
+        "Interface/AddOns/Automatonex/Modules/Plates.lua",
+        "Interface/AddOns/Automatonex/Modules/QuestItemBar.lua",
+        "Interface/AddOns/Automatonex/Modules/Tooltip.lua",
+        "Interface/AddOns/Automatonex/Modules/Trainer.lua"
+      ],
+      "tracked_files_at_reference": 122,
+      "pending": ""
+    },
+    {
+      "addon": "Bagshui",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Bagshui.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 161,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "BetterCharacterStats",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/BetterCharacterStats.md",
+      "purpose": "保持角色属性面板布局稳定，并与观察、换天赋功能协调。",
+      "sources": [
+        "Interface/AddOns/BetterCharacterStats/.workbuddy/memory/2026-08-16.md",
+        "Interface/AddOns/BetterCharacterStats/.workbuddy/memory/2026-09-12.md",
+        "Interface/AddOns/BetterCharacterStats/.workbuddy/memory/MEMORY.md",
+        "PluginHistory/Evidence/addons_tmp/talent-panel-actionbar-change-notes.md",
+        "PluginHistory/Evidence/addons_tmp/character-bcs-scan-backup-20261006/README.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/BetterCharacterStats"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/BetterCharacterStats/BCS_PropertiesPanel.lua",
+        "Interface/AddOns/BetterCharacterStats/BetterCharacterStats.lua",
+        "Interface/AddOns/BetterCharacterStats/BetterCharacterStats.xml",
+        "Interface/AddOns/BetterCharacterStats/helper.lua"
+      ],
+      "tracked_files_at_reference": 9,
+      "pending": ""
+    },
+    {
+      "addon": "BigWigs",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/BigWigs.md",
+      "purpose": "适配乌龟服首领、中文日志以及竖行计时条。",
+      "sources": [
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-08-21.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-08-25.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-08-28.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-01.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-02.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-04.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-08.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-09.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-13.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-15.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-17.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-18.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-19.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-23.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-24.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-28.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-09-29.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-10-02.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/2026-10-03.md",
+        "Interface/AddOns/BigWigs/.workbuddy/memory/MEMORY.md",
+        "Interface/AddOns/BigWigs/Raids/BWL/Ezzel.lua.20260918125911.bak"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/BigWigs/Plugins/Comm.lua",
+        "Interface/AddOns/BigWigs/Plugins/CommonAuras.lua",
+        "Interface/AddOns/BigWigs/Plugins/Threat.lua",
+        "Interface/AddOns/BigWigs/Plugins/Version.lua",
+        "Interface/AddOns/BigWigs/Plugins/VerticalBars.lua",
+        "Interface/AddOns/BigWigs/Plugins/WorldBossCooldown.lua",
+        "Interface/AddOns/BigWigs/Raids/BWL/Nefarian.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/Anomalus.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/BroodQueenAraxxna.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/ChessFight.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/ClawlordHowlfang.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/DarkRiderChampion.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/EchoOfMedivh.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/Grizikil.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/Incantagos.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/KaraTrash.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/KeeperGnarlmoon.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/Kruul.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/LordBlackwaldII.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/Mephistroth.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/Moroes.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/PhantomServant.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/Rupturan.lua",
+        "Interface/AddOns/BigWigs/Raids/Karazhan/SanvTasdal.lua",
+        "Interface/AddOns/BigWigs/Raids/MC/Ragnaros.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Karrsh.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Kronn.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Loktanag.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Ormanos.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Partath.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Perotharn.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Rotgrowl.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Selenaxx.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/TimbermawTrash.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Trioch.lua",
+        "Interface/AddOns/BigWigs/Raids/TMH/Ursol.lua"
+      ],
+      "tracked_files_at_reference": 339,
+      "pending": "首领模块数量较多，各场战斗的最终实测情况请按需补充。"
+    },
+    {
+      "addon": "Blizzard_AuctionUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_AuctionUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_BattlefieldMinimap",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_BattlefieldMinimap.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_BindingUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_BindingUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_CombatText",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_CombatText.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_CraftUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_CraftUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_GMSurveyUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_GMSurveyUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_InspectUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_InspectUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_MacroUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_MacroUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_RaidUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_RaidUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_TalentUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_TalentUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_TradeSkillUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_TradeSkillUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Blizzard_TrainerUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Blizzard_TrainerUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "BrainwasherPro",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/BrainwasherPro.md",
+      "purpose": "切换天赋后可靠地恢复装备、动作条及属性面板。",
+      "sources": [
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-08-26.md",
+        "PluginHistory/Evidence/addons_tmp/talent-panel-actionbar-change-notes.md",
+        "PluginHistory/Evidence/addons_tmp/talent-sync-performance-backup-20261006-202746/README.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/BrainwasherPro"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/BrainwasherPro/BrainwasherPro.lua"
+      ],
+      "tracked_files_at_reference": 2,
+      "pending": ""
+    },
+    {
+      "addon": "BuffTool",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/BuffTool.md",
+      "purpose": "简化本职业设置，并让移动模式可靠退出。",
+      "sources": [
+        "Interface/AddOns/BuffTool/.workbuddy/memory/2026-08-25.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/BuffTool/BuffTool.lua"
+      ],
+      "tracked_files_at_reference": 52,
+      "pending": ""
+    },
+    {
+      "addon": "Capslock",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/Capslock.md",
+      "purpose": "修正拉人名单的职业颜色。",
+      "sources": [
+        "Interface/AddOns/Capslock/.workbuddy/memory/2026-10-04.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/Capslock/Capslock.lua"
+      ],
+      "tracked_files_at_reference": 6,
+      "pending": ""
+    },
+    {
+      "addon": "Cat",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/Cat.md",
+      "purpose": "完善圣骑士输出/坦克逻辑、配置与界面。",
+      "sources": [
+        "PluginHistory/Evidence/CatBackups/20261007-judgement-reseal/manifest.json",
+        "PluginHistory/Evidence/CatBackups/20261007-settings-front/manifest.json",
+        "PluginHistory/Evidence/CatBackups/20261006-borderless-icons/manifest.json",
+        "PluginHistory/Evidence/CatBackups/20261006-header-alignment/manifest.json",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/Cat"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/Cat/CatEvent-Paladin.lua",
+        "Interface/AddOns/Cat/PaladinCJ.lua",
+        "Interface/AddOns/Cat/PaladinHeal.lua",
+        "Interface/AddOns/Cat/PaladinMeleeHeal.lua",
+        "Interface/AddOns/Cat/PaladinTank.lua",
+        "Interface/AddOns/Cat/UI/CatUI-PaladinSeal.lua",
+        "Interface/AddOns/Cat/UI/Settings-Common.lua",
+        "Interface/AddOns/Cat/UI/Settings-Menu.lua",
+        "Interface/AddOns/Cat/UI/Settings-PaladinCJ.lua",
+        "Interface/AddOns/Cat/UI/Settings-PaladinHeal.lua",
+        "Interface/AddOns/Cat/UI/Settings-PaladinMeleeHeal.lua",
+        "Interface/AddOns/Cat/UI/Settings-PaladinTank.lua"
+      ],
+      "tracked_files_at_reference": 100,
+      "pending": ""
+    },
+    {
+      "addon": "Cat2",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/Cat2.md",
+      "purpose": "扩展流程编辑、配置调用和动作条入口。",
+      "sources": [
+        "Interface/AddOns/Cat2/DEVELOPMENT-NOTES.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/Cat2/Cards/Logic/CallConfiguration.lua",
+        "Interface/AddOns/Cat2/Tests/ProfileMacroIconTest.lua",
+        "Interface/AddOns/Cat2/Tests/RunConfigurationTests.lua",
+        "Interface/AddOns/Cat2/UI/FlowEditor.lua",
+        "Interface/AddOns/Cat2/UI/FlowEditorCards.lua",
+        "Interface/AddOns/Cat2/UI/FlowEditorHeader.lua",
+        "Interface/AddOns/Cat2/UI/FlowEditorLists.lua",
+        "Interface/AddOns/Cat2/UI/FlowEditorWindow.lua",
+        "Interface/AddOns/Cat2/UI/ProfileMacroIcon.lua"
+      ],
+      "tracked_files_at_reference": 708,
+      "pending": "第三方动作条兼容及调用配置的完整游戏场景验收待补充。"
+    },
+    {
+      "addon": "CatPotion",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/CatPotion.md",
+      "purpose": "扩展常用物品，并完善多配置窗口和使用反馈。",
+      "sources": [
+        "PluginHistory/Evidence/reports/CatPotion-常用消耗品更新-20261006.md",
+        "PluginHistory/Evidence/reports/CatPotion-魔法橘子沙漏与标记报错修复-20261007.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-row-order-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-drag-preview-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-shortcut-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-menu-edge-backup-20261006/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-consumables-backup-20261006/Core.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-consumables-backup-20261006/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-consumables-backup-20261006/Settings.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-consumables-backup-20261006/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-drag-preview-backup-20261007/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-header-backup-20261006/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-menu-edge-backup-20261006/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/Banana.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/Banana.xml",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/Core.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/README.md",
+        "PluginHistory/Evidence/addons_tmp/catpotion-orange-hourglass-srti-backup-20261007/test_srti_tools.py",
+        "PluginHistory/Evidence/addons_tmp/catpotion-row-order-backup-20261007/Core.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-row-order-backup-20261007/Settings.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-row-order-backup-20261007/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-shortcut-backup-20261007/ChatBar.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-shortcut-backup-20261007/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/Core.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/Settings.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/Window.lua",
+        "PluginHistory/Evidence/addons_tmp/catpotion_data.py",
+        "Interface/AddOns/CatPotion/README.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/CatPotion/Core.lua",
+        "Interface/AddOns/CatPotion/README.md",
+        "Interface/AddOns/CatPotion/Settings.lua",
+        "Interface/AddOns/CatPotion/Window.lua"
+      ],
+      "tracked_files_at_reference": 19,
+      "pending": "部分早期窗口功能缺完整修改前对照；实际新增物品的游戏点击结果待补充。"
+    },
+    {
+      "addon": "Cooline",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/Cooline.md",
+      "purpose": "提供图形设置并减少冷却扫描与显示问题。",
+      "sources": [
+        "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-15.md",
+        "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-24.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/Cooline/Cooline.lua",
+        "Interface/AddOns/Cooline/settings.lua"
+      ],
+      "tracked_files_at_reference": 5,
+      "pending": ""
+    },
+    {
+      "addon": "Cryolysis",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Cryolysis.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 273,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Cursive",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Cursive.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 40,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "DPSMateX",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/DPSMateX.md",
+      "purpose": "完善紧凑详情、统计界面及扩展模块入口。",
+      "sources": [
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-compact-details-changes-20261006.md",
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-ui-localization-changes-20261006.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/DPSMateX"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/DPSMateX/DPSMateX.lua",
+        "Interface/AddOns/DPSMateX/DPSMateX_DataBuilder.lua",
+        "Interface/AddOns/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealing.lua",
+        "Interface/AddOns/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealing.xml",
+        "Interface/AddOns/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealingTotal.lua",
+        "Interface/AddOns/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealingTotal.xml",
+        "Interface/AddOns/DPSMateX/DPSMateX_Frame.xml",
+        "Interface/AddOns/DPSMateX/DPSMateX_Healing/DPSMateX_Details_Healing.lua",
+        "Interface/AddOns/DPSMateX/DPSMateX_Healing/DPSMateX_Details_Healing.xml",
+        "Interface/AddOns/DPSMateX/DPSMateX_Healing/DPSMateX_Details_HealingTotal.lua",
+        "Interface/AddOns/DPSMateX/DPSMateX_Healing/DPSMateX_Details_HealingTotal.xml",
+        "Interface/AddOns/DPSMateX/DPSMateX_Options.lua",
+        "Interface/AddOns/DPSMateX/DPSMateX_Sync.lua",
+        "Interface/AddOns/DPSMateX/Damage/DPSMateX_Details_Damage.lua",
+        "Interface/AddOns/DPSMateX/Damage/DPSMateX_Details_Damage.xml",
+        "Interface/AddOns/DPSMateX/Damage/DPSMateX_Details_DamageTotal.lua",
+        "Interface/AddOns/DPSMateX/Damage/DPSMateX_Details_DamageTotal.xml"
+      ],
+      "tracked_files_at_reference": 105,
+      "pending": ""
+    },
+    {
+      "addon": "DPSMateXEncounters",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/DPSMateXEncounters.md",
+      "purpose": "提供 Boss/小怪战斗分类与可靠汇总。",
+      "sources": [
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-Encounters-change-report-20261006.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/DPSMateXEncounters",
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-compact-details-changes-20261006.md",
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-ui-localization-changes-20261006.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/DPSMateXEncounters/DPSMateXEncounters.toc",
+        "Interface/AddOns/DPSMateXEncounters/Encounter.lua",
+        "Interface/AddOns/DPSMateXEncounters/Merge.lua",
+        "Interface/AddOns/DPSMateXEncounters/README.md",
+        "Interface/AddOns/DPSMateXEncounters/Views.lua"
+      ],
+      "tracked_files_at_reference": 5,
+      "pending": ""
+    },
+    {
+      "addon": "DPSMateXExtend",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/DPSMateXExtend.md",
+      "purpose": "让扩展统计详情参与 Boss/小怪汇总。",
+      "sources": [
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-Encounters-change-report-20261006.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/DPSMateXExtend",
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-compact-details-changes-20261006.md",
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-ui-localization-changes-20261006.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Auras/DPSMateX_Details_Auras.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Auras/DPSMateX_Details_Auras.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Auras/DPSMateX_Details_AurasTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Auras/DPSMateX_Details_AurasTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Casts/DPSMateX_Details_Casts.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Casts/DPSMateX_Details_Casts.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Casts/DPSMateX_Details_CastsTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Casts/DPSMateX_Details_CastsTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CureDisease/DPSMateX_Details_CureDisease.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CureDisease/DPSMateX_Details_CureDisease.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CureDisease/DPSMateX_Details_CureDiseaseTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CureDisease/DPSMateX_Details_CureDiseaseTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CureDiseaseReceived/DPSMateX_Details_CureDiseaseReceived.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CureDiseaseReceived/DPSMateX_Details_CureDiseaseReceived.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CurePoison/DPSMateX_Details_CurePoison.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CurePoison/DPSMateX_Details_CurePoison.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CurePoison/DPSMateX_Details_CurePoisonTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CurePoison/DPSMateX_Details_CurePoisonTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CurePoisonReceived/DPSMateX_Details_CurePoisonReceived.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_CurePoisonReceived/DPSMateX_Details_CurePoisonReceived.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_DamageTaken/DPSMateX_Details_DamageTaken.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_DamageTaken/DPSMateX_Details_DamageTaken.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_DamageTaken/DPSMateX_Details_DamageTakenTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_DamageTaken/DPSMateX_Details_DamageTakenTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Deaths/DPSMateX_Details_Deaths.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Deaths/DPSMateX_Details_Deaths.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Deaths/DPSMateX_Details_DeathsTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Deaths/DPSMateX_Details_DeathsTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Decurses/DPSMateX_Details_Decurses.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Decurses/DPSMateX_Details_Decurses.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Decurses/DPSMateX_Details_DecursesTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Decurses/DPSMateX_Details_DecursesTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_DecursesReceived/DPSMateX_Details_DecursesReceived.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_DecursesReceived/DPSMateX_Details_DecursesReceived.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Dispels/DPSMateX_Details_Dispels.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Dispels/DPSMateX_Details_Dispels.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Dispels/DPSMateX_Details_DispelsTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Dispels/DPSMateX_Details_DispelsTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_DispelsReceived/DPSMateX_Details_DispelsReceived.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_DispelsReceived/DPSMateX_Details_DispelsReceived.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_EDD/DPSMateX_Details_EDD.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_EDD/DPSMateX_Details_EDD.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_EDD/DPSMateX_Details_EDDTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_EDD/DPSMateX_Details_EDDTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_EDT/DPSMateX_Details_EDT.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_EDT/DPSMateX_Details_EDT.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_EDT/DPSMateX_Details_EDTTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_EDT/DPSMateX_Details_EDTTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Fails/DPSMateX_Details_Fails.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Fails/DPSMateX_Details_Fails.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Fails/DPSMateX_Details_FailsTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Fails/DPSMateX_Details_FailsTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_FriendlyFire/DPSMateX_Details_FriendlyFire.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_FriendlyFire/DPSMateX_Details_FriendlyFire.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_FriendlyFire/DPSMateX_Details_FriendlyFireTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_FriendlyFire/DPSMateX_Details_FriendlyFireTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_HealingTaken/DPSMateX_Details_HealingTaken.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_HealingTaken/DPSMateX_Details_HealingTaken.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_HealingTaken/DPSMateX_Details_HealingTakenTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_HealingTaken/DPSMateX_Details_HealingTakenTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Interrupts/DPSMateX_Details_Interrupts.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Interrupts/DPSMateX_Details_Interrupts.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Interrupts/DPSMateX_Details_InterruptsTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_Interrupts/DPSMateX_Details_InterruptsTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_LiftMagic/DPSMateX_Details_LiftMagic.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_LiftMagic/DPSMateX_Details_LiftMagic.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_LiftMagic/DPSMateX_Details_LiftMagicTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_LiftMagic/DPSMateX_Details_LiftMagicTotal.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_LiftMagicReceived/DPSMateX_Details_LiftMagicReceived.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_LiftMagicReceived/DPSMateX_Details_LiftMagicReceived.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_SunderArmor/DPSMateX_Details_SunderArmor.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_SunderArmor/DPSMateX_Details_SunderArmor.xml",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_SunderArmor/DPSMateX_Details_SunderArmorTotal.lua",
+        "Interface/AddOns/DPSMateXExtend/DPSMateX_SunderArmor/DPSMateX_Details_SunderArmorTotal.xml"
+      ],
+      "tracked_files_at_reference": 100,
+      "pending": ""
+    },
+    {
+      "addon": "DPSMateXExtendMore",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/DPSMateXExtendMore.md",
+      "purpose": "统一额外统计与汇总详情的口径。",
+      "sources": [
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-Encounters-change-report-20261006.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/DPSMateXExtendMore",
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-compact-details-changes-20261006.md",
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-ui-localization-changes-20261006.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Absorbs/DPSMateX_Absorbs.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Absorbs/DPSMateX_Details_Absorbs.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Absorbs/DPSMateX_Details_Absorbs.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Absorbs/DPSMateX_Details_AbsorbsTotal.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Absorbs/DPSMateX_Details_AbsorbsTotal.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_AbsorbsTaken/DPSMateX_Details_AbsorbsTaken.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_AbsorbsTaken/DPSMateX_Details_AbsorbsTaken.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_AbsorbsTaken/DPSMateX_Details_AbsorbsTakenTotal.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_AbsorbsTaken/DPSMateX_Details_AbsorbsTakenTotal.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_CCBreaker/DPSMateX_Details_CCBreaker.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_CCBreaker/DPSMateX_Details_CCBreaker.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_CCBreaker/DPSMateX_Details_CCBreakerTotal.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_CCBreaker/DPSMateX_Details_CCBreakerTotal.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_EHealingTaken/DPSMateX_Details_EHealingTaken.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_EHealingTaken/DPSMateX_Details_EHealingTaken.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_EHealingTaken/DPSMateX_Details_EHealingTakenTotal.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_EHealingTaken/DPSMateX_Details_EHealingTakenTotal.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_FriendlyFireTaken/DPSMateX_Details_FriendlyFireTaken.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_FriendlyFireTaken/DPSMateX_Details_FriendlyFireTaken.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_FriendlyFireTaken/DPSMateX_Details_FriendlyFireTakenTotal.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_FriendlyFireTaken/DPSMateX_Details_FriendlyFireTakenTotal.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_HealingAndAbsorbs/DPSMateX_Details_HealingAndAbsorbs.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_HealingAndAbsorbs/DPSMateX_Details_HealingAndAbsorbs.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_HealingAndAbsorbs/DPSMateX_Details_HealingAndAbsorbsTotal.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_HealingAndAbsorbs/DPSMateX_Details_HealingAndAbsorbsTotal.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_OHealingTaken/DPSMateX_Details_OHealingTaken.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_OHealingTaken/DPSMateX_Details_OHealingTaken.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_OHealingTaken/DPSMateX_Details_OverhealingTakenTotal.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_OHealingTaken/DPSMateX_Details_OverhealingTakenTotal.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_Overhealing.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_Overhealing.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_OverhealingTotal.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_OverhealingTotal.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_OHPS.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Overhealing.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Procs/DPSMateX_Details_Procs.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Procs/DPSMateX_Details_Procs.xml",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Procs/DPSMateX_Details_ProcsTotal.lua",
+        "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Procs/DPSMateX_Details_ProcsTotal.xml"
+      ],
+      "tracked_files_at_reference": 49,
+      "pending": ""
+    },
+    {
+      "addon": "DPSMateXInsights",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/DPSMateXInsights.md",
+      "purpose": "增加独立的战斗洞察和详情模块。",
+      "sources": [
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-ui-localization-changes-20261006.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/DPSMateXInsights",
+        "Interface/AddOns/DPSMateXInsights/README.md",
+        "PluginHistory/Evidence/addons_tmp/DPSMateX-compact-details-changes-20261006.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/DPSMateXInsights/Core.lua",
+        "Interface/AddOns/DPSMateXInsights/DPSMateXInsights.toc",
+        "Interface/AddOns/DPSMateXInsights/Details.lua",
+        "Interface/AddOns/DPSMateXInsights/HealingDetails.lua",
+        "Interface/AddOns/DPSMateXInsights/HealingStats.lua",
+        "Interface/AddOns/DPSMateXInsights/Modules.lua",
+        "Interface/AddOns/DPSMateXInsights/Parser.lua",
+        "Interface/AddOns/DPSMateXInsights/README.md"
+      ],
+      "tracked_files_at_reference": 8,
+      "pending": ""
+    },
+    {
+      "addon": "EavesDrop",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/EavesDrop.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 16,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "ExtraResourceBars",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/ExtraResourceBars.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 41,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "EzPoison",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/EzPoison.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 7,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "FishingBuddy",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/FishingBuddy.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 78,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Flyout",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Flyout.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 5,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "GoubayuHeal",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/GoubayuHeal.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 12,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "HideOutdoorWorldState",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/HideOutdoorWorldState.md",
+      "purpose": "保存并自动应用隐藏野外世界状态条的选择。",
+      "sources": [
+        "PluginHistory/pfUI-tooltip-fix-20261009.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/HideOutdoorWorldState/HideOutdoorWorldState.lua",
+        "Interface/AddOns/HideOutdoorWorldState/HideOutdoorWorldState.toc",
+        "Interface/AddOns/HideOutdoorWorldState/README.md",
+        "Interface/AddOns/HideOutdoorWorldState/tests/lifecycle.lua"
+      ],
+      "tracked_files_at_reference": 4,
+      "pending": "是否继续保留该插件、删除后的原始野外计数隐藏需求如何处理，请由对应维护任务补充。"
+    },
+    {
+      "addon": "HolyHope",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/HolyHope.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 69,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Interact",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Interact.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 4,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "LoseControl",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/LoseControl.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 3,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Meeting",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Meeting.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 20,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "ModernMapMarkers",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/ModernMapMarkers.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 16,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "ModifiedPowerAuras",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/ModifiedPowerAuras.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 403,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "MySlash",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/MySlash.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 5,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "NotGrid",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/NotGrid.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 22,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "OneBag",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/OneBag.md",
+      "purpose": "解决整理卡灰、油类次数和拆分回归。",
+      "sources": [
+        "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-18.md",
+        "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-23.md",
+        "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-25.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/OneBag/OneBag.lua",
+        "Interface/AddOns/OneBag/SortBags.lua"
+      ],
+      "tracked_files_at_reference": 30,
+      "pending": ""
+    },
+    {
+      "addon": "Outfitter",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/Outfitter.md",
+      "purpose": "完善快速换装和天赋切换联动。",
+      "sources": [
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-08-23.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-08-26.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-09-01.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-09-02.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-09-03.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-09-04.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-09-05.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-09-07.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-09-09.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-09-17.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/2026-10-05.md",
+        "Interface/AddOns/Outfitter/.workbuddy/memory/MEMORY.md",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/Outfitter"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/Outfitter/Bindings.xml",
+        "Interface/AddOns/Outfitter/Outfitter.lua",
+        "Interface/AddOns/Outfitter/QuickSwap.lua",
+        "Interface/AddOns/Outfitter/pfui-skin.lua"
+      ],
+      "tracked_files_at_reference": 40,
+      "pending": ""
+    },
+    {
+      "addon": "PallyPower",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/PallyPower.md",
+      "purpose": "增加单人操作与个人祝福，同时修正团队目标判断。",
+      "sources": [
+        "Interface/AddOns/PallyPower/.workbuddy/memory/2026-09-27.md",
+        "Interface/AddOns/PallyPower/.workbuddy/memory/2026-09-28.md",
+        "Interface/AddOns/PallyPower/.workbuddy/memory/2026-09-29.md",
+        "Interface/AddOns/PallyPower/.workbuddy/memory/MEMORY.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/PallyPower"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/PallyPower/PallyPower-Extensions.lua",
+        "Interface/AddOns/PallyPower/PallyPower.lua",
+        "Interface/AddOns/PallyPower/PallyPower.toc",
+        "Interface/AddOns/PallyPower/PallyPower.xml"
+      ],
+      "tracked_files_at_reference": 77,
+      "pending": ""
+    },
+    {
+      "addon": "PizzaWorldBuffs",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/PizzaWorldBuffs.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 26,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "PlayTurtle",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/PlayTurtle.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 35,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "PlayerLinkEnhance",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/PlayerLinkEnhance.md",
+      "purpose": "让头像/玩家菜单更紧凑并减少互相干扰。",
+      "sources": [
+        "PluginHistory/Evidence/addons_tmp/unit-menu-backup-20261006/README.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/PlayerLinkEnhance"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/PlayerLinkEnhance/PlayerLinkEnhance.lua",
+        "Interface/AddOns/PlayerLinkEnhance/PlayerLinkEnhance.toc",
+        "Interface/AddOns/PlayerLinkEnhance/SaferMenu.lua"
+      ],
+      "tracked_files_at_reference": 5,
+      "pending": ""
+    },
+    {
+      "addon": "QuickHeal",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/QuickHeal.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 25,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "QuickReply",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/QuickReply.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 6,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "RaidCheck",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/RaidCheck.md",
+      "purpose": "区分未检测成员，并增加团队分配工具。",
+      "sources": [
+        "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-09-27.md",
+        "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-09-29.md",
+        "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-09-30.md",
+        "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-10-02.md",
+        "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-10-05.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/RaidCheck/Icons/classicons.blp",
+        "Interface/AddOns/RaidCheck/RaidCheck.lua",
+        "Interface/AddOns/RaidCheck/RaidCheck.xml",
+        "Interface/AddOns/RaidCheck/RaidCheckBuffAssign.lua"
+      ],
+      "tracked_files_at_reference": 11,
+      "pending": "分配数据在各阶段有会话保存的限制，当前所需持久化范围及团队实测结果请补充。"
+    },
+    {
+      "addon": "Rinse",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Rinse.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 4,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "STSMmayor",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/STSMmayor.md",
+      "purpose": "精简盾牌/修理机器人界面并提高交互预判准确性。",
+      "sources": [
+        "PluginHistory/Evidence/CodexBackups/STSMmayor/force-disk-2.4.7/修改说明.md",
+        "PluginHistory/Evidence/CodexBackups/STSMmayor/robot-presence-2.4.8/修改说明.md",
+        "PluginHistory/Evidence/CodexBackups/STSMmayor/interaction-range-2.4.9/修改说明.md",
+        "PluginHistory/Evidence/CodexBackups/STSMmayor/interaction-los-2.4.10/修改说明.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/STSMmayor"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/STSMmayor/STSMmayor.lua",
+        "Interface/AddOns/STSMmayor/STSMmayor.toc"
+      ],
+      "tracked_files_at_reference": 36,
+      "pending": "真实墙体碰撞及服务器交互规则待实测。"
+    },
+    {
+      "addon": "S_ChatBar",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/S_ChatBar.md",
+      "purpose": "集中进入定制插件并完善 Roll 和常用工具。",
+      "sources": [
+        "Interface/AddOns/S_ChatBar/.workbuddy/memory/2026-08-20.md",
+        "Interface/AddOns/S_ChatBar/.workbuddy/memory/2026-08-25.md",
+        "Interface/AddOns/S_ChatBar/.workbuddy/memory/2026-09-02.md",
+        "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-09-27.md",
+        "PluginHistory/Evidence/reports/SimpleRaidTargetIcons-20261007.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/S_ChatBar/ChatBar.lua"
+      ],
+      "tracked_files_at_reference": 8,
+      "pending": ""
+    },
+    {
+      "addon": "S_ItemTip",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/S_ItemTip.md",
+      "purpose": "统一观察布局、属性扫描及图标显示。",
+      "sources": [
+        "Interface/AddOns/S_ItemTip/.workbuddy/memory/2026-09-30.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/S_ItemTip"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/S_ItemTip/Icons/classicons.blp",
+        "Interface/AddOns/S_ItemTip/InspectFrame.lua",
+        "Interface/AddOns/S_ItemTip/InspectGemAndEnchant.lua",
+        "Interface/AddOns/S_ItemTip/ItemSocre.lua"
+      ],
+      "tracked_files_at_reference": 24,
+      "pending": ""
+    },
+    {
+      "addon": "S_WorldMap",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/S_WorldMap.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 15,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "ShaguDPS",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/ShaguDPS.md",
+      "purpose": "增加标准坦克模式统计视图并给 pfUI 提供多目标仇恨。",
+      "sources": [
+        "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-03.md",
+        "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-04.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/ShaguDPS/core.lua",
+        "Interface/AddOns/ShaguDPS/parser.lua",
+        "Interface/AddOns/ShaguDPS/pfui_skin.lua",
+        "Interface/AddOns/ShaguDPS/settings.lua",
+        "Interface/AddOns/ShaguDPS/window.lua"
+      ],
+      "tracked_files_at_reference": 16,
+      "pending": "服务器响应、多人战斗及无 SuperWoW 时的兼容结果待补充。"
+    },
+    {
+      "addon": "ShaguScan",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/ShaguScan.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 21,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "SimpleRaidTargetIcons",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/SimpleRaidTargetIcons.md",
+      "purpose": "完善标记条生命显示、团队工具和透明图标。",
+      "sources": [
+        "PluginHistory/Evidence/reports/SimpleRaidTargetIcons-20261007.md",
+        "PluginHistory/Evidence/reports/SimpleRaidTargetIcons-borderless-icons-20261007.md",
+        "PluginHistory/Evidence/reports/CatPotion-魔法橘子沙漏与标记报错修复-20261007.md",
+        "PluginHistory/Evidence/addons_tmp/srti-borderless-backup-20261007/Banana.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-borderless-backup-20261007/SimpleRaidTargetIcons.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-borderless-backup-20261007/SimpleRaidTargetIcons.toc",
+        "PluginHistory/Evidence/addons_tmp/srti-layout-health-backup-20261007/Banana.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-layout-health-backup-20261007/RaidTools.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/ChatBar.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/Banana.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/Banana.xml",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/BananaConfig.xml",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/Bindings.xml",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/Localization.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/SimpleRaidTargetIcons.lua",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/SimpleRaidTargetIcons.toc",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/helper_version.ini",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/SRTIGlow.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/SRTIRing.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/blank.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/cross.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/diamond.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/huntermark.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/moon.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/nipple.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/skull.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/square.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/srti_mark.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/srti_save.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/star.tga",
+        "PluginHistory/Evidence/addons_tmp/srti-tools-backup-20261007/SimpleRaidTargetIcons/img/triangle.tga"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/SimpleRaidTargetIcons/Banana.lua",
+        "Interface/AddOns/SimpleRaidTargetIcons/Banana.xml",
+        "Interface/AddOns/SimpleRaidTargetIcons/IconTextures.lua",
+        "Interface/AddOns/SimpleRaidTargetIcons/RaidTools.lua",
+        "Interface/AddOns/SimpleRaidTargetIcons/SimpleRaidTargetIcons.lua",
+        "Interface/AddOns/SimpleRaidTargetIcons/SimpleRaidTargetIcons.toc",
+        "Interface/AddOns/SimpleRaidTargetIcons/img/srti_icons_borderless.png",
+        "Interface/AddOns/SimpleRaidTargetIcons/img/srti_icons_borderless.tga"
+      ],
+      "tracked_files_at_reference": 30,
+      "pending": "服务器就位/重置响应、实际血条和缩放效果待游戏确认。"
+    },
+    {
+      "addon": "SpecialTalent",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/SpecialTalent.md",
+      "purpose": "修复天赋方案翻页、拖动和 ESC 关闭。",
+      "sources": [
+        "Interface/AddOns/SpecialTalent/.workbuddy/memory/2026-08-21.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/SpecialTalent/SpecialTalentUI.lua",
+        "Interface/AddOns/SpecialTalent/SpecialTalentUI.xml"
+      ],
+      "tracked_files_at_reference": 10,
+      "pending": ""
+    },
+    {
+      "addon": "SpiritSenseRec",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/SpiritSenseRec.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 3,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "StatCompare",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/StatCompare.md",
+      "purpose": "让属性比较面板与角色/观察窗口协调。",
+      "sources": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/StatCompare"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/StatCompare/PanelLayout.lua",
+        "Interface/AddOns/StatCompare/SCOptions.lua",
+        "Interface/AddOns/StatCompare/StatCompare.lua",
+        "Interface/AddOns/StatCompare/StatCompare.toc",
+        "Interface/AddOns/StatCompare/StatCompare.xml",
+        "Interface/AddOns/StatCompare/StatScanner.lua"
+      ],
+      "tracked_files_at_reference": 25,
+      "pending": ""
+    },
+    {
+      "addon": "SuperCleveRoidMacros",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/SuperCleveRoidMacros.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 44,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "SuperMacro",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/SuperMacro.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 15,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "TWThreat",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/TWThreat.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 29,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "TankBuddyEnh",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/TankBuddyEnh.md",
+      "purpose": "完善坦克公告开关、技能识别及设置界面。",
+      "sources": [
+        "Interface/AddOns/TankBuddyEnh/.workbuddy/memory/2026-08-26.md",
+        "Interface/AddOns/TankBuddyEnh/.workbuddy/memory/2026-08-28.md",
+        "Interface/AddOns/TankBuddyEnh/.workbuddy/memory/2026-09-02.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/TankBuddyEnh/TankBuddyEnh.lua",
+        "Interface/AddOns/TankBuddyEnh/TankBuddyEnh.xml"
+      ],
+      "tracked_files_at_reference": 8,
+      "pending": ""
+    },
+    {
+      "addon": "TianYan",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/TianYan.md",
+      "purpose": "让怪物数量和战斗平均值更可靠。",
+      "sources": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/TianYan"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/TianYan/TianYan.lua"
+      ],
+      "tracked_files_at_reference": 3,
+      "pending": "未被客户端观测到的单位无法保证完整统计；请补充实际战斗验收情况。"
+    },
+    {
+      "addon": "Tmog",
+      "status": "related_skin_only",
+      "note": "PluginHistory/Plugins/Tmog.md",
+      "purpose": "登记相关皮肤适配，等待确认主插件是否另有个人改动。",
+      "sources": [
+        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-28.md"
+      ],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 53,
+      "pending": "请确认本插件本体是否曾另外修改；若有，请描述变化。"
+    },
+    {
+      "addon": "TrainerSkills",
+      "status": "related_skin_only",
+      "note": "PluginHistory/Plugins/TrainerSkills.md",
+      "purpose": "登记相关皮肤适配，等待确认主插件是否另有个人改动。",
+      "sources": [
+        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-28.md"
+      ],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 19,
+      "pending": "请确认本插件本体是否曾另外修改；若有，请描述变化。"
+    },
+    {
+      "addon": "TurtleMail",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/TurtleMail.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 10,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Turtle_General",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Turtle_General.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "Turtle_GroupUI",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/Turtle_GroupUI.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 1,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "UnitXP_SP3_Addon",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/UnitXP_SP3_Addon.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 17,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "WIM",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/WIM.md",
+      "purpose": "保持私聊界面可见，同时避免收到消息抢按键。",
+      "sources": [
+        "Interface/AddOns/WIM/.workbuddy/memory/2026-09-15.md",
+        "Interface/AddOns/WIM/.workbuddy/memory/2026-09-18.md",
+        "PluginHistory/Research/维护聊天摘录-20261009.json",
+        "PluginHistory/Evidence/CodexBackups/WIM/contacts-20261008",
+        "PluginHistory/Evidence/CodexBackups/WIM/input-focus-20261008",
+        "PluginHistory/Evidence/addons_tmp/test_wim_input_focus.py",
+        "PluginHistory/Evidence/CodexBackups/WIM/contacts-20261008/WIM.lua",
+        "PluginHistory/Evidence/CodexBackups/WIM/contacts-20261008/WIM_contact.lua",
+        "PluginHistory/Evidence/CodexBackups/WIM/input-focus-20261008/WIM.lua",
+        "PluginHistory/Evidence/CodexBackups/WIM/input-focus-20261008/WIM.xml",
+        "PluginHistory/Evidence/CodexBackups/WIM/input-focus-20261008/localization.cn.lua",
+        "PluginHistory/Evidence/CodexBackups/WIM/input-focus-20261008/localization.lua"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/WIM/WIM.lua",
+        "Interface/AddOns/WIM/WIM.xml",
+        "Interface/AddOns/WIM/WIM_Hooks.lua",
+        "Interface/AddOns/WIM/WIM_Options.lua",
+        "Interface/AddOns/WIM/WIM_contact.lua",
+        "Interface/AddOns/WIM/localization.cn.lua",
+        "Interface/AddOns/WIM/localization.lua"
+      ],
+      "tracked_files_at_reference": 47,
+      "pending": "战斗按键、连续回复、ESC/外部点击和其他界面覆盖情况请补充游戏验收。"
+    },
+    {
+      "addon": "WushuangLoot",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/WushuangLoot.md",
+      "purpose": "保留个人交互外观，适配 DLL 和可调速度。",
+      "sources": [
+        "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-08-19.md",
+        "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-08-28.md",
+        "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-09-09.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/WushuangLoot/Bindings.xml",
+        "Interface/AddOns/WushuangLoot/WSLMain.lua",
+        "Interface/AddOns/WushuangLoot/WushuangLoot.lua",
+        "Interface/AddOns/WushuangLoot/WushuangLoot.toc"
+      ],
+      "tracked_files_at_reference": 8,
+      "pending": "请优先补充重启后的探针结果、当前实际加载文件、小地图/中文命令是否恢复以及现有 DLL 版本。"
+    },
+    {
+      "addon": "XyTracker",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/XyTracker.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 38,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "YGB_OTAlarm",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/YGB_OTAlarm.md",
+      "purpose": "修正仇恨报警配置、计时与界面。",
+      "sources": [
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/YGB_OTAlarm"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/YGB_OTAlarm/UI.lua",
+        "Interface/AddOns/YGB_OTAlarm/YGB_OTAlarm.lua",
+        "Interface/AddOns/YGB_OTAlarm/YGB_OTAlarm.toc"
+      ],
+      "tracked_files_at_reference": 7,
+      "pending": ""
+    },
+    {
+      "addon": "aux-addon",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/aux-addon.md",
+      "purpose": "修正充能物品上架，并减少扫描和重复查询。",
+      "sources": [
+        "Interface/AddOns/aux-addon/.workbuddy/memory/2026-09-28.md",
+        "Interface/AddOns/aux-addon/OPTIMIZATION_SUMMARY.md",
+        "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-23.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/aux-addon/core/history.lua",
+        "Interface/AddOns/aux-addon/core/pricing_cache.lua",
+        "Interface/AddOns/aux-addon/core/scan.lua",
+        "Interface/AddOns/aux-addon/core/search_cache.lua",
+        "Interface/AddOns/aux-addon/core/tooltip.lua",
+        "Interface/AddOns/aux-addon/libs/ChatThrottleLib.lua",
+        "Interface/AddOns/aux-addon/tabs/post/core.lua",
+        "Interface/AddOns/aux-addon/util.lua",
+        "Interface/AddOns/aux-addon/util/info.lua",
+        "Interface/AddOns/aux-addon/util/temptable.lua"
+      ],
+      "tracked_files_at_reference": 49,
+      "pending": "缓存与扫描优化的真实游戏收益、异常消息根源仍待补充。"
+    },
+    {
+      "addon": "diminfo",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/diminfo.md",
+      "purpose": "支持渐隐，并消除信息条空白处右键误触。",
+      "sources": [
+        "Interface/AddOns/diminfo/.workbuddy/memory/2026-09-15.md",
+        "PluginHistory/Research/维护聊天摘录-20261009.json",
+        "PluginHistory/Evidence/CodexBackups/diminfo-click-through-20261008-162857/panel.lua"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/diminfo/panel.lua"
+      ],
+      "tracked_files_at_reference": 17,
+      "pending": "请补充实际游戏中的渐隐手感、地图右键和子模块点击验收结果。"
+    },
+    {
+      "addon": "hyx",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/hyx.md",
+      "purpose": "保留双列表界面，按实际职业能力驱散并浏览完整名单。",
+      "sources": [
+        "PluginHistory/Evidence/reports/hyx-全职业驱散与滚轮列表-20261008.md",
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-155425/hyx.lua",
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-155425/hyx.toc",
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-160930-c4a下bar/ChatBar.lua",
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-160930-c4a下bar/XinDispel.lua",
+        "PluginHistory/Evidence/CodexBackups/hyx/20261008-161523-settings-close/hyx.lua"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/hyx/XinDispel.lua",
+        "Interface/AddOns/hyx/hyx.lua",
+        "Interface/AddOns/hyx/hyx.toc"
+      ],
+      "tracked_files_at_reference": 3,
+      "pending": "游戏内滚动、中文布局、定向施法及术士宠物行为待验收。"
+    },
+    {
+      "addon": "nampowersettings",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/nampowersettings.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 19,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "perfboostsettings",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/perfboostsettings.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 18,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "pfExtend",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/pfExtend.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 36,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "pfQuest",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/pfQuest.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 256,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "pfQuest-turtle",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/pfQuest-turtle.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 38,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "pfUI",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/pfUI.md",
+      "purpose": "整合个人界面、监控和旧客户端兼容修改。",
+      "sources": [
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-15.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-16.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-17.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-18.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-19.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-20.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-21.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-22.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-23.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-24.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-25.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-26.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-28.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-29.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-30.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-31.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-01.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-03.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-04.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-05.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-07.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-08.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-09.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-10.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-12.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-13.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-14.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-17.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-18.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-19.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-23.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-24.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-29.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-10-02.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-10-04.md",
+        "Interface/AddOns/pfUI/.workbuddy/memory/MEMORY.md",
+        "PluginHistory/Research/维护聊天摘录-20261009.json",
+        "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-03.md",
+        "Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/2026-09-18.md",
+        "PluginHistory/Evidence/reports/chatcopy_partial_yy_test.py",
+        "PluginHistory/Evidence/addons_tmp/check_action_monitor.py",
+        "PluginHistory/Evidence/addons_tmp/check_distance_status.py",
+        "PluginHistory/Evidence/CodexBackups/pfUI/chatcopy-partial-yy-20261008/chatcopy.lua",
+        "PluginHistory/Evidence/CodexBackups/pfUI/chatcopy-partial-yy-20261008/translations_zhCN.lua",
+        "PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/actionbar.lua",
+        "PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/config.lua",
+        "PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/gui.lua",
+        "PluginHistory/Evidence/addons_tmp/action-monitor-options-backup-20261008-231021/translations_zhCN.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-antialias-backup-20261008-194831/check_distance_status.py",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-antialias-backup-20261008-194831/unitxp.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-centering-backup-20261008/unitxp.lua.original",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-fixed-markers-backup-20261008-215432/check_distance_status.py",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-fixed-markers-backup-20261008-215432/unitxp.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-shape-alignment-backup-20261008-194146/check_distance_status.py",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-shape-alignment-backup-20261008-194146/unitxp.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/api/config.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/env/translations_zhCN.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/modules/gui.lua",
+        "PluginHistory/Evidence/addons_tmp/distanceindicator-solid-status-backup-20261008-193305/modules/unitxp.lua",
+        "Interface/AddOns/pfUI/init/modules.xml.20260924_195026.buyemall.bak",
+        "Interface/AddOns/pfUI/modules/eqcompare.20261004_093912.selfcompare.bak",
+        "Interface/AddOns/pfUI/modules/tooltip.20261002_212528.alwaysperc.bak",
+        "PluginHistory/pfUI-tooltip-fix-20261009.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/pfUI/api/api.lua",
+        "Interface/AddOns/pfUI/api/config.lua",
+        "Interface/AddOns/pfUI/api/ui-widgets.lua",
+        "Interface/AddOns/pfUI/api/unitframes.lua",
+        "Interface/AddOns/pfUI/env/profiles.lua",
+        "Interface/AddOns/pfUI/env/translations_zhCN.lua",
+        "Interface/AddOns/pfUI/libs/libdebuff.lua",
+        "Interface/AddOns/pfUI/modules/actionbar.lua",
+        "Interface/AddOns/pfUI/modules/actionbar_glow.lua",
+        "Interface/AddOns/pfUI/modules/buff.lua",
+        "Interface/AddOns/pfUI/modules/buyemall.lua",
+        "Interface/AddOns/pfUI/modules/chat.lua",
+        "Interface/AddOns/pfUI/modules/chatcopy.lua",
+        "Interface/AddOns/pfUI/modules/energytick.lua",
+        "Interface/AddOns/pfUI/modules/eqcompare.lua",
+        "Interface/AddOns/pfUI/modules/gui.lua",
+        "Interface/AddOns/pfUI/modules/nameplates.lua",
+        "Interface/AddOns/pfUI/modules/panel.lua",
+        "Interface/AddOns/pfUI/modules/raid.lua",
+        "Interface/AddOns/pfUI/modules/swingtimer.lua",
+        "Interface/AddOns/pfUI/modules/target.lua",
+        "Interface/AddOns/pfUI/modules/tooltip.lua",
+        "Interface/AddOns/pfUI/modules/unlock.lua",
+        "Interface/AddOns/pfUI/tests/monitor-tooltip-owner.lua"
+      ],
+      "tracked_files_at_reference": 277,
+      "pending": "修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。"
+    },
+    {
+      "addon": "pfUI-CustomMedia",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/pfUI-CustomMedia.md",
+      "purpose": "让材质可见、可预览并容易应用。",
+      "sources": [
+        "Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/2026-09-17.md",
+        "Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/2026-09-18.md",
+        "Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/MEMORY.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/pfUI-CustomMedia/bars/pfUI-Z.tga",
+        "Interface/AddOns/pfUI-CustomMedia/pfUI-CustomMedia-bars.lua",
+        "Interface/AddOns/pfUI-CustomMedia/pfUI-CustomMedia-gui.lua",
+        "Interface/AddOns/pfUI-CustomMedia/pfUI-CustomMedia-tbc.toc",
+        "Interface/AddOns/pfUI-CustomMedia/pfUI-CustomMedia.toc"
+      ],
+      "tracked_files_at_reference": 37,
+      "pending": "26 张材质的实际预览和各应用目标刷新结果待补充。"
+    },
+    {
+      "addon": "pfUI-addonskinner",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/pfUI-addonskinner.md",
+      "purpose": "让定制功能及动态窗口沿用 pfUI 外观。",
+      "sources": [
+        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-27.md",
+        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-28.md",
+        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-29.md",
+        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-30.md",
+        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-10-02.md",
+        "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
+        "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/pfUI-addonskinner"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/pfUI-addonskinner/skins/Cat.lua",
+        "Interface/AddOns/pfUI-addonskinner/skins/PallyPower.lua",
+        "Interface/AddOns/pfUI-addonskinner/skins/RaidCheck.lua",
+        "Interface/AddOns/pfUI-addonskinner/skins/StatCompare.lua",
+        "Interface/AddOns/pfUI-addonskinner/skins/Tmog.lua",
+        "Interface/AddOns/pfUI-addonskinner/skins/TrainerSkills.lua"
+      ],
+      "tracked_files_at_reference": 84,
+      "pending": ""
+    },
+    {
+      "addon": "pfUI-eliteoverlay",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/pfUI-eliteoverlay.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 8,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "pfUI_ExtendedMerchant",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/pfUI_ExtendedMerchant.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 3,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    },
+    {
+      "addon": "xNet",
+      "status": "unconfirmed",
+      "note": "PluginHistory/Plugins/xNet.md",
+      "purpose": "等待确认是否有个人修改",
+      "sources": [],
+      "maintenance_files": [],
+      "tracked_files_at_reference": 2,
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+    }
+  ]
+}
