@@ -2848,6 +2848,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       MonitorConfig("Enable Action Monitor", "monitorenable", "checkbox")
       MonitorConfig("Lock Action Monitor", "monitorlock", "checkbox")
       MonitorConfig("Monitor Hide Tooltip", "monitorhidetooltip", "checkbox")
+      MonitorConfig("Monitor Display Only", "monitordisplayonly", "checkbox")
       MonitorConfig("Monitored Slots", "monitorlist")
       CreateConfig(nil, T["Share This List"], nil, nil, "button", function()
         if not pfUI.bars or not pfUI.bars.ImportMonShare then return end

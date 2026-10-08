@@ -741,6 +741,7 @@ pfUI_translation["zhCN"] = {
   ["Enable Action Monitor"] = "启用动作条监控",
   ["Lock Action Monitor"] = "锁定监控（保留Alt原有功能）",
   ["Monitor Hide Tooltip"] = "隐藏技能描述",
+  ["Monitor Display Only"] = "仅监控，禁止点击施法",
   ["Shift+Drag To Reorder Monitor"] = "Shift+拖动调整监控顺序",
   ["Monitor Profiles"] = "监控方案",
   ["Monitor Active Profile"] = "当前监控方案",

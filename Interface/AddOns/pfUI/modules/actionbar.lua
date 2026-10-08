@@ -1756,7 +1756,7 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
 
     -- Each monitor profile owns its list, order and appearance; position stays shared.
     local monitorProfileKeys = {
-      "monitorenable", "monitorlock", "monitorhidetooltip", "monitorlist",
+      "monitorenable", "monitorlock", "monitorhidetooltip", "monitordisplayonly", "monitorlist",
       "monitorsize", "monitorrowsize", "monitorhide", "monitorautohide",
       "monitorhidetime", "monitorspacing", "monitorbackdrop", "monitorcount",
       "monitorshowmacro", "monitorshowkeybind", "monitorcombat", "monitorborder", "monitorglow",
@@ -1785,6 +1785,8 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
         mon.activeProfile = selected
         for _, key in ipairs(monitorProfileKeys) do
           local value = profiles[selected].settings and profiles[selected].settings[key]
+          -- Older profiles keep their previous clickable behavior.
+          if key == "monitordisplayonly" and value == nil then value = "0" end
           if value ~= nil then C.bars[key] = value end
         end
       end
@@ -2203,6 +2205,8 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
           return
         end
 
+        if C.bars.monitordisplayonly == "1" then return end
+
         -- 左键/右键：直接使用该槽位动作（与 ButtonClick 的 mouse 分支一致）
         if HasAction(this.slot) then
           if MacroFrame_SaveMacro then
@@ -2231,7 +2235,11 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
         GameTooltip_SetDefaultAnchor(GameTooltip, this)
         if this.slot and HasAction(this.slot) then
           GameTooltip:SetAction(this.slot)
-          GameTooltip:AddLine(T["Click To Use Action"])
+          if C.bars.monitordisplayonly == "1" then
+            GameTooltip:AddLine(T["Monitor Display Only"])
+          else
+            GameTooltip:AddLine(T["Click To Use Action"])
+          end
           if C.bars.monitorlock ~= "1" then
             GameTooltip:AddLine(T["Alt+Leftclick To Remove From Monitor"])
             GameTooltip:AddLine(T["Shift+Drag To Reorder Monitor"])
@@ -2321,6 +2329,7 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
     end
 
     local function MonitorUseButton(idx)
+      if C.bars.monitordisplayonly == "1" then return end
       local b = mon.buttons[idx]
       if b and b.slot and HasAction(b.slot) then
         if MacroFrame_SaveMacro then
