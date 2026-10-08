@@ -1,0 +1,1128 @@
+# Cat/UI/CatUI-PaladinSeal.lua
+
+类型：modified；新增 452 行，删除 554 行。
+
+基线：10-06 审判图标与皮肤首次修复前
+基线来源：C:\Users\Administrator\Documents\Codex\2026-10-05\nik\work\cat-seal-icons\original\Cat\UI\CatUI-PaladinSeal.lua
+
+当前 SHA-256：`f1dfa6c64c00110ad0767512ab08868b5b8327417facd9cdebaa1de76d2170e3`
+
+所有行号均对应备份内 Latest 文件。函数名是变更块前最近的声明，仅用于搜索定位，不是 Lua 语法作用域分析。
+
+## 变更位置
+
+| 旧文件起始/行数 | 当前起始/行数 | 类型 | 当前邻近声明 |
+|---|---|---|---|
+| 1 / 2 | 1 / 1 | replace | `文件顶部 / 表定义` |
+| 4 / 0 | 3 / 4 | insert | `文件顶部 / 表定义` |
+| 7 / 2 | 10 / 0 | delete | `文件顶部 / 表定义` |
+| 10 / 1 | 11 / 1 | replace | `文件顶部 / 表定义` |
+| 13 / 2 | 14 / 0 | delete | `文件顶部 / 表定义` |
+| 18 / 3 | 17 / 1 | replace | `文件顶部 / 表定义` |
+| 24 / 1 | 21 / 0 | delete | `文件顶部 / 表定义` |
+| 26 / 2 | 22 / 0 | delete | `文件顶部 / 表定义` |
+| 30 / 2 | 24 / 33 | replace | `文件顶部 / 表定义` |
+| 34 / 1 | 59 / 1 | replace | `ApplyScale（第34行）` |
+| 36 / 0 | 61 / 1 | insert | `ApplyScale（第34行）` |
+| 38 / 6 | 64 / 7 | replace | `Label（第64行）` |
+| 47 / 3 | 74 / 2 | replace | `Label（第64行）` |
+| 54 / 8 | 80 / 91 | replace | `Label（第64行）` |
+| 63 / 0 | 172 / 28 | insert | `Slider（第172行）` |
+| 64 / 0 | 201 / 42 | insert | `Slider（第172行）` |
+| 65 / 0 | 244 / 14 | insert | `Slider（第172行）` |
+| 66 / 161 | 259 / 103 | replace | `AlignHeaders（第251行）` |
+| 229 / 300 | 364 / 0 | delete | `MPCatPaladinSealReset（第364行）` |
+| 530 / 1 | 365 / 0 | delete | `MPCatPaladinSealReset（第364行）` |
+| 532 / 3 | 366 / 2 | replace | `MPCatPaladinSealReset（第364行）` |
+| 536 / 1 | 369 / 5 | replace | `MPCatPaladinSealReset（第364行）` |
+| 539 / 0 | 376 / 6 | insert | `ValidValue（第376行）` |
+| 541 / 1 | 384 / 1 | replace | `MPCatPaladinSealInit（第383行）` |
+| 544 / 1 | 387 / 0 | delete | `MPCatPaladinSealInit（第383行）` |
+| 546 / 3 | 388 / 18 | replace | `MPCatPaladinSealInit（第383行）` |
+| 550 / 21 | 407 / 20 | replace | `MPCatPaladinSealInit（第383行）` |
+| 572 / 29 | 428 / 2 | replace | `MPCatPaladinSealInit（第383行）` |
+| 603 / 0 | 432 / 2 | insert | `MPCatPaladinSealInit（第383行）` |
+| 604 / 0 | 435 / 19 | insert | `MPCatPaladinControlUpdating（第433行）` |
+| 605 / 0 | 455 / 48 | insert | `MPCatPaladinApplyControl（第455行）` |
+
+## 完整代码差异
+
+`-` 为基线删除行，`+` 为当前新增行；上下文前缀为空格。新增文件展示整文件。
+
+```diff
+--- a/Cat/UI/CatUI-PaladinSeal.lua
++++ b/Cat/UI/CatUI-PaladinSeal.lua
+@@ -1,604 +1,502 @@
+-
+--- 定义插件名称
++-- 审判控制：保留原有选项编号，新增公正与面板外观设置。
+ local ADDON_NAME = "CatUI-PaladinSeal"
++local PaladinSealSettingsUIVersion = 2
++local updating = false
++local positionRestored = false
++local activeConfigs = {}
+ 
+ CatPaladinSeal = CreateFrame("Frame", ADDON_NAME.."Frame", UIParent)
+ CatPaladinSeal:Hide()
+-
+--- 设置窗口基本属性
+ CatPaladinSeal:SetWidth(330)
+-CatPaladinSeal:SetHeight(140)
++CatPaladinSeal:SetHeight(138)
+ CatPaladinSeal:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+ CatPaladinSeal:SetFrameLevel(1)
+-
+--- 创建Tooltip风格的背景和边框
+ CatPaladinSeal:SetBackdrop({
+     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+-    tile = true,
+-    tileSize = 16,
+-    edgeSize = 16,
++    tile = true, tileSize = 16, edgeSize = 16,
+     insets = { left = 4, right = 4, top = 4, bottom = 4 }
+ })
+ CatPaladinSeal:SetBackdropColor(0.1, 0.1, 0.2, 0.7)
+---CatPaladinSeal:SetBackdropBorderColor(0.5, 0.5, 0.5, 0.1)
+ CatPaladinSeal:SetScale(0.8)
+-
+--- 使窗口可移动
+ CatPaladinSeal:EnableMouse(true)
+ CatPaladinSeal:SetMovable(true)
+-CatPaladinSeal:RegisterForDrag("LeftButton")
+-CatPaladinSeal:SetScript("OnDragStart", function()
++
++local function SavePosition()
++    if not MPPaladinSealSaved then return end
++    local left, top = CatPaladinSeal:GetLeft(), CatPaladinSeal:GetTop()
++    if not left or not top then return end
++    local ratio = CatPaladinSeal:GetEffectiveScale() / UIParent:GetEffectiveScale()
++    MPPaladinSealSaved.PositionX = left * ratio
++    MPPaladinSealSaved.PositionY = top * ratio
++end
++
++local function ApplyScale(value)
++    if CatPaladinSeal:GetScale() == value then return end
++    -- 保持屏幕上的左上角；不能让承载滑条的窗口跟着缩放。
++    local left, top = CatPaladinSeal:GetLeft(), CatPaladinSeal:GetTop()
++    local oldScale = CatPaladinSeal:GetEffectiveScale()
++    CatPaladinSeal:SetScale(value)
++    if left and top then
++        local ratio = oldScale / CatPaladinSeal:GetEffectiveScale()
++        CatPaladinSeal:ClearAllPoints()
++        CatPaladinSeal:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left * ratio, top * ratio)
++        if positionRestored then SavePosition() end
++    end
++end
++
++-- 只有标题栏接受拖动，滑条和图标不会触发整个窗口移动。
++local dragHandle = CreateFrame("Frame", nil, CatPaladinSeal)
++dragHandle:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", 0, 0)
++dragHandle:SetWidth(225)
++dragHandle:SetHeight(28)
++dragHandle:EnableMouse(true)
++dragHandle:RegisterForDrag("LeftButton")
++dragHandle:SetScript("OnDragStart", function()
++    if MPPaladinSealSaved and MPPaladinSealSaved.Locked == 1 then return end
+     CatPaladinSeal:StartMoving()
+ end)
+-CatPaladinSeal:SetScript("OnDragStop", function()
++dragHandle:SetScript("OnDragStop", function()
+     CatPaladinSeal:StopMovingOrSizing()
+-end)
+-
+--- 添加标题文字
+-local title = CatPaladinSeal:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-title:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", 10, -10)
+-title:SetText("|cFFF58CBA圣骑士 - 审判控制|r")
+-
+--- 添加标准关闭按钮（精确对齐标题行）
++    SavePosition()
++end)
++
++local function Label(parent, text, x, y)
++    local label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
++    label:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
++    label:SetText(text)
++    return label
++end
++local title = Label(dragHandle, "|cFFF58CBA圣骑士 - 审判控制|r", 10, -10)
+ local closeButton = CreateFrame("Button", nil, CatPaladinSeal, "UIPanelCloseButton")
+ closeButton:SetWidth(32)
+ closeButton:SetHeight(32)
+-closeButton:SetPoint("TOPRIGHT", CatPaladinSeal, "TOPRIGHT", -5, -2)  -- Y坐标调整为-10，与标题完全对齐
+--- 设置点击事件
+-closeButton:SetScript("OnClick", function(self)
++closeButton:SetPoint("TOPRIGHT", CatPaladinSeal, "TOPRIGHT", -5, -2)
++closeButton:SetScript("OnClick", function()
+     CatPaladinSeal:Hide()
+     MPPublicSaved.PaladinSealDisplay = 0
+ end)
+ 
+--- 添加分隔线
+-local divider = CatPaladinSeal:CreateTexture(nil, "ARTWORK")
+-divider:SetTexture("Interface\\Tooltips\\UI-Tooltip-Border")
+-divider:SetTexCoord(0.81, 0.94, 0.5, 1)
+-divider:SetVertexColor(0.5, 0.5, 0.5)
+-divider:SetWidth(320)
+-divider:SetHeight(4)
+-divider:SetPoint("TOP", CatPaladinSeal, "TOP", 0, -30)
+-
+-
+-
+-
+-
+-local JusticeText = CatPaladinSeal:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-JusticeText:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", 10, -50)
+-JusticeText:SetText("审判")
+-
+-local postion_y = -40
+-
+-local postion_x = 50
+-local PopColor = 0.3
+-
+-local JusticeButtonNormal = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-JusticeButtonNormal:SetWidth(36)  -- 标准技能按钮大小
+-JusticeButtonNormal:SetHeight(36)
+-JusticeButtonNormal:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-JusticeButtonNormal.icon = JusticeButtonNormal:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-JusticeButtonNormal.icon:SetAllPoints()
+-JusticeButtonNormal.icon:SetTexture("Interface\\Icons\\Spell_Nature_WispSplode") -- 替换为你想要的技能图标路径
+-JusticeButtonNormal:SetAlpha(1.0)
+--- 添加高亮效果
+-JusticeButtonNormal:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-JusticeButtonNormal:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-JusticeButtonNormal.text = JusticeButtonNormal:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-JusticeButtonNormal.text:SetPoint("BOTTOM", JusticeButtonNormal, "BOTTOM", 0, 5)
+-JusticeButtonNormal.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-JusticeButtonNormal.text:SetTextColor(1, 1, 1)
+-JusticeButtonNormal.text:SetText("配置")
+-
+-
+-
+-postion_x = postion_x + 45 
+-
+-local JusticeButtonWisdom = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-JusticeButtonWisdom:SetWidth(36)  -- 标准技能按钮大小
+-JusticeButtonWisdom:SetHeight(36)
+-JusticeButtonWisdom:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-JusticeButtonWisdom.icon = JusticeButtonWisdom:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-JusticeButtonWisdom.icon:SetAllPoints()
+-JusticeButtonWisdom.icon:SetTexture("Interface\\Icons\\Spell_Holy_RighteousnessAura") -- 替换为你想要的技能图标路径
+-JusticeButtonWisdom:SetAlpha(PopColor)
+--- 添加高亮效果
+-JusticeButtonWisdom:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-JusticeButtonWisdom:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-JusticeButtonWisdom.text = JusticeButtonWisdom:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-JusticeButtonWisdom.text:SetPoint("BOTTOM", JusticeButtonWisdom, "BOTTOM", 0, 5)
+-JusticeButtonWisdom.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-JusticeButtonWisdom.text:SetTextColor(1, 1, 1)
+-JusticeButtonWisdom.text:SetText("智慧")
+-
+-
+-
+-
+-postion_x = postion_x + 45 
+-
+-local JusticeButtonRight = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-JusticeButtonRight:SetWidth(36)  -- 标准技能按钮大小
+-JusticeButtonRight:SetHeight(36)
+-JusticeButtonRight:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-JusticeButtonRight.icon = JusticeButtonRight:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-JusticeButtonRight.icon:SetAllPoints()
+-JusticeButtonRight.icon:SetTexture("Interface\\Icons\\Spell_Holy_HealingAura") -- 替换为你想要的技能图标路径
+-JusticeButtonRight:SetAlpha(PopColor)
+--- 添加高亮效果
+-JusticeButtonRight:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-JusticeButtonRight:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-JusticeButtonRight.text = JusticeButtonRight:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-JusticeButtonRight.text:SetPoint("BOTTOM", JusticeButtonRight, "BOTTOM", 0, 5)
+-JusticeButtonRight.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-JusticeButtonRight.text:SetTextColor(1, 1, 1)
+-JusticeButtonRight.text:SetText("光明")
+-
+-
+-
+-postion_x = postion_x + 45 
+-
+-local JusticeButtonCrusader = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-JusticeButtonCrusader:SetWidth(36)  -- 标准技能按钮大小
+-JusticeButtonCrusader:SetHeight(36)
+-JusticeButtonCrusader:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-JusticeButtonCrusader.icon = JusticeButtonCrusader:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-JusticeButtonCrusader.icon:SetAllPoints()
+-JusticeButtonCrusader.icon:SetTexture("Interface\\Icons\\Spell_Holy_HolySmite") -- 替换为你想要的技能图标路径
+-JusticeButtonCrusader:SetAlpha(PopColor)
+--- 添加高亮效果
+-JusticeButtonCrusader:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-JusticeButtonCrusader:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-JusticeButtonCrusader.text = JusticeButtonCrusader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-JusticeButtonCrusader.text:SetPoint("BOTTOM", JusticeButtonCrusader, "BOTTOM", 0, 5)
+-JusticeButtonCrusader.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-JusticeButtonCrusader.text:SetTextColor(1, 1, 1)
+-JusticeButtonCrusader.text:SetText("十字军")
+-
+-
+-
+-postion_x = postion_x + 45 
+-postion_x = postion_x + 45 
+-
+-local ButtonConsecration = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-ButtonConsecration:SetWidth(36)  -- 标准技能按钮大小
+-ButtonConsecration:SetHeight(36)
+-ButtonConsecration:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-ButtonConsecration.icon = ButtonConsecration:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-ButtonConsecration.icon:SetAllPoints()
+-ButtonConsecration.icon:SetTexture("Interface\\Icons\\Spell_Holy_InnerFire") -- 替换为你想要的技能图标路径
+-ButtonConsecration:SetAlpha(PopColor)
+--- 添加高亮效果
+-ButtonConsecration:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-ButtonConsecration:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-ButtonConsecration.text = ButtonConsecration:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-ButtonConsecration.text:SetPoint("BOTTOM", ButtonConsecration, "BOTTOM", 0, 5)
+-ButtonConsecration.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-ButtonConsecration.text:SetTextColor(1, 1, 1)
+-ButtonConsecration.text:SetText("奉献\n开")
+-
+-
+--- 添加点击事件
+-JusticeButtonNormal:SetScript("OnClick", function()
+-    JusticeButtonNormal:SetAlpha(1.0)
+-    JusticeButtonWisdom:SetAlpha(PopColor)
+-    JusticeButtonRight:SetAlpha(PopColor)
+-    JusticeButtonCrusader:SetAlpha(PopColor)
+-    MPPaladinSealSaved.Justice = 0
+-end)
+-
+-JusticeButtonWisdom:SetScript("OnClick", function()
+-    JusticeButtonNormal:SetAlpha(PopColor)
+-    JusticeButtonWisdom:SetAlpha(1.0)
+-    JusticeButtonRight:SetAlpha(PopColor)
+-    JusticeButtonCrusader:SetAlpha(PopColor)
+-    MPPaladinSealSaved.Justice = 1
+-end)
+-
+-JusticeButtonRight:SetScript("OnClick", function()
+-    JusticeButtonNormal:SetAlpha(PopColor)
+-    JusticeButtonWisdom:SetAlpha(PopColor)
+-    JusticeButtonRight:SetAlpha(1.0)
+-    JusticeButtonCrusader:SetAlpha(PopColor)
+-    MPPaladinSealSaved.Justice = 2
+-end)
+-
+-JusticeButtonCrusader:SetScript("OnClick", function()
+-    JusticeButtonNormal:SetAlpha(PopColor)
+-    JusticeButtonWisdom:SetAlpha(PopColor)
+-    JusticeButtonRight:SetAlpha(PopColor)
+-    JusticeButtonCrusader:SetAlpha(1.0)
+-    MPPaladinSealSaved.Justice = 3
+-end)
+-
+-ButtonConsecration:SetScript("OnClick", function()
+-    if MPPaladinSealSaved.Consecration==0 then
+-        ButtonConsecration:SetAlpha(1.0)
+-        MPPaladinSealSaved.Consecration=2
+-        ButtonConsecration.text:SetText("奉献\n配置")
+-        ButtonConsecration.icon:SetTexture("Interface\\Icons\\Spell_Nature_WispSplode")
+-    elseif MPPaladinSealSaved.Consecration==1 then
+-        ButtonConsecration:SetAlpha(PopColor)
+-        MPPaladinSealSaved.Consecration=0
+-        ButtonConsecration.text:SetText("奉献\n关")
+-        ButtonConsecration.icon:SetTexture("Interface\\Icons\\Spell_Holy_InnerFire")
+-    elseif MPPaladinSealSaved.Consecration==2 then
+-        ButtonConsecration:SetAlpha(1.0)
+-        MPPaladinSealSaved.Consecration=1
+-        ButtonConsecration.text:SetText("奉献\n开")
+-        ButtonConsecration.icon:SetTexture("Interface\\Icons\\Spell_Holy_InnerFire")
+-    end
+-end)
+-
+-
+-
+-
+-
+-
+-
+-postion_y = postion_y - 50
+-
+-local SealText = CatPaladinSeal:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-SealText:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", 10, -100)
+-SealText:SetText("圣印")
+-
+-
+-local postion_x = 50
+-local PopColor = 0.3
+-
+-local SealButtonNormal = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-SealButtonNormal:SetWidth(36)  -- 标准技能按钮大小
+-SealButtonNormal:SetHeight(36)
+-SealButtonNormal:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-SealButtonNormal.icon = SealButtonNormal:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-SealButtonNormal.icon:SetAllPoints()
+-SealButtonNormal.icon:SetTexture("Interface\\Icons\\INV_Sword_08") -- 替换为你想要的技能图标路径
+-SealButtonNormal:SetAlpha(1.0)
+--- 添加高亮效果
+-SealButtonNormal:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-SealButtonNormal:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-SealButtonNormal.text = SealButtonNormal:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-SealButtonNormal.text:SetPoint("BOTTOM", SealButtonNormal, "BOTTOM", 0, 5)
+-SealButtonNormal.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-SealButtonNormal.text:SetTextColor(1, 1, 1)
+-SealButtonNormal.text:SetText("自动")
+-
+-
+-
+-postion_x = postion_x + 45 
+-
+-local SealButtonWisdom = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-SealButtonWisdom:SetWidth(36)  -- 标准技能按钮大小
+-SealButtonWisdom:SetHeight(36)
+-SealButtonWisdom:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-SealButtonWisdom.icon = SealButtonWisdom:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-SealButtonWisdom.icon:SetAllPoints()
+-SealButtonWisdom.icon:SetTexture("Interface\\Icons\\Spell_Holy_RighteousnessAura") -- 替换为你想要的技能图标路径
+-SealButtonWisdom:SetAlpha(PopColor)
+--- 添加高亮效果
+-SealButtonWisdom:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-SealButtonWisdom:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-SealButtonWisdom.text = SealButtonWisdom:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-SealButtonWisdom.text:SetPoint("BOTTOM", SealButtonWisdom, "BOTTOM", 0, 5)
+-SealButtonWisdom.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-SealButtonWisdom.text:SetTextColor(1, 1, 1)
+-SealButtonWisdom.text:SetText("智慧")
+-
+-
+-
+-
+-postion_x = postion_x + 45 
+-
+-local SealButtonRight = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-SealButtonRight:SetWidth(36)  -- 标准技能按钮大小
+-SealButtonRight:SetHeight(36)
+-SealButtonRight:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-SealButtonRight.icon = SealButtonRight:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-SealButtonRight.icon:SetAllPoints()
+-SealButtonRight.icon:SetTexture("Interface\\Icons\\Spell_Holy_HealingAura") -- 替换为你想要的技能图标路径
+-SealButtonRight:SetAlpha(PopColor)
+--- 添加高亮效果
+-SealButtonRight:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-SealButtonRight:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-SealButtonRight.text = SealButtonRight:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-SealButtonRight.text:SetPoint("BOTTOM", SealButtonRight, "BOTTOM", 0, 5)
+-SealButtonRight.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-SealButtonRight.text:SetTextColor(1, 1, 1)
+-SealButtonRight.text:SetText("光明")
+-
+-
+-
+-postion_x = postion_x + 45 
+-
+-local SealButtonCrusader = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-SealButtonCrusader:SetWidth(36)  -- 标准技能按钮大小
+-SealButtonCrusader:SetHeight(36)
+-SealButtonCrusader:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-SealButtonCrusader.icon = SealButtonCrusader:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-SealButtonCrusader.icon:SetAllPoints()
+-SealButtonCrusader.icon:SetTexture("Interface\\Icons\\Spell_Holy_HolySmite") -- 替换为你想要的技能图标路径
+-SealButtonCrusader:SetAlpha(PopColor)
+--- 添加高亮效果
+-SealButtonCrusader:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-SealButtonCrusader:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-SealButtonCrusader.text = SealButtonCrusader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-SealButtonCrusader.text:SetPoint("BOTTOM", SealButtonCrusader, "BOTTOM", 0, 5)
+-SealButtonCrusader.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-SealButtonCrusader.text:SetTextColor(1, 1, 1)
+-SealButtonCrusader.text:SetText("十字军")
+-
+-
+-postion_x = postion_x + 45 
+-
+-local SealButtonJustice = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-SealButtonJustice:SetWidth(36)  -- 标准技能按钮大小
+-SealButtonJustice:SetHeight(36)
+-SealButtonJustice:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-SealButtonJustice.icon = SealButtonJustice:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-SealButtonJustice.icon:SetAllPoints()
+-SealButtonJustice.icon:SetTexture("Interface\\Icons\\Ability_ThunderBolt") -- 替换为你想要的技能图标路径
+-SealButtonJustice:SetAlpha(PopColor)
+--- 添加高亮效果
+-SealButtonJustice:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-SealButtonJustice:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-SealButtonJustice.text = SealButtonJustice:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-SealButtonJustice.text:SetPoint("BOTTOM", SealButtonJustice, "BOTTOM", 0, 5)
+-SealButtonJustice.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-SealButtonJustice.text:SetTextColor(1, 1, 1)
+-SealButtonJustice.text:SetText("正义")
+-
+-
+-
+-postion_x = postion_x + 45 
+-
+-local SealButtonCommand = CreateFrame("Button", "MySkillButton", CatPaladinSeal, "ActionButtonTemplate")
+-
+--- 设置按钮大小和位置
+-SealButtonCommand:SetWidth(36)  -- 标准技能按钮大小
+-SealButtonCommand:SetHeight(36)
+-SealButtonCommand:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", postion_x, postion_y)
+-
+--- 设置技能图标
+-SealButtonCommand.icon = SealButtonCommand:CreateTexture("MySkillButtonIcon", "BACKGROUND")
+-SealButtonCommand.icon:SetAllPoints()
+-SealButtonCommand.icon:SetTexture("Interface\\Icons\\Ability_Warrior_InnerRage") -- 替换为你想要的技能图标路径
+-SealButtonCommand:SetAlpha(PopColor)
+--- 添加高亮效果
+-SealButtonCommand:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+-
+--- 添加按下效果
+-SealButtonCommand:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+-
+--- 添加按钮文本(可选)
+-SealButtonCommand.text = SealButtonCommand:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-SealButtonCommand.text:SetPoint("BOTTOM", SealButtonCommand, "BOTTOM", 0, 5)
+-SealButtonCommand.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+-SealButtonCommand.text:SetTextColor(1, 1, 1)
+-SealButtonCommand.text:SetText("命令")
+-
+-
+--- 添加点击事件
+-SealButtonNormal:SetScript("OnClick", function()
+-    SealButtonNormal:SetAlpha(1.0)
+-    SealButtonWisdom:SetAlpha(PopColor)
+-    SealButtonRight:SetAlpha(PopColor)
+-    SealButtonCrusader:SetAlpha(PopColor)
+-    SealButtonJustice:SetAlpha(PopColor)
+-    SealButtonCommand:SetAlpha(PopColor)
+-    MPPaladinSealSaved.Seal = 0
+-end)
+-
+-SealButtonWisdom:SetScript("OnClick", function()
+-    SealButtonNormal:SetAlpha(PopColor)
+-    SealButtonWisdom:SetAlpha(1.0)
+-    SealButtonRight:SetAlpha(PopColor)
+-    SealButtonCrusader:SetAlpha(PopColor)
+-    SealButtonJustice:SetAlpha(PopColor)
+-    SealButtonCommand:SetAlpha(PopColor)
+-    MPPaladinSealSaved.Seal = 1
+-end)
+-
+-SealButtonRight:SetScript("OnClick", function()
+-    SealButtonNormal:SetAlpha(PopColor)
+-    SealButtonWisdom:SetAlpha(PopColor)
+-    SealButtonRight:SetAlpha(1.0)
+-    SealButtonCrusader:SetAlpha(PopColor)
+-    SealButtonJustice:SetAlpha(PopColor)
+-    SealButtonCommand:SetAlpha(PopColor)
+-    MPPaladinSealSaved.Seal = 2
+-end)
+-
+-SealButtonCrusader:SetScript("OnClick", function()
+-    SealButtonNormal:SetAlpha(PopColor)
+-    SealButtonWisdom:SetAlpha(PopColor)
+-    SealButtonRight:SetAlpha(PopColor)
+-    SealButtonCrusader:SetAlpha(1.0)
+-    SealButtonJustice:SetAlpha(PopColor)
+-    SealButtonCommand:SetAlpha(PopColor)
+-    MPPaladinSealSaved.Seal = 3
+-end)
+-
+-SealButtonJustice:SetScript("OnClick", function()
+-    SealButtonNormal:SetAlpha(PopColor)
+-    SealButtonWisdom:SetAlpha(PopColor)
+-    SealButtonRight:SetAlpha(PopColor)
+-    SealButtonCrusader:SetAlpha(PopColor)
+-    SealButtonJustice:SetAlpha(1.0)
+-    SealButtonCommand:SetAlpha(PopColor)
+-    MPPaladinSealSaved.Seal = 4
+-end)
+-
+-SealButtonCommand:SetScript("OnClick", function()
+-    SealButtonNormal:SetAlpha(PopColor)
+-    SealButtonWisdom:SetAlpha(PopColor)
+-    SealButtonRight:SetAlpha(PopColor)
+-    SealButtonCrusader:SetAlpha(PopColor)
+-    SealButtonJustice:SetAlpha(PopColor)
+-    SealButtonCommand:SetAlpha(1.0)
+-    MPPaladinSealSaved.Seal = 5
+-end)
+-
+-
+-
+-
+-
+-
+-
+-
+-local PaladinSealSettingsUIVersion = 2
++local justiceButtons, sealButtons = {}, {}
++local function SetIconSelected(button, selected)
++    -- 选中亮度用 RGB 表示，与整个窗口的透明度分开。
++    -- 只调整颜色，不重设子按钮/纹理 alpha；整体透明度由窗口统一应用。
++    local brightness = 0.3
++    if selected then brightness = 1 end
++    button.icon:SetVertexColor(brightness, brightness, brightness)
++    button.text:SetTextColor(brightness, brightness, brightness)
++end
++local function SelectButtons(buttons)
++    for _, button in ipairs(buttons) do
++        button.MPCatRefreshAppearance()
++    end
++end
++-- 技能图标不使用边框；悬停和按下仅覆盖淡色填充。
++local function PrepareBorderlessIcon(button)
++    button.MPCatBorderlessIcon = true
++    button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
++    button:SetHighlightTexture("Interface\\Buttons\\WHITE8X8", "ADD")
++    button:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.12)
++    button:SetPushedTexture("Interface\\Buttons\\WHITE8X8")
++    button:GetPushedTexture():SetVertexColor(0, 0, 0, 0.2)
++end
++local function IconButton(name, text, texture, x, y, field, value, buttons)
++    local button = CreateFrame("Button", ADDON_NAME..name, CatPaladinSeal)
++    button.selectionValue = value
++    button:SetWidth(36)
++    button:SetHeight(36)
++    button:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", x, y)
++    -- ARTWORK 位于 pfUI 深色按钮底板上方；使用匿名纹理避免全局名称冲突。
++    button.icon = button:CreateTexture(nil, "ARTWORK")
++    button.icon:SetAllPoints()
++    button.icon:SetTexture("Interface\\Icons\\"..texture)
++    PrepareBorderlessIcon(button)
++    button.text = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
++    button.text:SetPoint("BOTTOM", button, "BOTTOM", 0, 5)
++    button.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
++    button.text:SetTextColor(1, 1, 1)
++    button.text:SetText(text)
++    button.MPCatRefreshAppearance = function()
++        SetIconSelected(button, MPPaladinSealSaved and MPPaladinSealSaved[field] == value)
++    end
++    button.MPCatRefreshAppearance()
++    table.insert(buttons, button)
++    button:SetScript("OnClick", function()
++        local selected = value
++        if MPPaladinSealSaved[field] == value then
++            selected = -1
++        end
++        MPPaladinSealSaved[field] = selected
++        if field == "Seal" and type(MPCatPaladinTankManualSealChanged) == "function" then MPCatPaladinTankManualSealChanged() end
++        if field == "Seal" then MPCatPaladinSyncRetSeal() end
++        SelectButtons(buttons)
++    end)
++    return button
++end
++Label(CatPaladinSeal, "审判", 10, -50)
++IconButton("JusticeButtonNormal", "无", "Spell_Nature_WispSplode", 50, -40, "Justice", 0, justiceButtons)
++IconButton("JusticeButtonWisdom", "智慧", "Spell_Holy_RighteousnessAura", 95, -40, "Justice", 1, justiceButtons)
++IconButton("JusticeButtonRight", "光明", "Spell_Holy_HealingAura", 140, -40, "Justice", 2, justiceButtons)
++IconButton("JusticeButtonCrusader", "十字军", "Spell_Holy_HolySmite", 185, -40, "Justice", 3, justiceButtons)
++IconButton("JusticeButtonFair", "公正", "Spell_Holy_SealOfWrath", 230, -40, "Justice", 4, justiceButtons)
++local sealLabel = Label(CatPaladinSeal, "圣印", 10, -100)
++local outputSeal = IconButton("SealButtonOutput", "无", "Spell_Nature_WispSplode", 50, -90, "Seal", -1, sealButtons)
++outputSeal.MPCatRefreshAppearance = function()
++    local value = MPPaladinSealSaved and MPPaladinSealSaved.Seal
++    if value == 4 then
++        outputSeal.icon:SetTexture("Interface\\Icons\\Ability_ThunderBolt")
++        outputSeal.text:SetText("正义")
++    elseif value == 5 then
++        outputSeal.icon:SetTexture("Interface\\Icons\\Ability_Warrior_InnerRage")
++        outputSeal.text:SetText("命令")
++    else
++        outputSeal.icon:SetTexture("Interface\\Icons\\Spell_Nature_WispSplode")
++        outputSeal.text:SetText("无")
++    end
++    SetIconSelected(outputSeal, value == 4 or value == 5)
++end
++outputSeal.MPCatRefreshAppearance()
++outputSeal:SetScript("OnClick", function()
++    local value = MPPaladinSealSaved.Seal
++    if value == 4 then value = 5 elseif value == 5 then value = -1 else value = 4 end
++    MPPaladinSealSaved.Seal = value
++    if type(MPCatPaladinTankManualSealChanged) == "function" then MPCatPaladinTankManualSealChanged() end
++    MPCatPaladinSyncRetSeal()
++    SelectButtons(sealButtons)
++end)
++IconButton("SealButtonWisdom", "智慧", "Spell_Holy_RighteousnessAura", 95, -90, "Seal", 1, sealButtons)
++IconButton("SealButtonRight", "光明", "Spell_Holy_HealingAura", 140, -90, "Seal", 2, sealButtons)
++IconButton("SealButtonCrusader", "十字军", "Spell_Holy_HolySmite", 185, -90, "Seal", 3, sealButtons)
++IconButton("SealButtonFair", "公正", "Spell_Holy_SealOfWrath", 230, -90, "Seal", 6, sealButtons)
++
++local function Slider(name, x, y, width, minValue, maxValue, onChange, parent)
++    parent = parent or CatPaladinSeal
++    local slider = CreateFrame("Slider", ADDON_NAME..name, parent, "OptionsSliderTemplate")
++    slider:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
++    slider:SetWidth(width)
++    slider:SetHeight(16)
++    slider:SetMinMaxValues(minValue, maxValue)
++    slider:SetValueStep(1)
++    _G[slider:GetName().."Low"]:Hide()
++    _G[slider:GetName().."High"]:Hide()
++    local text = _G[slider:GetName().."Text"]
++    slider:SetScript("OnValueChanged", function()
++        if updating or not MPPaladinSealSaved then return end
++        local value = math.floor(slider:GetValue() + 0.5)
++        value = math.max(minValue, math.min(maxValue, value))
++        if slider:GetValue() ~= value then
++            updating = true
++            slider:SetValue(value)
++            updating = false
++        end
++        onChange(value, text)
++    end)
++    slider:EnableMouseWheel(true)
++    slider:SetScript("OnMouseWheel", function()
++        slider:SetValue(math.max(minValue, math.min(maxValue, slider:GetValue() + arg1)))
++    end)
++    return slider, text
++end
++
++-- 独立窗口保持固定尺寸和透明度，拖动缩放滑条时滑条自身不会位移。
++CatPaladinSealSettings = CreateFrame("Frame", ADDON_NAME.."AppearanceFrame", UIParent)
++CatPaladinSealSettings:Hide()
++CatPaladinSealSettings:SetWidth(330)
++CatPaladinSealSettings:SetHeight(195)
++CatPaladinSealSettings:SetScale(0.9)
++CatPaladinSealSettings:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
++if CatPaladinSealSettings.SetClampedToScreen then CatPaladinSealSettings:SetClampedToScreen(true) end
++CatPaladinSealSettings:SetFrameLevel(3)
++CatPaladinSealSettings:SetBackdrop({
++    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
++    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
++    tile = true, tileSize = 16, edgeSize = 16,
++    insets = { left = 4, right = 4, top = 4, bottom = 4 }
++})
++CatPaladinSealSettings:SetBackdropColor(0.1, 0.1, 0.2, 0.9)
++CatPaladinSealSettings:EnableMouse(true)
++CatPaladinSealSettings:SetMovable(true)
++local settingsDrag = CreateFrame("Frame", nil, CatPaladinSealSettings)
++settingsDrag:SetPoint("TOPLEFT", CatPaladinSealSettings, "TOPLEFT", 0, 0)
++settingsDrag:SetWidth(280)
++settingsDrag:SetHeight(28)
++settingsDrag:EnableMouse(true)
++settingsDrag:RegisterForDrag("LeftButton")
++settingsDrag:SetScript("OnDragStart", function() CatPaladinSealSettings:StartMoving() end)
++settingsDrag:SetScript("OnDragStop", function() CatPaladinSealSettings:StopMovingOrSizing() end)
++local settingsTitle = Label(settingsDrag, "审判控制 - 外观设置", 10, -10)
++local settingsClose = CreateFrame("Button", nil, CatPaladinSealSettings, "UIPanelCloseButton")
++settingsClose:SetWidth(32)
++settingsClose:SetHeight(32)
++settingsClose:SetPoint("TOPRIGHT", CatPaladinSealSettings, "TOPRIGHT", -5, -2)
++settingsClose:SetScript("OnClick", function() CatPaladinSealSettings:Hide() end)
++local settingsButton = CreateFrame("Button", ADDON_NAME.."SettingsButton", CatPaladinSeal, "UIPanelButtonTemplate")
++settingsButton:SetPoint("TOPRIGHT", CatPaladinSeal, "TOPRIGHT", -43, -8)
++settingsButton:SetWidth(54)
++settingsButton:SetHeight(20)
++settingsButton:SetText("设置")
++settingsButton:SetScript("OnClick", function()
++    if CatPaladinSealSettings:IsVisible() then CatPaladinSealSettings:Hide() return end
++    CatPaladinSealSettings:Show()
++end)
++CatPaladinSeal:SetScript("OnHide", function() CatPaladinSealSettings:Hide() end)
++
++-- 标题、设置文字和关闭图标共用标题栏中心线；关闭按钮换肤缩小后仍保持对齐。
++local function AlignHeader(frame, label, close)
++    label:ClearAllPoints()
++    label:SetPoint("LEFT", frame, "TOPLEFT", 10, -18)
++    close:ClearAllPoints()
++    close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -5, -18 + close:GetHeight() / 2)
++end
++local function AlignHeaders()
++    AlignHeader(CatPaladinSeal, title, closeButton)
++    AlignHeader(CatPaladinSealSettings, settingsTitle, settingsClose)
++    settingsButton:ClearAllPoints()
++    settingsButton:SetPoint("RIGHT", closeButton, "LEFT", -6, 0)
++end
++AlignHeaders()
++
++local consecration = CreateFrame("Button", ADDON_NAME.."ConsecrationButton", CatPaladinSeal)
++consecration:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", 285, -65)
++consecration:SetWidth(36)
++consecration:SetHeight(36)
++consecration.icon = consecration:CreateTexture(nil, "ARTWORK")
++consecration.icon:SetAllPoints()
++consecration.icon:SetTexture("Interface\\Icons\\Spell_Holy_InnerFire")
++PrepareBorderlessIcon(consecration)
++consecration.text = consecration:CreateFontString(nil, "OVERLAY", "GameFontNormal")
++consecration.text:SetPoint("BOTTOM", consecration, "BOTTOM", 0, 3)
++consecration.text:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
++consecration.text:SetTextColor(1, 1, 1)
++local consecrationLabels = { [0] = "关闭", [1] = "低", [2] = "中", [3] = "高" }
++local function ConsecrationMode()
++    if MPPaladinSealSaved.Consecration ~= 1 then return 0 end
++    return MPPaladinSealSaved.ConsecrationPriority
++end
++local function RefreshConsecrationIcon()
++    local mode = ConsecrationMode()
++    consecration.text:SetText("奉献\n"..consecrationLabels[mode])
++    SetIconSelected(consecration, mode ~= 0)
++end
++consecration.MPCatRefreshAppearance = function()
++    if not MPPaladinSealSaved then
++        consecration.text:SetText("奉献\n关闭")
++        SetIconSelected(consecration, false)
++        return
++    end
++    RefreshConsecrationIcon()
++end
++consecration.MPCatRefreshAppearance()
++local function ChangeConsecration(direction)
++    local mode = math.mod(ConsecrationMode() + direction + 4, 4)
++    if mode == 0 then
++        MPPaladinSealSaved.Consecration = 0
++    else
++        MPPaladinSealSaved.Consecration = 1
++        MPPaladinSealSaved.ConsecrationPriority = mode
++    end
++    MPCatPaladinSyncConsecration("Consecration", MPPaladinSealSaved.Consecration)
++    RefreshConsecrationIcon()
++end
++consecration:RegisterForClicks("LeftButtonUp", "RightButtonUp")
++consecration:SetScript("OnClick", function()
++    if arg1 == "RightButton" then ChangeConsecration(-1) else ChangeConsecration(1) end
++end)
++consecration:EnableMouseWheel(true)
++consecration:SetScript("OnMouseWheel", function()
++    if arg1 > 0 then ChangeConsecration(1) elseif arg1 < 0 then ChangeConsecration(-1) end
++end)
++function MPCatPaladinSealRefreshIcons()
++    if MPCatPaladinTankRecoveryActive then sealLabel:SetText("圣印\n|cff66ccff回蓝|r") else sealLabel:SetText("圣印") end
++    SelectButtons(justiceButtons)
++    SelectButtons(sealButtons)
++    consecration.MPCatRefreshAppearance()
++end
++-- 背景透明度独立于图标、文字和按钮；兼容原生背景及 pfUI 的独立背景框。
++function MPCatPaladinSealApplyAppearance()
++    AlignHeaders()
++    if not MPPaladinSealSaved or type(MPPaladinSealSaved.Alpha) ~= "number" then return end
++    local opacity = MPPaladinSealSaved.Alpha
++    CatPaladinSeal:SetAlpha(1)
++    if CatPaladinSeal.backdrop then
++        local background = CatPaladinSeal.backdrop
++        local red, green, blue = background:GetBackdropColor()
++        local baseAlpha = 0.75
++        if pfUI and pfUI.api and pfUI.api.GetStringColor and pfUI_config then
++            local _, _, _, configuredAlpha = pfUI.api.GetStringColor(pfUI_config.appearance.border.background)
++            baseAlpha = math.min(baseAlpha, tonumber(configuredAlpha) or baseAlpha)
++        end
++        background:SetAlpha(1)
++        background:SetBackdropColor(red, green, blue, baseAlpha * opacity)
++    else
++        CatPaladinSeal:SetBackdropColor(0.1, 0.1, 0.2, 0.7 * opacity)
++    end
++    MPCatPaladinSealRefreshIcons()
++end
++local scale, scaleText = Slider("Scale", 20, -60, 290, 60, 150, function(value, text)
++    MPPaladinSealSaved.Scale = value / 100
++    ApplyScale(MPPaladinSealSaved.Scale)
++    text:SetText("大小："..value.."%")
++end, CatPaladinSealSettings)
++local alpha, alphaText = Slider("Transparency", 20, -112, 290, 0, 70, function(value, text)
++    MPPaladinSealSaved.Alpha = 1 - value / 100
++    MPCatPaladinSealApplyAppearance()
++    text:SetText("背景透明度："..value.."%")
++end, CatPaladinSealSettings)
++local lock = CreateFrame("CheckButton", ADDON_NAME.."LockPosition", CatPaladinSealSettings, "UICheckButtonTemplate")
++lock:SetPoint("TOPLEFT", CatPaladinSealSettings, "TOPLEFT", 14, -150)
++local lockText = lock:CreateFontString(nil, "OVERLAY", "GameFontNormal")
++lockText:SetPoint("LEFT", lock, "RIGHT", 0, 0)
++lockText:SetText("锁定面板位置")
++local function RefreshLock()
++    local locked = MPPaladinSealSaved.Locked == 1
++    lock:SetChecked(locked)
++    CatPaladinSeal:SetMovable(not locked)
++    dragHandle:EnableMouse(not locked)
++end
++lock:SetScript("OnClick", function()
++    if this:GetChecked() then MPPaladinSealSaved.Locked = 1 else MPPaladinSealSaved.Locked = 0 end
++    CatPaladinSeal:StopMovingOrSizing()
++    SavePosition()
++    RefreshLock()
++end)
+ 
+ function MPCatPaladinSealReset()
+-
+     MPPaladinSealSaved.Version = PaladinSealSettingsUIVersion
+-
+-    MPPaladinSealSaved.Seal = 0
+-    MPPaladinSealSaved.Justice = 1
++    MPPaladinSealSaved.Seal = -1
++    MPPaladinSealSaved.Justice = -1
+     MPPaladinSealSaved.Consecration = 1
+-
+-end
+-
++    MPPaladinSealSaved.ConsecrationPriority = 1
++    MPPaladinSealSaved.Scale = 0.8
++    MPPaladinSealSaved.Alpha = 1
++    MPPaladinSealSaved.SharedConsecration = 1
++    MPPaladinSealSaved.Locked = 0
++end
++
++local function ValidValue(value, defaultValue, minimum, maximum, integer)
++    if type(value) ~= "number" or value ~= value then return defaultValue end
++    value = math.max(minimum, math.min(maximum, value))
++    if integer then value = math.floor(value + 0.5) end
++    return value
++end
+ 
+ function MPCatPaladinSealInit()
+-
++    if updating then return end
+     if not MPPaladinSealSaved then
+         MPPaladinSealSaved = {}
+-        MPCatPaladinSealReset()
+-    end
+-
+-    if MPPaladinSealSaved.Version ~= PaladinSealSettingsUIVersion then
+-        MPCatPaladinSealReset()
+-    end
+-
+-    JusticeButtonNormal:SetAlpha(PopColor)
+-    JusticeButtonWisdom:SetAlpha(PopColor)
+-    JusticeButtonRight:SetAlpha(PopColor)
+-    JusticeButtonCrusader:SetAlpha(PopColor)
+-
+-    SealButtonNormal:SetAlpha(PopColor)
+-    SealButtonWisdom:SetAlpha(PopColor)
+-    SealButtonRight:SetAlpha(PopColor)
+-    SealButtonCrusader:SetAlpha(PopColor)
+-    SealButtonJustice:SetAlpha(PopColor)
+-    SealButtonCommand:SetAlpha(PopColor)
+-
+-    if MPPaladinSealSaved.Justice==0 then
+-        JusticeButtonNormal:SetAlpha(1.0)
+-    elseif MPPaladinSealSaved.Justice==1 then
+-        JusticeButtonWisdom:SetAlpha(1.0)
+-    elseif MPPaladinSealSaved.Justice==2 then
+-        JusticeButtonRight:SetAlpha(1.0)
+-    elseif MPPaladinSealSaved.Justice==3 then
+-        JusticeButtonCrusader:SetAlpha(1.0)
+-    end
+-
+-    if MPPaladinSealSaved.Seal==0 then
+-        SealButtonNormal:SetAlpha(1.0)
+-    elseif MPPaladinSealSaved.Seal==1 then
+-        SealButtonWisdom:SetAlpha(1.0)
+-    elseif MPPaladinSealSaved.Seal==2 then
+-        SealButtonRight:SetAlpha(1.0)
+-    elseif MPPaladinSealSaved.Seal==3 then
+-        SealButtonCrusader:SetAlpha(1.0)
+-    elseif MPPaladinSealSaved.Seal==4 then
+-        SealButtonJustice:SetAlpha(1.0)
+-    elseif MPPaladinSealSaved.Seal==5 then
+-        SealButtonCommand:SetAlpha(1.0)
+-    end
+-
+-    if MPPaladinSealSaved.Consecration==2 then
+-        ButtonConsecration:SetAlpha(1.0)
+-        ButtonConsecration.text:SetText("奉献\n配置")
+-        ButtonConsecration.icon:SetTexture("Interface\\Icons\\Spell_Nature_WispSplode")
+-    elseif MPPaladinSealSaved.Consecration==0 then
+-        ButtonConsecration:SetAlpha(PopColor)
+-        ButtonConsecration.text:SetText("奉献\n关")
+-        ButtonConsecration.icon:SetTexture("Interface\\Icons\\Spell_Holy_InnerFire")
+-    elseif MPPaladinSealSaved.Consecration==1 then
+-        ButtonConsecration:SetAlpha(1.0)
+-        ButtonConsecration.text:SetText("奉献\n开")
+-        ButtonConsecration.icon:SetTexture("Interface\\Icons\\Spell_Holy_InnerFire")
+-    end
+-
+-end
+-
+-
+-
++    end
++    -- 仅补齐新字段，保留旧选项编号及已有角色设置。
++    local saved = MPPaladinSealSaved
++    -- 打开窗口、改透明度都不能触发整组重置。版本变化也只增量迁移。
++    saved.Version = PaladinSealSettingsUIVersion
++    saved.Justice = ValidValue(saved.Justice, -1, -1, 4, true)
++    saved.Seal = ValidValue(saved.Seal, -1, -1, 6, true)
++    if saved.Seal == 0 then saved.Seal = -1 end
++    saved.Locked = saved.Locked == 1 and 1 or 0
++    saved.Consecration = ValidValue(saved.Consecration, 1, 0, 2, true)
++    if saved.SharedConsecration ~= 1 then
++        -- 旧版“按配置”沿用原同步对象的开关，其余已有选择直接迁移。
++        if saved.Consecration == 2 then
++            local profiles = MPPaladinCJSaved
++            if saved.ControlRole == "TANK" then profiles = MPPaladinTankSaved end
++            local old = profiles and profiles[saved.ControlConfig or 1]
++            saved.Consecration = old and old.Consecration or 1
++        end
++        saved.SharedConsecration = 1
++    end
++    saved.Consecration = ValidValue(saved.Consecration, 1, 0, 1, true)
++    saved.ConsecrationPriority = ValidValue(saved.ConsecrationPriority, 1, 1, 3, true)
++    saved.Scale = ValidValue(saved.Scale, 0.8, 0.6, 1.5)
++    saved.Alpha = ValidValue(saved.Alpha, 1, 0.3, 1)
++    updating = true
++    scale:SetValue(math.floor(saved.Scale * 100 + 0.5))
++    alpha:SetValue(math.floor((1 - saved.Alpha) * 100 + 0.5))
++    updating = false
++    RefreshConsecrationIcon()
++    RefreshLock()
++    scaleText:SetText("大小："..math.floor(saved.Scale * 100 + 0.5).."%")
++    alphaText:SetText("背景透明度："..math.floor((1 - saved.Alpha) * 100 + 0.5).."%")
++    ApplyScale(saved.Scale)
++    if not positionRestored then
++        positionRestored = true
++        if type(saved.PositionX) == "number" and type(saved.PositionY) == "number" then
++            local ratio = UIParent:GetEffectiveScale() / CatPaladinSeal:GetEffectiveScale()
++            CatPaladinSeal:ClearAllPoints()
++            CatPaladinSeal:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", saved.PositionX * ratio, saved.PositionY * ratio)
++        end
++    end
++    MPCatPaladinSealApplyAppearance()
++    MPCatPaladinSyncRetSeal()
++end
++
++-- 一套面板选择同时服务两种宏；只同步正在使用/编辑的配置。
++function MPCatPaladinControlUpdating() return updating end
++
++-- 公共圣印编号与旧惩戒骑输出圣印编号不同；保留旧的正义/命令编号。
++local retSealValues = { [1] = 4, [2] = 5, [3] = 6, [4] = 2, [5] = 3, [6] = 7 }
++function MPCatPaladinSyncRetSeal(config)
++    if not MPPaladinSealSaved then return end
++    config = ValidValue(config or activeConfigs.RET or MPPaladinCJConfig, 1, 1, 3, true)
++    local settings = MPPaladinCJSaved and MPPaladinCJSaved[config]
++    if not settings then return end
++    local value = retSealValues[MPPaladinSealSaved.Seal]
++    local enabled = value and 1 or 0
++    local changed = settings.Seal ~= enabled or (value and settings.Seal_Value ~= value)
++    settings.Seal = enabled
++    if value then settings.Seal_Value = value end
++    if changed and MPCatRefreshPaladinCJSeal then
++        local previous = updating
++        updating = true
++        MPCatRefreshPaladinCJSeal(config)
++        updating = previous
++    end
++end
++
++function MPCatPaladinApplyControl(role, config)
++    if not MPPaladinSealSaved or MPPaladinSealSaved.SharedConsecration ~= 1 then MPCatPaladinSealInit() end
++    config = ValidValue(config, 1, 1, 3, true)
++    activeConfigs[role] = config
++    if role == "RET" then MPCatPaladinSyncRetSeal(config) end
++    local profiles = MPPaladinCJSaved
++    local refresh = MPCatRefreshPaladinCJConsecration
++    if role == "TANK" then profiles = MPPaladinTankSaved; refresh = MPCatRefreshPaladinTankConsecration end
++    local settings = profiles and profiles[config]
++    if not settings then return end
++    local changed = settings.Consecration ~= MPPaladinSealSaved.Consecration
++        or settings.Consecration_Priority ~= MPPaladinSealSaved.ConsecrationPriority
++    settings.Consecration = MPPaladinSealSaved.Consecration
++    settings.Consecration_Priority = MPPaladinSealSaved.ConsecrationPriority
++    if changed and refresh then
++        local previous = updating
++        updating = true
++        refresh(config)
++        updating = previous
++    end
++end
++
++function MPCatPaladinSyncConsecration(key, value, role, config)
++    if updating then return end
++    if not MPPaladinSealSaved then MPCatPaladinSealInit() end
++    if key == "Consecration" then
++        MPPaladinSealSaved.Consecration = ValidValue(value, 1, 0, 1, true)
++    elseif key == "Consecration_Priority" then
++        MPPaladinSealSaved.ConsecrationPriority = ValidValue(value, 1, 1, 3, true)
++    else
++        return
++    end
++    if role then activeConfigs[role] = ValidValue(config, 1, 1, 3, true) end
++    MPCatPaladinApplyControl("RET", activeConfigs.RET or MPPaladinCJConfig or 1)
++    MPCatPaladinApplyControl("TANK", activeConfigs.TANK or MPPaladinTankConfig or 1)
++    if role then
++        -- 设置界面的点击需要反向刷新公共面板，但不会改变窗口位置。
++        MPCatPaladinSealInit()
++    end
++end
++
++CatPaladinSeal:SetScript("OnShow", function() MPCatPaladinSealInit() end)
++
++-- 登录/重载后主动恢复外观，不依赖玩家重新打开面板或移动滑条。
++CatPaladinSeal:RegisterEvent("PLAYER_ENTERING_WORLD")
++CatPaladinSeal:SetScript("OnEvent", function()
++    if event == "PLAYER_ENTERING_WORLD" then MPCatPaladinSealInit() end
++end)
+```

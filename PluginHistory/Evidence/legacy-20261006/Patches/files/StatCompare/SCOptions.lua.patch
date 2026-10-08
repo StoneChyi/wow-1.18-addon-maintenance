@@ -1,0 +1,28 @@
+--- a/StatCompare/SCOptions.lua
++++ b/StatCompare/SCOptions.lua
+@@ -88,10 +88,11 @@
+ 		return
+ 	end
+ 	if(StatCompareOptFrame:IsVisible()) then
+ 		StatCompareOptFrame:Hide();
+ 	else
++		if SCEnsureLayoutButton then SCEnsureLayoutButton() end
+ 		StatCompareOptFrame:Show();
+ 		for i=1,2 do
+ 			getglobal("StatCompareOptTab"..i):UnlockHighlight();
+ 			getglobal("StatCompareOptSubFrame"..i):Hide();
+ 		end
+@@ -346,11 +347,12 @@
+ 	local value = 0;
+ 
+ 	if(this:GetChecked()) then
+ 		value = 1;
+ 	end
+-	StatCompare_SetSetting("ShowSelfFrame", value);	
++	StatCompare_SetSetting("ShowSelfFrame", value);
++	if SCRequestPanelLayout then SCRequestPanelLayout() end
+ end
+ 
+ function StatCompareShowBuffBonusOpt_OnClick()
+ 	local value = 0;
+ 

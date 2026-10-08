@@ -1,0 +1,247 @@
+--- a/Cat/UI/Settings-PaladinTank.lua
++++ b/Cat/UI/Settings-PaladinTank.lua
+@@ -1,10 +1,11 @@
+ 
+ -- 定义插件名称
+ local ADDON_NAME = "Settings-PaladinTank"
+ 
+ local ConfigCurrent = 1
++local restoring = false
+ local function GetCurrentSaved() return MPPaladinTankSaved[ConfigCurrent] end
+ 
+ -- 创建主框架
+ CatUISettingsPaladinTank = MPCreateFrame(ADDON_NAME.."Frame", 520, 550, "|cFFF58CBA设置 - 防骑|r")
+ 
+@@ -60,10 +61,13 @@
+     elseif MPPaladinTankSaved[ConfigCurrent].Consecration_Priority==2 then
+         _G[slider_Consecration:GetName().."Text"]:SetText(color_Consecration.."优先级: 中|r")
+     else
+         _G[slider_Consecration:GetName().."Text"]:SetText(color_Consecration.."优先级: 高|r")
+     end
++    if not restoring and not MPCatPaladinControlUpdating() and CatUISettingsPaladinTank:IsVisible() then
++        MPCatPaladinSyncConsecration("Consecration_Priority", MPPaladinTankSaved[ConfigCurrent].Consecration_Priority, "TANK", ConfigCurrent)
++    end
+ end)
+ 
+ -- 设置点击事件
+ checkButton_Consecration:SetScript("OnClick", function(self)
+     if this:GetChecked() then
+@@ -78,11 +82,11 @@
+     elseif MPPaladinTankSaved[ConfigCurrent].Consecration_Priority==2 then
+         _G[slider_Consecration:GetName().."Text"]:SetText(color_Consecration.."优先级: 中|r")
+     else
+         _G[slider_Consecration:GetName().."Text"]:SetText(color_Consecration.."优先级: 高|r")
+     end
+-    MPCatPaladinSealInit()
++    MPCatPaladinSyncConsecration("Consecration", MPPaladinTankSaved[ConfigCurrent].Consecration, "TANK", ConfigCurrent)
+ end)
+ 
+ 
+ 
+ 
+@@ -289,10 +293,21 @@
+         color_Righteous = "|cFF888888"
+         _G[slider_Righteous:GetName().."Text"]:SetText(color_Righteous.."血线: ".. MPPaladinTankSaved[ConfigCurrent].Righteous_Value .."%|r")
+     end
+ end)
+ 
++
++-- 下一次防骑宏按键取消免疫，默认关闭，各套配置独立保存。
++local checkButton_AutoCancelImmunity = MPCreateCheckButton(CatUISettingsPaladinTank,
++    ADDON_NAME.."CheckButtonAutoCancelImmunity", 340, postion_y, "自动取消 无敌/保护之手")
++MPBindConfigCheckButton(checkButton_AutoCancelImmunity, GetCurrentSaved, "AutoCancelImmunity")
++checkButton_AutoCancelImmunity:SetScript("OnEnter", function()
++    GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
++    GameTooltip:SetText("下一次按防骑宏时，优先取消自己身上的圣盾术、保护之手（保护祝福）。")
++    GameTooltip:Show()
++end)
++checkButton_AutoCancelImmunity:SetScript("OnLeave", function() GameTooltip:Hide() end)
+ 
+ postion_y = postion_y-40
+ 
+ -- 创建单选框 - 圣疗术
+ local checkButton_LayHands = MPCreateCheckButton(CatUISettingsPaladinTank, ADDON_NAME.."CheckButton", 340, postion_y, "自动 圣疗术")
+@@ -410,17 +425,86 @@
+     end
+ end)
+ 
+ 
+ 
++-- 回蓝配置使用独立居中窗口，跟随防骑设置当前选中的配置编号。
++CatPaladinTankManaSettings = MPCreateFrame(ADDON_NAME.."ManaFrame", 480, 270, "防骑 - 回蓝设置")
++if CatPaladinTankManaSettings.SetClampedToScreen then CatPaladinTankManaSettings:SetClampedToScreen(true) end
++-- 只允许标题栏拖动，阈值滑条不会拖走窗口。
++CatPaladinTankManaSettings:RegisterForDrag()
++CatPaladinTankManaSettings:SetScript("OnDragStart", nil)
++CatPaladinTankManaSettings:SetScript("OnDragStop", nil)
++local manaDrag = CreateFrame("Frame", nil, CatPaladinTankManaSettings)
++manaDrag:SetPoint("TOPLEFT", CatPaladinTankManaSettings, "TOPLEFT", 0, 0)
++manaDrag:SetWidth(300)
++manaDrag:SetHeight(28)
++manaDrag:EnableMouse(true)
++manaDrag:RegisterForDrag("LeftButton")
++manaDrag:SetScript("OnDragStart", function() CatPaladinTankManaSettings:StartMoving() end)
++manaDrag:SetScript("OnDragStop", function() CatPaladinTankManaSettings:StopMovingOrSizing() end)
++local manaRestoring = false
++local autoWisdom = MPCreateCheckButton(CatPaladinTankManaSettings, ADDON_NAME.."AutoWisdom", 20, -52, "低蓝自动切换智慧圣印")
++MPBindConfigCheckButton(autoWisdom, GetCurrentSaved, "AutoWisdom", function()
++    if type(MPCatPaladinTankManaOptionsChanged) == "function" then MPCatPaladinTankManaOptionsChanged() end
++end)
++local economy = MPCreateCheckButton(CatPaladinTankManaSettings, ADDON_NAME.."WisdomEconomy", 20, -165, "回蓝时节省蓝量")
++MPBindConfigCheckButton(economy, GetCurrentSaved, "WisdomEconomy")
++local enter = MPCreateConfigSlider(ADDON_NAME.."WisdomEnter", CatPaladinTankManaSettings, "TOPLEFT", CatPaladinTankManaSettings, "TOPLEFT", 20, -110, 200, 16, 5, 80, 1, 25)
++local leave = MPCreateConfigSlider(ADDON_NAME.."WisdomExit", CatPaladinTankManaSettings, "TOPLEFT", CatPaladinTankManaSettings, "TOPLEFT", 250, -110, 200, 16, 10, 95, 1, 40)
++local manaProfile = CatPaladinTankManaSettings:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
++manaProfile:SetPoint("TOPLEFT", CatPaladinTankManaSettings, "TOPLEFT", 20, -83)
++local manaDescription = CatPaladinTankManaSettings:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
++manaDescription:SetPoint("TOPLEFT", CatPaladinTankManaSettings, "TOPLEFT", 20, -204)
++manaDescription:SetWidth(440)
++manaDescription:SetJustifyH("LEFT")
++manaDescription:SetText("手动切换圣印或使用惩戒宏后，本场战斗尊重手动选择。节蓝：暂停驱邪术，自动档奉献改用等级1。")
++function MPCatRefreshPaladinTankManaSettings()
++    local saved = GetCurrentSaved()
++    if not saved then return end
++    MPCatPaladinTankEnsureManaConfig(saved)
++    manaRestoring = true
++    manaProfile:SetText("当前防骑配置："..ConfigCurrent)
++    autoWisdom:SetChecked(saved.AutoWisdom == 1)
++    economy:SetChecked(saved.WisdomEconomy == 1)
++    enter:SetValue(saved.WisdomEnter)
++    leave:SetValue(saved.WisdomExit)
++    _G[enter:GetName().."Text"]:SetText("进入回蓝：<"..saved.WisdomEnter.."%")
++    _G[leave:GetName().."Text"]:SetText("恢复输出：≥"..saved.WisdomExit.."%")
++    manaRestoring = false
++end
++enter:SetScript("OnValueChanged", function()
++    if restoring or manaRestoring then return end
++    local saved = GetCurrentSaved()
++    saved.WisdomEnter = math.floor(enter:GetValue() + 0.5)
++    MPCatPaladinTankEnsureManaConfig(saved)
++    MPCatRefreshPaladinTankManaSettings()
++end)
++leave:SetScript("OnValueChanged", function()
++    if restoring or manaRestoring then return end
++    local saved = GetCurrentSaved()
++    saved.WisdomExit = math.floor(leave:GetValue() + 0.5)
++    if saved.WisdomExit <= saved.WisdomEnter then saved.WisdomEnter = saved.WisdomExit - 5 end
++    MPCatPaladinTankEnsureManaConfig(saved)
++    MPCatRefreshPaladinTankManaSettings()
++end)
++CatPaladinTankManaSettings:SetScript("OnShow", function() MPCatRefreshPaladinTankManaSettings() end)
++local manaButton = MPCreateButton(CatUISettingsPaladinTank, ADDON_NAME.."ManaSettingsButton", "回蓝设置", 448, postion_y, 66, 22)
++manaButton:SetScript("OnClick", function()
++    if CatPaladinTankManaSettings:IsVisible() then CatPaladinTankManaSettings:Hide()
++    else CatPaladinTankManaSettings:Show() end
++end)
++
++
+ -- 创建按钮
+ local myButton = MPCreateButton(CatUISettingsPaladinTank, ADDON_NAME.."ButtonReset", MPLanguage.UI_Set_ResetDefaults, 120, -44, 100, 22)
+ myButton:SetScript("OnClick", function()
+     MPResetPaladinTankSettings(ConfigCurrent)
+     MPInitPaladinTankSettings()
+ 
+     MPCatPaladinSealReset()
++    MPCatPaladinApplyControl("TANK", ConfigCurrent)
+ 
+     CatPaladinSeal:Hide()
+     CatPaladinSeal:ClearAllPoints()
+     CatPaladinSeal:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+ 
+@@ -497,10 +581,15 @@
+     -- SuperWoW,UnitXP
+     MPPaladinTankSaved[config].SuperWoW = 1
+     MPPaladinTankSaved[config].UnitXP = 1
+ 
+     MPPaladinTankSaved[config].UnSalvation = 0
++    MPPaladinTankSaved[config].AutoCancelImmunity = 0
++    MPPaladinTankSaved[config].AutoWisdom = 0
++    MPPaladinTankSaved[config].WisdomEconomy = 0
++    MPPaladinTankSaved[config].WisdomEnter = 25
++    MPPaladinTankSaved[config].WisdomExit = 40
+     MPPaladinTankSaved[config].HolyShieldTarget = 0
+     MPPaladinTankSaved[config].Sanctuary = 0
+ 
+     MPPaladinTankSaved[config].RacialTraits = 0
+     MPPaladinTankSaved[config].RacialTraitsBoss = 1
+@@ -514,10 +603,11 @@
+ 
+ end
+ 
+ 
+ function InitPaladinTankSettingsPart1()
++    MPCatRefreshPaladinTankManaSettings()
+     checkButton_RighteousFury:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].RighteousFury))
+     checkButton_Consecration:SetChecked( MPToBoolean(MPPaladinTankSaved[ConfigCurrent].Consecration) )
+     checkButton_HolyShield:SetChecked( MPToBoolean(MPPaladinTankSaved[ConfigCurrent].HolyShield) )
+     checkButton_CrusaderStrike:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].CrusaderStrike))
+     checkButton_Exorcism:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].Exorcism))
+@@ -532,10 +622,11 @@
+     checkButton_RacialTraitsBoss:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].RacialTraitsBoss))
+     checkButton_Soulspeed:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].Soulspeed))
+     checkButton_SoulspeedBoss:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].SoulspeedBoss))
+ 
+     checkButton_UnSalvation:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].UnSalvation))
++    checkButton_AutoCancelImmunity:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].AutoCancelImmunity))
+     checkButton_HolyShieldTarget:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].HolyShieldTarget))
+     checkButton_Sanctuary:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].Sanctuary))
+ 
+     checkButton_Power:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].Power))
+     checkButton_Pick:SetChecked(MPToBoolean(MPPaladinTankSaved[ConfigCurrent].Pick))
+@@ -653,10 +744,11 @@
+ 
+ end
+ 
+ 
+ function MPInitPaladinTankSettings()
++    restoring = true
+     if not MPPaladinTankSaved then
+         MPPaladinTankSaved = {}
+ 
+         -- 第一套配置
+         if not MPPaladinTankSaved[1] then
+@@ -685,16 +777,44 @@
+         MPResetPaladinTankSettings(1)
+         MPResetPaladinTankSettings(2)
+         MPResetPaladinTankSettings(3)
+     end
+ 
++    -- 增量补齐新字段，不升级配置版本、不重置原有三套设置。
++    for config = 1, 3 do
++        MPCatPaladinTankEnsureManaConfig(MPPaladinTankSaved[config])
++        if MPPaladinTankSaved[config].AutoCancelImmunity == nil then
++            MPPaladinTankSaved[config].AutoCancelImmunity = 0
++        end
++    end
++
+     ConfigButton[1]:SetChecked(false)
+     ConfigButton[2]:SetChecked(false)
+     ConfigButton[3]:SetChecked(false)
+     ConfigButton[ConfigCurrent]:SetChecked(true)
+ 
++    if CatUISettingsPaladinTank:IsVisible() then MPCatPaladinApplyControl("TANK", ConfigCurrent) end
+     InitPaladinTankSettingsPart1()
+     InitPaladinTankSettingsPart2()
++    restoring = false
++
++    if CatUISettingsPaladinTank:IsVisible() then
++        MPCatPaladinSealInit()
++    end
+ 
+ 
+ end
+ 
++
++-- 面板只刷新对应配置的奉献控件，不触发完整设置初始化。
++function MPCatRefreshPaladinTankConsecration(config)
++    if ConfigCurrent ~= config then return end
++    local saved = MPPaladinTankSaved[ConfigCurrent]
++    checkButton_Consecration:SetChecked(MPToBoolean(saved.Consecration))
++    if saved.Consecration==1 then color_Consecration="|cFFFFD100" else color_Consecration="|cFF888888" end
++    slider_Consecration:SetValue(saved.Consecration_Priority)
++end
++
++CatUISettingsPaladinTank:SetScript("OnShow", function()
++    MPCatPaladinApplyControl("TANK", ConfigCurrent)
++    MPCatPaladinSealInit()
++end)

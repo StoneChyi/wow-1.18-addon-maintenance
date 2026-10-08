@@ -1,0 +1,48 @@
+--- a/StatCompare/StatCompare.xml
++++ b/StatCompare/StatCompare.xml
+@@ -32,20 +32,20 @@
+ 		<Scripts>
+ 			<OnLoad>
+ 				this:RegisterForDrag("LeftButton");
+ 			</OnLoad>
+ 			<OnDragStart>
+-				if arg1 == "LeftButton" then
++				if arg1 == "LeftButton" and SCGetPanelLayoutMode() == "free" then
+ 					this:StartMoving();
+ 				end
+ 			</OnDragStart>
+ 			<OnDragStop>
+ 				this:StopMovingOrSizing();
+ 				StatCompare_SaveFramePosition(this:GetName());
+ 			</OnDragStop>
+ 			<OnMouseDown>
+-				if arg1 == "LeftButton" and not this.isMoving then
++				if arg1 == "LeftButton" and not this.isMoving and SCGetPanelLayoutMode() == "free" then
+ 					this:StartMoving();
+ 					this.isMoving = true;
+ 				end
+ 			</OnMouseDown>
+ 			<OnMouseUp>
+@@ -185,20 +185,20 @@
+ 		<Scripts>
+ 			<OnLoad>
+ 				this:RegisterForDrag("LeftButton");
+ 			</OnLoad>
+ 			<OnDragStart>
+-				if arg1 == "LeftButton" then
++				if arg1 == "LeftButton" and SCGetPanelLayoutMode() == "free" then
+ 					this:StartMoving();
+ 				end
+ 			</OnDragStart>
+ 			<OnDragStop>
+ 				this:StopMovingOrSizing();
+ 				StatCompare_SaveFramePosition(this:GetName());
+ 			</OnDragStop>
+ 			<OnMouseDown>
+-				if arg1 == "LeftButton" and not this.isMoving then
++				if arg1 == "LeftButton" and not this.isMoving and SCGetPanelLayoutMode() == "free" then
+ 					this:StartMoving();
+ 					this.isMoving = true;
+ 				end
+ 			</OnMouseDown>
+ 			<OnMouseUp>

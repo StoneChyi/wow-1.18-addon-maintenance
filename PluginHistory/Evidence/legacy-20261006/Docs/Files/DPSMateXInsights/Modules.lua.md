@@ -1,0 +1,112 @@
+# DPSMateXInsights/Modules.lua
+
+类型：added；新增 86 行，删除 0 行。
+
+基线：10-06 新增独立模块，整文件均为新增代码
+基线来源：新增文件，无旧文件
+
+当前 SHA-256：`108694451cc1bd3916c9466c0792f31aaf7a8d29c8931118f4e4d57a148ac97d`
+
+所有行号均对应备份内 Latest 文件。函数名是变更块前最近的声明，仅用于搜索定位，不是 Lua 语法作用域分析。
+
+## 变更位置
+
+| 旧文件起始/行数 | 当前起始/行数 | 类型 | 当前邻近声明 |
+|---|---|---|---|
+| 1 / 0 | 1 / 86 | insert | `文件顶部 / 表定义` |
+
+## 完整代码差异
+
+`-` 为基线删除行，`+` 为当前新增行；上下文前缀为空格。新增文件展示整文件。
+
+```diff
+--- /dev/null
++++ b/DPSMateXInsights/Modules.lua
+@@ -0,0 +1,86 @@
++local D,E = DPSMateX,DPSMateX.Insights
++E.modules={}
++
++function E:RegisterModes()
++    for kind,id in pairs(self.ids) do
++        local module=self.modules[kind]
++        local capturedId=id
++        D.Options.Options[1].args[id]={order=kind=="healing" and 131 or (kind=="casts" and 271 or 272),
++            type="toggle",name=self.names[kind],desc="查看"..self.names[kind].."及详细数据。",
++            get=function() return D.Settings.windows[D.Options.Dewdrop:GetOpenedParent().Key].options[1][capturedId] end,
++            set=function()
++                local parent=D.Options.Dewdrop:GetOpenedParent()
++                if module.Kind=="playback" and (D.Settings.windows[parent.Key].options[2].total or D.Settings.windows[parent.Key].options[2].bossall or D.Settings.windows[parent.Key].options[2].trashall) then
++                    D.Options:ToggleDrewDrop(2,"currentfight",parent,true)
++                end
++                D.Options:ToggleDrewDrop(1,capturedId,parent)
++            end}
++        if not D.RegistredModules[id] then D:Register(id,module,self.names[kind]) end
++    end
++end
++
++for kind,id in pairs(E.ids) do
++    local mode={Insights=true,Kind=kind,DB={},Events={}}
++    E.modules[kind]=mode
++    function mode:GetSettingValues(s,duration,key)
++        local names,values,bars={},{},{}
++        local sorted,total=E:Sorted(s,self.Kind,key)
++        for _,row in ipairs(sorted) do
++            table.insert(names,row.name)
++            local text=string.format("%.0f (%.1f%%)",row.value,100*row.value/math.max(1,total))
++            table.insert(values,text)
++            table.insert(bars,100*row.value/math.max(1,sorted[1].value))
++        end
++        local summary=string.format("%.0f",total)
++        if s.unsupported then summary="请选择单场战斗"
++        elseif s.missing then summary="该战斗未采集"
++        elseif not E.available then summary="需要 Nampower 4.5+" end
++        return names,values,bars,{"",summary}
++    end
++    function mode:ShowTooltip(user,key)
++        local s,duration=E:GetMode(key,self.Kind)
++        local users=E:SelectedUsers(s,self.Kind,user)
++        local value=0
++        for _,u in ipairs(users) do value=value+E:Value(u,self.Kind) end
++        GameTooltip:AddLine(E.names[self.Kind].."："..string.format("%.0f",value))
++        GameTooltip:AddLine("左键查看技能、目标及时间明细",1,1,1)
++        if self.Kind=="healing" then
++            GameTooltip:AddLine(E.db.config.rawHealing and "口径：总治疗＋实际吸收" or "口径：有效治疗＋实际吸收",0.4,1,0.4)
++        elseif self.Kind=="playback" then
++            GameTooltip:AddLine("保留最近"..E.limits.perUser.."条/人；全场最多"..E.limits.perFight.."条",0.7,0.7,0.7)
++        end
++    end
++    function mode:OpenDetails(obj,key,compare)
++        E:OpenDetails(self.Kind,obj.user,key)
++        if compare then E:OpenDetails(self.Kind,compare,key,true) end
++    end
++    function mode:OpenTotalDetails(obj,key) E:OpenDetails(self.Kind,nil,key) end
++    function mode:EvalTable(user,key)
++        if not user then return end
++        local name=D:GetUserById(user[1])
++        local s=E:GetMode(key,self.Kind)
++        local merged={}
++        for _,u in ipairs(E:SelectedUsers(s,self.Kind,name)) do
++            if self.Kind=="playback" then
++                for _,ev in ipairs(E:RingValues(u.events,E.limits.perUser)) do
++                    if ev.kind~="death" then merged[ev.spell]=(merged[ev.spell] or 0)+1 end
++                end
++            else
++                for _,row in pairs(u.skills) do merged[row.name]=(merged[row.name] or 0)+E:Value(row,self.Kind) end
++            end
++        end
++        local rows,total={},0
++        for spell,value in pairs(merged) do
++            if value>0 then table.insert(rows,{spell=spell,value=value});total=total+value end
++        end
++        if total==0 then return end
++        table.sort(rows,function(a,b) if a.value==b.value then return a.spell<b.spell end return a.value>b.value end)
++        local abilities,values={},{}
++        for _,row in ipairs(rows) do
++            table.insert(abilities,(D.DB:BuildAbility(row.spell)))
++            table.insert(values,row.value)
++        end
++        return abilities,total,values
++    end
++end
++E:RegisterModes()
+```

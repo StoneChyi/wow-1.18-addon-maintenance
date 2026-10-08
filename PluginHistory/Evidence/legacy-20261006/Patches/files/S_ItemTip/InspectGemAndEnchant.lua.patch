@@ -1,0 +1,50 @@
+--- a/S_ItemTip/InspectGemAndEnchant.lua
++++ b/S_ItemTip/InspectGemAndEnchant.lua
+@@ -80,11 +80,13 @@
+     -- 设置较高的层级，确保不被遮挡
+     icon:SetFrameLevel(frame:GetFrameLevel() + 10)
+     
+     -- 启用鼠标事件，阻止穿透到下层
+     icon:EnableMouse(true)
+-    icon:SetToplevel(true)
++    -- A static child icon needs its explicit frame level, not independent
++    -- window promotion when it becomes visible with its parent.
++    icon:SetToplevel(false)
+     
+     icon:SetScript("OnEnter", function()
+         if this.title then
+             GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+             GameTooltip:SetText(this.title, 0, 1, 0.5, 1, true)
+@@ -382,15 +384,18 @@
+ 
+ --Hook 到装备更新函数（立即执行，不延迟）
+ local originalUpdateFrame = S_ItemTip_UpdateFrame
+ function S_ItemTip_UpdateFrame(unit)
+     if originalUpdateFrame then
+-        originalUpdateFrame(unit)
++        -- Respect the base update's throttle before redrawing enchant icons.
++        if originalUpdateFrame(unit) == false then return false end
+     end
+     
+     local frame = S_ItemTip_InspectFrame
+-    if not frame or not frame:IsShown() then
++    -- Equipment is populated before its parent is shown. Prepare the child
++    -- icons in the same update; their visibility follows the parent frame.
++    if not frame then
+         return
+     end
+     
+     -- 保存当前单位
+     frame.currentUnit = unit
+@@ -435,10 +440,11 @@
+     local unitName = UnitName(unit)
+     unitGuidCache[unitName] = {
+         scanTime = time(),
+         enchantCount = enchantCount
+     }
++    if SCRequestPanelLayout then SCRequestPanelLayout() end
+ end
+ 
+ 
+ --Hook 到装备更新函数
+ local function ExportCache()

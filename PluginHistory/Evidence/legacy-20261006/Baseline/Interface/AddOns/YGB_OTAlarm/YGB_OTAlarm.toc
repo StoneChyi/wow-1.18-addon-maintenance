@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: YGB_OTAlarm - 烟锅巴OT提醒器
+## Author: 烟锅巴
+## Version: 2.0
+## Notes: 监控玩家仇恨值，当超过设定阈值时自动施放变身法术并语音报警，通过/ygbot命令显示设置面板
+## SavedVariables: YGB_OTAlarmDB
+
+# 插件主文件
+YGB_OTAlarm.lua

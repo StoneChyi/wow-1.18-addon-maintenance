@@ -1,0 +1,1268 @@
+--- /dev/null
++++ b/DPSMateXInsights/Core.lua
+@@ -0,0 +1,348 @@
++local D = DPSMateX
++local E = { VERSION = 1, ready = false, shields = {}, pending = {}, identities = {}, seen = {} }
++D.Insights = E
++
++E.ids = { healing = "healingabsorbsactual", casts = "spellcastsactual", playback = "actionreplay" }
++E.names = { healing = "治疗与实际吸收", casts = "成功施放", playback = "动作回放" }
++E.UNKNOWN = "来源未知"
++E.limits = { perUser = 500, perFight = 8000, audit = 300, debug = 200, bins = 600 }
++
++local function segment()
++    return { healing = {}, casts = {}, playback = {}, duration = 0, seq = 0,
++        stored = 0, dropped = 0, absorbed = 0, unknown = 0, excluded = 0, audit = {}, collected = {} }
++end
++E.NewSegment = segment
++
++function E:Copy(t)
++    if type(t) ~= "table" then return t end
++    local n = {}
++    for k,v in pairs(t) do n[k] = self:Copy(v) end
++    return n
++end
++
++-- Bounded ring, persisted without shared references between fights.
++function E:Push(ring, value, limit)
++    ring.data = ring.data or {}; ring.head = ring.head or 1; ring.count = ring.count or 0
++    if ring.count < limit then
++        local slot = math.mod(ring.head + ring.count - 1, limit) + 1
++        ring.data[slot] = value; ring.count = ring.count + 1
++    else
++        ring.data[ring.head] = value; ring.head = math.mod(ring.head, limit) + 1
++        ring.dropped = (ring.dropped or 0) + 1
++    end
++end
++
++function E:RingValues(ring, limit)
++    local result = {}
++    if not ring or not ring.data then return result end
++    for i=0,(ring.count or 0)-1 do
++        result[table.getn(result)+1] = ring.data[math.mod((ring.head or 1)+i-1, limit)+1]
++    end
++    return result
++end
++
++function E:MigrateReplayBounds()
++    local db=self.db
++    if db.replayLimit==self.limits.perUser and db.replayFightLimit==self.limits.perFight then return end
++    local oldLimit=db.replayLimit or 2000
++    local segments={db.current,db.total}
++    for _,s in ipairs(db.history or {}) do table.insert(segments,s) end
++    for _,s in ipairs(segments) do
++        local candidates,byUser={},{}
++        local previous=0
++        for name,u in pairs(s.playback or {}) do
++            local all=self:RingValues(u.events,oldLimit)
++            previous=previous+table.getn(all)
++            local kept={}
++            for i=math.max(1,table.getn(all)-self.limits.perUser+1),table.getn(all) do
++                table.insert(kept,all[i]);table.insert(candidates,all[i])
++            end
++            byUser[name]={user=u,events=kept,previous=table.getn(all),dropped=u.events.dropped or 0}
++        end
++        table.sort(candidates,function(a,b) return a.seq>b.seq end)
++        local threshold=table.getn(candidates)>self.limits.perFight and candidates[self.limits.perFight].seq or 0
++        local stored=0
++        for _,entry in pairs(byUser) do
++            local ring={}
++            for _,ev in ipairs(entry.events) do
++                if ev.seq>=threshold then self:Push(ring,ev,self.limits.perUser);stored=stored+1 end
++            end
++            ring.dropped=entry.dropped+entry.previous-(ring.count or 0)
++            entry.user.events=ring
++        end
++        s.stored=stored;s.dropped=(s.dropped or 0)+math.max(0,previous-stored)
++    end
++    db.replayLimit=self.limits.perUser;db.replayFightLimit=self.limits.perFight
++    self.replayIndexes=nil
++end
++
++function E:Initialize()
++    if not D.Settings or not D.DPSMateXHistory then return end
++    local db = DPSMateXInsightsDB
++    if type(db) ~= "table" or db.version ~= self.VERSION then
++        db = { version = self.VERSION, total = segment(), current = segment(), history = {},
++            config = { rawHealing = false, debug = false }, debugLog = {} }
++        DPSMateXInsightsDB = db
++    end
++    self.db = db; self.ready = true
++    self:MigrateReplayBounds()
++    if not self.initialized then
++        self.initialized = true
++        -- A reload/reconnect cannot reconstruct all still-active shield owners reliably.
++        if db.current.active then
++            db.total.duration=(db.total.duration or 0)+math.max(0,(db.current.duration or 0)-(db.current.offset or 0))
++        end
++        db.current.active = false; db.current.started = nil
++        self.shields = {}; self.seen = {}; self.pending = {}; self.identities = {}
++        if not db.installed then
++            for _,id in pairs(self.ids) do D.Settings.enabledmodes[id] = true end
++            db.installed = true
++        end
++    end
++    self:AlignHistory()
++    for _,users in pairs({db.total.healing,db.total.casts,db.total.playback,db.current.healing,db.current.casts,db.current.playback}) do
++        for name,u in pairs(users) do
++            D.DB:BuildUser(name, u.class)
++        end
++    end
++    if self.RegisterModes then self:RegisterModes() end
++    for _,id in pairs(self.ids) do
++        if D:TContains(D.Settings.enabledmodes, id) then D:EnableModule(id) end
++    end
++    local major,minor,patch
++    if GetNampowerVersion then major,minor,patch = GetNampowerVersion() end
++    self.versionText = string.format("%s.%s.%s", tostring(major or 0), tostring(minor or 0), tostring(patch or 0))
++    self.available = major and (major > 4 or (major == 4 and minor >= 5)) and
++        GetSpellNameAndRankForId and GetUnitGUID and bit and bit.band and true or false
++    if not self.available and not self.warned then
++        self.warned = true
++        D:SendMessage("精确统计扩展需要 Nampower 4.5 或以上；当前无法采集新模块。")
++    end
++end
++
++function E:AlignHistory()
++    local names = D.DPSMateXHistory.names or {}
++    local aligned = {}
++    for i,label in ipairs(names) do
++        local saved = self.db.history[i]
++        if saved and saved.label == label then aligned[i] = saved
++        else aligned[i] = { label = label, missing = true } end
++    end
++    self.db.history = aligned
++end
++
++function E:Reset()
++    if not self.ready then
++        if type(DPSMateXInsightsDB)=="table" then
++            DPSMateXInsightsDB.total=segment();DPSMateXInsightsDB.current=segment();DPSMateXInsightsDB.history={}
++            DPSMateXInsightsDB.debugLog={}
++        end
++        return
++    end
++    self.db.total = segment(); self.db.current = segment(); self.db.history = {}
++    self.db.debugLog = {}; self.shields = {}; self.pending = {}; self.identities = {}; self.seen = {}
++    if self.HideDetails then self:HideDetails() end
++end
++
++function E:ResetCurrent()
++    if not self.ready then return end
++    local continuing = D.DB:IsCombatActive()
++    self:EndCombat()
++    self.db.current = segment(); self.seen = {}; self.pending = {}
++    if continuing then self:StartCombat() end
++    -- Preserve pre-pull shields. Their lifetime is independent of statistical segments.
++end
++
++function E:StartCombat()
++    if not self.ready then return end
++    local s = self.db.current
++    if not s.active then s.active = true; s.started = GetTime(); s.offset = s.duration or 0 end
++end
++
++function E:Duration(s)
++    if s.active and s.started then return (s.offset or 0) + math.max(0, GetTime()-s.started) end
++    return s.duration or 0
++end
++
++function E:EndCombat()
++    if not self.ready then return end
++    local s = self.db.current
++    if s.active then
++        s.duration = self:Duration(s); s.active = false; s.started = nil
++        self.db.total.duration = (self.db.total.duration or 0) + math.max(0, s.duration-(s.offset or 0))
++    end
++end
++
++function E:SaveSegment(label)
++    if not self.ready then return end
++    local s = self:Copy(self.db.current)
++    s.duration = self:Duration(self.db.current); s.active = false; s.started = nil; s.label = label
++    table.insert(self.db.history, 1, s)
++    local limit = math.max(1, math.min(100, tonumber(D.Settings.datasegments) or 10))
++    while table.getn(self.db.history) > limit do table.remove(self.db.history) end
++end
++
++function E:RemoveSegment(i)
++    if self.ready then table.remove(self.db.history, i) end
++end
++
++function E:GetMode(key, kind)
++    if not self.ready then return {missing=true}, 0, {} end
++    if D.Encounters and D.Encounters.ready and D.Encounters:Normalize(key) then return D.Encounters:GetInsights(key,kind) end
++    local s = self.db.current
++    local options = D.Settings.windows[key].options[2]
++    for mode,checked in pairs(options) do
++        if checked then
++            if mode == "total" then
++                if kind == "playback" then return {unsupported=true}, 0, {} end
++                s = self.db.total
++            elseif string.find(mode, "^segment%d+$") then
++                local index = tonumber(string.sub(mode,8))
++                s = self.db.history[index]
++                if not s or s.label ~= D.DPSMateXHistory.names[index] then return {missing=true}, 0, {} end
++            end
++            break
++        end
++    end
++    local duration = self:Duration(s)
++    if s == self.db.total and self.db.current.active then
++        duration = duration + self:Duration(self.db.current)-(self.db.current.offset or 0)
++    end
++    return s, math.max(1, duration), {}
++end
++
++function E:Enabled(kind)
++    return self.ready and self.available and D.Registered and D.EnabledModules[self.ids[kind]]
++end
++
++function E:User(s, kind, person)
++    local users = s[kind]
++    local u = users[person.name]
++    if not u then
++        D.DB:BuildUser(person.name,person.class)
++        u = { name=person.name, class=person.class, owner=person.owner, guid=person.guid, total=0, effective=0,
++            absorb=0, count=0, skills={}, targets={}, bins={}, events={} }
++        users[person.name] = u
++    end
++    return u
++end
++
++function E:Skill(u, key, spell, spellId, source)
++    local row = u.skills[key]
++    if not row then
++        row = {name=spell, spellId=spellId, source=source, total=0,effective=0,absorb=0,count=0,targets={}}
++        u.skills[key] = row
++    end
++    return row
++end
++
++function E:Target(rows, name)
++    name = name or "无目标"
++    local row = rows[name]
++    if not row then row={name=name,total=0,effective=0,absorb=0,count=0}; rows[name]=row end
++    return row
++end
++
++function E:Value(row, kind)
++    if kind == "healing" then return (self.db.config.rawHealing and row.total or row.effective) + row.absorb end
++    return row.count or 0
++end
++
++function E:Name(u)
++    if D.Settings.mergepets and u.owner then return u.owner end
++    return u.name
++end
++
++function E:SelectedUsers(s, kind, name, key)
++    local users = {}
++    for _,u in pairs(s[kind] or {}) do
++        local display=self:Name(u)
++        if (not name or display == name) and (name or not key or display==self.UNKNOWN or D:ApplyFilter(key,display)) then table.insert(users,u) end
++    end
++    return users
++end
++
++function E:Sorted(s, kind, key)
++    local merged = {}
++    for _,u in pairs(s[kind] or {}) do
++        local name = self:Name(u)
++        if name == self.UNKNOWN or D:ApplyFilter(key,name) then
++            merged[name] = (merged[name] or 0) + self:Value(u,kind)
++        end
++    end
++    local result,total = {},0
++    for name,value in pairs(merged) do
++        if value > 0 then table.insert(result,{name=name,value=value}); total=total+value end
++    end
++    table.sort(result,function(a,b) if a.value == b.value then return a.name < b.name end return a.value > b.value end)
++    return result,total
++end
++
++function E:RelativeTime()
++    return self.eventTime or self:Duration(self.db.current)
++end
++
++function E:AddBin(u, total, effective, absorb)
++    local second = math.floor(self:RelativeTime())
++    if not u.bins[second] then
++        if not u.binCount then
++            u.binCount=0
++            for _ in pairs(u.bins) do u.binCount=u.binCount+1 end
++        end
++        if u.binCount >= self.limits.bins then u.binsTruncated = true; return end
++        u.binCount=u.binCount+1
++    end
++    local bin=u.bins[second] or {total=0,effective=0,absorb=0}
++    bin.total=bin.total+(total or 0);bin.effective=bin.effective+(effective or 0);bin.absorb=bin.absorb+(absorb or 0)
++    u.bins[second]=bin
++end
++
++function E:Audit(record)
++    self:Push(self.db.current.audit, record, self.limits.audit)
++    if self.db.config.debug then self:Push(self.db.debugLog,self:Copy(record),self.limits.debug) end
++end
++
++function E:Touch(kind)
++    self.db.current.collected[kind] = true; self.db.total.collected[kind] = true
++    D.DB.NeedUpdate = true
++end
++
++local lifecycle = CreateFrame("Frame")
++lifecycle:RegisterEvent("PLAYER_LOGOUT")
++lifecycle:RegisterEvent("PLAYER_ENTERING_WORLD")
++lifecycle:SetScript("OnEvent",function()
++    if event == "PLAYER_LOGOUT" and E.ready then E:EndCombat()
++    elseif event == "PLAYER_ENTERING_WORLD" then
++        E.shields = {}; E.identities = {}; E.pending = {}; E.seen = {}
++    end
++end)
++local elapsed = 0
++lifecycle:SetScript("OnUpdate",function()
++    if not E.ready or (not E.db.current.active and table.getn(E.pending)==0) then return end
++    elapsed = elapsed + arg1
++    if elapsed < 0.25 then return end
++    elapsed = 0
++    if E.db.current.active then E.db.current.duration = E:Duration(E.db.current) end
++    if table.getn(E.pending)>0 and E.FlushPending then E:FlushPending() end
++end)
++
++SLASH_DPSMATEXINSIGHTS1 = "/dpsx"
++SlashCmdList.DPSMATEXINSIGHTS = function(message)
++    if not E.ready then return end
++    local cmd = string.lower(message or "")
++    if cmd == "debug" then
++        E.db.config.debug = not E.db.config.debug
++        D:SendMessage("扩展调试记录："..(E.db.config.debug and "开启（最多200条）" or "关闭"))
++    elseif cmd == "status" then
++        local s = E.db.current
++        D:SendMessage("Nampower "..(E.versionText or "未知").."；吸收 "..s.absorbed.." / 未知 "..s.unknown..
++            " / 排除 "..s.excluded.."；回放保留 "..s.stored.." / 丢弃 "..s.dropped)
++    elseif cmd == "raw" then
++        E.db.config.rawHealing = not E.db.config.rawHealing
++        D.DB.NeedUpdate = true
++        D:SendMessage(E.db.config.rawHealing and "合计口径：总治疗＋实际吸收" or "合计口径：有效治疗＋实际吸收")
++    else
++        E:OpenDetails("healing",nil,1)
++        D:SendMessage("/dpsx：详情；/dpsx raw：合计口径；/dpsx debug：调试；/dpsx status：核对")
++    end
++end
+--- /dev/null
++++ b/DPSMateXInsights/DPSMateXInsights.toc
+@@ -0,0 +1,13 @@
++## Interface: 11200
++## Title: |CFFEE7600[DPS统计]|RDPSMateXInsights
++## Notes: Actual absorbs, successful spell casts and action timelines for DPSMateX.
++## Title-zhCN: |CFFEE7600[DPS统计]|RDPSMateX 精确统计扩展
++## Notes-zhCN: 治疗与实际吸收、成功施放、动作回放及详细数据界面。
++## Version: 1.0.1
++## Dependencies: DPSMateX
++## SavedVariablesPerCharacter: DPSMateXInsightsDB
++
++Core.lua
++Parser.lua
++Modules.lua
++Details.lua
+--- /dev/null
++++ b/DPSMateXInsights/Details.lua
+@@ -0,0 +1,351 @@
++local D,E = DPSMateX,DPSMateX.Insights
++local format=string.format
++local sourceNames={all="全部来源",player="玩家",pet="宠物",item="物品",shield="护盾",death="死亡"}
++local targetNames={all="全部目标",enemy="敌方",friendly="友方",self="自身",none="无目标"}
++local sources={"all","player","pet","item","shield","death"}
++local targets={"all","enemy","friendly","self","none"}
++local labels={players="玩家",skills="技能",targets="目标",audit="核对",graph="曲线",events="动作"}
++
++local function text(parent,size,x,y,width)
++    local f=parent:CreateFontString(nil,"OVERLAY",size or "GameFontNormalSmall")
++    f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y); f:SetWidth(width or 300); f:SetHeight(22); f:SetJustifyH("LEFT")
++    return f
++end
++local function box(frame,alpha)
++    frame:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
++        tile=true,tileSize=16,edgeSize=16,insets={left=6,right=6,top=6,bottom=6}})
++    frame:SetBackdropColor(0.157,0.08,0.06,alpha or 1)
++end
++local function button(parent,label,x,y,width,action)
++    local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
++    b:SetWidth(width or 76); b:SetHeight(23); b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y); b:SetText(label)
++    b:SetScript("OnClick",action)
++    return b
++end
++local function edit(parent,label,x,y,width)
++    local caption=text(parent,nil,x,y,width);caption:SetText(label)
++    local f=CreateFrame("EditBox",nil,parent)
++    f.label=caption
++    f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,y-22); f:SetWidth(width); f:SetHeight(24)
++    f:SetFontObject(GameFontHighlightSmall); f:SetAutoFocus(false); box(f,0.5); f:SetTextInsets(5,5,0,0)
++    f:SetScript("OnEscapePressed",function() this:ClearFocus() end)
++    f:SetScript("OnEnterPressed",function() this:ClearFocus() end)
++    return f
++end
++
++function E:HideDetails()
++    for _,w in pairs(self.windows or {}) do w:Hide() end
++end
++
++function E:CreateDetails(index)
++    self.windows=self.windows or {}
++    if self.windows[index] then return self.windows[index] end
++    local w=CreateFrame("Frame","DPSMateX_InsightsDetails"..index,UIParent)
++    self.windows[index]=w
++    w:SetWidth(860); w:SetHeight(650); w:SetPoint("CENTER",UIParent,"CENTER",0,0)
++    w:SetFrameStrata("DIALOG"); w:SetMovable(true); w:EnableMouse(true); box(w)
++    w:SetClampedToScreen(true)
++    w:SetScript("OnMouseDown",function() if arg1=="LeftButton" then this:StartMoving() end end)
++    w:SetScript("OnMouseUp",function() this:StopMovingOrSizing() end)
++    table.insert(UISpecialFrames,w:GetName())
++    w.title=text(w,"GameFontNormalHuge",18,-13,780)
++    w.summary=text(w,"GameFontNormal",18,-43,818)
++    w.summary:SetHeight(42)
++    w.healShare=w:CreateTexture(nil,"ARTWORK");w.healShare:SetPoint("TOPLEFT",w,"TOPLEFT",18,-84);w.healShare:SetHeight(4)
++    w.healShare:SetTexture(0.2,0.8,0.2,1)
++    w.absorbShare=w:CreateTexture(nil,"ARTWORK");w.absorbShare:SetPoint("LEFT",w.healShare,"RIGHT",0,0);w.absorbShare:SetHeight(4)
++    w.absorbShare:SetTexture(0.3,0.6,1,1)
++    button(w,"×",818,-12,25,function() w:Hide() end)
++    w.raw=button(w,"切换治疗口径",18,-91,150,function()
++        E.db.config.rawHealing=not E.db.config.rawHealing; D.DB.NeedUpdate=true; E:Render(w)
++    end)
++    w.refresh=button(w,"刷新",179,-91,73,function() E:Render(w) end)
++    w.back=button(w,"返回玩家",259,-91,92,function()
++        w.person=nil;w.skill=nil;w.view=w.kind=="playback" and "events" or "players";w.offset=0;E:Render(w)
++    end)
++    w.search=edit(w,"技能／目标名称",18,-122,235)
++    w.start=edit(w,"起始秒",265,-122,67)
++    w.finish=edit(w,"结束秒",344,-122,67)
++    w.source=button(w,"全部来源",426,-145,100,function()
++        w.sourceIndex=math.mod(w.sourceIndex,table.getn(sources))+1;w.offset=0;E:Render(w)
++    end)
++    w.targetType=button(w,"全部目标",535,-145,100,function()
++        w.targetIndex=math.mod(w.targetIndex,table.getn(targets))+1;w.offset=0;E:Render(w)
++    end)
++    w.viewButtons={}
++    local x=18
++    for _,view in ipairs({"players","skills","targets","audit","graph","events"}) do
++        local v=view
++        w.viewButtons[view]=button(w,labels[view],x,-180,72,function() w.view=v;w.offset=0;w.skill=nil;E:Render(w) end)
++        x=x+80
++    end
++    w.caption=text(w,"GameFontNormal",18,-211,818)
++    w.rows={}
++    for i=1,16 do
++        local row=CreateFrame("Button",nil,w)
++        row:SetPoint("TOPLEFT",w,"TOPLEFT",18,-239-(i-1)*22);row:SetWidth(820);row:SetHeight(22)
++        row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight","ADD")
++        row.icon=row:CreateTexture(nil,"ARTWORK");row.icon:SetWidth(19);row.icon:SetHeight(19)
++        row.icon:SetPoint("LEFT",row,"LEFT",0,0)
++        row.left=text(row,nil,25,0,495);row.right=text(row,nil,527,0,282);row.right:SetJustifyH("RIGHT")
++        row:SetScript("OnClick",function()
++            if row.item and row.item.person then w.person=row.item.person;w.view="skills";w.skill=nil
++            elseif row.item and row.item.skill then w.skill=row.item.skill;w.view="targets"
++            else return end
++            w.offset=0;E:Render(w)
++        end)
++        row:SetScript("OnEnter",function()
++            if row.item then
++                GameTooltip:SetOwner(row,"ANCHOR_RIGHT")
++                GameTooltip:AddLine(row.item.left,1,1,1,true)
++                GameTooltip:AddLine(row.item.right or "",1,1,1,true)
++                if row.item.tip then GameTooltip:AddLine(row.item.tip,0.7,0.7,0.7,true) end
++                GameTooltip:Show()
++            end
++        end)
++        row:SetScript("OnLeave",function() GameTooltip:Hide() end)
++        w.rows[i]=row
++    end
++    w:EnableMouseWheel(true)
++    w:SetScript("OnMouseWheel",function()
++        w.offset=math.max(0,math.min(math.max(0,(w.lineCount or 0)-16),w.offset-arg1*3));E:Render(w)
++    end)
++    button(w,"上一页",18,-603,86,function() w.offset=math.max(0,w.offset-16);E:Render(w) end)
++    button(w,"下一页",111,-603,86,function()
++        w.offset=math.min(math.max(0,(w.lineCount or 0)-16),w.offset+16);E:Render(w)
++    end)
++    w.page=text(w,nil,210,-603,180)
++    w.note=text(w,nil,399,-598,440);w.note:SetHeight(40)
++    for _,field in ipairs({w.search,w.start,w.finish}) do
++        field:SetScript("OnTextChanged",function()
++            if w.initializing then return end
++            w.offset=0;E:Render(w)
++        end)
++    end
++    w:Hide()
++    return w
++end
++
++local function matches(s,query) return query=="" or string.find(s or "",query,1,true)~=nil end
++function E:Filters(w)
++    return { query=w.search:GetText() or "",from=tonumber(w.start:GetText()),to=tonumber(w.finish:GetText()),
++        source=sources[w.sourceIndex],target=targets[w.targetIndex] }
++end
++function E:MatchEvent(ev,f)
++    return (not f.from or ev.t>=f.from) and (not f.to or ev.t<=f.to) and
++        (f.source=="all" or ev.source==f.source) and
++        (f.target=="all" or ev.ttype==f.target or (f.target=="friendly" and ev.ttype=="self")) and
++        (matches(ev.spell,f.query) or matches(ev.target,f.query))
++end
++
++function E:DetailLines(w,s,duration)
++    local result={}
++    if s.unsupported then return {{left="动作回放按单场战斗保存",right="请在主窗口选择当前或历史战斗"}} end
++    if s.missing then return {{left="该历史战斗未采集新模块",right="新战斗开始后会记录"}} end
++    if not self.available then return {{left="无法采集：需要 Nampower 4.5 或以上",right=self.versionText}} end
++    local f=self:Filters(w)
++    if f.from and f.to and f.from>f.to then return {{left="起始时间不能大于结束时间",right=""}} end
++    local users=self:SelectedUsers(s,w.kind,w.person,w.key)
++    if w.view=="players" then
++        local sorted,total=self:Sorted(s,w.kind,w.key)
++        for _,row in ipairs(sorted) do
++            if matches(row.name,f.query) then
++                table.insert(result,{person=row.name,left=row.name,right=format("%.0f  (%.1f%%)",row.value,100*row.value/math.max(1,total))})
++            end
++        end
++    elseif w.view=="events" then
++        local evs={}
++        for _,u in ipairs(users) do
++            for _,ev in ipairs(self:RingValues(u.events,self.limits.perUser)) do
++                if self:MatchEvent(ev,f) then table.insert(evs,{ev=ev,user=u.name}) end
++            end
++        end
++        table.sort(evs,function(a,b) if a.ev.t==b.ev.t then return a.ev.seq<b.ev.seq end return a.ev.t<b.ev.t end)
++        for _,record in ipairs(evs) do
++            local ev=record.ev
++            local color=ev.kind=="death" and "|cffff5555" or "|cffffffff"
++            local name=w.person and "" or (record.user.."：")
++            local tc=ev.ttype=="enemy" and {r=1,g=0.25,b=0.25} or {r=0.2,g=1,b=0.2}
++            if ev.ttype~="enemy" and RAID_CLASS_COLORS and RAID_CLASS_COLORS[ev.targetClass] then tc=RAID_CLASS_COLORS[ev.targetClass] end
++            local target=format("|cff%02x%02x%02x%s|r",math.floor(tc.r*255),math.floor(tc.g*255),math.floor(tc.b*255),ev.target or "无目标")
++            if ev.targetOwner then target=target.."（宠物："..ev.targetOwner.."）" end
++            if ev.charmedBy then target=target.."（心控："..ev.charmedBy.."）" end
++            if ev.dead then target=target.."（已死亡）" end
++            table.insert(result,{left=color..format("[%07.2fs] ",ev.t)..name..(ev.spell or "动作").."|r",
++                right=target.."  ("..(targetNames[ev.ttype] or "未知")..")",spellId=ev.spellId,spellName=ev.spell,kind=ev.kind,
++                tip=(sourceNames[ev.source] or "未知来源").." · 记录序号 "..ev.seq})
++        end
++    elseif w.view=="audit" then
++        for _,ev in ipairs(self:RingValues(s.audit,self.limits.audit)) do
++            if (not w.person or ev.owner==w.person) and (not f.from or ev.t>=f.from) and (not f.to or ev.t<=f.to) and
++                (matches(ev.owner,f.query) or matches(ev.target,f.query) or matches(self:Spell(ev.spellId),f.query)) then
++                table.insert(result,{left=format("[%.2fs] %s → %s",ev.t,ev.owner or "未知",ev.target or "无目标"),
++                    right=format("%s  %.0f",ev.event,ev.amount or 1),spellId=ev.spellId,
++                    tip="归属依据："..(ev.reason or "").."；目标GUID："..(ev.targetGuid or "").."；技能ID："..tostring(ev.spellId or 0)})
++            end
++        end
++    else
++        local merged={}
++        local function collect(key,row)
++                if (f.source=="all" or row.source==f.source or w.view=="targets") and matches(row.name,f.query) and
++                    (w.view~="targets" or f.target=="all" or row.ttype==f.target or (f.target=="friendly" and row.ttype=="self")) then
++                    -- Display all ranks and sources of the same named ability together.
++                    local group=w.view=="targets" and key or row.name
++                    local r=merged[group]
++                    if not r then
++                        r={name=row.name,spellId=row.spellId,source=row.source,total=0,effective=0,absorb=0,count=0,ids={}}
++                        merged[group]=r
++                    end
++                    if row.spellId and row.spellId>0 then
++                        r.ids[row.spellId]=true
++                        if not r.spellId or r.spellId<=0 or row.spellId<r.spellId then r.spellId=row.spellId end
++                    end
++                    if r.source~=row.source then r.source="all" end
++                    r.total=r.total+row.total;r.effective=r.effective+row.effective;r.absorb=r.absorb+row.absorb;r.count=r.count+row.count
++                end
++        end
++        for _,u in ipairs(users) do
++            if w.view=="targets" and w.skill then
++                for key,skill in pairs(u.skills) do
++                    if (skill.name==w.skill or key==w.skill) and (f.source=="all" or skill.source==f.source) then
++                        for target,row in pairs(skill.targets) do collect(target,row) end
++                    end
++                end
++            else
++                for key,row in pairs(w.view=="targets" and u.targets or u.skills) do collect(key,row) end
++            end
++        end
++        local sorted,total={},0
++        for key,row in pairs(merged) do row.key=key;row.value=self:Value(row,w.kind);total=total+row.value;table.insert(sorted,row) end
++        table.sort(sorted,function(a,b) if a.value==b.value then return a.name<b.name end return a.value>b.value end)
++        for _,row in ipairs(sorted) do
++            local line={left=row.name,spellName=row.name,spellId=row.spellId,skill=w.view=="skills" and row.key or nil,
++                right=format("%.0f  (%.1f%%)",row.value,100*row.value/math.max(1,total))}
++            if w.kind=="healing" then
++                line.tip=format("总治疗 %.0f；有效治疗 %.0f；实际吸收 %.0f；事件数 %d",row.total,row.effective,row.absorb,row.count)
++            else line.tip=(sourceNames[row.source] or "目标分布").."；成功施放 "..row.count.." 次" end
++            local ids={};for id in pairs(row.ids) do table.insert(ids,id) end;table.sort(ids)
++            if table.getn(ids)>0 then
++                local visible={}
++                for i=1,math.min(8,table.getn(ids)) do visible[i]=tostring(ids[i]) end
++                line.tip=line.tip.."；技能ID："..table.concat(visible,", ")..(table.getn(ids)>8 and " …" or "")
++                if table.getn(ids)>1 then line.tip=line.tip.."（已合并同名技能）" end
++            end
++            table.insert(result,line)
++        end
++    end
++    if table.getn(result)==0 then result[1]={left="没有匹配的数据",right="检查战斗分段、模块开关或筛选条件"} end
++    return result
++end
++
++function E:DrawGraph(w,s)
++    if not D.Options.graph then return end
++    if not w.graph then
++        w.graph=D.Options.graph:CreateGraphLine(w:GetName().."Line",w,"TOPLEFT","TOPLEFT",55,-275,750,270)
++        w.graph:SetGridColor({0.5,0.5,0.5,0.5});w.graph:SetAxisDrawing(true,true)
++        w.graph:SetAxisColor({1,1,1,1});w.graph:SetAutoScale(true);w.graph:SetYLabels(true,false);w.graph:SetXLabels(true)
++    end
++    local bins={};local maxTime,maxValue=1,1
++    for _,u in ipairs(self:SelectedUsers(s,"healing",w.person,w.key)) do
++        for second,bin in pairs(u.bins) do
++            local value=(self.db.config.rawHealing and bin.total or bin.effective)+bin.absorb
++            bins[second]=(bins[second] or 0)+value
++        end
++    end
++    local points={{0,0}}
++    for second,value in pairs(bins) do
++        table.insert(points,{second,value});maxTime=math.max(maxTime,second);maxValue=math.max(maxValue,value)
++    end
++    table.sort(points,function(a,b) return a[1]<b[1] end)
++    w.graph:ResetData();w.graph:SetXAxis(0,maxTime+1);w.graph:SetYAxis(0,maxValue*1.1)
++    w.graph:SetGridSpacing(math.max(1,maxTime/10),math.max(1,maxValue/6))
++    w.graph:AddDataSeries(points,{{0.2,0.8,0.2,0.8},{0.5,0.8,0.9,0.8}},{})
++    w.graph:Show()
++end
++
++function E:Render(w)
++    if not self.ready then return end
++    local s,duration=self:GetMode(w.key,w.kind)
++    duration=math.max(1,duration or 0)
++    if s.aggregate and (w.view=="graph" or w.view=="audit") then w.view=w.person and "skills" or "players" end
++    w.title:SetText(self.names[w.kind].." — "..(w.person or "团队总览")..(s.scopeName and (" · "..s.scopeName) or ""))
++    local users=self:SelectedUsers(s,w.kind,w.person,w.key)
++    local totals={total=0,effective=0,absorb=0,count=0}
++    for _,u in ipairs(users) do
++        totals.total=totals.total+u.total;totals.effective=totals.effective+u.effective
++        totals.absorb=totals.absorb+u.absorb;totals.count=totals.count+u.count
++    end
++    if w.kind=="healing" then
++        w.summary:SetText(format("总治疗 %.0f  ·  有效 %.0f  ·  吸收 %.0f  ·  合计 %.0f  ·  HPS %.1f\n口径：%s；团队未知吸收 %.0f（绿：治疗，蓝：吸收）",
++            totals.total,totals.effective,totals.absorb,self:Value(totals,"healing"),self:Value(totals,"healing")/duration,
++            self.db.config.rawHealing and "总治疗＋吸收" or "有效治疗＋吸收",s.unknown or 0))
++        local combined=math.max(1,self:Value(totals,"healing"))
++        local healing=self.db.config.rawHealing and totals.total or totals.effective
++        w.healShare:SetWidth(healing/combined*818);w.absorbShare:SetWidth(totals.absorb/combined*818)
++        if healing>0 then w.healShare:Show() else w.healShare:Hide() end
++        if totals.absorb>0 then w.absorbShare:Show() else w.absorbShare:Hide() end
++    else
++        w.healShare:Hide();w.absorbShare:Hide()
++        w.summary:SetText(format("%s %d 次  ·  战斗 %.1f 秒  ·  Nampower %s\n%s",
++            w.kind=="casts" and "成功施放" or "技能与平砍动作",totals.count,duration,self.versionText or "未知",
++            w.kind=="casts" and "一次 SPELL_GO 计一次；持续效果与群体命中不增加施放数" or "按单场战斗时间排序；死亡标记不计入动作次数"))
++    end
++    w.source:SetText(sourceNames[sources[w.sourceIndex]]);w.targetType:SetText(targetNames[targets[w.targetIndex]])
++    if w.graph then w.graph:Hide() end
++    local lines=self:DetailLines(w,s,duration)
++    w.lineCount=table.getn(lines);w.offset=math.min(w.offset,math.max(0,w.lineCount-16))
++    w.caption:SetText((labels[w.view] or "详情")..(w.skill and " · 技能目标明细" or "").."                                      数量 / 占比；悬停查看拆分")
++    if w.view=="events" then w.caption:SetText("时间 / 技能（同一时刻按采集顺序）                                             目标 / 类型")
++    elseif w.view=="audit" then w.caption:SetText("时间 / 施法者 → 目标                                                          事件 / 金额") end
++    local graph=w.view=="graph" and w.kind=="healing" and not s.missing and not s.unsupported and s~=self.db.total and not s.aggregate
++    for i,row in ipairs(w.rows) do
++        local line=lines[w.offset+i]
++        if line and not graph then
++            row.item=line;row.left:SetText(line.left);row.right:SetText(line.right or "")
++            local icon=self:Icon(line.spellId,line.spellName or line.left,line.kind)
++            if line.person then
++                local r,g,b,class=D:GetClassColor(line.person)
++                row.left:SetTextColor(r,g,b)
++                icon="Interface\\AddOns\\DPSMateX\\images\\class\\"..class
++            else row.left:SetTextColor(1,1,1) end
++            if icon then row.icon:SetTexture(icon);row.icon:Show() else row.icon:Hide() end
++            row:Show()
++        else row:Hide();row.item=nil end
++    end
++    if graph then self:DrawGraph(w,s);w.caption:SetText("每秒治疗与吸收贡献 · 横轴为战斗秒数（玩家整体，最多600个时间点）") end
++    w.page:SetText(format("%d–%d / %d",w.offset+1,math.min(w.offset+16,w.lineCount),w.lineCount))
++    local note=""
++    if s.missing then note="该战斗未采集此模块"
++    elseif s.unsupported then note="请在主窗口选择单场战斗"
++    elseif w.view=="graph" and s==self.db.total then note="曲线只保存单场战斗；请选择当前或历史战斗"
++    elseif w.kind=="playback" then note=format("全场保留 %d；丢弃 %d；未解析 %d",s.stored or 0,s.dropped or 0,s.missed or 0)
++    elseif w.view=="audit" then note="最近300条核对记录；/dpsx debug 保存限量调试日志"
++    elseif w.kind=="healing" then note="多盾无法确定施法者时保留为来源未知" end
++    if s.aggregate then note="累计范围，"..(s.fightCount or 0).."场战斗"..(s.detailTrimmed and "；超出明细上限的内容归入其他，总数保留" or "") end
++    w.note:SetText(note)
++    for view,b in pairs(w.viewButtons) do
++        local show=(view=="players" or view=="skills" or view=="targets") and w.kind~="playback" or
++            (view=="events" and w.kind=="playback") or (view=="audit" and not s.aggregate) or (view=="graph" and w.kind=="healing" and not s.aggregate)
++        if show then b:Show() else b:Hide() end
++    end
++    if w.kind=="healing" then w.raw:Show() else w.raw:Hide() end
++    local showTime=w.view=="events" or w.view=="audit"
++    if showTime then w.start:Show();w.finish:Show();w.start.label:Show();w.finish.label:Show()
++    else w.start:Hide();w.finish:Hide();w.start.label:Hide();w.finish.label:Hide() end
++    if w.view=="events" or w.view=="skills" then w.source:Show() else w.source:Hide() end
++    if w.view=="events" or w.view=="targets" then w.targetType:Show() else w.targetType:Hide() end
++end
++
++function E:OpenDetails(kind,person,key,compare)
++    if not self.ready then return end
++    local w=self:CreateDetails(compare and 2 or 1)
++    w.initializing=true;w.kind=kind;w.person=person;w.key=key or 1
++    w.view=kind=="playback" and "events" or (person and "skills" or "players")
++    w.skill=nil;w.offset=0;w.sourceIndex=1;w.targetIndex=1
++    w.search:SetText("");w.start:SetText("");w.finish:SetText("");w.initializing=nil
++    w:SetScale((D.Settings.targetscale or 0.58)/UIParent:GetScale())
++    if compare then
++        w:ClearAllPoints();w:SetPoint("TOPLEFT",self.windows[1],"TOPRIGHT",8,0)
++    end
++    self:Render(w);w:Show()
++end
+--- /dev/null
++++ b/DPSMateXInsights/Modules.lua
+@@ -0,0 +1,86 @@
++local D,E = DPSMateX,DPSMateX.Insights
++E.modules={}
++
++function E:RegisterModes()
++    for kind,id in pairs(self.ids) do
++        local module=self.modules[kind]
++        local capturedId=id
++        D.Options.Options[1].args[id]={order=kind=="healing" and 131 or (kind=="casts" and 271 or 272),
++            type="toggle",name=self.names[kind],desc="查看"..self.names[kind].."及详细数据。",
++            get=function() return D.Settings.windows[D.Options.Dewdrop:GetOpenedParent().Key].options[1][capturedId] end,
++            set=function()
++                local parent=D.Options.Dewdrop:GetOpenedParent()
++                if module.Kind=="playback" and (D.Settings.windows[parent.Key].options[2].total or D.Settings.windows[parent.Key].options[2].bossall or D.Settings.windows[parent.Key].options[2].trashall) then
++                    D.Options:ToggleDrewDrop(2,"currentfight",parent,true)
++                end
++                D.Options:ToggleDrewDrop(1,capturedId,parent)
++            end}
++        if not D.RegistredModules[id] then D:Register(id,module,self.names[kind]) end
++    end
++end
++
++for kind,id in pairs(E.ids) do
++    local mode={Insights=true,Kind=kind,DB={},Events={}}
++    E.modules[kind]=mode
++    function mode:GetSettingValues(s,duration,key)
++        local names,values,bars={},{},{}
++        local sorted,total=E:Sorted(s,self.Kind,key)
++        for _,row in ipairs(sorted) do
++            table.insert(names,row.name)
++            local text=string.format("%.0f (%.1f%%)",row.value,100*row.value/math.max(1,total))
++            table.insert(values,text)
++            table.insert(bars,100*row.value/math.max(1,sorted[1].value))
++        end
++        local summary=string.format("%.0f",total)
++        if s.unsupported then summary="请选择单场战斗"
++        elseif s.missing then summary="该战斗未采集"
++        elseif not E.available then summary="需要 Nampower 4.5+" end
++        return names,values,bars,{"",summary}
++    end
++    function mode:ShowTooltip(user,key)
++        local s,duration=E:GetMode(key,self.Kind)
++        local users=E:SelectedUsers(s,self.Kind,user)
++        local value=0
++        for _,u in ipairs(users) do value=value+E:Value(u,self.Kind) end
++        GameTooltip:AddLine(E.names[self.Kind].."："..string.format("%.0f",value))
++        GameTooltip:AddLine("左键查看技能、目标及时间明细",1,1,1)
++        if self.Kind=="healing" then
++            GameTooltip:AddLine(E.db.config.rawHealing and "口径：总治疗＋实际吸收" or "口径：有效治疗＋实际吸收",0.4,1,0.4)
++        elseif self.Kind=="playback" then
++            GameTooltip:AddLine("保留最近"..E.limits.perUser.."条/人；全场最多"..E.limits.perFight.."条",0.7,0.7,0.7)
++        end
++    end
++    function mode:OpenDetails(obj,key,compare)
++        E:OpenDetails(self.Kind,obj.user,key)
++        if compare then E:OpenDetails(self.Kind,compare,key,true) end
++    end
++    function mode:OpenTotalDetails(obj,key) E:OpenDetails(self.Kind,nil,key) end
++    function mode:EvalTable(user,key)
++        if not user then return end
++        local name=D:GetUserById(user[1])
++        local s=E:GetMode(key,self.Kind)
++        local merged={}
++        for _,u in ipairs(E:SelectedUsers(s,self.Kind,name)) do
++            if self.Kind=="playback" then
++                for _,ev in ipairs(E:RingValues(u.events,E.limits.perUser)) do
++                    if ev.kind~="death" then merged[ev.spell]=(merged[ev.spell] or 0)+1 end
++                end
++            else
++                for _,row in pairs(u.skills) do merged[row.name]=(merged[row.name] or 0)+E:Value(row,self.Kind) end
++            end
++        end
++        local rows,total={},0
++        for spell,value in pairs(merged) do
++            if value>0 then table.insert(rows,{spell=spell,value=value});total=total+value end
++        end
++        if total==0 then return end
++        table.sort(rows,function(a,b) if a.value==b.value then return a.spell<b.spell end return a.value>b.value end)
++        local abilities,values={},{}
++        for _,row in ipairs(rows) do
++            table.insert(abilities,(D.DB:BuildAbility(row.spell)))
++            table.insert(values,row.value)
++        end
++        return abilities,total,values
++    end
++end
++E:RegisterModes()
+--- /dev/null
++++ b/DPSMateXInsights/Parser.lua
+@@ -0,0 +1,395 @@
++local D,E = DPSMateX,DPSMateX.Insights
++local ZERO = "0x0000000000000000"
++local function valid(guid) return type(guid)=="string" and guid~="" and guid~=ZERO end
++local function safe(fn,...)
++    if not fn then return nil end
++    local ok,value = pcall(fn,unpack(arg))
++    if ok then return value end
++end
++local known = {
++    ["Power Word: Shield"]=127,["真言术：盾"]=127,
++    ["Ice Barrier"]=127,["寒冰护体"]=127,["Persistent Shield"]=127,["持续护盾"]=127,
++    ["Earth Shield"]=127,["大地障壁"]=127,["Mana Shield"]=1,["法力护盾"]=1,
++    ["Fire Ward"]=4,["防护火焰结界"]=4,["Frost Ward"]=16,["防护冰霜结界"]=16,
++    ["Shadow Ward"]=32,["防护暗影结界"]=32,["Fire Protection"]=4,["火焰防护"]=4,
++    ["防护火焰"]=4,["Frost Protection"]=16,["防护冰霜"]=16,["Nature Protection"]=8,["防护自然"]=8,
++    ["Shadow Protection"]=32,["防护暗影"]=32,["Arcane Protection"]=64,["奥术防护"]=64,
++    ["Holy Protection"]=2,["防护神圣"]=2,
++}
++local excluded = {["红月"]=true,["蓝月"]=true}
++local families={
++    SPELL_GO_SELF="cast",SPELL_GO_OTHER="cast",SPELL_HEAL_BY_SELF="heal",SPELL_HEAL_BY_OTHER="heal",
++    SPELL_DAMAGE_EVENT_SELF="damage",SPELL_DAMAGE_EVENT_OTHER="damage",AUTO_ATTACK_SELF="swing",AUTO_ATTACK_OTHER="swing",
++    ENVIRONMENTAL_DMG_SELF="environment",ENVIRONMENTAL_DMG_OTHER="environment",
++    AURA_CAST_ON_SELF="aura",AURA_CAST_ON_OTHER="aura",BUFF_REMOVED_SELF="remove",BUFF_REMOVED_OTHER="remove",
++    UNIT_DIED="death",ZONE_CHANGED_NEW_AREA="zone",
++}
++local metadata,metadataCount={},0
++local function spellMetadata(id)
++    local row=metadata[id]
++    if row then return row end
++    local name=safe(GetSpellNameAndRankForId,id)
++    if not name or name=="" then return nil end
++    if metadataCount>=512 then metadata={};metadataCount=0 end
++    row={name=name};metadata[id]=row;metadataCount=metadataCount+1
++    return row
++end
++
++function E:Spell(id)
++    local row=id and spellMetadata(id)
++    return row and row.name or ("技能 #"..tostring(id or 0))
++end
++
++function E:Icon(id,name,kind)
++    if kind=="swing" then return "Interface\\Icons\\INV_Sword_04" end
++    if kind=="death" then return "Interface\\Icons\\Spell_Shadow_DeathCoil" end
++    if not id or id<=0 then return nil end
++    local row=spellMetadata(id)
++    if row and not row.iconChecked then
++        -- Nampower expects the DBC icon ID, not the spell ID.
++        local iconId=safe(GetSpellRecField,id,"spellIconID")
++        row.icon=iconId and safe(GetSpellIconTexture,iconId)
++        row.iconChecked=true
++    end
++    local icon=row and row.icon
++    if not icon or icon=="" then
++        local icons=D.BabbleSpellX and D.BabbleSpellX.SpellIcons
++        icon=icons and icons[name or (row and row.name)]
++        if icon and not string.find(icon,"\\",1,true) then icon="Interface\\Icons\\"..icon end
++    end
++    return icon or "Interface\\Icons\\INV_Misc_QuestionMark"
++end
++
++function E:EventRelevant(ev)
++    local family=families[ev]
++    if not family or not self.ready or not self.available or not D.Registered then return nil end
++    local healing=D.EnabledModules[self.ids.healing]
++    local casts=D.EnabledModules[self.ids.casts]
++    local playback=D.EnabledModules[self.ids.playback]
++    if not healing and next(self.shields) then self.shields={} end
++    if family=="cast" then return (casts or playback) and family
++    elseif family=="swing" or family=="death" then return (healing or playback) and family
++    elseif family=="zone" then return (healing or casts or playback) and family
++    else return healing and family end
++end
++
++function E:Owner(guid)
++    local owner
++    if GetUnitGUID then
++        local ok,first,second=pcall(GetUnitGUID,guid.."owner")
++        if ok then
++            owner=(valid(second) and string.sub(second,1,2)=="0x") and second or first
++        end
++    end
++    if not valid(owner) then owner = safe(GetUnitField,guid,"createdBy") end
++    if valid(owner) and owner~=guid then return owner end
++end
++
++function E:Tracked(guid)
++    if not valid(guid) then return false end
++    if D.Parser.TargetParty[guid] or guid == D.Parser.player then return true end
++    local owner = self:Owner(guid)
++    return owner and (D.Parser.TargetParty[owner] or owner==D.Parser.player) and true or false
++end
++
++function E:Identity(guid)
++    if not valid(guid) then return nil end
++    local cached = self.identities[guid]
++    if cached then return cached end
++    local name = safe(UnitName,guid)
++    if not name or name=="" or name==D.L.unknown then return nil end
++    local _,class = UnitClass(guid)
++    class = class and string.lower(class) or "warrior"
++    local ownerGuid = self:Owner(guid)
++    local owner = ownerGuid and safe(UnitName,ownerGuid)
++    local _,display = D.DB:BuildUser(guid,class)
++    local person = {name=display or name,class=class,owner=owner,guid=guid}
++    if owner then D.DB:BuildUser(owner) end
++    self.identityCount=self.identityCount or 0
++    if self.identityCount>=256 then self.identities={};self.identityCount=0 end
++    self.identities[guid]=person
++    self.identityCount=self.identityCount+1
++    return person
++end
++
++function E:TargetInfo(guid,caster)
++    if not valid(guid) then return "无目标","none" end
++    local name = safe(UnitName,guid) or ("未知目标 "..guid)
++    if guid==caster then return name,"self" end
++    return name, safe(UnitIsFriend,"player",guid) and "friendly" or "enemy"
++end
++
++function E:TargetSnapshot(record,guid,caster)
++    record.target,record.ttype=self:TargetInfo(guid,caster);record.targetGuid=guid
++    if not valid(guid) then return record end
++    local owner=self:Owner(guid)
++    record.targetOwner=owner and safe(UnitName,owner)
++    if UnitClass then
++        local ok,_,class=pcall(UnitClass,owner or guid)
++        if ok then record.targetClass=class end
++    end
++    local charm=safe(GetUnitField,guid,"charm")
++    if valid(charm) then record.charmedBy=safe(UnitName,charm) end
++    local dead=safe(UnitIsDead,guid)
++    record.dead=(dead==true or dead==1)
++    return record
++end
++
++function E:Queue(ev,args)
++    if self.retrying then return end
++    if table.getn(self.pending)>=100 then self.db.current.missed=(self.db.current.missed or 0)+1; return end
++    table.insert(self.pending,{event=ev,args=args,expires=GetTime()+2,t=self:RelativeTime(),segment=self.db.current})
++end
++
++function E:FlushPending()
++    if table.getn(self.pending)==0 then return end
++    local pending=self.pending; self.pending={}; self.retrying=true
++    for _,item in ipairs(pending) do
++        if item.segment==self.db.current then
++            self.eventTime=item.t; self.pendingCombat=true
++            local done=self:Handle(item.event,unpack(item.args,1,9))
++            if not done and GetTime()<item.expires then table.insert(self.pending,item)
++            elseif not done then self.db.current.missed=(self.db.current.missed or 0)+1 end
++        end
++    end
++    self.retrying=nil; self.eventTime=nil; self.pendingCombat=nil
++end
++
++function E:InCombat() return self.pendingCombat or D.DB:IsCombatActive() end
++
++function E:PrepareEvent(ev,a1,a2,a3,a4)
++    if not self:EventRelevant(ev) or self:InCombat() then return end
++    local source,target
++    if ev=="SPELL_GO_SELF" or ev=="SPELL_GO_OTHER" then source=a3;target=a4
++    elseif ev=="SPELL_DAMAGE_EVENT_SELF" or ev=="SPELL_DAMAGE_EVENT_OTHER" or ev=="SPELL_HEAL_BY_SELF" or ev=="SPELL_HEAL_BY_OTHER" then source=a2;target=a1
++    elseif ev=="AUTO_ATTACK_SELF" or ev=="AUTO_ATTACK_OTHER" then source=a1;target=a2
++    elseif ev=="ENVIRONMENTAL_DMG_SELF" or ev=="ENVIRONMENTAL_DMG_OTHER" then target=a1
++    else return end
++    local fighting=(self:Tracked(source) and safe(UnitAffectingCombat,source)) or (self:Tracked(target) and safe(UnitAffectingCombat,target))
++    local hostileCast=(ev=="SPELL_GO_SELF" or ev=="SPELL_GO_OTHER") and self:Tracked(source) and valid(target) and safe(UnitCanAttack,"player",target)
++    if fighting or hostileCast then D.DB:BeginInsightsCombat() end
++end
++
++function E:Heal(caster,target,id,amount,periodic)
++    if not self:Enabled("healing") or not self:InCombat() or not self:Tracked(caster) then return true end
++    local person=self:Identity(caster)
++    if not person then return false end
++    amount=math.max(0,tonumber(amount) or 0)
++    if amount==0 then return true end
++    local health,maxHealth=safe(GetUnitField,target,"health"),safe(GetUnitField,target,"maxHealth")
++    local effective=amount
++    if health and maxHealth then effective=math.min(amount,math.max(0,maxHealth-health)) end
++    local spell=self:Spell(id)
++    if tonumber(periodic)==1 then spell=spell.." (HoT)" end
++    local source=person.owner and "pet" or "player"
++    local targetName,ttype=self:TargetInfo(target,caster)
++    for _,s in ipairs({self.db.total,self.db.current}) do
++        local u=self:User(s,"healing",person)
++        local skill=self:Skill(u,source..":"..tostring(id)..":"..tostring(periodic),spell,id,source)
++        local receiver=self:Target(u.targets,targetName)
++        local starget=self:Target(skill.targets,targetName)
++        receiver.ttype=ttype;starget.ttype=ttype
++        for _,row in ipairs({u,skill,receiver,starget}) do
++            row.total=row.total+amount; row.effective=row.effective+effective; row.count=row.count+1
++        end
++        if s==self.db.current then self:AddBin(u,amount,effective,0) end
++    end
++    self:Audit({t=self:RelativeTime(),event="heal",owner=person.name,casterGuid=caster,target=targetName,targetGuid=target,spellId=id,
++        amount=amount,effective=effective,reason=health and maxHealth and "health-deficit" or "health-unavailable"})
++    self:Touch("healing")
++    return true
++end
++
++function E:Aura(id,caster,target,effect,aura,misc,duration,cap)
++    if not self:Tracked(target) then return end
++    local spell=self:Spell(id)
++    aura=tonumber(aura)
++    if aura~=69 and aura~=97 and not known[spell] and not excluded[spell] then return end
++    if tonumber(cap) and bit.band(tonumber(cap),1)~=0 then return end
++    local mask=(aura==69 or aura==97) and tonumber(misc) or known[spell]
++    if not mask or mask<=0 then mask=known[spell] or 127 end
++    self.shields[target]=self.shields[target] or {}
++    -- A refreshed rank replaces the previous rank of the same aura, not other shields.
++    for key,shield in pairs(self.shields[target]) do
++        if shield.name==spell then self.shields[target][key]=nil end
++    end
++    self.shields[target][id]={id=id,name=spell,caster=caster,mask=mask,ignored=excluded[spell],
++        expires=(tonumber(duration) and tonumber(duration)>0) and GetTime()+tonumber(duration)/1000 or nil}
++end
++
++function E:Absorb(target,school,amount,attackId)
++    amount=tonumber(amount) or 0
++    if amount<=0 or not self:Enabled("healing") or not self:InCombat() or not self:Tracked(target) then return end
++    local candidates={}
++    local shields=self.shields[target] or {}
++    for id,shield in pairs(shields) do
++        if shield.expires and shield.expires<=GetTime() then shields[id]=nil
++        elseif school==nil or bit.band(shield.mask,2^school)~=0 then table.insert(candidates,shield) end
++    end
++    local person,spell,id,reason
++    local ignored=false
++    if table.getn(candidates)==1 then
++        local shield=candidates[1]; ignored=shield.ignored
++        person=self:Identity(shield.caster); spell=shield.name; id=shield.id
++        reason=person and "single-compatible-shield" or "caster-unavailable"
++    elseif table.getn(candidates)>1 then
++        local caster=candidates[1].caster
++        local same=valid(caster); ignored=candidates[1].ignored and true or false
++        for _,shield in ipairs(candidates) do
++            if shield.caster~=caster or (shield.ignored and true or false)~=ignored then same=false end
++        end
++        if same then person=self:Identity(caster); spell="多重护盾（技能未知）"; id=0
++        else ignored=false end
++        reason=person and "same-owner-multiple-shields" or "ambiguous-shields"
++    else reason="no-compatible-shield" end
++    local targetName=self:TargetInfo(target)
++    if not person and not ignored then person={name=self.UNKNOWN,class="priest"}; spell="吸收（来源未知）"; id=0 end
++    if person and not self:Tracked(person.guid) and person.name~=self.UNKNOWN then
++        person={name=self.UNKNOWN,class="priest"}; spell="吸收（来源未知）"; id=0; reason="caster-outside-group"
++    end
++    for _,s in ipairs({self.db.total,self.db.current}) do
++        s.absorbed=s.absorbed+amount
++        if ignored then s.excluded=s.excluded+amount
++        else
++            if person.name==self.UNKNOWN then s.unknown=s.unknown+amount end
++            local u=self:User(s,"healing",person)
++            local skill=self:Skill(u,"absorb:"..tostring(id),spell,id,"shield")
++            local receiver=self:Target(u.targets,targetName); local starget=self:Target(skill.targets,targetName)
++            local _,ttype=self:TargetInfo(target)
++            receiver.ttype=ttype;starget.ttype=ttype
++            for _,row in ipairs({u,skill,receiver,starget}) do row.absorb=row.absorb+amount; row.count=row.count+1 end
++            if s==self.db.current then self:AddBin(u,0,0,amount) end
++        end
++    end
++    self:Audit({t=self:RelativeTime(),event="absorb",amount=amount,owner=ignored and "已排除" or person.name,casterGuid=person and person.guid,
++        target=targetName,targetGuid=target,spellId=id,attackId=attackId,school=school,reason=reason})
++    self:Touch("healing")
++end
++
++function E:Replay(person,record,action)
++    if not self:Enabled("playback") or not self:InCombat() then return end
++    local s=self.db.current; local u=self:User(s,"playback",person)
++    if action then u.count=u.count+1 end
++    s.seq=s.seq+1; record.seq=s.seq; record.t=self:RelativeTime()
++    if s.stored>=self.limits.perFight and (u.events.count or 0)<self.limits.perUser then
++        s.dropped=s.dropped+1; u.dropped=(u.dropped or 0)+1
++    else
++        local targets=self:ReplayTargetIndex(u)
++        if (u.events.count or 0)<self.limits.perUser then s.stored=s.stored+1
++        else
++            s.dropped=s.dropped+1
++            local previous=u.events.data[u.events.head]
++            if previous and previous.targetGuid and targets[previous.targetGuid] then
++                local count=targets[previous.targetGuid]-1
++                targets[previous.targetGuid]=count>0 and count or nil
++            end
++        end
++        self:Push(u.events,record,self.limits.perUser)
++        if record.targetGuid then targets[record.targetGuid]=(targets[record.targetGuid] or 0)+1 end
++    end
++    self:Touch("playback")
++end
++
++function E:Cast(itemId,id,caster,target)
++    if not self:Tracked(caster) then return true end
++    if not self:InCombat() then
++        if safe(UnitAffectingCombat,caster) or (valid(target) and safe(UnitCanAttack,"player",target)) then
++            D.DB:BeginInsightsCombat()
++        else return true end
++    end
++    local person=self:Identity(caster)
++    if not person then return false end
++    local spell=self:Spell(id); local source=person.owner and "pet" or "player"
++    itemId=tonumber(itemId) or 0
++    if itemId~=0 then
++        source="item"
++        spell=(safe(GetItemInfo,itemId) or ("物品 #"..itemId)).." - "..spell
++    end
++    local targetName,ttype=self:TargetInfo(target,caster)
++    if self:Enabled("casts") then
++        for _,s in ipairs({self.db.total,self.db.current}) do
++            local u=self:User(s,"casts",person)
++            local skill=self:Skill(u,source..":"..itemId..":"..tostring(id),spell,id,source)
++            local receiver=self:Target(u.targets,targetName); local starget=self:Target(skill.targets,targetName)
++            receiver.ttype=ttype;starget.ttype=ttype
++            for _,row in ipairs({u,skill,receiver,starget}) do row.count=row.count+1 end
++            skill.targetTypes=skill.targetTypes or {}
++            skill.targetTypes[ttype]=(skill.targetTypes[ttype] or 0)+1
++        end
++        self:Touch("casts")
++    end
++    if self:Enabled("playback") then
++        self:Replay(person,self:TargetSnapshot({kind="cast",spell=spell,spellId=id,source=source,owner=person.owner},target,caster),true)
++    end
++    self:Audit({t=self:RelativeTime(),event="cast",owner=person.name,casterGuid=caster,spellId=id,target=targetName,targetGuid=target,reason="SPELL_GO"})
++    return true
++end
++
++function E:ReplayTargetIndex(u)
++    self.replayIndexes=self.replayIndexes or setmetatable({},{__mode="k"})
++    local targets=self.replayIndexes[u]
++    if not targets then
++        targets={};self.replayIndexes[u]=targets
++        local ring=u.events
++        for i=0,(ring.count or 0)-1 do
++            local ev=ring.data[math.mod((ring.head or 1)+i-1,self.limits.perUser)+1]
++            if ev and ev.targetGuid then targets[ev.targetGuid]=(targets[ev.targetGuid] or 0)+1 end
++        end
++    end
++    return targets
++end
++
++function E:Death(guid)
++    self.shields[guid]=nil
++    if not self:Enabled("playback") or not self:InCombat() then return end
++    local name,ttype=self:TargetInfo(guid)
++    for _,u in pairs(self.db.current.playback) do
++        local match=u.guid==guid or u.name==name or self:ReplayTargetIndex(u)[guid]
++        if match then self:Replay(u,{kind="death",spell="死亡",source="death",target=name,ttype=ttype,targetGuid=guid},false) end
++    end
++end
++
++function E:Handle(ev,a1,a2,a3,a4,a5,a6,a7,a8,a9)
++    if ev=="AURA_CAST_ON_SELF" or ev=="AURA_CAST_ON_OTHER" then
++        self:Aura(a1,a2,a3,a4,a5,a7,a8,a9)
++    elseif ev=="BUFF_REMOVED_SELF" or ev=="BUFF_REMOVED_OTHER" then
++        if tonumber(a7)==1 and self.shields[a1] then self.shields[a1][a3]=nil end
++    elseif ev=="SPELL_DAMAGE_EVENT_SELF" or ev=="SPELL_DAMAGE_EVENT_OTHER" then
++        local amount=type(a5)=="string" and tonumber((string.gsub(a5,",.*$",""))) or 0
++        self:Absorb(a1,tonumber(a7),amount,a3)
++    elseif ev=="AUTO_ATTACK_SELF" or ev=="AUTO_ATTACK_OTHER" then
++        if not self.retrying then self:Absorb(a2,0,a8,0) end
++        if self:Tracked(a1) and self:Enabled("playback") and self:InCombat() then
++            local person=self:Identity(a1)
++            if not person then return false end
++            local target,ttype=self:TargetInfo(a2,a1)
++            self:Replay(person,self:TargetSnapshot({kind="swing",spell=bit.band(tonumber(a4) or 0,4)~=0 and "副手攻击" or "普通攻击",
++                source=person.owner and "pet" or "player"},a2,a1),true)
++        end
++    elseif ev=="ENVIRONMENTAL_DMG_SELF" or ev=="ENVIRONMENTAL_DMG_OTHER" then
++        local schools={[3]=2,[4]=3,[5]=2}
++        self:Absorb(a1,schools[tonumber(a2)],a4,0)
++    elseif ev=="SPELL_HEAL_BY_SELF" or ev=="SPELL_HEAL_BY_OTHER" then
++        return self:Heal(a2,a1,a3,a4,a6)
++    elseif ev=="SPELL_GO_SELF" or ev=="SPELL_GO_OTHER" then
++        if not self:Enabled("casts") and not self:Enabled("playback") then return true end
++        return self:Cast(a1,a2,a3,a4)
++    elseif ev=="UNIT_DIED" then self:Death(a1)
++    elseif ev=="ZONE_CHANGED_NEW_AREA" then self.shields={};self.identities={}
++    end
++    return true
++end
++
++function E:OnEvent(ev,a1,a2,a3,a4,a5,a6,a7,a8,a9)
++    local family=self:EventRelevant(ev)
++    if not family then return end
++    self:PrepareEvent(ev,a1,a2,a3,a4)
++    -- Only suppress a mirrored SELF/OTHER notification with identical payload and time.
++    -- Repeated events from the same stream are real actions and must remain countable.
++    local now=GetTime(); local old=self.seen[family]
++    if old and old.ev~=ev and old.time==now and old[1]==a1 and old[2]==a2 and old[3]==a3 and
++        old[4]==a4 and old[5]==a5 and old[6]==a6 and old[7]==a7 and old[8]==a8 and old[9]==a9 then return end
++    local done=self:Handle(ev,a1,a2,a3,a4,a5,a6,a7,a8,a9)
++    self.seen[family]={ev=ev,time=now,a1,a2,a3,a4,a5,a6,a7,a8,a9}
++    if not done then self:Queue(ev,{a1,a2,a3,a4,a5,a6,a7,a8,a9}) end
++end
+--- /dev/null
++++ b/DPSMateXInsights/README.md
+@@ -0,0 +1,57 @@
++# DPSMateX 精确统计扩展
++
++新增独立的“治疗与实际吸收”“成功施放”“动作回放”模式，使用 DPSMateX 的窗口、菜单与详情风格，不需要启用 ShaguDPS。原治疗、吸收、施法模式继续保留。
++
++## 使用
++
++新增插件目录后，请完全退出并重新启动游戏，在插件列表确认启用 **DPSMateXInsights**（依赖 DPSMateX）。首次安装会将三个新模式加入启用列表，后续尊重 DPSMateX 的模块开关。
++
++- 右键 DPSMateX 标题栏选择新模式。
++- 左键玩家条目进入详情，点击技能查看目标分布。
++- 左键总计查看团队总览；右键玩家的“对比”沿用原入口，打开第二个详情窗口。
++- “动作回放”使用当前或历史单场战斗，选择该模式时会将全程视图切换到当前战斗。
++- 详情支持名称搜索、分页、来源分类；回放还支持目标类型和时间区间筛选。
++- 治疗详情顶部显示治疗/吸收拆分与占比，可切换总治疗/有效治疗口径，并查看单场战斗的每秒贡献曲线。
++- 技能明细按名称合并不同等级、技能 ID 及来源；来源筛选仍可分开查看，点入目标明细会汇总对应记录。悬停显示合并的技能 ID。动作回放继续逐次显示真实事件。
++- 技能、Buff、Debuff 使用技能记录对应的图标 ID，按需读取并缓存；普通攻击与死亡使用独立图标。详情不提供跨模块切换按钮。
++
++命令：
++
++| 命令 | 功能 |
++| --- | --- |
++| `/dpsx` | 打开治疗与实际吸收详情 |
++| `/dpsx raw` | 在有效治疗＋吸收与总治疗＋吸收之间切换 |
++| `/dpsx status` | 显示运行时 Nampower 版本、吸收总量/来源未知/排除量、回放保留/丢弃数量 |
++| `/dpsx debug` | 切换限量调试日志，最多保存最近200条 |
++
++## 统计口径
++
++- 吸收采用伤害事件中的实际金额，按受保护者的护盾生命周期及伤害学校判断来源。不使用固定护盾容量截断事件金额。
++- 只有一个适用护盾时归给该护盾施法者；多个适用护盾属于同一施法者时保留施法者，技能显示“多重护盾（技能未知）”；多人来源冲突、缺少护盾记录或无法确认施法者时计入“来源未知”。
++- 统计包括自身护盾和可识别的物品/药水吸收；红月、蓝月单独排除。不能证明具体护盾归属的金额不会任意分配。
++- 实际吸收总量 = 已归属吸收 + 来源未知吸收 + 排除吸收。“来源未知”单独展示，便于核对，不归到任意治疗者。
++- 治疗量单独记录；有效治疗按收到治疗事件时的目标缺血计算。无法取得血量时按总治疗记录，并在核对日志标记 `health-unavailable`；有效治疗的精度仍受事件和血量更新时序影响。
++- 成功施放仅按 SPELL_GO 计数，群体技能、多段伤害和持续治疗跳数不会增加施放次数。事件包含玩家、宠物及物品触发，不等同于只统计手动按键。
++- 回放记录成功施放、普通/副手攻击及相关死亡事件；死亡标记不增加动作次数。回放是事件时间轴。
++
++## 保存与调试
++
++数据单独保存到每个角色的 `DPSMateXInsightsDB`，历史与 DPSMateX 分段同步保存、删除和重置。旧战斗显示“该战斗未采集”，不补造旧数据。统计汇总和历史不共享可变表。
++
++限制：每人保留最近500条回放，全场最多8000条；详情显示实际保留/丢弃数，丢弃回放不会减少成功施放、动作次数或治疗汇总。旧回放会自动按新上限缩减，保留最近的事件和统计汇总。曲线最多保存每人600个有贡献的秒数点。每场保留最近300条核对记录。历史场数跟随 DPSMateX 配置。
++
++资源控制：无关事件、已关闭模块会提前退出；技能名称及图标缓存最多512项，单位身份缓存最多256项。死亡事件通过保留回放的目标索引查询，不逐次扫描所有动作。详情仅在打开、翻页或操作时整理数据和读取图标；空闲时停止定时整理。调试默认关闭，已有调试设置会保留。新增模块不扫描整个技能表、不周期扫描全队 Buff/Debuff。
++
++“核对”页显示金额、时间、施法者、目标、技能及归属依据；悬停查看 GUID 和技能 ID。开启调试后，可在角色的 SavedVariables 中查看 `DPSMateXInsightsDB.debugLog`。不能解析的施法者会短暂等待名字，最多2秒；超时记为未解析，回放页显示数量。
++
++重载/重新进入世界后不会凭旧缓存猜测仍在生效的护盾归属；在看到新的护盾应用前，相关吸收可能进入“来源未知”。插件只能记录客户端收到的事件，缺失事件不能从历史补出。Nampower 不足4.5或缺少必要API时，新模块提示无法采集。
++
++## 本次验证
++
++根目录 `Logs/nampower_debug.log` 和上一份日志记录加载 Nampower **4.6.1**。扩展运行时也通过 `GetNampowerVersion()` 检查能力。
++
++27项扩展模拟/语法检查通过，覆盖护盾学校、刷新/移除/死亡、重叠护盾与未知金额守恒、群体治疗施放计数、宠物及物品、分段/重载、记录上限和详情交互；另通过原窗口锁定回归检查。还核验了同名技能合并及目标明细、图标 ID 转换与缓存、死亡目标索引、旧回放容量迁移、核心事件转发时的参数保存，以及旧版 Nampower 的停用行为。尚未在游戏内核验真实事件顺序、画面和战斗性能；离线检查不能保证游戏中完全没有资源开销。
++
++本机 Lua 5.1 模拟压力检查：10万条无关事件约0.006秒；模块关闭后1万条施法事件没有单位API查询；回放饱和后继续处理4万条施法约0.372秒，回收后的保留内存增量为0 KiB，5万次施法的汇总仍为5万。模拟40人共24000条动作时，保留8000条、丢弃16000条、动作汇总24000次。这里使用模拟API，不代表魔兽客户端的实际耗时或帧率。
++
++核心原文件备份在 `E:/1.18/addons_tmp/dpsmatex-insights-backup-20261006/`。恢复备份前先禁用新扩展；备份保留了此前修复的窗口锁定行为。

@@ -1,0 +1,2110 @@
+﻿-- ===== 属性面板公共布局（随主文件加载） =====
+if not SCGetPanelLayoutMode then
+-- 装备列表与属性面板共用的布局、背景管理。自动布局不覆盖原有自由拖动位置。
+function SCGetPanelLayoutMode()
+    return StatCompare_Player and StatCompare_Player.PanelLayoutMode == "free" and "free" or "auto"
+end
+
+function SCIsManagedPanel(frame)
+    return frame and (frame == StatCompareSelfFrame or frame == StatCompareTargetFrame)
+end
+
+local function Visible(frame)
+    return frame and frame:IsVisible()
+end
+
+local fallbackBackdrop = {bgFile="Interface\\BUTTONS\\WHITE8X8",
+    edgeFile="Interface\\BUTTONS\\WHITE8X8", edgeSize=1,
+    insets={left=0, right=0, top=0, bottom=0}}
+local function SameNumber(a, b)
+    return a == b or (type(a) == "number" and type(b) == "number" and math.abs(a-b) < 0.000001)
+end
+function SCSetPanelPoint(frame, point, relative, relativePoint, x, y)
+    if type(relative) == "string" then relative = getglobal(relative) end
+    local p, r, rp, ox, oy = frame:GetPoint()
+    if type(r) == "string" then r = getglobal(r) end
+    if p == point and r == relative and rp == relativePoint and SameNumber(ox,x) and SameNumber(oy,y)
+        and (not frame.GetNumPoints or frame:GetNumPoints() == 1) then return end
+    frame:ClearAllPoints()
+    frame:SetPoint(point, relative, relativePoint, x, y)
+end
+function SCSetPanelText(fontString, value)
+    value = tostring(value or "")
+    if fontString:GetText() ~= value then fontString:SetText(value) end
+end
+function SCGetPanelTextSize(fontString)
+    local file, size, flags = fontString:GetFont()
+    local content = fontString:GetText()
+    local measured = fontString.scMeasuredContent
+    if measured and measured.text == content and measured.file == file
+        and measured.size == size and measured.flags == flags then
+        return measured.width, measured.height
+    end
+    local width, height = fontString:GetWidth(), fontString:GetHeight()
+    fontString.scMeasuredContent = {text=content, file=file, size=size, flags=flags, width=width, height=height}
+    return width, height
+end
+local function SameBackdrop(a, b)
+    if not a or not b then return a == b end
+    if a.bgFile ~= b.bgFile or a.edgeFile ~= b.edgeFile or (not not a.tile) ~= (not not b.tile)
+        or not SameNumber(a.tileSize or 0, b.tileSize or 0)
+        or not SameNumber(a.edgeSize or 0, b.edgeSize or 0) then return false end
+    local ai, bi = a.insets or {}, b.insets or {}
+    return SameNumber(ai.left or 0, bi.left or 0) and SameNumber(ai.right or 0, bi.right or 0)
+        and SameNumber(ai.top or 0, bi.top or 0) and SameNumber(ai.bottom or 0, bi.bottom or 0)
+end
+local function ApplyColor(background, border, r, g, b, a)
+    local cr, cg, cb, ca
+    if border then cr, cg, cb, ca = background:GetBackdropBorderColor()
+    else cr, cg, cb, ca = background:GetBackdropColor() end
+    if SameNumber(cr,r) and SameNumber(cg,g) and SameNumber(cb,b) and SameNumber(ca,a) then return end
+    if border then background:SetBackdropBorderColor(r,g,b,a)
+    else background:SetBackdropColor(r,g,b,a) end
+end
+
+function SCApplyPanelStyle(frame)
+    if not frame then return end
+    local reference = CharacterFrame and (CharacterFrame.backdrop or (CharacterFrame:GetBackdrop() and CharacterFrame))
+        or InspectFrame and (InspectFrame.backdrop or (InspectFrame:GetBackdrop() and InspectFrame))
+    local background = frame.backdrop or frame
+    local r, g, b, a = 0, 0, 0, 0.75
+    local er, eg, eb, ea = 0.4, 0.4, 0.4, 1
+    local desiredBackdrop = fallbackBackdrop
+    if reference then
+        desiredBackdrop = reference:GetBackdrop()
+        r, g, b, a = reference:GetBackdropColor()
+        er, eg, eb, ea = reference:GetBackdropBorderColor()
+    end
+    if not SameBackdrop(background:GetBackdrop(), desiredBackdrop) then background:SetBackdrop(desiredBackdrop) end
+    -- pfUI 的子背景与原始框体背景只能保留一层，否则透明度会叠加。
+    if background ~= frame and frame:GetBackdrop() then frame:SetBackdrop(nil) end
+    local backdropAlpha = reference and reference:GetAlpha() or 1
+    if background ~= frame then
+        if not SameNumber(background:GetAlpha(), backdropAlpha) then background:SetAlpha(backdropAlpha) end
+    elseif reference ~= CharacterFrame then a = a * backdropAlpha end
+    ApplyColor(background, false, r, g, b, a)
+    ApplyColor(background, true, er, eg, eb, ea)
+    local alpha = CharacterFrame and CharacterFrame:GetAlpha() or 1
+    if not SameNumber(frame:GetAlpha(), alpha) then frame:SetAlpha(alpha) end
+end
+
+local layoutFrame, inLayout, suspendedPanels, suspendedRoot
+local function HookLifecycle(frame)
+    if not frame or frame._scLayoutHooked then return end
+    frame._scLayoutHooked = true
+    local function Hook(script)
+        local previous = frame:GetScript(script)
+        frame:SetScript(script, function(self, arg1, arg2)
+            if previous then previous(self, arg1, arg2) end
+            SCRequestPanelLayout()
+        end)
+    end
+    Hook("OnShow")
+    Hook("OnHide")
+    Hook("OnSizeChanged")
+end
+
+function SCRequestPanelLayout()
+    -- Layout writes can fire OnSizeChanged. Do not queue another layout for
+    -- our own changes; otherwise reanchoring can keep it running every frame.
+    if inLayout then return end
+    if not layoutFrame then
+        layoutFrame = CreateFrame("Frame")
+        layoutFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+        layoutFrame:RegisterEvent("ADDON_LOADED")
+        layoutFrame:SetScript("OnEvent", function() SCRequestPanelLayout() end)
+    end
+    -- 等当前显示/隐藏调用完成后统一排列，避免钩子调用顺序改变结果。
+    layoutFrame:SetScript("OnUpdate", function()
+        layoutFrame:SetScript("OnUpdate", nil)
+        SCRelayoutPanels()
+    end)
+end
+
+function SCRelayoutPanels()
+    if inLayout then return end
+    inLayout = true
+    HookLifecycle(CharacterFrame)
+    HookLifecycle(PaperDollFrame)
+    HookLifecycle(InspectFrame)
+    HookLifecycle(InspectPaperDollFrame)
+    HookLifecycle(OutfitterFrame)
+    HookLifecycle(S_ItemTip_InspectFrame)
+    HookLifecycle(StatCompareTargetFrame)
+    HookLifecycle(StatCompareSelfFrame)
+    SCEnsureSettingsButton()
+    if S_ItemTip_InspectFrame and S_ItemTip_ApplyLayoutPolicy then S_ItemTip_ApplyLayoutPolicy(S_ItemTip_InspectFrame) end
+    SCApplyPanelStyle(S_ItemTip_InspectFrame)
+    SCApplyPanelStyle(StatCompareTargetFrame)
+    SCApplyPanelStyle(StatCompareSelfFrame)
+
+    local root, inspecting
+    if Visible(InspectFrame) and InspectFrame.unit then
+        if not InspectPaperDollFrame or Visible(InspectPaperDollFrame) then
+            root, inspecting = InspectFrame, true
+        end
+    elseif Visible(CharacterFrame) and Visible(PaperDollFrame) then
+        root = CharacterFrame
+    end
+    if not root or Visible(OutfitterFrame) then
+        local owner = Visible(InspectFrame) and InspectFrame.unit and InspectFrame
+            or Visible(CharacterFrame) and CharacterFrame
+        if owner then
+            if suspendedRoot ~= owner then
+                suspendedRoot = owner
+                suspendedPanels = {equipment=Visible(S_ItemTip_InspectFrame),
+                    target=Visible(StatCompareTargetFrame), self=Visible(StatCompareSelfFrame)}
+            end
+        else suspendedPanels, suspendedRoot = nil, nil end
+        if S_ItemTip_InspectFrame then S_ItemTip_InspectFrame:Hide() end
+        if StatCompareTargetFrame then StatCompareTargetFrame:Hide() end
+        if StatCompareSelfFrame then StatCompareSelfFrame:Hide() end
+        inLayout = nil
+        return
+    end
+    if suspendedPanels and suspendedRoot == root then
+        if suspendedPanels.equipment and S_ItemTip_InspectFrame then S_ItemTip_InspectFrame:Show() end
+        if suspendedPanels.target and inspecting and StatCompareTargetFrame then StatCompareTargetFrame:Show() end
+        if suspendedPanels.self and StatCompareSelfFrame then StatCompareSelfFrame:Show() end
+    end
+    suspendedPanels, suspendedRoot = nil, nil
+    if not inspecting and StatCompareTargetFrame then
+        -- 目标框体的原始 OnHide 会连带隐藏自身框体，切回角色页时保留其显示状态。
+        local selfShown = Visible(StatCompareSelfFrame)
+        StatCompareTargetFrame:Hide()
+        if selfShown then StatCompareSelfFrame:Show() end
+    end
+    if inspecting and StatCompare_GetSetting and StatCompare_GetSetting("ShowSelfFrame") == 0
+        and StatCompareSelfFrame then StatCompareSelfFrame:Hide() end
+    if S_ItemTip_Settings and S_ItemTip_Settings.showInspect == false and S_ItemTip_InspectFrame then
+        S_ItemTip_InspectFrame:Hide()
+    end
+    if SCGetPanelLayoutMode() == "free" then inLayout = nil; return end
+
+    local anchor = root.backdrop or root
+    local x, y = root.backdrop and 4 or -26, root.backdrop and 0 or -10
+    local function Attach(frame)
+        if not Visible(frame) then return end
+        SCSetPanelPoint(frame, "TOPLEFT", anchor, "TOPRIGHT", x, y)
+        if frame:GetFrameStrata() ~= root:GetFrameStrata() then frame:SetFrameStrata(root:GetFrameStrata()) end
+        anchor, x, y = frame, 4, 0
+    end
+    Attach(S_ItemTip_InspectFrame)
+    if inspecting then Attach(StatCompareTargetFrame) end
+    Attach(StatCompareSelfFrame)
+    inLayout = nil
+end
+
+function SCSetPanelLayoutMode(mode)
+    if mode ~= "auto" and mode ~= "free" then return end
+    StatCompare_Player = StatCompare_Player or {}
+    StatCompare_Player.PanelLayoutMode = mode
+    if mode == "free" and StatCompare_RestoreFramePosition then
+        StatCompare_RestoreFramePosition("StatCompareTargetFrame")
+        StatCompare_RestoreFramePosition("StatCompareSelfFrame")
+    end
+    SCRelayoutPanels()
+    SCRequestPanelLayout()
+    if StatCompareLayoutButton then
+        StatCompareLayoutButton:SetText(mode == "auto" and "排列：自动" or "排列：自由拖动")
+    end
+end
+
+function SCEnsureLayoutButton()
+    if not StatCompareOptFrame then return end
+    if not StatCompareLayoutButton then
+        local button = CreateFrame("Button", "StatCompareLayoutButton", StatCompareOptFrame, "GameMenuButtonTemplate")
+        button:SetWidth(130)
+        button:SetHeight(24)
+        button:SetPoint("BOTTOMRIGHT", StatCompareOkButton, "BOTTOMLEFT", -8, 0)
+        button:SetScript("OnClick", function()
+            SCSetPanelLayoutMode(SCGetPanelLayoutMode() == "auto" and "free" or "auto")
+        end)
+    end
+    StatCompareLayoutButton:SetText(SCGetPanelLayoutMode() == "auto" and "排列：自动" or "排列：自由拖动")
+end
+
+function SCEnsureSettingsButton()
+    if not StatCompareSelfFrame or StatCompareSelfFrameSettingsButton then return end
+    local button = CreateFrame("Button", "StatCompareSelfFrameSettingsButton", StatCompareSelfFrame)
+    button:SetWidth(36)
+    button:SetHeight(16)
+    if StatCompareSelfFrameSpellsButton then
+        button:SetPoint("RIGHT", StatCompareSelfFrameSpellsButton, "LEFT", -5, 0)
+    else
+        button:SetPoint("TOPRIGHT", StatCompareSelfFrame, "TOPRIGHT", -49, -7)
+    end
+    button:SetBackdrop({bgFile="Interface\\BUTTONS\\WHITE8X8",
+        edgeFile="Interface\\BUTTONS\\WHITE8X8", edgeSize=1,
+        insets={left=1, right=1, top=1, bottom=1}})
+    button:SetBackdropColor(0.12, 0.12, 0.12, 0.75)
+    button:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+    local label = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    label:SetPoint("CENTER", button, "CENTER", 0, 0)
+    label:SetText("设置")
+    button:SetScript("OnClick", function()
+        if StatCompare_Toggle then StatCompare_Toggle() end
+    end)
+    button:SetScript("OnEnter", function() button:SetBackdropColor(0.25, 0.25, 0.25, 0.9) end)
+    button:SetScript("OnLeave", function() button:SetBackdropColor(0.12, 0.12, 0.12, 0.75) end)
+end
+
+-- Opt-in, one-opening measurement. No timing hooks are installed normally.
+local openProfile
+local profileTimer
+local function ProfileMessage(message)
+    DEFAULT_CHAT_FRAME:AddMessage("|cff33ccff面板耗时：|r" .. message)
+end
+local function StopOpenProfile(report)
+    local sample = openProfile
+    if not sample then return end
+    openProfile = nil
+    if profileTimer then profileTimer:SetScript("OnUpdate", nil) end
+    for _, hook in ipairs(sample.hooks) do
+        if hook.script then
+            if hook.owner:GetScript(hook.key) == hook.wrapper then hook.owner:SetScript(hook.key, hook.previous) end
+        elseif hook.owner[hook.key] == hook.wrapper then hook.owner[hook.key] = hook.previous end
+    end
+    if not report then return end
+    ProfileMessage("本次打开及随后 0.3 秒内的界面处理（毫秒）：")
+    for _, entry in ipairs(sample.entries) do
+        if entry.calls > 0 then
+            ProfileMessage(string.format("%s：%.2f ms / %d 次", entry.label, entry.ms, entry.calls))
+            if entry.label == "装备列表显示操作" then
+                ProfileMessage(string.format("装备显示扣除已计时内部调用：%.2f ms",entry.selfMs or entry.ms))
+            end
+        end
+        if entry.memoryDrop and entry.memoryDrop > 64 then
+            ProfileMessage(string.format("%s期间内存回落 %.0f KB，可能发生了内存回收。",entry.label,entry.memoryDrop))
+        end
+    end
+    ProfileMessage("分项包含内部调用，不能相加；采样已自动关闭。")
+end
+local function PackProfileResults(...) return arg end
+-- Lua 5.0's unpack accepts only the table; it ignores start/end arguments.
+-- Expand an explicit range ourselves, preserving nil holes and return counts.
+local function UnpackProfileRange(values, first, last)
+    if first > last then return end
+    return values[first], UnpackProfileRange(values, first+1, last)
+end
+function SCProfileNextCharacterOpen()
+    if openProfile then StopOpenProfile(false); ProfileMessage("已取消采样。"); return end
+    if type(debugprofilestop) ~= "function" then
+        ProfileMessage("当前客户端没有精确计时接口，无法提供可靠耗时。"); return
+    end
+    local sample = {hooks={}, entries={}, elapsed=0}
+    openProfile = sample
+    local function Install(owner, key, label, script, after)
+        if not owner then return end
+        local previous = script and owner:GetScript(key) or owner[key]
+        if type(previous) ~= "function" then return end
+        local entry = {label=label, ms=0, calls=0}
+        table.insert(sample.entries, entry)
+        local wrapper = function(...)
+            if script and not sample.started then
+                sample.started = true
+                profileTimer = profileTimer or CreateFrame("Frame")
+                profileTimer:SetScript("OnUpdate", function()
+                    sample.elapsed = sample.elapsed + (arg1 or 0)
+                    if sample.elapsed >= 0.3 then StopOpenProfile(true) end
+                end)
+            end
+            if not sample.started or openProfile ~= sample then return previous(UnpackProfileRange(arg,1,arg.n)) end
+            local memoryBefore = script and type(gcinfo) == "function" and gcinfo()
+            local started = debugprofilestop()
+            local span = {parent=sample.current,children=0}
+            sample.current = span
+            local results = PackProfileResults(pcall(previous,UnpackProfileRange(arg,1,arg.n)))
+            local elapsed = math.max(0, debugprofilestop()-started)
+            sample.current = span.parent
+            if span.parent then span.parent.children = span.parent.children + elapsed end
+            entry.ms = entry.ms + elapsed
+            entry.selfMs = (entry.selfMs or 0) + math.max(0,elapsed-span.children)
+            entry.calls = entry.calls + 1
+            if type(memoryBefore) == "number" then
+                local memoryAfter = gcinfo()
+                if type(memoryAfter) == "number" and memoryAfter < memoryBefore then
+                    entry.memoryDrop = (entry.memoryDrop or 0) + memoryBefore - memoryAfter
+                end
+            end
+            if not results[1] then StopOpenProfile(false); error(results[2],0) end
+            if after then after(UnpackProfileRange(results,2,results.n)) end
+            return UnpackProfileRange(results,2,results.n)
+        end
+        table.insert(sample.hooks,{owner=owner,key=key,previous=previous,wrapper=wrapper,script=script})
+        if script then owner:SetScript(key,wrapper) else owner[key]=wrapper end
+    end
+    Install(CharacterFrame,"OnShow","角色窗口打开回调",true)
+    Install(PaperDollFrame,"OnShow","角色属性页打开回调",true)
+    Install(_G,"oldPaperDollFrame_OnShow","StatCompare 调用的原有打开处理")
+    Install(_G,"PaperDollFrame_OnShow","属性页主处理（含 StatCompare）")
+    Install(_G,"StatScanner_ScanAll","装备提示文本扫描")
+    Install(_G,"SC_BuffScanner_ScanAllInspect","增益扫描")
+    Install(_G,"StatCompare_CharStats_Scan","属性计算")
+    Install(_G,"StatCompare_GetTooltipText","属性文字生成")
+    Install(_G,"SCShowFrame","属性副面板显示")
+    Install(_G,"S_ItemTip_UpdateFrame","装备列表与附魔刷新")
+    Install(_G,"S_ItemTip_OnCharacterShow","装备列表打开处理")
+    Install(_G,"S_ItemTip_RelayoutStatCompare","装备列表调用的布局处理")
+    local profiledEquipment
+    local function ProfileEquipment(frame)
+        if not frame or frame == profiledEquipment then return end
+        profiledEquipment = frame
+        Install(frame,"Show","装备列表显示操作")
+        Install(frame,"OnShow","装备窗口显示回调",true)
+        Install(frame,"ClearAllPoints","装备列表清空锚点")
+        Install(frame,"SetPoint","装备列表定位")
+    end
+    ProfileEquipment(S_ItemTip_InspectFrame)
+    Install(_G,"S_ItemTip_CreateInspectFrame","装备列表首次创建",false,ProfileEquipment)
+    Install(CharacterModelFrame,"SetUnit","角色三维模型载入")
+    Install(CharacterModelFrame,"RefreshUnit","角色三维模型刷新")
+    Install(BetterCharacterAttributesFrame,"OnShow","BCS 子属性区显示",true)
+    Install(ItemSocre,"ScanUnit","装等计算")
+    Install(BCS,"UpdateStats","BCS 角色属性刷新")
+    Install(BCS,"GetLiveSpellPower","BCS 法伤计算")
+    Install(BCS,"GetLiveSpellHitRating","BCS 法术命中计算")
+    Install(BCS,"GetLiveSpellCritChance","BCS 法术暴击计算")
+    Install(BCS,"GetLiveHealingPower","BCS 治疗计算")
+    Install(BCS,"GetLiveManaRegen","BCS 回蓝计算")
+    Install(BCS,"GetLiveHaste","BCS 急速计算")
+    Install(BCS,"SyncCharacterPanelContent","角色属性区域切换")
+    Install(BCS and BCS.PropertiesPanel,"GetDisplayLines","浮动属性内容计算")
+    Install(_G,"SCRelayoutPanels","面板布局")
+    Install(_G,"StatCompare_RefreshPortrait","副面板头像处理")
+    Install(_G,"SetPortraitTexture","头像渲染（含其他面板）")
+    Install(_G,"SCGetPanelTextSize","副面板文字尺寸处理")
+    Install(StatCompareSelfFrameText,"SetText","副面板正文写入")
+    Install(StatCompareSelfFrame,"Show","副面板显示操作")
+    Install(StatCompareSelfFrame,"SetHeight","副面板高度调整")
+    Install(StatCompareSelfFrame,"SetWidth","副面板宽度调整")
+    Install(StatCompareSelfFramePortraitBorder,"SetTexture","副面板边框贴图")
+    ProfileMessage("已准备采样，请关闭角色窗口，再按 C 打开一次。结果会自动显示。")
+end
+
+end
+-- ===== 属性面板公共布局结束 =====
+
+--
+--  $Id: slashboy @ DreamLand 九藜方舟 & lasthime @ 艾森纳 幻物梵天
+--  $ver: v1.7.010
+--  $Date: 2007-01-22 18:00:00
+--  &Note: Thanks for crowley@headshot.de , the author of Titan Plugin - Item Bonuses.
+--
+
+StatCompareSelfFrameShowSpells = false;
+StatCompareTargetFrameShowSpells = false;
+StatCompare_ItemCollection = {};
+StatCompare_ItemCache = {};
+StatCompare_bonuses_single = {};
+
+
+--STATCOMPARE_SETNAME_PATTERN = "^(.*)%d/%d.*$";
+STATCOMPARE_SETNAME_PATTERN = "^(.*)%d/(%d).*$";
+
+STATCOMPARE_PREFIX_PATTERN = "^%+(%d+)%%?(.*)$";
+STATCOMPARE_SUFFIX_PATTERN = "^(.*)%+(%d+)%%?$";
+
+STATCOMPARE_ITEMLINK_PATTERN = "|cff(%x+)|Hitem:(%d+:%d+:%d+:%d+)|h%[(.-)%]|h|r";
+
+StatCompre_ColorList = {
+	X = 'FFD200',  -- attributes	--yellow
+	Y = '20FF20',  -- skills
+	M = 'FFFFFF',  -- melee		--white
+	R = '00C0C0',  -- ranged
+	C = 'FFFF00',  -- spells	--gold
+	A = 'FF60FF',  -- arcane
+	I = 'FF3600',  -- fire
+	F = '00C0FF',  -- frost
+	H = 'FFA400',  -- holy
+	N = '00FF60',  -- nature
+	S = 'AA12AC',  -- shadow
+	L = '20FF20',  -- life		--green
+	P = '6060FF',  -- mana		--purple
+	B = '33CCFF',			--light blue
+	D = '00FF7F',			--light green
+};
+
+STATCOMPARE_SELFSTAT = {};
+
+STATCOMPARE_EFFECTS = {
+	{ effect = "STR",		name = STATCOMPARE_STR,	 		format = "+%d",	lformat = "%d",		short = "XSTR",	cat = "ATT",	opt="ShowSTR" },
+	{ effect = "AGI",		name = STATCOMPARE_AGI, 		format = "+%d",	lformat = "%d",		short = "XAGI",	cat = "ATT",	opt="ShowAGI" },
+	{ effect = "STA",		name = STATCOMPARE_STA, 		format = "+%d",	lformat = "%d",		short = "XSTA",	cat = "ATT",	opt="ShowSTA" },
+	{ effect = "INT",		name = STATCOMPARE_INT, 		format = "+%d",	lformat = "%d",		short = "XINT",	cat = "ATT",	opt="ShowINT" },
+	{ effect = "SPI",		name = STATCOMPARE_SPI,	 		format = "+%d",	lformat = "%d",		short = "XSPI",	cat = "ATT",	opt="ShowSPI" },
+
+	--defend
+	{ effect = "HEALTH",		name = STATCOMPARE_HEALTH,		format = "+%d",	lformat = "%d",		show = 1,	short = "MP",	cat = "DEFEND",	opt="ShowHealth" },
+	{ effect = "DEFENSE",		name = STATCOMPARE_DEFENSE, 		format = "+%d",	lformat = "%d",		short = "MDEF",	cat = "DEFEND",	opt="ShowDefense" },	
+	{ effect = "DODGE",		name = STATCOMPARE_DODGE, 		format = "+%d%%",	lformat = "%.2f%%",	show = 1,	short = "MD",	cat = "DEFEND",	opt="ShowDodge" },
+	{ effect = "PARRY", 		name = STATCOMPARE_PARRY, 		format = "+%d%%",	lformat = "%.2f%%",	short = "MP",	cat = "DEFEND",	opt="ShowParry" },
+	{ effect = "TOBLOCK",		name = STATCOMPARE_TOBLOCK, 		format = "+%d%%",	lformat = "%.2f%%",	short = "MB",	cat = "DEFEND",	opt="ShowToBlock" },
+	{ effect = "BLOCK",		name = STATCOMPARE_BLOCK, 		format = "+%d",	lformat = "%d",	short = "MB",	show = 1,	cat = "DEFEND",	opt="ShowBlock" },
+	{ effect = "ARMOR",		name = STATCOMPARE_ARMOR,	 	format = "+%d",	lformat = "%d",		show = 1,	short = "MARM",	cat = "DEFEND",	opt="ShowArmor" },
+	{ effect = "ENARMOR",		name = STATCOMPARE_ENARMOR,	 	format = "+%d",	lformat = "%d",	show = 0,		short = "EARM",	cat = "DEFEND",	opt="ShowEnArmor" },
+	{ effect = "DAMAGEREDUCEV60",	name = STATCOMPARE_DAMAGEREDUCEV60,	format = "+%d%%",	lformat = "%.2f%%",	show = 1,	short = "MR",	cat = "DEFEND",	opt="ShowDR" },
+	{ effect = "DAMAGEREDUCEV63",	name = STATCOMPARE_DAMAGEREDUCEV63,	format = "+%d%%",	lformat = "%.2f%%",	show = 1,	short = "MR",	cat = "DEFEND",	opt="ShowDR" },
+
+	--resistance
+	{ effect = "ARCANERES",		name = STATCOMPARE_ARCANERES,		format = "+%d",	lformat = "%d",		short = "AR",	cat = "RES",	opt="ShowArcaneRes" },
+	{ effect = "FIRERES",		name = STATCOMPARE_FIRERES, 		format = "+%d",	lformat = "%d",		short = "IR",	cat = "RES",	opt="ShowFireRes" },
+	{ effect = "NATURERES", 	name = STATCOMPARE_NATURERES, 		format = "+%d",	lformat = "%d",		short = "NR",	cat = "RES",	opt="ShowNatureRes" },
+	{ effect = "FROSTRES",		name = STATCOMPARE_FROSTRES, 		format = "+%d",	lformat = "%d",		short = "FR",	cat = "RES",	opt="ShowFrostRes" },
+	{ effect = "SHADOWRES",		name = STATCOMPARE_SHADOWRES,		format = "+%d",	lformat = "%d",		short = "SR",	cat = "RES",	opt="ShowShadowRes" },
+	{ effect = "ALLRES",		name = STATCOMPARE_ALLRES,		format = "+%d",	short="AR",		cat = "RES",	show = 0},
+	
+	--physics
+	{ effect = "ATTACKPOWER",	name = STATCOMPARE_ATTACKPOWER, 	format = "+%d",	lformat = "%d",		show = 0,	short = "CA",	cat = "BON",	opt="ShowAP" },
+	{ effect = "TOHIT", 		name = STATCOMPARE_TOHIT, 		format = "+%d%%",	lformat = "%.2f%%",	show = 0,short = "CH",	cat = "BON",	opt="ShowToHit" },
+	{ effect = "RANGEDTOHIT", 		name = STATCOMPARE_RANGEDTOHIT, format = "+%d%%",	lformat = "%.2f%%",	show = 0,short = "CH",	cat = "BON",	opt="ShowToHit" },
+	{ effect = "CRIT",		name = STATCOMPARE_CRIT, 		format = "+%d%%",	lformat = "%.2f%%",	show = 0,	short = "CC",	cat = "BON",	opt="ShowCrit" },
+	{ effect = "RANGEDATTACKPOWER", name = STATCOMPARE_RANGEDATTACKPOWER,	format = "+%d",	lformat = "%d",		show = 0,	short = "CA",	cat = "BON",	opt="ShowRAP" },
+	{ effect = "RANGEDCRIT",	name = STATCOMPARE_RANGEDCRIT,		format = "+%d%%",	lformat = "%.2f%%",	show = 0,	short = "CC",	cat = "BON",	opt="ShowRCrit" },
+	{ effect = "ARMORPENETRATION",   name = STATCOMPARE_ARMORPENETRATION,   format = "+%d",    lformat = "%d",   show = 1,       short = "CAN",         cat = "BON",        opt = "ShowPenetration" },
+	{ effect = "MELEE_WITH_RANGED_ATTACK_POWER",	name = STATCOMPARE_MELEE_WITH_RANGED_ATTACK_POWER, 		format = "%s",	lformat = "%s",		show = 1,	short = "CA",	cat = "BON",	opt="ShowAP"},
+	{ effect = "BEARAP",		name = STATCOMPARE_DRUID_BEAR,		format = "+%d", lformat = "%d",		short = "CA",	cat = "BON",	opt="ShowAP" },
+	{ effect = "CATAP",		name = STATCOMPARE_DRUID_CAT,		format = "+%d", lformat = "%d",		short = "CA",	cat = "BON",	opt="ShowAP" },
+	{ effect = "ATTACKPOWERUNDEAD",	name = STATCOMPARE_ATTACKPOWERUNDEAD, 	format = "+%d",	lformat = "%d",		show = 1,	short = "CA",	cat = "BON",	opt="ShowAP" },
+	{ effect = "MELEE_WITH_RANGED_HIT", name = STATCOMPARE_MELEE_WITH_RANGED_HIT, show=1,format = "%s",		short = "CH",	cat = "BON",	opt="ShowToHit" },
+	{ effect = "MELEE_WITH_RANGED_CRIT",name = STATCOMPARE_MELEE_WITH_RANGED_CRIT,format = "%s",	show = 1,	short = "CC",	cat = "BON",	opt="ShowCrit" },
+	
+
+
+	--spell
+	{ effect = "MANA",		name = STATCOMPARE_MANA, 		format = "+%d",	lformat = "%d",	show = 1,	short = "BP",	cat = "SBON",	opt="ShowMana" },
+	{ effect = "DMG",		name = STATCOMPARE_DMG, 		format = "%d",		short = "BD",	cat = "SBON" },
+	{ effect = "DMGUNDEAD",		name = STATCOMPARE_DMGUNDEAD, 		format = "+%d",		short = "BD",	cat = "SBON" },
+	{ effect = "HEAL",		name = STATCOMPARE_SPELLHEAL, 		format = "%d",		short = "BH",	cat = "SBON"},
+	{ effect = "SPELLCRIT", 	name = STATCOMPARE_SPELLCRIT,		format = "+%d%%",	lformat = "%.2f%%",	short = "BSC",	cat = "SBON" },
+	{ effect = "SPELLTOHIT", 	name = STATCOMPARE_SPELLTOHIT,		format = "+%d%%",	lformat = "%.2f%%",	short = "BSH",	cat = "SBON" },
+	{ effect = "HASTE", 		name = STATCOMPARE_HASTE,		format = "+%.2f%%",show = 1,	lformat = "%.2f%%",	short = "BHASTE",	cat = "SBON" },
+	{ effect = "SPELLPENETRATION", 	name = STATCOMPARE_SPELLPENETRATION,	format = "+%d",	lformat = "+%d",	short = "BSPELLPENETRATION",	cat = "SBON" },
+
+	{ effect = "FLASHHOLYLIGHTHEAL",name = STATCOMPARE_FLASHHOLYLIGHT_HEAL, format = "+%d",		short = "CH",	cat = "SBON"},
+	{ effect = "LESSERHEALWAVE",	name = STATCOMPARE_LESSER_HEALING_WAVE_HEAL, 	format = "+%d",		short = "CH",	cat = "SBON"},
+	{ effect = "CHAINLIGHTNING",	name = STATCOMPARE_CHAIN_LIGHTNING_DAM, format = "+%d",		short = "ND",	cat = "SBON"},
+	{ effect = "EARTHSHOCK",	name = STATCOMPARE_EARTH_SHOCK_DAM, 	format = "+%d",		short = "ND",	cat = "SBON"},
+	{ effect = "FLAMESHOCK",	name = STATCOMPARE_FLAME_SHOCK_DAM, 	format = "+%d",		short = "ID",	cat = "SBON"},
+	{ effect = "FROSTSHOCK",	name = STATCOMPARE_FROST_SHOCK_DAM, 	format = "+%d",		short = "FD",	cat = "SBON"},
+	{ effect = "LIGHTNINGBOLT",	name = STATCOMPARE_LIGHTNING_BOLT_DAM, 	format = "+%d",		short = "ND",	cat = "SBON"},
+	{ effect = "NATURECRIT", 		name = STATCOMPARE_NATURECRIT,	format = "+%d%%",	lformat = "%.2f%%",	short = "CNC",	cat = "SBON" },
+	{ effect = "HOLYCRIT", 		name = STATCOMPARE_HOLYCRIT,		format = "+%d%%",	lformat = "%.2f%%",	short = "CHC",	cat = "SBON" },
+	
+	{ effect = "ARCANEDMG", 	name = STATCOMPARE_ARCANEDMG, 		format = "+%d",		short = "AD",	cat = "SBON" },
+	{ effect = "FIREDMG", 		name = STATCOMPARE_FIREDMG, 		format = "+%d",		short = "ID",	cat = "SBON" },
+	{ effect = "FROSTDMG",		name = STATCOMPARE_FROSTDMG, 		format = "+%d",		short = "FD",	cat = "SBON" },
+	{ effect = "HOLYDMG",		name = STATCOMPARE_HOLYDMG, 		format = "+%d",		short = "HD",	cat = "SBON" },
+	{ effect = "NATUREDMG",		name = STATCOMPARE_NATUREDMG, 		format = "+%d",		short = "ND",	cat = "SBON" },
+	{ effect = "SHADOWDMG",		name = STATCOMPARE_SHADOWDMG, 		format = "+%d",		short = "SD",	cat = "SBON" },
+
+	--regen
+	{ effect = "HEALTHREG",		name = STATCOMPARE_HEALTHREG,		format = "%d HP/5s",	short = "DR",	cat = "OBON",	opt="ShowHealthRegen" },
+	{ effect = "MANAREG",		name = STATCOMPARE_MANAREG, 		format = "%d",	lformat = "%d", short = "DR",	cat = "OBON",	opt="ShowManaRegen" },
+	{ effect = "MANAREGSPI",	name = STATCOMPARE_MANAREGSPI, 		format = "%d MP/2s",	lformat = "%d MP/2s",	show = 1,	short = "DR",	cat = "OBON",	opt="ShowManaRegenSPI" },
+	{ effect = "CASTING_MANA_REG",		name = STATCOMPARE_CASTING_MANA_REG,		format = "+%d%%",	show = 1, short = "DC", cat = "OBON"},
+	{ effect = "LIFEDRAIN",		name = STATCOMPARE_LIFEDRAIN,		format = "%d%%",	show = 1, short = "DL", cat = "OBON"},
+
+	--weaponskill
+	{ effect = "WEAPONSKILL_DAGGER",		name = STATCOMPARE_WEAPONSKILL_DAGGER,		format = "+%d",		short = "YWD",	cat = "SKILL" ,show = 0 },
+	{ effect = "WEAPONSKILL_FIST",			name = STATCOMPARE_WEAPONSKILL_FIST,		format = "+%d",		short = "YWF",	cat = "SKILL" ,show = 0 },
+	{ effect = "WEAPONSKILL_DAGGER",		name = STATCOMPARE_WEAPONSKILL_ONEHAND_MACE,		format = "+%d",		short = "YWD",	cat = "SKILL" ,show = 0 },
+	{ effect = "WEAPONSKILL_ONEHAND_SWORD",		name = STATCOMPARE_WEAPONSKILL_ONEHAND_SWORD,		format = "+%d",		short = "YWOS",	cat = "SKILL" ,show = 0 },
+	{ effect = "WEAPONSKILL_ONEHAND_MACE",		name = STATCOMPARE_WEAPONSKILL_ONEHAND_MACE,		format = "+%d",		short = "YWOM",	cat = "SKILL" ,show = 0 },
+	{ effect = "WEAPONSKILL_ONEHAND_AXE",		name = STATCOMPARE_WEAPONSKILL_ONEHAND_AXE,		format = "+%d",		short = "YWOA",	cat = "SKILL" ,show = 0 },
+	{ effect = "WEAPONSKILL_TWOHAND_AXE",		name = STATCOMPARE_WEAPONSKILL_TWOHAND_AXE,		format = "+%d",		short = "YWTA",	cat = "SKILL" ,show = 0 },
+	{ effect = "WEAPONSKILL_TWOHAND_SWORD",		name = STATCOMPARE_WEAPONSKILL_TWOHAND_SWORD,		format = "+%d",		short = "YWTS",	cat = "SKILL" ,show = 0 },
+	{ effect = "WEAPONSKILL_TWOHAND_MACE",		name = STATCOMPARE_WEAPONSKILL_TWOHAND_MACE,		format = "+%d",		short = "YWTM",	cat = "SKILL" ,show = 0 },
+	{ effect = "WEAPONSKILL_POLEARMS",		name = STATCOMPARE_WEAPONSKILL_POLEARMS,		format = "+%d",		short = "YWP",	cat = "SKILL" ,show = 0 },
+
+	{ effect = "STEALTH",		name = STATCOMPARE_STEALTH,		format = "+%d", lformat = "%d",		short = "YDEF", cat = "SKILL"},
+	{ effect = "MINING",		name = STATCOMPARE_MINING,		format = "+%d",		short = "YMIN",	cat = "SKILL",	opt="ShowMining" },
+	{ effect = "HERBALISM",		name = STATCOMPARE_HERBALISM, 		format = "+%d",		short = "YHER",	cat = "SKILL",	opt="ShowHerbalism" },
+	{ effect = "SKINNING", 		name = STATCOMPARE_SKINNING, 		format = "+%d",		short = "YSKI",	cat = "SKILL",	opt="ShowSkinning" },
+	{ effect = "FISHING",		name = STATCOMPARE_FISHING,		format = "+%d",		short = "YFIS",	cat = "SKILL",	opt="ShowFishing" },
+};
+
+STATCOMPARE_VALUE_RANGEDATTACKPOWER = 0;
+STATCOMPARE_VALUE_DRUIDFORM = nil;
+
+
+STATCOMPARE_CATEGORIES = {'ATT', 'DEFEND', 'BON', 'SBON', 'RES', 'SKILL', 'OBON'};
+
+function StatCompare_OnLoad()
+	InspectFrame_LoadUI();
+
+	-- hook
+	StatCompare_SetupHook(StatCompare_enable);
+	--
+	StatCompare_Register(StatCompare_enable);
+
+	UnitPopupButtons["INSPECT"] = { text = TEXT(INSPECT), dist = 0 };
+
+  	SlashCmdList["StatCompare"] = STATCOMPARE_SlashCmdHandler;
+  	SLASH_StatCompare1 = "/statc";
+
+	DEFAULT_CHAT_FRAME:AddMessage("|cff00ffff属性统计 已加载|r /statc");
+--	DEFAULT_CHAT_FRAME:AddMessage("增强版 - "..GREEN_FONT_COLOR_CODE.."作者：lasthime @ 艾森纳 幻物梵天 "..FONT_COLOR_CODE_CLOSE);
+
+
+	STATCOMPARE_SELFSTAT["STR"]=1;
+	STATCOMPARE_SELFSTAT["AGI"]=2;
+	STATCOMPARE_SELFSTAT["STA"]=3;
+	STATCOMPARE_SELFSTAT["INT"]=4;
+	STATCOMPARE_SELFSTAT["SPI"]=5;
+
+end
+
+function StatCompare_SetupHook(enable)
+	StatCompare_SetupDressHook();
+	StatCompare_SetupItemLinkHook();
+	if (enable == 1) then
+		if ((PaperDollFrame_OnShow ~=SCPaperDollFrame_OnShow) and (oldPaperDollFrame_OnShow ==nil)) then
+			oldPaperDollFrame_OnShow =  PaperDollFrame_OnShow;
+			PaperDollFrame_OnShow = SCPaperDollFrame_OnShow;
+		end
+		if ((PaperDollFrame_OnHide ~=SCPaperDollFrame_OnHide) and (oldPaperDollFrame_OnHide ==nil)) then
+			oldPaperDollFrame_OnHide =  PaperDollFrame_OnHide;
+			PaperDollFrame_OnHide = SCPaperDollFrame_OnHide;
+		end
+		
+		if ((InspectFrame_Show ~=SCInspectFrame_Show) and (oldInspectFrame_Show ==nil)) then
+			oldInspectFrame_Show =  InspectFrame_Show;
+			InspectFrame_Show = SCInspectFrame_Show;   
+
+			if not InspectFrameTab3 then
+					CreateFrame('Button', 'InspectFrameTab3', InspectFrame, 'CharacterFrameTabButtonTemplate')
+					InspectFrameTab3:SetPoint("LEFT", InspectFrameTab2, "RIGHT", -16, 0)
+					InspectFrameTab3:SetID(3)
+					InspectFrameTab3:SetText('天赋')
+					InspectFrameTab3:SetScript("OnEnter", function()
+						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
+						GameTooltip:SetText("天赋信息", 1.0,1.0,1.0 );
+					end)
+					InspectFrameTab3:SetScript("OnLeave", function()
+						GameTooltip:Hide()
+					end)
+					InspectFrameTab3:SetScript("OnClick", function()
+						InspectFrameTalentsTab_OnClick()
+					end)
+					InspectFrameTab3:Show()
+					PanelTemplates_TabResize(0, InspectFrameTab3);
+
+					INSPECTFRAME_SUBFRAMES = { "InspectPaperDollFrame", "InspectHonorFrame", "InspectTalentsFrame" };
+					UIPanelWindows["InspectFrame"] = { area = "left", pushable = 0 };
+
+					PanelTemplates_SetNumTabs(InspectFrame, 3)
+					PanelTemplates_SetTab(InspectFrame, 1)
+			end
+			
+			
+		end
+		
+		
+		if ((InspectFrame_OnHide ~=SCInspectFrame_OnHide) and (oldInspectFrame_OnHide ==nil)) then
+			oldInspectFrame_OnHide =  InspectFrame_OnHide;
+			InspectFrame_OnHide = SCInspectFrame_OnHide;
+		end
+		
+		
+	else
+		-- Unhook the function
+
+		if (PaperDollFrame_OnShow == SCPaperDollFrame_OnShow) then
+			PaperDollFrame_OnShow = oldPaperDollFrame_OnShow;
+			oldPaperDollFrame_OnShow = nil;
+		end
+		if (PaperDollFrame_OnHide == SCPaperDollFrame_OnHide) then
+			PaperDollFrame_OnHide = oldPaperDollFrame_OnHide;
+			oldPaperDollFrame_OnHide = nil;
+		end
+		if (InspectFrame_Show == SCInspectFrame_Show) then
+			InspectFrame_Show = oldInspectFrame_Show;
+			oldInspectFrame_Show = nil;
+		end
+		if (InspectFrame_OnHide == SCInspectFrame_OnHide) then
+			InspectFrame_OnHide = oldInspectFrame_OnHide;
+			oldInspectFrame_OnHide = nil;
+		end
+	end
+	-- 支持Inpector的处理
+	if(InspectorFrame) then
+		if (enable == 1) then
+			if ((InspectorFrameShow ~=SCInspectorFrameShow) and (oldInspectorFrameShow ==nil)) then
+				oldInspectorFrameShow =  InspectorFrameShow;
+				InspectorFrameShow = SCInspectorFrameShow;
+			end
+			if ((InspectorFrameHide ~=SCInspectorFrameHide) and (oldInspectorFrameHide ==nil)) then
+				oldInspectorFrameHide =  InspectorFrameHide;
+				InspectorFrameHide = SCInspectorFrameHide;
+			end
+		else
+			if (InspectorFrameShow == SCInspectorFrameShow) then
+				InspectorFrameShow = oldInspectorFrameShow;
+				oldInspectorFrameShow = nil;
+			end
+			if (InspectorFrameHide == SCInspectorFrameHide) then
+				InspectorFrameHide = oldInspectorFrameHide;
+				oldInspectorFrameHide = nil;
+			end
+		end
+	end
+	-- 支持GoodInpector的处理
+	if(GoodInspectFrame) then
+		if (enable == 1) then
+			if ((GoodInspect_InspectFrame_Show ~=SCGoodInspect_InspectFrame_Show) and (oldGoodInspect_InspectFrame_Show ==nil)) then
+				oldGoodInspect_InspectFrame_Show =  GoodInspect_InspectFrame_Show;
+				GoodInspect_InspectFrame_Show = SCGoodInspect_InspectFrame_Show;
+			end
+		else
+			if (GoodInspect_InspectFrame_Show == SCGoodInspect_InspectFrame_Show) then
+				GoodInspect_InspectFrame_Show = oldGoodInspect_InspectFrame_Show;
+				oldGoodInspect_InspectFrame_Show = nil;
+			end
+		end
+	end
+	-- 支持SuperInspect的处理
+	if(SuperInspectFrame) then
+		if (enable == 1) then
+			if ((SuperInspect_InspectFrame_Show ~=SCSuperInspect_InspectFrame_Show) and (scoldSuperInspect_InspectFrame_Show ==nil)) then
+				scoldSuperInspect_InspectFrame_Show =  SuperInspect_InspectFrame_Show;
+				SuperInspect_InspectFrame_Show = SCSuperInspect_InspectFrame_Show;
+			end
+			if ((ClearInspectPlayer ~=SCClearInspectPlayer) and (scoldClearInspectPlayer ==nil)) then
+				scoldClearInspectPlayer =  ClearInspectPlayer;
+				ClearInspectPlayer = SCClearInspectPlayer;
+			end
+		else
+			if (SuperInspect_InspectFrame_Show == SCSuperInspect_InspectFrame_Show) then
+				SuperInspect_InspectFrame_Show = scoldSuperInspect_InspectFrame_Show;
+				scoldSuperInspect_InspectFrame_Show = nil;
+			end
+			if (ClearInspectPlayer == SCClearInspectPlayer) then
+				ClearInspectPlayer = scoldClearInspectPlayer;
+				scoldClearInspectPlayer = nil;
+			end
+		end
+	end
+	
+end
+
+function StatCompare_SetupDressHook()
+	if(StatCompare_IsDressUpStat==1 and StatCompare_enable==1) then
+		if ((DressUpItemLink ~=SCDressUpItemLink) and (oldDressUpItemLink ==nil)) then
+			oldDressUpItemLink =  DressUpItemLink;
+			DressUpItemLink = SCDressUpItemLink;
+		end
+		if ((HideUIPanel ~=SCHideUIPanel) and (oldHideUIPanel ==nil)) then
+			oldHideUIPanel =  HideUIPanel;
+			HideUIPanel = SCHideUIPanel;
+		end
+	else -- unhook
+		if (DressUpItemLink == SCDressUpItemLink) then
+			DressUpItemLink = oldDressUpItemLink;
+			oldDressUpItemLink = nil;
+		end
+		if (HideUIPanel == SCHideUIPanel) then
+			HideUIPanel = oldHideUIPanel;
+			oldHideUIPanel = nil;
+		end
+	end
+
+end
+
+function StatCompare_Register(register)
+	if (register == 1) then
+		this:RegisterEvent("PLAYER_ENTERING_WORLD");
+		this:RegisterEvent("UNIT_INVENTORY_CHANGED");
+		this:RegisterEvent("PLAYER_LOGOUT");
+		this:RegisterEvent("PLAYER_ENTERING_WORLD");
+		this:RegisterEvent("UNIT_NAME_UPDATE");
+		this:RegisterEvent("PLAYER_AURAS_CHANGED");
+		this:RegisterEvent("UNIT_PORTRAIT_UPDATE");
+		this:RegisterEvent("UNIT_MODEL_CHANGED");
+	else	
+		this:UnregisterEvent("PLAYER_ENTERING_WORLD");
+		this:UnregisterEvent("UNIT_INVENTORY_CHANGED");
+		this:UnregisterEvent("PLAYER_LOGOUT");
+		this:UnregisterEvent("PLAYER_ENTERING_WORLD");
+		this:UnregisterEvent("UNIT_NAME_UPDATE");
+		this:UnregisterEvent("PLAYER_AURAS_CHANGED");
+		this:UnregisterEvent("UNIT_PORTRAIT_UPDATE");
+		this:UnregisterEvent("UNIT_MODEL_CHANGED");
+	end
+end
+
+function STATCOMPARE_SlashCmdHandler(msg)
+	local GREEN = GREEN_FONT_COLOR_CODE;
+	local CLOSE = FONT_COLOR_CODE_CLOSE;
+	local NORMAL = NORMAL_FONT_COLOR_CODE;
+
+	if msg == "perf" then
+		SCProfileNextCharacterOpen()
+	elseif msg == "layout auto" or msg == "layout free" then
+		SCSetPanelLayoutMode(msg == "layout auto" and "auto" or "free")
+		DEFAULT_CHAT_FRAME:AddMessage("属性面板排列：" .. (SCGetPanelLayoutMode() == "auto" and "自动" or "自由拖动"))
+	elseif ( (not msg) or (strlen(msg) <= 0 ) or (msg == "help") ) then
+		DEFAULT_CHAT_FRAME:AddMessage(NORMAL.."StatCompare  用法:"..CLOSE);
+		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc help    "..CLOSE.." - 帮助");
+		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc item    "..CLOSE.." - 打开物品收藏窗口");
+		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc on | off"..CLOSE.." - 开启/关闭 StatCompare");
+		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc reset   "..CLOSE.." - 重置框体位置");
+		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc layout auto | free"..CLOSE.." - 自动排列 / 自由拖动");
+		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc perf"..CLOSE.." - 测量下一次打开角色面板的耗时");
+		if(StatCompareOptFrame) then
+			DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc config  "..CLOSE.." - 开启/关闭 StatCompare 配置窗口");
+		end
+		if(StatCompareSetsFrame) then
+			DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc sets  "..CLOSE.." - 打开 StatCompareSets 窗口");
+		end
+	elseif (msg == "sets") then
+		if(StatCompareSetsFrame) then
+			StatCompareSetsFrame:Show();
+		else
+			DEFAULT_CHAT_FRAME:AddMessage(NORMAL.."Need load StatCompareSets plugin first."..CLOSE);
+		end
+	elseif (msg == "config") then
+		if(StatCompareOptFrame) then
+			StatCompare_Toggle();
+		else
+			DEFAULT_CHAT_FRAME:AddMessage(NORMAL.."Need load StatCompareUI plugin first."..CLOSE);
+		end
+	elseif (msg == "on") then
+		StatCompare_Register(1);
+		StatCompare_SetupHook(1);
+		StatCompare_SaveVar["enable"]=1;
+		StatCompare_enable=1;
+		DEFAULT_CHAT_FRAME:AddMessage("StatCompare "..GREEN.."开启"..CLOSE);
+	elseif (msg == "off") then
+		StatCompare_Register(0);
+		StatCompare_SetupHook(0);
+		StatCompare_SaveVar["enable"]=0;
+		StatCompare_enable=0;
+		DEFAULT_CHAT_FRAME:AddMessage("StatCompare "..GREEN.."关闭"..CLOSE);
+	elseif (msg == "DressOn") then
+		StatCompare_IsDressUpStat=1;
+		StatCompare_SaveVar["IsDressUpStat"]=1;
+		StatCompare_SetupDressHook();
+		DEFAULT_CHAT_FRAME:AddMessage("StatCompare "..GREEN.."试衣间显示开启"..CLOSE);
+	elseif (msg == "DressOff") then
+		StatCompare_IsDressUpStat=0;
+		StatCompare_SaveVar["IsDressUpStat"]=0;
+		StatCompare_SetupDressHook();
+		DEFAULT_CHAT_FRAME:AddMessage("StatCompare "..GREEN.."试衣间显示关闭"..CLOSE);
+	elseif (msg == "item") then
+		StatCompare_ItemCollectionFrame:Show();
+	elseif (msg == "reset") then
+		if StatCompare_Player and StatCompare_Player["FramePositions"] then
+			StatCompare_Player["FramePositions"] = {};
+			if StatCompare_Info and realmName and playerName and StatCompare_Info[realmName] and StatCompare_Info[realmName]["FramePositions"] then
+				StatCompare_Info[realmName]["FramePositions"][playerName] = {};
+			end
+			DEFAULT_CHAT_FRAME:AddMessage("StatCompare "..GREEN.."框体位置已重置"..CLOSE);
+		end
+		SCRelayoutPanels()
+		SCRequestPanelLayout()
+	else
+		DEFAULT_CHAT_FRAME:AddMessage("未知的命令: "..GREEN..msg..CLOSE..
+					      ", 试试 "..GREEN.."/statc help"..CLOSE);
+	end
+end
+
+local StatCompare_isLoaded=0
+function StatCompare_OnEvent()
+	if event == "PLAYER_ENTERING_WORLD" then
+		StatCompareSelfFrame.scPortraitDirty = true
+		StatCompareTargetFrame.scPortraitDirty = true
+	elseif event == "UNIT_INVENTORY_CHANGED" and arg1 == "player" then
+		StatCompareSelfFrame.scPortraitDirty = true
+	end
+	if( event == "VARIABLES_LOADED" ) then
+		if( not StatCompare_SaveVar ) then
+			StatCompare_SaveVar = { };
+			StatCompare_SaveVar["enable"]=1;
+			StatCompare_SaveVar["IsDressUpStat"]=0;
+			StatCompare_SaveVar["ItemCollection"]={};
+		end
+		StatCompare_enable = StatCompare_SaveVar["enable"];
+		StatCompare_IsDressUpStat = StatCompare_SaveVar["IsDressUpStat"];
+		if (not StatCompare_SaveVar["ItemCollection"]) then
+			StatCompare_SaveVar["ItemCollection"]={};
+		end
+		StatCompare_ItemCollection = StatCompare_SaveVar["ItemCollection"];
+		StatCompare_BuildItemCache();
+		StatCompare_OnLoad();
+		if(StatCompareOptFrame and StatCompareOptFrame:IsVisible()) then
+			StatCompareOptFrame:Hide();
+		end
+	end
+
+	if ((event == "PLAYER_ENTERING_WORLD" or event=="UNIT_NAME_UPDATE") and StatCompare_enable) then
+		if(StatCompare_isLoaded ~= 1) then
+			StatCompare_InitConfig();
+		end
+		local showIcon = StatCompare_GetSetting("ShowMinimapIcon");
+		if(showIcon == 0 and StatCompareMinimapFrame and StatCompareMinimapFrame:IsVisible()) then
+			--StatCompareMinimapFrame:Hide();
+			StatCompareMinimapFrame:Show();
+		elseif(showIcon == 1 and StatCompareMinimapFrame and not StatCompareMinimapFrame:IsVisible()) then
+			StatCompareMinimapFrame:Show();
+			StatCompareMinimapButton_UpdatePosition()
+		end
+		StatCompare_isLoaded=1;
+	end
+
+	if ( (event == "UNIT_INVENTORY_CHANGED") and StatCompare_enable and StatCompare_isLoaded==1) then
+
+		if ((arg1 == "player") and StatCompareSelfFrame:IsVisible()) then
+			SCHideFrame(StatCompareSelfFrame);
+			StatScanner_ScanAll();
+			if(SC_BuffScanner_ScanAllInspect) then
+				-- Scan the buffers
+				SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+			end
+			if(StatCompare_CharStats_Scan) then
+				StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+			end
+			local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+			local inspecting = InspectFrame and InspectFrame:IsVisible() and InspectFrame.unit
+			SCShowFrame(StatCompareSelfFrame, inspecting and StatCompareTargetFrame or PaperDollFrame,
+				UnitName("player"), tiptext, inspecting and 4 or 200, inspecting and 0 or -12);
+		elseif ((arg1 == "target") and StatCompare_enable and StatCompare_isLoaded==1 and StatCompareTargetFrame:IsVisible()) then
+			SCHideFrame(StatCompareTargetFrame);
+			SCHideFrame(StatCompareSelfFrame);
+			StatScanner_ScanAllInspect();
+			if(SC_BuffScanner_ScanAllInspect) then
+				-- Scan the buffers
+				SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "target");
+			end
+			if(StatCompare_CharStats_Scan) then
+				StatCompare_CharStats_Scan(StatScanner_bonuses);
+			end
+			local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,0);
+			
+			-- 检查是否有 S_ItemTip 装备列表框架
+			local anchorFrame = InspectFrame
+			local anchorX = -15
+			if S_ItemTip_InspectFrame and S_ItemTip_InspectFrame:IsVisible() then
+				-- 如果装备列表显示，定位到装备列表右边
+				anchorFrame = S_ItemTip_InspectFrame
+				anchorX = 0
+			end
+			
+			SCShowFrame(StatCompareTargetFrame, anchorFrame, UnitName("target"), tiptext, anchorX, -2);
+			StatScanner_ScanAll();
+			if(SC_BuffScanner_ScanAllInspect) then
+				-- Scan the buffers
+				SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+			end
+			if(StatCompare_CharStats_Scan) then
+				StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+			end
+			tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+			-- 自己的属性定位到对方属性的右边
+			SCShowFrame(StatCompareSelfFrame, StatCompareTargetFrame, UnitName("player"), tiptext, 0, 0);
+		end
+	end
+	--REQ_20250315:While Druid change instance ,refresh the Stacompare
+	if ( event == "PLAYER_AURAS_CHANGED" and StatCompare_enable and StatCompare_isLoaded==1 ) then
+		if (UnitClass("player") == "德鲁伊") then
+			local form = GetDruidForm()
+			if form == STATCOMPARE_VALUE_DRUIDFORM then
+			else
+				if (StatCompareSelfFrame:IsVisible()) then
+					SCHideFrame(StatCompareSelfFrame);
+					StatScanner_ScanAll();
+					if(SC_BuffScanner_ScanAllInspect) then
+						-- Scan the buffers
+						SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+					end
+					if (StatCompare_CharStats_Scan) then
+						StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+					end
+					local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+					local inspecting = InspectFrame and InspectFrame:IsVisible() and InspectFrame.unit
+					SCShowFrame(StatCompareSelfFrame, inspecting and StatCompareTargetFrame or PaperDollFrame,
+						UnitName("player"), tiptext, inspecting and 4 or 200, inspecting and 0 or -12);
+				end
+				STATCOMPARE_VALUE_DRUIDFORM = form
+			end
+		end
+
+	elseif ( event == "UNIT_PORTRAIT_UPDATE" or event == "UNIT_MODEL_CHANGED" ) then
+		-- 处理头像更新事件
+		if arg1 == "player" then
+			StatCompareSelfFrame.scPortraitDirty = true
+			if StatCompareSelfFrame:IsVisible() then StatCompare_RefreshPortrait(StatCompareSelfFrame,"player") end
+		end
+		local inspectedUnit = InspectFrame and InspectFrame.unit or "target"
+		if arg1 == inspectedUnit then
+			StatCompareTargetFrame.scPortraitDirty = true
+			if StatCompareTargetFrame:IsVisible() then StatCompare_RefreshPortrait(StatCompareTargetFrame,inspectedUnit) end
+		end
+	elseif ( event == "PLAYER_LOGOUT" ) then
+		-- save the player settings
+		StatCompare_SaveConfigInfo();
+	end
+end
+
+-- 强制刷新头像的辅助函数
+function StatCompare_RefreshPortrait(frame, unit)
+	if not frame or not UnitExists(unit) then return end
+	
+	local portrait = getglobal(frame:GetName().."Portrait")
+	if portrait then
+		if frame.portraitUpdateFrame then frame.portraitUpdateFrame:SetScript("OnUpdate", nil) end
+		local name = UnitName(unit)
+		if unit == "player" and frame.scPortraitUnit == unit and frame.scPortraitName == name
+			and frame.scPortraitTexture == portrait and not frame.scPortraitDirty
+			and (not portrait.GetTexture or portrait:GetTexture()) then
+			portrait:Show()
+			return
+		end
+		-- 立即设置头像
+		SetPortraitTexture(portrait, unit)
+		portrait:Show()
+		frame.scPortraitUnit, frame.scPortraitName, frame.scPortraitTexture = unit, name, portrait
+		frame.scPortraitDirty = nil
+		
+		-- Own portrait is available immediately. Keep one reusable retry frame
+		-- only for inspected players whose model can arrive asynchronously.
+		if unit == "player" then return end
+		local timer = 0
+		local updateFrame = frame.portraitUpdateFrame or CreateFrame("Frame", nil, frame)
+		frame.portraitUpdateFrame = updateFrame
+		updateFrame:SetScript("OnUpdate", function()
+			timer = timer + arg1
+			if timer > 0.2 then
+				if frame:IsVisible() and UnitExists(unit) then
+					SetPortraitTexture(portrait, unit)
+					portrait:Show()
+				end
+				updateFrame:SetScript("OnUpdate", nil)
+			end
+		end)
+	end
+end
+
+function SCDressUpItemLink(link)
+	local item = gsub(link, ".*(item:%d+:%d+:%d+:%d+).*", "%1", 1);
+	StatScanner_Scan(item);
+	StatCompare_bonuses_single = StatScanner_bonuses;
+	local tiptext = StatCompare_GetTooltipText(StatCompare_bonuses_single,0);
+	SCShowFrame(StatCompareItemStatFrame,SCItemTooltip,"",tiptext,0,0);
+
+	StatScanner_bonuses = {};
+
+	oldDressUpItemLink(link);
+end
+
+function SCPaperDollFrame_OnShow()
+    -- ★ 新增：如果正在观察别人，先关闭观察界面
+    if InspectFrame and InspectFrame:IsVisible() then
+        HideUIPanel(InspectFrame)
+    end
+
+    StatScanner_ScanAll();
+    if(SC_BuffScanner_ScanAllInspect) then
+        SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+    end
+    if(StatCompare_CharStats_Scan) then
+        StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+    end
+    local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+    SCShowFrame(StatCompareSelfFrame,PaperDollFrame,UnitName("player"),tiptext,200,-12);
+
+    oldPaperDollFrame_OnShow();
+end
+
+function SCInspectorFrameShow()
+	StatScanner_ScanAllInspect();
+	if(SC_BuffScanner_ScanAllInspect) then
+		-- Scan the buffers
+		SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "target");
+	end
+	if(StatCompare_CharStats_Scan) then
+		StatCompare_CharStats_Scan(StatScanner_bonuses);
+	end
+	local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,0);
+	SCShowFrame(StatCompareTargetFrame,InspectorFrame,UnitName("target"),tiptext,-5,-12);
+
+	StatScanner_ScanAll();
+	if(SC_BuffScanner_ScanAllInspect) then
+		-- Scan the buffers
+		SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+	end
+	if(StatCompare_CharStats_Scan) then
+		StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+	end
+	tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+	-- 不使用 TargetFrame 的宽度，直接定位到 InspectorFrame 右侧
+	SCShowFrame(StatCompareSelfFrame,InspectorFrame,UnitName("player"),tiptext,160,-12);
+
+	oldInspectorFrameShow();
+end
+function SCGoodInspect_InspectFrame_Show(unit)
+	oldGoodInspect_InspectFrame_Show(unit);
+	if ( not UnitIsPlayer(unit)) then return; end
+	StatScanner_ScanAllInspect();
+	if(SC_BuffScanner_ScanAllInspect) then
+		-- Scan the buffers
+		SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "target");
+	end
+	if(StatCompare_CharStats_Scan) then
+		StatCompare_CharStats_Scan(StatScanner_bonuses);
+	end
+	local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,0);
+	
+	-- 检查是否有 S_ItemTip 装备列表框架
+	local anchorFrame = InspectFrame
+	local anchorX = -5
+	if S_ItemTip_InspectFrame and S_ItemTip_InspectFrame:IsVisible() then
+		-- 如果装备列表显示，定位到装备列表右边
+		anchorFrame = S_ItemTip_InspectFrame
+		anchorX = 0
+	end
+	
+	SCShowFrame(StatCompareTargetFrame, anchorFrame, UnitName("target"), tiptext, anchorX, -2);
+	StatScanner_ScanAll();
+	if(SC_BuffScanner_ScanAllInspect) then
+		-- Scan the buffers
+		SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+	end
+	if(StatCompare_CharStats_Scan) then
+		StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+	end
+	tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+	-- 自己的属性定位到对方属性的右边
+	SCShowFrame(StatCompareSelfFrame, StatCompareTargetFrame, UnitName("player"), tiptext, 0, 0);
+	
+end
+function SCInspectorFrameHide()
+	SCHideFrame(StatCompareTargetFrame);
+	SCHideFrame(StatCompareSelfFrame);
+	oldInspectorFrameHide();
+end
+function SCSuperInspect_InspectFrame_Show(unit)
+	SCHideFrame(StatCompareTargetFrame);
+	SCHideFrame(StatCompareSelfFrame);
+	if (UnitExists(unit) and UnitIsPlayer(unit) and UnitIsFriend(unit, "player")) then
+		StatScanner_ScanAllInspect();
+		if(SC_BuffScanner_ScanAllInspect) then
+			-- Scan the buffers
+			SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "target");
+		end
+		if(StatCompare_CharStats_Scan) then
+			StatCompare_CharStats_Scan(StatScanner_bonuses);
+		end
+		local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,0);
+		SCShowFrame(StatCompareTargetFrame,SuperInspectFrame,UnitName("target"),tiptext,-5,-12);
+		StatScanner_ScanAll();
+		if(SC_BuffScanner_ScanAllInspect) then
+			-- Scan the buffers
+			SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+		end
+		if(StatCompare_CharStats_Scan) then
+			StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+		end
+		tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+		local targetWidth = StatCompareTargetFrame:GetWidth() or 0
+		local gap = 30  -- 两个框体之间的间距
+		SCShowFrame(StatCompareSelfFrame,StatCompareTargetFrame,UnitName("player"),tiptext,targetWidth + gap,0);
+
+		-- 装备等级已经在 SCShowFrame 中通过 ILevelText 显示，不需要再用 TargetItemGS
+		-- if IsAddOnLoaded("S_ItemTip") then
+		-- 	local score, r, g, b = ItemSocre:ScanUnit("target")
+		-- 	if score and score > 0 then
+		-- 		TargetItemGS:SetText("装备等级: " .. score)
+		-- 		TargetItemGS:SetTextColor(1, 1, 0)
+		-- 	else
+		-- 		TargetItemGS:SetText()
+		-- 	end
+		-- end
+	end
+	scoldSuperInspect_InspectFrame_Show(unit);
+end
+function SCClearInspectPlayer()
+	SCHideFrame(StatCompareTargetFrame);
+	SCHideFrame(StatCompareSelfFrame);
+	scoldClearInspectPlayer();
+end
+
+function SCShowFrame(frame,target,tiptitle,tiptext,anchorx,anchory)
+	local text = getglobal(frame:GetName().."Text");
+	local title = getglobal(frame:GetName().."Title");
+	local levelText = getglobal(frame:GetName().."LevelText");
+	local ilevelText = getglobal(frame:GetName().."ILevelText");
+	
+	if SCIsManagedPanel(frame) then
+		SCApplyPanelStyle(frame)
+	else
+		frame:SetBackdropColor(0, 0, 0, 0.9)
+		frame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+	end
+	
+	-- 确定单位（player 或 target）
+	local unit = "player"
+	if frame == StatCompareTargetFrame then
+		unit = InspectFrame and InspectFrame.unit or "target"
+	end
+	
+	-- 创建等级背景框（如果不存在）
+	if not frame.levelBg then
+		frame.levelBg = CreateFrame("Frame", nil, frame)
+		frame.levelBg:SetWidth(40)
+		frame.levelBg:SetHeight(16)
+		frame.levelBg:SetBackdrop({
+			bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+			edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+			tile = true,
+			tileSize = 8,
+			edgeSize = 8,
+			insets = {left = 2, right = 2, top = 2, bottom = 2}
+		})
+		frame.levelBg:SetBackdropColor(0, 0, 0, 0.8)
+		-- 定位到头像底部
+		local portraitFrame = getglobal(frame:GetName().."Portrait")
+		if portraitFrame then
+			frame.levelBg:SetPoint("CENTER", portraitFrame, "BOTTOM", 0, -10)
+		end
+		frame.levelBg:SetFrameLevel(frame:GetFrameLevel() + 2)
+		
+		-- 将等级文本重新定位到背景框中心
+		if levelText then
+			levelText:ClearAllPoints()
+			levelText:SetPoint("CENTER", frame.levelBg, "CENTER", 0, 0)
+			levelText:SetParent(frame.levelBg)
+		end
+	end
+	
+	-- 设置头像边框
+	local portraitBorder = getglobal(frame:GetName().."PortraitBorder")
+	if portraitBorder and (not portraitBorder.scBorderInitialized
+		or (portraitBorder.GetTexture and not portraitBorder:GetTexture())) then
+		portraitBorder:SetTexture("Interface\\AddOns\\S_ItemTip\\边框")
+		portraitBorder:SetBlendMode("BLEND")
+		portraitBorder.scBorderInitialized = true
+	end
+	
+	-- Portrait refresh is centralized after Show below.
+	-- 设置等级（金色字体）
+	if levelText and UnitExists(unit) then
+		local level = UnitLevel(unit)
+		SCSetPanelText(levelText,level)
+		levelText:SetTextColor(1, 0.82, 0)  -- 金色
+	end
+	
+	-- 设置名字和职业颜色
+	if UnitExists(unit) then
+		local name = UnitName(unit)
+		local localizedClass, class = UnitClass(unit)
+		local classColor = RAID_CLASS_COLORS[class]
+		if classColor then
+			SCSetPanelText(title,name)
+			title:SetTextColor(classColor.r, classColor.g, classColor.b)
+			-- 头像边框也使用职业颜色
+			if portraitBorder then
+				portraitBorder:SetVertexColor(classColor.r, classColor.g, classColor.b)
+			end
+			-- 等级背景框边框也使用职业颜色
+			if frame.levelBg then
+				frame.levelBg:SetBackdropBorderColor(classColor.r, classColor.g, classColor.b)
+			end
+		else
+			SCSetPanelText(title,name)
+			-- 默认白色边框
+			if portraitBorder then
+				portraitBorder:SetVertexColor(1, 1, 1)
+			end
+			if frame.levelBg then
+				frame.levelBg:SetBackdropBorderColor(1, 1, 1)
+			end
+		end
+	else
+		SCSetPanelText(title,tiptitle)
+	end
+	
+	-- 设置装等（如果有 S_ItemTip）
+	local displayScore
+	if IsAddOnLoaded("S_ItemTip") and ItemSocre and ItemSocre.ScanUnit then
+		displayScore = ItemSocre:ScanUnit(unit)
+	end
+	if ilevelText and displayScore and displayScore > 0 then
+		SCSetPanelText(ilevelText,string.format("装等 %.1f", displayScore))
+		ilevelText:SetTextColor(1, 0.82, 0)  -- 金色
+		ilevelText:Show()
+	elseif ilevelText then
+		ilevelText:Hide()
+	end
+	
+	SCSetPanelText(text,tiptext)
+	local width, height = SCGetPanelTextSize(text)
+	local titleWidth = SCGetPanelTextSize(title)
+	
+	-- 计算最大宽度，考虑标题、装等文本
+	if(width < titleWidth) then
+		width = titleWidth;
+	end
+	
+	-- 考虑装等文本的宽度
+	if ilevelText and ilevelText:IsVisible() then
+		local ilevelWidth = SCGetPanelTextSize(ilevelText)
+		if width < ilevelWidth then
+			width = ilevelWidth
+		end
+	end
+	
+	-- 确保至少能容纳头像+名字的宽度（头像56px + 间距10px + 名字）
+	local minWidth = 56 + 10 + titleWidth
+	if width < minWidth then
+		width = minWidth
+	end
+	
+	-- 按本次内容确定宽度，避免历史长文本让后续窗口永久变宽。
+	width = math.max(200, width)
+	
+	-- 调整高度以容纳头像和等级
+	local extraHeight = 80  -- 头像和等级区域的高度
+	local panelHeight = height + extraHeight
+	if displayScore and displayScore > 0 then
+		panelHeight = panelHeight + 30
+	end
+	if frame:GetHeight() ~= panelHeight then frame:SetHeight(panelHeight) end
+	if frame:GetWidth() ~= width+40 then frame:SetWidth(width+40) end
+	
+	-- 检查是否有保存的位置
+	local hasCustomPosition = false;
+	local savedPos = nil;
+	
+	if (not SCIsManagedPanel(frame) or SCGetPanelLayoutMode() == "free")
+		and StatCompare_Player and StatCompare_Player["FramePositions"] and StatCompare_Player["FramePositions"][frame:GetName()] then
+		hasCustomPosition = true;
+		savedPos = StatCompare_Player["FramePositions"][frame:GetName()];
+	end
+	
+	if hasCustomPosition and savedPos then
+		-- 如果有保存的位置，直接恢复
+		if savedPos.point and savedPos.relativePoint and savedPos.xOfs and savedPos.yOfs then
+			SCSetPanelPoint(frame,savedPos.point,savedPos.relativeTo or "UIParent",savedPos.relativePoint,savedPos.xOfs,savedPos.yOfs)
+		end
+	elseif not SCIsManagedPanel(frame) or SCGetPanelLayoutMode() == "free" then
+		-- 没有保存位置时使用默认定位
+		-- 如果 target 是 StatCompareTargetFrame，说明是 SelfFrame 要定位在 TargetFrame 右侧
+		if target:GetName() == "StatCompareTargetFrame" then
+			-- SelfFrame 定位在 TargetFrame 的右侧，anchorx 就是间距
+			SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx,anchory)
+		elseif(IsAddOnLoaded("oSkin") or IsAddOnLoaded("Skinner")) then
+			if(target:GetName() == "InspectFrame" or target:GetName() == "PaperDollFrame") then
+				SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx+30,anchory+12)
+			else
+				SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx,anchory)
+			end
+		else
+			SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx,anchory)
+		end
+	end
+	
+	if(tiptext=="") then
+		frame:Hide();
+	else
+		local showSelfFrame = StatCompare_GetSetting("ShowSelfFrame");
+		if(StatCompareTargetFrame:IsVisible() and showSelfFrame == 0 and frame == StatCompareSelfFrame) then
+			frame:Hide();
+		else
+			frame:Show();
+			-- 显示框体后强制刷新头像
+			StatCompare_RefreshPortrait(frame, unit)
+		end
+	end
+	if SCIsManagedPanel(frame) then
+		SCRelayoutPanels()
+		SCRequestPanelLayout()
+	end
+end
+
+function SCHideFrame(frame)
+	frame:Hide();
+	-- 下次显示时按当前内容重新计算尺寸。
+end
+
+function SCPaperDollFrame_OnHide()
+	SCHideFrame(StatCompareSelfFrame);
+	oldPaperDollFrame_OnHide();
+end
+
+function SCInspectFrame_Show(unit)
+	HideUIPanel(InspectFrame);
+	if CanInspect(unit) then
+		NotifyInspect(unit);
+		InspectFrame.unit = unit;
+		ShowUIPanel(InspectFrame);
+		if InspectFrame:IsVisible() then
+			InspectFrameTab1:Click()
+		end
+		StatScanner_ScanAllInspect();
+		if(SC_BuffScanner_ScanAllInspect) then
+			-- Scan the buffers
+			SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "target");
+		end
+		if(StatCompare_CharStats_Scan) then
+			StatCompare_CharStats_Scan(StatScanner_bonuses);
+		end
+		local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,0);
+
+		-- 检查是否有 S_ItemTip 装备列表框架
+		local anchorFrame = InspectFrame
+		local anchorX, anchorY = -29.5, -10.5   -- 默认锚定到 InspectFrame 时的偏移
+		if S_ItemTip_InspectFrame and S_ItemTip_InspectFrame:IsVisible() then
+			-- 如果装备列表显示，定位到装备列表右边
+			anchorFrame = S_ItemTip_InspectFrame
+			anchorX, anchorY = -5.5, -5       -- 锚定到装等界面时的偏移（可根据需要修改）
+		end
+
+                SCShowFrame(StatCompareTargetFrame, anchorFrame, UnitName("target"), tiptext, anchorX, anchorY); 
+
+		StatScanner_ScanAll();
+		if(SC_BuffScanner_ScanAllInspect) then
+			-- Scan the buffers
+			SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+		end
+		if(StatCompare_CharStats_Scan) then
+			StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+		end
+		tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+		-- 自己的属性定位到对方属性的右边
+		SCShowFrame(StatCompareSelfFrame, StatCompareTargetFrame, UnitName("player"), tiptext, 0.5, 0);
+	end
+	--oldInspectFrame_Show();
+end
+
+
+function SCInspectFrame_OnHide()
+	SCHideFrame(StatCompareTargetFrame);
+	SCHideFrame(StatCompareSelfFrame);
+	oldInspectFrame_OnHide();
+end
+
+function SCHideUIPanel(frame)
+	if (frame == DressUpFrame) then
+		SCItemTooltip:Hide();
+		SCHideFrame(StatCompareItemStatFrame);
+	end
+	oldHideUIPanel(frame);
+end
+
+function StatCompare_GetTooltipText(bonuses,bSelfStat)
+	local retstr,cat,val,lval = "","","","","";
+	local i;
+	local baseval = {};
+	if(bSelfStat==1) then
+		_, baseval["STR"], _, _ = UnitStat("player", 1);
+		_, baseval["AGI"], _, _ = UnitStat("player", 2);
+		_, baseval["STA"], _, _ = UnitStat("player", 3);
+		_, baseval["INT"], _, _ = UnitStat("player", 4);
+		_, baseval["SPI"], _, _ = UnitStat("player", 5);
+
+		_, baseval["ARCANERES"], _, _ = UnitResistance("player",6);
+		_, baseval["FIRERES"], _, _ = UnitResistance("player",2);
+		_, baseval["NATURERES"], _, _ = UnitResistance("player",3);
+		_, baseval["FROSTRES"], _, _ = UnitResistance("player",4);
+		_, baseval["SHADOWRES"], _, _ = UnitResistance("player",5);
+
+		baseval["DODGE"] = GetDodgeChance();
+		baseval["TOBLOCK"] = GetBlockChance();
+		if(baseval["TOBLOCK"] == 0) then
+			baseval["PARRY"] = nil;
+		end
+		if IsAddOnLoaded("BetterCharacterStats") then
+			baseval["CRIT"] = BCS:GetCritChance()
+		else
+			baseval["CRIT"] = StatCompare_CharStats_GetCritChance()
+		end
+		
+		baseval["PARRY"] = GetParryChance();
+		if(baseval["PARRY"] == 0) then
+			baseval["PARRY"] = nil;
+		end
+		baseval["ATTACKPOWER"], posBuff, negBuff = UnitAttackPower("player");
+		baseval["ATTACKPOWER"] = baseval["ATTACKPOWER"] + posBuff + negBuff;
+		baseval["RANGEDATTACKPOWER"], posBuff, negBuff = UnitRangedAttackPower("player");
+		baseval["RANGEDATTACKPOWER"] = baseval["RANGEDATTACKPOWER"] + posBuff + negBuff;
+
+		baseval["DEFENSE"], armorDefense = UnitDefense("player");
+		baseval["DEFENSE"] = baseval["DEFENSE"] + armorDefense;
+		baseval["HEALTH"] = UnitHealthMax("player");
+		_, baseval["ARMOR"], _, _, _ = UnitArmor("player");
+		baseval["MANA"] = UnitManaMax("player");
+	end
+	--DEFAULT_CHAT_FRAME:AddMessage("Entering GetTooltipText");
+	for i,e in pairs(STATCOMPARE_EFFECTS) do
+
+		
+		if(e.opt and StatCompare_GetSetting(e.opt) and StatCompare_GetSetting(e.opt) ~= 1) then
+		elseif(e.show and e.show == 0) then
+		--elseif e.effect == "HASTE" then
+		elseif(bonuses[e.effect]) then
+			if(e.format) then
+		   		val = format(e.format,bonuses[e.effect]);
+			else
+				val = bonuses[e.effect];
+			end;
+			if(e.cat ~= cat) then
+				cat = e.cat;
+				if(retstr ~= "") then
+					retstr = retstr .. "\n"
+				end
+				retstr = retstr .. "\n" ..GREEN_FONT_COLOR_CODE.. getglobal('STATCOMPARE_CAT_'..cat)..":"..FONT_COLOR_CODE_CLOSE;
+				
+			end
+			
+			if (bSelfStat==1) then
+				if(baseval[e.effect]) then
+					if(e.lformat) then
+						lval = format(e.lformat, baseval[e.effect]);
+					else
+						lval = baseval[e.effect];
+					end
+					
+					val = val.." / "..lval;
+					
+				elseif(CharStats_fullvals and CharStats_fullvals[e.effect]) then
+					if(CharStats_fullvals[e.effect] == 0) then
+					elseif(e.show and e.show == 0) then
+					else
+						if(e.lformat) then
+							lval = format(e.lformat, CharStats_fullvals[e.effect]);
+						else
+							lval = CharStats_fullvals[e.effect];
+						end
+						val = val.." / "..lval;
+					end
+				end
+			elseif(bSelfStat==0 and CharStats_fullvals and CharStats_fullvals[e.effect]) then
+				if(e.effect == "SPELLHIT" or e.effect == "TOHIT") then
+				elseif(CharStats_fullvals[e.effect] == 0) then
+				else
+					if(e.lformat) then
+						lval = format(e.lformat, CharStats_fullvals[e.effect]);
+					else
+						lval = CharStats_fullvals[e.effect];
+					end
+					val = val.." / "..lval;
+				end
+			end
+
+			--REQ_20250301:When show "STR","AGI","STA","INT","SPI","ARCANERES","FIRERES","NATURERES","FROSTRES","SHADOWRES","DEFENSE","DODGE","ARMOR", only show total value.
+			local only_show_total_value ={"STR","AGI","STA","INT","SPI","ARCANERES","FIRERES","NATURERES","FROSTRES","SHADOWRES","DEFENSE","DODGE","ARMOR",}
+			for _,v in ipairs(only_show_total_value) do
+				if e.effect == v then
+					val=lval;
+					break;
+				end
+			end
+
+			if (e.effect == "HASTE") then
+				CharStats_fullvals["HASTE"] = bonuses["HASTE"];
+
+			end
+			if(e.effect == "MANAREG") then
+				val = val.." MP/5s"
+			end
+			
+			--REQ_20250303:When show SPELLCRIT, only show total value.
+			if(e.effect == "SPELLCRIT") and CharStats_fullvals[e.effect] then
+				lval = format(e.lformat, CharStats_fullvals[e.effect]);
+				val = lval
+			end
+			
+			retstr = retstr.. "\n".. StatComparePaintText(e.short,e.name)..":\t";
+			if(SC_BuffScanner_bonuses and SC_BuffScanner_bonuses[e.effect]) then
+				retstr = retstr.. GREEN_FONT_COLOR_CODE..val..FONT_COLOR_CODE_CLOSE;
+			else
+				retstr = retstr.. NORMAL_FONT_COLOR_CODE..val..FONT_COLOR_CODE_CLOSE;
+			end
+		
+		elseif(CharStats_fullvals and CharStats_fullvals[e.effect]) then
+			if(e.effect == "SPELLHIT" or e.effect == "TOHIT") then
+			elseif(CharStats_fullvals[e.effect] == 0) then
+			elseif(not e.show) then
+			elseif(e.show == 0) then
+			else
+				
+
+				if(e.lformat) then
+					val = format(e.lformat, CharStats_fullvals[e.effect]);
+				else
+					val = CharStats_fullvals[e.effect];
+				end
+				if(e.cat ~= cat) then
+					cat = e.cat;
+					if(retstr ~= "") then
+						retstr = retstr .. "\n"
+					end
+					retstr = retstr .. "\n" ..GREEN_FONT_COLOR_CODE.. getglobal('STATCOMPARE_CAT_'..cat)..":"..FONT_COLOR_CODE_CLOSE;
+					
+				end
+				
+				if (bSelfStat==1 and baseval[e.effect]) then
+					if(e.lformat) then
+						lval = format(e.lformat, baseval[e.effect]);
+					else
+						lval = baseval[e.effect];
+					end
+					val = lval;
+				end
+
+				if(e.effect == "MANAREG") then
+					val = val.." MP/5s"
+				end
+
+
+
+				retstr = retstr.. "\n".. StatComparePaintText(e.short,e.name)..":\t";
+				if(SC_BuffScanner_bonuses and SC_BuffScanner_bonuses[e.effect]) then
+					retstr = retstr.. GREEN_FONT_COLOR_CODE..val..FONT_COLOR_CODE_CLOSE;
+				else
+					retstr = retstr.. NORMAL_FONT_COLOR_CODE..val..FONT_COLOR_CODE_CLOSE;
+				end
+			end
+			
+			
+		end
+
+	end
+
+	local setstr=""
+	local settitle="\n\n"..GREEN_FONT_COLOR_CODE..STATCOMPARE_SET_PREFIX..FONT_COLOR_CODE_CLOSE.."\n"
+	for i,v in pairs(StatScanner_setcount) do
+		setstr=setstr..'|cff'..v.color..i..v.count.."/"..v.total.."）"..FONT_COLOR_CODE_CLOSE.."\n";
+	end
+	if (setstr~="") then setstr=settitle..setstr; end
+
+	return retstr..setstr;
+end
+
+function StatComparePaintText(short,val)
+	local color = 'FFFFFF';
+	local text = string.sub(short,2);
+	local colorcode = string.sub(short,1,1);
+	if(StatCompre_ColorList[colorcode]) then
+		color = StatCompre_ColorList[colorcode];
+	end;
+	if(val) then
+		return '|cff'.. color .. val .. FONT_COLOR_CODE_CLOSE
+	else 
+		return '|cff'.. color .. text .. FONT_COLOR_CODE_CLOSE
+	end;
+end
+
+function StatcompareBinding()
+	if(InspectFrame:IsVisible()) then
+		HideUIPanel(InspectFrame);
+	else
+		InspectUnit("target");
+	end
+end
+
+
+-- 2006.01.27 edit --
+function StatCompare_SetupItemLinkHook()
+	if(StatCompare_enable==1) then
+		if ((ChatFrame_OnHyperlinkShow ~= StatCompare_ChatFrame_OnHyperlinkShow) and (scoldChatFrame_OnHyperlinkShow == nil)) then			
+			scoldChatFrame_OnHyperlinkShow = ChatFrame_OnHyperlinkShow;
+			ChatFrame_OnHyperlinkShow = StatCompare_ChatFrame_OnHyperlinkShow;		
+		end
+		if ((PaperDollItemSlotButton_OnClick ~= StatCompare_PaperDollItemSlotButton_OnClick) and (scoldPaperDollItemSlotButton_OnClick == nil)) then			
+			scoldPaperDollItemSlotButton_OnClick = PaperDollItemSlotButton_OnClick;
+			PaperDollItemSlotButton_OnClick = StatCompare_PaperDollItemSlotButton_OnClick;		
+		end
+		if ((InspectPaperDollItemSlotButton_OnClick ~= StatCompare_InspectPaperDollItemSlotButton_OnClick) and (scoldInspectPaperDollItemSlotButton_OnClick == nil)) then			
+			scoldInspectPaperDollItemSlotButton_OnClick = InspectPaperDollItemSlotButton_OnClick;
+			InspectPaperDollItemSlotButton_OnClick = StatCompare_InspectPaperDollItemSlotButton_OnClick;		
+		end
+
+	else -- unhook
+		if (ChatFrame_OnHyperlinkShow == StatCompare_ChatFrame_OnHyperlinkShow) then
+			ChatFrame_OnHyperlinkShow = scoldChatFrame_OnHyperlinkShow;
+			scoldChatFrame_OnHyperlinkShow = nil;
+		end
+		if (PaperDollItemSlotButton_OnClick == StatCompare_PaperDollItemSlotButton_OnClick) then
+			PaperDollItemSlotButton_OnClick = scoldPaperDollItemSlotButton_OnClick;
+			scoldPaperDollItemSlotButton_OnClick = nil;
+		end
+		if (InspectPaperDollItemSlotButton_OnClick == StatCompare_InspectPaperDollItemSlotButton_OnClick) then
+			InspectPaperDollItemSlotButton_OnClick = scoldInspectPaperDollItemSlotButton_OnClick;
+			scoldInspectPaperDollItemSlotButton_OnClick = nil;
+		end
+	end
+end
+
+function StatCompare_ChatFrame_OnHyperlinkShow(link, text, button)
+	if(StatCompare_GeneralEditFrameEidtBox:IsVisible()) then
+		StatCompare_GeneralEditFrameEidtBox:SetText(text);
+	end
+	return scoldChatFrame_OnHyperlinkShow(link, text, button);
+end
+
+function StatCompare_PaperDollItemSlotButton_OnClick(button, ignoreModifiers)
+	if(StatCompare_GeneralEditFrameEidtBox:IsVisible() and IsShiftKeyDown()) then
+		StatCompare_GeneralEditFrameEidtBox:SetText(GetInventoryItemLink("player", this:GetID()));
+	end
+	return scoldPaperDollItemSlotButton_OnClick(button, ignoreModifiers);
+end
+
+function StatCompare_InspectPaperDollItemSlotButton_OnClick(button)
+	if(StatCompare_GeneralEditFrameEidtBox:IsVisible() and IsShiftKeyDown()) then
+		StatCompare_GeneralEditFrameEidtBox:SetText(GetInventoryItemLink(InspectFrame.unit, this:GetID()));
+	end
+	return scoldInspectPaperDollItemSlotButton_OnClick(button);
+end
+
+function StatCompare_ItemCollectionFrame_OnLoad()
+end
+
+
+function StatCompare_ItemCollectionFrame_OnShow()
+	StatCompare_ItemCollection_ScrollFrame_Update();
+end
+
+local statcompare_editdata = {type="",id="",text="",value=""};
+function StatCompare_ItemCollection_Add_OnClick()
+	statcompare_editdata.type="edititem";
+	statcompare_editdata.id=0;
+	statcompare_editdata.text="Shift点击物品或者链接";
+	statcompare_editdata.value="";
+	StatCompare_GeneralEditFrame:Show();
+end
+
+function StatCompare_GeneralEditFrame_OnShow()
+	local control= getglobal(this:GetName().."EditTitle");
+	control:SetText(statcompare_editdata.text);
+	StatCompare_GeneralEditFrameEidtBox:SetText(statcompare_editdata.value);
+	StatCompare_GeneralEditFrameEidtBox:HighlightText();
+end
+
+function StatCompare_GeneralEditFrame_Save()
+	local s=StatCompare_GeneralEditFrameEidtBox:GetText();
+	if (statcompare_editdata.type=="edititem") then
+		if (s~="") then
+			table.insert(StatCompare_ItemCollection,1,s);
+			table.insert(StatCompare_ItemCache,1,s);
+		end
+	end
+	StatCompare_ItemCollection_ScrollFrame_Update();
+end
+
+
+local StatCompare_DelItem="";
+StaticPopupDialogs["StatCompare_DelItem"] = {
+	text = "确认要删除吗？",
+	button1 = TEXT(ACCEPT),
+	button2 = TEXT(CANCEL),
+	OnAccept = function()
+		StatCompare_DeleteItem(StatCompare_DelItem);
+		StatCompare_BuildItemCache();
+		StatCompare_ItemCollection_ScrollFrame_Update();
+		StatCompare_DelItem="";
+	end,
+	showAlert = 1,
+	timeout = 0,
+	hideOnEscape = 1
+};
+function StatCompare_DeleteItem(sItem)
+	if sItem=="" then return; end
+	for i=1, getn(StatCompare_ItemCollection) do
+		if(sItem==StatCompare_ItemCollection[i]) then
+			table.remove(StatCompare_ItemCollection,i);
+			break;
+		end
+	end
+end
+function StatCompare_ItemCol_Onclick()
+	local id=this:GetID();	
+	local button = getglobal("StatCompareItem"..id.."_Name");
+	local s=button:GetText();
+	if (s ==nil or s=="") then return; end
+	local _,_,_,text,_=string.find(s,"|(.-)|H(.-)|(.-)|h|r");
+	if (IsShiftKeyDown()) then
+		if ( ChatFrameEditBox:IsVisible() ) then
+			ChatFrameEditBox:Insert(s);
+		end
+	elseif (IsControlKeyDown() and text) then
+		DressUpItemLink(s);
+	elseif (IsAltKeyDown()) then
+		StatCompare_DelItem=s;
+		StaticPopup_Show("StatCompare_DelItem");
+	elseif (text) then
+		GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
+		GameTooltip:SetHyperlink(text);
+		local _,_,_,_,sType,sSubType,_ = GetItemInfo(text);
+		--DEFAULT_CHAT_FRAME:AddMessage(sType..":"..sSubType);
+	end
+end
+
+function StatCompare_ItemCollection_ScrollFrame_Update()
+	if not StatCompare_ItemCollectionFrame:IsVisible() then return; end
+	local number=getn(StatCompare_ItemCache);
+	FauxScrollFrame_Update(StatCompare_ItemCollection_ScrollFrame, number, 10, 22);
+
+	local line;
+	local lineplusoffset;
+	for line=1,10 do
+		lineplusoffset = line + FauxScrollFrame_GetOffset(StatCompare_ItemCollection_ScrollFrame);
+		if (lineplusoffset < number+1) then
+			btn = getglobal("StatCompareItem"..line.."_Name");
+			local stitle = StatCompare_ItemCache[lineplusoffset];
+			btn:SetText(stitle);
+			btn:Show();
+		else
+			getglobal("StatCompareItem"..line.."_Name"):SetText("");
+			getglobal("StatCompareItem"..line.."_Name"):Hide();
+		end
+	end
+end
+
+-- 2006.02.03 edit --
+-------------------------------------- 物品稀有度下拉框------------------------------------------
+StatCompare_ItemRarity_DROPDOWN_LIST = {
+	{name = "全部", value = -1},
+	{name = "|c009d9d9d粗糙|r", value = 0},
+	{name = "|c00ffffff普通|r", value = 1},
+	{name = "|c001eff00优秀|r", value = 2},
+	{name = "|c000070dd精良|r", value = 3},
+	{name = "|c00a335ee史诗|r", value = 4},
+	{name = "|c00ff8000传说|r", value = 5},
+};
+
+function StatCompare_ItemRarityDropDown_OnLoad()
+	UIDropDownMenu_Initialize(StatCompare_ItemRarityDropDown, StatCompare_ItemRarityDropDown_Initialize);
+	UIDropDownMenu_SetSelectedID(StatCompare_ItemRarityDropDown,1);
+	UIDropDownMenu_SetWidth(70);
+end
+
+function StatCompare_ItemRarityDropDown_Initialize()
+	local info;
+	for i = 1, getn(StatCompare_ItemRarity_DROPDOWN_LIST), 1 do
+		info = { };
+		info.text = StatCompare_ItemRarity_DROPDOWN_LIST[i].name;
+		info.value = StatCompare_ItemRarity_DROPDOWN_LIST[i].value;
+		info.func = StatCompare_ItemRarityDropDown_OnClick;
+		UIDropDownMenu_AddButton(info);
+	end
+end
+
+function StatCompare_ItemRarityDropDown_OnClick()
+	UIDropDownMenu_SetSelectedID(StatCompare_ItemRarityDropDown, this:GetID());
+	StatCompare_BuildItemCache();
+	StatCompare_ItemCollection_ScrollFrame_Update();
+end
+
+-------------------------------------- 物品类型下拉框------------------------------------------
+StatCompare_ItemType_DROPDOWN_LIST = {
+	{name = "全部", value = "全部", subvalue="全部"},
+	{name = "武器", value = "武器", subvalue="全部"},
+	{name = "护甲", value = "护甲", subvalue="全部"},
+	{name = "- 板甲", value = "护甲", subvalue="板甲"},
+	{name = "- 锁甲", value = "护甲", subvalue="锁甲"},
+	{name = "- 皮甲", value = "护甲", subvalue="皮甲"},
+	{name = "- 布甲", value = "护甲", subvalue="布甲"},
+	{name = "- 盾牌", value = "护甲", subvalue="盾牌"},
+	{name = "- 其它", value = "护甲", subvalue="其它"},
+	{name = "其它", value = "其它", subvalue="全部"},
+};
+
+function StatCompare_ItemTypeDropDown_OnLoad()
+	UIDropDownMenu_Initialize(StatCompare_ItemTypeDropDown, StatCompare_ItemTypeDropDown_Initialize);
+	UIDropDownMenu_SetSelectedID(StatCompare_ItemTypeDropDown,1);
+	UIDropDownMenu_SetWidth(70);
+end
+
+function StatCompare_ItemTypeDropDown_Initialize()
+	local info;
+	for i = 1, getn(StatCompare_ItemType_DROPDOWN_LIST), 1 do
+		info = { };
+		info.text = StatCompare_ItemType_DROPDOWN_LIST[i].name;
+		info.value = StatCompare_ItemType_DROPDOWN_LIST[i].value;
+		info.func = StatCompare_ItemTypeDropDown_OnClick;
+		UIDropDownMenu_AddButton(info);
+	end
+end
+
+function StatCompare_ItemTypeDropDown_OnClick()
+	UIDropDownMenu_SetSelectedID(StatCompare_ItemTypeDropDown, this:GetID());
+	StatCompare_BuildItemCache();
+	StatCompare_ItemCollection_ScrollFrame_Update();
+end
+----------------------------------------------------------------------------------------------
+function StatCompare_BuildItemCache()
+	StatCompare_ItemCache={};
+	local rarityFilter=StatCompare_ItemRarity_DROPDOWN_LIST[UIDropDownMenu_GetSelectedID(StatCompare_ItemRarityDropDown)].value;
+	if(not rarityFilter) then rarityFilter=-1; end
+
+	local typeFilter=StatCompare_ItemType_DROPDOWN_LIST[UIDropDownMenu_GetSelectedID(StatCompare_ItemTypeDropDown)].value;
+	local subtypeFilter=StatCompare_ItemType_DROPDOWN_LIST[UIDropDownMenu_GetSelectedID(StatCompare_ItemTypeDropDown)].subvalue;
+	if(not typeFilter) then typeFilter="全部"; end
+	if(not subtypeFilter) then subtypeFilter="全部"; end
+
+	for i=1,getn(StatCompare_ItemCollection) do
+		local _,_,_,sItem,_=string.find(StatCompare_ItemCollection[i],"|(.-)|H(.-)|(.-)|h|r");
+		if(sItem) then
+			local _,_,iRarity,_,sType,sSubType,_ = GetItemInfo(sItem);
+			if (not iRarity) then
+				iRarity = -1;
+			end
+			if (iRarity>=rarityFilter) then
+				if (typeFilter=="全部") then
+					table.insert(StatCompare_ItemCache,StatCompare_ItemCollection[i]);
+				elseif (sType==typeFilter and (subtypeFilter=="全部" or sSubType==subtypeFilter)) then
+					table.insert(StatCompare_ItemCache,StatCompare_ItemCollection[i]);
+				elseif (typeFilter=="其它" and sType~="武器" and sType~="护甲") then
+					table.insert(StatCompare_ItemCache,StatCompare_ItemCollection[i]);
+				end
+			end
+		end
+	end
+end
+
+function StatCompareSelfFrameSpellsButton_OnClick()
+	local text,title,tiptext;
+	if(not StatCompare_CharStats_Scan) then
+		return;
+	end
+
+	if(StatCompareSelfFrameShowSpells == false) then
+		-- Show spells
+		if(not StatCompare_GetSpellsTooltipText) then
+			return
+		end
+		StatCompareSelfFrameShowSpells = true;
+		StatScanner_ScanAll();
+		if(SC_BuffScanner_ScanAllInspect) then
+			-- Scan the buffers
+			SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+		end
+		StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+		tiptext = StatCompare_GetSpellsTooltipText(StatScanner_bonuses,"player");
+		if(tiptext == "") then
+			return;
+		end
+
+		StatCompareSelfFrameSpellsButton:LockHighlight();
+	else
+		-- show stats
+		StatCompareSelfFrameShowSpells = false;
+		StatScanner_ScanAll();
+		if(SC_BuffScanner_ScanAllInspect) then
+			-- Scan the buffers
+			SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "player");
+		end
+		StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+		tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+		if(tiptext == "") then
+			return;
+		end
+		StatCompareSelfFrameSpellsButton:UnlockHighlight();
+	end
+
+	text = getglobal(StatCompareSelfFrame:GetName().."Text");
+	title = getglobal(StatCompareSelfFrame:GetName().."Title");
+	local ilevelText = getglobal(StatCompareSelfFrame:GetName().."ILevelText");
+	
+	text:SetText(tiptext);
+	height = text:GetHeight();
+	width = text:GetWidth();
+	
+	-- 计算最大宽度，考虑标题、装等文本
+	if(width < title:GetWidth()) then
+		width = title:GetWidth();
+	end
+	
+	-- 考虑装等文本的宽度
+	if ilevelText and ilevelText:IsVisible() then
+		local ilevelWidth = ilevelText:GetWidth()
+		if width < ilevelWidth then
+			width = ilevelWidth
+		end
+	end
+	
+	-- 确保至少能容纳头像+名字的宽度（头像56px + 间距10px + 名字）
+	local minWidth = 56 + 10 + title:GetWidth()
+	if width < minWidth then
+		width = minWidth
+	end
+	
+	-- 调整高度以容纳头像和等级
+	local extraHeight = 80  -- 头像和等级区域的高度
+	if IsAddOnLoaded("S_ItemTip") then
+		local score = ItemSocre:ScanUnit("player")
+		if score and score > 0 then
+			StatCompareSelfFrame:SetHeight(height + extraHeight + 30)
+		else
+			StatCompareSelfFrame:SetHeight(height + extraHeight)
+		end
+	else
+		StatCompareSelfFrame:SetHeight(height + extraHeight)
+	end
+	
+	StatCompareSelfFrame:SetWidth(width+40);  -- 增加左右边距
+end
+
+function StatCompareTargetFrameSpellsButton_OnClick()
+	local text,title,tiptext;
+	if(not StatCompare_CharStats_Scan) then
+		return;
+	end
+
+	if(StatCompareTargetFrameShowSpells == false) then
+		-- show spells
+		if(not StatCompare_GetSpellsTooltipText) then
+			return
+		end
+		StatCompareTargetFrameShowSpells = true;
+
+		StatScanner_ScanAllInspect();
+		if(SC_BuffScanner_ScanAllInspect) then
+			-- Scan the buffers
+			SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "target");
+		end
+		StatCompare_CharStats_Scan(StatScanner_bonuses);
+
+		tiptext = StatCompare_GetSpellsTooltipText(StatScanner_bonuses);
+
+		if(tiptext == "") then
+			return;
+		end
+		StatCompareTargetFrameSpellsButton:LockHighlight();
+	else
+		StatCompareTargetFrameShowSpells = false;
+
+		StatScanner_ScanAllInspect();
+		if(SC_BuffScanner_ScanAllInspect) then
+			-- Scan the buffers
+			SC_BuffScanner_ScanAllInspect(StatScanner_bonuses, "target");
+		end
+		StatCompare_CharStats_Scan(StatScanner_bonuses);
+
+		tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,0);
+
+		if(tiptext == "") then
+			return;
+		end
+		StatCompareTargetFrameSpellsButton:UnlockHighlight();
+	end
+
+	text = getglobal(StatCompareTargetFrame:GetName().."Text");
+	title = getglobal(StatCompareTargetFrame:GetName().."Title");
+	local ilevelText = getglobal(StatCompareTargetFrame:GetName().."ILevelText");
+	
+	text:SetText(tiptext);
+	height = text:GetHeight();
+	width = text:GetWidth();
+	
+	-- 计算最大宽度，考虑标题、装等文本
+	if(width < title:GetWidth()) then
+		width = title:GetWidth();
+	end
+	
+	-- 考虑装等文本的宽度
+	if ilevelText and ilevelText:IsVisible() then
+		local ilevelWidth = ilevelText:GetWidth()
+		if width < ilevelWidth then
+			width = ilevelWidth
+		end
+	end
+	
+	-- 确保至少能容纳头像+名字的宽度（头像56px + 间距10px + 名字）
+	local minWidth = 56 + 10 + title:GetWidth()
+	if width < minWidth then
+		width = minWidth
+	end
+	
+	-- 调整高度以容纳头像和等级
+	local extraHeight = 80  -- 头像和等级区域的高度
+	if IsAddOnLoaded("S_ItemTip") then
+		local score = ItemSocre:ScanUnit("target")
+		if score and score > 0 then
+			StatCompareTargetFrame:SetHeight(height + extraHeight + 30)
+		else
+			StatCompareTargetFrame:SetHeight(height + extraHeight)
+		end
+	else
+		StatCompareTargetFrame:SetHeight(height + extraHeight)
+	end
+	
+	StatCompareTargetFrame:SetWidth(width+40);  -- 增加左右边距
+end
+
+
+
+function InspectFrameTalentsTab_OnClick()
+	if loadedFor ~= UnitName('target') then
+		Ins_Init()
+		SendAddonMessage("TW_CHAT_MSG_WHISPER<" .. UnitName('target') ..">", "INSShowTalents", "GUILD")
+	else
+		TWInspectTalents_Show()
+	end
+	PlaySound("igCharacterInfoTab");
+	loadedFor = UnitName('target')
+end
+
+function GetDruidForm()
+	local forms = {
+		["Interface\\Icons\\Ability_Racial_BearForm"] = "熊形态",
+		["Interface\\Icons\\Ability_Druid_CatForm"] = "猎豹形态",
+		--["Interface\\Icons\\Spell_Nature_ForceOfNature"] = "枭兽形态",
+		["Interface\\Icons\\Ability_Druid_TreeofLife"] = "生命之树形态",
+		["Interface\\Icons\\Ability_Druid_TravelForm"] = "迅捷旅行形态",
+	}
+	for i= 0, 31 do
+		local buffName = UnitBuff("player",i)
+		if buffName and forms[buffName] then
+			return forms[buffName]
+		end
+	end
+	return "人形态"
+end
+
+
+-- 框体位置保存和恢复功能
+function StatCompare_SaveFramePosition(frameName)
+	local frame = getglobal(frameName);
+	if not frame then 
+		return; 
+	end
+	if SCIsManagedPanel(frame) and SCGetPanelLayoutMode() ~= "free" then return end
+	
+	local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint();
+	
+	-- 确保 StatCompare_Player 存在
+	if not StatCompare_Player then
+		StatCompare_Player = {};
+	end
+	if not StatCompare_Player["FramePositions"] then
+		StatCompare_Player["FramePositions"] = {};
+	end
+	
+	-- 保存到角色变量（这个会自动保存）
+	StatCompare_Player["FramePositions"][frameName] = {
+		point = point,
+		relativeTo = relativeTo and relativeTo:GetName() or "UIParent",
+		relativePoint = relativePoint,
+		xOfs = xOfs,
+		yOfs = yOfs
+	};
+end
+
+function StatCompare_RestoreFramePosition(frameName)
+	local frame = getglobal(frameName);
+	if not frame then return; end
+	if SCIsManagedPanel(frame) and SCGetPanelLayoutMode() ~= "free" then return end
+	
+	if not StatCompare_Player or not StatCompare_Player["FramePositions"] or not StatCompare_Player["FramePositions"][frameName] then
+		return;
+	end
+	
+	local pos = StatCompare_Player["FramePositions"][frameName];
+	if pos.point and pos.relativePoint and pos.xOfs and pos.yOfs then
+		frame:ClearAllPoints();
+		frame:SetPoint(pos.point, pos.relativeTo or "UIParent", pos.relativePoint, pos.xOfs, pos.yOfs);
+	end
+end

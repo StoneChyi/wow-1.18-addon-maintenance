@@ -1,0 +1,7 @@
+{
+  "wsloot_sha256": "6a36596430299171dafacbb031089717fc223e98285754d68e15a890bf217fe0",
+  "scan_range_yards": 5,
+  "NPC_branch_range_yards": 6,
+  "effective_range_yards": 5,
+  "distance": "Euclidean 3D, inclusive upper limit"
+}

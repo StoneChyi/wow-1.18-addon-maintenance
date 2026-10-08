@@ -1,0 +1,746 @@
+--- /dev/null
++++ b/DPSMateXEncounters/DPSMateXEncounters.toc
+@@ -0,0 +1,12 @@
++## Interface: 11200
++## Title: |CFFEE7600[DPS统计]|RDPSMateX 战斗分类
++## Notes: Boss and trash aggregate time ranges for DPSMateX.
++## Notes-zhCN: Boss与小怪汇总时间范围，独立于历史保留数量。
++## Version: 1.0.0
++## Dependencies: DPSMateX
++## OptionalDeps: DPSMateXInsights
++## SavedVariablesPerCharacter: DPSMateXEncountersDB
++
++Merge.lua
++Encounter.lua
++Views.lua
+--- /dev/null
++++ b/DPSMateXEncounters/Encounter.lua
+@@ -0,0 +1,264 @@
++local D,C=DPSMateX,DPSMateX.Encounters
++local function yes(value) return value==true or value==1 end
++local function safe(fn,...)
++    if not fn then return nil end
++    local ok,value=pcall(fn,unpack(arg));if ok then return value end
++end
++local function guid(value) return type(value)=="string" and string.sub(value,1,2)=="0x" and value~="0x0000000000000000" end
++-- Small explicit fallback list. Translation dictionaries also contain ordinary mobs.
++local dungeonBosses={
++    ["Baron Rivendare"]=true,["瑞文戴尔男爵"]=true,["Darkmaster Gandling"]=true,["黑暗院长加丁"]=true,
++    ["General Drakkisath"]=true,["达基萨斯将军"]=true,["King Gordok"]=true,["戈多克大王"]=true,
++    ["Princess Theradras"]=true,["瑟莱德丝公主"]=true,["Emperor Dagran Thaurissan"]=true,["达格兰·索瑞森大帝"]=true,
++    ["Edwin VanCleef"]=true,["艾德温·范克里夫"]=true,["Archaedas"]=true,["阿扎达斯"]=true,
++}
++local events={AUTO_ATTACK_SELF="attack",AUTO_ATTACK_OTHER="attack",SPELL_MISS_SELF="attack",SPELL_MISS_OTHER="attack",
++    SPELL_DAMAGE_EVENT_SELF="damage",SPELL_DAMAGE_EVENT_OTHER="damage",DAMAGE_SHIELD_SELF="attack",DAMAGE_SHIELD_OTHER="attack",
++    SPELL_GO_SELF="cast",SPELL_GO_OTHER="cast",SPELL_HEAL_BY_SELF="heal",SPELL_HEAL_BY_OTHER="heal"}
++
++function C:Log(reason,f)
++    if not self.db or not self.db.debug then return end
++    local log=self.db.log;table.insert(log,{reason=reason,id=f and f.id,kind=f and f.kind,time=GetTime()})
++    if table.getn(log)>self.limits.debug then table.remove(log,1) end
++end
++
++function C:Invalidate()
++    self.revision=(self.revision or 0)+1;self.cache={};D.DB.NeedUpdate=true
++end
++
++function C:Initialize()
++    if not D.Settings or not D.DBCache or not D.CombatTime then return end
++    local db=DPSMateXEncountersDB
++    if type(db)~="table" or db.version~=self.VERSION then
++        db={version=self.VERSION,startedAt=time and time() or 0,nextId=1,
++            buckets={boss=self:NewBucket(),trash=self:NewBucket(),unclassified=self:NewBucket()},bossNames={},log={},debug=false}
++        DPSMateXEncountersDB=db
++    end
++    self.db=db;self.ready=true
++    self.available=D.DB.has_nampower and UnitClassification and GetUnitGUID and true or false
++    if not self.initialized then
++        self.initialized=true
++        local f=db.current
++        if f and not f.settled then
++            -- GetTime belongs to the old process; only use the saved elapsed time.
++            f.active=false;f.ended=true;f.interrupted=true;f.waiting=false
++            if f.kind~="boss" then f.kind="unclassified" end
++            self:Finalize()
++        end
++    end
++    self:InstallMenus();self:InstallDetailHooks();self:Invalidate()
++    if D.DB:IsCombatActive() and not db.current then self:Start() end
++end
++
++function C:Reset()
++    local db=self.db or DPSMateXEncountersDB
++    if type(db)~="table" then return end
++    local kind=self.ready and db.current and db.current.active and db.current.kind
++    db.buckets={boss=self:NewBucket(),trash=self:NewBucket(),unclassified=self:NewBucket()}
++    db.current=nil;db.startedAt=time and time() or 0;db.log={}
++    self.guidCache={};self.guidCount=0;self.suspended=nil;self:Invalidate()
++    if self.ready and D.DB:IsCombatActive() then self:Start(kind) end
++end
++
++function C:Start(kind)
++    if not self.ready or not self.available or self.suspended then return end
++    local previous=self.db.current
++    if previous and previous.active then return end
++    if previous and not previous.settled then self:Finalize() end
++    local id=self.db.nextId;self.db.nextId=id+1
++    self.db.current={id=id,slice=1,active=true,kind=kind or "unclassified",bosses={},bossCount=0,
++        zone=safe(GetRealZoneText) or "",instance=yes(safe(IsInInstance)),
++        sliceStart=GetTime(),cutDuration=0,elapsed=0,pending=self:NewBucket()}
++    self:Log("start",self.db.current);self:Invalidate()
++end
++
++function C:Elapsed(f)
++    if f.active then return (f.cutDuration or 0)+math.max(0,GetTime()-(f.sliceStart or GetTime())) end
++    return f.elapsed or 0
++end
++
++function C:IsTracked(unit)
++    if not guid(unit) then return false end
++    if D.Parser.TargetParty[unit] or unit==D.Parser.player then return true end
++    local known=self.guidCache[unit]
++    if known and known.owner and GetTime()<(known.expires or 0) then return D.Parser.TargetParty[known.owner] or known.owner==D.Parser.player end
++    if known and known.npc then return false end
++    local ok,first,second=pcall(GetUnitGUID,unit.."owner")
++    local owner=ok and (guid(second) and second or first)
++    if not guid(owner) then owner=safe(GetUnitField,unit,"createdBy") end
++    if guid(owner) then
++        if self.guidCount>=self.limits.guids then self.guidCache={};self.guidCount=0 end
++        self.guidCache[unit]={owner=owner,expires=GetTime()+5};self.guidCount=self.guidCount+1
++    end
++    return guid(owner) and (D.Parser.TargetParty[owner] or owner==D.Parser.player) and true or false
++end
++
++function C:NPC(unit)
++    if not guid(unit) then return nil end
++    local cached=self.guidCache[unit]
++    if cached then return cached end
++    if yes(safe(UnitIsPlayer,unit)) or self:IsTracked(unit) then return nil end
++    local class=safe(UnitClassification,unit)
++    if not class then return nil end
++    local name=safe(UnitName,unit)
++    local f=self.db.current
++    local info={npc=true,name=name,classification=class,
++        boss=class=="worldboss" or (f.instance and name and (dungeonBosses[name] or self.db.bossNames[f.zone.."\031"..name]))}
++    if self.guidCount>=self.limits.guids then self.guidCache={};self.guidCount=0 end
++    -- Missing names are retried on the next event, so whitelist recognition can recover.
++    if name then self.guidCache[unit]=info;self.guidCount=self.guidCount+1 end
++    return info
++end
++
++function C:ObserveUnit(unit)
++    local f=self.db.current
++    if not f or not f.active then return end
++    local npc=self:NPC(unit)
++    if not npc or not yes(safe(UnitCanAttack,"player",unit)) then return end
++    if npc.boss then
++        f.kind="boss"
++        if not f.bosses[unit] and f.bossCount<32 then
++            f.bosses[unit]=npc.name or unit;f.bossCount=f.bossCount+1
++            f.name=f.name or npc.name
++            self:Log("boss-observed",f);self:Invalidate()
++        end
++    elseif f.kind~="boss" and f.kind~="trash" then f.kind="trash";self:Invalidate() end
++end
++
++function C:PrepareEvent(ev,a1,a2,a3,a4)
++    if not self.ready or not self.available or not D.Registered or self.suspended then return end
++    if ev=="ZONE_CHANGED_NEW_AREA" then self:End("zone");self.suspended=D.DB:IsCombatActive() or nil;return end
++    if ev=="UNIT_DIED" then
++        local f=self.db.current
++        if f and f.active and f.bosses[a1] then f.observedBossDeath=true end
++        return
++    end
++    local family=events[ev]
++    if not family then return end
++    local source,target
++    if family=="cast" then source=a3;target=a4
++    elseif family=="damage" or family=="heal" then source=a2;target=a1
++    else source=a1;target=a2 end
++    local sourceTracked,targetTracked=self:IsTracked(source),self:IsTracked(target)
++    if not sourceTracked and not targetTracked then return end
++    local active=D.DB:IsCombatActive()
++    if not active then
++        local hostile=(family~="heal" and ((sourceTracked and yes(safe(UnitCanAttack,"player",target))) or
++            (targetTracked and yes(safe(UnitCanAttack,"player",source)))))
++        local fighting=(sourceTracked and yes(safe(UnitAffectingCombat,source))) or (targetTracked and yes(safe(UnitAffectingCombat,target)))
++        if not hostile and not fighting then return end
++        D.DB:BeginInsightsCombat()
++    end
++    if not self.db.current or not self.db.current.active then self:Start() end
++    if family~="heal" then
++        if sourceTracked then self:ObserveUnit(target) end
++        if targetTracked then self:ObserveUnit(source) end
++    end
++end
++
++function C:Snapshot(destination,core)
++    self:MergeCore(destination.core,core or self:CaptureCore(),destination)
++    local E=D.Insights
++    if E and E.ready then self:MergeInsights(destination,E.db.current,destination) end
++    local effective=D.CombatTime.effective[2]
++    for name,value in pairs(effective) do destination.effective[name]=(destination.effective[name] or 0)+value end
++end
++
++function C:FinishPending()
++    local E=D.Insights
++    if E and E.ready and E.FlushPending then
++        E:FlushPending()
++        if table.getn(E.pending)>0 then
++            E.db.current.missed=(E.db.current.missed or 0)+table.getn(E.pending);E.pending={}
++            self:Log("unresolved-at-boundary",self.db.current)
++        end
++    end
++end
++
++function C:BeforeReset()
++    if not self.ready then return end
++    local f=self.db.current
++    if f and f.active then
++        self:FinishPending();self:Snapshot(f.pending)
++        f.cutDuration=(f.cutDuration or 0)+math.max(0,GetTime()-f.sliceStart)
++        f.sliceStart=GetTime();f.slice=f.slice+1;f.elapsed=f.cutDuration
++        self:Log("manual-slice",f)
++    else
++        if f and not f.settled then self:Finalize() end
++        self.db.current=nil;self.suspended=nil
++        self.guidCache={};self.guidCount=0
++    end
++    self:Invalidate()
++end
++
++function C:End(reason)
++    if not self.ready then return end
++    local f=self.db.current
++    if not f or not f.active then return end
++    f.elapsed=self:Elapsed(f);f.active=false;f.ended=true
++    if reason then
++        f.interrupted=true
++        if f.kind~="boss" then f.kind="unclassified" end
++    end
++    local E=D.Insights
++    if not reason and E and E.ready and table.getn(E.pending)>0 then
++        f.waiting=true;f.deadline=GetTime()+2;f.frozen=self:NewBucket()
++        self:MergeCore(f.frozen.core,self:CaptureCore(),f.frozen)
++        f.frozen.effective=self:Copy(D.CombatTime.effective[2])
++    else self:Finalize() end
++end
++
++function C:Finalize()
++    local f=self.db.current
++    if not f or f.settled or f.active then return end
++    self:FinishPending()
++    local last=self:NewBucket()
++    if f.frozen then
++        self:MergeCore(last.core,f.frozen.core,last);last.effective=self:Copy(f.frozen.effective)
++        local E=D.Insights;if E and E.ready then self:MergeInsights(last,E.db.current,last) end
++    else self:Snapshot(last) end
++    self:MergeSummary(f.pending,last)
++    local bucket=self.db.buckets[f.kind or "unclassified"]
++    self:MergeSummary(bucket,f.pending)
++    bucket.duration=bucket.duration+(f.elapsed or 0);bucket.fightCount=bucket.fightCount+1
++    bucket.revision=bucket.revision+1
++    f.settled=true;f.waiting=false;f.frozen=nil;f.pending=nil
++    self:Log(f.interrupted and "interrupted-settled" or "settled",f);self:Invalidate()
++end
++
++local elapsed=0
++function C:OnUpdate(delta)
++    if not self.ready then return end
++    local f=self.db.current
++    if not f or (not f.active and not f.waiting) then return end
++    elapsed=elapsed+(delta or 0)
++    if elapsed<0.5 then return end;elapsed=0
++    if f.active then f.elapsed=self:Elapsed(f)
++    elseif f.waiting then
++        local E=D.Insights
++        if not E or table.getn(E.pending)==0 or GetTime()>=f.deadline then self:Finalize() end
++    end
++end
++
++local frame=CreateFrame("Frame")
++frame:RegisterEvent("PLAYER_LOGOUT")
++frame:SetScript("OnEvent",function()
++    if C.ready then C:End("logout");C:Finalize() end
++end)
++
++SLASH_DPSMATEXENCOUNTERS1="/dpsxenc"
++SlashCmdList.DPSMATEXENCOUNTERS=function(message)
++    if not C.ready then return end
++    local cmd=string.lower(message or "")
++    if cmd=="debug" then C.db.debug=not C.db.debug;D:SendMessage("战斗分类调试："..(C.db.debug and "开启" or "关闭"))
++    elseif cmd=="boss" then
++        local name=safe(UnitName,"target");local zone=safe(GetRealZoneText)
++        if name and zone and yes(safe(IsInInstance)) and yes(safe(UnitCanAttack,"player","target")) and not yes(safe(UnitIsPlayer,"target")) then
++            C.db.bossNames[zone.."\031"..name]=true;C.guidCache={};C.guidCount=0
++            D:SendMessage("已加入本副本Boss名单："..name)
++        else D:SendMessage("请在副本内选择需要补充识别的敌方首领。") end
++    else
++        local b,t,u=C.db.buckets.boss,C.db.buckets.trash,C.db.buckets.unclassified
++        D:SendMessage(string.format("Boss %d场 %.1fs；小怪 %d场 %.1fs；未分类 %d场；/dpsxenc debug；/dpsxenc boss",b.fightCount,b.duration,t.fightCount,t.duration,u.fightCount))
++    end
++end
+--- /dev/null
++++ b/DPSMateXEncounters/Merge.lua
+@@ -0,0 +1,157 @@
++local D=DPSMateX
++local C={VERSION=1,ready=false,cache={},guidCache={},guidCount=0}
++D.Encounters=C
++C.limits={targets=64,skills=128,leaves=10000,guids=256,debug=200,views=4}
++C.schemas={
++    DMGDone={path="DamageDone",depth=2,kind="damage"},
++    DMGTaken={path="DamageTaken",depth=3,kind="taken"},
++    EDDone={path="EDD",depth=3,kind="damage",enemy=true},
++    EDTaken={path="EDT",depth=3,kind="damage",enemy=true},
++    THealing={path="THealing",depth=2,kind="heal"},
++    EHealing={path="EHealing",depth=2,kind="heal"},
++    OHealing={path="Overhealing",depth=2,kind="heal"},
++    THealingTaken={path="HealingTaken",depth=3,kind="heal"},
++    EHealingTaken={path="EHealingTaken",depth=3,kind="heal"},
++    OHealingTaken={path="OverhealingTaken",depth=3,kind="heal"},
++}
++C.supported={damage=true,dps=true,damagetaken=true,dtps=true,enemydamagedone=true,enemydamagetaken=true,
++    friendlyfire=true,friendlyfiretaken=true,healing=true,hps=true,effectivehealing=true,effectivehps=true,
++    overhealing=true,OHPS=true,healingtaken=true,effectivehealingtaken=true,OHealingTaken=true,
++    healingabsorbsactual=true,spellcastsactual=true}
++local minima={damage={[2]=true,[6]=true,[15]=true,[19]=true},
++    taken={[2]=true,[6]=true,[16]=true,[21]=true},heal={[6]=true,[8]=true}}
++local maxima={damage={[3]=true,[7]=true,[16]=true,[20]=true},
++    taken={[3]=true,[7]=true,[17]=true,[22]=true},heal={[7]=true,[9]=true}}
++
++function C:Copy(value)
++    if type(value)~="table" then return value end
++    local result={};for key,item in pairs(value) do result[key]=self:Copy(item) end
++    return result
++end
++
++function C:NewBucket()
++    return {core={},effective={},duration=0,fightCount=0,revision=0,leaves=0,
++        healing={},casts={},playback={},audit={},collected={},absorbed=0,unknown=0,excluded=0,
++        aggregate=true,detailTrimmed=false}
++end
++
++function C:OtherAbility() return (D.DB:BuildAbility("其他技能（汇总明细上限）")) end
++function C:OtherUser() return (D.DB:BuildUser("其他目标（汇总明细上限）","warrior")) end
++local function keys(t)
++    local n=0;for key in pairs(t) do if key~="i" then n=n+1 end end;return n
++end
++
++function C:MergeLeaf(target,source,kind)
++    for key,value in pairs(source) do
++        if type(key)=="number" and type(value)=="number" then
++            if minima[kind][key] then
++                if value>0 and ((target[key] or 0)==0 or value<target[key]) then target[key]=value end
++            elseif maxima[kind][key] then target[key]=math.max(target[key] or 0,value)
++            elseif not (kind=="taken" and key==14) then target[key]=(target[key] or 0)+value end
++        end
++    end
++    for key,value in pairs(source) do
++        if type(key)=="number" and type(value)=="number" and target[key]==nil then target[key]=0 end
++    end
++    if kind=="taken" then
++        local count=(target[1] or 0)+(target[5] or 0)+(target[15] or 0)+(target[20] or 0)
++        target[14]=(target[13] or 0)/math.max(1,count)
++    end
++    -- Aggregates do not contain a fabricated per-second timeline.
++    target.i=target.i or {}
++end
++
++function C:MergeTree(target,source,depth,schema,bucket)
++    if depth==0 then self:MergeLeaf(target,source,schema.kind);return end
++    for key,value in pairs(source or {}) do
++        if key=="i" and type(value)=="number" then target.i=(target.i or 0)+value
++        elseif type(value)=="table" and type(key)=="number" then
++            local destination=key
++            if not target[key] then
++                if depth==1 and (keys(target)>=self.limits.skills or bucket.leaves>=self.limits.leaves) then
++                    destination=self:OtherAbility();bucket.detailTrimmed=true
++                elseif (depth==2 and schema.depth==3 and not schema.enemy) or (depth==3 and schema.enemy) then
++                    if keys(target)>=self.limits.targets then destination=self:OtherUser();bucket.detailTrimmed=true end
++                end
++            end
++            if not target[destination] then
++                target[destination]={}
++                if depth==1 then bucket.leaves=bucket.leaves+1 end
++            end
++            self:MergeTree(target[destination],value,depth-1,schema,bucket)
++        end
++    end
++end
++
++function C:MergeCore(target,source,bucket)
++    for category,rows in pairs(source or {}) do
++        local schema=self.schemas[category]
++        if schema then
++            target[category]=target[category] or {}
++            self:MergeTree(target[category],rows,schema.depth,schema,bucket)
++        end
++    end
++end
++
++function C:CaptureCore()
++    local result={}
++    for category,schema in pairs(self.schemas) do
++        local db=D.DBCache[schema.path]
++        result[category]=db and db[2] or {}
++    end
++    return result
++end
++
++local amounts={"total","effective","absorb","count"}
++local function addAmounts(target,source)
++    for _,key in ipairs(amounts) do target[key]=(target[key] or 0)+(source[key] or 0) end
++end
++
++function C:MergeTargets(target,source,limit,bucket)
++    for name,row in pairs(source or {}) do
++        local destination=name
++        if not target[name] and keys(target)>=limit then destination="其他目标（汇总明细上限）";bucket.detailTrimmed=true end
++        local out=target[destination]
++        if not out then out={name=destination,ttype=row.ttype};target[destination]=out end
++        if out.ttype~=row.ttype then out.ttype=nil end
++        addAmounts(out,row)
++    end
++end
++
++function C:MergeInsights(target,source,bucket)
++    for _,kind in ipairs({"healing","casts"}) do
++        target[kind]=target[kind] or {}
++        for name,u in pairs(source[kind] or {}) do
++            local out=target[kind][name]
++            if not out then
++                out={name=name,class=u.class,owner=u.owner,guid=u.guid,total=0,effective=0,absorb=0,count=0,
++                    skills={},targets={},bins={},events={}}
++                target[kind][name]=out
++            end
++            addAmounts(out,u)
++            self:MergeTargets(out.targets,u.targets,self.limits.targets,bucket)
++            for key,row in pairs(u.skills or {}) do
++                local destination=key
++                if not out.skills[key] and keys(out.skills)>=self.limits.skills then destination="__other";bucket.detailTrimmed=true end
++                local skill=out.skills[destination]
++                if not skill then
++                    skill={name=destination=="__other" and "其他技能（汇总明细上限）" or row.name,
++                        spellId=row.spellId,source=row.source,total=0,effective=0,absorb=0,count=0,targets={}}
++                    out.skills[destination]=skill
++                end
++                if skill.source~=row.source then skill.source="all" end
++                addAmounts(skill,row)
++                self:MergeTargets(skill.targets,row.targets,16,bucket)
++            end
++        end
++    end
++    for _,key in ipairs({"absorbed","unknown","excluded"}) do target[key]=(target[key] or 0)+(source[key] or 0) end
++    for kind,value in pairs(source.collected or {}) do if value then target.collected[kind]=true end end
++end
++
++function C:MergeSummary(target,source)
++    self:MergeCore(target.core,source.core,target)
++    self:MergeInsights(target,source,target)
++    for name,value in pairs(source.effective or {}) do target.effective[name]=(target.effective[name] or 0)+value end
++    target.detailTrimmed=target.detailTrimmed or source.detailTrimmed
++end
+--- /dev/null
++++ b/DPSMateXEncounters/README.md
+@@ -0,0 +1,60 @@
++# DPSMateX 战斗分类
++
++在 DPSMateX 原来的时间选择菜单中加入 **Boss汇总**、**小怪汇总**。每个窗口独立选择，沿用原统计模式、筛选和详情入口。
++
++## 启用
++
++完全退出游戏并重新启动，在角色选择界面的插件列表中启用 **DPSMateX 战斗分类**（目录 `DPSMateXEncounters`）。新目录通常不能仅靠 `/reload` 发现。
++
++依赖 DPSMateX；治疗与实际吸收、成功施放汇总需要同时启用 DPSMateXInsights。分类使用现有 Nampower 战斗事件和 GUID 接口，不另开扫描计时器。
++
++右键打开原窗口菜单，在原时间选择位置选择 Boss汇总或小怪汇总。没有数据时主栏保持空白。新增治疗数据条继续只显示数值、占比，不加入 HPS。
++
++## 统计口径
++
++- Boss汇总：本周期所有已确认有首领参与的战斗，包括未击杀、团灭和增援数据。
++- 小怪汇总：已确认普通敌方 NPC 参与、没有首领证据的 PvE 战斗。
++- 未分类：PvP、无法确认单位，以及没有 Boss 证据的重载/跨区域中断。内部保存，可用 `/dpsxenc` 查看场数，不强行计入小怪。
++- 从启用分类或上次清空数据开始累计；不推算安装前的旧历史。
++- 时长为实际战斗时长之和，手动分段保留同一遭遇，只计一场；离线时间不计入。
++- 确认 Boss 后，整场及此前手动切片一起归入 Boss。仅选中或经过首领、旁观其他队伍的战斗不会标记。
++- 沿用 DPSMateX 的队伍脱战规则，不因玩家自己短暂脱战结算。
++- 删除历史、只保存 Boss 历史、历史数量裁剪都不减少累计。原来的“清空全部数据”同时清空分类；单独新建分段继续当前遭遇。
++- 原全程包含启用前数据和战斗外治疗，因此不要求原全程等于 Boss＋小怪。
++
++## 首领识别
++
++敌对 `worldboss` 单位与自己、队友或其宠物发生有效战斗事件时，标记首领。副本内为少数常见普通精英首领提供明确名称补充：瑞文戴尔男爵、黑暗院长加丁、达基萨斯将军、戈多克大王、瑟莱德丝公主、达格兰·索瑞森大帝、艾德温·范克里夫、阿扎达斯（中英文）。不把 Babble-Boss 字典中的普通怪自动当成首领。
++
++普通精英型或服务器自定义首领可能需要补充名单。进入副本、选中该首领后输入 **`/dpsxenc boss`**；名单按区域＋名称保存。建议开战前补充；若已开战，需要之后有一次相关战斗事件才能重新确认。名单保留到清空统计后。
++
++## 支持范围
++
++| 模式 | Boss / 小怪汇总 |
++| --- | --- |
++| 伤害、DPS、承伤、DTPS、敌方伤害/承伤、友伤 | 支持 |
++| 总治疗、有效治疗、过量治疗及承疗模式 | 支持 |
++| 新增治疗与实际吸收、成功施放 | 支持 |
++| 动作回放、死亡、打断、驱散、光环、仇恨、旧吸收及旧治疗吸收模式 | 保留原范围；选中累计范围时切回当前战斗 |
++
++详情沿用原界面，并注明累计范围和场数。技能、目标、次数及金额可以累计；单场曲线、逐条审计、动作时间轴不拼接为累计时间轴，查看这些内容请选当前或历史战斗。累计范围的旧详情曲线位置显示简短说明；原饼图和数据明细继续使用。
++
++## 性能与保存
++
++使用现有采集结果，只在结算/手动分段时合并统计，不复制原始事件、动作回放和逐秒曲线。战斗中仅对请求的统计类别生成视图，每秒最多刷新一次，最多缓存四个视图；队伍原数据和历史不被该视图修改。空闲时不扫描单位。
++
++GUID 缓存最多256项，宠物归属短期缓存；调试日志最多200条，默认关闭。每层目标明细最多64项、技能明细最多128项；整个汇总达到10000个技能明细后新增技能归入“其他”，每个已有父项可能额外保留一个“其他”项。新增模块每技能目标最多16项。超限时金额、次数仍累计，并在新详情注明明细压缩；被压缩的数据无法恢复原目标/技能的精确筛选。不同玩家的累计姓名仍随统计周期增加。
++
++待解析名字最多等待2秒；切换战斗前强制处理原场待解析事件，未解析项目计入原模块的 missed 计数，不会写到下一场。
++
++保存变量独立为 `DPSMateXEncountersDB`（每角色）。完整数据清空仍由 DPSMateX 原有流程负责。禁用本模块后，已保存的 Boss/小怪窗口选择自动回到当前战斗，避免旧模块读取无效范围。
++
++命令：`/dpsxenc` 查看三类场数/时长；`/dpsxenc debug` 开关有上限的分类日志；`/dpsxenc boss` 添加当前副本目标到首领名单。
++
++## 验证与回退
++
++已完成23组离线检查（包含完整 Lua 语法和加载列表检查），覆盖分类、宠物、失败尝试、切片、清空、重载、区域切换、待解析事件、多窗口、超限金额守恒、旧事件入口和历史命名。旧 Insights 27组检查与锁窗检查另行运行。
++
++离线检查不代表真实游戏中的帧率、界面排版和所有自定义 NPC 已验证；首次团本可检查一次原当前战斗与累计数值是否吻合。
++
++本轮修改前备份：`E:/1.18/addons_tmp/dpsmatex-encounters-backup-20261006`，保留此前锁窗及 Insights 修复。简单停用可禁用“DPSMateX 战斗分类”；完全回退可在退出游戏后用备份中的对应文件覆盖本轮修改的旧插件文件，并移出新分类目录。备份不包含用户个人 SavedVariables，不需要清空旧历史。
+--- /dev/null
++++ b/DPSMateXEncounters/Views.lua
+@@ -0,0 +1,238 @@
++local D,C=DPSMateX,DPSMateX.Encounters
++local names={boss="Boss汇总",trash="小怪汇总"}
++
++function C:Scope(key)
++    local w=D.Settings.windows[key or 1]
++    if not w then return end
++    local options=w.options[2]
++    if options.bossall then return "boss" end
++    if options.trashall then return "trash" end
++end
++
++function C:ValidateScope(key,selection)
++    if selection~="bossall" and selection~="trashall" then return selection end
++    if self.ready and self.available and self.supported[D.Settings.windows[key].CurMode] then return selection end
++    local mode=D.Settings.windows[key].CurMode
++    self.warnings=self.warnings or {}
++    if not self.warnings[mode] then
++        self.warnings[mode]=true
++        D:SendMessage(self.available and "此模块只支持原有战斗范围，已切换到当前战斗。" or "战斗分类需要Nampower扩展，已切换到当前战斗。")
++    end
++    return "currentfight"
++end
++
++function C:Normalize(key)
++    local scope=self:Scope(key)
++    if scope and self:ValidateScope(key,scope.."all")=="currentfight" then
++        D.Options:ToggleSegment(key,"currentfight")
++        return nil
++    end
++    return scope
++end
++
++-- Cache only the category that a visible window requests. No duplicate timelines.
++function C:View(scope,category)
++    local base=self.db.buckets[scope]
++    local f=self.db.current
++    if not f or f.settled or f.kind~=scope then return base end
++    local stamp=math.floor(GetTime())
++    local cacheKey=scope..":"..(category or "insights")
++    local cached=self.cache[cacheKey]
++    if cached and cached.stamp==stamp then return cached.value end
++    local view=self:NewBucket()
++    local function merge(source)
++        if category then self:MergeCore(view.core,{[category]=source.core[category] or {}},view)
++        else self:MergeInsights(view,source,view) end
++        for name,value in pairs(source.effective or {}) do view.effective[name]=(view.effective[name] or 0)+value end
++        view.detailTrimmed=view.detailTrimmed or source.detailTrimmed
++    end
++    merge(base);merge(f.pending)
++    if category then
++        local schema=self.schemas[category]
++        local rows=f.frozen and f.frozen.core[category] or (schema and D.DBCache[schema.path][2])
++        self:MergeCore(view.core,{[category]=rows or {}},view)
++    else
++        local E=D.Insights
++        if E and E.ready then self:MergeInsights(view,E.db.current,view) end
++    end
++    local effective=f.frozen and f.frozen.effective or D.CombatTime.effective[2]
++    for name,value in pairs(effective) do view.effective[name]=(view.effective[name] or 0)+value end
++    view.duration=base.duration+self:Elapsed(f);view.fightCount=base.fightCount+1
++    view.active=f.active;view.scopeName=names[scope]
++    local count=0;for _ in pairs(self.cache) do count=count+1 end
++    if count>=self.limits.views then self.cache={} end
++    self.cache[cacheKey]={stamp=stamp,value=view}
++    return view
++end
++
++function C:GetCore(key,category)
++    local view=self:View(self:Scope(key),category)
++    return view.core[category] or {},math.max(1.5,view.duration),view.effective
++end
++
++function C:GetCoreByArr(arr,key)
++    for category,schema in pairs(self.schemas) do
++        if D.DBCache[schema.path]==arr then return self:GetCore(key,category) end
++    end
++    local view=self:View(self:Scope(key),"unsupported")
++    return {},math.max(1.5,view.duration),view.effective
++end
++
++function C:GetInsights(key,kind)
++    if kind=="playback" then return {unsupported=true},0,{} end
++    local scope=self:Scope(key)
++    local view=self:View(scope)
++    view.scopeName=names[scope]
++    return view,math.max(1,view.duration),view.effective
++end
++
++function C:ScopeName(key)
++    local scope=self:Scope(key)
++    local b=self.db.buckets[scope];local f=self.db.current
++    local count=b.fightCount+((f and not f.settled and f.kind==scope) and 1 or 0)
++    return names[scope].."（"..count.."场）"
++end
++
++function C:InstallMenus()
++    local options=D.Options.Options[2]
++    if not options or not options.args then return end
++    for scope,name in pairs(names) do
++        local id=scope.."all"
++        options.args[id]={order=scope=="boss" and 25 or 26,type="toggle",name=name,
++            desc="累计已识别的"..name.."，与历史记录独立保存。",
++            disabled=function() return not C.available end,
++            get=function() return D.Settings.windows[D.Options.Dewdrop:GetOpenedParent().Key].options[2][id] end,
++            set=function() D.Options:ToggleDrewDrop(2,id,D.Options.Dewdrop:GetOpenedParent()) end}
++    end
++end
++
++C.detailTitles={
++    DetailsAbsorbs={"DPSMateX_Details_Absorbs_Title","DPSMateX_Details_CompareAbsorbs_Title"},
++    DetailsAbsorbsTaken={"DPSMateX_Details_AbsorbsTaken_Title","DPSMateX_Details_CompareAbsorbsTaken_Title"},
++    DetailsAbsorbsTakenTotal={"DPSMateX_Details_AbsorbsTakenTotal_Title"},
++    DetailsAbsorbsTotal={"DPSMateX_Details_AbsorbsTotal_Title"},
++    DetailsAurasTotal={"DPSMateX_Details_AurasTotal_Title"},
++    DetailsCCBreaker={"DPSMateX_Details_CCBreaker_Title","DPSMateX_Details_CompareCCBreaker_Title"},
++    DetailsCCBreakerTotal={"DPSMateX_Details_CCBreakerTotal_Title"},
++    DetailsCasts={"DPSMateX_Details_Casts_Title","DPSMateX_Details_CompareCasts_Title"},
++    DetailsCastsTotal={"DPSMateX_Details_CastsTotal_Title"},
++    DetailsCureDisease={"DPSMateX_Details_CompareCureDisease_Title","DPSMateX_Details_CureDisease_Title"},
++    DetailsCureDiseaseReceived={"DPSMateX_Details_CompareCureDiseaseReceived_Title","DPSMateX_Details_CureDiseaseReceived_Title"},
++    DetailsCureDiseaseTotal={"DPSMateX_Details_CureDisease_Total_Title"},
++    DetailsCurePoison={"DPSMateX_Details_CompareCurePoison_Title","DPSMateX_Details_CurePoison_Title"},
++    DetailsCurePoisonReceived={"DPSMateX_Details_CompareCurePoisonReceived_Title","DPSMateX_Details_CurePoisonReceived_Title"},
++    DetailsCurePoisonTotal={"DPSMateX_Details_CurePoison_Total_Title"},
++    DetailsDamage={"DPSMateX_Details_CompareDamage_Title","DPSMateX_Details_Title"},
++    DetailsDamageTaken={"DPSMateX_Details_CompareDamageTaken_Title","DPSMateX_Details_DamageTaken_Title"},
++    DetailsDamageTakenTotal={"DPSMateX_Details_DamageTakenTotal_Title"},
++    DetailsDamageTotal={"DPSMateX_Details_DamageTotal_Title"},
++    DetailsDeaths={"DPSMateX_Details_CompareDeaths_Title","DPSMateX_Details_Deaths_Title"},
++    DetailsDeathsTotal={"DPSMateX_Details_Deaths_Total_Title"},
++    DetailsDecurses={"DPSMateX_Details_CompareDecurses_Title","DPSMateX_Details_Decurses_Title"},
++    DetailsDecursesReceived={"DPSMateX_Details_CompareDecursesReceived_Title","DPSMateX_Details_DecursesReceived_Title"},
++    DetailsDecursesTotal={"DPSMateX_Details_Decurses_Total_Title"},
++    DetailsDispels={"DPSMateX_Details_CompareDispels_Title","DPSMateX_Details_Dispels_Title"},
++    DetailsDispelsReceived={"DPSMateX_Details_CompareDispelsReceived_Title","DPSMateX_Details_DispelsReceived_Title"},
++    DetailsDispelsTotal={"DPSMateX_Details_Dispels_Total_Title"},
++    DetailsEDD={"DPSMateX_Details_CompareEDD_Title","DPSMateX_Details_EDD_Title"},
++    DetailsEDDTotal={"DPSMateX_Details_EDDTotal_Title"},
++    DetailsEDT={"DPSMateX_Details_CompareEDT_Title","DPSMateX_Details_EDT_Title"},
++    DetailsEDTTotal={"DPSMateX_Details_EDTTotal_Title"},
++    DetailsEHealing={"DPSMateX_Details_CompareEHealing_Title","DPSMateX_Details_EHealing_Title"},
++    DetailsEHealingTaken={"DPSMateX_Details_CompareEHealingTaken_Title","DPSMateX_Details_EHealingTaken_Title"},
++    DetailsEHealingTakenTotal={"DPSMateX_Details_EHealingTakenTotal_Title"},
++    DetailsEHealingTotal={"DPSMateX_Details_EHealingTotal_Title"},
++    DetailsFF={"DPSMateX_Details_CompareFF_Title","DPSMateX_Details_FF_Title"},
++    DetailsFFT={"DPSMateX_Details_CompareFFT_Title","DPSMateX_Details_FFT_Title"},
++    DetailsFFTTotal={"DPSMateX_Details_FFTTotal_Title"},
++    DetailsFFTotal={"DPSMateX_Details_FFTotal_Title"},
++    DetailsFails={"DPSMateX_Details_CompareFails_Title","DPSMateX_Details_Fails_Title"},
++    DetailsFailsTotal={"DPSMateX_Details_FailsTotal_Title"},
++    DetailsHABTotal={"DPSMateX_Details_HABTotal_Title"},
++    DetailsHealing={"DPSMateX_Details_CompareHealing_Title","DPSMateX_Details_Healing_Title"},
++    DetailsHealingAndAbsorbs={"DPSMateX_Details_CompareHealingAndAbsorbs_Title","DPSMateX_Details_HealingAndAbsorbs_Title"},
++    DetailsHealingTaken={"DPSMateX_Details_CompareHealingTaken_Title","DPSMateX_Details_HealingTaken_Title"},
++    DetailsHealingTakenTotal={"DPSMateX_Details_HealingTakenTotal_Title"},
++    DetailsHealingTotal={"DPSMateX_Details_HealingTotal_Title"},
++    DetailsInterrupts={"DPSMateX_Details_CompareInterrupts_Title","DPSMateX_Details_Interrupts_Title"},
++    DetailsInterruptsTotal={"DPSMateX_Details_Interrupts_Total_Title"},
++    DetailsLiftMagic={"DPSMateX_Details_CompareLiftMagic_Title","DPSMateX_Details_LiftMagic_Title"},
++    DetailsLiftMagicReceived={"DPSMateX_Details_CompareLiftMagicReceived_Title","DPSMateX_Details_LiftMagicReceived_Title"},
++    DetailsLiftMagicTotal={"DPSMateX_Details_LiftMagic_Total_Title"},
++    DetailsOHealingTaken={"DPSMateX_Details_CompareOHealingTaken_Title","DPSMateX_Details_OHealingTaken_Title"},
++    DetailsOverhealing={"DPSMateX_Details_CompareOverhealing_Title","DPSMateX_Details_Overhealing_Title"},
++    DetailsOverhealingTakenTotal={"DPSMateX_Details_OverhealingTakenTotal_Title"},
++    DetailsOverhealingTotal={"DPSMateX_Details_OverhealingTotal_Title"},
++    DetailsProcs={"DPSMateX_Details_CompareProcs_Title","DPSMateX_Details_Procs_Title"},
++    DetailsProcsTotal={"DPSMateX_Details_ProcsTotal_Title"},
++    DetailsSunderArmor={"DPSMateX_Details_CompareSunderArmor_Title","DPSMateX_Details_SunderArmor_Title"},
++    DetailsSunderArmorTotal={"DPSMateX_Details_SunderArmorTotal_Title"},
++}
++
++local totals={DetailsDamageTotal="DMGDTLineGraph",DetailsEHealingTotal="EHPSTLineGraph",
++    DetailsHealingTotal="HPSTLineGraph",DetailsDamageTakenTotal="DMGTTLineGraph",
++    DetailsEDDTotal="EDDTLineGraph",DetailsEDTTotal="EDTTLineGraph",DetailsFFTotal="FFTTLineGraph",
++    DetailsHealingTakenTotal="EHPSTTLineGraph",DetailsEHealingTakenTotal="EHPSTTLineGraph",
++    DetailsFFTTotal="FFTTTLineGraph",DetailsOverhealingTakenTotal="OHPSTTLineGraph",DetailsOverhealingTotal="HPSTLineGraph"}
++
++function C:GraphNote(module,graph)
++    if not graph then return false end
++    local scope=self:Scope(module.encounterKey or 1)
++    if scope then
++        graph:Hide()
++        if not graph.encounterNote then
++            local parent=graph:GetParent()
++            graph.encounterNote=parent:CreateFontString(nil,"OVERLAY","GameFontNormal")
++            graph.encounterNote:SetPoint("CENTER",graph,"CENTER",0,0)
++            graph.encounterNote:SetWidth(300)
++        end
++        graph.encounterNote:SetText(self:ScopeName(module.encounterKey or 1).."\n累计范围无单场时间轴；查看曲线请选择当前或历史战斗。")
++        graph.encounterNote:Show()
++        return true
++    elseif graph.encounterNote then graph.encounterNote:Hide() end
++    return false
++end
++
++function C:InstallDetailHooks()
++    for name,module in pairs(D.Modules or {}) do
++        if string.find(name,"^Details") and not module.encounterHooked then
++            module.encounterHooked=true
++            local moduleName=name
++            for _,method in ipairs({"UpdateDetails","UpdateCompare"}) do
++                local old=module[method]
++                if old then module[method]=function(self,user,key,...)
++                    self.encounterKey=key or 1
++                    old(self,user,key,unpack(arg))
++                    local titles=C.detailTitles and C.detailTitles[moduleName]
++                    if titles and C:Scope(self.encounterKey) then
++                        for _,titleName in ipairs(titles) do
++                            local title=getglobal(titleName)
++                            if title and not string.find(title:GetText() or "","汇总",1,true) then
++                                title:SetText((title:GetText() or "").." · "..C:ScopeName(self.encounterKey))
++                            end
++                        end
++                    end
++                end end
++            end
++            for _,method in ipairs({"UpdateLineGraph","UpdateStackedGraph"}) do
++                local old=module[method];local graphName=totals[name]
++                if old then module[method]=function(self,graph,...)
++                    local selected=graph or (graphName and getglobal(graphName))
++                    if C:GraphNote(self,selected) then
++                        if graphName then
++                            local stacked=getglobal(string.gsub(graphName,"LineGraph","StackedGraph"))
++                            if stacked then stacked:Hide() end
++                        end
++                        return
++                    end
++                    return old(self,graph,unpack(arg))
++                end end
++            end
++            local aura=module.GetAuraGainedArr
++            if aura then module.GetAuraGainedArr=function(self,...)
++                if C:Scope(self.encounterKey or 1) then return {} end
++                return aura(self,unpack(arg))
++            end end
++        end
++    end
++end

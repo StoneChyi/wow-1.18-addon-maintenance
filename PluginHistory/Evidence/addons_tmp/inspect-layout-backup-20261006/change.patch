@@ -1,0 +1,528 @@
+--- before/Interface/AddOns/pfUI-addonskinner/skins/StatCompare.lua
++++ after/Interface/AddOns/pfUI-addonskinner/skins/StatCompare.lua
+@@ -26,5 +26,11 @@
+ ReposSpellButton(StatCompareSelfFrameSpellsButton, StatCompareSelfFrame)
+ ReposSpellButton(StatCompareTargetFrameSpellsButton, StatCompareTargetFrame)
+ 
++if SCApplyPanelStyle then
++  SCApplyPanelStyle(StatCompareSelfFrame)
++  SCApplyPanelStyle(StatCompareTargetFrame)
++end
++if SCRequestPanelLayout then SCRequestPanelLayout() end
++
+   pfUI.addonskinner:UnregisterSkin("StatCompare")
+-end)+end)
+--- before/Interface/AddOns/S_ItemTip/InspectFrame.lua
++++ after/Interface/AddOns/S_ItemTip/InspectFrame.lua
+@@ -215,7 +215,8 @@
+         edgeSize = 10,
+         insets = {left = 5, right = 5, top = 5, bottom = 5}
+     })
+-    frame:SetBackdropColor(0, 0, 0, 0.5)
++    frame:SetBackdropColor(0, 0, 0, 0.75)
++    if SCApplyPanelStyle then SCApplyPanelStyle(frame) end
+     frame:EnableMouse(true)
+     frame:SetMovable(true)
+     frame:SetClampedToScreen(true)
+@@ -229,10 +230,12 @@
+     -- 添加拖动功能
+     frame:RegisterForDrag("LeftButton")
+     frame:SetScript("OnDragStart", function()
+-        this:StartMoving()
++        if not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "free" then this:StartMoving() end
+     end)
+     frame:SetScript("OnDragStop", function()
+         this:StopMovingOrSizing()
++        this.scFreePosition = true
++        if SCRequestPanelLayout then SCRequestPanelLayout() end
+     end)
+ 
+     --头像框架
+@@ -612,10 +615,16 @@
+         avgLevel = ItemSocre:ScanUnit(unit) or 0
+     end
+     frame.ilevelText:SetText(string.format("装等 %.1f", avgLevel))
++    if SCRequestPanelLayout then SCRequestPanelLayout() end
+ end
+ 
+ -- 重新布局 StatCompare 框架（根据装备面板的显示状态）
+ function S_ItemTip_RelayoutStatCompare()
++    if SCRelayoutPanels then
++        SCRelayoutPanels()
++        SCRequestPanelLayout()
++        return
++    end
+     local settings = S_ItemTip_Settings or { showInspect = true }
+     local showInspect = settings.showInspect
+ 
+@@ -708,13 +717,12 @@
+     local frame = S_ItemTip_InspectFrame
+     if frame then
+         local settings = S_ItemTip_Settings or { showInspect = true }
+-        -- 如果角色面板已打开，则隐藏装备界面（不显示他人）
+-        if CharacterFrame and CharacterFrame:IsVisible() then
+-            frame:Hide()
+-        elseif settings.showInspect then
+-            frame:SetFrameStrata("LOW")
+-            frame:ClearAllPoints()
+-            frame:SetPoint("TOPLEFT", InspectFrame, "TOPRIGHT", -35, -5.2)
++        if settings.showInspect then
++            frame:SetFrameStrata(InspectFrame:GetFrameStrata())
++            if not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "auto" or not frame.scFreePosition then
++                frame:ClearAllPoints()
++                frame:SetPoint("TOPLEFT", InspectFrame, "TOPRIGHT", -35, -5.2)
++            end
+             frame:Show()
+             S_ItemTip_UpdateFrame(unit)
+         else
+@@ -741,8 +749,10 @@
+ 
+         if settings.showInspect then
+             frame:SetFrameStrata("MEDIUM")
+-            frame:ClearAllPoints()
+-            frame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -35.5, -5)
++            if not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "auto" or not frame.scFreePosition then
++                frame:ClearAllPoints()
++                frame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -35.5, -5)
++            end
+             frame:Show()
+             S_ItemTip_UpdateFrame("player")
+         else
+@@ -989,6 +999,10 @@
+ 
+ -- ========== 强制修正 StatCompareSelfFrame 位置（解决空白问题） ==========
+ local function ForceStatComparePosition()
++    if SCRequestPanelLayout then
++        SCRequestPanelLayout()
++        return
++    end
+     if not StatCompareSelfFrame then
+         -- 如果框架还未创建，延迟重试
+         local timer = 0
+@@ -1045,4 +1059,4 @@
+ end)
+ -- ==========================================================
+ 
+-DEFAULT_CHAT_FRAME:AddMessage("|cFFFFFF00S_ItemTip InspectFrame.lua 加载完成|r")+DEFAULT_CHAT_FRAME:AddMessage("|cFFFFFF00S_ItemTip InspectFrame.lua 加载完成|r")
+--- before/Interface/AddOns/S_ItemTip/InspectGemAndEnchant.lua
++++ after/Interface/AddOns/S_ItemTip/InspectGemAndEnchant.lua
+@@ -437,6 +437,7 @@
+         scanTime = time(),
+         enchantCount = enchantCount
+     }
++    if SCRequestPanelLayout then SCRequestPanelLayout() end
+ end
+ 
+ 
+--- before/Interface/AddOns/StatCompare/SCOptions.lua
++++ after/Interface/AddOns/StatCompare/SCOptions.lua
+@@ -90,6 +90,7 @@
+ 	if(StatCompareOptFrame:IsVisible()) then
+ 		StatCompareOptFrame:Hide();
+ 	else
++		if SCEnsureLayoutButton then SCEnsureLayoutButton() end
+ 		StatCompareOptFrame:Show();
+ 		for i=1,2 do
+ 			getglobal("StatCompareOptTab"..i):UnlockHighlight();
+@@ -348,7 +349,8 @@
+ 	if(this:GetChecked()) then
+ 		value = 1;
+ 	end
+-	StatCompare_SetSetting("ShowSelfFrame", value);	
++	StatCompare_SetSetting("ShowSelfFrame", value);
++	if SCRequestPanelLayout then SCRequestPanelLayout() end
+ end
+ 
+ function StatCompareShowBuffBonusOpt_OnClick()
+--- before/Interface/AddOns/StatCompare/StatCompare.lua
++++ after/Interface/AddOns/StatCompare/StatCompare.lua
+@@ -351,12 +351,16 @@
+ 	local CLOSE = FONT_COLOR_CODE_CLOSE;
+ 	local NORMAL = NORMAL_FONT_COLOR_CODE;
+ 
+-	if ( (not msg) or (strlen(msg) <= 0 ) or (msg == "help") ) then
++	if msg == "layout auto" or msg == "layout free" then
++		SCSetPanelLayoutMode(msg == "layout auto" and "auto" or "free")
++		DEFAULT_CHAT_FRAME:AddMessage("属性面板排列：" .. (SCGetPanelLayoutMode() == "auto" and "自动" or "自由拖动"))
++	elseif ( (not msg) or (strlen(msg) <= 0 ) or (msg == "help") ) then
+ 		DEFAULT_CHAT_FRAME:AddMessage(NORMAL.."StatCompare  用法:"..CLOSE);
+ 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc help    "..CLOSE.." - 帮助");
+ 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc item    "..CLOSE.." - 打开物品收藏窗口");
+ 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc on | off"..CLOSE.." - 开启/关闭 StatCompare");
+ 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc reset   "..CLOSE.." - 重置框体位置");
++		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc layout auto | free"..CLOSE.." - 自动排列 / 自由拖动");
+ 		if(StatCompareOptFrame) then
+ 			DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc config  "..CLOSE.." - 开启/关闭 StatCompare 配置窗口");
+ 		end
+@@ -407,6 +411,8 @@
+ 			end
+ 			DEFAULT_CHAT_FRAME:AddMessage("StatCompare "..GREEN.."框体位置已重置"..CLOSE);
+ 		end
++		SCRelayoutPanels()
++		SCRequestPanelLayout()
+ 	else
+ 		DEFAULT_CHAT_FRAME:AddMessage("未知的命令: "..GREEN..msg..CLOSE..
+ 					      ", 试试 "..GREEN.."/statc help"..CLOSE);
+@@ -463,8 +469,9 @@
+ 				StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+ 			end
+ 			local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+-			-- 始终定位到 PaperDollFrame 右侧，避免位置偏移
+-			SCShowFrame(StatCompareSelfFrame,PaperDollFrame,UnitName("player"),tiptext,200,-12);
++			local inspecting = InspectFrame and InspectFrame:IsVisible() and InspectFrame.unit
++			SCShowFrame(StatCompareSelfFrame, inspecting and StatCompareTargetFrame or PaperDollFrame,
++				UnitName("player"), tiptext, inspecting and 4 or 200, inspecting and 0 or -12);
+ 		elseif ((arg1 == "target") and StatCompare_enable and StatCompare_isLoaded==1 and StatCompareTargetFrame:IsVisible()) then
+ 			SCHideFrame(StatCompareTargetFrame);
+ 			SCHideFrame(StatCompareSelfFrame);
+@@ -518,8 +525,9 @@
+ 						StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+ 					end
+ 					local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+-					-- 始终定位到 PaperDollFrame 右侧，避免位置偏移
+-					SCShowFrame(StatCompareSelfFrame,PaperDollFrame,UnitName("player"),tiptext,200,-12);
++					local inspecting = InspectFrame and InspectFrame:IsVisible() and InspectFrame.unit
++					SCShowFrame(StatCompareSelfFrame, inspecting and StatCompareTargetFrame or PaperDollFrame,
++						UnitName("player"), tiptext, inspecting and 4 or 200, inspecting and 0 or -12);
+ 				end
+ 				STATCOMPARE_VALUE_DRUIDFORM = form
+ 			end
+@@ -723,14 +731,17 @@
+ 	local levelText = getglobal(frame:GetName().."LevelText");
+ 	local ilevelText = getglobal(frame:GetName().."ILevelText");
+ 	
+-	-- 设置边框颜色（和 S_ItemTip 一样）
+-	frame:SetBackdropColor(0, 0, 0, 0.9)  -- 黑色背景，90% 不透明
+-	frame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)  -- 深灰色边框，100% 不透明
++	if SCIsManagedPanel(frame) then
++		SCApplyPanelStyle(frame)
++	else
++		frame:SetBackdropColor(0, 0, 0, 0.9)
++		frame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
++	end
+ 	
+ 	-- 确定单位（player 或 target）
+ 	local unit = "player"
+ 	if frame == StatCompareTargetFrame then
+-		unit = "target"
++		unit = InspectFrame and InspectFrame.unit or "target"
+ 	end
+ 	
+ 	-- 创建等级背景框（如果不存在）
+@@ -864,18 +875,8 @@
+ 		width = minWidth
+ 	end
+ 	
+-	-- 设置一个绝对最小宽度，避免框体宽度变化导致位置偏移
+-	-- 同时记住每个框体的最大宽度，避免宽度缩小
+-	if not frame.maxWidth then
+-		frame.maxWidth = 200  -- 初始最小宽度
+-	end
+-	
+-	if width > frame.maxWidth then
+-		frame.maxWidth = width
+-	end
+-	
+-	-- 使用记录的最大宽度，这样框体宽度只会增加不会减少
+-	width = frame.maxWidth
++	-- 按本次内容确定宽度，避免历史长文本让后续窗口永久变宽。
++	width = math.max(200, width)
+ 	
+ 	-- 调整高度以容纳头像和等级
+ 	local extraHeight = 80  -- 头像和等级区域的高度
+@@ -895,7 +896,8 @@
+ 	local hasCustomPosition = false;
+ 	local savedPos = nil;
+ 	
+-	if StatCompare_Player and StatCompare_Player["FramePositions"] and StatCompare_Player["FramePositions"][frame:GetName()] then
++	if (not SCIsManagedPanel(frame) or SCGetPanelLayoutMode() == "free")
++		and StatCompare_Player and StatCompare_Player["FramePositions"] and StatCompare_Player["FramePositions"][frame:GetName()] then
+ 		hasCustomPosition = true;
+ 		savedPos = StatCompare_Player["FramePositions"][frame:GetName()];
+ 	end
+@@ -906,7 +908,7 @@
+ 	if hasCustomPosition and savedPos then
+ 		-- 如果有保存的位置，直接恢复
+ 		if savedPos.point and savedPos.relativePoint and savedPos.xOfs and savedPos.yOfs then
+-			frame:SetPoint(savedPos.point, "UIParent", savedPos.relativePoint, savedPos.xOfs, savedPos.yOfs);
++			frame:SetPoint(savedPos.point, savedPos.relativeTo or "UIParent", savedPos.relativePoint, savedPos.xOfs, savedPos.yOfs);
+ 		end
+ 	else
+ 		-- 没有保存位置时使用默认定位
+@@ -937,12 +939,15 @@
+ 			StatCompare_RefreshPortrait(frame, unit)
+ 		end
+ 	end
++	if SCIsManagedPanel(frame) then
++		SCRelayoutPanels()
++		SCRequestPanelLayout()
++	end
+ end
+ 
+ function SCHideFrame(frame)
+ 	frame:Hide();
+-	-- 不再重置 maxWidth，保持框体宽度稳定
+-	-- frame.maxWidth = nil;
++	-- 下次显示时按当前内容重新计算尺寸。
+ end
+ 
+ function SCPaperDollFrame_OnHide()
+@@ -1689,6 +1694,7 @@
+ 	if not frame then 
+ 		return; 
+ 	end
++	if SCIsManagedPanel(frame) and SCGetPanelLayoutMode() ~= "free" then return end
+ 	
+ 	local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint();
+ 	
+@@ -1703,6 +1709,7 @@
+ 	-- 保存到角色变量（这个会自动保存）
+ 	StatCompare_Player["FramePositions"][frameName] = {
+ 		point = point,
++		relativeTo = relativeTo and relativeTo:GetName() or "UIParent",
+ 		relativePoint = relativePoint,
+ 		xOfs = xOfs,
+ 		yOfs = yOfs
+@@ -1712,6 +1719,7 @@
+ function StatCompare_RestoreFramePosition(frameName)
+ 	local frame = getglobal(frameName);
+ 	if not frame then return; end
++	if SCIsManagedPanel(frame) and SCGetPanelLayoutMode() ~= "free" then return end
+ 	
+ 	if not StatCompare_Player or not StatCompare_Player["FramePositions"] or not StatCompare_Player["FramePositions"][frameName] then
+ 		return;
+@@ -1720,6 +1728,6 @@
+ 	local pos = StatCompare_Player["FramePositions"][frameName];
+ 	if pos.point and pos.relativePoint and pos.xOfs and pos.yOfs then
+ 		frame:ClearAllPoints();
+-		frame:SetPoint(pos.point, "UIParent", pos.relativePoint, pos.xOfs, pos.yOfs);
+-	end
+-end+		frame:SetPoint(pos.point, pos.relativeTo or "UIParent", pos.relativePoint, pos.xOfs, pos.yOfs);
++	end
++end
+--- before/Interface/AddOns/StatCompare/StatCompare.toc
++++ after/Interface/AddOns/StatCompare/StatCompare.toc
+@@ -13,6 +13,7 @@
+ Localization.lua
+ SCOptions.lua
+ StatScanner.lua
++PanelLayout.lua
+ StatCompare.lua
+ StatCompare.xml
+ 
+--- before/Interface/AddOns/StatCompare/StatCompare.xml
++++ after/Interface/AddOns/StatCompare/StatCompare.xml
+@@ -34,7 +34,7 @@
+ 				this:RegisterForDrag("LeftButton");
+ 			</OnLoad>
+ 			<OnDragStart>
+-				if arg1 == "LeftButton" then
++				if arg1 == "LeftButton" and SCGetPanelLayoutMode() == "free" then
+ 					this:StartMoving();
+ 				end
+ 			</OnDragStart>
+@@ -43,7 +43,7 @@
+ 				StatCompare_SaveFramePosition(this:GetName());
+ 			</OnDragStop>
+ 			<OnMouseDown>
+-				if arg1 == "LeftButton" and not this.isMoving then
++				if arg1 == "LeftButton" and not this.isMoving and SCGetPanelLayoutMode() == "free" then
+ 					this:StartMoving();
+ 					this.isMoving = true;
+ 				end
+@@ -187,7 +187,7 @@
+ 				this:RegisterForDrag("LeftButton");
+ 			</OnLoad>
+ 			<OnDragStart>
+-				if arg1 == "LeftButton" then
++				if arg1 == "LeftButton" and SCGetPanelLayoutMode() == "free" then
+ 					this:StartMoving();
+ 				end
+ 			</OnDragStart>
+@@ -196,7 +196,7 @@
+ 				StatCompare_SaveFramePosition(this:GetName());
+ 			</OnDragStop>
+ 			<OnMouseDown>
+-				if arg1 == "LeftButton" and not this.isMoving then
++				if arg1 == "LeftButton" and not this.isMoving and SCGetPanelLayoutMode() == "free" then
+ 					this:StartMoving();
+ 					this.isMoving = true;
+ 				end
+@@ -831,4 +831,4 @@
+         </Scripts>
+     </Frame>
+ 
+-</Ui>+</Ui>
+--- /dev/null
++++ after/Interface/AddOns/StatCompare/PanelLayout.lua
+@@ -0,0 +1,170 @@
++-- 装备列表与属性面板共用的布局、背景管理。自动布局不覆盖原有自由拖动位置。
++function SCGetPanelLayoutMode()
++    return StatCompare_Player and StatCompare_Player.PanelLayoutMode == "free" and "free" or "auto"
++end
++
++function SCIsManagedPanel(frame)
++    return frame and (frame == StatCompareSelfFrame or frame == StatCompareTargetFrame)
++end
++
++local function Visible(frame)
++    return frame and frame:IsVisible()
++end
++
++function SCApplyPanelStyle(frame)
++    if not frame then return end
++    local reference = CharacterFrame and (CharacterFrame.backdrop or (CharacterFrame:GetBackdrop() and CharacterFrame))
++        or InspectFrame and (InspectFrame.backdrop or (InspectFrame:GetBackdrop() and InspectFrame))
++    local background = frame.backdrop or frame
++    local r, g, b, a = 0, 0, 0, 0.75
++    local er, eg, eb, ea = 0.4, 0.4, 0.4, 1
++    if reference then
++        background:SetBackdrop(reference:GetBackdrop())
++        r, g, b, a = reference:GetBackdropColor()
++        er, eg, eb, ea = reference:GetBackdropBorderColor()
++    else
++        background:SetBackdrop({bgFile="Interface\\BUTTONS\\WHITE8X8",
++            edgeFile="Interface\\BUTTONS\\WHITE8X8", edgeSize=1,
++            insets={left=0, right=0, top=0, bottom=0}})
++    end
++    -- pfUI 的子背景与原始框体背景只能保留一层，否则透明度会叠加。
++    if background ~= frame then frame:SetBackdrop(nil) end
++    local backdropAlpha = reference and reference:GetAlpha() or 1
++    if background ~= frame then background:SetAlpha(backdropAlpha)
++    elseif reference ~= CharacterFrame then a = a * backdropAlpha end
++    background:SetBackdropColor(r, g, b, a)
++    background:SetBackdropBorderColor(er, eg, eb, ea)
++    frame:SetAlpha(CharacterFrame and CharacterFrame:GetAlpha() or 1)
++end
++
++local layoutFrame, inLayout, suspendedPanels, suspendedRoot
++local function HookLifecycle(frame)
++    if not frame or frame._scLayoutHooked then return end
++    frame._scLayoutHooked = true
++    local function Hook(script)
++        local previous = frame:GetScript(script)
++        frame:SetScript(script, function(self, arg1, arg2)
++            if previous then previous(self, arg1, arg2) end
++            SCRequestPanelLayout()
++        end)
++    end
++    Hook("OnShow")
++    Hook("OnHide")
++    Hook("OnSizeChanged")
++end
++
++function SCRequestPanelLayout()
++    if not layoutFrame then
++        layoutFrame = CreateFrame("Frame")
++        layoutFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
++        layoutFrame:RegisterEvent("ADDON_LOADED")
++        layoutFrame:SetScript("OnEvent", function() SCRequestPanelLayout() end)
++    end
++    -- 等当前显示/隐藏调用完成后统一排列，避免钩子调用顺序改变结果。
++    layoutFrame:SetScript("OnUpdate", function()
++        layoutFrame:SetScript("OnUpdate", nil)
++        SCRelayoutPanels()
++    end)
++end
++
++function SCRelayoutPanels()
++    if inLayout then return end
++    inLayout = true
++    HookLifecycle(CharacterFrame)
++    HookLifecycle(PaperDollFrame)
++    HookLifecycle(InspectFrame)
++    HookLifecycle(InspectPaperDollFrame)
++    HookLifecycle(OutfitterFrame)
++    HookLifecycle(S_ItemTip_InspectFrame)
++    HookLifecycle(StatCompareTargetFrame)
++    HookLifecycle(StatCompareSelfFrame)
++    SCApplyPanelStyle(S_ItemTip_InspectFrame)
++    SCApplyPanelStyle(StatCompareTargetFrame)
++    SCApplyPanelStyle(StatCompareSelfFrame)
++
++    local root, inspecting
++    if Visible(InspectFrame) and InspectFrame.unit then
++        if not InspectPaperDollFrame or Visible(InspectPaperDollFrame) then
++            root, inspecting = InspectFrame, true
++        end
++    elseif Visible(CharacterFrame) and Visible(PaperDollFrame) then
++        root = CharacterFrame
++    end
++    if not root or Visible(OutfitterFrame) then
++        local owner = Visible(InspectFrame) and InspectFrame.unit and InspectFrame
++            or Visible(CharacterFrame) and CharacterFrame
++        if owner then
++            if suspendedRoot ~= owner then
++                suspendedRoot = owner
++                suspendedPanels = {equipment=Visible(S_ItemTip_InspectFrame),
++                    target=Visible(StatCompareTargetFrame), self=Visible(StatCompareSelfFrame)}
++            end
++        else suspendedPanels, suspendedRoot = nil, nil end
++        if S_ItemTip_InspectFrame then S_ItemTip_InspectFrame:Hide() end
++        if StatCompareTargetFrame then StatCompareTargetFrame:Hide() end
++        if StatCompareSelfFrame then StatCompareSelfFrame:Hide() end
++        inLayout = nil
++        return
++    end
++    if suspendedPanels and suspendedRoot == root then
++        if suspendedPanels.equipment and S_ItemTip_InspectFrame then S_ItemTip_InspectFrame:Show() end
++        if suspendedPanels.target and inspecting and StatCompareTargetFrame then StatCompareTargetFrame:Show() end
++        if suspendedPanels.self and StatCompareSelfFrame then StatCompareSelfFrame:Show() end
++    end
++    suspendedPanels, suspendedRoot = nil, nil
++    if not inspecting and StatCompareTargetFrame then
++        -- 目标框体的原始 OnHide 会连带隐藏自身框体，切回角色页时保留其显示状态。
++        local selfShown = Visible(StatCompareSelfFrame)
++        StatCompareTargetFrame:Hide()
++        if selfShown then StatCompareSelfFrame:Show() end
++    end
++    if inspecting and StatCompare_GetSetting and StatCompare_GetSetting("ShowSelfFrame") == 0
++        and StatCompareSelfFrame then StatCompareSelfFrame:Hide() end
++    if S_ItemTip_Settings and S_ItemTip_Settings.showInspect == false and S_ItemTip_InspectFrame then
++        S_ItemTip_InspectFrame:Hide()
++    end
++    if SCGetPanelLayoutMode() == "free" then inLayout = nil; return end
++
++    local anchor = root.backdrop or root
++    local x, y = root.backdrop and 4 or -26, root.backdrop and 0 or -10
++    local function Attach(frame)
++        if not Visible(frame) then return end
++        frame:ClearAllPoints()
++        frame:SetPoint("TOPLEFT", anchor, "TOPRIGHT", x, y)
++        frame:SetFrameStrata(root:GetFrameStrata())
++        anchor, x, y = frame, 4, 0
++    end
++    Attach(S_ItemTip_InspectFrame)
++    if inspecting then Attach(StatCompareTargetFrame) end
++    Attach(StatCompareSelfFrame)
++    inLayout = nil
++end
++
++function SCSetPanelLayoutMode(mode)
++    if mode ~= "auto" and mode ~= "free" then return end
++    StatCompare_Player = StatCompare_Player or {}
++    StatCompare_Player.PanelLayoutMode = mode
++    if mode == "free" and StatCompare_RestoreFramePosition then
++        StatCompare_RestoreFramePosition("StatCompareTargetFrame")
++        StatCompare_RestoreFramePosition("StatCompareSelfFrame")
++    end
++    SCRelayoutPanels()
++    SCRequestPanelLayout()
++    if StatCompareLayoutButton then
++        StatCompareLayoutButton:SetText(mode == "auto" and "排列：自动" or "排列：自由拖动")
++    end
++end
++
++function SCEnsureLayoutButton()
++    if not StatCompareOptFrame then return end
++    if not StatCompareLayoutButton then
++        local button = CreateFrame("Button", "StatCompareLayoutButton", StatCompareOptFrame, "GameMenuButtonTemplate")
++        button:SetWidth(130)
++        button:SetHeight(24)
++        button:SetPoint("BOTTOMRIGHT", StatCompareOkButton, "BOTTOMLEFT", -8, 0)
++        button:SetScript("OnClick", function()
++            SCSetPanelLayoutMode(SCGetPanelLayoutMode() == "auto" and "free" or "auto")
++        end)
++    end
++    StatCompareLayoutButton:SetText(SCGetPanelLayoutMode() == "auto" and "排列：自动" or "排列：自由拖动")
++end

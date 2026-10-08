@@ -1,0 +1,94 @@
+--- before/StatCompare/StatCompare.lua
++++ after/StatCompare/StatCompare.lua
+@@ -270,6 +270,9 @@
+         if entry.calls > 0 then
+             ProfileMessage(string.format("%s：%.2f ms / %d 次", entry.label, entry.ms, entry.calls))
+         end
++        if entry.memoryDrop and entry.memoryDrop > 64 then
++            ProfileMessage(string.format("%s期间内存回落 %.0f KB，可能发生了内存回收。",entry.label,entry.memoryDrop))
++        end
+     end
+     ProfileMessage("分项包含内部调用，不能相加；采样已自动关闭。")
+ end
+@@ -303,10 +306,17 @@
+                 end)
+             end
+             if not sample.started or openProfile ~= sample then return previous(UnpackProfileRange(arg,1,arg.n)) end
++            local memoryBefore = script and type(gcinfo) == "function" and gcinfo()
+             local started = debugprofilestop()
+             local results = PackProfileResults(pcall(previous,UnpackProfileRange(arg,1,arg.n)))
+             entry.ms = entry.ms + math.max(0, debugprofilestop()-started)
+             entry.calls = entry.calls + 1
++            if type(memoryBefore) == "number" then
++                local memoryAfter = gcinfo()
++                if type(memoryAfter) == "number" and memoryAfter < memoryBefore then
++                    entry.memoryDrop = (entry.memoryDrop or 0) + memoryBefore - memoryAfter
++                end
++            end
+             if not results[1] then StopOpenProfile(false); error(results[2],0) end
+             return UnpackProfileRange(results,2,results.n)
+         end
+@@ -316,12 +326,21 @@
+     Install(CharacterFrame,"OnShow","角色窗口打开回调",true)
+     Install(PaperDollFrame,"OnShow","角色属性页打开回调",true)
+     Install(_G,"oldPaperDollFrame_OnShow","StatCompare 调用的原有打开处理")
++    Install(_G,"PaperDollFrame_OnShow","属性页主处理（含 StatCompare）")
+     Install(_G,"StatScanner_ScanAll","装备提示文本扫描")
+     Install(_G,"SC_BuffScanner_ScanAllInspect","增益扫描")
+     Install(_G,"StatCompare_CharStats_Scan","属性计算")
+     Install(_G,"StatCompare_GetTooltipText","属性文字生成")
+     Install(_G,"SCShowFrame","属性副面板显示")
+     Install(_G,"S_ItemTip_UpdateFrame","装备列表与附魔刷新")
++    Install(_G,"S_ItemTip_OnCharacterShow","装备列表打开处理")
++    Install(_G,"S_ItemTip_RelayoutStatCompare","装备列表调用的布局处理")
++    Install(S_ItemTip_InspectFrame,"Show","装备列表显示操作")
++    Install(S_ItemTip_InspectFrame,"ClearAllPoints","装备列表清空锚点")
++    Install(S_ItemTip_InspectFrame,"SetPoint","装备列表定位")
++    Install(CharacterModelFrame,"SetUnit","角色三维模型载入")
++    Install(CharacterModelFrame,"RefreshUnit","角色三维模型刷新")
++    Install(BetterCharacterAttributesFrame,"OnShow","BCS 子属性区显示",true)
+     Install(ItemSocre,"ScanUnit","装等计算")
+     Install(BCS,"UpdateStats","BCS 角色属性刷新")
+     Install(BCS,"SyncCharacterPanelContent","角色属性区域切换")
+--- before/S_ItemTip/InspectFrame.lua
++++ after/S_ItemTip/InspectFrame.lua
+@@ -721,10 +721,14 @@
+     if frame then
+         local settings = S_ItemTip_Settings or { showInspect = true }
+         if settings.showInspect then
+-            frame:SetFrameStrata(InspectFrame:GetFrameStrata())
+-            if not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "auto" or not frame.scFreePosition then
+-                frame:ClearAllPoints()
+-                frame:SetPoint("TOPLEFT", InspectFrame, "TOPRIGHT", -35, -5.2)
++            if frame:GetFrameStrata() ~= InspectFrame:GetFrameStrata() then frame:SetFrameStrata(InspectFrame:GetFrameStrata()) end
++            local managed = SCRelayoutPanels and SCGetPanelLayoutMode and SCGetPanelLayoutMode() == "auto"
++            if not managed and (not SCGetPanelLayoutMode or not frame.scFreePosition) then
++                if SCSetPanelPoint then SCSetPanelPoint(frame,"TOPLEFT",InspectFrame,"TOPRIGHT",-35,-5.2)
++                else
++                    frame:ClearAllPoints()
++                    frame:SetPoint("TOPLEFT", InspectFrame, "TOPRIGHT", -35, -5.2)
++                end
+             end
+             frame:Show()
+             S_ItemTip_UpdateFrame(unit)
+@@ -751,10 +755,16 @@
+         end
+ 
+         if settings.showInspect then
+-            frame:SetFrameStrata("MEDIUM")
+-            if not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "auto" or not frame.scFreePosition then
+-                frame:ClearAllPoints()
+-                frame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -35.5, -5)
++            local managed = SCRelayoutPanels and SCGetPanelLayoutMode and SCGetPanelLayoutMode() == "auto"
++            if not managed then
++                if frame:GetFrameStrata() ~= "MEDIUM" then frame:SetFrameStrata("MEDIUM") end
++                if not SCGetPanelLayoutMode or not frame.scFreePosition then
++                    if SCSetPanelPoint then SCSetPanelPoint(frame,"TOPLEFT",CharacterFrame,"TOPRIGHT",-35.5,-5)
++                    else
++                        frame:ClearAllPoints()
++                        frame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -35.5, -5)
++                    end
++                end
+             end
+             frame:Show()
+             S_ItemTip_UpdateFrame("player")

@@ -1,0 +1,25 @@
+--- a/BetterCharacterStats/BetterCharacterStats.lua
++++ b/BetterCharacterStats/BetterCharacterStats.lua
+@@ -268,14 +268,20 @@
+ 	
+ 	BCS:Print(format("Average: %d (%d results), Exact: %d", avg, getn(avgV), timeUsed))
+ end
+ ]]
+ 
++local function UpdateBothPaperdollStats()
++	BCS:UpdatePaperdollStats("PlayerStatFrameLeft", IndexLeft)
++	BCS:UpdatePaperdollStats("PlayerStatFrameRight", IndexRight)
++end
+ function BCS:UpdateStats()
+ 	if not BCS:IsCharacterPanelEnabled() then return end
+-	BCS:UpdatePaperdollStats("PlayerStatFrameLeft", IndexLeft)
+-	BCS:UpdatePaperdollStats("PlayerStatFrameRight", IndexRight)
++	BCS:BeginEquipmentRead()
++	local ok, message = pcall(UpdateBothPaperdollStats)
++	BCS:EndEquipmentRead()
++	if not ok then error(message, 0) end
+ end
+ 
+ function BCS:SetStat(statFrame, statIndex)
+ 	local label = getglobal(statFrame:GetName().."Label")
+ 	local text = getglobal(statFrame:GetName().."StatText")

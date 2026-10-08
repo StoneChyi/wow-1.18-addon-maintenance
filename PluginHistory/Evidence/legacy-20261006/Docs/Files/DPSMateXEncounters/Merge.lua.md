@@ -1,0 +1,183 @@
+# DPSMateXEncounters/Merge.lua
+
+类型：added；新增 157 行，删除 0 行。
+
+基线：10-06 新增独立模块，整文件均为新增代码
+基线来源：新增文件，无旧文件
+
+当前 SHA-256：`fb015b0588b3b4e5fa184b3f6d3bf904fed13e9ca828ddfa4703c119c0db6121`
+
+所有行号均对应备份内 Latest 文件。函数名是变更块前最近的声明，仅用于搜索定位，不是 Lua 语法作用域分析。
+
+## 变更位置
+
+| 旧文件起始/行数 | 当前起始/行数 | 类型 | 当前邻近声明 |
+|---|---|---|---|
+| 1 / 0 | 1 / 157 | insert | `文件顶部 / 表定义` |
+
+## 完整代码差异
+
+`-` 为基线删除行，`+` 为当前新增行；上下文前缀为空格。新增文件展示整文件。
+
+```diff
+--- /dev/null
++++ b/DPSMateXEncounters/Merge.lua
+@@ -0,0 +1,157 @@
++local D=DPSMateX
++local C={VERSION=1,ready=false,cache={},guidCache={},guidCount=0}
++D.Encounters=C
++C.limits={targets=64,skills=128,leaves=10000,guids=256,debug=200,views=4}
++C.schemas={
++    DMGDone={path="DamageDone",depth=2,kind="damage"},
++    DMGTaken={path="DamageTaken",depth=3,kind="taken"},
++    EDDone={path="EDD",depth=3,kind="damage",enemy=true},
++    EDTaken={path="EDT",depth=3,kind="damage",enemy=true},
++    THealing={path="THealing",depth=2,kind="heal"},
++    EHealing={path="EHealing",depth=2,kind="heal"},
++    OHealing={path="Overhealing",depth=2,kind="heal"},
++    THealingTaken={path="HealingTaken",depth=3,kind="heal"},
++    EHealingTaken={path="EHealingTaken",depth=3,kind="heal"},
++    OHealingTaken={path="OverhealingTaken",depth=3,kind="heal"},
++}
++C.supported={damage=true,dps=true,damagetaken=true,dtps=true,enemydamagedone=true,enemydamagetaken=true,
++    friendlyfire=true,friendlyfiretaken=true,healing=true,hps=true,effectivehealing=true,effectivehps=true,
++    overhealing=true,OHPS=true,healingtaken=true,effectivehealingtaken=true,OHealingTaken=true,
++    healingabsorbsactual=true,spellcastsactual=true}
++local minima={damage={[2]=true,[6]=true,[15]=true,[19]=true},
++    taken={[2]=true,[6]=true,[16]=true,[21]=true},heal={[6]=true,[8]=true}}
++local maxima={damage={[3]=true,[7]=true,[16]=true,[20]=true},
++    taken={[3]=true,[7]=true,[17]=true,[22]=true},heal={[7]=true,[9]=true}}
++
++function C:Copy(value)
++    if type(value)~="table" then return value end
++    local result={};for key,item in pairs(value) do result[key]=self:Copy(item) end
++    return result
++end
++
++function C:NewBucket()
++    return {core={},effective={},duration=0,fightCount=0,revision=0,leaves=0,
++        healing={},casts={},playback={},audit={},collected={},absorbed=0,unknown=0,excluded=0,
++        aggregate=true,detailTrimmed=false}
++end
++
++function C:OtherAbility() return (D.DB:BuildAbility("其他技能（汇总明细上限）")) end
++function C:OtherUser() return (D.DB:BuildUser("其他目标（汇总明细上限）","warrior")) end
++local function keys(t)
++    local n=0;for key in pairs(t) do if key~="i" then n=n+1 end end;return n
++end
++
++function C:MergeLeaf(target,source,kind)
++    for key,value in pairs(source) do
++        if type(key)=="number" and type(value)=="number" then
++            if minima[kind][key] then
++                if value>0 and ((target[key] or 0)==0 or value<target[key]) then target[key]=value end
++            elseif maxima[kind][key] then target[key]=math.max(target[key] or 0,value)
++            elseif not (kind=="taken" and key==14) then target[key]=(target[key] or 0)+value end
++        end
++    end
++    for key,value in pairs(source) do
++        if type(key)=="number" and type(value)=="number" and target[key]==nil then target[key]=0 end
++    end
++    if kind=="taken" then
++        local count=(target[1] or 0)+(target[5] or 0)+(target[15] or 0)+(target[20] or 0)
++        target[14]=(target[13] or 0)/math.max(1,count)
++    end
++    -- Aggregates do not contain a fabricated per-second timeline.
++    target.i=target.i or {}
++end
++
++function C:MergeTree(target,source,depth,schema,bucket)
++    if depth==0 then self:MergeLeaf(target,source,schema.kind);return end
++    for key,value in pairs(source or {}) do
++        if key=="i" and type(value)=="number" then target.i=(target.i or 0)+value
++        elseif type(value)=="table" and type(key)=="number" then
++            local destination=key
++            if not target[key] then
++                if depth==1 and (keys(target)>=self.limits.skills or bucket.leaves>=self.limits.leaves) then
++                    destination=self:OtherAbility();bucket.detailTrimmed=true
++                elseif (depth==2 and schema.depth==3 and not schema.enemy) or (depth==3 and schema.enemy) then
++                    if keys(target)>=self.limits.targets then destination=self:OtherUser();bucket.detailTrimmed=true end
++                end
++            end
++            if not target[destination] then
++                target[destination]={}
++                if depth==1 then bucket.leaves=bucket.leaves+1 end
++            end
++            self:MergeTree(target[destination],value,depth-1,schema,bucket)
++        end
++    end
++end
++
++function C:MergeCore(target,source,bucket)
++    for category,rows in pairs(source or {}) do
++        local schema=self.schemas[category]
++        if schema then
++            target[category]=target[category] or {}
++            self:MergeTree(target[category],rows,schema.depth,schema,bucket)
++        end
++    end
++end
++
++function C:CaptureCore()
++    local result={}
++    for category,schema in pairs(self.schemas) do
++        local db=D.DBCache[schema.path]
++        result[category]=db and db[2] or {}
++    end
++    return result
++end
++
++local amounts={"total","effective","absorb","count"}
++local function addAmounts(target,source)
++    for _,key in ipairs(amounts) do target[key]=(target[key] or 0)+(source[key] or 0) end
++end
++
++function C:MergeTargets(target,source,limit,bucket)
++    for name,row in pairs(source or {}) do
++        local destination=name
++        if not target[name] and keys(target)>=limit then destination="其他目标（汇总明细上限）";bucket.detailTrimmed=true end
++        local out=target[destination]
++        if not out then out={name=destination,ttype=row.ttype};target[destination]=out end
++        if out.ttype~=row.ttype then out.ttype=nil end
++        addAmounts(out,row)
++    end
++end
++
++function C:MergeInsights(target,source,bucket)
++    for _,kind in ipairs({"healing","casts"}) do
++        target[kind]=target[kind] or {}
++        for name,u in pairs(source[kind] or {}) do
++            local out=target[kind][name]
++            if not out then
++                out={name=name,class=u.class,owner=u.owner,guid=u.guid,total=0,effective=0,absorb=0,count=0,
++                    skills={},targets={},bins={},events={}}
++                target[kind][name]=out
++            end
++            addAmounts(out,u)
++            self:MergeTargets(out.targets,u.targets,self.limits.targets,bucket)
++            for key,row in pairs(u.skills or {}) do
++                local destination=key
++                if not out.skills[key] and keys(out.skills)>=self.limits.skills then destination="__other";bucket.detailTrimmed=true end
++                local skill=out.skills[destination]
++                if not skill then
++                    skill={name=destination=="__other" and "其他技能（汇总明细上限）" or row.name,
++                        spellId=row.spellId,source=row.source,total=0,effective=0,absorb=0,count=0,targets={}}
++                    out.skills[destination]=skill
++                end
++                if skill.source~=row.source then skill.source="all" end
++                addAmounts(skill,row)
++                self:MergeTargets(skill.targets,row.targets,16,bucket)
++            end
++        end
++    end
++    for _,key in ipairs({"absorbed","unknown","excluded"}) do target[key]=(target[key] or 0)+(source[key] or 0) end
++    for kind,value in pairs(source.collected or {}) do if value then target.collected[kind]=true end end
++end
++
++function C:MergeSummary(target,source)
++    self:MergeCore(target.core,source.core,target)
++    self:MergeInsights(target,source,target)
++    for name,value in pairs(source.effective or {}) do target.effective[name]=(target.effective[name] or 0)+value end
++    target.detailTrimmed=target.detailTrimmed or source.detailTrimmed
++end
+```

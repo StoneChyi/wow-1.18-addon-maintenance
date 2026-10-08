@@ -1,0 +1,15 @@
+--- a/DPSMateX/Damage/DPSMateX_Details_Damage.lua
++++ b/DPSMateX/Damage/DPSMateX_Details_Damage.lua
+@@ -73,11 +73,11 @@
+ 	
+ 	DPSMateX_Details_CompareDamage.proc = "None"
+ 	UIDropDownMenu_SetSelectedValue(DPSMateX_Details_CompareDamage_DiagramLegend_Procs, "None")
+ 	DetailsUserComp = comp
+ 	DPSMateX_Details_CompareDamage_Title:SetText(DPSMateX.L["dmgdoneby"]..comp)
+-	DPSMateX_Details_CompareDamage_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX.CombatTime["effective"][key][comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX.CombatTime["effective"][key][comp] or 0)/cbt).."%)")
++	DPSMateX_Details_CompareDamage_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0)/cbt).."%)")
+ 	UIDropDownMenu_Initialize(DPSMateX_Details_CompareDamage_DiagramLegend_Procs, DPSMateX.Modules.DetailsDamage.ProcsDropDown_CompareDamage)
+ 	DetailsArrComp, DetailsTotalComp, DmgArrComp = DPSMateX:EvalTable(DPSMateX.RegistredModules[DPSMateX.Settings["windows"][curKey]["CurMode"]], DPSMateX.CacheUser[comp], curKey)
+ 	t1Comp, t2Comp, TTotalComp = self:EvalToggleTable(comp)
+ 	
+ 	if not g4 then

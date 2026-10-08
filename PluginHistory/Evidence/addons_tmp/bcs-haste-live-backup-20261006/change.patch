@@ -1,0 +1,140 @@
+--- BCS_PropertiesPanel.lua.original
++++ BCS_PropertiesPanel.lua
+@@ -1002,8 +1002,8 @@
+     local entries = {}
+     for i = 1, ArrayCount(keys) do
+         local key = keys[i]
+-        -- 移速只存位置，实时数值在 GetDisplayLines 中拼接。
+-        Append(entries, {key=key, text=key ~= "speed" and self:GetPropertyText(key) or nil})
++        -- 移速与急速实时读取，避免光环事件早于客户端数值更新时缓存旧值。
++        Append(entries, {key=key, text=key ~= "speed" and key ~= "haste" and self:GetPropertyText(key) or nil})
+     end
+     self.defenseSnapshot = nil
+     BCS.ForceCalculate = previousForce
+@@ -1021,7 +1021,9 @@
+     local firstLine, rest = nil, {}
+     for i = 1, ArrayCount(self.bodyEntries) do
+         local entry = self.bodyEntries[i]
+-        local text = entry.key == "speed" and self:DisplaySpeed() or entry.text
++        local text = entry.text
++        if entry.key == "speed" then text = self:DisplaySpeed()
++        elseif entry.key == "haste" then text = self:DisplayHaste() end
+         text = self:FormatPropertyText(entry.key, text or "数据不可用")
+         if entry.key == self.bodyTitleKey then firstLine = text
+         else Append(rest, text) end
+@@ -1249,7 +1251,11 @@
+     if not BCS then return "急速: 数据不可用" end
+ 
+     local haste
+-    if type(BCS.IsNampowerReady) == "function" then
++    local _, class = UnitClass("player")
++    -- Paladin Zeal affects attack speed. Use the same measured melee haste
++    -- as the character panel instead of the unstable cast-speed coefficient.
++    if class == "PALADIN" then haste = ReadNumber(self.GetMeleeHaste, self) end
++    if not IsFiniteNumber(haste) and type(BCS.IsNampowerReady) == "function" then
+         local ok, ready = pcall(BCS.IsNampowerReady, BCS)
+         if ok and ready then
+             local castSpeed = ReadNumber(GetUnitField, "player", "modCastSpeed")
+@@ -1257,9 +1263,39 @@
+         end
+     end
+     if not IsFiniteNumber(haste) then haste = ReadNumber(BCS.EstimateHaste, BCS) end
+-    if not IsFiniteNumber(haste) then haste = ReadNumber(BCS.GetHaste, BCS) end
++    if not IsFiniteNumber(haste) then
++        local previousForce = BCS.ForceCalculate
++        BCS.ForceCalculate = true
++        haste = ReadNumber(BCS.GetHaste, BCS)
++        BCS.ForceCalculate = previousForce
++    end
+     if not IsFiniteNumber(haste) then return "急速: 数据不可用" end
+     return "急速: " .. string.format("%.2f", haste) .. "%"
++end
++
++-- Same attack-speed ratio as the character panel's melee haste, for source comparison.
++function P:GetMeleeHaste()
++    if not BCS then return nil end
++    local base
++    local canIdentifyWeapon = type(GetInventoryItemLink) == "function"
++    local weaponKey
++    if canIdentifyWeapon then weaponKey = GetInventoryItemLink("player", 16) end
++    if canIdentifyWeapon and self.hasteWeaponBase and self.hasteWeaponKey == weaponKey then
++        base = self.hasteWeaponBase
++    else
++        base = ReadNumber(BCS.GetOriWeaponSpeed, BCS, 16)
++        if base and base > 0 then
++            self.hasteWeaponKey, self.hasteWeaponBase = weaponKey, base
++        else self.hasteWeaponBase = nil end
++    end
++    local _, class = UnitClass("player")
++    if class == "DRUID" and BCS.GetDruidForm and BCS.L_FORM then
++        local ok, form = pcall(BCS.GetDruidForm, BCS)
++        if ok and form == BCS.L_FORM.BEAR then base = 2.5
++        elseif ok and form == BCS.L_FORM.CAT then base = 1 end
++    end
++    local current = ReadNumber(UnitAttackSpeed, "player")
++    if base and base > 0 and current and current > 0 then return (base / current - 1) * 100 end
+ end
+ 
+ function P:DisplayDualAttackSpeed()
+@@ -1660,6 +1696,10 @@
+         DEFAULT_CHAT_FRAME:AddMessage("|cFFF5F54A PropertiesPanel:|r 已加载，输入 /mb 呼出配置选择窗口", 1, 1, 1)
+     end
+ 
++    if event == "UNIT_INVENTORY_CHANGED" and arg1 == "player" then
++        P.hasteWeaponBase = nil
++    end
++
+     if event == "PLAYER_AURAS_CHANGED"
+         or (event == "UNIT_AURA" and (not arg1 or arg1 == "player"))
+         or (event == "UNIT_INVENTORY_CHANGED" and arg1 == "player") then
+@@ -1762,6 +1802,17 @@
+         Report("接口急速（%）", castSpeed and castSpeed > 0 and (1 / castSpeed - 1) * 100 or nil)
+         Report("施法时间估算（%）", BCS and ReadNumber(BCS.LiveEstimateHaste, BCS))
+         Report("装备与增益统计（%）", BCS and ReadNumber(BCS.GetLiveHaste, BCS))
++        Report("近战急速（%）", P:GetMeleeHaste())
++        DEFAULT_CHAT_FRAME:AddMessage("浮窗当前值 · " .. P:DisplayHaste())
++        if BCS and BCS.GetHasteAuraDetails then
++            local ok, auras = pcall(BCS.GetHasteAuraDetails, BCS)
++            if ok then
++                for i = 1, ArrayCount(auras) do
++                    local aura = auras[i]
++                    DEFAULT_CHAT_FRAME:AddMessage("急速增益 · " .. aura.name .. "（" .. aura.stacks .. "层）: " .. aura.text)
++                end
++            end
++        end
+     elseif arg == "lock" then
+         P:SetLocked(true, true)
+     elseif arg == "unlock" then
+--- helper.lua.original
++++ helper.lua
+@@ -2049,6 +2049,30 @@
+ 
+ end
+ 
++-- Diagnostics only: keep each aura's name, stack count and actual tooltip wording.
++function BCS:GetHasteAuraDetails()
++	local result = {}
++	for i = 0, 31 do
++		local index = GetPlayerBuff(i, "HELPFUL")
++		if index and index > -1 then
++			BCS_Tooltip:SetPlayerBuff(index)
++			local nameLine = getglobal(BCS_Prefix .. "TextLeft1")
++			local name = nameLine and nameLine:GetText() or tostring(index)
++			local stacks = GetPlayerBuffApplications and GetPlayerBuffApplications(index) or 1
++			if type(stacks) ~= "number" or stacks < 1 then stacks = 1 end
++			for line = 2, BCS_Tooltip:NumLines() do
++				local font = getglobal(BCS_Prefix .. "TextLeft" .. line)
++				local text = font and font:GetText()
++				if text and (strfind(text, "急速") or (strfind(text, "速度")
++					and (strfind(text, "攻击") or strfind(text, "施法")))) then
++					tinsert(result, {name=name, stacks=stacks, text=text})
++				end
++			end
++		end
++	end
++	return result
++end
++
+ function BCS:GetLiveHaste()
+ 	local haste = 1.0000
+ 	local haste_Set_bonus = {}

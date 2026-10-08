@@ -1,0 +1,15 @@
+--- a/DPSMateX/Damage/DPSMateX_Details_DamageTotal.lua
++++ b/DPSMateX/Damage/DPSMateX_Details_DamageTotal.lua
+@@ -266,11 +266,11 @@
+ 					totCrit=totCrit+va[1]+va[5]+va[9]+va[10]+va[11]+va[12]+va[14]
+ 					crit=crit+va[5]
+ 					totMiss=totMiss+va[1]+va[5]+va[9]+va[10]+va[11]+va[12]+va[14]
+ 					miss=miss+va[9]+va[10]+va[11]+va[12]
+ 				else
+-					time = tonumber(strformat("%.2f", DPSMateX.CombatTime["effective"][curKey][name] or 0))
++					time = tonumber(strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(curKey)[name] or 0))
+ 				end
+ 			end
+ 			tinsert(arr, {name, val["i"], crit, miss, time, totCrit, totMiss, cat})
+ 			total = total + val["i"]
+ 		end

@@ -1,0 +1,15 @@
+--- a/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_Overhealing.lua
++++ b/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_Overhealing.lua
+@@ -70,11 +70,11 @@
+ 	
+ 	DPSMateX_Details_CompareOverhealing.proc = "None"
+ 	UIDropDownMenu_SetSelectedValue(DPSMateX_Details_CompareOverhealing_DiagramLegend_Procs, "None")
+ 	DetailsUserComp = comp
+ 	DPSMateX_Details_CompareOverhealing_Title:SetText(DPSMateX.L["overhealby"]..comp)
+-	DPSMateX_Details_CompareOverhealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX.CombatTime["effective"][key][comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX.CombatTime["effective"][key][comp] or 0)/cbt).."%)")
++	DPSMateX_Details_CompareOverhealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0)/cbt).."%)")
+ 	UIDropDownMenu_Initialize(DPSMateX_Details_CompareOverhealing_DiagramLegend_Procs, DPSMateX.Modules.DetailsOverhealing.ProcsDropDown_CompareOverhealing)
+ 	DetailsArrComp, DetailsTotalComp, DmgArrComp = DPSMateX:EvalTable(DPSMateX.RegistredModules[DPSMateX.Settings["windows"][curKey]["CurMode"]], DPSMateX.CacheUser[comp], curKey)
+ 	t1Comp, t2Comp, TTotalComp = self:EvalToggleTable(comp)
+ 	
+ 	if not g4 then

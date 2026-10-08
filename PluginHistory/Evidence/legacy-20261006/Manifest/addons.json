@@ -1,0 +1,208 @@
+[
+  {
+    "addon": "Cat",
+    "files": 100,
+    "bytes": 2125864,
+    "tocMetadata": [
+      "## Version: 1.18.1",
+      "## SavedVariablesPerCharacter: MPPublicSaved",
+      "## SavedVariablesPerCharacter: MPDruidCatSaved",
+      "## SavedVariablesPerCharacter: MPDruidBearSaved",
+      "## SavedVariablesPerCharacter: MPDruidCOOSaved",
+      "## SavedVariablesPerCharacter: MPDruidHealSaved",
+      "## SavedVariablesPerCharacter: MPWarriorArmsSaved",
+      "## SavedVariablesPerCharacter: MPWarriorFurySaved",
+      "## SavedVariablesPerCharacter: MPWarriorEvilSaved",
+      "## SavedVariablesPerCharacter: MPWarriorTankSaved",
+      "## SavedVariablesPerCharacter: MPPaladinCJSaved",
+      "## SavedVariablesPerCharacter: MPPaladinHealSaved",
+      "## SavedVariablesPerCharacter: MPPaladinMeleeHealSaved",
+      "## SavedVariablesPerCharacter: MPPaladinTankSaved",
+      "## SavedVariablesPerCharacter: MPPaladinSealSaved",
+      "## SavedVariablesPerCharacter: MPRogueSaved",
+      "## SavedVariablesPerCharacter: MPRogueArmorSaved",
+      "## SavedVariablesPerCharacter: MPRogueCombatSaved",
+      "## SavedVariablesPerCharacter: MPRogueEnvenomSaved",
+      "## SavedVariablesPerCharacter: MPShamanHealSaved",
+      "## SavedVariablesPerCharacter: MPShamanEnhanceSaved",
+      "## SavedVariablesPerCharacter: MPShamanElementalSaved",
+      "## SavedVariablesPerCharacter: MPWarlockSDSaved",
+      "## SavedVariablesPerCharacter: MPWarlockFDSaved",
+      "## SavedVariablesPerCharacter: MPWarlockAffSaved",
+      "## SavedVariablesPerCharacter: MPWarlockDemoSaved",
+      "## SavedVariablesPerCharacter: MPMageArcaneSaved",
+      "## SavedVariablesPerCharacter: MPMageFireSaved",
+      "## SavedVariablesPerCharacter: MPMageFrostSaved",
+      "## SavedVariablesPerCharacter: MPPriestHealSaved",
+      "## SavedVariablesPerCharacter: MPPriestShadowSaved",
+      "## SavedVariablesPerCharacter: MPPriestDisciplineSaved",
+      "## SavedVariablesPerCharacter: MPHunterShotSaved",
+      "## SavedVariablesPerCharacter: MPHunterBeastSaved",
+      "## SavedVariablesPerCharacter: MPHunterMeleeSaved",
+      "## SavedVariablesPerCharacter: MPInterruptCastSaved",
+      "## SavedVariablesPerCharacter: MPMultilineDotSaved",
+      "## SavedVariablesPerCharacter: MPPowerSaved"
+    ]
+  },
+  {
+    "addon": "PallyPower",
+    "files": 77,
+    "bytes": 1625384,
+    "tocMetadata": [
+      "## SavedVariablesPerCharacter: PallyPower_Assignments, TenMinuteBlessingOn, PP_PerUser"
+    ]
+  },
+  {
+    "addon": "YGB_OTAlarm",
+    "files": 152,
+    "bytes": 5335117,
+    "tocMetadata": [
+      "## Version: 2.0",
+      "## SavedVariables: YGB_OTAlarmDB"
+    ]
+  },
+  {
+    "addon": "STSMmayor",
+    "files": 36,
+    "bytes": 1386744,
+    "tocMetadata": [
+      "## Version: 2.4.6",
+      "## OptionalDeps: pfUI",
+      "## SavedVariablesPerCharacter: STSMmayorDB"
+    ]
+  },
+  {
+    "addon": "BetterCharacterStats",
+    "files": 9,
+    "bytes": 259188,
+    "tocMetadata": [
+      "## Version: 1.2",
+      "## SavedVariablesPerCharacter: BCSConfig"
+    ]
+  },
+  {
+    "addon": "StatCompare",
+    "files": 25,
+    "bytes": 331396,
+    "tocMetadata": [
+      "## Version: 1.2",
+      "## OptionalDeps: BetterCharacterStats",
+      "## SavedVariables: StatCompare_SaveVar, StatCompare_Info",
+      "## SavedVariablesPerCharacter: StatCompare_Player"
+    ]
+  },
+  {
+    "addon": "S_ItemTip",
+    "files": 24,
+    "bytes": 1503172,
+    "tocMetadata": [
+      "## Version: 1.3.1-Optimized",
+      "## OptionalDeps: StatCompare",
+      "## SavedVariables: S_CountDB, SellValues, ShowSellValueTooltip, S_ItemTip_EnchantCache, S_ItemTip_Settings"
+    ]
+  },
+  {
+    "addon": "pfUI-addonskinner",
+    "files": 84,
+    "bytes": 941797,
+    "tocMetadata": [
+      "## Version: 0.4",
+      "## Dependencies: pfUI"
+    ]
+  },
+  {
+    "addon": "PlayerLinkEnhance",
+    "files": 5,
+    "bytes": 31778,
+    "tocMetadata": [
+      "## Version: 1.8.3-compact"
+    ]
+  },
+  {
+    "addon": "ActionBarProfiles",
+    "files": 4,
+    "bytes": 28934,
+    "tocMetadata": [
+      "## Version: 2.1",
+      "## SavedVariables: ABP_Layout, ABP_ButtonPosition"
+    ]
+  },
+  {
+    "addon": "BrainwasherPro",
+    "files": 2,
+    "bytes": 61863,
+    "tocMetadata": [
+      "## Version: 1.0",
+      "## SavedVariablesPerCharacter: BrainwasherProDB"
+    ]
+  },
+  {
+    "addon": "DPSMateX",
+    "files": 105,
+    "bytes": 3183420,
+    "tocMetadata": [
+      "## Version: 1.0.7",
+      "## SavedVariables: DPSMateXSettings",
+      "## SavedVariablesPerCharacter: DPSMateXUser, DPSMateXAbility, DPSMateXDamageDone, DPSMateXEDT, DPSMateXEDD, DPSMateXDamageTaken, DPSMateXDispels, DPSMateXInterrupts, DPSMateXDeaths, DPSMateXEHealing, DPSMateXTHealing, DPSMateXHealingTaken, DPSMateXEHealingTaken, DPSMateXOverhealing, DPSMateXOverhealingTaken, DPSMateXAbsorbs, DPSMateXThreat, DPSMateXAurasGained, DPSMateXCombatTime, DPSMateXHistory, DPSMateXFails, DPSMateXCCBreaker, DPSMATEXRESET, DPSMateXStats"
+    ]
+  },
+  {
+    "addon": "DPSMateXExtend",
+    "files": 100,
+    "bytes": 1521340,
+    "tocMetadata": [
+      "## Version: 1.0.7",
+      "## Dependencies: DPSMateX"
+    ]
+  },
+  {
+    "addon": "DPSMateXExtendMore",
+    "files": 49,
+    "bytes": 961991,
+    "tocMetadata": [
+      "## Version: 1.0.7",
+      "## Dependencies: DPSMateX"
+    ]
+  },
+  {
+    "addon": "DPSMateXInsights",
+    "files": 6,
+    "bytes": 66174,
+    "tocMetadata": [
+      "## Version: 1.0.1",
+      "## Dependencies: DPSMateX",
+      "## SavedVariablesPerCharacter: DPSMateXInsightsDB"
+    ]
+  },
+  {
+    "addon": "DPSMateXEncounters",
+    "files": 5,
+    "bytes": 38869,
+    "tocMetadata": [
+      "## Version: 1.0.0",
+      "## Dependencies: DPSMateX",
+      "## OptionalDeps: DPSMateXInsights",
+      "## SavedVariablesPerCharacter: DPSMateXEncountersDB"
+    ]
+  },
+  {
+    "addon": "TianYan",
+    "files": 3,
+    "bytes": 31443,
+    "tocMetadata": [
+      "## Version: 2.0",
+      "## SavedVariablesPerCharacter: TY_DB"
+    ]
+  },
+  {
+    "addon": "Outfitter",
+    "files": 40,
+    "bytes": 1108308,
+    "tocMetadata": [
+      "## Version: 1.5.4",
+      "## OptionalDeps: TankPoints, Ace2",
+      "## RequiredDeps: ",
+      "## SavedVariablesPerCharacter: gOutfitter_Settings"
+    ]
+  }
+]

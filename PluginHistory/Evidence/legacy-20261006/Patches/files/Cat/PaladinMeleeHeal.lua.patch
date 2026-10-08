@@ -1,0 +1,42 @@
+--- a/Cat/PaladinMeleeHeal.lua
++++ b/Cat/PaladinMeleeHeal.lua
+@@ -185,10 +185,16 @@
+ 		if not MPSeal("十字军圣印") then SealCrusader() return end
+ 		if MPSeal("十字军圣印") and SP and Mana>=76 and GCD>1.4 then CastSpellByName("审判") return end
+ 
+ 		return
+ 
++	elseif MPPaladinSealSaved.Justice==4 and not MPBuff("公正审判", "target") then
++		-- 公正审判：先准备圣印，再沿用审判的蓝量与公共冷却限制。
++		if not MPSeal("公正圣印") then MPCastWithoutNampower("公正圣印") return end
++		if SP and Mana>=76 and GCD>1.4 then CastSpellByName("审判") return end
++		return
++
+ 	end
+ 
+ 	-- 通过小窗参数 - 圣印
+ 
+ 	if MPPaladinSealSaved.Seal==1 then
+@@ -203,10 +209,22 @@
+ 
+ 	elseif MPPaladinSealSaved.Seal==3 then
+ 
+ 		-- 保持十字军圣印
+ 		if not MPSeal("十字军圣印") then SealCrusader() return end
++
++	elseif MPPaladinSealSaved.Seal==4 then
++		if not MPSeal("正义圣印") then SealJustice() return end
++		if SP and Mana>=76 and GCD>1.4 then CastSpellByName("审判") return end
++
++	elseif MPPaladinSealSaved.Seal==5 then
++		if not MPSeal("命令圣印") then SealCommand() return end
++		if SP and Mana>=76 and GCD>1.4 then CastSpellByName("审判") return end
++
++	elseif MPPaladinSealSaved.Seal==6 then
++		-- 保持公正圣印；是否施放公正审判由上面的审判选项决定。
++		if not MPSeal("公正圣印") then MPCastWithoutNampower("公正圣印") return end
+ 
+ 	elseif MPPaladinSealSaved.Seal==0 then
+ 
+ 		-- 输出
+ 

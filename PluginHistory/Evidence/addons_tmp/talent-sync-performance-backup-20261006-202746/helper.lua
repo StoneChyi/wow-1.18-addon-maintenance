@@ -1,0 +1,2857 @@
+BCS = BCS or {}
+
+
+local BCS_Tooltip = getglobal("BetterCharacterStatsTooltip") or CreateFrame("GameTooltip", "BetterCharacterStatsTooltip", nil, "GameTooltipTemplate")
+local BCS_Prefix = "BetterCharacterStatsTooltip"
+BCS_Tooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
+
+-- Share immutable equipment/aura text only within one UpdateStats call.
+-- Neither cache survives the update; standalone consumers retain live reads.
+local equipmentReadDepth = 0
+local equipmentReadCache
+local auraReadCache
+-- Standalone consumers retain native tooltip reads without allocating a
+-- snapshot for every slot. The live view never stores item text.
+local function IsHasteSetActive(font)
+    if not font or type(font.GetTextColor) ~= "function" then return true end
+    local r, g, b = font:GetTextColor()
+    if not r or not g or not b then return true end
+    return not (r < 0.75 and g < 0.75 and b < 0.75
+        and math.abs(r - g) < 0.05 and math.abs(g - b) < 0.05)
+end
+local liveEquipment = {
+    hasteSetActive=setmetatable({}, {__index=function(_, line)
+        return IsHasteSetActive(getglobal(BCS_Prefix .. "TextLeft" .. line))
+    end}),
+    left=setmetatable({}, {__index=function(_, line)
+        local font = getglobal(BCS_Prefix .. "TextLeft" .. line)
+        return font and font:GetText()
+    end}),
+    right=setmetatable({}, {__index=function(_, line)
+        local font = getglobal(BCS_Prefix .. "TextRight" .. line)
+        return font and font:GetText()
+    end})
+}
+function BCS:BeginEquipmentRead()
+    if equipmentReadDepth == 0 then equipmentReadCache = {}; auraReadCache = {} end
+    equipmentReadDepth = equipmentReadDepth + 1
+end
+function BCS:EndEquipmentRead()
+    equipmentReadDepth = equipmentReadDepth - 1
+    if equipmentReadDepth <= 0 then
+        equipmentReadDepth = 0
+        equipmentReadCache = nil
+        auraReadCache = nil
+    end
+end
+local function ReadEquipmentTooltip(slot)
+    if equipmentReadCache and equipmentReadCache[slot] then
+        local cached = equipmentReadCache[slot]
+        return cached.hasItem, cached
+    end
+    local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
+    if not equipmentReadCache then
+        liveEquipment.count = hasItem and BCS_Tooltip:NumLines() or 0
+        return hasItem, liveEquipment
+    end
+    local snapshot = {hasItem=hasItem, count=0, left={}, right={}}
+    if hasItem then
+        snapshot.count = BCS_Tooltip:NumLines()
+        for line=1, snapshot.count do
+            local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+            local right = getglobal(BCS_Prefix .. "TextRight" .. line)
+            snapshot.left[line] = left and left:GetText()
+            snapshot.right[line] = right and right:GetText()
+            if snapshot.left[line] and BCS.L_HASTE
+                and strfind(snapshot.left[line], BCS.L_HASTE.HASTE_improve_set) then
+                snapshot.hasteSetActive = snapshot.hasteSetActive or {}
+                snapshot.hasteSetActive[line] = IsHasteSetActive(left)
+            end
+        end
+    end
+    if equipmentReadCache then equipmentReadCache[slot] = snapshot end
+    return hasItem, snapshot
+end
+
+local L = BCS["L"]
+local L_RACE = BCS["L_RACE"]
+local L_TALENT = BCS["L_TALENT"]
+local L_HASTE = BCS["L_HASTE"]
+local L_ARMOR = BCS["L_ARMOR"]
+local L_FORM = BCS["L_FORM"]
+local L_SPELLHIT = BCS["L_SPELLHIT"]
+local L_SPELLCRIT = BCS["L_SPELLCRIT"]
+local L_MANAREGEN = BCS["L_MANAREGEN"]
+local L_SPELL_SCHOOL = BCS["L_SPELL_SCHOOL"]
+local L_SPELLPOWER = BCS["L_SPELLPOWER"]
+local L_HEALPOWER = BCS["L_HEALPOWER"]
+local L_HIT = BCS["L_HIT"]
+local L_BLOCKVALUE = BCS["L_BLOCKVALUE"]
+local L_ARMORPENETRATION = BCS["L_ARMORPENETRATION"]
+local L_WEAPONTYPE = BCS["L_WEAPONTYPE"]
+local L_RANGECRIT = BCS["L_RANGECRIT"]
+
+local strfind = strfind
+local tonumber = tonumber
+local tinsert = tinsert
+local lclass, class = UnitClass("player")
+local faction, _ = UnitFactionGroup("player")  --Alliance,Horde
+
+
+
+local BCS_USE_CACHE = 1
+local BCS_GET_ON_DEMAND = 1
+-- 按需计算(on-demand)：默认只有 C 面板当前选中的分页(DropdownLeft/Right)命中对应分类时才真正扫描计算，
+-- 否则直接返回 0，用于节省角色面板未打开时的开销。
+-- 独立消费者（如浮动属性面板 BCS.PropertiesPanel）可在构建显示内容期间临时置 BCS.ForceCalculate = true
+-- 绕过该限制，使其数值不受「按 C 后选择的面板」影响。
+local VERSION = "1.0.12-SNAPSHOT"
+
+local MELEE_HIT = nil
+local GET_MELEE_HIT_TIME = 0
+local HASTE_CACHE = 0
+local GET_HASTE_CACHE_TIME = nil
+local CALCULATED_MELEE_HASTE
+local CALCULATED_MELEE_HASTE_TIME
+local SPELL_CRIT = 0
+local GET_SPELL_CRIT_TIME = 0
+local RANGE_HIT = 0
+local GET_RANGE_HIT_TIME = 0
+local SPELL_HIT = 0
+local SPELL_HIT_FIRE = 0
+local SPELL_HIT_FROST = 0
+local SPELL_HIT_ARCANE = 0
+local SPELL_HIT_SHADOW = 0
+local SPELL_HIT_HOLY = 0
+local GET_SPELL_HIT_TIME = 0
+local MELEE_CRIT = nil
+local GET_MELEE_CRIT_TIME = 0
+local RANGE_CRIT = 0
+local GET_RANGE_CRIT_TIME =0
+local SPELL_POWER = 0
+local HEAL_POWER = 0
+local GET_HEAL_POWER_TIME = 0
+local SPELL_POWER_IN_GETSPELLPOWER = 0
+local SECOND_SPELL_POWER = 0
+local SECOND_SPELL_POWER_NAME = 0
+local DAMAGE_POWER = 0
+local SPELL_POWER_BY_SCHOOL = {FIRE=0,FROST=0,ARCANE=0,SHADOW=0,HOLY=0,NATURE=0}
+local GET_SPELL_POWER_TIME = 0
+local MANA_REGEN_BASE = 0
+local MANA_REGEN_CAST = 0
+local MANA_REGEN_MP5 = 0
+local MANA_REGEN_CAST_PERCENT = 0
+local GET_MANA_REGEN_TIME = 0
+local GEAR_ARMOR = 0
+local GET_GEAR_ARMOR_TIME = 0
+local BLOCK_VALUE = 0
+local GET_BLOCK_VALUE_TIME = 0
+local ARMORPENETRATION_VALUE = 0
+local GET_ARMORPENETRATION_VALUE_TIME = 0
+local ESTIMATE_HASTE = 0
+local ESTIMATE_HASTE_SCHOOL = 0
+local GET_ESTIMATE_HASTE_TIME = nil
+
+
+
+local function tContains(table, item)
+	local index = 1
+	while table[index] do
+		if ( item == table[index] ) then
+			return 1
+		end
+		index = index + 1
+	end
+	return nil
+end
+
+local function ReadHasteAuras(kind)
+    if auraReadCache and auraReadCache[kind] then return auraReadCache[kind] end
+    local auras = {}
+    for i = 0, kind == "HELPFUL" and 31 or 6 do
+        local index = GetPlayerBuff(i, kind)
+        if index and index > -1 then
+            BCS_Tooltip:SetPlayerBuff(index)
+            local lines = {count=BCS_Tooltip:NumLines(), index=index}
+            for line = 1, lines.count do
+                local font = getglobal(BCS_Prefix .. "TextLeft" .. line)
+                lines[line] = font and font:GetText()
+            end
+            tinsert(auras, lines)
+        end
+    end
+    if auraReadCache then auraReadCache[kind] = auras end
+    return auras
+end
+
+function BCS:GetPlayerAura(searchText, auraType)
+	-- The same active buffs are otherwise rebuilt once for every searched
+	-- pattern. Capture their text once, preserving buff/line search order.
+	if auraReadCache and (not auraType or auraType == 'HARMFUL') then
+		local kind = auraType or 'HELPFUL'
+		local auras = ReadHasteAuras(kind)
+		for _, lines in ipairs(auras) do
+			for line=1, lines.count do
+				if lines[line] then
+					local value = {strfind(lines[line], searchText)}
+					if value[1] then return unpack(value) end
+				end
+			end
+		end
+		return
+	end
+	if not auraType then
+		-- buffs
+		-- http://blue.cardplace.com/cache/wow-dungeons/624230.htm
+		-- 32 buffs max
+		for i=0, 31 do
+			local index = GetPlayerBuff(i, 'HELPFUL')
+			if index > -1 then
+				BCS_Tooltip:SetPlayerBuff(index)
+				local MAX_LINES = BCS_Tooltip:NumLines()
+					
+				for line=1, MAX_LINES do
+					local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+					if left:GetText() then
+						local value = {strfind(left:GetText(), searchText)}
+						if value[1] then
+							return unpack(value)
+						end
+					end
+				end
+			end
+		end
+	elseif auraType == 'HARMFUL' then
+		for i=0, 6 do
+			local index = GetPlayerBuff(i, auraType)
+			if index > -1 then
+				BCS_Tooltip:SetPlayerBuff(index)
+				local MAX_LINES = BCS_Tooltip:NumLines()
+					
+				for line=1, MAX_LINES do
+					local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+					if left:GetText() then
+						local value = {strfind(left:GetText(), searchText)}
+						if value[1] then
+							return unpack(value)
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+
+local Cache_GetHitRating_Tab, Cache_GetHitRating_Talent
+local hit_debuff = 0
+
+
+function BCS:GetHitRating(hitOnly)
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_MELEE_COMBAT","PLAYERSTAT_RANGED_COMBAT"} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v) then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+	if BCS_USE_CACHE == 1 then
+		if MELEE_HIT ~= nil and GET_MELEE_HIT_TIME and (GetTime() - GET_MELEE_HIT_TIME) < 2 then
+			return MELEE_HIT
+		else 
+			local value = BCS:GetLiveHitRating(hitOnly)
+			if value ~= nil then
+				MELEE_HIT = value
+				GET_MELEE_HIT_TIME = GetTime()
+			end
+			return value
+		end
+	else
+		return BCS:GetLiveHitRating(hitOnly)
+	end
+end
+
+function BCS:GetLiveHitRating(hitOnly)
+	local Hit_Set_Bonus = {}
+	local hit = 0
+	local MAX_INVENTORY_SLOTS = 19
+	hit_debuff = 0
+	
+	for slot=0, MAX_INVENTORY_SLOTS do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		if hasItem then
+
+			local MAX_LINES = equipment.count
+			local SET_NAME = nil
+			
+			for line=1, MAX_LINES do
+				local left = equipment.left[line]
+				if left then
+					local _,_, value = strfind(left, L["Equip: Improves your chance to hit by (%d)%%."])
+					if value then
+						hit = hit + tonumber(value)
+					end
+					_,_, value = strfind(left, L["/Hit %+(%d+)"])
+					if value then
+						hit = hit + tonumber(value)
+					end
+					
+					_,_, value = strfind(left, L_HIT["Rune_of_the_Guard_Captain"])
+					if value then
+						hit = hit + tonumber(value)
+					end
+					
+					_,_, value = strfind(left, L_HIT["Signet_of_Howling_Nightmares"])
+					if value then
+						hit = hit - tonumber(value)
+					end
+					
+					_,_, value = strfind(left, "(.+)（%d/%d）")
+					if value then
+						SET_NAME = value
+					end
+					_,_, value = strfind(left, L["^Set: Improves your chance to hit by (%d)%%."])
+					if value and SET_NAME and not tContains(Hit_Set_Bonus, SET_NAME) then
+						tinsert(Hit_Set_Bonus, SET_NAME)
+						hit = hit + tonumber(value)
+						line = MAX_LINES
+					end
+				end
+			end
+			
+		end
+	end
+
+	-- buffs
+	local _, _, hitFromAura = BCS:GetPlayerAura(L["Chance to hit increased by (%d)%%."])
+	if hitFromAura then
+		hit = hit + tonumber(hitFromAura)
+	end
+	 _, _, hitFromAura = BCS:GetPlayerAura(L["Improves your chance to hit by (%d+)%%."])
+	if hitFromAura then
+		hit = hit + tonumber(hitFromAura)
+	end
+	 _, _, hitFromAura = BCS:GetPlayerAura(L["Increases attack power by %d+ and chance to hit by (%d+)%%."])
+	if hitFromAura then
+		hit = hit + tonumber(hitFromAura)
+	end
+	-- debuffs
+	_, _, hitFromAura = BCS:GetPlayerAura(L["Chance to hit reduced by (%d+)%%."], 'HARMFUL')
+	if hitFromAura then
+		hit_debuff = hit_debuff + tonumber(hitFromAura)
+	end
+	_, _, hitFromAura = BCS:GetPlayerAura(L["Chance to hit decreased by (%d+)%% and %d+ Nature damage every %d+ sec."], 'HARMFUL')
+	if hitFromAura then
+		hit_debuff = hit_debuff + tonumber(hitFromAura)
+	end
+	hitFromAura = BCS:GetPlayerAura(L["Lowered chance to hit."], 'HARMFUL')
+	if hitFromAura then
+		hit_debuff = hit_debuff + 25
+	end
+
+	--from talent
+	hit = hit + BCS:GetLiveMeleeHitRating_FromTalent()
+
+	
+	local MAX_TABS = GetNumTalentTabs()
+	-- speedup
+	if Cache_GetHitRating_Tab and Cache_GetHitRating_Talent then
+		BCS_Tooltip:SetTalent(Cache_GetHitRating_Tab, Cache_GetHitRating_Talent)
+		local MAX_LINES = BCS_Tooltip:NumLines()
+		
+		for line=1, MAX_LINES do
+			local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+			if left:GetText() then
+				-- rogues
+				local _,_, value = strfind(left:GetText(), L["Increases your chance to hit with melee weapons by (%d)%%."])
+				local name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = GetTalentInfo(Cache_GetHitRating_Tab, Cache_GetHitRating_Talent)
+				if value and rank > 0 then
+					hit = hit + tonumber(value)
+					line = MAX_LINES
+				end
+				
+				-- hunters
+				_,_, value = strfind(left:GetText(), L["Increases hit chance by (%d)%% and increases the chance movement impairing effects will be resisted by an additional %d+%%."])
+				name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = GetTalentInfo(Cache_GetHitRating_Tab, Cache_GetHitRating_Talent)
+				if value and rank > 0 then
+					hit = hit + tonumber(value)
+					line = MAX_LINES
+				end
+			end
+		end
+		
+		if not hitOnly then
+			hit = hit - hit_debuff
+			if hit < 0 then hit = 0 end
+			return hit
+		else
+			return hit
+		end
+	end
+	
+	for tab=1, MAX_TABS do
+		local MAX_TALENTS = GetNumTalents(tab)
+		
+		for talent=1, MAX_TALENTS do
+			BCS_Tooltip:SetTalent(tab, talent)
+			local MAX_LINES = BCS_Tooltip:NumLines()
+			
+			for line=1, MAX_LINES do
+				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+				if left:GetText() then
+					-- rogues
+					local _,_, value = strfind(left:GetText(), L["Increases your chance to hit with melee weapons by (%d)%%."])
+					local name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = GetTalentInfo(tab, talent)
+					if value and rank > 0 then
+						hit = hit + tonumber(value)
+						
+						Cache_GetHitRating_Tab = tab
+						Cache_GetHitRating_Talent = talent
+						
+						line = MAX_LINES
+						talent = MAX_TALENTS
+						tab = MAX_TABS
+					end
+					
+					-- hunters
+					_,_, value = strfind(left:GetText(), L["Increases hit chance by (%d)%% and increases the chance movement impairing effects will be resisted by an additional %d+%%."])
+					name, iconTexture, tier, column, rank, maxRank, isExceptional, meetsPrereq = GetTalentInfo(tab, talent)
+					if value and rank > 0 then
+						hit = hit + tonumber(value)
+						
+						Cache_GetHitRating_Tab = tab
+						Cache_GetHitRating_Talent = talent
+						
+						line = MAX_LINES
+						talent = MAX_TALENTS
+						tab = MAX_TABS
+					end
+				end	
+			end
+			
+		end
+	end
+	
+	if not hitOnly then
+		hit = hit - hit_debuff
+		if hit < 0 then hit = 0 end -- Dust Cloud OP
+		return hit
+	else
+		return hit
+	end
+end
+
+function BCS:GetLiveMeleeHitRating_FromTalent()
+	local hit = 0
+	if class == "DRUID" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 7)
+		if talentname == L_TALENT.DRUID_NATURAL_WEAPONS then 
+			hit = hit + crank
+		end
+	elseif class == "SHAMAN" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 5)
+		if talentname == L_TALENT.SHAMAN_ELEMENTAL_DEVASTATION then 
+			hit = hit + crank
+		end
+	elseif class == "PALADIN" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(2, 3)
+		if talentname == L_TALENT.PALADIN_PRECISION then 
+			hit = hit + crank
+		end
+	elseif class == "HUNTER" then
+		local talentname, _, _, _, crank, _ = GetTalentInfo(L_TALENT.HUNTER_SUREFOOTED.tab, L_TALENT.HUNTER_SUREFOOTED.number)
+		if talentname == L_TALENT.HUNTER_SUREFOOTED.name then
+			if BCS:IsDualWielding() then
+				hit = hit + crank * 2
+			else			
+				hit = hit + crank
+			end
+		end
+	end
+	
+
+
+	return hit
+end
+
+function BCS:GetRangedHitRating()
+
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_RANGED_COMBAT",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v) then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+
+	if BCS_USE_CACHE == 1 then
+		if RANGE_HIT and (GetTime() - GET_RANGE_HIT_TIME) < 2 then
+			return RANGE_HIT
+		else 
+			RANGE_HIT = BCS:GetLiveRangedHitRating()
+			GET_RANGE_HIT_TIME = GetTime()
+			return RANGE_HIT
+		end
+	else
+		return BCS:GetLiveRangedHitRating()
+	end
+	
+end
+
+function BCS:GetLiveRangedHitRating()
+	local melee_hit = BCS:GetHitRating(true)
+	local ranged_hit = melee_hit
+	local debuff = hit_debuff
+
+	local hasItem, equipment = ReadEquipmentTooltip(18) -- ranged enchant
+	if hasItem then
+		local MAX_LINES = equipment.count
+		for line=1, MAX_LINES do
+			local left = equipment.left[line]
+			if left then
+				local _,_, value = strfind(left, L["+(%d)%% Hit"])
+				if value then
+					ranged_hit = ranged_hit + tonumber(value)
+					line = MAX_LINES
+				end
+			end
+		end
+	end
+	
+	ranged_hit = ranged_hit - debuff
+	if ranged_hit < 0 then ranged_hit = 0 end
+	return ranged_hit
+end
+
+function BCS:GetSpellHitRating()
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_SPELL_COMBAT",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v) then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+
+	if BCS_USE_CACHE == 1 then
+		if  (GetTime() - GET_SPELL_HIT_TIME) < 2 then
+			return SPELL_HIT, SPELL_HIT_FIRE, SPELL_HIT_FROST, SPELL_HIT_ARCANE, SPELL_HIT_SHADOW ,SPELL_HIT_HOLY
+		else 
+			SPELL_HIT, SPELL_HIT_FIRE, SPELL_HIT_FROST, SPELL_HIT_ARCANE, SPELL_HIT_SHADOW,SPELL_HIT_HOLY = BCS:GetLiveSpellHitRating()
+			GET_SPELL_HIT_TIME = GetTime()
+			return SPELL_HIT, SPELL_HIT_FIRE, SPELL_HIT_FROST, SPELL_HIT_ARCANE, SPELL_HIT_SHADOW, SPELL_HIT_HOLY
+		end
+	else
+		return BCS:GetLiveSpellHitRating()
+	end
+	return BCS:GetLiveSpellHitRating()
+end
+
+function BCS:GetLiveSpellHitRating()
+	local hit = 0
+	local hit_fire = 0
+	local hit_frost = 0
+	local hit_arcane = 0
+	local hit_shadow = 0
+	local hit_holy = 0
+	local hit_Set_Bonus = {}
+	
+	-- scan gear
+	local MAX_INVENTORY_SLOTS = 19
+	for slot=0, MAX_INVENTORY_SLOTS do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		
+		if hasItem then
+			local SET_NAME
+			local MAX_LINES = equipment.count
+			
+			for line=1, MAX_LINES do
+				local left = equipment.left[line]
+				
+				if left then
+					local _,_, value = strfind(left, L_SPELLHIT["Equip: Improves your chance to hit with spells by (%d)%%."])
+					if value then
+						hit = hit + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELLHIT["/Spell Hit %+(%d+)"])
+					if value then
+						hit = hit + tonumber(value)
+					end
+
+					_,_, value = strfind(left, L_SPELLHIT["Scythe_of_Elune"])
+					if value then
+						hit = hit + tonumber(value)
+					end
+					
+					_,_, value = strfind(left, L_SPELLHIT["Rune_of_the_Guard_Captain"])
+					if value then
+						hit = hit + tonumber(value)
+					end
+					
+					_,_, value = strfind(left, "(.+)（%d/%d）")
+					if value then
+						SET_NAME = value
+					end
+					_, _, value = strfind(left, L_SPELLHIT["^Set: Improves your chance to hit with spells by (%d)%%."])
+					if value and SET_NAME and not tContains(hit_Set_Bonus, SET_NAME) then
+						tinsert(hit_Set_Bonus, SET_NAME)
+						hit = hit + tonumber(value)
+					end
+				end
+			end
+		
+		end
+	end
+	
+	-- scan talents
+
+	local hit_all_from_talent, hit_fire_from_talent, hit_frost_from_talent, hit_arcane_from_talent, hit_shadow_from_talent, hit_holy_from_talent = BCS:GetLiveSpellHitRating_FromTalent()
+	hit = hit + hit_all_from_talent
+	hit_fire = hit_fire + hit_fire_from_talent
+	hit_frost = hit_frost + hit_frost_from_talent
+	hit_arcane = hit_arcane + hit_arcane_from_talent
+	hit_shadow = hit_shadow + hit_shadow_from_talent
+	hit_holy = hit_holy + hit_holy_from_talent
+	
+	-- buffs
+	local _, _, hitFromAura = BCS:GetPlayerAura(L_SPELLHIT["Spell hit chance increased by (%d+)%%."])
+	if hitFromAura then
+		hit = hit + tonumber(hitFromAura)
+	end
+	_, _, hitFromAura,_ = BCS:GetPlayerAura(L_SPELLHIT["Emerald_Essence"])
+	if hitFromAura then
+		hit = hit + tonumber(hitFromAura)
+	end
+	_, _, hitFromAura,_ = BCS:GetPlayerAura(L_SPELLHIT["Elemental_devastation"])
+	if hitFromAura then
+		hit = hit + tonumber(hitFromAura)
+	end
+	_, _, _, hitFromAura = BCS:GetPlayerAura(L_SPELLHIT["Droplet_of_Nordrassil"])
+	if hitFromAura then
+		hit = hit + tonumber(hitFromAura)
+	end
+	return hit, hit_fire, hit_frost, hit_arcane, hit_shadow , hit_holy
+end
+
+function BCS:GetLiveSpellHitRating_FromTalent()
+	local hit_all = 0 
+	local hit_holy = 0
+	local hit_shadow = 0
+	local hit_arcane = 0
+	local hit_frost = 0
+	local hit_fire = 0
+	
+	if class == "PRIEST" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 2)
+		if talentname == L_TALENT.PRIEST_PIERCING_LIGHT then 
+			hit_holy = hit_holy + crank*2
+		end
+
+		local talentname, _, _, _, crank, _ = GetTalentInfo(3, 5)
+		if talentname == L_TALENT.PRIEST_SHADOW_FOCUS then 
+			hit_shadow = hit_shadow + crank*2
+		end
+	end
+
+	if class == "MAGE" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 5)
+		if talentname == L_TALENT.MAGE_ARCANE_FOCUS then 
+			hit_arcane = hit_arcane + crank*2
+		end
+
+		local talentname, _, _, _, crank, _ = GetTalentInfo(3, 3)
+		if talentname == L_TALENT.MAGE_ELEMENTAL_PRECISION then 
+			hit_fire = hit_fire + crank*2
+			hit_frost = hit_frost + crank*2
+		end
+	end
+
+	if class == "DRUID" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 7)
+		if talentname == L_TALENT.DRUID_NATURAL_WEAPONS then 
+			hit_all = hit_all + crank
+		end
+
+	end
+
+	if class == "SHAMAN" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 5)
+		if talentname == L_TALENT.SHAMAN_ELEMENTAL_DEVASTATION then 
+			hit_all = hit_all + crank
+		end
+
+	end
+	return hit_all, hit_fire, hit_frost, hit_arcane, hit_shadow, hit_holy
+end
+
+function BCS:GetCritChance()
+	--[[
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_MELEE_COMBAT","PLAYERSTAT_RANGED_COMBAT",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v) then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+	]]
+
+	if BCS_USE_CACHE == 1 and (class ~= 'HUNTER') then 
+		if MELEE_CRIT ~= nil and GET_MELEE_CRIT_TIME and (GetTime() - GET_MELEE_CRIT_TIME <2 ) then
+			return MELEE_CRIT
+		else 
+			local value =BCS:GetLiveCritChance()
+			if value ~= nil then
+				MELEE_CRIT = value
+				GET_MELEE_CRIT_TIME = GetTime()
+			end
+			return value
+		end
+	else
+		return BCS:GetLiveCritChance()
+	end
+end
+
+function BCS:GetLiveCritChance()
+	local crit = 0
+	
+	--修改by狗血编剧男
+	local iCritInfo = 0
+	local id = self:GetSpellIndex(L.SPELLBOOK_ATTACK)
+
+	if not id then
+		return nil
+	end
+	
+	BCS_Tooltip:SetSpell(id, BOOKTYPE_SPELL)
+	local spellName = getglobal(BCS_Prefix .. "TextLeft" .. 2):GetText()
+	if spellName then
+		iCritInfo = string.gsub(spellName, "(.*)%%.*", "%1")
+	end
+	if(iCritInfo) then
+		crit = crit + tonumber(iCritInfo)
+	else
+		crit = nil
+	end
+	return crit
+end
+
+
+function BCS:GetRangedCritChance()
+
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_RANGED_COMBAT",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v) then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+
+	if BCS_USE_CACHE == 1 then 
+		if  GET_RANGE_CRIT_TIME and (GetTime() - GET_RANGE_CRIT_TIME <2 ) then
+			return RANGE_CRIT
+		else 
+			RANGE_CRIT = BCS:GetLiveRangedCritChance()
+			GET_RANGE_CRIT_TIME = GetTime()
+			return RANGE_CRIT
+		end
+	else
+		return BCS:GetLiveRangedCritChance()
+	end
+end
+
+function BCS:GetLiveRangedCritChance()
+	local crit = BCS:GetCritChance()
+	
+	local MAX_INVENTORY_SLOTS = 19
+	for slot=0, MAX_INVENTORY_SLOTS do
+		if slot == 18 then  --远程武器处理专用
+			local hasItem, equipment = ReadEquipmentTooltip(slot)
+			if hasItem then
+				for line=1, equipment.count do
+					local left = equipment.left[line]
+					if left then
+						local _,_, value = strfind(left, L_RANGECRIT["RANGECRIT_1"])
+						if value then
+							crit = crit + tonumber(value)
+						end
+					end
+				end
+			end
+		end
+	end
+	
+	--from talent
+	if class == "HUNTER" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(L_TALENT.HUNTER_LETHAL_SHOOTS.tab, L_TALENT.HUNTER_LETHAL_SHOOTS.number)
+		if talentname == L_TALENT.HUNTER_LETHAL_SHOOTS.name then 
+			crit = crit + crank
+		end
+	end
+
+	return crit
+end
+
+function BCS:GetSpellCritChance()
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_SPELL_COMBAT",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v) then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+	
+	if BCS_USE_CACHE == 1 then
+		if SPELL_CRIT and (GetTime() - GET_SPELL_CRIT_TIME) < 2 then
+			return SPELL_CRIT, spellCritBySchool
+		else 
+			SPELL_CRIT, spellCritBySchool = BCS:GetLiveSpellCritChance()
+			GET_SPELL_CRIT_TIME = GetTime()
+			return SPELL_CRIT, spellCritBySchool
+		end
+	else
+		return BCS:GetLiveSpellCritChance()
+	end
+	
+	return BCS:GetLiveSpellCritChance()
+end
+
+function BCS:GetLiveSpellCritChance()
+	-- school crit: most likely never
+	local Crit_Set_Bonus = {}
+	local spellCrit = 0
+	local _, intelect = UnitStat("player", 4)
+	local spellCritBySchool = {}
+	
+	
+	-- values from theorycraft / http://wow.allakhazam.com/forum.html?forum=21&mid=1157230638252681707
+	if class == "MAGE" then
+		spellCrit = 0.2 + (intelect / 59.5)
+	elseif class == "WARLOCK" then
+		spellCrit = 1.7 + (intelect / 60.6)
+	elseif class == "PRIEST" then
+		spellCrit = 0.8 + (intelect / 59.56)
+	elseif class == "DRUID" then
+		spellCrit = 1.8 + (intelect / 60)
+	elseif class == "SHAMAN" then
+		spellCrit = 1.8 + (intelect / 59.2)
+	elseif class == "PALADIN" then
+		spellCrit = intelect / 29.5
+	end
+	
+	local MAX_INVENTORY_SLOTS = 19
+	
+	for slot=0, MAX_INVENTORY_SLOTS do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		
+		if hasItem then
+			local SET_NAME = nil
+			
+			for line=1, equipment.count do
+				local left = equipment.left[line]
+
+				if left then
+					local _,_, value = strfind(left, L_SPELLCRIT["Equip: Improves your chance to get a critical strike with spells by (%d)%%."])
+					if value then
+						spellCrit = spellCrit + tonumber(value)
+					end
+
+					_,_, value = strfind(left, L_SPELLCRIT["Eye of Diminution"])
+					if value then
+						spellCrit = spellCrit + tonumber(value)
+					end
+					
+					_,_, value = strfind(left, L_SPELLCRIT["Brilliant_Wizard_Oil"])
+					if value then
+						spellCrit = spellCrit + 1
+					end
+
+					_,_,_, value = strfind(left, L_SPELLCRIT["Power of the Scourge"])
+					if value then
+						spellCrit = spellCrit + tonumber(value)
+					end
+
+					_,_,_, value = strfind(left, L_SPELLCRIT["Scythe_of_Elune"])
+					if value then
+						spellCrit = spellCrit + tonumber(value)
+					end
+					
+					_,_, value = strfind(left, L_SPELLCRIT["Mantle_of_the_Horusath"])
+					if value then
+						spellCrit = spellCrit + tonumber(value)
+					end
+					
+					
+
+					_,_, value = strfind(left, "(.+)（%d/%d）")
+					if value then
+						SET_NAME = value
+					end
+
+					_, _, value = strfind(left, L_SPELLCRIT["^Set: Improves your chance to get a critical strike with spells by (%d)%%."])
+					if value and SET_NAME and not tContains(Crit_Set_Bonus, SET_NAME) then
+						tinsert(Crit_Set_Bonus, SET_NAME)
+						spellCrit = spellCrit + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELLCRIT["nature_spell_crit_set_1"])
+					if value and SET_NAME and not tContains(Crit_Set_Bonus, SET_NAME) then
+						tinsert(Crit_Set_Bonus, SET_NAME)
+						spellCritBySchool[L.SPELL_SCHOOL_NATURE] = spellCritBySchool[L.SPELL_SCHOOL_NATURE] or 0 + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELLCRIT["holy_spell_crit_set_1"])
+					if value and SET_NAME and not tContains(Crit_Set_Bonus, SET_NAME) then
+						tinsert(Crit_Set_Bonus, SET_NAME)
+						spellCritBySchool[L.SPELL_SCHOOL_HOLY] = spellCritBySchool[L.SPELL_SCHOOL_HOLY] or 0 + tonumber(value)
+					end
+					if class == "SHAMAN" then
+						_,_, value = strfind(left, L_SPELLCRIT["shock_spell_crit_set_1"])
+						if value and SET_NAME and not tContains(Crit_Set_Bonus, SET_NAME) then
+							tinsert(Crit_Set_Bonus, SET_NAME)
+							spellCritBySchool[L.SPELL_SCHOOL_SHOCK] = spellCritBySchool[L.SPELL_SCHOOL_SHOCK] or 0 + tonumber(value)
+						end
+					end
+				end
+			end
+		end
+		
+	end
+	
+	-- buffs
+	local _, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Chance for a critical hit with a spell increased by (%d+)%%."])
+	if critFromAura then
+		spellCrit = spellCrit + tonumber(critFromAura)
+	end
+	_, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["While active, target's critical hit chance with spells and attacks increases by 10%%."])
+	if critFromAura then
+		spellCrit = spellCrit + 10
+	end
+	_, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Increases chance for a melee, ranged, or spell critical by (%d+)%% and all attributes by %d+."])
+	if critFromAura then
+		spellCrit = spellCrit + tonumber(critFromAura)
+	end
+	critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Increases critical chance of spells by 10%%, melee and ranged by 5%% and grants 140 attack power. 120 minute duration."])
+	if critFromAura then
+		spellCrit = spellCrit + 10
+	end
+	_, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Critical strike chance with spells and melee attacks increased by (%d+)%%."])
+	if critFromAura then
+		spellCrit = spellCrit + tonumber(critFromAura)
+	end
+	
+	_, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["mushroom_flower"], 'HARMFUL')
+	if critFromAura then
+		spellCrit = spellCrit + tonumber(critFromAura)
+	end
+
+	_, _, _, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Dreamshard Elixir"])
+	if critFromAura then
+		spellCrit = spellCrit + tonumber(critFromAura)
+	end
+
+	_, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Moonkin Aura"])
+	if critFromAura then
+		spellCrit = spellCrit + tonumber(critFromAura)
+	end
+
+	_, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Atiesh, Greatstaff of the Guardian_Mage_aura"])
+	if critFromAura then
+		spellCrit = spellCrit + tonumber(critFromAura)
+	end
+	
+	_, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Dream_Mongoose"])
+	if critFromAura then
+		spellCrit = spellCrit + tonumber(critFromAura)
+	end
+	
+	if class == "WARLOCK" then
+		_, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Firestone"])
+		if critFromAura then
+			spellCritBySchool[L.SPELL_SCHOOL_FIRE] = ( spellCritBySchool[L.SPELL_SCHOOL_FIRE] or 0 ) + tonumber(critFromAura)
+		end
+	end
+	
+	if class == "MAGE" then
+		_, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Combustion"])
+		if critFromAura then
+			spellCritBySchool[L.SPELL_SCHOOL_FIRE] = ( spellCritBySchool[L.SPELL_SCHOOL_FIRE] or 0 ) + tonumber(critFromAura)
+		end
+	end
+
+	-- debuffs
+	_, _, _, critFromAura = BCS:GetPlayerAura(L_SPELLCRIT["Melee critical-hit chance reduced by (%d+)%%.\r\nSpell critical-hit chance reduced by (%d+)%%."], 'HARMFUL')
+	if critFromAura then
+		spellCrit = spellCrit - tonumber(critFromAura)
+	end
+	
+	--talent
+	
+	if class == "PRIEST" then
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 17)
+		if talentname == L_TALENT.PRIEST_FORCE_OF_WILL then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_ATTACKSPELL] = crank
+			end
+		end
+		
+		talentname, _, _, _, crank, _ = GetTalentInfo(2, 3)
+		if talentname == L_TALENT.PRIEST_DIVINITY then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_HOLYANDDISCIPLINE] = crank
+			end
+		end
+	end
+	
+	if class == "MAGE" then
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 8)
+		if talentname == L_TALENT.MAGE_ARCANE_ARCANE_IMPACT then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_ARCANE] = ( spellCritBySchool[L.SPELL_SCHOOL_ARCANE] or 0 ) + crank * 2
+			end
+		end
+		
+		local talentname, _, _, _, crank, _ = GetTalentInfo(2, 6)
+		if talentname == L_TALENT.MAGE_FIRE_INCINERATE then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_FIREBLASTANDSCORCH] = crank * 2
+			end
+		end
+		talentname, _, _, _, crank, _ = GetTalentInfo(2, 7)
+		if talentname == L_TALENT.MAGE_FIRE_IMPROVED_FLAMESTRIKE then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_FALMESTRIKE] = crank * 5
+			end
+		end
+		talentname, _, _, _, crank, _ = GetTalentInfo(2, 14)
+		if talentname == L_TALENT.MAGE_FIRE_CRITICAL_MASS then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_FIRE] = ( spellCritBySchool[L.SPELL_SCHOOL_FIRE] or 0 ) + crank * 2
+			end
+		end
+	end
+	
+	if class == "WARLOCK" then
+		local talentname, _, _, _, crank, _ = GetTalentInfo(3, 11)
+		if talentname == L_TALENT.WARLOCK_DESTRUCTION_IMPROVED_SEARINGPAIN then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_SEARINGPAIN] = crank * 2
+			end
+		end
+		talentname, _, _, _, crank, _ = GetTalentInfo(3, 8)
+		if talentname == L_TALENT.WARLOCK_DESTRUCTION_DEVASTATION then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_DESTRUCTION] = crank
+			end
+		end
+	end
+	
+	if class == "PALADIN" then
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 13)
+		if talentname == L_TALENT.PALADIN_HOLY_DIVINE_FAVOR then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_HOLYSHOCK] = crank * 10
+			end
+		end
+		talentname, _, _, _, crank, _ = GetTalentInfo(1, 15)
+		if talentname == L_TALENT.PALADIN_HOLY_HOLY_POWER then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_HOLYLIGHTANDFLASH] = crank * 2
+			end
+		end
+	end
+	
+	if class == "SHAMAN" then
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 8)
+		if talentname == L_TALENT.SHAMAN_ELEMENTAL_CALL_OF_THUNDER then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_LIGHTINGBOLTANDCHAINLIGHTING] = crank 
+			end
+			if crank == 5 then
+				spellCritBySchool[L.SPELL_SCHOOL_LIGHTINGBOLTANDCHAINLIGHTING] = ( spellCritBySchool[L.SPELL_SCHOOL_LIGHTINGBOLTANDCHAINLIGHTING] or 0 ) + 1 
+			end
+		end
+		talentname, _, _, _, crank, _ = GetTalentInfo(3, 5)
+		if talentname == L_TALENT.SHAMAN_RESTORATION_TIDAL_MASTERY then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_HEALANDLIGHTING] = crank
+			end
+		end
+	end
+	
+	if class == "DRUID" then
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 6)
+		if talentname == L_TALENT.DRUID_BALANCE_IMPROVED_MOONFIRE then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_MOONFIRE] = crank * 5
+			end
+		end
+		talentname, _, _, _, crank, _ = GetTalentInfo(3, 14)
+		if talentname == L_TALENT.DRUID_RESTORATION_IMPROVED_REGROWTH then
+			if crank ~= 0 then
+				spellCritBySchool[L.SPELL_SCHOOL_REGROWTH] = crank * 10
+			end
+		end
+	end
+	
+	return spellCrit, spellCritBySchool
+end
+
+function BCS:GetSpellPower(school)
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_SPELL_COMBAT","PLAYERSTAT_SPELL_SCHOOLS",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v) then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+	
+	if BCS_USE_CACHE == 1 then
+		if  (GetTime() - GET_SPELL_POWER_TIME) < 1 then
+			return SPELL_POWER_IN_GETSPELLPOWER, SECOND_SPELL_POWER, SECOND_SPELL_POWER_NAME, DAMAGE_POWER, SPELL_POWER_BY_SCHOOL.ARCANE, SPELL_POWER_BY_SCHOOL.FIRE,  SPELL_POWER_BY_SCHOOL.FROST, SPELL_POWER_BY_SCHOOL.HOLY, SPELL_POWER_BY_SCHOOL.NATURE, SPELL_POWER_BY_SCHOOL.SHADOW
+			
+		else 
+			SPELL_POWER_IN_GETSPELLPOWER, SECOND_SPELL_POWER, SECOND_SPELL_POWER_NAME, DAMAGE_POWER, SPELL_POWER_BY_SCHOOL.ARCANE, SPELL_POWER_BY_SCHOOL.FIRE,  SPELL_POWER_BY_SCHOOL.FROST, SPELL_POWER_BY_SCHOOL.HOLY, SPELL_POWER_BY_SCHOOL.NATURE, SPELL_POWER_BY_SCHOOL.SHADOW = BCS:GetLiveSpellPower(school)
+			GET_SPELL_POWER_TIME = GetTime()
+			return SPELL_POWER_IN_GETSPELLPOWER, SECOND_SPELL_POWER, SECOND_SPELL_POWER_NAME, DAMAGE_POWER, SPELL_POWER_BY_SCHOOL.ARCANE, SPELL_POWER_BY_SCHOOL.FIRE,  SPELL_POWER_BY_SCHOOL.FROST, SPELL_POWER_BY_SCHOOL.HOLY, SPELL_POWER_BY_SCHOOL.NATURE, SPELL_POWER_BY_SCHOOL.SHADOW
+		end
+	else
+		return BCS:GetLiveSpellPower(school)
+	end
+	return BCS:GetLiveSpellPower(school)
+end
+
+function BCS:GetLiveSpellPower(school)
+	local spellPower = 0
+	local arcanePower = 0
+	local firePower = 0
+	local frostPower = 0
+	local holyPower = 0
+	local naturePower = 0
+	local shadowPower = 0
+	local damagePower = 0
+	local MAX_INVENTORY_SLOTS = 19
+	local SpellPower_Set_Bonus = {}
+		
+	-- scan gear
+	for slot=0, MAX_INVENTORY_SLOTS do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		if hasItem then
+			local SET_NAME
+			for line=1, equipment.count do
+				local left = equipment.left[line]
+				if left then
+					local _,_, value = strfind(left, L_SPELLPOWER["Equip: Increases damage and healing done by magical spells and effects by up to (%d+)."])
+					if value then
+						spellPower = spellPower + tonumber(value)
+					end
+
+					_,_, value = strfind(left, L_SPELLPOWER["jewel_5_spell_power"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+					end
+
+					_,_, value = strfind(left, L_SPELLPOWER["Desecration"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+					end
+														
+					_,_, value,_ = strfind(left, L_SPELLPOWER["Atiesh, Greatstaff of the Guardian_Druid"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+						damagePower = damagePower + tonumber(value)
+					end
+
+					_,_, value,_ = strfind(left, L_SPELLPOWER["Atiesh, Greatstaff of the Guardian_Priest"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+						damagePower = damagePower + tonumber(value)
+					end
+
+					_,_,_,_, value = strfind(left, L_SPELLPOWER["Scythe_of_Elune"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+						damagePower = damagePower + tonumber(value)
+					end
+
+					_,_, value,_ = strfind(left, L_SPELLPOWER["Power of the Scourge"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+					end
+						
+					_,_, value = strfind(left, L_SPELLPOWER["Spell Damage %+(%d+)"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELLPOWER["^%+(%d+) Spell Damage and Healing"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELLPOWER["^%+(%d+) Damage and Healing Spells"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELLPOWER["fm_12_spell_damage"])
+					if value then
+						spellPower = spellPower + tonumber(value)
+					end
+					
+					_,_, value = strfind(left, L_SPELLPOWER["Minor_Wizard_Oil"])
+					if value then
+						spellPower = spellPower + 8
+					end
+					_,_, value = strfind(left, L_SPELLPOWER["Wizard_Oil"])
+					if value then
+						spellPower = spellPower + 24
+					end
+					_,_, value = strfind(left, L_SPELLPOWER["Brilliant_Wizard_Oil"])
+					if value then
+						spellPower = spellPower + 36
+					end
+					
+						
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Arcane spells and effects by up to (%d+)."])
+					if value then
+						arcanePower = arcanePower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Arcane Spell Damage"])
+					if value then
+						arcanePower = arcanePower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Netherwind Epaulets"])
+					if value then
+						arcanePower = arcanePower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["glove_20_arcane_power"])
+					if value then
+						arcanePower = arcanePower + tonumber(value)
+					end
+						
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Fire spells and effects by up to (%d+)."])
+					if value then
+						firePower = firePower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Fire Damage %+(%d+)"])
+					if value then
+						firePower = firePower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Fire Spell Damage"])
+					if value then
+						firePower = firePower + tonumber(value)
+					end
+						
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Frost spells and effects by up to (%d+)."])
+					if value then
+						frostPower = frostPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Frost Damage %+(%d+)"])
+					if value then
+						frostPower = frostPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Frost_Spell_Damage1"])
+					if value then
+						frostPower = frostPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Frost Spell Damage"])
+					if value then
+						frostPower = frostPower + tonumber(value)
+					end
+					
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Holy spells and effects by up to (%d+)."])
+					if value then
+						holyPower = holyPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Holy Spell Damage"])
+					if value then
+						holyPower = holyPower + tonumber(value)
+					end
+						
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Nature spells and effects by up to (%d+)."])
+					if value then
+						naturePower = naturePower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Nature Spell Damage"])
+					if value then
+						naturePower = naturePower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["jewel_9_nature_power"])
+					if value then
+						naturePower = naturePower + tonumber(value)
+					end
+				
+						
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Shadow spells and effects by up to (%d+)."])
+					if value then
+						shadowPower = shadowPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Shadow spells and effects by up (%d+)."])
+					if value then
+						shadowPower = shadowPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Shadow_effect_3"])
+					if value then
+						shadowPower = shadowPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["Shadow Damage %+(%d+)"])
+					if value then
+						shadowPower = shadowPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Shadow Spell Damage"])
+					if value then
+						shadowPower = shadowPower + tonumber(value)
+					end
+						
+					_,_, value = strfind(left, "(.+)（%d/%d）")
+					if value then
+						SET_NAME = value
+					end
+
+					_, _, value = strfind(left, L_SPELLPOWER["^Set: Increases damage and healing done by magical spells and effects by up to (%d+)%."])
+					if value and SET_NAME and not tContains(SpellPower_Set_Bonus, SET_NAME) then
+						tinsert(SpellPower_Set_Bonus, SET_NAME)
+						spellPower = spellPower + tonumber(value)
+					end
+					
+					_, _, value = strfind(left, L_SPELL_SCHOOL["Set_Nature_damage"])
+					if value and SET_NAME and not tContains(SpellPower_Set_Bonus, SET_NAME) then
+						tinsert(SpellPower_Set_Bonus, SET_NAME)
+						naturePower = naturePower + tonumber(value)
+					end
+					
+				end
+			end
+		end
+	end
+		
+		-- scan talents
+	spellPower = spellPower + BCS:GetLiveSpellPower_FromTalent()
+	
+		
+		-- buffs
+	local _, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Magical damage dealt is increased by up to (%d+)."])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+		damagePower = damagePower + tonumber(spellPowerFromAura)
+	end
+
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Atiesh, Greatstaff of the Guardian_Warlock_aura"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Wrath_of_Cenarius"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+		damagePower = damagePower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Remains_of_Overwhelming_Power"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["The_Restrained_Essence_of_Sapphiron"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Arcane_Giant"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Dream_Firewater"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Dream_Mongoose"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Unity_of_the_Timbermaw"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Droplet_of_Nordrassil"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+	end
+		
+	_, _, spellPowerFromAura,_,_ = BCS:GetPlayerAura(L_SPELLPOWER["Dreamshard Elixir"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+		damagePower = damagePower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura,_,_ = BCS:GetPlayerAura(L_SPELLPOWER["Zandalarian_Hero_Charm_sp"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+		damagePower = damagePower + tonumber(spellPowerFromAura)
+	end
+
+	_, _, spellPowerFromAura,_,_ = BCS:GetPlayerAura(L_SPELLPOWER["Talisman of Ephemeral Power"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+	end
+
+	if class == "PRIEST" then
+		_, _, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["INNER_FIRE"])
+		if spellPowerFromAura then
+			local talentname, _, _, _, crank, _ = GetTalentInfo(1, 8)
+			if talentname == L_TALENT.PRIEST_IMPROVED_INNER_FIRE then 
+				spellPower = spellPower + tonumber(spellPowerFromAura) * ( 1 + 0.15 * crank )
+				damagePower = damagePower + tonumber(spellPowerFromAura) * ( 1 + 0.15 * crank )
+			else
+				spellPower = spellPower + tonumber(spellPowerFromAura)
+				damagePower = damagePower + tonumber(spellPowerFromAura)
+			end
+		end
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELLPOWER["Dreamtonic"])
+	if spellPowerFromAura then
+		spellPower = spellPower + tonumber(spellPowerFromAura)
+		damagePower = damagePower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELL_SCHOOL["Elixir_of_Greater_Nature_Power"])
+	if spellPowerFromAura then
+		naturePower = naturePower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELL_SCHOOL["Elixir_of_Greater_Frost_Power"])
+	if spellPowerFromAura then
+		frostPower = frostPower + tonumber(spellPowerFromAura)
+	end
+	
+	_, _, spellPowerFromAura = BCS:GetPlayerAura(L_SPELL_SCHOOL["Elixir_of_Greater_Arcane_Power"])
+	if spellPowerFromAura then
+		arcanePower = arcanePower + tonumber(spellPowerFromAura)
+	end
+		
+	local secondaryPower = 0
+	local secondaryPowerName = ""
+		
+	if arcanePower > secondaryPower then
+		secondaryPower = arcanePower
+		secondaryPowerName = L.SPELL_SCHOOL_ARCANE
+	end
+	if firePower > secondaryPower then
+		secondaryPower = firePower
+		secondaryPowerName = L.SPELL_SCHOOL_FIRE
+	end
+	if frostPower > secondaryPower then
+		secondaryPower = frostPower
+		secondaryPowerName = L.SPELL_SCHOOL_FROST
+	end
+	if holyPower > secondaryPower then
+		secondaryPower = holyPower
+		secondaryPowerName = L.SPELL_SCHOOL_HOLY
+	end
+	if naturePower > secondaryPower then
+		secondaryPower = naturePower
+		secondaryPowerName = L.SPELL_SCHOOL_NATURE
+	end
+	if shadowPower > secondaryPower then
+		secondaryPower = shadowPower
+		secondaryPowerName = L.SPELL_SCHOOL_SHADOW
+	end
+
+	if class == "PRIEST" then
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 17)
+		if talentname == L_TALENT.PRIEST_FORCE_OF_WILL then
+			if crank ~= 0 then
+				spellPower = spellPower * ( 1 + crank * 0.01 )
+				secondaryPower = secondaryPower * ( 1 + crank * 0.01 )
+				damagePower = damagePower * ( 1 + crank * 0.01 )
+				arcanePower = arcanePower * ( 1 + crank * 0.01 )
+				firePower = firePower * ( 1 + crank * 0.01 )
+				frostPower = frostPower * ( 1 + crank * 0.01 )
+				holyPower = holyPower * ( 1 + crank * 0.01 )
+				naturePower = naturePower * ( 1 + crank * 0.01 )
+				shadowPower = shadowPower * ( 1 + crank * 0.01 )
+			end
+		end
+	end
+
+	return spellPower, secondaryPower, secondaryPowerName, damagePower, arcanePower, firePower, frostPower, holyPower, naturePower, shadowPower
+end
+
+function BCS:GetLiveSpellPower_FromTalent()
+	local spellPower = 0
+	if class == "PRIEST" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(2, 12)
+		local _, Spirit, _, _ = UnitStat("player", 5)
+		if talentname == L_TALENT.PRIEST_SPIRITUAL_GUIDANCE then 
+			spellPower = spellPower + crank * 0.05 * Spirit
+		end
+	end
+	return spellPower
+end
+
+function BCS:GetHealingPower()
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_SPELL_COMBAT",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v) then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+	if BCS_USE_CACHE == 1 then
+		if HEAL_POWER and (GetTime() - GET_HEAL_POWER_TIME) < 2 then
+			return HEAL_POWER
+		else 
+			HEAL_POWER = BCS:GetLiveHealingPower()
+			GET_HEAL_POWER_TIME = GetTime()
+			return HEAL_POWER
+		end
+	else
+		return BCS:GetLiveHealingPower()
+	end
+end
+
+function BCS:GetLiveHealingPower()
+	local healPower = 0
+	local healPower_Set_Bonus = {}
+	local MAX_INVENTORY_SLOTS = 19
+	
+	for slot=0, MAX_INVENTORY_SLOTS do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		
+		if hasItem then
+			local SET_NAME
+			
+			for line=1, equipment.count do
+				local left = equipment.left[line]
+				
+				if left then
+					local _,_, value = strfind(left, L_HEALPOWER["Equip: Increases healing done by spells and effects by up to (%d+)."])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_HEALPOWER["Healing Spells %+(%d+)"])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_HEALPOWER["Equip: Increases healing (%d+)."])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+					_,_, value = strfind(left, L_HEALPOWER["^%+(%d+) Healing Spells"])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+
+					_,_, value = strfind(left, L_HEALPOWER["jewel_12_heal_power"])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+
+					_,_, value = strfind(left, L_HEALPOWER["Hammer of the Twisting Nether"])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+
+					_,_, value = strfind(left, L_HEALPOWER["Scepter of the False Prophet"])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+
+					_,_,_, value = strfind(left, L_HEALPOWER["Atiesh, Greatstaff of the Guardian_Druid"])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+
+					_,_,_, value = strfind(left, L_HEALPOWER["Atiesh, Greatstaff of the Guardian_Priest"])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+
+					_,_, value = strfind(left, L_HEALPOWER["Resilience of the Scourge"])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+					
+					--[[
+					_,_, value = strfind(left, L_HEALPOWER["fm_12_spell_damage"])
+					if value then
+						healPower = healPower + tonumber(value)
+					end
+					]]
+					_,_, value = strfind(left, L_HEALPOWER["Brilliant_Mana_Oil"])
+					if value then
+						healPower = healPower + 25
+					end
+					
+					_,_, value = strfind(left, "(.+)（%d/%d）")
+					if value then
+						SET_NAME = value
+					end
+					_, _, value = strfind(left, L_HEALPOWER["^Set: Increases healing done by spells and effects by up to (%d+)%."])
+					if value and SET_NAME and not tContains(healPower_Set_Bonus, SET_NAME) then
+						tinsert(healPower_Set_Bonus, SET_NAME)
+						healPower = healPower + tonumber(value)
+					end
+				end
+			end
+		end
+		
+	end
+
+	--from talent
+	healPower = healPower + BCS:GetLiveHealPower_FromTalent()
+	
+	
+	-- buffs
+	local _, _, healPowerFromAura = BCS:GetPlayerAura(L_HEALPOWER["Healing done by magical spells is increased by up to (%d+)."])
+	if healPowerFromAura then
+		healPower = healPower + tonumber(healPowerFromAura)
+	end
+
+	_, _, _, healPowerFromAura, _ = BCS:GetPlayerAura(L_HEALPOWER["Dreamshard Elixir"])
+	if healPowerFromAura then
+		healPower = healPower + tonumber(healPowerFromAura)
+	end
+
+	_, _, healPowerFromAura = BCS:GetPlayerAura(L_HEALPOWER["Atiesh, Greatstaff of the Guardian_Priest_aura"])
+	if healPowerFromAura then
+		healPower = healPower + tonumber(healPowerFromAura)
+	end
+	
+	_, _, healPowerFromAura = BCS:GetPlayerAura(L_HEALPOWER["Zandalarian_Hero_Charm_hp"])
+	if healPowerFromAura then
+		healPower = healPower + tonumber(healPowerFromAura)
+	end
+	
+	_, _, healPowerFromAura = BCS:GetPlayerAura(L_HEALPOWER["Spirit_of_Arathor"])
+	if healPowerFromAura then
+		healPower = healPower + tonumber(healPowerFromAura)
+	end
+
+	return healPower
+end
+
+function BCS:GetLiveHealPower_FromTalent()
+	local healPower = 0
+	--[[
+	if class == "PRIEST" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(2, 12)
+		local _, Spirit, _, _ = UnitStat("player", 5)
+		if talentname == L_TALENT.PRIEST_SPIRITUAL_GUIDANCE then 
+			healPower = healPower + crank * 0.05 * Spirit
+		end
+	end
+	]]
+	if class == "PALADIN" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 12)
+		if talentname == L_TALENT.PALADIN_IRONCLAD then 
+			healPower = healPower + crank * 0.01 * BCS:GetOnlyGearArmor()
+		end
+	end
+	return healPower
+end
+
+--[[
+-- server\src\game\Object\Player.cpp
+float Player::OCTRegenMPPerSpirit()
+{
+    float addvalue = 0.0
+
+    float Spirit = GetStat(STAT_SPIRIT)
+    uint8 Class = getClass()
+
+    switch (Class)
+    {
+        case CLASS_DRUID:   addvalue = (Spirit / 5 + 15)   break
+        case CLASS_HUNTER:  addvalue = (Spirit / 5 + 15)   break
+        case CLASS_MAGE:    addvalue = (Spirit / 4 + 12.5) break
+        case CLASS_PALADIN: addvalue = (Spirit / 5 + 15)   break
+        case CLASS_PRIEST:  addvalue = (Spirit / 4 + 12.5) break
+        case CLASS_SHAMAN:  addvalue = (Spirit / 5 + 17)   break
+        case CLASS_WARLOCK: addvalue = (Spirit / 5 + 15)   break
+    }
+
+    addvalue /= 2.0f   // the above addvalue are given per tick which occurs every 2 seconds, hence this divide by 2
+
+    return addvalue
+}
+
+void Player::UpdateManaRegen()
+{
+    // Mana regen from spirit
+    float power_regen = OCTRegenMPPerSpirit()
+    // Apply PCT bonus from SPELL_AURA_MOD_POWER_REGEN_PERCENT aura on spirit base regen
+    power_regen *= GetTotalAuraMultiplierByMiscValue(SPELL_AURA_MOD_POWER_REGEN_PERCENT, POWER_MANA)
+
+    // Mana regen from SPELL_AURA_MOD_POWER_REGEN aura
+    float power_regen_mp5 = GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_POWER_REGEN, POWER_MANA) / 5.0f
+
+    // Set regen rate in cast state apply only on spirit based regen
+    int32 modManaRegenInterrupt = GetTotalAuraModifier(SPELL_AURA_MOD_MANA_REGEN_INTERRUPT)
+    if (modManaRegenInterrupt > 100)
+        { modManaRegenInterrupt = 100 }
+
+    m_modManaRegenInterrupt = power_regen_mp5 + power_regen * modManaRegenInterrupt / 100.0f
+
+    m_modManaRegen = power_regen_mp5 + power_regen
+}
+]]
+
+local function GetRegenMPPerSpirit()
+	local addvalue = 0
+	
+	local stat, Spirit, posBuff, negBuff = UnitStat("player", 5)
+		
+	if class == "DRUID" then
+		addvalue = (Spirit / 5 + 15)
+	elseif class == "HUNTER" then
+		addvalue = (Spirit / 5 + 15)
+	elseif class == "MAGE" then
+		addvalue = (Spirit / 4 + 12.5)
+	elseif class == "PALADIN" then
+		addvalue = (Spirit / 5 + 15)
+	elseif class == "PRIEST" then
+		addvalue = (Spirit / 4 + 12.5)
+	elseif class == "SHAMAN" then
+		addvalue = (Spirit / 5 + 17)
+	elseif class == "WARLOCK" then
+		addvalue = (Spirit / 5 + 15)
+	else
+		return addvalue
+	end
+		
+	return addvalue
+end
+
+function BCS:GetManaRegen()
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_SPELL_COMBAT",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v) then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+	if BCS_USE_CACHE == 1 then
+		if  (GetTime() - GET_MANA_REGEN_TIME) < 2 then
+			return MANA_REGEN_BASE, MANA_REGEN_CAST, MANA_REGEN_MP5, MANA_REGEN_CAST_PERCENT
+		else 
+			MANA_REGEN_BASE, MANA_REGEN_CAST, MANA_REGEN_MP5, MANA_REGEN_CAST_PERCENT = BCS:GetLiveManaRegen()
+			GET_MANA_REGEN_TIME = GetTime()
+			return MANA_REGEN_BASE, MANA_REGEN_CAST, MANA_REGEN_MP5, MANA_REGEN_CAST_PERCENT
+		end
+	else
+		return BCS:GetLiveManaRegen()
+	end
+end 
+
+function BCS:GetLiveManaRegen()
+	-- to-maybe-do: apply buffs/talents
+	
+	if class == "WARRIOR" or class == "ROGUE" then 
+		return 0,0,0,0
+	end
+
+	local base, casting,casting_percent
+	local power_regen = GetRegenMPPerSpirit()
+	local ManaRegenCastPercent_Set_bonus = {}
+	
+	casting = 0
+	casting_percent = 0
+	base = power_regen
+	
+	local mp5 = 0
+	local MAX_INVENTORY_SLOTS = 19
+	
+	local arcane_mage_3T2 = 0
+	
+	for slot=0, MAX_INVENTORY_SLOTS do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		 
+		
+		
+		if hasItem then
+			local SET_NAME
+			for line=1, equipment.count do
+				local left = equipment.left[line]
+				
+				if left then
+					local _,_, value = strfind(left, L_MANAREGEN["^Mana Regen %+(%d+)"])
+					if value then
+						mp5 = mp5 + tonumber(value)
+					end
+					_,_, value = strfind(left, L_MANAREGEN["Equip: Restores (%d+) mana per 5 sec."])
+					if value then
+						mp5 = mp5 + tonumber(value)
+					end
+					_,_, value = strfind(left, L_MANAREGEN["^%+(%d+) mana every 5 sec."])
+					if value then
+						mp5 = mp5 + tonumber(value)
+					end
+					_,_,_, value = strfind(left, L_MANAREGEN["Resilience of the Scourge"])
+					if value then
+						mp5 = mp5 + tonumber(value)
+					end
+					_,_, value = strfind(left, L_MANAREGEN["Brilliant_Mana_Oil"])
+					if value then
+						mp5 = mp5 + 12
+					end
+		
+					
+					_,_, value = strfind(left, L_MANAREGEN["cast_mana_percent_regen_1"])
+					if value then
+						casting_percent = casting_percent + tonumber(value)
+					end
+					_,_, value = strfind(left, L_MANAREGEN["cast_mana_percent_regen_2"])
+					if value then
+						casting_percent = casting_percent + tonumber(value)
+					end
+					_,_, value = strfind(left, L_MANAREGEN["cast_mana_percent_regen_3"])
+					if value then
+						casting_percent = casting_percent + tonumber(value)
+					end
+					
+					--from set
+					_,_, value = strfind(left, "(.+)（%d/%d）")
+					if value then
+						SET_NAME = value
+					end
+					_, _, value = strfind(left, L_MANAREGEN["cast_mana_percent_regen_set"])
+					if value and SET_NAME and not tContains(ManaRegenCastPercent_Set_bonus, SET_NAME) then
+						tinsert(ManaRegenCastPercent_Set_bonus, SET_NAME)
+						casting_percent = casting_percent + tonumber(value)
+					end
+					
+					_, _, value = strfind(left, L_MANAREGEN["arcane_mage_3T2"])
+					if value then
+						arcane_mage_3T2 = 1
+					end
+					
+				end
+			end
+		end
+		
+	end
+	
+	
+	if UnitRace("player") == L_RACE.HUMAN then
+		casting_percent = casting_percent + 5
+	end
+
+	--from talent
+	if class == "PRIEST" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 11)
+		if talentname == L_TALENT.PRIEST_MEDITATION then 
+			casting_percent = casting_percent + crank * 5
+		end
+	end
+	
+	if class == "DRUID" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(3, 8)
+		if talentname == L_TALENT.DRUID_REFLECTION then 
+			casting_percent = casting_percent + crank * 5
+		end
+	end
+	
+	if class == "MAGE" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 13)
+		if talentname == L_TALENT.MAGE_ARCANE_MEDITATION then 
+			if crank > 0 then
+				local casting_percent_add = 0
+				if crank == 1 then
+					casting_percent_add = 7
+				elseif crank ==2 then
+					casting_percent_add = 14
+				elseif crank ==3 then
+					casting_percent_add = 20
+				end
+				if UnitMana("player",0) / UnitManaMax("player",0) < 0.35 then
+					casting_percent_add = casting_percent_add * 3
+				end
+				casting_percent = casting_percent + casting_percent_add
+				
+			end
+		end
+	end
+	
+	
+	
+	-- buffs
+	local _, _, mp5FromAura = BCS:GetPlayerAura(L["Increases hitpoints by 300. 15%% haste to melee attacks. 10 mana regen every 5 seconds."])
+	if mp5FromAura then
+		mp5 = mp5 + 10
+	end
+	
+	_, _, mp5FromAura = BCS:GetPlayerAura(L_MANAREGEN["Blessing_of_Wisdom"])
+	if mp5FromAura then
+		mp5 = mp5 + tonumber(mp5FromAura)
+	end
+	
+	_, _, mp5FromAura = BCS:GetPlayerAura(L_MANAREGEN["Mageblood_Potion"])
+	if mp5FromAura then
+		mp5 = mp5 + tonumber(mp5FromAura)
+	end
+	
+	_, _, mp5FromAura = BCS:GetPlayerAura(L_MANAREGEN["Warchief_Blessing"])
+	if mp5FromAura then
+		mp5 = mp5 + tonumber(mp5FromAura)
+	end
+	
+	_, _, value = BCS:GetPlayerAura(L_MANAREGEN["Fizzy_Energy_Drink"])
+	if value then
+		mp5 = mp5 + tonumber(value)
+	end
+	
+	_, _, _, value = BCS:GetPlayerAura(L_MANAREGEN["Emerald_Essence"])
+	if value then
+		casting_percent = casting_percent + tonumber(value)
+	end
+	
+	_, _, value = BCS:GetPlayerAura(L_MANAREGEN["Sylvan_Blessing"])
+	if value then
+		casting_percent = casting_percent + tonumber(value)
+	end
+	
+	_, _, value = BCS:GetPlayerAura(L_MANAREGEN["Aspect_of_Strider"])
+	if value then
+		casting_percent = casting_percent + tonumber(value)
+	end
+	
+	_, _, value = BCS:GetPlayerAura(L_MANAREGEN["sprit_tap"])
+	if value then
+		casting_percent = casting_percent + tonumber(value)
+	end
+	
+	_, _, value = BCS:GetPlayerAura(L_MANAREGEN["Shard_of_Dreams"])
+	if value then
+		casting_percent = casting_percent + tonumber(value)
+	end
+		
+	_, _, mp5FromAura = BCS:GetPlayerAura(L_MANAREGEN["Mana_Spring_totem"])
+	if mp5FromAura then
+		mp5 = mp5 + tonumber(mp5FromAura) * 2.5
+	end
+	
+	
+	if class == "MAGE" then
+		local _, _, casting_percentFromAura = BCS:GetPlayerAura(L_MANAREGEN["magic_armor"])
+		if casting_percentFromAura then
+			casting_percent = casting_percent + tonumber(casting_percentFromAura)
+			if arcane_mage_3T2 == 1 then 
+				casting_percent = casting_percent + 15
+			end
+		end
+		_, _, value = BCS:GetPlayerAura(L_MANAREGEN["Evocation"])
+		if value then
+			base = base * (1 + tonumber(value) / 100 )
+		end
+	end
+	
+	if class == "PRIEST" then
+		 _, _, value = BCS:GetPlayerAura(L_MANAREGEN["Shadowform"])
+		if value then
+			if UnitLevel("player") == 60 then
+				casting_percent = casting_percent + 15
+			end
+		end
+	end
+	
+	if class == "SHAMAN" then
+		local talentname, _, _, _, crank, _ = GetTalentInfo(3, 11)
+		if talentname == L_TALENT.SHAMAN_IMPROVED_WATER_SHIELD and crank > 0 then 
+			local _, _, hasWaterShield = BCS:GetPlayerAura(L_MANAREGEN["Water_Shield"])
+			if hasWaterShield then
+				local waterShieldStacks = 1
+				for i = 1, 32 do
+					local name, stacks  = UnitBuff("player", i)
+					if name and name == "Interface\\Icons\\Ability_Shaman_WaterShield" then
+						waterShieldStacks = stacks or 1
+						break
+					end
+				end
+				mp5 = mp5 + crank * 3
+				local basebonus = base * (( crank * 0.005 + 0.005 ) * waterShieldStacks ) 
+				mp5 = mp5 * (( crank * 0.005 + 0.005 ) * waterShieldStacks + 1 ) + basebonus * 2.5
+			end
+		end
+	end
+	
+	casting = base * casting_percent / 100
+
+	return base, casting, mp5, casting_percent
+end
+
+-- Equipment/aura changes invalidate only the two haste caches.
+function BCS:InvalidateHasteCache()
+	GET_HASTE_CACHE_TIME = nil
+	GET_ESTIMATE_HASTE_TIME = nil
+    CALCULATED_MELEE_HASTE_TIME = nil
+end
+
+function BCS:GetCalculatedMeleeHaste()
+    if BCS_USE_CACHE == 1 and CALCULATED_MELEE_HASTE_TIME
+        and GetTime() - CALCULATED_MELEE_HASTE_TIME < 2 then
+        return CALCULATED_MELEE_HASTE
+    end
+    CALCULATED_MELEE_HASTE = self:GetLiveHaste("melee")
+    CALCULATED_MELEE_HASTE_TIME = GetTime()
+    return CALCULATED_MELEE_HASTE
+end
+
+function BCS:GetHaste()
+
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_SPELL_COMBAT",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v)then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+	 
+	if BCS_USE_CACHE == 1 then 
+		if  GET_HASTE_CACHE_TIME and (GetTime()-GET_HASTE_CACHE_TIME <2 ) then
+			return HASTE_CACHE
+		else 
+			HASTE_CACHE = BCS:GetLiveHaste()
+			GET_HASTE_CACHE_TIME = GetTime()
+			return HASTE_CACHE
+		end
+	else
+		return BCS:GetLiveHaste()
+	end
+
+end
+
+-- Diagnostics only: keep each aura's name, stack count and actual tooltip wording.
+function BCS:GetHasteAuraDetails()
+	local result = {}
+	for i = 0, 31 do
+		local index = GetPlayerBuff(i, "HELPFUL")
+		if index and index > -1 then
+			BCS_Tooltip:SetPlayerBuff(index)
+			local nameLine = getglobal(BCS_Prefix .. "TextLeft1")
+			local name = nameLine and nameLine:GetText() or tostring(index)
+			local stacks = GetPlayerBuffApplications and GetPlayerBuffApplications(index) or 1
+			if type(stacks) ~= "number" or stacks < 1 then stacks = 1 end
+			for line = 2, BCS_Tooltip:NumLines() do
+				local font = getglobal(BCS_Prefix .. "TextLeft" .. line)
+				local text = font and font:GetText()
+				if text and (strfind(text, "急速") or (strfind(text, "速度")
+					and (strfind(text, "攻击") or strfind(text, "施法")))) then
+					tinsert(result, {name=name, stacks=stacks, text=text})
+				end
+			end
+		end
+	end
+	return result
+end
+
+local zealSpellTooltip
+local function CleanHasteText(text)
+    text = string.gsub(text or "", "|c%x%x%x%x%x%x%x%x", "")
+    return (string.gsub(text, "|r", ""))
+end
+
+-- The aura tooltip contains the stacked base magnitude, but can omit the
+-- talent bonus. The Crusader Strike spell tooltip exposes the per-stack value.
+function BCS:GetZealHastePerStack()
+    local index = self:GetSpellIndex("十字军打击") or self:GetSpellIndex("Crusader Strike")
+    if not index then return nil, "技能书中未找到十字军打击" end
+    if not zealSpellTooltip then
+        zealSpellTooltip = CreateFrame("GameTooltip", "BCSZealSpellTooltip", nil, "GameTooltipTemplate")
+        zealSpellTooltip:SetOwner(UIParent, "ANCHOR_NONE")
+    end
+    local tooltip = zealSpellTooltip
+    tooltip:ClearLines()
+    tooltip:SetSpell(index, BOOKTYPE_SPELL)
+    local patterns = {
+        "攻击速度提高%s*(%d+%.?%d*)%%",
+        "攻击速度和施法速度提高%s*(%d+%.?%d*)%%",
+        "攻击和施法速度提高%s*(%d+%.?%d*)%%",
+        "攻击速度%s*(%d+%.?%d*)%%",
+        "attack speed by%s+(%d+%.?%d*)%%",
+        "attack and casting speed by%s+(%d+%.?%d*)%%",
+    }
+    local spellText = {}
+    for line = 1, tooltip:NumLines() do
+        local font = getglobal("BCSZealSpellTooltipTextLeft" .. line)
+        local text = CleanHasteText(font and font:GetText())
+        if text ~= "" then tinsert(spellText, text) end
+        for _, pattern in ipairs(patterns) do
+            local _, _, value = strfind(text, pattern)
+            value = tonumber(value)
+            if value and value > 0 then
+                tooltip:Hide()
+                return value
+            end
+        end
+    end
+    tooltip:Hide()
+    return nil, "未识别速度数值，技能提示：" .. table.concat(spellText, " / ")
+end
+
+function BCS:GetLiveHaste(mode)
+	local haste = 1.0000
+	local haste_Set_bonus = {}
+	local MAX_INVENTORY_SLOTS = 19
+	--from gear
+	for slot=0, MAX_INVENTORY_SLOTS do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		if hasItem then
+			local SET_NAME = nil
+			for line=1, equipment.count do
+				local left = equipment.left[line]
+				
+				if left then
+
+					local _,_, value = strfind(left, L_HASTE["HASTE_improve_equip_1"])
+					if value then
+						haste = haste * (1+tonumber(value)/100)
+					end
+
+					local _,_, value = strfind(left, L_HASTE["HASTE_improve_equip_2"])
+					if value then
+						haste = haste * (1+tonumber(value)/100)
+					end
+
+					local _,_, value = strfind(left, L_HASTE["HASTE_improve_enchant"])
+					if value then
+						haste = haste * (1+tonumber(value)/100)
+					end
+
+					local _,_, value = strfind(left, L_HASTE["Libram of Rapidity"])
+					if value then
+						haste = haste * (1+tonumber(value)/100)
+					end
+					
+					--from set
+					_,_, value = strfind(left, "(.+)（%d+/%d+）")
+                    if not value then _, _, value = strfind(left, "(.+)%(%d+/%d+%)") end
+					if value then
+						SET_NAME = value
+					end
+
+					_, _, value = strfind(left, L_HASTE["HASTE_improve_set"])
+                    local setKey = SET_NAME and (SET_NAME .. "\001" .. left)
+                    local active = not equipment.hasteSetActive or equipment.hasteSetActive[line] ~= false
+                    if value and setKey and active and not haste_Set_bonus[setKey] then
+                        haste_Set_bonus[setKey] = true
+                        haste = haste * (1+tonumber(value)/100)
+                    end
+
+				end
+			end
+		end
+		
+	end
+	
+    -- Independent auras multiply once each. Matching by pattern globally
+    -- loses the second aura with the same wording, and can count one aura twice.
+    local patterns = {
+        {"HASTE_BUFF_2", 3}, {"HASTE_BUFF_3", 3}, {"HASTE_PALADIN_ZEAL", 3},
+        {"Atiesh, Greatstaff of the Guardian_Druid_aura", 3},
+    }
+    if mode ~= "melee" then
+        tinsert(patterns, {"HASTE_BUFF_1", 3})
+        tinsert(patterns, {"Shard_of_Dreams", 4})
+        if class == "MAGE" then tinsert(patterns, {"ARCANE_POWER", 3}) end
+    end
+    if class == "WARLOCK" then tinsert(patterns, {"HASTE_WARLOCK_Master_Demonologist", 3}) end
+    local function ApplyAura(lines, choices, sign)
+        for line = 1, lines.count do
+            local text = lines[line]
+            if text then
+                for _, choice in ipairs(choices) do
+                    local match = {strfind(text, L_HASTE[choice[1]])}
+                    local value = tonumber(match[choice[2]])
+                    if value then
+                        local name = CleanHasteText(lines[1])
+                        if sign == 1 and (name == "狂热" or name == "Zeal")
+                            and type(GetPlayerBuffApplications) == "function" then
+                            local ok, stacks = pcall(GetPlayerBuffApplications, lines.index)
+                            if ok and type(stacks) == "number" and stacks >= 1 and stacks <= 3 then
+                                local found, perStack = pcall(BCS.GetZealHastePerStack, BCS)
+                                if found and type(perStack) == "number" and perStack > 0 then
+                                    value = perStack * stacks
+                                end
+                            end
+                        end
+                        -- For other buffs, tooltip magnitude may already include
+                        -- stacks. Apply each aura once without an extra multiplier.
+                        haste = haste * (1 + sign * value / 100)
+                        return
+                    end
+                end
+            end
+        end
+    end
+    for _, lines in ipairs(ReadHasteAuras("HELPFUL")) do ApplyAura(lines, patterns, 1) end
+    if mode ~= "melee" then
+        for _, lines in ipairs(ReadHasteAuras("HARMFUL")) do ApplyAura(lines, {{"Contagion_of_Rot", 3}}, -1) end
+    end
+
+	--from race 
+	if UnitRace("player") == L_RACE.NIGHT_ELF then
+		haste = haste * 1.01
+	end
+
+	--from talent
+	if mode ~= "melee" and class == "PRIEST" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 14)
+		if talentname == L_TALENT.PRIEST_MENTAL_STRENGTH then 
+			haste = haste * (1+crank/100)
+		end
+	end
+	return (haste-1)*100
+end
+
+function BCS:GetOriWeaponSpeed(slotID)
+	if slotID ~= 16 and  slotID ~= 18 then 
+		return nil
+	end 
+	local weaponSpeed = 0
+	local hasItem, equipment = ReadEquipmentTooltip(slotID)
+	if hasItem then
+		for line=1, equipment.count do
+			local right = equipment.right[line]
+			if right then
+				local _, _, v1, v2 = strfind(right, L["weaponSpeed"])
+				if v1 then
+					weaponSpeed = v2/100+v1
+					break
+				end
+			end
+		end
+	else 
+		if slotID == 16 then 
+			weaponSpeed = 2
+		end
+		if slotID == 18 then 
+			weaponSpeed = 0
+		end
+	end
+	return weaponSpeed
+end
+
+function BCS:GetOnlyGearArmor()
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_SPELL_COMBAT",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v)then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+	 
+	if BCS_USE_CACHE == 1 then 
+		if  GET_GEAR_ARMOR_TIME and (GetTime() - GET_GEAR_ARMOR_TIME <2 ) then
+			return GEAR_ARMOR
+		else 
+			GEAR_ARMOR = BCS:GetLiveOnlyGearArmor()
+			GET_GEAR_ARMOR_TIME = GetTime()
+			return GEAR_ARMOR
+		end
+	else
+		return BCS:GetLiveOnlyGearArmor()
+	end
+
+	return BCS:GetLiveOnlyGearArmor()
+end
+
+function BCS:GetLiveOnlyGearArmor()
+	local armor = 0
+	local Set_bonus = {}
+	for slot=0, 19 do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		if hasItem then
+			local SET_NAME = nil
+			for line=1, equipment.count do
+				local left = equipment.left[line]
+				if left then
+					local _,_, value = strfind(left, L_ARMOR["gainarmor"])
+					if value then
+						armor = armor + tonumber(value)
+					end
+					--from set
+					_,_, value = strfind(left, "(.+)（%d/%d）")
+					if value then
+						SET_NAME = value
+					end
+					_, _, value = strfind(left, L_ARMOR["gainarmor_set"])
+					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+						tinsert(Set_bonus, SET_NAME)
+						armor = armor + tonumber(value)
+					end
+
+				end
+			end
+		end
+	end
+	return armor
+end
+
+function BCS:Version()
+	return VERSION
+end
+
+function BCS:GetBlockValue()
+	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+		local on_show = 0
+		local allow_options= {"PLAYERSTAT_DEFENSES",} 
+		for _,v in ipairs(allow_options) do
+			if (BCSConfig["DropdownLeft"] == v) or (BCSConfig["DropdownRight"] == v)then
+				on_show = 1
+				break
+			end
+		end
+		if on_show == 0 then 
+			return 0
+		end
+	end
+	if BCS_USE_CACHE == 1 then 
+		if  GET_BLOCK_VALUE_TIME and (GetTime() - GET_BLOCK_VALUE_TIME < 2 ) then
+			return BLOCK_VALUE
+		else 
+			BLOCK_VALUE = BCS:GetLiveBlockValue()
+			GET_BLOCK_VALUE_TIME = GetTime()
+			return BLOCK_VALUE
+		end
+	else
+		return BCS:GetLiveBlockValue()
+	end
+	return BCS:GetLiveBlockValue()
+end
+
+function BCS:GetLiveBlockValue()
+	local blockvalue = 0
+	local hasShield = false
+	
+	if class ~= "WARRIOR" and  class ~= "PALADIN" and class ~="SHAMAN" then 
+		return 0
+	end
+
+	local offhandLink = GetInventoryItemLink("player", 17)
+	if offhandLink then
+		local _, _, itemID = string.find(offhandLink, "item:(%d+):%d+:%d+:%d+")
+		local n = tonumber(itemID)
+		local itemName, _, itemRarity, _, itemEquipType, _, _, itemInvType = GetItemInfo(n)	
+		if itemInvType == "INVTYPE_SHIELD" then hasShield = true end
+	else
+		return 0
+	end
+	
+	if not hasShield then return 0 end
+	
+	--from_strength
+	blockvalue = blockvalue + UnitStat("player", 1) / 20
+	
+	--from equip
+	local Set_bonus = {}
+	for slot=0, 19 do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		if hasItem then
+			local SET_NAME = nil
+			for line=1, equipment.count do
+				local left = equipment.left[line]
+				if left then
+					local _,_, value = strfind(left, L_BLOCKVALUE["BLOCKVALUE_1"])
+					if value then
+						blockvalue = blockvalue + tonumber(value)
+					end
+					_,_, value = strfind(left, L_BLOCKVALUE["BLOCKVALUE_2"])
+					if value then
+						blockvalue = blockvalue + tonumber(value)
+					end
+					
+					--from set
+					_,_, value = strfind(left, "(.+)（%d/%d）")
+					if value then
+						SET_NAME = value
+					end
+					_, _, value = strfind(left, L_BLOCKVALUE["BLOCKVALUE_SET_1"])
+					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+						tinsert(Set_bonus, SET_NAME)
+						blockvalue = blockvalue + tonumber(value)
+					end
+					_, _, value = strfind(left, L_BLOCKVALUE["BLOCKVALUE_SET_2"])
+					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+						tinsert(Set_bonus, SET_NAME)
+						blockvalue = blockvalue + tonumber(value)
+					end
+
+				end
+			end
+		end
+	end
+	
+	--from_talent
+	if class == "WARRIOR" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(3, 5)
+		if talentname == L_TALENT.WARRIOR_TOUGHNESS then 
+			blockvalue = blockvalue * ( 1 + crank * 0.03)
+		end
+	end
+	
+	if class == "PALADIN" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(2, 8)
+		if talentname == L_TALENT.PALADIN_SHIELD_SPECIALIZATION then 
+			blockvalue = blockvalue * ( 1 + crank * 0.1)
+		end
+	end
+	
+	if class == "SHAMAN" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(2, 2)
+		if talentname == L_TALENT.SHAMAN_SHIELD_SPECIALIZATION then 
+			blockvalue = blockvalue * ( 1 + crank * 0.06)
+		end
+	end
+	
+	--from_buff
+	_, _, blockFromAura = BCS:GetPlayerAura(L_BLOCKVALUE["pala_8t2"])
+	if blockFromAura then
+		blockvalue = blockvalue + tonumber(blockFromAura)
+	end
+	
+	if class == "SHAMAN" then
+		_, _, blockFromAura = BCS:GetPlayerAura(L_BLOCKVALUE["Stoneskin_totem"])
+		if blockFromAura then
+			local talentname, _, _, _, crank, _ = GetTalentInfo(2, 12)
+			if talentname == L_TALENT.SHAMAN_ENHANCING_TOTEMS then
+				blockvalue = blockvalue * ( 1 + crank * 0.15)
+			end
+		end
+	end
+	
+	if class == "PALADIN" then
+		_, _, blockFromAura = BCS:GetPlayerAura(L_HASTE["HASTE_PALADIN_ZEAL"])
+		if blockFromAura then
+			local talentname, _, _, _, crank, _ = GetTalentInfo(2, 15)
+			if talentname == L_TALENT.PALADIN_RIGHTEOUS_STRIKES then
+				blockvalue = blockvalue * ( 1 + crank * 0.02 * blockFromAura / 3)
+			end
+		end
+	end
+	
+	return blockvalue
+end
+
+function BCS:GetArmorPenetrationValue()
+
+	if BCS_USE_CACHE == 1 then 
+		if  GET_ARMORPENETRATION_VALUE_TIME and (GetTime() - GET_ARMORPENETRATION_VALUE_TIME < 2 ) then
+			return ARMORPENETRATION_VALUE
+		else 
+			ARMORPENETRATION_VALUE = BCS:GetLiveArmorPenetrationValue()
+			GET_ARMORPENETRATION_VALUE_TIME = GetTime()
+			return ARMORPENETRATION_VALUE
+		end
+	else
+		return BCS:GetLiveArmorPenetrationValue()
+	end
+	return BCS:GetLiveArmorPenetrationValue()
+end
+
+function BCS:GetLiveArmorPenetrationValue()
+	local armorPenetrationvalue = 0
+	local playerlevel=UnitLevel("player")
+	
+	if class == "MAGE" or class == "WARLOCK" or class == "PRIEST" then 
+		return 0
+	end
+
+	--from equip
+	local Set_bonus = {}
+	for slot=0, 19 do
+		local hasItem, equipment = ReadEquipmentTooltip(slot)
+		if hasItem then
+			local SET_NAME = nil
+			for line=1, equipment.count do
+				local left = equipment.left[line]
+				if left then
+					local _,_, value = strfind(left, L_ARMORPENETRATION["ARMORPENETRATION_1"])
+					if value then
+						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+					end
+					_,_, value = strfind(left, L_ARMORPENETRATION["ARMORPENETRATION_2"])
+					if value then
+						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+					end
+					
+					_,_, value = strfind(left, L_ARMORPENETRATION["ARMORPENETRATION_3"])
+					if value then
+						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+					end
+					
+					--[[
+					--from set
+					_,_, value = strfind(left, "(.+)（%d/%d）")
+					if value then
+						SET_NAME = value
+					end
+					_, _, value = strfind(left, L_BLOCKVALUE["ARMORPENETRATION_SET_1"])
+					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+						tinsert(Set_bonus, SET_NAME)
+						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+					end
+					_, _, value = strfind(left, L_BLOCKVALUE["ARMORPENETRATION_SET_2"])
+					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+						tinsert(Set_bonus, SET_NAME)
+						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+					end
+					]]
+
+				end
+			end
+		end
+	end
+	
+	--from_talent
+	if class == "WARRIOR" then 
+		local hasMace = false
+		local mainhandLink = GetInventoryItemLink("player", 16)
+		if mainhandLink then
+			local _, _, itemID = string.find(mainhandLink, "item:(%d+):%d+:%d+:%d+")
+			local n = tonumber(itemID)
+			local _, _, _, _, _, itemInvType = GetItemInfo(n)	
+			if itemInvType == L_WEAPONTYPE["ONE_HANDED_MACE"] or itemInvType == L_WEAPONTYPE["TWO_HANDED_MACE"] then hasMace = true end
+		end
+		if not hasMace then
+			local offhandLink = GetInventoryItemLink("player", 17)
+			if offhandLink then
+				local _, _, itemID = string.find(offhandLink, "item:(%d+):%d+:%d+:%d+")
+				local n = tonumber(itemID)
+				local _, _, _, _, _, itemInvType = GetItemInfo(n)	
+				if itemInvType == L_WEAPONTYPE["ONE_HANDED_MACE"] then hasMace = true end
+			end
+		end
+		
+		if hasMace then
+			local talentname, _, _, _, crank, _ = GetTalentInfo(1, 12)
+			if talentname == L_TALENT.WARRIOR_MASTER_OF_ARMS then 
+				armorPenetrationvalue = armorPenetrationvalue + crank * 1.2 * playerlevel
+			end
+		end
+	end
+	if class == "ROUGE" then 
+		local talentname, _, _, _, crank, _ = GetTalentInfo(3, 6)
+		if talentname == L_TALENT.ROGUE_SERRATED_BLADES then 
+			armorPenetrationvalue = armorPenetrationvalue + 100 * crank
+		end
+	end
+	
+	--from_buff
+	_, _, value = BCS:GetPlayerAura(L_ARMORPENETRATION["ARMORPENETRATION_4"])
+	if value then
+		armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+	end
+	
+	_, _, value = BCS:GetPlayerAura(L_ARMORPENETRATION["ARMORPENETRATION_5"])
+	if value then
+		armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+	end
+	
+	return armorPenetrationvalue
+end
+
+function BCS:GetSpellIndex(spellName)
+	local now = GetTime()
+	if self.spellIndexCache and self.spellIndexCache[spellName] then
+		local cache = self.spellIndexCache[spellName]
+		if (now - cache.timestamp) < 600 then
+			if cache.index then
+				local cachedName = GetSpellName(cache.index, BOOKTYPE_SPELL)
+				if cachedName and cachedName == spellName then
+					return cache.index
+				end
+			end
+			self.spellIndexCache[spellName] = nil			
+		end
+	end
+	
+	local spellIndex = nil
+	local i = 1
+	while true do
+		local name = GetSpellName(i, BOOKTYPE_SPELL)
+		if not name then
+			break
+		end
+		if name == spellName then
+			spellIndex = i
+			break
+		end
+		i = i + 1
+		if i > 400 then
+			break
+		end
+	end
+	
+	self.spellIndexCache = self.spellIndexCache or {}
+	if spellIndex then
+		self.spellIndexCache[spellName] = {
+			index = spellIndex,
+			timestamp = now
+		}
+	end
+	
+	return spellIndex
+end
+
+local hasteSpellTooltip
+function BCS:GetSpellCastTime(spellName)
+	local spellIndex = self:GetSpellIndex(spellName)
+	if not spellIndex then return nil end
+	if not hasteSpellTooltip then
+		hasteSpellTooltip = CreateFrame("GameTooltip", "BCSHasteSpellTooltip", nil, "GameTooltipTemplate")
+		hasteSpellTooltip:SetOwner(UIParent, "ANCHOR_NONE")
+	end
+	local tt = hasteSpellTooltip
+	tt:ClearLines()
+	tt:SetSpell(spellIndex, BOOKTYPE_SPELL)
+	local channel = false
+	for j = 1, tt:NumLines() do
+		local line = getglobal("BCSHasteSpellTooltipTextLeft" .. j)
+		local text = line and line:GetText()
+		if text then
+			local _, _, duration = strfind(text, "(%d+%.?%d*)%s*秒施法时间")
+			if not duration and channel then
+				_, _, duration = strfind(text, "在%s*(%d+%.?%d*)%s*秒内")
+			end
+			local seconds = tonumber(duration)
+			if seconds and seconds > 0 then
+				tt:Hide()
+				return seconds
+			end
+			channel = strfind(text, "需引导") ~= nil
+		end
+	end
+	tt:Hide()
+	return nil
+end
+
+function BCS:EstimateHaste()
+	if BCS_USE_CACHE == 1 then 
+		if GET_ESTIMATE_HASTE_TIME and ( GetTime() - GET_ESTIMATE_HASTE_TIME < 2 ) then
+			return ESTIMATE_HASTE, ESTIMATE_HASTE_SCHOOL
+		else
+			ESTIMATE_HASTE, ESTIMATE_HASTE_SCHOOL = BCS:LiveEstimateHaste()
+			GET_ESTIMATE_HASTE_TIME = GetTime()
+			return ESTIMATE_HASTE, ESTIMATE_HASTE_SCHOOL
+		end
+	else
+		return BCS:LiveEstimateHaste()
+	end
+end
+
+function BCS:LiveEstimateHaste()
+	local estimateHaste
+	local estimateHaste2
+	local errMsg =""
+	local spells = {
+		["吸取灵魂"] = {class = "WARLOCK", school = L.SPELL_SCHOOL_AFFLICTION, baseTime = 6 },
+		["召唤仪式"] = {class = "WARLOCK", school = "general", baseTime = 5 },
+		["星界传送"] = {class = "SHAMAN", school = "general", baseTime = 10 },
+		["复活术"] = {class = "PRIEST", school = "general", baseTime = 10 },
+		["传送：月光林地"] = {class = "DRUID", school = "general", baseTime = 10 },
+		["救赎"] = {class = "PALADIN", school = "general", baseTime = 10 },
+		["造水术"] = {class = "MAGE", school = L.SPELL_SCHOOL_ARCANE, baseTime = 3 },
+		["传送：暴风城"] = {class = "MAGE", school = L.SPELL_SCHOOL_ARCANE, baseTime = 10 },
+		["传送：奥格瑞玛"] = {class = "MAGE", school = L.SPELL_SCHOOL_ARCANE, baseTime = 10 },
+		["烈焰风暴"] = {class = "MAGE", school = "general", baseTime = 2.5 },
+	}
+	
+	if class == "WARLOCK" then
+		local ctime = self:GetSpellCastTime("吸取灵魂")
+		if ctime then
+			estimateHaste = (spells["吸取灵魂"].baseTime / ctime - 1) * 100
+		else
+			errMsg = "can not get spell cast time for 吸取灵魂"
+		end
+		local ctime2 = self:GetSpellCastTime("召唤仪式")
+		if ctime2 then
+			estimateHaste2 = (spells["召唤仪式"].baseTime / ctime2 - 1) * 100
+		else
+			errMsg = errMsg .."can not get spell cast time for 召唤仪式\n"
+		end
+		
+		if estimateHaste and estimateHaste2 then
+			if estimateHaste > estimateHaste2 + 1 then
+				return estimateHaste, spells["吸取灵魂"].school
+			else
+				return estimateHaste2, spells["召唤仪式"].school
+			end
+		elseif estimateHaste then
+			return estimateHaste, spells["吸取灵魂"].school
+		elseif estimateHaste2 then
+			return estimateHaste2, spells["召唤仪式"].school
+		else
+			return nil, errMsg 
+		end
+	end
+	
+	if class == "SHAMAN" then
+		local ctime = self:GetSpellCastTime("星界传送")
+		if ctime then
+			estimateHaste = (spells["星界传送"].baseTime / ctime - 1) * 100
+			return estimateHaste, spells["星界传送"].school
+		else 
+			errMsg = "can not get spell cast time for 星界传送\n"
+		end
+	end
+	
+	if class == "PRIEST" then 
+		local ctime = self:GetSpellCastTime("复活术")
+		if ctime then
+			estimateHaste = (spells["复活术"].baseTime / ctime - 1) * 100
+			return estimateHaste, spells["复活术"].school
+		else 
+			errMsg = "can not get spell cast time for 复活术\n"
+		end
+	end
+	
+	if class == "DRUID" then 
+		local ctime = self:GetSpellCastTime("传送：月光林地")
+		if ctime then
+			estimateHaste = (spells["传送：月光林地"].baseTime / ctime - 1) * 100
+			return estimateHaste, spells["传送：月光林地"].school
+		else 
+			errMsg = "can not get spell cast time for 传送：月光林地\n"
+		end
+	end
+	
+	if class == "PALADIN" then 
+		local ctime = self:GetSpellCastTime("救赎")
+		if ctime then
+			estimateHaste = (spells["救赎"].baseTime / ctime - 1) * 100
+			return estimateHaste, spells["救赎"].school
+		else 
+			errMsg = "can not get spell cast time for 救赎\n"
+		end
+	end
+	
+	if class == "MAGE" then
+		local ctime
+		local mageArcaneTestSpell
+		
+		if not faction then
+			faction, _ = UnitFactionGroup("player")  --Alliance,Horde
+		end
+		
+		if faction == "Alliance" then
+			mageArcaneTestSpell = "传送：暴风城"
+		elseif faction == "Horde" then
+			mageArcaneTestSpell = "传送：奥格瑞玛"
+		else
+			return nil, "can not get faction\n"
+		end
+		
+		ctime = self:GetSpellCastTime(mageArcaneTestSpell)
+		if ctime then
+			estimateHaste = (spells[mageArcaneTestSpell].baseTime / ctime - 1) * 100
+		else
+			errMsg = "can not get spell cast time for "..mageArcaneTestSpell
+		end
+		
+		local ctime2 = self:GetSpellCastTime("烈焰风暴")
+		if ctime2 then
+			estimateHaste2 = (spells["烈焰风暴"].baseTime / ctime2 - 1) * 100
+		else
+			errMsg = errMsg .."can not get spell cast time for 烈焰风暴\n"
+		end
+		
+		if estimateHaste and estimateHaste2 then
+			if estimateHaste > estimateHaste2 + 1 then
+				return estimateHaste, spells[mageArcaneTestSpell].school
+			else
+				return estimateHaste, spells["烈焰风暴"].school
+			end
+		elseif estimateHaste then
+			return estimateHaste, spells[mageArcaneTestSpell].school
+		elseif estimateHaste2 then
+			return estimateHaste2, spells["烈焰风暴"].school
+		else 
+			return nil, errMsg
+		end
+	end
+	return nil, errMsg
+end
+
+function BCS:IsDualWielding()
+	local mainhandType = BCS:GetItemTypeFromInvSlot(16)
+	local offhandType = BCS:GetItemTypeFromInvSlot(17)
+	return mainhandType == "武器" and offhandType == "武器"
+end
+
+function BCS:GetItemTypeFromInvSlot(SlotNumber)
+	if not SlotNumber then return nil end
+	local link = GetInventoryItemLink("player", SlotNumber)
+	if not link then return nil end
+	local itemID = string.match(link, "item:(%d+)")
+	if not itemID then return nil end
+	local n = tonumber(itemID)
+	local _, _, _, _, itemType = GetItemInfo(n)
+	if not itemType then return nil end
+	return itemType
+end

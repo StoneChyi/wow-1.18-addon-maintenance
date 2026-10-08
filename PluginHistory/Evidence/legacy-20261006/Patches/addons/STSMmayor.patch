@@ -1,0 +1,1706 @@
+--- a/STSMmayor/STSMmayor.lua
++++ b/STSMmayor/STSMmayor.lua
+@@ -27,225 +27,400 @@
+ local EQUIP_COOLDOWN = 3 -- 换盾冷却时间（秒）
+ local lastEquipAttempt = 0 -- 上次尝试换盾的时间
+ 
+ -- 耐久度监控窗口相关变量
+ local durabilityFrame = nil -- 耐久度监控窗口
++local positionFrame = nil -- 不缩放的固定位置锚点
+ local durabilityText = nil -- 耐久度文本显示
+ local closeButton = nil -- 关闭按钮
+ local equipButton = nil -- 换盾按钮
+ local repairButton = nil -- 修理按钮
+ local autoSwapCheckButton = nil -- 自动换盾开关
+ local autoSwapCheckText = nil -- 自动换盾开关文本
++local pickupButton, autoSwapText, autoRepairText, robotDetectionText
++local autoRepairCheckButton, robotDetectionCheckButton, autoRepairInteractHint
++local settingsLoaded = false
++local startupComplete = false
++local startupFrame = nil
++local appearanceFrame = nil
++local isFrameMoving = false
+ local isDurabilityFrameVisible = false -- 窗口是否可见
+ local equipFailed = false -- 记录上次换装是否失败
+ local STSMmayor_AutoSwapEnabled = true -- 自动换盾开关，默认开启
+ local STSMmayor_AutoRepairEnabled = false -- 自动修理开关，默认关闭
+ local STSMmayor_RobotDetectionEnabled = false -- 机器人检测开关，默认关闭
+ local AUTO_REPAIR_THRESHOLD = 30 -- 自动修理耐久阈值（百分比）
+ 
++-- 每个角色独立保存；等 SavedVariables 加载完成后再读取。
++function STSMmayor_LoadSettings()
++    if settingsLoaded then return end
++    if type(STSMmayorDB) ~= "table" then STSMmayorDB = {} end
++    if type(STSMmayorDB.AutoSwap) == "boolean" then
++        STSMmayor_AutoSwapEnabled = STSMmayorDB.AutoSwap
++    end
++    if type(STSMmayorDB.AutoRepair) == "boolean" then
++        STSMmayor_AutoRepairEnabled = STSMmayorDB.AutoRepair
++    end
++    if type(STSMmayorDB.RobotDetection) == "boolean" then
++        STSMmayor_RobotDetectionEnabled = STSMmayorDB.RobotDetection
++    end
++    if type(STSMmayorDB.Enabled) == "boolean" then
++        STSMmayor_Enabled = STSMmayorDB.Enabled
++    else
++        STSMmayorDB.Enabled = nil
++    end
++    -- Validate old or manually edited appearance settings before touching the UI.
++    local function bounded(value, fallback, low, high)
++        if type(value) ~= "number" or value ~= value then return fallback end
++        return math.max(low, math.min(value, high))
++    end
++    STSMmayorDB.UIScale = bounded(STSMmayorDB.UIScale, 0.9, 0.5, 1.5)
++    STSMmayorDB.BackgroundAlpha = bounded(STSMmayorDB.BackgroundAlpha, 0.35, 0, 1)
++    if type(STSMmayorDB.PositionLocked) ~= "boolean" then STSMmayorDB.PositionLocked = false end
++    settingsLoaded = true
++end
++
++-- Position is owned by an unscaled, fixed-size anchor. The visible panel is
++-- always attached to its top-left with zero offsets and may scale independently.
++local STSMmayor_PositionPoints = {
++    TOPLEFT = {0, 1}, TOP = {0.5, 1}, TOPRIGHT = {1, 1},
++    LEFT = {0, 0.5}, CENTER = {0.5, 0.5}, RIGHT = {1, 0.5},
++    BOTTOMLEFT = {0, 0}, BOTTOM = {0.5, 0}, BOTTOMRIGHT = {1, 0},
++}
++
++local function STSMmayor_ValidPositionAnchor(anchor)
++    return type(anchor) == "table" and STSMmayor_PositionPoints[anchor.point]
++        and STSMmayor_PositionPoints[anchor.relativePoint]
++        and type(anchor.x) == "number" and type(anchor.y) == "number"
++        and anchor.x - anchor.x == 0 and anchor.y - anchor.y == 0
++end
++
++function STSMmayor_SaveSettings()
++    if not settingsLoaded then return end
++    STSMmayorDB.AutoSwap = STSMmayor_AutoSwapEnabled
++    STSMmayorDB.AutoRepair = STSMmayor_AutoRepairEnabled
++    STSMmayorDB.RobotDetection = STSMmayor_RobotDetectionEnabled
++    STSMmayorDB.Enabled = STSMmayor_Enabled
++    STSMmayorDB.Visible = isDurabilityFrameVisible
++    if positionFrame and not isFrameMoving then
++        -- Native dragging can leave GetPoint() empty or unreliable on 1.12.
++        -- Read the unscaled carrier's actual geometry, never the scaled panel.
++        local left, top = positionFrame:GetLeft(), positionFrame:GetTop()
++        local parentLeft, parentBottom = UIParent:GetLeft(), UIParent:GetBottom()
++        local ownScale, parentScale = positionFrame:GetEffectiveScale(), UIParent:GetEffectiveScale()
++        if type(left) == "number" and type(top) == "number"
++            and type(parentLeft) == "number" and type(parentBottom) == "number"
++            and type(ownScale) == "number" and type(parentScale) == "number" and parentScale > 0 then
++            local ratio = ownScale / parentScale
++            local anchor = { point = "TOPLEFT", relativePoint = "BOTTOMLEFT",
++                x = left * ratio - parentLeft, y = top * ratio - parentBottom }
++            if STSMmayor_ValidPositionAnchor(anchor) then
++                STSMmayorDB.PositionAnchor = anchor
++                return true
++            end
++        end
++        -- Missing geometry must not erase the last valid saved position.
++    end
++    return false
++end
++
++-- Capture again after native dragging has finished its next layout pass.
++-- Retries are bounded and run only after a drag, never as permanent polling.
++function STSMmayor_FinishMoving()
++    if not positionFrame or not isFrameMoving then return end
++    positionFrame:StopMovingOrSizing()
++    isFrameMoving = false
++    STSMmayor_SaveSettings()
++    local deadline, nextAttempt = GetTime() + 1, 0
++    positionFrame:SetScript("OnUpdate", function()
++        local now = GetTime()
++        if now < nextAttempt then return end
++        nextAttempt = now + 0.05
++        if now > deadline or (not isFrameMoving and STSMmayor_SaveSettings()) then
++            positionFrame:SetScript("OnUpdate", nil)
++        end
++    end)
++end
++
++local function STSMmayor_SetPositionAnchor(point, relativePoint, x, y)
++    positionFrame:SetPoint(point, UIParent, relativePoint, x, y)
++    -- Also keep the explicit restored anchor if the engine has no geometry yet.
++    STSMmayorDB.PositionAnchor = { point = point, relativePoint = relativePoint, x = x, y = y }
++end
++
++function STSMmayor_RestorePosition()
++    if not positionFrame then return end
++    local anchor = STSMmayorDB.PositionAnchor
++    positionFrame:ClearAllPoints()
++    if STSMmayor_ValidPositionAnchor(anchor) then
++        STSMmayor_SetPositionAnchor(anchor.point, anchor.relativePoint, anchor.x, anchor.y)
++        return
++    end
++    -- Migrate the old scaled-panel anchor once, compensating its point within
++    -- the old 320x34 panel. Never repeat this conversion when a slider changes.
++    local old = STSMmayorDB.Anchor
++    local scale = STSMmayorDB.UIScale
++    if STSMmayor_ValidPositionAnchor(old) then
++        local point = STSMmayor_PositionPoints[old.point]
++        STSMmayor_SetPositionAnchor("TOPLEFT", old.relativePoint,
++            (old.x - point[1] * 320) * scale,
++            (old.y + (1 - point[2]) * 34) * scale)
++        return
++    end
++    local position = STSMmayorDB.Position
++    if type(position) == "table" and type(position.x) == "number" and type(position.y) == "number"
++        and position.x - position.x == 0 and position.y - position.y == 0 then
++        local width, height = UIParent:GetWidth(), UIParent:GetHeight()
++        local x = math.max(0, math.min(position.x * width, math.max(0, width - 320 * scale)))
++        local bottom = math.max(0, math.min(position.y * height, math.max(0, height - 34 * scale)))
++        local y = bottom + 34 * scale
++        STSMmayor_SetPositionAnchor("TOPLEFT", "BOTTOMLEFT", x, y)
++    else
++        STSMmayor_SetPositionAnchor("TOPLEFT", "CENTER", -160 * scale, -UIParent:GetHeight() / 4 + 34 * scale)
++    end
++end
++
++function STSMmayor_ResetPosition()
++    STSMmayor_LoadSettings()
++    if not durabilityFrame then STSMmayor_CreateDurabilityFrame() end
++    if isFrameMoving then positionFrame:StopMovingOrSizing(); isFrameMoving = false end
++    STSMmayorDB.PositionAnchor = nil
++    STSMmayorDB.Anchor = nil
++    STSMmayorDB.Position = nil
++    STSMmayor_RestorePosition()
++    STSMmayor_SaveSettings()
++end
++
+ -- 聊天消息颜色
+ local CHAT_COLOR = "|cff40ff40" -- 绿色
+ local ERROR_COLOR = "|cffff4040" -- 红色
+ local WARNING_COLOR = "|cffffff00" -- 黄色（预警用）
+ local REPAIR_WARNING_COLOR = "|cffff8040" -- 橙色（修理警告用）
+ 
+ -- 修理机器人状态显示文本
+ local repairBotText = nil
+ 
+--- ===== 修理机器人检测（事件驱动，参考crazytarget插件）=====
+--- 原理：SuperWOW模组会让 UNIT_FLAGS/UNIT_FACTION/UNIT_HEALTH 等单位事件对
+--- 周围所有单位触发，arg1 直接是单位GUID（"0x..."开头），可直接用
+--- UnitName(GUID)/UnitCanAttack("player", GUID)/UnitIsVisible(GUID) 查询，
+--- 全程不需要 TargetByName 切换目标，也没有轮询扫描。
+--- 机器人被召唤/进入视野的瞬间事件即触发；20秒定时器只负责轻量校验GUID是否还在。
+-local repairBotGUID = nil        -- 事件发现并缓存的修理机器人GUID
+-local lastBotProbeTime = 0       -- 上次TargetByName兜底探测的时间
+-local BOT_PROBE_INTERVAL = 60    -- 兜底探测最小间隔（秒），且仅脱战时执行
+-local repairBotEventsOn = false  -- 事件是否已注册（开关关闭时反注册，零开销）
+-
+--- 名字是否为修理机器人（中英文子串匹配）
++-- 机器人：事件立即发现，动态间隔校验，姓名板分批补查。
++local repairBotGUID = nil
++local repairBotUnits = {}
++local deadRepairBots = {}
++local repairBotEventsOn = false
++local lastBotRefresh = -1
++local lastBotPlateScan = -1
++local robotIndicator = nil
++local nextBotRefresh = 0
++local plateQueue, plateQueueIndex = nil, 1
++local nextPlateSlice = 0
++
++local function STSMmayor_BotBusy()
++    return UnitAffectingCombat("player") or (type(GetFramerate) == "function" and GetFramerate() < 30)
++end
++
++local function STSMmayor_BotPollInterval()
++    if not durabilityFrame or not durabilityFrame:IsShown() then return 2 end
++    if STSMmayor_BotBusy() then return 0.75 end
++    if next(repairBotUnits) or (robotIndicator and robotIndicator.Status == "present") then return 0.25 end
++    return 1
++end
++
++local function STSMmayor_IsGUID(guid)
++    return type(guid) == "string" and string.find(guid, "^0x%x+$")
++        and not string.find(guid, "^0x0+$")
++end
++
+ local function STSMmayor_IsRepairBotName(name)
+-    if not name then return false end
++    if type(name) ~= "string" then return false end
+     local lower = strlower(name)
+     return strfind(lower, "修理机器人") ~= nil or strfind(lower, "repair bot") ~= nil
+ end
+ 
+--- 判定某个单位（unit token 或 SuperWOW GUID）是否为修理机器人
++local function STSMmayor_GetBotGUID(unit)
++    if STSMmayor_IsGUID(unit) then return unit end
++    for _, getter in ipairs({ GetUnitGUID or false, UnitGUID or false }) do
++        if type(getter) == "function" then
++            local ok, guid = pcall(getter, unit)
++            if ok and STSMmayor_IsGUID(guid) then return guid end
++        end
++    end
++    -- pcall adds its success flag BEFORE UnitExists' exists and GUID results.
++    local ok, exists, guid = pcall(UnitExists, unit)
++    if ok and exists and STSMmayor_IsGUID(guid) then return guid end
++end
++
+ local function STSMmayor_UnitIsRepairBot(unit)
+     if not unit then return false end
+-    local ok, name = pcall(UnitName, unit)
+-    if not ok or not STSMmayor_IsRepairBotName(name) then
+-        return false
+-    end
+-    -- 修理机器人是友方NPC：不可被玩家攻击（SuperWOW下GUID也可直接查）
++    local okName, name = pcall(UnitName, unit)
++    if not okName or not STSMmayor_IsRepairBotName(name) then return false end
++    local guid = STSMmayor_GetBotGUID(unit)
++    if guid and deadRepairBots[guid] then return false end
++    local okExists, exists = pcall(UnitExists, unit)
++    if not okExists or not exists then return false end
++    local okVis, visible = pcall(UnitIsVisible, unit)
++    if not okVis or not visible then return false end
+     local okAttack, canAttack = pcall(UnitCanAttack, "player", unit)
+-    if okAttack and canAttack then
+-        return false
++    if not okAttack or canAttack then return false end
++    if type(UnitIsDeadOrGhost) == "function" then
++        local ok, dead = pcall(UnitIsDeadOrGhost, unit)
++        if ok and dead then return false end
++    elseif type(UnitIsDead) == "function" then
++        local ok, dead = pcall(UnitIsDead, unit)
++        if ok and dead then return false end
++    end
++    if type(UnitHealth) == "function" then
++        local ok, health = pcall(UnitHealth, unit)
++        if ok and type(health) == "number" and health <= 0 then return false end
+     end
+     return true
+ end
+ 
+--- 机器人检测事件框（默认不注册任何事件，开启检测时才注册）
+-local repairBotEventFrame = CreateFrame("Frame")
+-repairBotEventFrame:SetScript("OnEvent", function()
+-    if not STSMmayor_RobotDetectionEnabled then return end
+-
+-    if event == "PLAYER_TARGET_CHANGED" or event == "UPDATE_MOUSEOVER_UNIT" then
+-        -- 当前目标/鼠标指向是机器人时立即记录（无SuperWOW也能用，不切目标）
+-        local unit = (event == "PLAYER_TARGET_CHANGED") and "target" or "mouseover"
+-        if STSMmayor_UnitIsRepairBot(unit) then
+-            local _, guid = pcall(UnitExists, unit)
+-            if guid then repairBotGUID = guid end
++local function STSMmayor_RememberRepairBot(unit)
++    if not STSMmayor_UnitIsRepairBot(unit) then return false end
++    local guid = STSMmayor_GetBotGUID(unit)
++    if guid then repairBotUnits[guid] = true; repairBotGUID = guid end
++    return true
++end
++
++function STSMmayor_ResetRepairBots()
++    repairBotUnits = {}; deadRepairBots = {}; repairBotGUID = nil
++    lastBotPlateScan = -1; lastBotRefresh = -1
++    nextBotRefresh = 0; plateQueue = nil; plateQueueIndex = 1; nextPlateSlice = 0
++end
++
++local function STSMmayor_ScanRobotPlates()
++    if not WorldFrame or not WorldFrame.GetChildren then return end
++    -- Only inspect frames already present; never enable nameplates or switch target.
++    local now = GetTime()
++    local busy = STSMmayor_BotBusy()
++    local interval = busy and 5 or 2
++    if not durabilityFrame or not durabilityFrame:IsShown() then interval = 10 end
++    if not plateQueue and (lastBotPlateScan < 0 or now - lastBotPlateScan >= interval) then
++        lastBotPlateScan = now
++        plateQueue = { WorldFrame:GetChildren() }
++        plateQueueIndex = 1
++    end
++    if not plateQueue or now < nextPlateSlice then return end
++    nextPlateSlice = now + (busy and 0.5 or 0.25)
++    -- Bound lookup work per slice even in crowded areas. Retain the snapshot
++    -- until the scan completes, rather than enumerating WorldFrame every tick.
++    local count = table.getn(plateQueue)
++    local last = math.min(count, plateQueueIndex + 63)
++    for index = plateQueueIndex, last do
++        local frame = plateQueue[index]
++        if frame.IsShown and frame:IsShown() and frame.GetName then
++            local ok, guid = pcall(frame.GetName, frame, 1)
++            if ok and STSMmayor_IsGUID(guid) then STSMmayor_RememberRepairBot(guid) end
++        end
++    end
++    plateQueueIndex = last + 1
++    if plateQueueIndex > count then plateQueue = nil end
++end
++
++function STSMmayor_CheckForRepairBot()
++    STSMmayor_ScanRobotPlates()
++    local found = false
++    for guid in pairs(repairBotUnits) do
++        if STSMmayor_UnitIsRepairBot(guid) then found = true; repairBotGUID = guid
++        else repairBotUnits[guid] = nil end
++    end
++    -- Standard unit tokens remain usable even without a GUID extension.
++    if STSMmayor_RememberRepairBot("target") then found = true end
++    if STSMmayor_RememberRepairBot("mouseover") then found = true end
++    if not found then repairBotGUID = nil end
++    return found
++end
++
++local repairBotEventFrame = CreateFrame("Frame", "STSMmayorRobotWatcher")
++repairBotEventFrame:Hide()
++repairBotEventFrame:SetScript("OnEvent", function(selfArg, eventArg, unitArg)
++    if not STSMmayor_Enabled or not STSMmayor_RobotDetectionEnabled then return end
++    local currentEvent = eventArg or event
++    local unit = unitArg or arg1
++    if currentEvent == "PLAYER_ENTERING_WORLD" then
++        STSMmayor_ResetRepairBots()
++        STSMmayor_UpdateRepairBotStatus()
++    elseif currentEvent == "PLAYER_TARGET_CHANGED" or currentEvent == "UPDATE_MOUSEOVER_UNIT" then
++        STSMmayor_RememberRepairBot(currentEvent == "PLAYER_TARGET_CHANGED" and "target" or "mouseover")
++        STSMmayor_UpdateRepairBotStatus()
++    elseif STSMmayor_IsGUID(unit) then
++        if currentEvent == "UNIT_DIED" then
++            if not repairBotUnits[unit] then return end
++            deadRepairBots[unit] = true
++            repairBotUnits[unit] = nil
+             STSMmayor_UpdateRepairBotStatus()
+-        end
+-        return
+-    end
+-
+-    -- SuperWOW：单位事件的arg1是周围单位的GUID（"0x"开头）；
+-    -- 原版客户端arg1是"player"/"target"等token，不在此处理
+-    local guid = arg1
+-    if type(guid) == "string" and string.sub(guid, 1, 2) == "0x" then
+-        if STSMmayor_UnitIsRepairBot(guid) then
+-            repairBotGUID = guid
++        elseif repairBotUnits[unit] or STSMmayor_RememberRepairBot(unit) then
+             STSMmayor_UpdateRepairBotStatus()
+         end
+     end
+ end)
+-
+--- 开关机器人检测事件注册（关闭时反注册，零开销）
++repairBotEventFrame:SetScript("OnUpdate", function()
++    local now = GetTime()
++    if now >= nextBotRefresh then
++        lastBotRefresh = now
++        STSMmayor_UpdateRepairBotStatus()
++        nextBotRefresh = now + STSMmayor_BotPollInterval()
++    end
++end)
++
+ function STSMmayor_SetRepairBotEvents(enable)
+     if enable and not repairBotEventsOn then
+-        repairBotEventFrame:RegisterEvent("UNIT_FLAGS")
+-        repairBotEventFrame:RegisterEvent("UNIT_FACTION")
+-        repairBotEventFrame:RegisterEvent("UNIT_HEALTH")
+-        repairBotEventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+-        repairBotEventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
++        for _, name in ipairs({ "UNIT_FLAGS", "UNIT_FACTION", "PLAYER_TARGET_CHANGED",
++            "UPDATE_MOUSEOVER_UNIT", "PLAYER_ENTERING_WORLD", "UNIT_FLAGS_GUID",
++            "UNIT_NAME_UPDATE_GUID", "UNIT_MODEL_CHANGED_GUID", "UNIT_DIED" }) do
++            -- Older clients may reject extension event names individually.
++            pcall(function() repairBotEventFrame:RegisterEvent(name) end)
++        end
+         repairBotEventsOn = true
+-    elseif not enable and repairBotEventsOn then
++        lastBotRefresh = -1; lastBotPlateScan = -1
++        nextBotRefresh = 0
++        repairBotEventFrame:Show()
++    elseif not enable then
+         repairBotEventFrame:UnregisterAllEvents()
++        repairBotEventFrame:Hide()
+         repairBotEventsOn = false
+-    end
+-end
+-
+--- 检测周围是否存在修理机器人
+--- 优先级：事件缓存GUID → 当前目标/鼠标指向 → 脱战时低频TargetByName兜底
+-function STSMmayor_CheckForRepairBot()
+-    -- 1) 事件缓存的GUID：仍可见且名字匹配 → 存在
+-    if repairBotGUID then
+-        local okVis, visible = pcall(UnitIsVisible, repairBotGUID)
+-        if okVis and visible then
+-            local okName, name = pcall(UnitName, repairBotGUID)
+-            if okName and STSMmayor_IsRepairBotName(name) then
+-                return true
+-            end
+-        end
+-        -- GUID失效（离开视野/换图/机器人消失），清缓存等事件重新发现
+-        repairBotGUID = nil
+-    end
+-
+-    -- 2) 当前目标/鼠标指向是否就是修理机器人（不切换目标，无SuperWOW也可用）
+-    if STSMmayor_UnitIsRepairBot("target") then
+-        local _, guid = pcall(UnitExists, "target")
+-        if guid then repairBotGUID = guid end
+-        return true
+-    end
+-    if STSMmayor_UnitIsRepairBot("mouseover") then
+-        local _, guid = pcall(UnitExists, "mouseover")
+-        if guid then repairBotGUID = guid end
+-        return true
+-    end
+-
+-    -- 3) 兜底：事件漏报时（如开启检测时机器人已站在身边）补检。
+-    --    仅脱战执行（打怪时绝不切换目标），且60秒最多一次；探测到GUID后缓存，后续不再探测。
+-    if not UnitAffectingCombat("player") and (GetTime() - lastBotProbeTime) >= BOT_PROBE_INTERVAL then
+-        lastBotProbeTime = GetTime()
+-
+-        local foundRepairBot = false
+-        local probedBotGUID = nil
+-        local originalTarget = nil
+-
+-        -- 保存当前目标
+-        if UnitExists("target") then
+-            originalTarget = UnitName("target")
+-        end
+-
+-        -- 尝试中文名称
+-        TargetByName("修理机器人75B型", true)
+-        if UnitExists("target") and STSMmayor_UnitIsRepairBot("target") then
+-            foundRepairBot = true
+-            local _, guid = pcall(UnitExists, "target")
+-            probedBotGUID = guid
+-        end
+-
+-        -- 如果没找到，尝试英文名称
+-        if not foundRepairBot then
+-            TargetByName("Repair Bot 75A", true)
+-            if UnitExists("target") and STSMmayor_UnitIsRepairBot("target") then
+-                foundRepairBot = true
+-                local _, guid = pcall(UnitExists, "target")
+-                probedBotGUID = guid
+-            end
+-        end
+-
+-        -- 恢复原始目标
+-        if originalTarget then
+-            TargetByName(originalTarget, true)
++        STSMmayor_ResetRepairBots()
++    end
++end
++
++function STSMmayor_UpdateRepairBotStatus()
++    if not durabilityFrame then return end
++    local enabled = STSMmayor_Enabled and STSMmayor_RobotDetectionEnabled
++    local found = enabled and STSMmayor_CheckForRepairBot()
++    local r, g, b = 0.5, 0.5, 0.5
++    local text = "修理机器人检测已关闭（可在设置中开启）"
++    local state = "disabled"
++    if enabled then
++        if found then
++            r, g, b = 0.2, 0.9, 0.25
++            text = "已检测到附近可见且存活的修理机器人"
++            state = "present"
+         else
+-            -- 如果之前没有目标，清除当前目标
+-            ClearTarget()
+-        end
+-
+-        if foundRepairBot then
+-            -- GUID为"0x"开头才缓存（无SuperWOW时UnitExists不返回GUID，保持每60秒兜底）
+-            if type(probedBotGUID) == "string" and string.sub(probedBotGUID, 1, 2) == "0x" then
+-                repairBotGUID = probedBotGUID
+-            end
+-            return true
+-        end
+-    end
+-
+-    return false
+-end
+-
+--- 更新修理机器人状态显示
+-function STSMmayor_UpdateRepairBotStatus()
+-    if not durabilityFrame then
+-        return
+-    end
+-
+-    -- 如果机器人检测开关关闭，不执行检测
+-    if not STSMmayor_RobotDetectionEnabled then
+-        if repairBotText then
+-            repairBotText:Hide()
+-        end
+-        return
+-    end
+-
+-    -- 创建修理机器人状态显示文本
++            r, g, b = 0.95, 0.2, 0.2
++            text = "当前未检测到修理机器人（仅限客户端可见范围）"
++            state = "missing"
++        end
++    end
+     if not repairBotText then
+         repairBotText = durabilityFrame:CreateFontString(nil, "OVERLAY")
+-        repairBotText:SetFont("Fonts/FRIZQT__.TTF", 14, "OUTLINE")
+-        repairBotText:SetPoint("TOP", durabilityFrame, "TOP", 0, 20) -- 在框体正上方
+-        repairBotText:SetText("")
+-        repairBotText:SetWidth(300) -- 设置宽度以容纳文本
+-        repairBotText:SetJustifyH("CENTER") -- 居中对齐
+-    end
+-
+-    -- 检查修理机器人状态
+-    local hasRepairBot = STSMmayor_CheckForRepairBot()
+-
+-    -- 更新文本和颜色
+-    if hasRepairBot then
+-        repairBotText:SetTextColor(0, 1, 0, 1) -- 绿色
+-        repairBotText:SetText("监测到周围已召唤修理机器人")
+-    else
+-        repairBotText:SetTextColor(1, 0, 0, 1) -- 红色
+-        repairBotText:SetText("警告：未监测到召唤修理机器人")
+-    end
+-
+-    -- 显示文本
+-    repairBotText:Show()
++        -- Hidden FontStrings still require a font before their first SetText.
++        repairBotText:SetFont(STSMmayor_GetUIFont(), 11, "OUTLINE")
++    end
++    if repairBotText:GetText() ~= text then repairBotText:SetText(text) end
++    repairBotText:Hide()
++    if robotDetectionText and robotDetectionText.botState ~= state then
++        robotDetectionText.botState = state
++        robotDetectionText:SetTextColor(r, g, b)
++    end
++    -- Checking existence need not invalidate UI textures when nothing changed.
++    if robotIndicator and robotIndicator.Status ~= state then
++        robotIndicator.Status = state
++        robotIndicator.Tip = text
++        robotIndicator.Icon:SetVertexColor(r, g, b, 1)
++        robotIndicator:SetBackdropBorderColor(r, g, b, 1)
++        if GameTooltip.IsOwned and GameTooltip:IsOwned(robotIndicator) then
++            GameTooltip:SetText(text, r, g, b); GameTooltip:Show()
++        end
++    end
+ end
+ 
+ -- 检查是否为盾牌物品
+ function STSMmayor_IsOffHandItem(itemLink)
+     if not itemLink then
+@@ -271,371 +446,443 @@
+     
+     -- 只检查盾牌类型
+     return equipLoc == "INVTYPE_SHIELD"
+ end
+ 
+--- 创建耐久度监控窗口
++-- 单行操作面板；背景透明度与缩放单独保存，文字不随背景变淡。
++function STSMmayor_GetUIFont()
++    return (pfUI and pfUI.font_default) or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
++end
++
++local function STSMmayor_FlatBackdrop(frame)
++    frame:SetBackdrop({
++        bgFile = "Interface\\Buttons\\WHITE8X8",
++        edgeFile = "Interface\\Buttons\\WHITE8X8",
++        tile = false, edgeSize = 1,
++        insets = { left = 1, right = 1, top = 1, bottom = 1 },
++    })
++    frame:SetBackdropColor(0.08, 0.08, 0.08, 0.92)
++    frame:SetBackdropBorderColor(0.28, 0.28, 0.28, 1)
++end
++
++function STSMmayor_LayoutFooter()
++    if not durabilityFrame then return end
++    -- Dependency and robot details live in tooltips, keeping the main panel one row.
++    if autoRepairInteractHint then autoRepairInteractHint:Hide() end
++    if repairBotText then repairBotText:Hide() end
++    durabilityFrame:SetHeight(34)
++end
++
++function STSMmayor_ApplyAppearance()
++    if not durabilityFrame then return end
++    local function apply(frame)
++        if not frame then return end
++        local r, g, b = frame:GetBackdropColor()
++        frame:SetBackdropColor(r or 0.08, g or 0.08, b or 0.08, STSMmayorDB.BackgroundAlpha)
++    end
++    -- pfUI buttons use a child backdrop, while its legacy root skin uses the frame.
++    apply(durabilityFrame)
++    for _, button in ipairs({equipButton, repairButton, pickupButton, STSMmayorSettingsButton, robotIndicator}) do
++        apply(button.backdrop or button)
++    end
++end
++
++function STSMmayor_SetUIScale(scale)
++    if type(scale) ~= "number" or scale - scale ~= 0 then return end
++    scale = math.max(0.5, math.min(scale, 1.5))
++    if STSMmayorDB.UIScale == scale then return end
++    STSMmayorDB.UIScale = scale
++    -- The position frame and both frames' anchor offsets remain untouched.
++    if durabilityFrame then durabilityFrame:SetScale(scale) end
++end
++
++function STSMmayor_SetPositionLocked(locked)
++    STSMmayorDB.PositionLocked = locked and true or false
++    if positionFrame then
++        if isFrameMoving then
++            STSMmayor_FinishMoving()
++        end
++        positionFrame:SetMovable(not STSMmayorDB.PositionLocked)
++    end
++    STSMmayor_SaveSettings()
++end
++
++function STSMmayor_ToggleAppearance()
++    if appearanceFrame and appearanceFrame:IsShown() then appearanceFrame:Hide(); return end
++    if not appearanceFrame then
++        appearanceFrame = CreateFrame("Frame", "STSMmayorAppearanceFrame", UIParent)
++        appearanceFrame:SetWidth(230)
++        appearanceFrame:SetHeight(264)
++        appearanceFrame:SetFrameStrata("DIALOG")
++        appearanceFrame:SetClampedToScreen(true)
++        appearanceFrame:EnableMouse(true)
++        STSMmayor_FlatBackdrop(appearanceFrame)
++        if pfUI and pfUI.api and pfUI.env and pfUI.env.C then
++            pfUI.api.CreateBackdrop(appearanceFrame, nil, true)
++        end
++        -- The settings popup stays readable, even when the main panel is transparent.
++        appearanceFrame:SetBackdropColor(0.08, 0.08, 0.08, 0.94)
++        local function makeCheck(name, label, y, enabled, callback)
++            local button = CreateFrame("CheckButton", name, appearanceFrame, "UICheckButtonTemplate")
++            button:SetWidth(14)
++            button:SetHeight(14)
++            button:SetPoint("TOPLEFT", appearanceFrame, "TOPLEFT", 13, y)
++            button:SetChecked(enabled)
++            button:SetScript("OnClick", callback)
++            local text = appearanceFrame:CreateFontString(nil, "OVERLAY")
++            text:SetFont(STSMmayor_GetUIFont(), 11, "OUTLINE")
++            text:SetPoint("LEFT", button, "RIGHT", 3, 0)
++            text:SetHeight(14)
++            text:SetJustifyV("MIDDLE")
++            text:SetText(label)
++            text:SetTextColor(0.8, 0.8, 0.8)
++            button.Label = text
++            return button, text
++        end
++        autoSwapCheckButton, autoSwapText = makeCheck("STSMmayorAutoSwapCheck", "自动换盾", -16,
++            STSMmayor_AutoSwapEnabled, function()
++                STSMmayor_AutoSwapEnabled = not STSMmayor_AutoSwapEnabled
++                autoSwapCheckButton:SetChecked(STSMmayor_AutoSwapEnabled)
++                STSMmayor_SaveSettings()
++                if STSMmayor_AutoSwapEnabled and STSMmayor_Enabled then
++                    lastShieldDurability = -1
++                    STSMmayor_CheckShield()
++                end
++            end)
++        autoRepairCheckButton, autoRepairText = makeCheck("STSMmayorAutoRepairCheck", "自动修理", -42,
++            STSMmayor_AutoRepairEnabled, function()
++                STSMmayor_AutoRepairEnabled = not STSMmayor_AutoRepairEnabled
++                autoRepairCheckButton:SetChecked(STSMmayor_AutoRepairEnabled)
++                STSMmayor_SaveSettings()
++                -- Enabling the option must not open an interaction. The regular
++                -- durability check decides whether repair is actually needed.
++            end)
++        robotDetectionCheckButton, robotDetectionText = makeCheck("STSMmayorRobotDetectionCheck", "机器人检测", -68,
++            STSMmayor_RobotDetectionEnabled, function()
++                STSMmayor_RobotDetectionEnabled = not STSMmayor_RobotDetectionEnabled
++                robotDetectionCheckButton:SetChecked(STSMmayor_RobotDetectionEnabled)
++                STSMmayor_SetRepairBotEvents(STSMmayor_Enabled and STSMmayor_RobotDetectionEnabled)
++                if not STSMmayor_RobotDetectionEnabled then STSMmayor_ResetRepairBots() end
++                STSMmayor_UpdateRepairBotStatus()
++                STSMmayor_SaveSettings()
++            end)
++
++        if pfUI and pfUI.api and pfUI.env and pfUI.env.C then
++            local api = pfUI.api
++            for _, button in ipairs({ autoSwapCheckButton, autoRepairCheckButton, robotDetectionCheckButton }) do
++                api.SkinCheckbox(button)
++                if button.backdrop then
++                    button.backdrop:ClearAllPoints()
++                    button.backdrop:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
++                    button.backdrop:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
++                end
++                local checked = button:GetCheckedTexture()
++                if checked then
++                    checked:ClearAllPoints()
++                    checked:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
++                    checked:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
++                end
++            end
++        end
++        for _, button in ipairs({ autoSwapCheckButton, autoRepairCheckButton, robotDetectionCheckButton }) do
++            button:SetHitRectInsets(0, button == robotDetectionCheckButton and -58 or -47, 0, 0)
++        end
++        robotDetectionCheckButton:SetScript("OnEnter", function()
++            GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
++            GameTooltip:SetText(STSMmayor_RobotDetectionEnabled and repairBotText and repairBotText:GetText()
++                or "修理机器人检测已关闭", 0.9, 0.9, 0.9)
++            GameTooltip:Show()
++        end)
++        robotDetectionCheckButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
++        local function makeSlider(name, label, y, low, high, callback)
++            local slider = CreateFrame("Slider", name, appearanceFrame)
++            slider:SetWidth(204)
++            slider:SetHeight(10)
++            slider:SetPoint("TOPLEFT", appearanceFrame, "TOPLEFT", 13, y)
++            slider:SetOrientation("HORIZONTAL")
++            slider:SetMinMaxValues(low, high)
++            slider:SetValueStep(1)
++            slider:EnableMouse(true)
++            STSMmayor_FlatBackdrop(slider)
++            slider:SetThumbTexture("Interface\\Buttons\\WHITE8X8")
++            local thumb = slider:GetThumbTexture()
++            thumb:SetTexture(0.8, 0.7, 0.35, 1)
++            thumb:SetWidth(8)
++            thumb:SetHeight(16)
++            slider.Label = slider:CreateFontString(nil, "OVERLAY")
++            slider.Label:SetFont(STSMmayor_GetUIFont(), 11, "OUTLINE")
++            slider.Label:SetPoint("BOTTOMLEFT", slider, "TOPLEFT", 0, 7)
++            slider:SetScript("OnValueChanged", function()
++                if appearanceFrame.syncing then return end
++                local control = this
++                local value = math.floor(control:GetValue() + 0.5)
++                callback(value)
++                control.Label:SetText(label .. ": " .. value .. "%")
++                STSMmayor_ApplyAppearance()
++                STSMmayor_SaveSettings()
++            end)
++            return slider
++        end
++        appearanceFrame.Transparency = makeSlider("STSMmayorTransparencySlider", "背景透明度", -120, 0, 100,
++            function(value) STSMmayorDB.BackgroundAlpha = 1 - value / 100 end)
++        appearanceFrame.Scale = makeSlider("STSMmayorScaleSlider", "界面大小", -172, 50, 150,
++            function(value) STSMmayor_SetUIScale(value / 100) end)
++        local lock = CreateFrame("CheckButton", "STSMmayorPositionLockCheck", appearanceFrame, "UICheckButtonTemplate")
++        lock:SetWidth(14)
++        lock:SetHeight(14)
++        lock:SetPoint("TOPLEFT", appearanceFrame, "TOPLEFT", 13, -203)
++        lock:SetHitRectInsets(0, -50, 0, 0)
++        lock.Label = lock:CreateFontString(nil, "OVERLAY")
++        lock.Label:SetFont(STSMmayor_GetUIFont(), 11, "OUTLINE")
++        lock.Label:SetPoint("LEFT", lock, "RIGHT", 3, 0)
++        lock.Label:SetHeight(14)
++        lock.Label:SetJustifyV("MIDDLE")
++        lock.Label:SetText("锁定位置")
++        lock.Label:SetTextColor(0.9, 0.9, 0.9)
++        if pfUI and pfUI.api and pfUI.env and pfUI.env.C then
++            pfUI.api.SkinCheckbox(lock)
++            if lock.backdrop then
++                lock.backdrop:ClearAllPoints()
++                lock.backdrop:SetPoint("TOPLEFT", lock, "TOPLEFT", 0, 0)
++                lock.backdrop:SetPoint("BOTTOMRIGHT", lock, "BOTTOMRIGHT", 0, 0)
++            end
++            local checked = lock:GetCheckedTexture()
++            if checked then
++                checked:ClearAllPoints()
++                checked:SetPoint("TOPLEFT", lock, "TOPLEFT", 2, -2)
++                checked:SetPoint("BOTTOMRIGHT", lock, "BOTTOMRIGHT", -2, 2)
++            end
++        end
++        lock:SetScript("OnClick", function()
++            STSMmayor_SetPositionLocked(not STSMmayorDB.PositionLocked)
++            lock:SetChecked(STSMmayorDB.PositionLocked)
++        end)
++        appearanceFrame.Lock = lock
++        local close = CreateFrame("Button", "STSMmayorAppearanceClose", appearanceFrame, "UIPanelButtonTemplate")
++        close:SetWidth(72)
++        close:SetHeight(22)
++        close:SetPoint("BOTTOM", appearanceFrame, "BOTTOM", 0, 8)
++        close:SetNormalTexture("")
++        close:SetPushedTexture("")
++        close:SetHighlightTexture("Interface\\Buttons\\WHITE8X8")
++        close:GetHighlightTexture():SetVertexColor(0.7, 0.7, 0.7, 0.15)
++        STSMmayor_FlatBackdrop(close)
++        close:SetText("完成")
++        close:GetFontString():SetFont(STSMmayor_GetUIFont(), 11, "OUTLINE")
++        if pfUI and pfUI.api and pfUI.env and pfUI.env.C then
++            pfUI.api.SkinButton(close, 0.45, 0.65, 0.85)
++        end
++        local label = close:GetFontString()
++        label:ClearAllPoints()
++        label:SetPoint("CENTER", close, "CENTER", 0, 0)
++        label:SetJustifyH("CENTER")
++        label:SetJustifyV("MIDDLE")
++        close:SetScript("OnClick", function() appearanceFrame:Hide() end)
++    end
++    appearanceFrame.syncing = true
++    local transparency = math.floor((1 - STSMmayorDB.BackgroundAlpha) * 100 + 0.5)
++    local scale = math.floor(STSMmayorDB.UIScale * 100 + 0.5)
++    appearanceFrame.Transparency:SetValue(transparency)
++    appearanceFrame.Transparency.Label:SetText("背景透明度: " .. transparency .. "%")
++    appearanceFrame.Scale:SetValue(scale)
++    appearanceFrame.Scale.Label:SetText("界面大小: " .. scale .. "%")
++    appearanceFrame.Lock:SetChecked(STSMmayorDB.PositionLocked)
++    autoSwapCheckButton:SetChecked(STSMmayor_AutoSwapEnabled)
++    autoRepairCheckButton:SetChecked(STSMmayor_AutoRepairEnabled)
++    robotDetectionCheckButton:SetChecked(STSMmayor_RobotDetectionEnabled)
++    STSMmayor_UpdateRepairBotStatus()
++    appearanceFrame.syncing = false
++    -- Independent of the scaled/movable panel: a slider cannot move under the
++    -- cursor as a side effect of changing its own value.
++    appearanceFrame:ClearAllPoints()
++    appearanceFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
++    appearanceFrame:Show()
++end
++
++function STSMmayor_UpdateInteractButtons()
++    if not repairButton or not pickupButton then return end
++    local hasInteract = STSMmayor_IsInteractLoaded()
++    local hasWushuang = STSMmayor_IsWushuangLoaded()
++    local available = hasInteract or hasWushuang
++    for _, button in ipairs({ repairButton, pickupButton }) do
++        button:Enable()
++        button.Label:SetTextColor(available and 0.9 or 0.45, available and 0.9 or 0.45, available and 0.9 or 0.45)
++        button:SetScript("OnEnter", function()
++            GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
++            local tip = "未检测到 Interact 或无双拾取模组"
++            if available then
++                if this == repairButton then
++                    tip = hasWushuang and "一键修理 (/STSMF) · 无双交互" or "一键修理 (/STSMF) · Interact"
++                else
++                    tip = hasInteract and "一键拾取 (/STSML) · Interact" or "一键拾取 (/STSML) · 无双交互"
++                end
++            end
++            GameTooltip:SetText(tip, 0.9, 0.9, 0.9)
++            GameTooltip:Show()
++        end)
++        button:SetScript("OnLeave", function() GameTooltip:Hide() end)
++    end
++    repairButton:SetScript("OnClick", available and function() STSMmayor_AutoRepair() end or function() end)
++    pickupButton:SetScript("OnClick", available and function() STSMmayor_AutoPickup() end or function() end)
++    if autoRepairInteractHint then
++        if available then autoRepairInteractHint:Hide() else autoRepairInteractHint:Show() end
++    end
++    STSMmayor_LayoutFooter()
++end
++
+ function STSMmayor_CreateDurabilityFrame()
+-    -- 创建主窗口（兼容1.12）
+-    durabilityFrame = CreateFrame("Frame", "STSMmayorDurabilityFrame", UIParent)
+-    durabilityFrame:SetWidth(380) -- 增加宽度以容纳新布局
+-    durabilityFrame:SetHeight(65) -- 减少高度
+-    -- 设置位置：X轴中心，Y轴靠下1/4处
+-    local screenWidth = GetScreenWidth()
+-    local screenHeight = GetScreenHeight()
+-    durabilityFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", screenWidth / 2, screenHeight / 4)
+-    
+-    -- 恢复背景设置（1.12兼容版本）
+-    durabilityFrame:SetBackdrop({
+-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+-        tile = true, tileSize = 16, edgeSize = 16
+-    })
+-    durabilityFrame:SetBackdropColor(0, 0, 0, 0.7)
+-    
+-    -- 恢复移动功能（1.12兼容版本）
+-    durabilityFrame:SetMovable(true)
++    if durabilityFrame then return durabilityFrame end
++    STSMmayor_LoadSettings()
++    positionFrame = CreateFrame("Frame", "STSMmayorPositionFrame", UIParent)
++    positionFrame:SetWidth(1)
++    positionFrame:SetHeight(1)
++    positionFrame:SetFrameStrata("MEDIUM")
++    positionFrame:SetMovable(not STSMmayorDB.PositionLocked)
++    positionFrame:SetClampedToScreen(true)
++    positionFrame:EnableMouse(false)
++    durabilityFrame = CreateFrame("Frame", "STSMmayorDurabilityFrame", positionFrame)
++    durabilityFrame:SetPoint("TOPLEFT", positionFrame, "TOPLEFT", 0, 0)
++    durabilityFrame:SetWidth(320)
++    durabilityFrame:SetHeight(34)
++    durabilityFrame:SetFrameStrata("MEDIUM")
++    durabilityFrame:SetScale(STSMmayorDB.UIScale)
++    durabilityFrame:SetMovable(false)
++    -- Clamping a scaled child can mutate its anchor in this client. Only the
++    -- unscaled position frame participates in native movement and clamping.
++    durabilityFrame:SetClampedToScreen(false)
+     durabilityFrame:EnableMouse(true)
+     durabilityFrame:RegisterForDrag("LeftButton")
+     durabilityFrame:SetScript("OnDragStart", function()
+-        durabilityFrame:StartMoving()
++        if STSMmayorDB.PositionLocked then return end
++        if appearanceFrame then appearanceFrame:Hide() end
++        isFrameMoving = true
++        positionFrame:StartMoving()
+     end)
+     durabilityFrame:SetScript("OnDragStop", function()
+-        durabilityFrame:StopMovingOrSizing()
++        if not isFrameMoving then return end
++        STSMmayor_FinishMoving()
+     end)
+-    durabilityFrame:Hide() -- 初始隐藏
+-    
+-    -- 创建关闭按钮（右侧第一个）
+-closeButton = CreateFrame("Button", nil, durabilityFrame)
+-closeButton:SetWidth(30)
+-closeButton:SetHeight(30)
+-closeButton:SetPoint("RIGHT", durabilityFrame, "RIGHT", -120, 5) -- 向左移动一大截，向上移动
+-closeButton:SetNormalTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up")
+-closeButton:SetPushedTexture("Interface/Buttons/UI-Panel-MinimizeButton-Down")
+-closeButton:SetHighlightTexture("Interface/Buttons/UI-Panel-MinimizeButton-Highlight")
+-closeButton:SetScript("OnClick", function()
+-    STSMmayor_HideDurabilityFrame()
+-end)
+-
+--- 创建换盾按钮（右侧第二个）
+-equipButton = CreateFrame("Button", nil, durabilityFrame)
+-equipButton:SetWidth(40) -- 稍微宽一点以容纳"换"字
+-equipButton:SetHeight(30)
+-equipButton:SetPoint("RIGHT", durabilityFrame, "RIGHT", -80, 5) -- 向左移动一大截，向上移动
+-
+--- 设置换盾按钮样式（红色背景，类似关闭按钮）
+-equipButton:SetNormalTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up")
+-equipButton:SetPushedTexture("Interface/Buttons/UI-Panel-MinimizeButton-Down")
+-equipButton:SetHighlightTexture("Interface/Buttons/UI-Panel-MinimizeButton-Highlight")
+-equipButton:SetScript("OnClick", function()
+-    STSMmayor_ManualEquip()
+-end)
+-
+--- 添加换盾按钮鼠标悬停提示
+- equipButton:SetScript("OnEnter", function()
+-     GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+-     GameTooltip:SetText("手动换盾 (/STSMC)", 1, 1, 1, 1)
+-     GameTooltip:Show()
+- end)
+- equipButton:SetScript("OnLeave", function()
+-     GameTooltip:Hide()
+- end)
+-
+--- 添加按钮文本
+-local equipButtonText = equipButton:CreateFontString(nil, "OVERLAY")
+-equipButtonText:SetFont("Fonts/FRIZQT__.TTF", 14, "OUTLINE")
+-equipButtonText:SetPoint("CENTER", equipButton, "CENTER")
+-equipButtonText:SetText("换")
+-equipButtonText:SetTextColor(1, 1, 1) -- 白色文字
+-
+--- 创建修理按钮（右侧第三个）
+-repairButton = CreateFrame("Button", nil, durabilityFrame)
+-repairButton:SetWidth(40) -- 与换盾按钮相同宽度
+-repairButton:SetHeight(30)
+-repairButton:SetPoint("RIGHT", durabilityFrame, "RIGHT", -42, 5) -- 向左移动一大截，向上移动，再向左2像素
+-
+--- 设置修理按钮样式（类似换盾按钮）
+-repairButton:SetNormalTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up")
+-repairButton:SetPushedTexture("Interface/Buttons/UI-Panel-MinimizeButton-Down")
+-repairButton:SetHighlightTexture("Interface/Buttons/UI-Panel-MinimizeButton-Highlight")
+-repairButton:SetDisabledTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up") -- 禁用时使用正常纹理，避免红色
+-
+-repairButton:SetScript("OnClick", function()
+-    STSMmayor_AutoRepair()
+-end)
+-
+--- 添加修理按钮文本
+-local repairButtonText = repairButton:CreateFontString(nil, "OVERLAY")
+-repairButtonText:SetFont("Fonts/FRIZQT__.TTF", 14, "OUTLINE")
+-repairButtonText:SetPoint("CENTER", repairButton, "CENTER")
+-repairButtonText:SetText("修")
+-repairButtonText:SetTextColor(1, 1, 1) -- 白色文字
+-
+--- 创建捡拾按钮（右侧第四个）
+-pickupButton = CreateFrame("Button", nil, durabilityFrame)
+-pickupButton:SetWidth(40) -- 与修理按钮相同宽度
+-pickupButton:SetHeight(30)
+-pickupButton:SetPoint("RIGHT", durabilityFrame, "RIGHT", -5, 5) -- 向左移动一大截，向上移动
+-
+--- 设置捡拾按钮样式（类似换盾按钮）
+-pickupButton:SetNormalTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up")
+-pickupButton:SetPushedTexture("Interface/Buttons/UI-Panel-MinimizeButton-Down")
+-pickupButton:SetHighlightTexture("Interface/Buttons/UI-Panel-MinimizeButton-Highlight")
+-pickupButton:SetDisabledTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up") -- 禁用时使用正常纹理，避免红色
+-
+-pickupButton:SetScript("OnClick", function()
+-    STSMmayor_AutoPickup()
+-end)
+-
+--- 添加捡拾按钮文本
+-local pickupButtonText = pickupButton:CreateFontString(nil, "OVERLAY")
+-pickupButtonText:SetFont("Fonts/FRIZQT__.TTF", 14, "OUTLINE")
+-pickupButtonText:SetPoint("CENTER", pickupButton, "CENTER")
+-pickupButtonText:SetText("拾")
+-pickupButtonText:SetTextColor(1, 1, 1) -- 白色文字
+-
+--- 检查拾取模组状态并更新按钮（同时支持Interact与无双拾取两种模组）
+--- 绑定规则：
+---   仅检测到Interact：修=Interact(1)，拾=Interact(0)（与旧版一致）
+---   仅检测到无双拾取：修、拾 均绑定 /无双交互
+---   两个模组都检测到：拾=Interact(0)，修=/无双交互
+---   两个模组都没检测到：两个按钮禁用（灰字+空点击）
+-function STSMmayor_UpdateInteractButtons()
+-    local hasInteract = STSMmayor_IsInteractLoaded()
+-    local hasWushuang = STSMmayor_IsWushuangLoaded()
+-
+-    if hasInteract or hasWushuang then
+-        -- 至少检测到一个拾取模组，启用按钮
+-        repairButton:Enable()
+-        pickupButton:Enable()
+-        repairButtonText:SetTextColor(1, 1, 1) -- 白色文字
+-        pickupButtonText:SetTextColor(1, 1, 1) -- 白色文字
+-
+-        -- 重新设置纹理为正常状态
+-        repairButton:SetNormalTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up")
+-        pickupButton:SetNormalTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up")
+-
+-        -- 修按钮：装了无双拾取就用无双交互，否则用Interact
+-        local repairTip = "一键修理 (/STSMF)"
+-        if hasWushuang then
+-            repairTip = "一键修理 (/STSMF) - 无双交互"
+-        end
+-
+-        -- 拾按钮：装了Interact就用Interact（两个都装时拾按钮归Interact），仅装无双时用无双交互
+-        local pickupTip = "一键拾取 (/STSML)"
+-        if not hasInteract and hasWushuang then
+-            pickupTip = "一键拾取 (/STSML) - 无双交互"
+-        end
+-
+-        -- 修理按钮悬停提示
+-        repairButton:SetScript("OnEnter", function()
+-            GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+-            GameTooltip:SetText(repairTip, 1, 1, 1, 1)
+-            GameTooltip:Show()
+-        end)
+-        repairButton:SetScript("OnLeave", function()
+-            GameTooltip:Hide()
+-        end)
+-
+-        -- 拾取按钮悬停提示
+-        pickupButton:SetScript("OnEnter", function()
+-            GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+-            GameTooltip:SetText(pickupTip, 1, 1, 1, 1)
+-            GameTooltip:Show()
+-        end)
+-        pickupButton:SetScript("OnLeave", function()
+-            GameTooltip:Hide()
+-        end)
+-
+-        -- 恢复按钮点击功能（具体路由由STSMmayor_AutoRepair/STSMmayor_AutoPickup按模组状态决定）
+-        repairButton:SetScript("OnClick", function()
+-            STSMmayor_AutoRepair()
+-        end)
+-        pickupButton:SetScript("OnClick", function()
+-            STSMmayor_AutoPickup()
+-        end)
+-    else
+-        -- 两个拾取模组都未加载，手动模拟禁用状态（不使用 Disable() 避免红色）
+-        -- 使用 Enable() 保持按钮状态，通过脚本模拟禁用
+-        repairButton:Enable()
+-        pickupButton:Enable()
+-        repairButtonText:SetTextColor(0.5, 0.5, 0.5) -- 灰色文字
+-        pickupButtonText:SetTextColor(0.5, 0.5, 0.5) -- 灰色文字
+-
+-        -- 保持纹理为正常状态，避免红色
+-        repairButton:SetNormalTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up")
+-        pickupButton:SetNormalTexture("Interface/Buttons/UI-Panel-MinimizeButton-Up")
+-
+-        -- 添加鼠标悬停提示
+-        repairButton:SetScript("OnEnter", function()
+-            GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+-            GameTooltip:SetText("未检测到任何拾取模组", 1, 0, 0, 1)
+-            GameTooltip:Show()
+-        end)
+-        repairButton:SetScript("OnLeave", function()
+-            GameTooltip:Hide()
+-        end)
+-
+-        pickupButton:SetScript("OnEnter", function()
+-            GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+-            GameTooltip:SetText("未检测到任何拾取模组", 1, 0, 0, 1)
+-            GameTooltip:Show()
+-        end)
+-        pickupButton:SetScript("OnLeave", function()
+-            GameTooltip:Hide()
+-        end)
+-
+-        -- 禁用点击功能（通过空函数）
+-        repairButton:SetScript("OnClick", function()
+-            -- 空函数，模拟禁用
+-        end)
+-        pickupButton:SetScript("OnClick", function()
+-            -- 空函数，模拟禁用
+-        end)
+-    end
+-
+-    -- 同步右下角模组状态提示文字（任一模组已加载即隐藏）
+-    if autoRepairInteractHint then
+-        if hasInteract or hasWushuang then
+-            autoRepairInteractHint:Hide()
+-        else
+-            autoRepairInteractHint:Show()
+-        end
+-    end
+-end
+-
+--- 初始更新按钮状态
+-STSMmayor_UpdateInteractButtons()
+-    
+-    -- 创建耐久度文本显示（左侧）
++    durabilityFrame:SetScript("OnHide", function()
++        if isFrameMoving then
++            STSMmayor_FinishMoving()
++        end
++        if appearanceFrame then appearanceFrame:Hide() end
++    end)
++    STSMmayor_FlatBackdrop(durabilityFrame)
++
++    local function makeButton(name, label, x, callback)
++        local button = CreateFrame("Button", name, durabilityFrame, "UIPanelButtonTemplate")
++        button:SetWidth(32)
++        button:SetHeight(24)
++        button:SetPoint("LEFT", durabilityFrame, "LEFT", x, 0)
++        button:SetNormalTexture("")
++        button:SetPushedTexture("")
++        button:SetDisabledTexture("")
++        button:SetHighlightTexture("Interface\\Buttons\\WHITE8X8")
++        button:GetHighlightTexture():SetVertexColor(0.7, 0.7, 0.7, 0.15)
++        STSMmayor_FlatBackdrop(button)
++        button:SetText(label)
++        button.Label = button:GetFontString()
++        button.Label:SetFont(STSMmayor_GetUIFont(), 12, "OUTLINE")
++        button.Label:SetTextColor(0.9, 0.9, 0.9)
++        button:SetScript("OnClick", callback)
++        return button
++    end
++    equipButton = makeButton("STSMmayorEquipButton", "换盾", 118, function() STSMmayor_ManualEquip() end)
++    repairButton = makeButton("STSMmayorRepairButton", "修理", 154, function() STSMmayor_AutoRepair() end)
++    pickupButton = makeButton("STSMmayorPickupButton", "拾取", 190, function() STSMmayor_AutoPickup() end)
++    equipButton:SetScript("OnEnter", function()
++        GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
++        GameTooltip:SetText("手动换盾 (/STSMC)", 0.9, 0.9, 0.9)
++        GameTooltip:Show()
++    end)
++    equipButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
++
++    robotIndicator = CreateFrame("Button", "STSMmayorRobotIndicator", durabilityFrame)
++    robotIndicator:SetWidth(18)
++    robotIndicator:SetHeight(18)
++    robotIndicator:SetPoint("LEFT", durabilityFrame, "LEFT", 232, 0)
++    robotIndicator:EnableMouse(true)
++    STSMmayor_FlatBackdrop(robotIndicator)
++    robotIndicator.Icon = robotIndicator:CreateTexture(nil, "ARTWORK")
++    robotIndicator.Icon:SetPoint("TOPLEFT", robotIndicator, "TOPLEFT", 2, -2)
++    robotIndicator.Icon:SetPoint("BOTTOMRIGHT", robotIndicator, "BOTTOMRIGHT", -2, 2)
++    robotIndicator.Icon:SetTexture("Interface\\Icons\\INV_Gizmo_02")
++    robotIndicator:SetScript("OnEnter", function()
++        GameTooltip:SetOwner(robotIndicator, "ANCHOR_RIGHT")
++        GameTooltip:SetText(robotIndicator.Tip or "修理机器人检测", 0.9, 0.9, 0.9)
++        GameTooltip:Show()
++    end)
++    robotIndicator:SetScript("OnLeave", function() GameTooltip:Hide() end)
++
++    STSMmayorSettingsButton = makeButton("STSMmayorSettingsButton", "设置", 260,
++        function() STSMmayor_ToggleAppearance() end)
++    STSMmayorSettingsButton:SetWidth(34)
++    STSMmayorSettingsButton:SetHeight(20)
++    STSMmayorSettingsButton:ClearAllPoints()
++    STSMmayorSettingsButton:SetPoint("LEFT", durabilityFrame, "LEFT", 260, 0)
++
++    closeButton = CreateFrame("Button", "STSMmayorCloseButton", durabilityFrame, "UIPanelButtonTemplate")
++    closeButton:SetWidth(16)
++    closeButton:SetHeight(16)
++    closeButton:SetPoint("TOPRIGHT", durabilityFrame, "TOPRIGHT", -6, -8)
++    closeButton:SetNormalTexture("")
++    closeButton:SetPushedTexture("")
++    closeButton:SetHighlightTexture("")
++    closeButton:SetText("×")
++    closeButton:SetFont(STSMmayor_GetUIFont(), 14, "OUTLINE")
++    closeButton:GetFontString():SetTextColor(0.9, 0.35, 0.35)
++    closeButton:SetScript("OnClick", function() STSMmayor_HideDurabilityFrame() end)
++
+     durabilityText = durabilityFrame:CreateFontString(nil, "OVERLAY")
+-    durabilityText:SetFont("Fonts/FRIZQT__.TTF", 18, "OUTLINE") -- 更大的字体
+-    durabilityText:SetPoint("LEFT", durabilityFrame, "LEFT", 15, 5) -- 左侧位置，下移减少间距
++    durabilityText:SetFont(STSMmayor_GetUIFont(), 12, "OUTLINE")
++    durabilityText:SetPoint("LEFT", durabilityFrame, "LEFT", 8, 0)
++    durabilityText:SetHeight(24)
++    durabilityText:SetJustifyV("MIDDLE")
++    durabilityText:SetWidth(104)
++    durabilityText:SetJustifyH("LEFT")
+     durabilityText:SetText("未装备盾牌")
+-    durabilityText:SetTextColor(1, 1, 1, 1) -- 默认白色
+-    
+-    -- 创建自动换盾开关（盾牌耐久文字下方左侧）
+-autoSwapCheckButton = CreateFrame("CheckButton", nil, durabilityFrame, "UICheckButtonTemplate")
+-autoSwapCheckButton:SetWidth(20)
+-autoSwapCheckButton:SetHeight(20)
+-autoSwapCheckButton:SetPoint("TOP", durabilityText, "BOTTOM", -70, -5) -- 在盾牌耐久文字下方，向左移动30像素
+-autoSwapCheckButton:SetScript("OnClick", function()
+-    STSMmayor_AutoSwapEnabled = not STSMmayor_AutoSwapEnabled
+-    autoSwapCheckButton:SetChecked(STSMmayor_AutoSwapEnabled)
+-    
+-    if STSMmayor_AutoSwapEnabled then
+-        STSMmayor_Print(CHAT_COLOR .. "自动换盾已开启")
+-        -- 立即检查当前盾牌耐久并触发换盾逻辑
+-        local slotID = GetInventorySlotInfo("SecondaryHandSlot")
+-        if slotID then
+-            local itemLink = GetInventoryItemLink("player", slotID)
+-            if itemLink and STSMmayor_IsOffHandItem(itemLink) then
+-                local durability, maxDurability = STSMmayor_GetInventoryDurability(slotID)
+-                if durability and maxDurability and durability <= AUTO_SWAP_THRESHOLD then
+-                    STSMmayor_Print(REPAIR_WARNING_COLOR .. "⚠ 检测到盾牌耐久过低（" .. durability .. "点），立即自动更换...")
+-                    equipFailed = true -- 标记换装失败状态，需要重检
+-                    lastShieldDurability = durability -- 更新上次耐久度记录
+-                    
+-                    -- 尝试自动换盾
+-                    local swapSuccess = STSMmayor_AutoEquipShield()
+-                    if not swapSuccess then
+-                        STSMmayor_Print(ERROR_COLOR .. "✗ 自动换盾失败，请手动检查背包中的盾牌")
+-                    end
+-                else
+-                    STSMmayor_Print(CHAT_COLOR .. "当前盾牌耐久正常，无需更换")
+-                end
+-            else
+-                STSMmayor_Print(WARNING_COLOR .. "未检测到盾牌装备")
+-            end
+-        end
+-    else
+-        STSMmayor_Print(WARNING_COLOR .. "自动换盾已关闭")
+-    end
+-end)
+-autoSwapCheckButton:SetChecked(STSMmayor_AutoSwapEnabled) -- 默认打钩
+-
+--- 创建自动换盾文本
+-autoSwapText = durabilityFrame:CreateFontString(nil, "OVERLAY")
+-autoSwapText:SetFont("Fonts/FRIZQT__.TTF", 12, "OUTLINE")
+-autoSwapText:SetPoint("LEFT", autoSwapCheckButton, "RIGHT", 5, 0)
+-autoSwapText:SetText("自动换盾")
+-
+--- 创建自动修理开关（盾牌耐久文字下方右侧）
+-autoRepairCheckButton = CreateFrame("CheckButton", nil, durabilityFrame, "UICheckButtonTemplate")
+-autoRepairCheckButton:SetWidth(20)
+-autoRepairCheckButton:SetHeight(20)
+-autoRepairCheckButton:SetPoint("LEFT", autoSwapCheckButton, "RIGHT", 70, 0) -- 在自动换盾右侧，减少间距
+-autoRepairCheckButton:SetScript("OnClick", function()
+-    STSMmayor_AutoRepairEnabled = not STSMmayor_AutoRepairEnabled
+-    autoRepairCheckButton:SetChecked(STSMmayor_AutoRepairEnabled)
+-    
+-    if STSMmayor_AutoRepairEnabled then
+-        STSMmayor_Print(CHAT_COLOR .. "自动修理已开启")
+-        -- 立即触发一次修理效果
+-        STSMmayor_AutoRepair()
+-    else
+-        STSMmayor_Print(WARNING_COLOR .. "自动修理已关闭")
+-    end
+-end)
+-autoRepairCheckButton:SetChecked(STSMmayor_AutoRepairEnabled) -- 默认关闭
+-
+--- 创建自动修理文本
+-autoRepairText = durabilityFrame:CreateFontString(nil, "OVERLAY")
+-autoRepairText:SetFont("Fonts/FRIZQT__.TTF", 12, "OUTLINE")
+-autoRepairText:SetPoint("LEFT", autoRepairCheckButton, "RIGHT", 5, 0)
+-autoRepairText:SetText("自动修理")
+-
+--- 创建机器人检测开关（盾牌耐久文字下方右侧）
+-robotDetectionCheckButton = CreateFrame("CheckButton", nil, durabilityFrame, "UICheckButtonTemplate")
+-robotDetectionCheckButton:SetWidth(20)
+-robotDetectionCheckButton:SetHeight(20)
+-robotDetectionCheckButton:SetPoint("LEFT", autoRepairCheckButton, "RIGHT", 70, 0) -- 在自动修理右侧
+-robotDetectionCheckButton:SetScript("OnClick", function()
+-    STSMmayor_RobotDetectionEnabled = not STSMmayor_RobotDetectionEnabled
+-    robotDetectionCheckButton:SetChecked(STSMmayor_RobotDetectionEnabled)
+-
+-    if STSMmayor_RobotDetectionEnabled then
+-        STSMmayor_Print(CHAT_COLOR .. "机器人检测已开启")
+-        -- 注册SuperWOW单位事件（事件驱动检测，不切换目标）
+-        STSMmayor_SetRepairBotEvents(true)
+-        -- 重置兜底探测计时：开启瞬间若脱战立即探测一次（事件漏报时补检）
+-        lastBotProbeTime = 0
+-        -- 立即检查修理机器人状态
+-        STSMmayor_UpdateRepairBotStatus()
+-    else
+-        STSMmayor_Print(WARNING_COLOR .. "机器人检测已关闭")
+-        -- 反注册事件，零开销
+-        STSMmayor_SetRepairBotEvents(false)
+-        repairBotGUID = nil
+-        -- 隐藏修理机器人状态文本
+-        if repairBotText then
+-            repairBotText:Hide()
+-        end
+-    end
+-end)
+-robotDetectionCheckButton:SetChecked(STSMmayor_RobotDetectionEnabled) -- 默认关闭
+-
+--- 创建机器人检测文本
+-robotDetectionText = durabilityFrame:CreateFontString(nil, "OVERLAY")
+-robotDetectionText:SetFont("Fonts/FRIZQT__.TTF", 12, "OUTLINE")
+-robotDetectionText:SetPoint("LEFT", robotDetectionCheckButton, "RIGHT", 5, 0)
+-robotDetectionText:SetText("机器人检测")
+-
+--- 创建拾取模组加载状态提示文字（Interact与无双拾取均未加载时显示）
+-autoRepairInteractHint = durabilityFrame:CreateFontString(nil, "OVERLAY")
+-autoRepairInteractHint:SetFont("Fonts/FRIZQT__.TTF", 10, "OUTLINE")
+-autoRepairInteractHint:SetPoint("BOTTOMRIGHT", durabilityFrame, "BOTTOMRIGHT", -5, 5) -- 移动到右下角
+-autoRepairInteractHint:SetTextColor(1, 0, 0) -- 设置为红色
+-autoRepairInteractHint:SetText("-未加载拾取模组")
+--- 初始检查并设置提示可见性（Interact与无双拾取任一加载即隐藏）
+-if STSMmayor_IsInteractLoaded() or STSMmayor_IsWushuangLoaded() then
++
++    autoRepairInteractHint = durabilityFrame:CreateFontString(nil, "OVERLAY")
++    autoRepairInteractHint:SetFont(STSMmayor_GetUIFont(), 11, "OUTLINE")
++    autoRepairInteractHint:SetWidth(296)
++    autoRepairInteractHint:SetJustifyH("LEFT")
++    autoRepairInteractHint:SetTextColor(0.85, 0.45, 0.35)
++    autoRepairInteractHint:SetText("拾取与修理不可用：未加载交互模组")
+     autoRepairInteractHint:Hide()
+-else
+-    autoRepairInteractHint:Show()
+-end
++
++    if pfUI and pfUI.api and pfUI.env and pfUI.env.C then
++        local api = pfUI.api
++        api.CreateBackdrop(durabilityFrame, nil, true)
++        for _, button in ipairs({ equipButton, repairButton, pickupButton, STSMmayorSettingsButton }) do
++            api.SkinButton(button, 0.45, 0.65, 0.85)
++            button.Label:SetFont(STSMmayor_GetUIFont(), 12, "OUTLINE")
++        end
++        api.SkinCloseButton(closeButton, durabilityFrame, -6, -8)
++        closeButton:SetText("")
++    end
++    for _, button in ipairs({ equipButton, repairButton, pickupButton, STSMmayorSettingsButton }) do
++        button.Label:ClearAllPoints()
++        button.Label:SetPoint("CENTER", button, "CENTER", 0, 0)
++        button.Label:SetJustifyH("CENTER")
++        button.Label:SetJustifyV("MIDDLE")
++    end
++    closeButton:ClearAllPoints()
++    closeButton:SetPoint("RIGHT", durabilityFrame, "RIGHT", -6, 0)
++    if not closeButton.icon then
++        local label = closeButton:GetFontString()
++        label:ClearAllPoints()
++        label:SetPoint("CENTER", closeButton, "CENTER", 0, 0)
++    end
++    STSMmayor_UpdateInteractButtons()
++    STSMmayor_ApplyAppearance()
++    STSMmayor_UpdateRepairBotStatus()
++    STSMmayor_RestorePosition()
++    durabilityFrame:Hide()
+     return durabilityFrame
+ end
++
+ 
+ -- 更新耐久度显示
+ function STSMmayor_UpdateDurabilityDisplay()
+     if not durabilityFrame or not durabilityText then
+         return
+@@ -663,15 +910,14 @@
+                     else
+                         r, g, b = 0, 1, 0 -- 绿色
+                     end
+                     
+                     durabilityText:SetTextColor(r, g, b)
+-                    durabilityText:SetText("盾牌: " .. durability .. "/" .. maxDurability .. " (" .. durabilityPercent .. "%)")
++                    durabilityText:SetText(durability .. "/" .. maxDurability .. " (" .. durabilityPercent .. "%)")
+                     
+                     -- 检查是否需要自动修理（耐久低于30%）
+                     if STSMmayor_AutoRepairEnabled and durabilityPercent < AUTO_REPAIR_THRESHOLD then
+-                        STSMmayor_Print(REPAIR_WARNING_COLOR .. "⚠ 检测到盾牌耐久过低（" .. durabilityPercent .. "%），自动执行修理...")
+                         STSMmayor_AutoRepair()
+                     end
+                 else
+                     durabilityText:SetTextColor(1, 1, 1) -- 白色
+                     durabilityText:SetText("盾牌: 未知耐久")
+@@ -697,19 +943,22 @@
+     end
+ 
+     durabilityFrame:Show()
+     isDurabilityFrameVisible = true
+     STSMmayor_UpdateDurabilityDisplay() -- 恢复更新显示
+-    STSMmayor_UpdateInteractButtons() -- 重新检测拾取模组（Interact/无双拾取可能晚于窗口创建加载）
++    STSMmayor_UpdateInteractButtons()
++    STSMmayor_UpdateRepairBotStatus()
++    STSMmayor_SaveSettings()
+ end
+ 
+ -- 隐藏耐久度监控窗口
+ function STSMmayor_HideDurabilityFrame()
+     if durabilityFrame then
+         durabilityFrame:Hide()
+     end
+     isDurabilityFrameVisible = false
++    STSMmayor_SaveSettings()
+ end
+ 
+ -- 切换耐久度监控窗口的显示状态
+ function STSMmayor_ToggleDurabilityFrame()
+     if isDurabilityFrameVisible then
+@@ -719,10 +968,12 @@
+     end
+ end
+ 
+ -- 事件注册
+ local f = CreateFrame("Frame")
++f:RegisterEvent("ADDON_LOADED")
++f:RegisterEvent("PLAYER_LOGOUT")
+ f:RegisterEvent("UNIT_INVENTORY_CHANGED")
+ f:RegisterEvent("PLAYER_ENTERING_WORLD")
+ f:RegisterEvent("UPDATE_INVENTORY_DURABILITY") -- 专门检测耐久度变化的事件
+ 
+ -- 创建定期检查耐久度的定时器
+@@ -741,50 +992,74 @@
+         STSMmayor_UpdateDurabilityDisplay()
+         STSMmayor_CheckShield()
+     end
+ end)
+ 
+--- 事件处理函数
+-f:SetScript("OnEvent", function(self, event, arg1)
+-    if (event == "UNIT_INVENTORY_CHANGED" and arg1 == "player") or event == "UPDATE_INVENTORY_DURABILITY" then
+-        -- 当物品栏变化或耐久度变化时检查
+-        STSMmayor_UpdateDurabilityDisplay() -- 更新耐久度显示
+-        if STSMmayor_Enabled then
+-            STSMmayor_CheckShield()
+-        end
+-    elseif event == "PLAYER_ENTERING_WORLD" then
+-        -- 初始化时检查一次
++-- 合并为一套初始化流程，兼容 1.12 的全局 event/arg1。
++function STSMmayor_SetEnabled(enabled)
++    STSMmayor_LoadSettings()
++    STSMmayor_Enabled = enabled and true or false
++    if STSMmayor_Enabled then
++        STSMmayor_SetRepairBotEvents(STSMmayor_RobotDetectionEnabled)
++        STSMmayor_ShowDurabilityFrame()
++        STSMmayor_CheckShield()
++        STSMmayor_StartBagCheckTimer()
++    else
++        STSMmayor_SetRepairBotEvents(false)
++        STSMmayor_HideDurabilityFrame()
++        STSMmayor_StopBagCheckTimer()
++    end
++    STSMmayor_SaveSettings()
++end
++
++f:SetScript("OnEvent", function(selfArg, eventArg, unitArg)
++    local currentEvent = eventArg or event
++    local currentUnit = unitArg or arg1
++    if currentEvent == "ADDON_LOADED" and currentUnit == "STSMmayor" then
++        STSMmayor_LoadSettings()
++    elseif currentEvent == "PLAYER_LOGOUT" then
++        -- Reloading while still dragging must capture the final location too.
++        if positionFrame and isFrameMoving then
++            positionFrame:StopMovingOrSizing()
++            isFrameMoving = false
++        end
++        STSMmayor_SaveSettings()
++    elseif (currentEvent == "UNIT_INVENTORY_CHANGED" and currentUnit == "player")
++        or currentEvent == "UPDATE_INVENTORY_DURABILITY" then
++        if not startupComplete then return end
+         STSMmayor_UpdateDurabilityDisplay()
+-        if STSMmayor_Enabled then
+-            STSMmayor_CheckShield()
+-        end
+-        -- 登录时延迟检查地点，因为地图数据可能还没有完全加载
+-        local checkFrame = CreateFrame("Frame")
+-        local elapsed = 0
+-        checkFrame:SetScript("OnUpdate", function()
+-            elapsed = elapsed + arg1
+-            if elapsed >= 2 then -- 延迟2秒检查，确保地图数据已加载
+-                checkFrame:SetScript("OnUpdate", nil)
+-                -- 检查地点，如果在目标区域则自动开启插件
+-                if STSMmayor_IsInTargetZone() and not STSMmayor_Enabled then
+-                    STSMmayor_Enabled = true
+-                    STSMmayor_Print("常用命令：")
+-                    STSMmayor_Print("  /STSM - 开启/关闭插件")
+-                    STSMmayor_Print("  /STSMC - 手动换盾")
+-                    STSMmayor_Print("  /STSMF - 自动修理（需要Interact或无双拾取模组）")
+-                    STSMmayor_Print("  /STSML - 自动拾取（需要Interact或无双拾取模组）")
+-                    STSMmayor_Print("  /STSMSHOW - 显示耐久度监控窗口")
+-                    STSMmayor_Print("  /STSMHIDE - 隐藏耐久度监控窗口")
+-                    STSMmayor_Print("  /STSMcheck - 检查背包中的破损盾牌")
+-                    STSMmayor_Print("报告镇长！自动换修盾插件已成功开启")
+-                    STSMmayor_PrintLootStatus()
+-                      STSMmayor_GenerateShieldReport() -- 显示盾牌状态
+-                      STSMmayor_ShowDurabilityFrame() -- 显示耐久度监控窗口
+-                      STSMmayor_CheckShield() -- 立即检查一次盾牌状态
+-                      STSMmayor_StartBagCheckTimer() -- 启动背包检查定时器
+-                end
+-            end
++        if STSMmayor_Enabled then STSMmayor_CheckShield() end
++    elseif currentEvent == "PLAYER_ENTERING_WORLD" then
++        STSMmayor_LoadSettings()
++        if startupComplete then
++            STSMmayor_UpdateDurabilityDisplay()
++            if STSMmayor_Enabled then STSMmayor_CheckShield() end
++            return
++        end
++        if startupFrame then return end
++        startupFrame = CreateFrame("Frame")
++        local restoreAt = GetTime() + 2
++        startupFrame:SetScript("OnUpdate", function()
++            if GetTime() < restoreAt then return end
++            startupFrame:SetScript("OnUpdate", nil)
++            startupFrame:Hide()
++            startupComplete = true
++            -- 仅首次无保存状态时沿用原来的区域自动开启。
++            -- 用户明确关闭后，过图/重登录都尊重已保存的关闭状态。
++            if STSMmayorDB.Enabled == nil then
++                STSMmayor_Enabled = STSMmayor_IsInTargetZone() and true or false
++            end
++            local showWindow = STSMmayorDB.Visible
++            if type(showWindow) ~= "boolean" then showWindow = STSMmayor_Enabled end
++            STSMmayor_SetRepairBotEvents(STSMmayor_Enabled and STSMmayor_RobotDetectionEnabled)
++            if STSMmayor_Enabled or showWindow then STSMmayor_CreateDurabilityFrame() end
++            if showWindow then STSMmayor_ShowDurabilityFrame() end
++            if STSMmayor_Enabled then
++                STSMmayor_CheckShield()
++                STSMmayor_StartBagCheckTimer()
++            end
++            STSMmayor_SaveSettings()
+         end)
+     end
+ end)
+ 
+ -- 获取背包物品耐久度的函数（使用Gratuity-2.0库提高性能）
+@@ -1239,14 +1514,13 @@
+     
+     -- 换装后延迟刷新信息
+     if success then
+         -- 延迟1秒后刷新显示，确保装备信息已更新
+         local refreshFrame = CreateFrame("Frame")
++        local refreshAt = GetTime() + 1
+         refreshFrame:SetScript("OnUpdate", function()
+-            local elapsed = arg1
+-            this.elapsed = (this.elapsed or 0) + elapsed
+-            if this.elapsed >= 1 then
++            if GetTime() >= refreshAt then
+                 STSMmayor_UpdateDurabilityDisplay()
+                 STSMmayor_CheckShield()
+                 this:SetScript("OnUpdate", nil)
+             end
+         end)
+@@ -1303,17 +1577,15 @@
+     end
+ 
+     -- 修按钮路由：装了无双拾取（无论是否同时装了Interact）都用/无双交互与商人交互修理；
+     -- 仅装Interact时沿用旧逻辑 Interact(1)
+     if hasWushuang and STSMmayor_DoWushuangInteract() then
+-        STSMmayor_Print(CHAT_COLOR .. "正在执行自动修理（无双交互）...")
+         return true
+     end
+ 
+     if hasInteract then
+         Interact(1)
+-        STSMmayor_Print(CHAT_COLOR .. "正在执行自动修理...")
+         return true
+     end
+ 
+     STSMmayor_Print(ERROR_COLOR .. "未检测到任何拾取模组，自动修理功能无效")
+     return false
+@@ -1332,16 +1604,14 @@
+ 
+     -- 拾按钮路由：只要装了Interact就用Interact(0)（两个模组都装时拾按钮归Interact）；
+     -- 仅装无双拾取时才用/无双交互
+     if hasInteract then
+         Interact(0)
+-        STSMmayor_Print(CHAT_COLOR .. "正在执行自动拾取...")
+         return true
+     end
+ 
+     if hasWushuang and STSMmayor_DoWushuangInteract() then
+-        STSMmayor_Print(CHAT_COLOR .. "正在执行自动拾取（无双交互）...")
+         return true
+     end
+ 
+     STSMmayor_Print(ERROR_COLOR .. "未检测到任何拾取模组，自动拾取功能无效")
+     return false
+@@ -1374,16 +1644,16 @@
+ function STSMmayor_StartBagCheckTimer()
+     if bagCheckTimer then
+         return
+     end
+     
++    lastBagCheckTime = GetTime()
+     bagCheckTimer = CreateFrame("Frame")
+     bagCheckTimer:SetScript("OnUpdate", function()
+-        local elapsed = arg1
+-        lastBagCheckTime = lastBagCheckTime + elapsed
+-        if lastBagCheckTime >= BAG_CHECK_INTERVAL then
+-            lastBagCheckTime = 0
++        local now = GetTime()
++        if now - lastBagCheckTime >= BAG_CHECK_INTERVAL then
++            lastBagCheckTime = now
+             STSMmayor_CheckBagForBrokenShields()
+             
+             -- 添加自动修理检查
+             if STSMmayor_AutoRepairEnabled then
+                 local slotID = GetInventorySlotInfo("SecondaryHandSlot")
+@@ -1392,11 +1662,10 @@
+                     if itemLink and STSMmayor_IsOffHandItem(itemLink) then
+                         local durability, maxDurability = STSMmayor_GetInventoryDurability(slotID)
+                         if durability and maxDurability and maxDurability > 0 then
+                             local durabilityPercent = math.floor((durability / maxDurability) * 100)
+                             if durabilityPercent < AUTO_REPAIR_THRESHOLD then
+-                                STSMmayor_Print(REPAIR_WARNING_COLOR .. "⚠ 定时检查发现盾牌耐久过低（" .. durabilityPercent .. "%），自动执行修理...")
+                                 STSMmayor_AutoRepair()
+                             end
+                         end
+                     end
+                 end
+@@ -1420,31 +1689,11 @@
+     end
+     lastBagCheckTime = 0
+ end
+ 
+ SlashCmdList["STSM"] = function(msg)
+-    STSMmayor_Enabled = not STSMmayor_Enabled
+-    if STSMmayor_Enabled then
+-        STSMmayor_Print(CHAT_COLOR .. "常用命令：")
+-        STSMmayor_Print(CHAT_COLOR .. "  /STSM - 开启/关闭插件")
+-        STSMmayor_Print(CHAT_COLOR .. "  /STSMC - 手动换盾")
+-        STSMmayor_Print(CHAT_COLOR .. "  /STSMF - 自动修理（需要Interact或无双拾取模组）")
+-        STSMmayor_Print(CHAT_COLOR .. "  /STSML - 自动拾取（需要Interact或无双拾取模组）")
+-        STSMmayor_Print(CHAT_COLOR .. "  /STSMSHOW - 显示耐久度监控窗口")
+-        STSMmayor_Print(CHAT_COLOR .. "  /STSMHIDE - 隐藏耐久度监控窗口")
+-        STSMmayor_Print(CHAT_COLOR .. "  /STSMcheck - 检查背包中的破损盾牌")
+-        STSMmayor_Print("报告镇长！自动换修盾插件已成功开启")
+-        STSMmayor_PrintLootStatus()
+-        STSMmayor_GenerateShieldReport() -- 显示盾牌状态
+-        STSMmayor_ShowDurabilityFrame() -- 显示耐久度监控窗口
+-        STSMmayor_CheckShield() -- 立即检查一次盾牌状态
+-        STSMmayor_StartBagCheckTimer() -- 启动背包检查定时器
+-    else
+-        STSMmayor_Print("镇长再见~自动换修盾插件已关闭")
+-        STSMmayor_HideDurabilityFrame() -- 关闭时隐藏窗口
+-        STSMmayor_StopBagCheckTimer() -- 停止背包检查定时器
+-    end
++    STSMmayor_SetEnabled(not STSMmayor_Enabled)
+ end
+ 
+ SlashCmdList["STSMC"] = function(msg)
+     STSMmayor_ManualEquip()
+ end
+@@ -1459,35 +1708,9 @@
+ 
+ SlashCmdList["STSMcheck"] = function()
+     STSMmayor_CheckBagForBrokenShields()
+ end
+ 
+--- 初始化
+-STSMmayor_Print("插件已加载，使用/STSM命令开启/关闭，/STSMC命令手动换装，/STSMF命令自动修理，/STSML命令自动拾取")
+-
+--- 插件加载后延迟检查地点，因为地图数据可能还没有完全加载
+-local initFrame = CreateFrame("Frame")
+-local initElapsed = 0
+-initFrame:SetScript("OnUpdate", function()
+-    initElapsed = initElapsed + arg1
+-    if initElapsed >= 3 then -- 延迟3秒检查，确保地图数据已加载
+-        initFrame:SetScript("OnUpdate", nil)
+-        -- 检查地点，如果在目标区域则自动开启插件
+-        if STSMmayor_IsInTargetZone() and not STSMmayor_Enabled then
+-            STSMmayor_Enabled = true
+-            STSMmayor_Print("常用命令：")
+-            STSMmayor_Print("  /STSM - 开启/关闭插件")
+-            STSMmayor_Print("  /STSMC - 手动换盾")
+-            STSMmayor_Print("  /STSMF - 自动修理（需要Interact或无双拾取模组）")
+-            STSMmayor_Print("  /STSML - 自动拾取（需要Interact或无双拾取模组）")
+-            STSMmayor_Print("  /STSMSHOW - 显示耐久度监控窗口")
+-            STSMmayor_Print("  /STSMHIDE - 隐藏耐久度监控窗口")
+-            STSMmayor_Print("  /STSMcheck - 检查背包中的破损盾牌")
+-            STSMmayor_Print("报告镇长！自动换修盾插件已成功开启")
+-            STSMmayor_PrintLootStatus()
+-            STSMmayor_GenerateShieldReport() -- 显示盾牌状态
+-            STSMmayor_ShowDurabilityFrame() -- 显示耐久度监控窗口
+-            STSMmayor_CheckShield() -- 立即检查一次盾牌状态
+-            STSMmayor_StartBagCheckTimer() -- 启动背包检查定时器
+-        end
+-    end
+-end)
++
++-- Recover a position saved by an earlier scaling bug without resetting preferences.
++SLASH_STSMPOS1 = "/stsmpos"
++SlashCmdList["STSMPOS"] = function() STSMmayor_ResetPosition() end
+--- a/STSMmayor/STSMmayor.toc
++++ b/STSMmayor/STSMmayor.toc
+@@ -1,10 +1,12 @@
+ ## Interface: 11200
+ ## Title: 斯坦索姆镇长-盾牌耐久检测自动换盾插件
+ ## Notes: 请将备用盾牌放在背包前8个格子中，使用/STSM命令 开启/关闭，支持interact和无双交互两种模组
+ ## Author: jimmy
+-## Version: 2.4
++## Version: 2.4.6
++## OptionalDeps: pfUI
++## SavedVariablesPerCharacter: STSMmayorDB
+ ## DefaultState: disabled
+ 
+ Libs\Ace2\AceLibrary\AceLibrary.lua
+ Libs\Deformat-2.0\Deformat-2.0.lua
+ Libs\Gratuity-2.0\Gratuity-2.0.lua

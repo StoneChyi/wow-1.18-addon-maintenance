@@ -1,0 +1,878 @@
+--- a/StatCompare/StatCompare.lua
++++ b/StatCompare/StatCompare.lua
+@@ -1,5 +1,414 @@
++-- ===== 属性面板公共布局（随主文件加载） =====
++if not SCGetPanelLayoutMode then
++-- 装备列表与属性面板共用的布局、背景管理。自动布局不覆盖原有自由拖动位置。
++function SCGetPanelLayoutMode()
++    return StatCompare_Player and StatCompare_Player.PanelLayoutMode == "free" and "free" or "auto"
++end
++
++function SCIsManagedPanel(frame)
++    return frame and (frame == StatCompareSelfFrame or frame == StatCompareTargetFrame)
++end
++
++function SCApplyPanelDisplayPolicy(frame)
++    if not frame or (not SCIsManagedPanel(frame) and frame ~= S_ItemTip_InspectFrame) then return end
++    -- Keep the right-hand statistics above MEDIUM unit frames without Raise.
++    if frame == StatCompareSelfFrame and frame:GetFrameStrata() ~= "HIGH" then frame:SetFrameStrata("HIGH") end
++    -- The automatic chain does not need three independently raised windows.
++    -- Free placement keeps their original top-level behavior.
++    local topLevel = not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "free"
++    if frame.scTopLevel ~= topLevel then
++        frame:SetToplevel(topLevel)
++        frame.scTopLevel = topLevel
++    end
++end
++
++function SCShowPanel(frame)
++    SCApplyPanelDisplayPolicy(frame)
++    if not frame:IsShown() then frame:Show() end
++end
++
++local function Visible(frame)
++    return frame and frame:IsVisible()
++end
++
++local fallbackBackdrop = {bgFile="Interface\\BUTTONS\\WHITE8X8",
++    edgeFile="Interface\\BUTTONS\\WHITE8X8", edgeSize=1,
++    insets={left=0, right=0, top=0, bottom=0}}
++local function SameNumber(a, b)
++    return a == b or (type(a) == "number" and type(b) == "number" and math.abs(a-b) < 0.000001)
++end
++function SCSetPanelPoint(frame, point, relative, relativePoint, x, y)
++    if type(relative) == "string" then relative = getglobal(relative) end
++    local p, r, rp, ox, oy = frame:GetPoint()
++    if type(r) == "string" then r = getglobal(r) end
++    if p == point and r == relative and rp == relativePoint and SameNumber(ox,x) and SameNumber(oy,y)
++        and (not frame.GetNumPoints or frame:GetNumPoints() == 1) then return end
++    frame:ClearAllPoints()
++    frame:SetPoint(point, relative, relativePoint, x, y)
++end
++function SCSetPanelText(fontString, value)
++    value = tostring(value or "")
++    if fontString:GetText() ~= value then fontString:SetText(value) end
++end
++function SCGetPanelTextSize(fontString)
++    local file, size, flags = fontString:GetFont()
++    local content = fontString:GetText()
++    local measured = fontString.scMeasuredContent
++    if measured and measured.text == content and measured.file == file
++        and measured.size == size and measured.flags == flags then
++        return measured.width, measured.height
++    end
++    local width, height = fontString:GetWidth(), fontString:GetHeight()
++    fontString.scMeasuredContent = {text=content, file=file, size=size, flags=flags, width=width, height=height}
++    return width, height
++end
++local function SameBackdrop(a, b)
++    if not a or not b then return a == b end
++    if a.bgFile ~= b.bgFile or a.edgeFile ~= b.edgeFile or (not not a.tile) ~= (not not b.tile)
++        or not SameNumber(a.tileSize or 0, b.tileSize or 0)
++        or not SameNumber(a.edgeSize or 0, b.edgeSize or 0) then return false end
++    local ai, bi = a.insets or {}, b.insets or {}
++    return SameNumber(ai.left or 0, bi.left or 0) and SameNumber(ai.right or 0, bi.right or 0)
++        and SameNumber(ai.top or 0, bi.top or 0) and SameNumber(ai.bottom or 0, bi.bottom or 0)
++end
++local function ApplyColor(background, border, r, g, b, a)
++    local cr, cg, cb, ca
++    if border then cr, cg, cb, ca = background:GetBackdropBorderColor()
++    else cr, cg, cb, ca = background:GetBackdropColor() end
++    if SameNumber(cr,r) and SameNumber(cg,g) and SameNumber(cb,b) and SameNumber(ca,a) then return end
++    if border then background:SetBackdropBorderColor(r,g,b,a)
++    else background:SetBackdropColor(r,g,b,a) end
++end
++
++function SCApplyPanelStyle(frame)
++    if not frame then return end
++    local reference = CharacterFrame and (CharacterFrame.backdrop or (CharacterFrame:GetBackdrop() and CharacterFrame))
++        or InspectFrame and (InspectFrame.backdrop or (InspectFrame:GetBackdrop() and InspectFrame))
++    local background = frame.backdrop or frame
++    local r, g, b, a = 0, 0, 0, 0.75
++    local er, eg, eb, ea = 0.4, 0.4, 0.4, 1
++    local desiredBackdrop = fallbackBackdrop
++    if reference then
++        desiredBackdrop = reference:GetBackdrop()
++        r, g, b, a = reference:GetBackdropColor()
++        er, eg, eb, ea = reference:GetBackdropBorderColor()
++    end
++    if not SameBackdrop(background:GetBackdrop(), desiredBackdrop) then background:SetBackdrop(desiredBackdrop) end
++    -- pfUI 的子背景与原始框体背景只能保留一层，否则透明度会叠加。
++    if background ~= frame and frame:GetBackdrop() then frame:SetBackdrop(nil) end
++    local backdropAlpha = reference and reference:GetAlpha() or 1
++    if background ~= frame then
++        if not SameNumber(background:GetAlpha(), backdropAlpha) then background:SetAlpha(backdropAlpha) end
++    elseif reference ~= CharacterFrame then a = a * backdropAlpha end
++    ApplyColor(background, false, r, g, b, a)
++    ApplyColor(background, true, er, eg, eb, ea)
++    local alpha = CharacterFrame and CharacterFrame:GetAlpha() or 1
++    if not SameNumber(frame:GetAlpha(), alpha) then frame:SetAlpha(alpha) end
++end
++
++local layoutFrame, inLayout, suspendedPanels, suspendedRoot
++local function HookLifecycle(frame)
++    if not frame or frame._scLayoutHooked then return end
++    frame._scLayoutHooked = true
++    local function Hook(script)
++        local previous = frame:GetScript(script)
++        frame:SetScript(script, function(self, arg1, arg2)
++            if previous then previous(self, arg1, arg2) end
++            SCRequestPanelLayout()
++        end)
++    end
++    Hook("OnShow")
++    Hook("OnHide")
++    Hook("OnSizeChanged")
++end
++
++function SCRequestPanelLayout()
++    -- Layout writes can fire OnSizeChanged. Do not queue another layout for
++    -- our own changes; otherwise reanchoring can keep it running every frame.
++    if inLayout then return end
++    if not layoutFrame then
++        layoutFrame = CreateFrame("Frame")
++        layoutFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
++        layoutFrame:RegisterEvent("ADDON_LOADED")
++        layoutFrame:SetScript("OnEvent", function() SCRequestPanelLayout() end)
++    end
++    -- 等当前显示/隐藏调用完成后统一排列，避免钩子调用顺序改变结果。
++    layoutFrame:SetScript("OnUpdate", function()
++        layoutFrame:SetScript("OnUpdate", nil)
++        SCRelayoutPanels()
++    end)
++end
++
++function SCRelayoutPanels()
++    if inLayout then return end
++    inLayout = true
++    HookLifecycle(CharacterFrame)
++    HookLifecycle(PaperDollFrame)
++    HookLifecycle(InspectFrame)
++    HookLifecycle(InspectPaperDollFrame)
++    HookLifecycle(OutfitterFrame)
++    HookLifecycle(S_ItemTip_InspectFrame)
++    HookLifecycle(StatCompareTargetFrame)
++    HookLifecycle(StatCompareSelfFrame)
++    SCEnsureSettingsButton()
++    SCApplyPanelDisplayPolicy(S_ItemTip_InspectFrame)
++    SCApplyPanelDisplayPolicy(StatCompareTargetFrame)
++    SCApplyPanelDisplayPolicy(StatCompareSelfFrame)
++    if S_ItemTip_InspectFrame and S_ItemTip_ApplyLayoutPolicy then S_ItemTip_ApplyLayoutPolicy(S_ItemTip_InspectFrame) end
++    SCApplyPanelStyle(S_ItemTip_InspectFrame)
++    SCApplyPanelStyle(StatCompareTargetFrame)
++    SCApplyPanelStyle(StatCompareSelfFrame)
++
++    local root, inspecting
++    if Visible(InspectFrame) and InspectFrame.unit then
++        if not InspectPaperDollFrame or Visible(InspectPaperDollFrame) then
++            root, inspecting = InspectFrame, true
++        end
++    elseif Visible(CharacterFrame) and Visible(PaperDollFrame) then
++        root = CharacterFrame
++    end
++    if not root or Visible(OutfitterFrame) then
++        local owner = Visible(InspectFrame) and InspectFrame.unit and InspectFrame
++            or Visible(CharacterFrame) and CharacterFrame
++        if owner then
++            if suspendedRoot ~= owner then
++                suspendedRoot = owner
++                suspendedPanels = {equipment=Visible(S_ItemTip_InspectFrame),
++                    target=Visible(StatCompareTargetFrame), self=Visible(StatCompareSelfFrame)}
++            end
++        else suspendedPanels, suspendedRoot = nil, nil end
++        if S_ItemTip_InspectFrame then S_ItemTip_InspectFrame:Hide() end
++        if StatCompareTargetFrame then StatCompareTargetFrame:Hide() end
++        if StatCompareSelfFrame then StatCompareSelfFrame:Hide() end
++        inLayout = nil
++        return
++    end
++    if suspendedPanels and suspendedRoot == root then
++        if suspendedPanels.equipment and S_ItemTip_InspectFrame then SCShowPanel(S_ItemTip_InspectFrame) end
++        if suspendedPanels.target and inspecting and StatCompareTargetFrame then SCShowPanel(StatCompareTargetFrame) end
++        if suspendedPanels.self and StatCompareSelfFrame then SCShowPanel(StatCompareSelfFrame) end
++    end
++    suspendedPanels, suspendedRoot = nil, nil
++    if not inspecting and StatCompareTargetFrame then
++        -- 目标框体的原始 OnHide 会连带隐藏自身框体，切回角色页时保留其显示状态。
++        local selfShown = Visible(StatCompareSelfFrame)
++        StatCompareTargetFrame:Hide()
++        if selfShown then SCShowPanel(StatCompareSelfFrame) end
++    end
++    if inspecting and StatCompare_GetSetting and StatCompare_GetSetting("ShowSelfFrame") == 0
++        and StatCompareSelfFrame then StatCompareSelfFrame:Hide() end
++    if S_ItemTip_Settings and S_ItemTip_Settings.showInspect == false and S_ItemTip_InspectFrame then
++        S_ItemTip_InspectFrame:Hide()
++    end
++    if SCGetPanelLayoutMode() == "free" then inLayout = nil; return end
++
++    local anchor = root.backdrop or root
++    local x, y = root.backdrop and 4 or -26, root.backdrop and 0 or -10
++    local function Attach(frame)
++        if not Visible(frame) then return end
++        SCSetPanelPoint(frame, "TOPLEFT", anchor, "TOPRIGHT", x, y)
++        local strata = frame == StatCompareSelfFrame and "HIGH" or root:GetFrameStrata()
++        if frame:GetFrameStrata() ~= strata then frame:SetFrameStrata(strata) end
++        anchor, x, y = frame, 4, 0
++    end
++    Attach(S_ItemTip_InspectFrame)
++    if inspecting then Attach(StatCompareTargetFrame) end
++    Attach(StatCompareSelfFrame)
++    inLayout = nil
++end
++
++function SCSetPanelLayoutMode(mode)
++    if mode ~= "auto" and mode ~= "free" then return end
++    StatCompare_Player = StatCompare_Player or {}
++    StatCompare_Player.PanelLayoutMode = mode
++    if mode == "free" and StatCompare_RestoreFramePosition then
++        StatCompare_RestoreFramePosition("StatCompareTargetFrame")
++        StatCompare_RestoreFramePosition("StatCompareSelfFrame")
++    end
++    SCRelayoutPanels()
++    SCRequestPanelLayout()
++    if StatCompareLayoutButton then
++        StatCompareLayoutButton:SetText(mode == "auto" and "排列：自动" or "排列：自由拖动")
++    end
++end
++
++function SCEnsureLayoutButton()
++    if not StatCompareOptFrame then return end
++    if not StatCompareLayoutButton then
++        local button = CreateFrame("Button", "StatCompareLayoutButton", StatCompareOptFrame, "GameMenuButtonTemplate")
++        button:SetWidth(130)
++        button:SetHeight(24)
++        button:SetPoint("BOTTOMRIGHT", StatCompareOkButton, "BOTTOMLEFT", -8, 0)
++        button:SetScript("OnClick", function()
++            SCSetPanelLayoutMode(SCGetPanelLayoutMode() == "auto" and "free" or "auto")
++        end)
++    end
++    StatCompareLayoutButton:SetText(SCGetPanelLayoutMode() == "auto" and "排列：自动" or "排列：自由拖动")
++end
++
++function SCEnsureSettingsButton()
++    if not StatCompareSelfFrame or StatCompareSelfFrameSettingsButton then return end
++    local button = CreateFrame("Button", "StatCompareSelfFrameSettingsButton", StatCompareSelfFrame)
++    button:SetWidth(36)
++    button:SetHeight(16)
++    if StatCompareSelfFrameSpellsButton then
++        button:SetPoint("RIGHT", StatCompareSelfFrameSpellsButton, "LEFT", -5, 0)
++    else
++        button:SetPoint("TOPRIGHT", StatCompareSelfFrame, "TOPRIGHT", -49, -7)
++    end
++    button:SetBackdrop({bgFile="Interface\\BUTTONS\\WHITE8X8",
++        edgeFile="Interface\\BUTTONS\\WHITE8X8", edgeSize=1,
++        insets={left=1, right=1, top=1, bottom=1}})
++    button:SetBackdropColor(0.12, 0.12, 0.12, 0.75)
++    button:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
++    local label = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
++    label:SetPoint("CENTER", button, "CENTER", 0, 0)
++    label:SetText("设置")
++    button:SetScript("OnClick", function()
++        if StatCompare_Toggle then StatCompare_Toggle() end
++    end)
++    button:SetScript("OnEnter", function() button:SetBackdropColor(0.25, 0.25, 0.25, 0.9) end)
++    button:SetScript("OnLeave", function() button:SetBackdropColor(0.12, 0.12, 0.12, 0.75) end)
++end
++
++-- Opt-in, one-opening measurement. No timing hooks are installed normally.
++local openProfile
++local profileTimer
++local function ProfileMessage(message)
++    DEFAULT_CHAT_FRAME:AddMessage("|cff33ccff面板耗时：|r" .. message)
++end
++local function StopOpenProfile(report)
++    local sample = openProfile
++    if not sample then return end
++    openProfile = nil
++    if profileTimer then profileTimer:SetScript("OnUpdate", nil) end
++    for _, hook in ipairs(sample.hooks) do
++        if hook.script then
++            if hook.owner:GetScript(hook.key) == hook.wrapper then hook.owner:SetScript(hook.key, hook.previous) end
++        elseif hook.owner[hook.key] == hook.wrapper then hook.owner[hook.key] = hook.previous end
++    end
++    if not report then return end
++    ProfileMessage("本次打开及随后 0.3 秒内的界面处理（毫秒）：")
++    for _, entry in ipairs(sample.entries) do
++        if entry.calls > 0 then
++            ProfileMessage(string.format("%s：%.2f ms / %d 次", entry.label, entry.ms, entry.calls))
++            if entry.label == "装备列表显示操作" then
++                ProfileMessage(string.format("装备显示扣除已计时内部调用：%.2f ms",entry.selfMs or entry.ms))
++            end
++        end
++        if entry.memoryDrop and entry.memoryDrop > 64 then
++            ProfileMessage(string.format("%s期间内存回落 %.0f KB，可能发生了内存回收。",entry.label,entry.memoryDrop))
++        end
++    end
++    ProfileMessage("分项包含内部调用，不能相加；采样已自动关闭。")
++end
++local function PackProfileResults(...) return arg end
++-- Lua 5.0's unpack accepts only the table; it ignores start/end arguments.
++-- Expand an explicit range ourselves, preserving nil holes and return counts.
++local function UnpackProfileRange(values, first, last)
++    if first > last then return end
++    return values[first], UnpackProfileRange(values, first+1, last)
++end
++function SCProfileNextCharacterOpen()
++    if openProfile then StopOpenProfile(false); ProfileMessage("已取消采样。"); return end
++    if type(debugprofilestop) ~= "function" then
++        ProfileMessage("当前客户端没有精确计时接口，无法提供可靠耗时。"); return
++    end
++    local sample = {hooks={}, entries={}, elapsed=0}
++    openProfile = sample
++    local function Install(owner, key, label, script, after)
++        if not owner then return end
++        local previous = script and owner:GetScript(key) or owner[key]
++        if type(previous) ~= "function" then return end
++        local entry = {label=label, ms=0, calls=0}
++        table.insert(sample.entries, entry)
++        local wrapper = function(...)
++            if script and not sample.started then
++                sample.started = true
++                profileTimer = profileTimer or CreateFrame("Frame")
++                profileTimer:SetScript("OnUpdate", function()
++                    sample.elapsed = sample.elapsed + (arg1 or 0)
++                    if sample.elapsed >= 0.3 then StopOpenProfile(true) end
++                end)
++            end
++            if not sample.started or openProfile ~= sample then return previous(UnpackProfileRange(arg,1,arg.n)) end
++            local memoryBefore = script and type(gcinfo) == "function" and gcinfo()
++            local started = debugprofilestop()
++            local span = {parent=sample.current,children=0}
++            sample.current = span
++            local results = PackProfileResults(pcall(previous,UnpackProfileRange(arg,1,arg.n)))
++            local elapsed = math.max(0, debugprofilestop()-started)
++            sample.current = span.parent
++            if span.parent then span.parent.children = span.parent.children + elapsed end
++            entry.ms = entry.ms + elapsed
++            entry.selfMs = (entry.selfMs or 0) + math.max(0,elapsed-span.children)
++            entry.calls = entry.calls + 1
++            if type(memoryBefore) == "number" then
++                local memoryAfter = gcinfo()
++                if type(memoryAfter) == "number" and memoryAfter < memoryBefore then
++                    entry.memoryDrop = (entry.memoryDrop or 0) + memoryBefore - memoryAfter
++                end
++            end
++            if not results[1] then StopOpenProfile(false); error(results[2],0) end
++            if after then after(UnpackProfileRange(results,2,results.n)) end
++            return UnpackProfileRange(results,2,results.n)
++        end
++        table.insert(sample.hooks,{owner=owner,key=key,previous=previous,wrapper=wrapper,script=script})
++        if script then owner:SetScript(key,wrapper) else owner[key]=wrapper end
++    end
++    Install(CharacterFrame,"OnShow","角色窗口打开回调",true)
++    Install(PaperDollFrame,"OnShow","角色属性页打开回调",true)
++    Install(_G,"oldPaperDollFrame_OnShow","StatCompare 调用的原有打开处理")
++    Install(_G,"PaperDollFrame_OnShow","属性页主处理（含 StatCompare）")
++    Install(_G,"StatScanner_ScanAll","装备提示文本扫描")
++    Install(_G,"SC_BuffScanner_ScanAllInspect","增益扫描")
++    Install(_G,"StatCompare_CharStats_Scan","属性计算")
++    Install(_G,"StatCompare_GetTooltipText","属性文字生成")
++    Install(_G,"SCShowFrame","属性副面板显示")
++    Install(_G,"S_ItemTip_UpdateFrame","装备列表与附魔刷新")
++    Install(_G,"S_ItemTip_OnCharacterShow","装备列表打开处理")
++    Install(_G,"S_ItemTip_RelayoutStatCompare","装备列表调用的布局处理")
++    local profiledEquipment
++    local function ProfileEquipment(frame)
++        if not frame or frame == profiledEquipment then return end
++        profiledEquipment = frame
++        Install(frame,"Show","装备列表显示操作")
++        Install(frame,"OnShow","装备窗口显示回调",true)
++        Install(frame,"ClearAllPoints","装备列表清空锚点")
++        Install(frame,"SetPoint","装备列表定位")
++    end
++    ProfileEquipment(S_ItemTip_InspectFrame)
++    Install(_G,"S_ItemTip_CreateInspectFrame","装备列表首次创建",false,ProfileEquipment)
++    Install(CharacterModelFrame,"SetUnit","角色三维模型载入")
++    Install(CharacterModelFrame,"RefreshUnit","角色三维模型刷新")
++    Install(BetterCharacterAttributesFrame,"OnShow","BCS 子属性区显示",true)
++    Install(ItemSocre,"ScanUnit","装等计算")
++    Install(BCS,"UpdateStats","BCS 角色属性刷新")
++    Install(BCS,"GetLiveSpellPower","BCS 法伤计算")
++    Install(BCS,"GetLiveSpellHitRating","BCS 法术命中计算")
++    Install(BCS,"GetLiveSpellCritChance","BCS 法术暴击计算")
++    Install(BCS,"GetLiveHealingPower","BCS 治疗计算")
++    Install(BCS,"GetLiveManaRegen","BCS 回蓝计算")
++    Install(BCS,"GetLiveHaste","BCS 急速计算")
++    Install(BCS,"SyncCharacterPanelContent","角色属性区域切换")
++    Install(BCS and BCS.PropertiesPanel,"GetDisplayLines","浮动属性内容计算")
++    Install(_G,"SCRelayoutPanels","面板布局")
++    Install(_G,"StatCompare_RefreshPortrait","副面板头像处理")
++    Install(_G,"SetPortraitTexture","头像渲染（含其他面板）")
++    Install(_G,"SCGetPanelTextSize","副面板文字尺寸处理")
++    Install(StatCompareSelfFrameText,"SetText","副面板正文写入")
++    Install(StatCompareSelfFrame,"Show","副面板显示操作")
++    Install(StatCompareSelfFrame,"SetHeight","副面板高度调整")
++    Install(StatCompareSelfFrame,"SetWidth","副面板宽度调整")
++    Install(StatCompareSelfFramePortraitBorder,"SetTexture","副面板边框贴图")
++    ProfileMessage("已准备采样，请关闭角色窗口，再按 C 打开一次。结果会自动显示。")
++end
++
++end
++-- ===== 属性面板公共布局结束 =====
++
+ --
+ --  $Id: slashboy @ DreamLand 九藜方舟 & lasthime @ 艾森纳 幻物梵天
+ --  $ver: v1.7.010
+ --  $Date: 2007-01-22 18:00:00
+ --  &Note: Thanks for crowley@headshot.de , the author of Titan Plugin - Item Bonuses.
+@@ -349,16 +758,23 @@
+ function STATCOMPARE_SlashCmdHandler(msg)
+ 	local GREEN = GREEN_FONT_COLOR_CODE;
+ 	local CLOSE = FONT_COLOR_CODE_CLOSE;
+ 	local NORMAL = NORMAL_FONT_COLOR_CODE;
+ 
+-	if ( (not msg) or (strlen(msg) <= 0 ) or (msg == "help") ) then
++	if msg == "perf" then
++		SCProfileNextCharacterOpen()
++	elseif msg == "layout auto" or msg == "layout free" then
++		SCSetPanelLayoutMode(msg == "layout auto" and "auto" or "free")
++		DEFAULT_CHAT_FRAME:AddMessage("属性面板排列：" .. (SCGetPanelLayoutMode() == "auto" and "自动" or "自由拖动"))
++	elseif ( (not msg) or (strlen(msg) <= 0 ) or (msg == "help") ) then
+ 		DEFAULT_CHAT_FRAME:AddMessage(NORMAL.."StatCompare  用法:"..CLOSE);
+ 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc help    "..CLOSE.." - 帮助");
+ 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc item    "..CLOSE.." - 打开物品收藏窗口");
+ 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc on | off"..CLOSE.." - 开启/关闭 StatCompare");
+ 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc reset   "..CLOSE.." - 重置框体位置");
++		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc layout auto | free"..CLOSE.." - 自动排列 / 自由拖动");
++		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc perf"..CLOSE.." - 测量下一次打开角色面板的耗时");
+ 		if(StatCompareOptFrame) then
+ 			DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc config  "..CLOSE.." - 开启/关闭 StatCompare 配置窗口");
+ 		end
+ 		if(StatCompareSetsFrame) then
+ 			DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc sets  "..CLOSE.." - 打开 StatCompareSets 窗口");
+@@ -405,18 +821,26 @@
+ 			if StatCompare_Info and realmName and playerName and StatCompare_Info[realmName] and StatCompare_Info[realmName]["FramePositions"] then
+ 				StatCompare_Info[realmName]["FramePositions"][playerName] = {};
+ 			end
+ 			DEFAULT_CHAT_FRAME:AddMessage("StatCompare "..GREEN.."框体位置已重置"..CLOSE);
+ 		end
++		SCRelayoutPanels()
++		SCRequestPanelLayout()
+ 	else
+ 		DEFAULT_CHAT_FRAME:AddMessage("未知的命令: "..GREEN..msg..CLOSE..
+ 					      ", 试试 "..GREEN.."/statc help"..CLOSE);
+ 	end
+ end
+ 
+ local StatCompare_isLoaded=0
+ function StatCompare_OnEvent()
++	if event == "PLAYER_ENTERING_WORLD" then
++		StatCompareSelfFrame.scPortraitDirty = true
++		StatCompareTargetFrame.scPortraitDirty = true
++	elseif event == "UNIT_INVENTORY_CHANGED" and arg1 == "player" then
++		StatCompareSelfFrame.scPortraitDirty = true
++	end
+ 	if( event == "VARIABLES_LOADED" ) then
+ 		if( not StatCompare_SaveVar ) then
+ 			StatCompare_SaveVar = { };
+ 			StatCompare_SaveVar["enable"]=1;
+ 			StatCompare_SaveVar["IsDressUpStat"]=0;
+@@ -461,12 +885,13 @@
+ 			end
+ 			if(StatCompare_CharStats_Scan) then
+ 				StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+ 			end
+ 			local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+-			-- 始终定位到 PaperDollFrame 右侧，避免位置偏移
+-			SCShowFrame(StatCompareSelfFrame,PaperDollFrame,UnitName("player"),tiptext,200,-12);
++			local inspecting = InspectFrame and InspectFrame:IsVisible() and InspectFrame.unit
++			SCShowFrame(StatCompareSelfFrame, inspecting and StatCompareTargetFrame or PaperDollFrame,
++				UnitName("player"), tiptext, inspecting and 4 or 200, inspecting and 0 or -12);
+ 		elseif ((arg1 == "target") and StatCompare_enable and StatCompare_isLoaded==1 and StatCompareTargetFrame:IsVisible()) then
+ 			SCHideFrame(StatCompareTargetFrame);
+ 			SCHideFrame(StatCompareSelfFrame);
+ 			StatScanner_ScanAllInspect();
+ 			if(SC_BuffScanner_ScanAllInspect) then
+@@ -516,31 +941,28 @@
+ 					end
+ 					if (StatCompare_CharStats_Scan) then
+ 						StatCompare_CharStats_Scan(StatScanner_bonuses, "player");
+ 					end
+ 					local tiptext = StatCompare_GetTooltipText(StatScanner_bonuses,1);
+-					-- 始终定位到 PaperDollFrame 右侧，避免位置偏移
+-					SCShowFrame(StatCompareSelfFrame,PaperDollFrame,UnitName("player"),tiptext,200,-12);
++					local inspecting = InspectFrame and InspectFrame:IsVisible() and InspectFrame.unit
++					SCShowFrame(StatCompareSelfFrame, inspecting and StatCompareTargetFrame or PaperDollFrame,
++						UnitName("player"), tiptext, inspecting and 4 or 200, inspecting and 0 or -12);
+ 				end
+ 				STATCOMPARE_VALUE_DRUIDFORM = form
+ 			end
+ 		end
+ 
+ 	elseif ( event == "UNIT_PORTRAIT_UPDATE" or event == "UNIT_MODEL_CHANGED" ) then
+ 		-- 处理头像更新事件
+-		if arg1 == "player" and StatCompareSelfFrame:IsVisible() then
+-			local portrait = getglobal("StatCompareSelfFramePortrait")
+-			if portrait and UnitExists("player") then
+-				SetPortraitTexture(portrait, "player")
+-				portrait:Show()
+-			end
+-		elseif arg1 == "target" and StatCompareTargetFrame:IsVisible() then
+-			local portrait = getglobal("StatCompareTargetFramePortrait")
+-			if portrait and UnitExists("target") then
+-				SetPortraitTexture(portrait, "target")
+-				portrait:Show()
+-			end
++		if arg1 == "player" then
++			StatCompareSelfFrame.scPortraitDirty = true
++			if StatCompareSelfFrame:IsVisible() then StatCompare_RefreshPortrait(StatCompareSelfFrame,"player") end
++		end
++		local inspectedUnit = InspectFrame and InspectFrame.unit or "target"
++		if arg1 == inspectedUnit then
++			StatCompareTargetFrame.scPortraitDirty = true
++			if StatCompareTargetFrame:IsVisible() then StatCompare_RefreshPortrait(StatCompareTargetFrame,inspectedUnit) end
+ 		end
+ 	elseif ( event == "PLAYER_LOGOUT" ) then
+ 		-- save the player settings
+ 		StatCompare_SaveConfigInfo();
+ 	end
+@@ -550,21 +972,34 @@
+ function StatCompare_RefreshPortrait(frame, unit)
+ 	if not frame or not UnitExists(unit) then return end
+ 	
+ 	local portrait = getglobal(frame:GetName().."Portrait")
+ 	if portrait then
++		if frame.portraitUpdateFrame then frame.portraitUpdateFrame:SetScript("OnUpdate", nil) end
++		local name = UnitName(unit)
++		if unit == "player" and frame.scPortraitUnit == unit and frame.scPortraitName == name
++			and frame.scPortraitTexture == portrait and not frame.scPortraitDirty
++			and (not portrait.GetTexture or portrait:GetTexture()) then
++			portrait:Show()
++			return
++		end
+ 		-- 立即设置头像
+ 		SetPortraitTexture(portrait, unit)
+ 		portrait:Show()
++		frame.scPortraitUnit, frame.scPortraitName, frame.scPortraitTexture = unit, name, portrait
++		frame.scPortraitDirty = nil
+ 		
+-		-- 再次延迟刷新以确保显示正确
++		-- Own portrait is available immediately. Keep one reusable retry frame
++		-- only for inspected players whose model can arrive asynchronously.
++		if unit == "player" then return end
+ 		local timer = 0
+-		local updateFrame = CreateFrame("Frame")
++		local updateFrame = frame.portraitUpdateFrame or CreateFrame("Frame", nil, frame)
++		frame.portraitUpdateFrame = updateFrame
+ 		updateFrame:SetScript("OnUpdate", function()
+ 			timer = timer + arg1
+ 			if timer > 0.2 then
+-				if UnitExists(unit) then
++				if frame:IsVisible() and UnitExists(unit) then
+ 					SetPortraitTexture(portrait, unit)
+ 					portrait:Show()
+ 				end
+ 				updateFrame:SetScript("OnUpdate", nil)
+ 			end
+@@ -717,22 +1152,25 @@
+ end
+ 
+ function SCShowFrame(frame,target,tiptitle,tiptext,anchorx,anchory)
+ 	local text = getglobal(frame:GetName().."Text");
+ 	local title = getglobal(frame:GetName().."Title");
+-	local portrait = getglobal(frame:GetName().."Portrait");
+ 	local levelText = getglobal(frame:GetName().."LevelText");
+ 	local ilevelText = getglobal(frame:GetName().."ILevelText");
+ 	
+-	-- 设置边框颜色（和 S_ItemTip 一样）
+-	frame:SetBackdropColor(0, 0, 0, 0.9)  -- 黑色背景，90% 不透明
+-	frame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)  -- 深灰色边框，100% 不透明
++    if SCIsManagedPanel(frame) then
++        SCApplyPanelDisplayPolicy(frame)
++        SCApplyPanelStyle(frame)
++	else
++		frame:SetBackdropColor(0, 0, 0, 0.9)
++		frame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
++	end
+ 	
+ 	-- 确定单位（player 或 target）
+ 	local unit = "player"
+ 	if frame == StatCompareTargetFrame then
+-		unit = "target"
++		unit = InspectFrame and InspectFrame.unit or "target"
+ 	end
+ 	
+ 	-- 创建等级背景框（如果不存在）
+ 	if not frame.levelBg then
+ 		frame.levelBg = CreateFrame("Frame", nil, frame)
+@@ -762,189 +1200,156 @@
+ 		end
+ 	end
+ 	
+ 	-- 设置头像边框
+ 	local portraitBorder = getglobal(frame:GetName().."PortraitBorder")
+-	if portraitBorder then
++	if portraitBorder and (not portraitBorder.scBorderInitialized
++		or (portraitBorder.GetTexture and not portraitBorder:GetTexture())) then
+ 		portraitBorder:SetTexture("Interface\\AddOns\\S_ItemTip\\边框")
+ 		portraitBorder:SetBlendMode("BLEND")
+-	end
+-	
+-	-- 设置头像（延迟设置以确保数据加载完成，模仿 S_ItemTip）
+-	if portrait and UnitExists(unit) then
+-		-- 先设置临时头像
+-		portrait:SetTexture("Interface\\CharacterFrame\\TempPortrait")
+-		portrait:Show()
+-		
+-		-- 延迟0.15秒后设置真实头像（增加延迟时间以确保数据加载完成）
+-		local portraitTimer = 0
+-		local portraitUpdateFrame = CreateFrame("Frame")
+-		portraitUpdateFrame:SetScript("OnUpdate", function()
+-			portraitTimer = portraitTimer + arg1
+-			if portraitTimer > 0.15 then
+-				if UnitExists(unit) then
+-					SetPortraitTexture(portrait, unit)
+-					portrait:Show()  -- 确保显示
+-				end
+-				portraitUpdateFrame:SetScript("OnUpdate", nil)
+-			end
+-		end)
+-	end
+-	
++		portraitBorder.scBorderInitialized = true
++	end
++	
++	-- Portrait refresh is centralized after Show below.
+ 	-- 设置等级（金色字体）
+ 	if levelText and UnitExists(unit) then
+ 		local level = UnitLevel(unit)
+-		levelText:SetText(level)
++		SCSetPanelText(levelText,level)
+ 		levelText:SetTextColor(1, 0.82, 0)  -- 金色
+ 	end
+ 	
+ 	-- 设置名字和职业颜色
+ 	if UnitExists(unit) then
+ 		local name = UnitName(unit)
+ 		local localizedClass, class = UnitClass(unit)
+ 		local classColor = RAID_CLASS_COLORS[class]
+ 		if classColor then
+-			title:SetText(name)
++			SCSetPanelText(title,name)
+ 			title:SetTextColor(classColor.r, classColor.g, classColor.b)
+ 			-- 头像边框也使用职业颜色
+ 			if portraitBorder then
+ 				portraitBorder:SetVertexColor(classColor.r, classColor.g, classColor.b)
+ 			end
+ 			-- 等级背景框边框也使用职业颜色
+ 			if frame.levelBg then
+ 				frame.levelBg:SetBackdropBorderColor(classColor.r, classColor.g, classColor.b)
+ 			end
+ 		else
+-			title:SetText(name)
++			SCSetPanelText(title,name)
+ 			-- 默认白色边框
+ 			if portraitBorder then
+ 				portraitBorder:SetVertexColor(1, 1, 1)
+ 			end
+ 			if frame.levelBg then
+ 				frame.levelBg:SetBackdropBorderColor(1, 1, 1)
+ 			end
+ 		end
+ 	else
+-		title:SetText(tiptitle)
++		SCSetPanelText(title,tiptitle)
+ 	end
+ 	
+ 	-- 设置装等（如果有 S_ItemTip）
+-	if ilevelText and IsAddOnLoaded("S_ItemTip") and ItemSocre and ItemSocre.ScanUnit then
+-		local score = ItemSocre:ScanUnit(unit)
+-		if score and score > 0 then
+-			ilevelText:SetText(string.format("装等 %.1f", score))
+-			ilevelText:SetTextColor(1, 0.82, 0)  -- 金色
+-			ilevelText:Show()
+-		else
+-			ilevelText:Hide()
+-		end
++	local displayScore
++	if IsAddOnLoaded("S_ItemTip") and ItemSocre and ItemSocre.ScanUnit then
++		displayScore = ItemSocre:ScanUnit(unit)
++	end
++	if ilevelText and displayScore and displayScore > 0 then
++		SCSetPanelText(ilevelText,string.format("装等 %.1f", displayScore))
++		ilevelText:SetTextColor(1, 0.82, 0)  -- 金色
++		ilevelText:Show()
+ 	elseif ilevelText then
+ 		ilevelText:Hide()
+ 	end
+ 	
+-	text:SetText(tiptext);
+-	height = text:GetHeight();
+-	width = text:GetWidth();
++	SCSetPanelText(text,tiptext)
++	local width, height = SCGetPanelTextSize(text)
++	local titleWidth = SCGetPanelTextSize(title)
+ 	
+ 	-- 计算最大宽度，考虑标题、装等文本
+-	if(width < title:GetWidth()) then
+-		width = title:GetWidth();
++	if(width < titleWidth) then
++		width = titleWidth;
+ 	end
+ 	
+ 	-- 考虑装等文本的宽度
+ 	if ilevelText and ilevelText:IsVisible() then
+-		local ilevelWidth = ilevelText:GetWidth()
++		local ilevelWidth = SCGetPanelTextSize(ilevelText)
+ 		if width < ilevelWidth then
+ 			width = ilevelWidth
+ 		end
+ 	end
+ 	
+ 	-- 确保至少能容纳头像+名字的宽度（头像56px + 间距10px + 名字）
+-	local minWidth = 56 + 10 + title:GetWidth()
++	local minWidth = 56 + 10 + titleWidth
+ 	if width < minWidth then
+ 		width = minWidth
+ 	end
+ 	
+-	-- 设置一个绝对最小宽度，避免框体宽度变化导致位置偏移
+-	-- 同时记住每个框体的最大宽度，避免宽度缩小
+-	if not frame.maxWidth then
+-		frame.maxWidth = 200  -- 初始最小宽度
+-	end
+-	
+-	if width > frame.maxWidth then
+-		frame.maxWidth = width
+-	end
+-	
+-	-- 使用记录的最大宽度，这样框体宽度只会增加不会减少
+-	width = frame.maxWidth
++	-- 按本次内容确定宽度，避免历史长文本让后续窗口永久变宽。
++	width = math.max(200, width)
+ 	
+ 	-- 调整高度以容纳头像和等级
+ 	local extraHeight = 80  -- 头像和等级区域的高度
+-	if IsAddOnLoaded("S_ItemTip") then
+-		local score = ItemSocre and ItemSocre.ScanUnit and ItemSocre:ScanUnit(unit)
+-		if score and score > 0 then 
+-			frame:SetHeight(height + extraHeight + 30)
+-		else 
+-			frame:SetHeight(height + extraHeight)
+-		end
+-	else
+-		frame:SetHeight(height + extraHeight)
+-	end
+-	frame:SetWidth(width+40);  -- 增加左右边距
++	local panelHeight = height + extraHeight
++	if displayScore and displayScore > 0 then
++		panelHeight = panelHeight + 30
++	end
++	if frame:GetHeight() ~= panelHeight then frame:SetHeight(panelHeight) end
++	if frame:GetWidth() ~= width+40 then frame:SetWidth(width+40) end
+ 	
+ 	-- 检查是否有保存的位置
+ 	local hasCustomPosition = false;
+ 	local savedPos = nil;
+ 	
+-	if StatCompare_Player and StatCompare_Player["FramePositions"] and StatCompare_Player["FramePositions"][frame:GetName()] then
++	if (not SCIsManagedPanel(frame) or SCGetPanelLayoutMode() == "free")
++		and StatCompare_Player and StatCompare_Player["FramePositions"] and StatCompare_Player["FramePositions"][frame:GetName()] then
+ 		hasCustomPosition = true;
+ 		savedPos = StatCompare_Player["FramePositions"][frame:GetName()];
+ 	end
+-	
+-	-- 先清除所有锚点
+-	frame:ClearAllPoints()
+ 	
+ 	if hasCustomPosition and savedPos then
+ 		-- 如果有保存的位置，直接恢复
+ 		if savedPos.point and savedPos.relativePoint and savedPos.xOfs and savedPos.yOfs then
+-			frame:SetPoint(savedPos.point, "UIParent", savedPos.relativePoint, savedPos.xOfs, savedPos.yOfs);
+-		end
+-	else
++			SCSetPanelPoint(frame,savedPos.point,savedPos.relativeTo or "UIParent",savedPos.relativePoint,savedPos.xOfs,savedPos.yOfs)
++		end
++	elseif not SCIsManagedPanel(frame) or SCGetPanelLayoutMode() == "free" then
+ 		-- 没有保存位置时使用默认定位
+ 		-- 如果 target 是 StatCompareTargetFrame，说明是 SelfFrame 要定位在 TargetFrame 右侧
+ 		if target:GetName() == "StatCompareTargetFrame" then
+ 			-- SelfFrame 定位在 TargetFrame 的右侧，anchorx 就是间距
+-			frame:SetPoint("TOPLEFT", target:GetName(), "TOPRIGHT", anchorx, anchory);
++			SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx,anchory)
+ 		elseif(IsAddOnLoaded("oSkin") or IsAddOnLoaded("Skinner")) then
+ 			if(target:GetName() == "InspectFrame" or target:GetName() == "PaperDollFrame") then
+-				frame:SetPoint("TOPLEFT", target:GetName(), "TOPRIGHT", anchorx + 30, anchory + 12);
++				SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx+30,anchory+12)
+ 			else
+-				frame:SetPoint("TOPLEFT", target:GetName(), "TOPRIGHT", anchorx, anchory);
++				SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx,anchory)
+ 			end
+ 		else
+-			frame:SetPoint("TOPLEFT", target:GetName(), "TOPRIGHT", anchorx, anchory);
++			SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx,anchory)
+ 		end
+ 	end
+ 	
+ 	if(tiptext=="") then
+ 		frame:Hide();
+ 	else
+ 		local showSelfFrame = StatCompare_GetSetting("ShowSelfFrame");
+ 		if(StatCompareTargetFrame:IsVisible() and showSelfFrame == 0 and frame == StatCompareSelfFrame) then
+ 			frame:Hide();
+ 		else
+-			frame:Show();
++			SCShowPanel(frame)
+ 			-- 显示框体后强制刷新头像
+ 			StatCompare_RefreshPortrait(frame, unit)
+ 		end
+ 	end
++	if SCIsManagedPanel(frame) then
++		SCRelayoutPanels()
++		SCRequestPanelLayout()
++	end
+ end
+ 
+ function SCHideFrame(frame)
+ 	frame:Hide();
+-	-- 不再重置 maxWidth，保持框体宽度稳定
+-	-- frame.maxWidth = nil;
++	-- 下次显示时按当前内容重新计算尺寸。
+ end
+ 
+ function SCPaperDollFrame_OnHide()
+ 	SCHideFrame(StatCompareSelfFrame);
+ 	oldPaperDollFrame_OnHide();
+@@ -1687,10 +2092,11 @@
+ function StatCompare_SaveFramePosition(frameName)
+ 	local frame = getglobal(frameName);
+ 	if not frame then 
+ 		return; 
+ 	end
++	if SCIsManagedPanel(frame) and SCGetPanelLayoutMode() ~= "free" then return end
+ 	
+ 	local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint();
+ 	
+ 	-- 确保 StatCompare_Player 存在
+ 	if not StatCompare_Player then
+@@ -1701,25 +2107,27 @@
+ 	end
+ 	
+ 	-- 保存到角色变量（这个会自动保存）
+ 	StatCompare_Player["FramePositions"][frameName] = {
+ 		point = point,
++		relativeTo = relativeTo and relativeTo:GetName() or "UIParent",
+ 		relativePoint = relativePoint,
+ 		xOfs = xOfs,
+ 		yOfs = yOfs
+ 	};
+ end
+ 
+ function StatCompare_RestoreFramePosition(frameName)
+ 	local frame = getglobal(frameName);
+ 	if not frame then return; end
++	if SCIsManagedPanel(frame) and SCGetPanelLayoutMode() ~= "free" then return end
+ 	
+ 	if not StatCompare_Player or not StatCompare_Player["FramePositions"] or not StatCompare_Player["FramePositions"][frameName] then
+ 		return;
+ 	end
+ 	
+ 	local pos = StatCompare_Player["FramePositions"][frameName];
+ 	if pos.point and pos.relativePoint and pos.xOfs and pos.yOfs then
+ 		frame:ClearAllPoints();
+-		frame:SetPoint(pos.point, "UIParent", pos.relativePoint, pos.xOfs, pos.yOfs);
+-	end
+-end
++		frame:SetPoint(pos.point, pos.relativeTo or "UIParent", pos.relativePoint, pos.xOfs, pos.yOfs);
++	end
++end

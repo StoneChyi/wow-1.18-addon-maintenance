@@ -1,0 +1,15 @@
+--- a/DPSMateXExtend/DPSMateX_EDD/DPSMateX_Details_EDDTotal.lua
++++ b/DPSMateXExtend/DPSMateX_EDD/DPSMateX_Details_EDDTotal.lua
+@@ -441,11 +441,11 @@
+ 		_G("DPSMateX_Details_EDDTotal_PlayerList_Child_R"..cat.."_AmountPerc"):SetText(strformat("%.1f", 100*val[2]/total).."%")
+ 		_G("DPSMateX_Details_EDDTotal_PlayerList_Child_R"..cat.."_Crush"):SetText(strformat("%.1f", 100*val[10]/val[11]).."%")
+ 		_G("DPSMateX_Details_EDDTotal_PlayerList_Child_R"..cat.."_Hit"):SetText(strformat("%.1f", 100*val[8]/val[11]).."%")
+ 		_G("DPSMateX_Details_EDDTotal_PlayerList_Child_R"..cat.."_Crit"):SetText(strformat("%.1f", 100*val[3]/val[11]).."%")
+ 		_G("DPSMateX_Details_EDDTotal_PlayerList_Child_R"..cat.."_Miss"):SetText(strformat("%.1f", 100*val[4]/val[11]).."%")
+-		_G("DPSMateX_Details_EDDTotal_PlayerList_Child_R"..cat.."_EDPS"):SetText(strformat("%.1f", val[2]/(((DPSMateX.CombatTime["effective"][curKey][val[1]]) or cbt)+1)))
++		_G("DPSMateX_Details_EDDTotal_PlayerList_Child_R"..cat.."_EDPS"):SetText(strformat("%.1f", val[2]/(((DPSMateX:GetSelectedEffectiveTime(curKey)[val[1]]) or cbt)+1)))
+ 		_G("DPSMateX_Details_EDDTotal_PlayerList_Child_R"..cat).user = val[7]
+ 		_G("DPSMateX_Details_EDDTotal_PlayerList_Child_R"..cat):Show()
+ 	end
+ end
+ 

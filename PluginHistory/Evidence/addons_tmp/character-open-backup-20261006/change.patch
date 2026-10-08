@@ -1,0 +1,271 @@
+--- before/StatCompare/StatScanner.lua
++++ after/StatCompare/StatScanner.lua
+@@ -169,8 +169,58 @@
+ 	SCObjectTooltip:Hide()
+ end
+ 
++-- Cache raw equipment only: buff scanners mutate the working tables later.
++local playerEquipmentCache
++local equipmentCacheFields = {
++    "StatScanner_bonuses", "StatScanner_sets", "StatScanner_setcount",
++    "StatScanner_setsproperty", "StatScanner_currentset", "StatScanner_currentsetcount"
++}
++
++local function CopyEquipmentData(value)
++    if type(value) ~= "table" then return value end
++    local copy = {}
++    for key, entry in pairs(value) do copy[key] = CopyEquipmentData(entry) end
++    return copy
++end
++
++function StatScanner_InvalidatePlayerCache()
++    playerEquipmentCache = nil
++end
++
++local function PlayerEquipmentKey()
++    local parts = { tostring(UnitLevel("player")) }
++    local ready = true
++    for slot = 1, 19 do
++        local link = GetInventoryItemLink("player", slot)
++        parts[slot + 1] = link or ""
++        if link then
++            local _, _, itemID = string.find(link, "item:(%d+)")
++            if not itemID or not GetItemInfo(tonumber(itemID)) then ready = false end
++        elseif GetInventoryItemTexture("player", slot) then
++            -- Retry when an equipped item has not supplied its link yet.
++            ready = false
++        end
++    end
++    return table.concat(parts, "\n"), ready
++end
++
+ function StatScanner_ScanAll()
+-	StatScanner_ScanAllInspect("player");
++    local key, ready = PlayerEquipmentKey()
++    if ready and playerEquipmentCache and playerEquipmentCache.key == key then
++        for _, field in ipairs(equipmentCacheFields) do
++            _G[field] = CopyEquipmentData(playerEquipmentCache[field])
++        end
++        return
++    end
++
++    StatScanner_ScanAllInspect("player")
++    playerEquipmentCache = nil
++    if ready then
++        playerEquipmentCache = { key = key }
++        for _, field in ipairs(equipmentCacheFields) do
++            playerEquipmentCache[field] = CopyEquipmentData(getglobal(field))
++        end
++    end
+ end
+ 
+ function StatScanner_AddValue(effect, value)
+--- before/StatCompare/StatCompare.lua
++++ after/StatCompare/StatCompare.lua
+@@ -623,6 +623,12 @@
+ 
+ local StatCompare_isLoaded=0
+ function StatCompare_OnEvent()
++	-- Inventory/aura events also cover changes to temporary weapon enchants.
++	if StatScanner_InvalidatePlayerCache and (event == "PLAYER_ENTERING_WORLD"
++		or event == "PLAYER_AURAS_CHANGED"
++		or (event == "UNIT_INVENTORY_CHANGED" and arg1 == "player")) then
++		StatScanner_InvalidatePlayerCache()
++	end
+ 	if( event == "VARIABLES_LOADED" ) then
+ 		if( not StatCompare_SaveVar ) then
+ 			StatCompare_SaveVar = { };
+@@ -766,13 +772,19 @@
+ 		SetPortraitTexture(portrait, unit)
+ 		portrait:Show()
+ 		
+-		-- 再次延迟刷新以确保显示正确
++		-- Own portrait is available immediately. Keep one reusable retry frame
++		-- only for inspected players whose model can arrive asynchronously.
++		if frame.portraitUpdateFrame then
++			frame.portraitUpdateFrame:SetScript("OnUpdate", nil)
++		end
++		if unit == "player" then return end
+ 		local timer = 0
+-		local updateFrame = CreateFrame("Frame")
++		local updateFrame = frame.portraitUpdateFrame or CreateFrame("Frame", nil, frame)
++		frame.portraitUpdateFrame = updateFrame
+ 		updateFrame:SetScript("OnUpdate", function()
+ 			timer = timer + arg1
+ 			if timer > 0.2 then
+-				if UnitExists(unit) then
++				if frame:IsVisible() and UnitExists(unit) then
+ 					SetPortraitTexture(portrait, unit)
+ 					portrait:Show()
+ 				end
+@@ -929,7 +941,6 @@
+ function SCShowFrame(frame,target,tiptitle,tiptext,anchorx,anchory)
+ 	local text = getglobal(frame:GetName().."Text");
+ 	local title = getglobal(frame:GetName().."Title");
+-	local portrait = getglobal(frame:GetName().."Portrait");
+ 	local levelText = getglobal(frame:GetName().."LevelText");
+ 	local ilevelText = getglobal(frame:GetName().."ILevelText");
+ 	
+@@ -982,27 +993,7 @@
+ 		portraitBorder:SetBlendMode("BLEND")
+ 	end
+ 	
+-	-- 设置头像（延迟设置以确保数据加载完成，模仿 S_ItemTip）
+-	if portrait and UnitExists(unit) then
+-		-- 先设置临时头像
+-		portrait:SetTexture("Interface\\CharacterFrame\\TempPortrait")
+-		portrait:Show()
+-		
+-		-- 延迟0.15秒后设置真实头像（增加延迟时间以确保数据加载完成）
+-		local portraitTimer = 0
+-		local portraitUpdateFrame = CreateFrame("Frame")
+-		portraitUpdateFrame:SetScript("OnUpdate", function()
+-			portraitTimer = portraitTimer + arg1
+-			if portraitTimer > 0.15 then
+-				if UnitExists(unit) then
+-					SetPortraitTexture(portrait, unit)
+-					portrait:Show()  -- 确保显示
+-				end
+-				portraitUpdateFrame:SetScript("OnUpdate", nil)
+-			end
+-		end)
+-	end
+-	
++	-- Portrait refresh is centralized after Show below.
+ 	-- 设置等级（金色字体）
+ 	if levelText and UnitExists(unit) then
+ 		local level = UnitLevel(unit)
+@@ -1041,15 +1032,14 @@
+ 	end
+ 	
+ 	-- 设置装等（如果有 S_ItemTip）
+-	if ilevelText and IsAddOnLoaded("S_ItemTip") and ItemSocre and ItemSocre.ScanUnit then
+-		local score = ItemSocre:ScanUnit(unit)
+-		if score and score > 0 then
+-			ilevelText:SetText(string.format("装等 %.1f", score))
+-			ilevelText:SetTextColor(1, 0.82, 0)  -- 金色
+-			ilevelText:Show()
+-		else
+-			ilevelText:Hide()
+-		end
++	local displayScore
++	if IsAddOnLoaded("S_ItemTip") and ItemSocre and ItemSocre.ScanUnit then
++		displayScore = ItemSocre:ScanUnit(unit)
++	end
++	if ilevelText and displayScore and displayScore > 0 then
++		ilevelText:SetText(string.format("装等 %.1f", displayScore))
++		ilevelText:SetTextColor(1, 0.82, 0)  -- 金色
++		ilevelText:Show()
+ 	elseif ilevelText then
+ 		ilevelText:Hide()
+ 	end
+@@ -1082,13 +1072,8 @@
+ 	
+ 	-- 调整高度以容纳头像和等级
+ 	local extraHeight = 80  -- 头像和等级区域的高度
+-	if IsAddOnLoaded("S_ItemTip") then
+-		local score = ItemSocre and ItemSocre.ScanUnit and ItemSocre:ScanUnit(unit)
+-		if score and score > 0 then 
+-			frame:SetHeight(height + extraHeight + 30)
+-		else 
+-			frame:SetHeight(height + extraHeight)
+-		end
++	if displayScore and displayScore > 0 then
++		frame:SetHeight(height + extraHeight + 30)
+ 	else
+ 		frame:SetHeight(height + extraHeight)
+ 	end
+--- before/S_ItemTip/ItemSocre.lua
++++ after/S_ItemTip/ItemSocre.lua
+@@ -4,6 +4,24 @@
+ local lib = LibStub("LibItem-enUS-1.0")
+ local libLevel = LibStub("LibItemLevel-1.0")
+ LibItem_Level = libLevel and libLevel.Item_Level or LibItem_Level or {}
++
++-- Build the fallback index once instead of searching the whole database for
++-- every custom item each time the character panel opens.
++local scoreNameIndex
++local scoreNameSource
++local function GetScoreItemIDByName(name)
++    if not lib or not lib.Item_enUS then return nil end
++    if not scoreNameIndex or scoreNameSource ~= lib.Item_enUS then
++        scoreNameIndex = {}
++        scoreNameSource = lib.Item_enUS
++        for itemID, itemName in pairs(scoreNameSource) do
++            if scoreNameIndex[itemName] == nil then
++                scoreNameIndex[itemName] = itemID
++            end
++        end
++    end
++    return scoreNameIndex[name]
++end
+ local USE_PFUI_STYLE = (pfUI and type(pfUI) == "table") or IsAddOnLoaded("pfUI")
+ 
+ local EquipSoltList = {
+@@ -270,17 +288,9 @@
+                 local itemLevel = LibItem_Level[tonumber(itemID)] or 0
+                 local itemName, _, itemRarity = GetItemInfo(itemID)
+ 
+-                if itemLevel == 0 then              
+-                    local itemName = GetItemInfo(itemID)
+-                    if itemName and lib and lib.Item_enUS then
+-                        for realID, engName in pairs(lib.Item_enUS) do
+-                            if engName == itemName then
+-                                local newItemLevel = LibItem_Level[realID] or 0
+-                                itemLevel = newItemLevel
+-                                break
+-                            end
+-                        end
+-                    end
++                if itemLevel == 0 and itemName then
++                    local realID = GetScoreItemIDByName(itemName)
++                    if realID then itemLevel = LibItem_Level[realID] or 0 end
+                 end
+ 
+                 local coef = slotCoefficients[i] or 1
+@@ -450,4 +460,3 @@
+ 		end
+ 	end
+ end
+-
+--- before/S_ItemTip/InspectFrame.lua
++++ after/S_ItemTip/InspectFrame.lua
+@@ -419,12 +419,12 @@
+ --更新装备信息（全局函数，供 InspectGemAndEnchant.lua 使用）
+ function S_ItemTip_UpdateFrame(unit)
+     local frame = S_ItemTip_InspectFrame
+-    if not frame then return end
+-    if not UnitExists(unit) then return end
++    if not frame then return false end
++    if not UnitExists(unit) then return false end
+ 
+     local now = GetTime()
+     if frame.lastUpdateUnit == unit and frame.lastUpdateTime and (now - frame.lastUpdateTime) < S_ITEMTIP_UPDATE_THROTTLE then
+-        return
++        return false
+     end
+     frame.lastUpdateUnit = unit
+     frame.lastUpdateTime = now
+@@ -615,7 +615,10 @@
+         avgLevel = ItemSocre:ScanUnit(unit) or 0
+     end
+     frame.ilevelText:SetText(string.format("装等 %.1f", avgLevel))
++    -- Throttle from completion, even if the first update itself took >80ms.
++    frame.lastUpdateTime = GetTime()
+     if SCRequestPanelLayout then SCRequestPanelLayout() end
++    return true
+ end
+ 
+ -- 重新布局 StatCompare 框架（根据装备面板的显示状态）
+--- before/S_ItemTip/InspectGemAndEnchant.lua
++++ after/S_ItemTip/InspectGemAndEnchant.lua
+@@ -384,7 +384,8 @@
+ local originalUpdateFrame = S_ItemTip_UpdateFrame
+ function S_ItemTip_UpdateFrame(unit)
+     if originalUpdateFrame then
+-        originalUpdateFrame(unit)
++        -- Respect the base update's throttle before redrawing enchant icons.
++        if originalUpdateFrame(unit) == false then return false end
+     end
+     
+     local frame = S_ItemTip_InspectFrame

@@ -1,0 +1,15 @@
+--- /dev/null
++++ b/DPSMateXEncounters/DPSMateXEncounters.toc
+@@ -0,0 +1,12 @@
++## Interface: 11200
++## Title: |CFFEE7600[DPS统计]|RDPSMateX 战斗分类
++## Notes: Boss and trash aggregate time ranges for DPSMateX.
++## Notes-zhCN: Boss与小怪汇总时间范围，独立于历史保留数量。
++## Version: 1.0.0
++## Dependencies: DPSMateX
++## OptionalDeps: DPSMateXInsights
++## SavedVariablesPerCharacter: DPSMateXEncountersDB
++
++Merge.lua
++Encounter.lua
++Views.lua

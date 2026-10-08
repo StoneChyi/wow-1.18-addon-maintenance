@@ -1,0 +1,61 @@
+## Interface: 11200
+## Title: |CFFEE7600[DPS统计]|RDPSMateX
+## Notes: DPSMateX
+## Title-zhCN:|CFFEE7600[DPS统计]|RDPSMateX
+## Notes-zhCN:|CFFFF8080DPSMateX|R|NDPSMateX
+## X-Repple: 战斗
+## Author: 
+## Version: 1.0.7
+## SavedVariables: DPSMateXSettings
+## SavedVariablesPerCharacter: DPSMateXUser, DPSMateXAbility, DPSMateXDamageDone, DPSMateXEDT, DPSMateXEDD, DPSMateXDamageTaken, DPSMateXDispels, DPSMateXInterrupts, DPSMateXDeaths, DPSMateXEHealing, DPSMateXTHealing, DPSMateXHealingTaken, DPSMateXEHealingTaken, DPSMateXOverhealing, DPSMateXOverhealingTaken, DPSMateXAbsorbs, DPSMateXThreat, DPSMateXAurasGained, DPSMateXCombatTime, DPSMateXHistory, DPSMateXFails, DPSMateXCCBreaker, DPSMATEXRESET, DPSMateXStats
+
+libs\AceLibrary\AceLibrary.lua
+libs\Dewdrop-2.0\Dewdrop-2.0.lua
+libs\GraphLib\Graph-1.0\Graph-1.0.lua
+enUS\Babble-Spell-2.3.lua
+enUS\Babble-Boss-2.3.lua
+
+DPSMateX.lua
+
+enUS\enUS.lua
+
+DPSMateX_Parser.lua
+DPSMateX_ParserNP.lua
+enUS\DPSMateX_ParserENUS.lua
+DPSMateX_Options.lua
+DPSMateX_Sync.lua
+DPSMateX_DataBuilder.lua
+
+DPSMateX_Frame.xml
+DPSMateX_Options.xml
+
+Damage\DPSMateX_Damage.lua
+Damage\DPSMateX_DPS.lua
+Damage\DPSMateX_Details_Damage.lua
+Damage\DPSMateX_Details_Damage.xml
+Damage\DPSMateX_Details_DamageTotal.lua
+Damage\DPSMateX_Details_DamageTotal.xml
+
+DPSMateX_!zhCN\Babble-Spell-2.3_zhCN.lua
+DPSMateX_!zhCN\Babble-Boss-2.3_zhCN.lua
+DPSMateX_!zhCN\zhCN.lua
+DPSMateX_!zhCN\DPSMateX_ParserZHCN.lua
+
+DPSMateX_EHealing\DPSMateX_EffectiveHealing.lua
+DPSMateX_EHealing\DPSMateX_EffectiveHPS.lua
+DPSMateX_EHealing\DPSMateX_Details_EHealing.lua
+DPSMateX_EHealing\DPSMateX_Details_EHealing.xml
+DPSMateX_EHealing\DPSMateX_Details_EHealingTotal.lua
+DPSMateX_EHealing\DPSMateX_Details_EHealingTotal.xml
+
+DPSMateX_Healing\DPSMateX_Healing.lua
+DPSMateX_Healing\DPSMateX_HPS.lua
+DPSMateX_Healing\DPSMateX_Details_Healing.lua
+DPSMateX_Healing\DPSMateX_Details_Healing.xml
+DPSMateX_Healing\DPSMateX_Details_HealingTotal.lua
+DPSMateX_Healing\DPSMateX_Details_HealingTotal.xml
+
+## X-PluginId: 267
+## X-PublishTime: 2026-06-07 03:49:51
+## X-Version: 20260607002
+## X-OverrideMode: 2

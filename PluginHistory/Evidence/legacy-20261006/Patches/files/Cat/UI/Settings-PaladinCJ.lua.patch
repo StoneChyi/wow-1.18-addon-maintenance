@@ -1,0 +1,309 @@
+--- a/Cat/UI/Settings-PaladinCJ.lua
++++ b/Cat/UI/Settings-PaladinCJ.lua
+@@ -1,10 +1,11 @@
+ 
+ -- 定义插件名称
+ local ADDON_NAME = "Settings-PaladinCJ"
+ 
+ local ConfigCurrent = 1
++local restoring = false
+ local function GetCurrentSaved() return MPPaladinCJSaved[ConfigCurrent] end
+ 
+ -- 创建主框架
+ CatUISettingsPaladinCJ = MPCreateFrame(ADDON_NAME.."Frame", 520, 570, "|cFFF58CBA设置 - 惩戒骑|r")
+ 
+@@ -60,10 +61,13 @@
+     elseif MPPaladinCJSaved[ConfigCurrent].Consecration_Priority==2 then
+         _G[slider_Consecration:GetName().."Text"]:SetText(color_Consecration.."优先级: 中|r")
+     else
+         _G[slider_Consecration:GetName().."Text"]:SetText(color_Consecration.."优先级: 高|r")
+     end
++    if not restoring and not MPCatPaladinControlUpdating() and CatUISettingsPaladinCJ:IsVisible() then
++        MPCatPaladinSyncConsecration("Consecration_Priority", MPPaladinCJSaved[ConfigCurrent].Consecration_Priority, "RET", ConfigCurrent)
++    end
+ end)
+ 
+ -- 设置点击事件
+ checkButton_Consecration:SetScript("OnClick", function(self)
+     if this:GetChecked() then
+@@ -78,11 +82,11 @@
+     elseif MPPaladinCJSaved[ConfigCurrent].Consecration_Priority==2 then
+         _G[slider_Consecration:GetName().."Text"]:SetText(color_Consecration.."优先级: 中|r")
+     else
+         _G[slider_Consecration:GetName().."Text"]:SetText(color_Consecration.."优先级: 高|r")
+     end
+-    MPCatPaladinSealInit()
++    MPCatPaladinSyncConsecration("Consecration", MPPaladinCJSaved[ConfigCurrent].Consecration, "RET", ConfigCurrent)
+ end)
+ 
+ 
+ -- 创建单选框 - 下方饰品
+ local checkButton_Trinket_Below = MPCreateCheckButton(CatUISettingsPaladinCJ, ADDON_NAME.."CheckButton", 340, postion_y, "自动开启饰品(下)")
+@@ -150,53 +154,29 @@
+ 
+ 
+ postion_y = postion_y-80
+ 
+ 
+--- 创建单选框 - 使用 圣印
++-- 输出圣印保留旧编号，新增与公共控制面板一致的辅助圣印显示。
+ local checkButton_Seal = MPCreateCheckButton(CatUISettingsPaladinCJ, ADDON_NAME.."CheckButton", 20, postion_y, "输出圣印")
+-
+-local slider_Seal = MPCreateConfigSlider(ADDON_NAME.."Slider_Seal", checkButton_Seal, "RIGHT", checkButton_Seal, "RIGHT", 244, -2, 160, 16, 1, 3, 1, 1)
+-
+-local color_Seal = "|cFFFFD100"
+-
+--- 值变化时的回调函数
++local slider_Seal = MPCreateConfigSlider(ADDON_NAME.."Slider_Seal", checkButton_Seal, "RIGHT", checkButton_Seal, "RIGHT", 244, -2, 160, 16, 1, 7, 1, 1)
++local sealLabels = { "自动识别", "正义圣印", "命令圣印", "智慧圣印", "光明圣印", "十字军圣印", "公正圣印" }
++local function RefreshSealLabel()
++    local saved = MPPaladinCJSaved[ConfigCurrent]
++    local color = saved.Seal == 1 and "|cFFFFD100" or "|cFF888888"
++    local label = saved.Seal == 1 and (sealLabels[saved.Seal_Value] or sealLabels[1]) or "无"
++    _G[slider_Seal:GetName().."Text"]:SetText(color..label)
++end
+ slider_Seal:SetScript("OnValueChanged", function()
+-    --print("HerbalTea当前值:", arg1)
+-    MPPaladinCJSaved[ConfigCurrent].Seal_Value = arg1
+-    if MPPaladinCJSaved[ConfigCurrent].Seal_Value==1 then
+-        _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."自动识别")
+-    elseif MPPaladinCJSaved[ConfigCurrent].Seal_Value==2 then
+-        _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."正义圣印")
+-    elseif MPPaladinCJSaved[ConfigCurrent].Seal_Value==3 then
+-        _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."命令圣印")
+-    end
+-end)
+-
+--- 设置点击事件
+-checkButton_Seal:SetScript("OnClick", function(self)
+-    if this:GetChecked() then
+-        MPPaladinCJSaved[ConfigCurrent].Seal = 1
+-        color_Seal = "|cFFFFD100"
+-        if MPPaladinCJSaved[ConfigCurrent].Seal_Value==1 then
+-            _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."自动识别")
+-        elseif MPPaladinCJSaved[ConfigCurrent].Seal_Value==2 then
+-            _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."正义圣印")
+-        elseif MPPaladinCJSaved[ConfigCurrent].Seal_Value==3 then
+-            _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."命令圣印")
+-        end
+-    else
+-        MPPaladinCJSaved[ConfigCurrent].Seal = 0
+-        color_Seal = "|cFF888888"
+-        if MPPaladinCJSaved[ConfigCurrent].Seal_Value==1 then
+-            _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."自动识别")
+-        elseif MPPaladinCJSaved[ConfigCurrent].Seal_Value==2 then
+-            _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."正义圣印")
+-        elseif MPPaladinCJSaved[ConfigCurrent].Seal_Value==3 then
+-            _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."命令圣印")
+-        end
+-    end
++    if not restoring and not MPCatPaladinControlUpdating() then
++        MPPaladinCJSaved[ConfigCurrent].Seal_Value = math.max(1, math.min(7, math.floor(slider_Seal:GetValue() + 0.5)))
++    end
++    RefreshSealLabel()
++end)
++checkButton_Seal:SetScript("OnClick", function()
++    MPPaladinCJSaved[ConfigCurrent].Seal = this:GetChecked() and 1 or 0
++    RefreshSealLabel()
+ end)
+ 
+ 
+ 
+ -- 创建单选框 - 治疗石
+@@ -232,26 +212,35 @@
+ 
+ 
+ -- 创建单选框 - 使用 神打/十打
+ local checkButton_Strike = MPCreateCheckButton(CatUISettingsPaladinCJ, ADDON_NAME.."CheckButton", 20, postion_y, "输出技能")
+ 
+-local slider_Strike = MPCreateConfigSlider(ADDON_NAME.."Slider_Strike", checkButton_Strike, "RIGHT", checkButton_Strike, "RIGHT", 244, -2, 160, 16, 1, 4, 1, 2)
++local slider_Strike = MPCreateConfigSlider(ADDON_NAME.."Slider_Strike", checkButton_Strike, "RIGHT", checkButton_Strike, "RIGHT", 244, -2, 160, 16, 1, 5, 1, 2)
++
++-- 鼠标滚轮按整档切换，便于准确选择第五档。
++slider_Strike:EnableMouseWheel(true)
++slider_Strike:SetScript("OnMouseWheel", function()
++    local value = math.floor(this:GetValue() + 0.5)
++    this:SetValue(math.max(1, math.min(5, value + arg1)))
++end)
+ 
+ local color_Strike = "|cFFFFD100"
+ 
+ -- 值变化时的回调函数
+ slider_Strike:SetScript("OnValueChanged", function()
+     --print("HerbalTea当前值:", arg1)
+-    MPPaladinCJSaved[ConfigCurrent].Strike_Value = arg1
++    MPPaladinCJSaved[ConfigCurrent].Strike_Value = math.max(1, math.min(5, math.floor(arg1 + 0.5)))
+     if MPPaladinCJSaved[ConfigCurrent].Strike_Value==1 then
+         _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 神圣打击")
+     elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==2 then
+         _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (均衡)")
+     elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==3 then
+         _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 十字军打击 (均衡)")
+     elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==4 then
+         _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 十字军打击")
++    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==5 then
++        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (三层狂热)")
+     end
+ end)
+ 
+ -- 设置点击事件
+ checkButton_Strike:SetScript("OnClick", function(self)
+@@ -264,10 +253,12 @@
+             _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (均衡)")
+         elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==3 then
+             _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 十字军打击 (均衡)")
+         elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==4 then
+             _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 十字军打击")
++        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==5 then
++            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (三层狂热)")
+         end
+     else
+         MPPaladinCJSaved[ConfigCurrent].Strike = 0
+         color_Strike = "|cFF888888"
+         if MPPaladinCJSaved[ConfigCurrent].Strike_Value==1 then
+@@ -276,10 +267,12 @@
+             _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (均衡)")
+         elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==3 then
+             _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 十字军打击 (均衡)")
+         elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==4 then
+             _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 十字军打击")
++        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==5 then
++            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (三层狂热)")
+         end
+     end
+ end)
+ 
+ 
+@@ -592,10 +585,11 @@
+ myButton:SetScript("OnClick", function()
+     MPResetPaladinCJSettings(ConfigCurrent)
+     MPInitPaladinCJSettings()
+ 
+     MPCatPaladinSealReset()
++    MPCatPaladinApplyControl("RET", ConfigCurrent)
+ 
+     CatPaladinSeal:Hide()
+     CatPaladinSeal:ClearAllPoints()
+     CatPaladinSeal:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+ 
+@@ -694,19 +688,21 @@
+ function InitPaladinCJSetPart1()
+     checkButton_HolinessAura:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].HolinessAura))
+ 
+     checkButton_Consecration:SetChecked( MPToBoolean(MPPaladinCJSaved[ConfigCurrent].Consecration) )
+     checkButton_Repentance:SetChecked( MPToBoolean(MPPaladinCJSaved[ConfigCurrent].Repentance) )
++    checkButton_RepentanceBoss:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].RepentanceBoss))
+ 
+     checkButton_Trinket_Upper:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].Trinket_Upper))
+     checkButton_TUBoss:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].TUBoss))
+     checkButton_Trinket_Below:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].Trinket_Below))
+     checkButton_TBBoss:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].TBBoss))
+ 
+     checkButton_Target:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].Target))
+     checkButton_Exorcism:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].Exorcism))
+     checkButton_HammerWrath:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].HammerWrath))
++    checkButton_HammerWrathBoss:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].HammerWrathBoss))
+ 
+ 
+     checkButton_HealthStone:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].HealthStone))
+     slider_HealthStone:SetValue(MPPaladinCJSaved[ConfigCurrent].HealthStone_Value)
+     if MPPaladinCJSaved[ConfigCurrent].HealthStone==1 then
+@@ -756,26 +752,14 @@
+     _G[slider_DivineShield:GetName().."Text"]:SetText(color_DivineShield.."血线: ".. MPPaladinCJSaved[ConfigCurrent].DivineShield_Value .."%|r")
+ end
+ 
+ 
+ function InitPaladinCJSetPart2()
+-    checkButton_Seal:SetChecked(MPPaladinCJSaved[ConfigCurrent].Seal)
+-    slider_Seal:SetValue(MPPaladinCJSaved[ConfigCurrent].Seal_Value)
+-    if MPPaladinCJSaved[ConfigCurrent].Seal==1 then
+-        color_Seal = "|cFFFFD100"
+-    else
+-        color_Seal = "|cFF888888"
+-    end
+-    if MPPaladinCJSaved[ConfigCurrent].Seal_Value==1 then
+-        _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."自动识别")
+-    elseif MPPaladinCJSaved[ConfigCurrent].Seal_Value==2 then
+-        _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."正义圣印")
+-    elseif MPPaladinCJSaved[ConfigCurrent].Seal_Value==3 then
+-        _G[slider_Seal:GetName().."Text"]:SetText(color_Seal.."命令圣印")
+-    end
++    MPCatRefreshPaladinCJSeal(ConfigCurrent)
+ 
+     checkButton_Strike:SetChecked(MPPaladinCJSaved[ConfigCurrent].Strike)
++    slider_Strike:SetMinMaxValues(1, 5)
+     slider_Strike:SetValue(MPPaladinCJSaved[ConfigCurrent].Strike_Value)
+     if MPPaladinCJSaved[ConfigCurrent].Strike==1 then
+         color_Strike = "|cFFFFD100"
+     else
+         color_Strike = "|cFF888888"
+@@ -786,10 +770,12 @@
+         _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (均衡)")
+     elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==3 then
+         _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 十字军打击 (均衡)")
+     elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==4 then
+         _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 十字军打击")
++    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==5 then
++        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (三层狂热)")
+     end
+ 
+ 
+     checkButton_Relic:SetChecked(MPPaladinCJSaved[ConfigCurrent].Relic)
+     for idx_Relic_Low, data_Relic_Low in pairs(modes_Relic_Low) do
+@@ -834,10 +820,11 @@
+     checkButton_Power:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].Power))
+     checkButton_Pick:SetChecked(MPToBoolean(MPPaladinCJSaved[ConfigCurrent].Pick))
+ end
+ 
+ function MPInitPaladinCJSettings()
++    restoring = true
+     if not MPPaladinCJSaved then
+         MPPaladinCJSaved = {}
+ 
+         -- 第一套配置
+         if not MPPaladinCJSaved[1] then
+@@ -872,10 +859,44 @@
+     ConfigButton[2]:SetChecked(false)
+     ConfigButton[3]:SetChecked(false)
+     ConfigButton[ConfigCurrent]:SetChecked(true)
+ 
+ 
++    if CatUISettingsPaladinCJ:IsVisible() then MPCatPaladinApplyControl("RET", ConfigCurrent) end
+     InitPaladinCJSetPart1()
+     InitPaladinCJSetPart2()
++    restoring = false
++
++    if CatUISettingsPaladinCJ:IsVisible() then
++        MPCatPaladinSealInit()
++    end
+ 
+ end
+ 
++
++-- 只刷新当前配置的圣印控件，避免重置其他控件或反向覆盖公共选择。
++function MPCatRefreshPaladinCJSeal(config)
++    if ConfigCurrent ~= config then return end
++    local saved = MPPaladinCJSaved and MPPaladinCJSaved[config]
++    if not saved then return end
++    local previous = restoring
++    restoring = true
++    checkButton_Seal:SetChecked(MPToBoolean(saved.Seal))
++    slider_Seal:SetValue(saved.Seal_Value or 1)
++    RefreshSealLabel()
++    restoring = previous
++end
++
++-- 面板只刷新对应配置的奉献控件，不触发完整设置初始化。
++function MPCatRefreshPaladinCJConsecration(config)
++    if ConfigCurrent ~= config then return end
++    local saved = MPPaladinCJSaved[ConfigCurrent]
++    checkButton_Consecration:SetChecked(MPToBoolean(saved.Consecration))
++    if saved.Consecration==1 then color_Consecration="|cFFFFD100" else color_Consecration="|cFF888888" end
++    slider_Consecration:SetValue(saved.Consecration_Priority)
++end
++
++CatUISettingsPaladinCJ:SetScript("OnShow", function()
++    MPCatPaladinApplyControl("RET", ConfigCurrent)
++    MPCatRefreshPaladinCJSeal(ConfigCurrent)
++    MPCatPaladinSealInit()
++end)

@@ -1,0 +1,111 @@
+--- before/BCS_PropertiesPanel.lua
++++ after/BCS_PropertiesPanel.lua
+@@ -277,6 +277,41 @@
+ P.frame.details:SetFont("Fonts\\ARIALN.ttf", 13, "OUTLINE")
+ 
+ P.frame:RegisterForDrag("LeftButton")
++function P:SaveCenterPosition(snap)
++    local frame = self.frame
++    local point, _, relPoint, x, y = frame:GetPoint()
++    local cx, cy, ux, uy
++    if frame.GetCenter and UIParent.GetCenter then
++        cx, cy = frame:GetCenter()
++        ux, uy = UIParent:GetCenter()
++    end
++    local centered = cx and cy and ux and uy
++    if centered then
++        local frameScale = frame.GetEffectiveScale and frame:GetEffectiveScale() or 1
++        local parentScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
++        x, y = cx - ux * parentScale / frameScale, cy - uy * parentScale / frameScale
++        point, relPoint = "CENTER", "CENTER"
++    end
++    if not point or not x or not y then return false end
++    if snap and x < 20 and x > -20 then x = 0 end
++    local panel = PanelConfig()
++    panel.point, panel.rel_point = point, relPoint
++    panel.x_offset = math.floor(x * 100 + 0.5) / 100
++    panel.y_offset = math.floor(y * 100 + 0.5) / 100
++    if centered then
++        self.pendingCenter = {x=panel.x_offset, y=panel.y_offset}
++        self.centerAfterLayout = false
++    else self.centerAfterLayout = true end
++    return centered and true or false
++end
++
++function P:ApplyCenterPosition()
++    if not self.pendingCenter or self.dragging then return end
++    self.frame:ClearAllPoints()
++    self.frame:SetPoint("CENTER", UIParent, "CENTER", self.pendingCenter.x, self.pendingCenter.y)
++    self.pendingCenter = nil
++end
++
+ P.frame:SetScript("OnDragStart", function()
+     if P.locked then return end  -- 锁定时禁止拖动
+     P.dragging = true
+@@ -286,19 +321,9 @@
+     P.frame:StopMovingOrSizing()
+     P.dragging = false
+     if P.locked then return end
+-    local point, _, rel_point, x_offset, y_offset = P.frame:GetPoint()
+-    if x_offset < 20 and x_offset > -20 then x_offset = 0 end
+-
+-    -- 确保 BCSConfig.PropertiesPanel 存在
+-    if not BCSConfig.PropertiesPanel then
+-        BCSConfig.PropertiesPanel = {}
+-    end
+-
+-    -- 保存位置
+-    BCSConfig.PropertiesPanel.point = point
+-    BCSConfig.PropertiesPanel.rel_point = rel_point
+-    BCSConfig.PropertiesPanel.x_offset = math.floor(x_offset)
+-    BCSConfig.PropertiesPanel.y_offset = math.floor(y_offset)
++    -- Save the center now; reanchor on the next display refresh, outside
++    -- the native drag-stop callback and before any size changes.
++    P:SaveCenterPosition(true)
+ end)
+ 
+ P.frame:Hide()
+@@ -576,10 +601,7 @@
+     if self.dragging then
+         self.frame:StopMovingOrSizing()
+         self.dragging = false
+-        local point, _, relPoint, x, y = self.frame:GetPoint()
+-        local panel = PanelConfig()
+-        panel.point, panel.rel_point = point, relPoint
+-        panel.x_offset, panel.y_offset = math.floor(x), math.floor(y)
++        self:SaveCenterPosition()
+     end
+     self.locked = locked == true
+     PanelConfig().locked = self.locked
+@@ -787,7 +809,12 @@
+     local rel_point = panel.rel_point
+     local x = panel.x_offset
+     local y = panel.y_offset
++    self.frame:ClearAllPoints()
+     self.frame:SetPoint(point, UIParent, rel_point, x, y)
++    self.pendingCenter = nil
++    -- Migrate legacy corner anchors after rendering their original preset,
++    -- so adopting a center anchor does not relocate the existing window.
++    self.centerAfterLayout = point ~= "CENTER" or rel_point ~= "CENTER"
+ 
+     -- 设置显示配置到 P.displayConfig
+     self.displayConfig = panel.displayConfig
+@@ -849,6 +876,7 @@
+         if self.speedUpdater then self.speedUpdater:Cancel(); self.speedUpdater = nil end
+         return
+     end
++    self:ApplyCenterPosition()
+     local lines = {}
+     local iter = string.gfind or string.gmatch
+     for line in iter(restLines or "", "[^\n]+") do Append(lines, line) end
+@@ -941,6 +969,10 @@
+     end
+     self.frame:EnableMouse(not self.locked)
+     self.frame:Show()
++    if self.centerAfterLayout and not self.dragging then
++        self:SaveCenterPosition()
++        self:ApplyCenterPosition()
++    end
+     if not self.speedUpdater then
+         self.speedUpdater = C_Timer.NewTicker(FAST_TICK, function() P:RefreshSpeedDisplay() end)
+     end

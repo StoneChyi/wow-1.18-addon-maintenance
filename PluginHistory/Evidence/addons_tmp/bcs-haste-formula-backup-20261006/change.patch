@@ -1,0 +1,328 @@
+--- helper.lua.original
++++ helper.lua
+@@ -12,7 +12,17 @@
+ local auraReadCache
+ -- Standalone consumers retain native tooltip reads without allocating a
+ -- snapshot for every slot. The live view never stores item text.
++local function IsHasteSetActive(font)
++    if not font or type(font.GetTextColor) ~= "function" then return true end
++    local r, g, b = font:GetTextColor()
++    if not r or not g or not b then return true end
++    return not (r < 0.75 and g < 0.75 and b < 0.75
++        and math.abs(r - g) < 0.05 and math.abs(g - b) < 0.05)
++end
+ local liveEquipment = {
++    hasteSetActive=setmetatable({}, {__index=function(_, line)
++        return IsHasteSetActive(getglobal(BCS_Prefix .. "TextLeft" .. line))
++    end}),
+     left=setmetatable({}, {__index=function(_, line)
+         local font = getglobal(BCS_Prefix .. "TextLeft" .. line)
+         return font and font:GetText()
+@@ -52,6 +62,11 @@
+             local right = getglobal(BCS_Prefix .. "TextRight" .. line)
+             snapshot.left[line] = left and left:GetText()
+             snapshot.right[line] = right and right:GetText()
++            if snapshot.left[line] and BCS.L_HASTE
++                and strfind(snapshot.left[line], BCS.L_HASTE.HASTE_improve_set) then
++                snapshot.hasteSetActive = snapshot.hasteSetActive or {}
++                snapshot.hasteSetActive[line] = IsHasteSetActive(left)
++            end
+         end
+     end
+     if equipmentReadCache then equipmentReadCache[slot] = snapshot end
+@@ -96,6 +111,8 @@
+ local GET_MELEE_HIT_TIME = 0
+ local HASTE_CACHE = 0
+ local GET_HASTE_CACHE_TIME = nil
++local CALCULATED_MELEE_HASTE
++local CALCULATED_MELEE_HASTE_TIME
+ local SPELL_CRIT = 0
+ local GET_SPELL_CRIT_TIME = 0
+ local RANGE_HIT = 0
+@@ -148,28 +165,31 @@
+ 	return nil
+ end
+ 
++local function ReadHasteAuras(kind)
++    if auraReadCache and auraReadCache[kind] then return auraReadCache[kind] end
++    local auras = {}
++    for i = 0, kind == "HELPFUL" and 31 or 6 do
++        local index = GetPlayerBuff(i, kind)
++        if index and index > -1 then
++            BCS_Tooltip:SetPlayerBuff(index)
++            local lines = {count=BCS_Tooltip:NumLines(), index=index}
++            for line = 1, lines.count do
++                local font = getglobal(BCS_Prefix .. "TextLeft" .. line)
++                lines[line] = font and font:GetText()
++            end
++            tinsert(auras, lines)
++        end
++    end
++    if auraReadCache then auraReadCache[kind] = auras end
++    return auras
++end
++
+ function BCS:GetPlayerAura(searchText, auraType)
+ 	-- The same active buffs are otherwise rebuilt once for every searched
+ 	-- pattern. Capture their text once, preserving buff/line search order.
+ 	if auraReadCache and (not auraType or auraType == 'HARMFUL') then
+ 		local kind = auraType or 'HELPFUL'
+-		local auras = auraReadCache[kind]
+-		if not auras then
+-			auras = {}
+-			for i=0, kind == 'HELPFUL' and 31 or 6 do
+-				local index = GetPlayerBuff(i, kind)
+-				if index > -1 then
+-					BCS_Tooltip:SetPlayerBuff(index)
+-					local lines = {count=BCS_Tooltip:NumLines()}
+-					for line=1, lines.count do
+-						local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+-						lines[line] = left and left:GetText()
+-					end
+-					tinsert(auras, lines)
+-				end
+-			end
+-			auraReadCache[kind] = auras
+-		end
++		local auras = ReadHasteAuras(kind)
+ 		for _, lines in ipairs(auras) do
+ 			for line=1, lines.count do
+ 				if lines[line] then
+@@ -2017,6 +2037,17 @@
+ function BCS:InvalidateHasteCache()
+ 	GET_HASTE_CACHE_TIME = nil
+ 	GET_ESTIMATE_HASTE_TIME = nil
++    CALCULATED_MELEE_HASTE_TIME = nil
++end
++
++function BCS:GetCalculatedMeleeHaste()
++    if BCS_USE_CACHE == 1 and CALCULATED_MELEE_HASTE_TIME
++        and GetTime() - CALCULATED_MELEE_HASTE_TIME < 2 then
++        return CALCULATED_MELEE_HASTE
++    end
++    CALCULATED_MELEE_HASTE = self:GetLiveHaste("melee")
++    CALCULATED_MELEE_HASTE_TIME = GetTime()
++    return CALCULATED_MELEE_HASTE
+ end
+ 
+ function BCS:GetHaste()
+@@ -2073,7 +2104,49 @@
+ 	return result
+ end
+ 
+-function BCS:GetLiveHaste()
++local zealSpellTooltip
++local function CleanHasteText(text)
++    text = string.gsub(text or "", "|c%x%x%x%x%x%x%x%x", "")
++    return (string.gsub(text, "|r", ""))
++end
++
++-- The aura tooltip contains the stacked base magnitude, but can omit the
++-- talent bonus. The Crusader Strike spell tooltip exposes the per-stack value.
++function BCS:GetZealHastePerStack()
++    local index = self:GetSpellIndex("十字军打击") or self:GetSpellIndex("Crusader Strike")
++    if not index then return nil end
++    if not zealSpellTooltip then
++        zealSpellTooltip = CreateFrame("GameTooltip", "BCSZealSpellTooltip", nil, "GameTooltipTemplate")
++        zealSpellTooltip:SetOwner(UIParent, "ANCHOR_NONE")
++    end
++    local tooltip = zealSpellTooltip
++    tooltip:ClearLines()
++    tooltip:SetSpell(index, BOOKTYPE_SPELL)
++    local patterns = {
++        "攻击速度提高%s*(%d+%.?%d*)%%",
++        "攻击速度和施法速度提高%s*(%d+%.?%d*)%%",
++        "攻击和施法速度提高%s*(%d+%.?%d*)%%",
++        "攻击速度%s*(%d+%.?%d*)%%",
++        "attack speed by%s+(%d+%.?%d*)%%",
++        "attack and casting speed by%s+(%d+%.?%d*)%%",
++    }
++    for line = 1, tooltip:NumLines() do
++        local font = getglobal("BCSZealSpellTooltipTextLeft" .. line)
++        local text = CleanHasteText(font and font:GetText())
++        for _, pattern in ipairs(patterns) do
++            local _, _, value = strfind(text, pattern)
++            value = tonumber(value)
++            if value and value > 0 then
++                tooltip:Hide()
++                return value
++            end
++        end
++    end
++    tooltip:Hide()
++    return nil
++end
++
++function BCS:GetLiveHaste(mode)
+ 	local haste = 1.0000
+ 	local haste_Set_bonus = {}
+ 	local MAX_INVENTORY_SLOTS = 19
+@@ -2108,16 +2181,19 @@
+ 					end
+ 					
+ 					--from set
+-					_,_, value = strfind(left, "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d+/%d+）")
++                    if not value then _, _, value = strfind(left, "(.+)%(%d+/%d+%)") end
+ 					if value then
+ 						SET_NAME = value
+ 					end
+ 
+ 					_, _, value = strfind(left, L_HASTE["HASTE_improve_set"])
+-					if value and SET_NAME and not tContains(haste_Set_bonus, SET_NAME) then
+-						tinsert(haste_Set_bonus, SET_NAME)
+-						haste = haste * (1+tonumber(value)/100)
+-					end
++                    local setKey = SET_NAME and (SET_NAME .. "\001" .. left)
++                    local active = not equipment.hasteSetActive or equipment.hasteSetActive[line] ~= false
++                    if value and setKey and active and not haste_Set_bonus[setKey] then
++                        haste_Set_bonus[setKey] = true
++                        haste = haste * (1+tonumber(value)/100)
++                    end
+ 
+ 				end
+ 			end
+@@ -2125,55 +2201,50 @@
+ 		
+ 	end
+ 	
+-	--from buff
+-	local _, _, hasteFromAura = BCS:GetPlayerAura(L_HASTE["HASTE_BUFF_1"])
+-	if hasteFromAura then
+-		haste = haste * (1+tonumber(hasteFromAura)/100)
+-	end
+-	_, _, hasteFromAura = BCS:GetPlayerAura(L_HASTE["HASTE_BUFF_2"])
+-	if hasteFromAura then
+-		haste = haste * (1+tonumber(hasteFromAura)/100)
+-	end
+-	_, _, hasteFromAura = BCS:GetPlayerAura(L_HASTE["HASTE_BUFF_3"])
+-	if hasteFromAura then
+-		haste = haste * (1+tonumber(hasteFromAura)/100)
+-	end
+-	_, _, _, hasteFromAura = BCS:GetPlayerAura(L_HASTE["Shard_of_Dreams"])
+-	if hasteFromAura then
+-		haste = haste * (1+tonumber(hasteFromAura)/100)
+-	end
+-	
+-	--from debuff
+-	_, _, hasteFromAura = BCS:GetPlayerAura(L_HASTE["Contagion_of_Rot"],'HARMFUL')
+-	if hasteFromAura then
+-		haste = haste * (1-tonumber(hasteFromAura)/100)
+-	end
+-	
+-	
+-	local _, _, hasteFromAura = BCS:GetPlayerAura(L_HASTE["HASTE_PALADIN_ZEAL"])
+-	if hasteFromAura then
+-		haste = haste * (1+tonumber(hasteFromAura)/100)
+-	end
+-	
+-
+-	if class == "MAGE" then
+-		local _, _, hasteFromAura = BCS:GetPlayerAura(L_HASTE["ARCANE_POWER"])
+-		if hasteFromAura then
+-			haste = haste * (1+tonumber(hasteFromAura)/100)
+-		end
+-	end
+-
+-	local _, _, hasteFromAura = BCS:GetPlayerAura(L_HASTE["Atiesh, Greatstaff of the Guardian_Druid_aura"])
+-	if hasteFromAura then
+-		haste = haste * (1+tonumber(hasteFromAura)/100)
+-	end
+-
+-	if class == "WARLOCK" then
+-		local _, _, hasteFromAura,_ = BCS:GetPlayerAura(L_HASTE["HASTE_WARLOCK_Master_Demonologist"])
+-		if hasteFromAura then
+-			haste = haste * (1+tonumber(hasteFromAura)/100)
+-		end
+-	end
++    -- Independent auras multiply once each. Matching by pattern globally
++    -- loses the second aura with the same wording, and can count one aura twice.
++    local patterns = {
++        {"HASTE_BUFF_2", 3}, {"HASTE_BUFF_3", 3}, {"HASTE_PALADIN_ZEAL", 3},
++        {"Atiesh, Greatstaff of the Guardian_Druid_aura", 3},
++    }
++    if mode ~= "melee" then
++        tinsert(patterns, {"HASTE_BUFF_1", 3})
++        tinsert(patterns, {"Shard_of_Dreams", 4})
++        if class == "MAGE" then tinsert(patterns, {"ARCANE_POWER", 3}) end
++    end
++    if class == "WARLOCK" then tinsert(patterns, {"HASTE_WARLOCK_Master_Demonologist", 3}) end
++    local function ApplyAura(lines, choices, sign)
++        for line = 1, lines.count do
++            local text = lines[line]
++            if text then
++                for _, choice in ipairs(choices) do
++                    local match = {strfind(text, L_HASTE[choice[1]])}
++                    local value = tonumber(match[choice[2]])
++                    if value then
++                        local name = CleanHasteText(lines[1])
++                        if sign == 1 and (name == "狂热" or name == "Zeal")
++                            and type(GetPlayerBuffApplications) == "function" then
++                            local ok, stacks = pcall(GetPlayerBuffApplications, lines.index)
++                            if ok and type(stacks) == "number" and stacks >= 1 and stacks <= 3 then
++                                local found, perStack = pcall(BCS.GetZealHastePerStack, BCS)
++                                if found and type(perStack) == "number" and perStack > 0 then
++                                    value = perStack * stacks
++                                end
++                            end
++                        end
++                        -- For other buffs, tooltip magnitude may already include
++                        -- stacks. Apply each aura once without an extra multiplier.
++                        haste = haste * (1 + sign * value / 100)
++                        return
++                    end
++                end
++            end
++        end
++    end
++    for _, lines in ipairs(ReadHasteAuras("HELPFUL")) do ApplyAura(lines, patterns, 1) end
++    if mode ~= "melee" then
++        for _, lines in ipairs(ReadHasteAuras("HARMFUL")) do ApplyAura(lines, {{"Contagion_of_Rot", 3}}, -1) end
++    end
+ 
+ 	--from race 
+ 	if UnitRace("player") == L_RACE.NIGHT_ELF then
+@@ -2181,7 +2252,7 @@
+ 	end
+ 
+ 	--from talent
+-	if class == "PRIEST" then 
++	if mode ~= "melee" and class == "PRIEST" then 
+ 		local talentname, _, _, _, crank, _ = GetTalentInfo(1, 14)
+ 		if talentname == L_TALENT.PRIEST_MENTAL_STRENGTH then 
+ 			haste = haste * (1+crank/100)
+--- BCS_PropertiesPanel.lua.original
++++ BCS_PropertiesPanel.lua
+@@ -1254,7 +1254,19 @@
+     local _, class = UnitClass("player")
+     -- Paladin Zeal affects attack speed. Use the same measured melee haste
+     -- as the character panel instead of the unstable cast-speed coefficient.
+-    if class == "PALADIN" then haste = ReadNumber(self.GetMeleeHaste, self) end
++    if class == "PALADIN" then
++        haste = ReadNumber(self.GetMeleeHaste, self)
++        if not IsFiniteNumber(haste) then
++            local previousForce = BCS.ForceCalculate
++            BCS.ForceCalculate = true
++            haste = ReadNumber(BCS.GetCalculatedMeleeHaste or BCS.GetHaste, BCS)
++            BCS.ForceCalculate = previousForce
++        end
++        -- A melee statistic must fall back to the factor calculation, not
++        -- silently switch to the unrelated casting-speed coefficient.
++        if not IsFiniteNumber(haste) then return "急速: 数据不可用" end
++        return "急速: " .. string.format("%.2f", haste) .. "%"
++    end
+     if not IsFiniteNumber(haste) and type(BCS.IsNampowerReady) == "function" then
+         local ok, ready = pcall(BCS.IsNampowerReady, BCS)
+         if ok and ready then
+@@ -1818,8 +1830,10 @@
+         Report("施法速度系数", castSpeed)
+         Report("接口急速（%）", castSpeed and castSpeed > 0 and (1 / castSpeed - 1) * 100 or nil)
+         Report("施法时间估算（%）", BCS and ReadNumber(BCS.LiveEstimateHaste, BCS))
+-        Report("装备与增益统计（%）", BCS and ReadNumber(BCS.GetLiveHaste, BCS))
++        local _, class = UnitClass("player")
++        Report("装备与增益统计（%）", BCS and ReadNumber(BCS.GetLiveHaste, BCS, class == "PALADIN" and "melee" or nil))
+         Report("近战急速（%）", P:GetMeleeHaste())
++        Report("狂热每层（%）", BCS and ReadNumber(BCS.GetZealHastePerStack, BCS))
+         DEFAULT_CHAT_FRAME:AddMessage("浮窗当前值 · " .. P:DisplayHaste())
+         if BCS and BCS.GetHasteAuraDetails then
+             local ok, auras = pcall(BCS.GetHasteAuraDetails, BCS)

@@ -1,0 +1,934 @@
+--- a/TianYan/TianYan.lua
++++ b/TianYan/TianYan.lua
+@@ -2,10 +2,11 @@
+ 
+ local TY = {}
+ TY.summonCache = {}
+ local bar = nil
+ local lines = {}
++local values = {}
+ 
+ local scanTip = nil
+ local function initScanTip()
+ 	if not scanTip then
+ 		scanTip = CreateFrame("GameTooltip", "TYScanTip", UIParent, "GameTooltipTemplate")
+@@ -27,195 +28,328 @@
+ 		if string.find(unitName, excl) then return true end
+ 	end
+ 	return false
+ end
+ 
+-local function isMySummon(unit)
+-	if not unit or not UnitExists(unit) then return false end
+-	if UnitIsDead(unit) then return false end
+-	if UnitCanAttack("player", unit) then return false end
+-	if UnitIsUnit(unit, "player") then return false end
+-
+-	local unitName = UnitName(unit)
+-	if isExcluded(unitName) then return false end
+-
+-	initScanTip()
+-	scanTip:ClearLines()
+-	scanTip:SetUnit(unit)
+-
+-	local playerName = UnitName("player")
+-	if not playerName or playerName == "" then return false end
+-
+-	local i = 1
+-	while true do
+-		local leftText = getglobal("TYScanTipTextLeft" .. i)
+-		if not leftText then break end
+-		local text = leftText:GetText()
+-		if text and string.find(text, playerName) then
+-			return true
+-		end
+-		local rightText = getglobal("TYScanTipTextRight" .. i)
+-		if rightText then
+-			local rtext = rightText:GetText()
+-			if rtext and string.find(rtext, playerName) then
+-				return true
+-			end
+-		end
+-		i = i + 1
+-	end
+-	return false
+-end
+-
+-local function nameplateHasMyName(frame)
+-	local playerName = UnitName("player")
+-	if not playerName or playerName == "" then return false end
+-	if not frame or not frame.GetNumRegions then return false end
+-	local numRegions = frame:GetNumRegions()
+-	if not numRegions then return false end
+-	for j = 1, numRegions do
+-		local region = select(j, frame:GetRegions())
+-		if region then
+-			local ok, objType = pcall(function()
+-				if region.GetObjectType then return region:GetObjectType() end
+-				return ""
+-			end)
+-			if ok and objType == "FontString" then
+-				local ok2, text = pcall(region.GetText, region)
+-				if ok2 and text and string.find(text, playerName) then
+-					return true
+-				end
+-			end
+-		end
+-	end
+-	return false
+-end
+-
+-local function getUnitNameSafe(unit)
+-	if not unit or not UnitExists(unit) then return nil end
+-	local n = UnitName(unit)
+-	if n and n ~= "" then return n end
+-	return nil
+-end
+-
+-local function getNameFromNameplate(frame)
+-	if not frame or not frame.GetNumRegions then return nil end
+-	local numRegions = frame:GetNumRegions()
+-	if not numRegions then return nil end
+-	for j = 1, numRegions do
+-		local region = select(j, frame:GetRegions())
+-		if region then
+-			local ok, objType = pcall(function()
+-				if region.GetObjectType then return region:GetObjectType() end
+-				return ""
+-			end)
+-			if ok and objType == "FontString" then
+-				local ok2, text = pcall(region.GetText, region)
+-				if ok2 and text and text ~= "" and string.len(text) > 1 then
+-					local playerName = UnitName("player")
+-					if not string.find(text, playerName) then
+-						return text
+-					end
+-				end
+-			end
+-		end
+-	end
+-	return nil
++-- GUIDs identify real units; temporary entries are keyed by the frame object.
++local SCAN_INTERVAL = 0.3
++local UNKNOWN_GRACE = 0.9
++local OWNER_CACHE_TIME = 2
++local temporary = {}
++local ownerCache = {}
++local deadUntil = {}
++local playerName, playerGuid
++local diagnostics = { scans = 0, tooltips = 0, events = 0 }
++local lastCount, lastGroups, lastUncertain = 0, {}, 0
++
++local function safeCall(fn, unit)
++    if type(fn) ~= "function" then return nil end
++    local ok, result = pcall(fn, unit)
++    if ok then return result end
++    return nil
++end
++
++local function validGuid(guid)
++    return type(guid) == "string" and guid ~= "" and
++        not string.find(guid, "^0x0+$")
++end
++
++local function getGuid(unit)
++    local guid = safeCall(GetUnitGUID, unit) or safeCall(UnitGUID, unit)
++    if validGuid(guid) then return guid end
++    if unit and type(UnitExists) == "function" then
++        local ok, exists, fallback = pcall(UnitExists, unit)
++        if ok and exists and validGuid(fallback) then return fallback end
++    end
++    return nil
++end
++
++local function cleanText(text)
++    if type(text) ~= "string" then return nil end
++    text = string.gsub(text, "|c%x%x%x%x%x%x%x%x", "")
++    text = string.gsub(text, "|r", "")
++    text = string.gsub(text, "^%s+", "")
++    return string.gsub(text, "%s+$", "")
++end
++
++local function ownerTextMatches(text)
++    text = cleanText(text)
++    if not text or not playerName or playerName == "" then return false end
++    -- Whole owner lines only: a guild name or a longer character name is not ownership.
++    if text == playerName then return true end
++    local suffixes = {"的宠物", "的仆从", "的守护者", "的召唤物", "的图腾", "的随从",
++        "'s Pet", "'s Minion", "'s Guardian", "'s Totem", "'s Summon"}
++    for _, suffix in ipairs(suffixes) do
++        if text == playerName .. suffix or text == "<" .. playerName .. suffix .. ">" then return true end
++    end
++    return false
++end
++
++local function eligible(unit)
++    if not unit or not safeCall(UnitExists, unit) then return false end
++    if safeCall(UnitIsDead, unit) or safeCall(UnitIsDeadOrGhost, unit) then return false end
++    if UnitCanAttack and UnitCanAttack("player", unit) then return false end
++    if UnitIsUnit and UnitIsUnit(unit, "player") then return false end
++    if safeCall(UnitIsPlayer, unit) then return false end
++    local name = safeCall(UnitName, unit)
++    return name and name ~= "" and not isExcluded(name)
++end
++
++local function ownership(unit, guid, now, force)
++    -- Nampower owner suffix is authoritative when it resolves (including another owner).
++    local owner = getGuid(unit .. "owner")
++    if owner and playerGuid then
++        ownerCache[guid or unit] = {mine = owner == playerGuid, name = UnitName(unit), time = now}
++        return owner == playerGuid
++    end
++    local key = guid or unit
++    local name = UnitName(unit)
++    local cached = ownerCache[key]
++    if not force and cached and cached.name == name and now - cached.time < OWNER_CACHE_TIME then
++        return cached.mine
++    end
++    initScanTip()
++    scanTip:ClearLines()
++    scanTip:SetUnit(unit)
++    diagnostics.tooltips = diagnostics.tooltips + 1
++    local mine = false
++    for i = 1, 30 do
++        local left = getglobal("TYScanTipTextLeft" .. i)
++        local right = getglobal("TYScanTipTextRight" .. i)
++        if not left and not right then break end
++        if (left and ownerTextMatches(left:GetText())) or
++            (right and ownerTextMatches(right:GetText())) then mine = true; break end
++    end
++    ownerCache[key] = {mine = mine, name = name, time = now}
++    return mine
++end
++
++local function observeUnit(unit, now, force)
++    local guid = getGuid(unit)
++    if guid and deadUntil[guid] and now < deadUntil[guid] then return nil end
++    if not eligible(unit) then
++        if guid then TY.summonCache[guid] = nil; ownerCache[guid] = nil end
++        return nil
++    end
++    if not ownership(unit, guid, now, force) then
++        if guid then TY.summonCache[guid] = nil end
++        return nil
++    end
++    local name = UnitName(unit)
++    if guid then
++        TY.summonCache[guid] = {name = name, time = now, state = "alive"}
++    end
++    return guid, name
++end
++
++local function frameGuid(frame)
++    -- Never associate a WorldFrame child index with nameplateN: those indices are unrelated.
++    if frame.GetName then
++        local ok, guid = pcall(frame.GetName, frame, 1)
++        if ok and validGuid(guid) and string.find(guid, "^0x%x+$") then return guid end
++    end
++    if type(frame.unit) == "string" then return getGuid(frame.unit) end
++    return nil
++end
++
++local function plateText(frame)
++    if not frame.GetRegions then return nil end
++    local regions = {frame:GetRegions()}
++    local isPlate = frame._pfNamePlate or frame.nameplate
++    local owned, name = false, nil
++    for _, region in ipairs(regions) do
++        local kind = region.GetObjectType and region:GetObjectType()
++        if kind == "Texture" and region.GetTexture and
++            region:GetTexture() == "Interface\\Tooltips\\Nameplate-Border" then isPlate = true end
++        if kind == "FontString" and region.GetText then
++            local text = cleanText(region:GetText())
++            if ownerTextMatches(text) then owned = true
++            elseif text and text ~= "" and not tonumber(text) and
++                not string.find(text, "^[<>]") and text ~= "??" and not name then name = text end
++        end
++    end
++    -- pfUI retains the original text regions even after hiding/replacing them.
++    local original = frame.nameplate and frame.nameplate.original
++    if original and original.name then name = cleanText(original.name:GetText()) or name end
++    if isPlate then
++        local health = original and original.healthbar
++        if not health and frame.GetChildren then
++            local children = {frame:GetChildren()}
++            health = children[1]
++        end
++        if health and health.GetValue and health.GetMinMaxValues then
++            local ok, minimum, maximum = pcall(health.GetMinMaxValues, health)
++            local value = safeCall(function() return health:GetValue() end)
++            -- Zero with an initialized health range is death, unlike a hidden plate.
++            if ok and type(maximum) == "number" and maximum > 0 and
++                type(value) == "number" and value <= 0 then owned = false end
++        end
++    end
++    return isPlate and owned, name
++end
++
++local function mergePromotedFrames(guid)
++    for frame in pairs(temporary) do
++        if frameGuid(frame) == guid then temporary[frame] = nil end
++    end
++end
++
++local function countTracked(now)
++    local count, groups, uncertain = 0, {}, 0
++    local function add(name, estimated)
++        count = count + 1
++        groups[name] = (groups[name] or 0) + 1
++        if estimated then uncertain = uncertain + 1 end
++    end
++    for guid, info in pairs(TY.summonCache) do
++        if deadUntil[guid] and now < deadUntil[guid] then
++            TY.summonCache[guid] = nil
++        elseif safeCall(UnitExists, guid) then
++            if not eligible(guid) or not ownership(guid, guid, now, false) then
++                TY.summonCache[guid] = nil
++            else
++                info.name = UnitName(guid)
++                info.state = "alive"; info.unknownSince = nil
++                add(info.name, false)
++            end
++        else
++            -- Loss of visibility is not a death. Keep only a short, explicitly estimated tail.
++            info.unknownSince = info.unknownSince or now
++            info.state = "unobserved"
++            if now - info.unknownSince < UNKNOWN_GRACE then add(info.name, true)
++            else TY.summonCache[guid] = nil; ownerCache[guid] = nil end
++        end
++    end
++    for frame, info in pairs(temporary) do
++        if not frame:IsShown() then info.state = "unobserved" end
++        if now - info.time < UNKNOWN_GRACE then add(info.name, true)
++        else temporary[frame] = nil end
++    end
++    for key, info in pairs(ownerCache) do
++        if now - info.time > OWNER_CACHE_TIME and not TY.summonCache[key] then ownerCache[key] = nil end
++    end
++    for guid, deadline in pairs(deadUntil) do
++        if now >= deadline then deadUntil[guid] = nil end
++    end
++    lastCount, lastGroups, lastUncertain = count, groups, uncertain
++    return count, groups, uncertain
+ end
+ 
+ local function scanForSummons()
+-	local now = GetTime()
+-	for guid, info in pairs(TY.summonCache) do
+-		if now - info.time > 30 then
+-			TY.summonCache[guid] = nil
+-		elseif string.sub(guid, 1, 6) ~= "mysum_" then
+-			if not UnitExists(guid) or UnitIsDead(guid) then
+-				TY.summonCache[guid] = nil
+-			end
+-		end
+-	end
+-
+-	local units = { "target", "mouseover" }
+-	for _, u in ipairs(units) do
+-		if isMySummon(u) then
+-			local g = GetUnitGUID(u)
+-			local n = getUnitNameSafe(u)
+-			if g and n then
+-				TY.summonCache[g] = { name = n, time = now }
+-			end
+-		end
+-	end
+-
+-	for i = 1, 40 do
+-		local unit = "nameplate" .. i
+-		local ok, exists = pcall(UnitExists, unit)
+-		if ok and exists then
+-			if isMySummon(unit) then
+-				local g = GetUnitGUID(unit)
+-				local n = getUnitNameSafe(unit)
+-				if g and n then
+-					TY.summonCache[g] = { name = n, time = now }
+-				end
+-			end
+-		end
+-	end
+-
+-	if WorldFrame and WorldFrame.GetNumChildren then
+-		local numChildren = WorldFrame:GetNumChildren()
+-		for i = 1, numChildren do
+-			local frame = select(i, WorldFrame:GetChildren())
+-			if frame and frame:IsShown() then
+-				if nameplateHasMyName(frame) then
+-					local unit = frame.unit
+-					if not unit then unit = "nameplate" .. i end
+-					local g = nil
+-					local n = nil
+-					if unit then
+-						local ok, exists = pcall(UnitExists, unit)
+-						if ok and exists then
+-							g = GetUnitGUID(unit)
+-							n = getUnitNameSafe(unit)
+-						end
+-					end
+-					if not n then
+-						n = getNameFromNameplate(frame) or "未知召唤物"
+-					end
+-					if g and n then
+-						TY.summonCache[g] = { name = n, time = now }
+-					else
+-						local fakeGuid = "mysum_" .. i
+-						TY.summonCache[fakeGuid] = { name = n or "未知召唤物", time = now }
+-					end
+-				end
+-			end
+-		end
+-	end
+-
+-	local totalCount = 0
+-	local nameGroups = {}
+-	for guid, info in pairs(TY.summonCache) do
+-		local alive = false
+-		if string.sub(guid, 1, 5) == "mysum" then
+-			if now - info.time < 30 then
+-				alive = true
+-			else
+-				TY.summonCache[guid] = nil
+-			end
+-		elseif UnitExists(guid) and not UnitIsDead(guid) then
+-			alive = true
+-		else
+-			TY.summonCache[guid] = nil
+-		end
+-		if alive then
+-			totalCount = totalCount + 1
+-			local name = info.name or "未知"
+-			if not nameGroups[name] then
+-				nameGroups[name] = 0
+-			end
+-			nameGroups[name] = nameGroups[name] + 1
+-		end
+-	end
+-	return totalCount, nameGroups
++    local now = GetTime()
++    playerName, playerGuid = UnitName("player"), getGuid("player")
++    diagnostics.scans = diagnostics.scans + 1
++    local seen = {}
++    local units = {"pet", "target", "mouseover"}
++    for i = 1, 40 do table.insert(units, "nameplate" .. i) end
++    for _, unit in ipairs(units) do
++        if safeCall(UnitExists, unit) then
++            local guid = getGuid(unit)
++            if not guid or not seen[guid] then
++                observeUnit(unit, now, false)
++                if guid then seen[guid] = true end
++            end
++        end
++    end
++    if WorldFrame and WorldFrame.GetChildren then
++        local children = {WorldFrame:GetChildren()}
++        for _, frame in ipairs(children) do
++            if frame.IsShown and frame:IsShown() then
++                local guid = frameGuid(frame)
++                if guid then
++                    temporary[frame] = nil
++                    if not seen[guid] then observeUnit(guid, now, false); seen[guid] = true end
++                elseif type(frame.unit) == "string" and safeCall(UnitExists, frame.unit) then
++                    local _, name = observeUnit(frame.unit, now, false)
++                    if name then temporary[frame] = {name = name, time = now, state = "observed"}
++                    else temporary[frame] = nil end
++                else
++                    local owned, name = plateText(frame)
++                    if owned and name and not isExcluded(name) then
++                        temporary[frame] = {name = name, time = now, state = "observed"}
++                    else temporary[frame] = nil end
++                end
++            end
++        end
++    end
++    return countTracked(now)
++end
++
++
++-- ========== Per-combat time-weighted averages ==========
++local currentCombat = nil
++
++local function copyGroups(groups)
++    local result = {}
++    for name, count in pairs(groups) do result[name] = count end
++    return result
++end
++
++local function beginCombat(now, count, groups, partial, uncertain)
++    if currentCombat then return end
++    currentCombat = {
++        started = now, sampled = now, area = 0, areas = {},
++        count = count, groups = copyGroups(groups), partial = partial or false,
++        uncertain = uncertain or 0, uncertainTime = 0,
++    }
++end
++
++local function advanceCombat(now)
++    if not currentCombat then return end
++    local elapsed = math.max(0, now - currentCombat.sampled)
++    currentCombat.area = currentCombat.area + currentCombat.count * elapsed
++    if currentCombat.uncertain > 0 then
++        currentCombat.uncertainTime = currentCombat.uncertainTime + elapsed
++    end
++    for name, count in pairs(currentCombat.groups) do
++        currentCombat.areas[name] = (currentCombat.areas[name] or 0) + count * elapsed
++    end
++    currentCombat.sampled = now
++end
++
++local function combatStats(now)
++    if not currentCombat then return TY_DB and TY_DB.lastCombat end
++    local duration = math.max(0, now - currentCombat.started)
++    local elapsed = math.max(0, now - currentCombat.sampled)
++    local area = currentCombat.area + currentCombat.count * elapsed
++    local averages = {}
++    for name, amount in pairs(currentCombat.areas) do
++        averages[name] = duration > 0 and amount / duration or 0
++    end
++    for name, count in pairs(currentCombat.groups) do
++        averages[name] = (averages[name] or 0) + (duration > 0 and count * elapsed / duration or 0)
++    end
++    return {
++        duration = duration, average = duration > 0 and area / duration or 0,
++        averages = averages, partial = currentCombat.partial,
++        uncertainTime = currentCombat.uncertainTime + (currentCombat.uncertain > 0 and elapsed or 0),
++    }
++end
++
++local function finishCombat(now)
++    if not currentCombat then return end
++    advanceCombat(now)
++    local result = combatStats(now)
++    if not TY_DB then TY_DB = {} end
++    TY_DB.lastCombat = result
++    currentCombat = nil
++end
++
++local function recordSample(now, count, groups, uncertain)
++    if UnitAffectingCombat("player") then
++        if not currentCombat then
++            -- Reloading during combat starts a partial record, not a full fight.
++            beginCombat(now, count, groups, true, uncertain)
++        else
++            advanceCombat(now)
++            currentCombat.count = count
++            currentCombat.groups = copyGroups(groups)
++            currentCombat.uncertain = uncertain or 0
++        end
++    elseif currentCombat then
++        finishCombat(now)
++    end
+ end
+ 
+ -- ========== UI ==========
+ 
+ local backdrop_bar = {
+@@ -246,64 +380,78 @@
+ 			TY_DB.history[name] = num
+ 		end
+ 	end
+ end
+ 
+-local function refreshDisplay()
+-	if not bar then return end
+-	local count, groups = scanForSummons()
+-	updateHistory(groups)
+-
+-	local inCombat = UnitAffectingCombat("player")
+-
+-	lines[1]:SetText("天眼 (" .. count .. ")")
+-	lines[1]:SetTextColor(COL_TITLE.r, COL_TITLE.g, COL_TITLE.b)
+-
+-	local sortedNames = {}
+-	for name, _ in pairs(groups) do
+-		table.insert(sortedNames, name)
+-	end
+-	table.sort(sortedNames, function(a, b)
+-		local ga = (TY_DB.history and TY_DB.history[a]) or 0
+-		local gb = (TY_DB.history and TY_DB.history[b]) or 0
+-		if ga ~= gb then return ga > gb end
+-		return a < b
+-	end)
+-
+-	local lineIdx = 2
+-	local shown = math.min(table.getn(sortedNames), MAX_LINES - 1)
+-	for i = 1, shown do
+-		local name = sortedNames[i]
+-		local cur = groups[name] or 0
+-		local hist = (TY_DB.history and TY_DB.history[name]) or 0
+-		if inCombat then
+-			lines[lineIdx]:SetText(name .. "  " .. cur .. " / " .. hist)
+-			if cur > 0 then
+-				lines[lineIdx]:SetTextColor(COL_CUR.r, COL_CUR.g, COL_CUR.b)
+-			else
+-				lines[lineIdx]:SetTextColor(COL_GRAY.r, COL_GRAY.g, COL_GRAY.b)
+-			end
+-		else
+-			lines[lineIdx]:SetText(name .. "  " .. cur)
+-			lines[lineIdx]:SetTextColor(COL_CUR.r, COL_CUR.g, COL_CUR.b)
+-		end
+-		lines[lineIdx]:Show()
+-		lineIdx = lineIdx + 1
+-	end
+-	for i = lineIdx, MAX_LINES do
+-		if lines[i] then lines[i]:Hide() end
+-	end
+-
+-	local shownLines = 1 + shown
+-	bar:SetHeight(8 + shownLines * 14 + 4)
++local function refreshDisplay(count, groups, uncertain)
++    if not bar then return end
++    local now = GetTime()
++    if count == nil then count, groups, uncertain = scanForSummons() end
++    recordSample(now, count, groups, uncertain)
++    updateHistory(groups)
++    local stats = combatStats(now)
++
++    lines[1]:SetText("天眼 (" .. count .. ((uncertain or 0) > 0 and "~" or "") .. ")")
++    lines[1]:SetTextColor(COL_TITLE.r, COL_TITLE.g, COL_TITLE.b)
++    if stats then
++        local label = currentCombat and "本次均值" or "上次均值"
++        local partial = (stats.partial and " *" or "") .. ((stats.uncertainTime or 0) > 0 and " ~" or "")
++        lines[2]:SetText(string.format("%s: %.2f  |  %.1f秒%s", label, stats.average, stats.duration, partial))
++    else
++        lines[2]:SetText("战斗均值: 等待战斗")
++    end
++    lines[2]:SetTextColor(1.0, 0.8, 0.0)
++    lines[2]:Show()
++
++    local names = {}
++    for name, _ in pairs(groups) do names[name] = true end
++    if stats and stats.averages then
++        for name, _ in pairs(stats.averages) do names[name] = true end
++    end
++    local sortedNames = {}
++    for name, _ in pairs(names) do table.insert(sortedNames, name) end
++    table.sort(sortedNames, function(a, b)
++        local ga = (TY_DB.history and TY_DB.history[a]) or 0
++        local gb = (TY_DB.history and TY_DB.history[b]) or 0
++        if ga ~= gb then return ga > gb end
++        return a < b
++    end)
++
++    local lineIdx = 3
++    local shown = math.min(table.getn(sortedNames), MAX_LINES - 2)
++    for i = 1, shown do
++        local name = sortedNames[i]
++        local cur = groups[name] or 0
++        local hist = (TY_DB.history and TY_DB.history[name]) or 0
++        lines[lineIdx]:SetText(name)
++        if stats then
++            local average = (stats.averages and stats.averages[name]) or 0
++            values[lineIdx]:SetText(string.format("%d/%d  均%.2f", cur, hist, average))
++        elseif UnitAffectingCombat("player") then
++            values[lineIdx]:SetText(cur .. "/" .. hist)
++        else
++            values[lineIdx]:SetText(tostring(cur))
++        end
++        local color = cur > 0 and COL_CUR or COL_GRAY
++        lines[lineIdx]:SetTextColor(color.r, color.g, color.b)
++        values[lineIdx]:SetTextColor(color.r, color.g, color.b)
++        lines[lineIdx]:Show()
++        values[lineIdx]:Show()
++        lineIdx = lineIdx + 1
++    end
++    for i = lineIdx, MAX_LINES do
++        if lines[i] then lines[i]:Hide() end
++        if values[i] then values[i]:Hide() end
++    end
++    bar:SetHeight(8 + (2 + shown) * 14 + 4)
+ end
+ 
+ function TY_CreateBar()
+ 	if bar then return end
+ 
+ 	bar = CreateFrame("Frame", "TYBar", UIParent)
+-	bar:SetWidth(160)
++	bar:SetWidth(220)
+ 	bar:SetHeight(26)
+ 	bar:SetPoint("CENTER", UIParent, "CENTER", 200, 200)
+ 	bar:SetBackdrop(backdrop_bar)
+ 	bar:SetBackdropColor(COL_BG.r, COL_BG.g, COL_BG.b, COL_BG.a)
+ 	bar:SetBackdropBorderColor(COL_BORDER.r, COL_BORDER.g, COL_BORDER.b, COL_BORDER.a)
+@@ -314,21 +462,31 @@
+ 	lines[1] = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+ 	lines[1]:SetPoint("TOPLEFT", bar, "TOPLEFT", 6, -4)
+ 	lines[1]:SetText("天眼 (0)")
+ 	lines[1]:SetTextColor(COL_TITLE.r, COL_TITLE.g, COL_TITLE.b)
+ 
+-	local subTitle = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+-	subTitle:SetPoint("LEFT", lines[1], "RIGHT", 2, 0)
+-	subTitle:SetText("|cffffcc00.By.小老板娘|r")
+-	subTitle:SetTextColor(1.0, 0.8, 0.0)
+-	local f, h, fpath = subTitle:GetFont()
+-	if f then subTitle:SetFont(f, 9) end
+-	bar.subTitle = subTitle
++    lines[1]:SetWidth(118)
++    lines[1]:SetHeight(14)
++    lines[1]:SetJustifyH("LEFT")
+ 
+ 	for i = 2, MAX_LINES do
+ 		lines[i] = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+ 		lines[i]:SetPoint("TOPLEFT", lines[i-1], "BOTTOMLEFT", 0, 0)
++        lines[i]:SetHeight(14)
++        lines[i]:SetJustifyH("LEFT")
++        if i == 2 then
++            lines[i]:SetWidth(208)
++        else
++            lines[i]:SetWidth(100)
++            values[i] = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
++            values[i]:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -6, -4 - (i - 1) * 14)
++            values[i]:SetWidth(100)
++            values[i]:SetHeight(14)
++            values[i]:SetJustifyH("RIGHT")
++            values[i]:SetText("")
++            values[i]:Hide()
++        end
+ 		lines[i]:SetText("")
+ 		lines[i]:Hide()
+ 	end
+ 
+ 	local closeBtn = CreateFrame("Button", nil, bar)
+@@ -344,19 +502,66 @@
+ 	closeBtn:SetScript("OnClick", function()
+ 		bar:Hide()
+ 		TY_DB.shown = false
+ 	end)
+ 
++    local resetBtn = CreateFrame("Button", "TYResetHistoryButton", bar)
++    resetBtn:SetWidth(56)
++    resetBtn:SetHeight(14)
++    resetBtn:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -21, -3)
++    resetBtn:SetBackdrop(backdrop_bar)
++    resetBtn:SetBackdropColor(0.12, 0.16, 0.2, 0.9)
++    local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
++    resetText:SetPoint("CENTER", resetBtn, "CENTER", 0, 0)
++    local font = resetText:GetFont()
++    if font then resetText:SetFont(font, 9) end
++    resetText:SetText("清空历史")
++    resetText:SetTextColor(1, 0.8, 0)
++    resetBtn:SetScript("OnClick", function()
++        SlashCmdList["RETY"]("")
++    end)
++    resetBtn:SetScript("OnEnter", function()
++        GameTooltip:SetOwner(resetBtn, "ANCHOR_TOPLEFT")
++        GameTooltip:SetText("清空历史最高记录", 1, 0.8, 0)
++        GameTooltip:AddLine("与 /rety 相同，重新开始记录历史最高数量", 1, 1, 1)
++        GameTooltip:AddLine("当前存活的召唤物会立即成为新的记录", 0.8, 0.8, 0.8)
++        GameTooltip:AddLine("本次及上次战斗均值继续保留", 0.8, 0.8, 0.8)
++        GameTooltip:Show()
++    end)
++    resetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
++
+ 	bar:SetScript("OnDragStart", function() bar:StartMoving() end)
+ 	bar:SetScript("OnDragStop", function()
+ 		bar:StopMovingOrSizing()
+ 		local p, _, rp, x, y = bar:GetPoint()
+ 		TY_DB.pos = { point = p, relPoint = rp, x = x, y = y }
+ 	end)
+ 
+-	bar:SetScript("OnEnter", nil)
+-	bar:SetScript("OnLeave", nil)
++    bar:SetScript("OnEnter", function()
++        GameTooltip:SetOwner(bar, "ANCHOR_RIGHT")
++        GameTooltip:SetText("天眼 - 本人召唤物", COL_TITLE.r, COL_TITLE.g, COL_TITLE.b)
++        GameTooltip:AddLine("类型行：当前 / 历史最高；均 = 战斗平均数量", 1, 1, 1)
++        local stats = combatStats(GetTime())
++        if lastUncertain > 0 then
++            GameTooltip:AddLine("当前含 " .. lastUncertain .. " 个估计记录 (~)", 1, 0.6, 0.3)
++        end
++        if stats then
++            if (stats.uncertainTime or 0) > 0 then
++                GameTooltip:AddLine(string.format("~ 有 %.1f 秒包含估计记录", stats.uncertainTime), 1, 0.6, 0.3)
++            end
++            if stats.partial then
++                GameTooltip:AddLine("* 中途开始记录，仅统计已记录时段", 1, 0.6, 0.3)
++            end
++            for name, average in pairs(stats.averages or {}) do
++                GameTooltip:AddLine(name .. "：平均 " .. string.format("%.2f", average), 0.8, 1, 0.8)
++            end
++        end
++        GameTooltip:AddLine("左键拖动窗口；右键打印历史最高", 0.8, 0.8, 0.8)
++        GameTooltip:AddLine("作者：小老板娘", 0.8, 0.8, 0.8)
++        GameTooltip:Show()
++    end)
++    bar:SetScript("OnLeave", function() GameTooltip:Hide() end)
+ 
+ 	bar:SetScript("OnMouseUp", function()
+ 		if arg1 == "RightButton" then
+ 			if TY_DB and TY_DB.history then
+ 				TY_Print("=== 历史最高记录 ===")
+@@ -377,16 +582,16 @@
+ 	bar:Show()
+ 	refreshDisplay()
+ end
+ 
+ local updateFrame = CreateFrame("Frame")
+-local updateTimer = 0
++local nextUpdate = 0
+ updateFrame:SetScript("OnUpdate", function()
+-	updateTimer = updateTimer + arg1
+-	if updateTimer < 0.3 then return end
+-	updateTimer = 0
+-	refreshDisplay()
++    local now = GetTime()
++    if now < nextUpdate then return end
++    nextUpdate = now + SCAN_INTERVAL
++    refreshDisplay()
+ end)
+ 
+ -- ========== Minimap button ==========
+ local miniBtn = nil
+ 
+@@ -459,13 +664,26 @@
+ 		end
+ 	end)
+ 
+ 	miniBtn:SetScript("OnEnter", function()
+ 		GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT")
+-		local count = scanForSummons()
++		refreshDisplay()
++        local count = lastCount
+ 		GameTooltip:SetText("天眼 - 召唤物统计", 0.53, 0.8, 1.0)
+ 		GameTooltip:AddLine("当前召唤物: " .. count .. " 个", 1, 1, 0)
++        local stats = combatStats(GetTime())
++        if stats then
++            local label = currentCombat and "本次战斗" or "上次战斗"
++            GameTooltip:AddLine(string.format("%s平均: %.2f 个 (%.1f秒)", label, stats.average, stats.duration), 1, 0.8, 0)
++            if stats.partial then GameTooltip:AddLine("中途开始记录，仅统计已记录时段", 1, 0.6, 0.3) end
++        end
++        if lastUncertain > 0 then GameTooltip:AddLine("当前含估计记录 (~)：" .. lastUncertain, 1, 0.6, 0.3) end
++        if stats and (stats.uncertainTime or 0) > 0 then
++            GameTooltip:AddLine(string.format("~ 有 %.1f 秒包含估计记录", stats.uncertainTime), 1, 0.6, 0.3)
++        end
++        GameTooltip:AddLine("平均数量包含没有召唤物的时段", 0.8, 0.8, 0.8)
++        GameTooltip:AddLine("类型行: 当前 / 历史最高，均值按战斗时长计算", 0.8, 0.8, 0.8)
+ 		GameTooltip:AddLine(" ", 1, 1, 1)
+ 		GameTooltip:AddLine("左键: 显示/隐藏", 0.8, 0.8, 0.8)
+ 		GameTooltip:AddLine("右键: 打印历史最高", 0.8, 0.8, 0.8)
+ 		GameTooltip:AddLine("拖动: 移动按钮位置", 0.8, 0.8, 0.8)
+ 		GameTooltip:AddLine("/rety: 重置历史最高", 0.8, 0.8, 0.8)
+@@ -477,15 +695,28 @@
+ -- ========== Events ==========
+ local eventFrame = CreateFrame("Frame")
+ eventFrame:RegisterEvent("VARIABLES_LOADED")
+ eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+ eventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+-
+-pcall(function()
+-	eventFrame:RegisterEvent("UNIT_COMBAT_GUID")
+-	eventFrame:RegisterEvent("UNIT_MODEL_CHANGED_GUID")
+-end)
++eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
++eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
++
++-- Register each optional extension event independently; polling remains the fallback.
++for _, name in ipairs({"UNIT_COMBAT_GUID", "UNIT_MODEL_CHANGED_GUID", "UNIT_DIED"}) do
++    pcall(function() eventFrame:RegisterEvent(name) end)
++end
++eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
++
++local function unitChanged(unit, force)
++    if not bar or type(unit) ~= "string" then return end
++    local now = GetTime()
++    diagnostics.events = diagnostics.events + 1
++    local guid = observeUnit(unit, now, force)
++    if guid then mergePromotedFrames(guid) end
++    local count, groups, uncertain = countTracked(now)
++    refreshDisplay(count, groups, uncertain)
++end
+ 
+ eventFrame:SetScript("OnEvent", function()
+ 	if event == "VARIABLES_LOADED" then
+ 		if not TY_DB then TY_DB = {} end
+ 		if not TY_DB.history then TY_DB.history = {} end
+@@ -506,36 +737,41 @@
+ 				SetCVar("NP_EnableUnitEventsGuid", 1)
+ 			end
+ 		end)
+ 		TY_Print("TianYan loaded!")
+ 
+-	elseif event == "PLAYER_TARGET_CHANGED" then
+-		if isMySummon("target") then
+-			local g = GetUnitGUID("target")
+-			local n = getUnitNameSafe("target")
+-			if g and n then
+-				TY.summonCache[g] = { name = n, time = GetTime() }
+-			end
+-		end
+-	elseif event == "UPDATE_MOUSEOVER_UNIT" then
+-		if isMySummon("mouseover") then
+-			local g = GetUnitGUID("mouseover")
+-			local n = getUnitNameSafe("mouseover")
+-			if g and n then
+-				TY.summonCache[g] = { name = n, time = GetTime() }
+-			end
+-		end
+-	elseif event == "UNIT_COMBAT_GUID" or event == "UNIT_MODEL_CHANGED_GUID" then
+-		if arg1 and UnitExists(arg1) and not UnitCanAttack("player", arg1) then
+-			if isMySummon(arg1) then
+-				local n = getUnitNameSafe(arg1)
+-				if n then
+-					TY.summonCache[arg1] = { name = n, time = GetTime() }
+-				end
+-			end
+-		end
+-	end
++    elseif event == "PLAYER_ENTERING_WORLD" then
++        TY.summonCache = {}; temporary = {}; ownerCache = {}; deadUntil = {}
++        playerName, playerGuid = UnitName("player"), getGuid("player")
++        nextUpdate = 0
++        if bar then refreshDisplay() end
++    elseif event == "PLAYER_REGEN_DISABLED" then
++        local count, groups, uncertain = scanForSummons()
++        beginCombat(GetTime(), count, groups, false, uncertain)
++        refreshDisplay(count, groups, uncertain)
++    elseif event == "PLAYER_REGEN_ENABLED" then
++        finishCombat(GetTime())
++        refreshDisplay()
++    elseif event == "PLAYER_TARGET_CHANGED" then
++        unitChanged("target", true)
++    elseif event == "UPDATE_MOUSEOVER_UNIT" then
++        unitChanged("mouseover", false)
++    elseif event == "UNIT_COMBAT_GUID" or event == "UNIT_MODEL_CHANGED_GUID" then
++        -- Model/combat events are observations, not unconditional summon increments.
++        unitChanged(arg1, event == "UNIT_MODEL_CHANGED_GUID")
++    elseif event == "UNIT_DIED" and type(arg1) == "string" and bar then
++        local guid = arg1
++        local now = GetTime()
++        if TY.summonCache[guid] then
++            deadUntil[guid] = now + 2
++            TY.summonCache[guid] = nil; ownerCache[guid] = nil
++            mergePromotedFrames(guid)
++            diagnostics.events = diagnostics.events + 1
++            local count, groups, uncertain = countTracked(now)
++            refreshDisplay(count, groups, uncertain)
++        end
++    end
+ end)
+ 
+ -- ========== Slash commands ==========
+ SLASH_TYAN1 = "/tyan"
+ SlashCmdList["TYAN"] = function(msg)
+@@ -556,5 +792,21 @@
+ 		TY_DB.history = {}
+ 	end
+ 	TY_Print("history reset")
+ 	refreshDisplay()
+ end
++
++
++-- On-demand diagnostics only: no per-frame chat or log writes.
++SLASH_TYDEBUG1 = "/tydebug"
++SlashCmdList["TYDEBUG"] = function()
++    refreshDisplay()
++    TY_Print("当前 " .. lastCount .. "，估计 " .. lastUncertain ..
++        "；扫描 " .. diagnostics.scans .. "，提示读取 " .. diagnostics.tooltips ..
++        "，事件更新 " .. diagnostics.events)
++    for guid, info in pairs(TY.summonCache) do
++        TY_Print((info.name or "未知") .. " | " .. guid .. " | " .. info.state)
++    end
++    for _, info in pairs(temporary) do
++        TY_Print(info.name .. " | 无GUID姓名板 | " .. info.state .. " (估计)")
++    end
++end

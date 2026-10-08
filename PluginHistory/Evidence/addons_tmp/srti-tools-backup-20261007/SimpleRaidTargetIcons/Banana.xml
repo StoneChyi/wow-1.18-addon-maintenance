@@ -1,0 +1,146 @@
+﻿<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+    ..\..\FrameXML\UI.xsd">
+    <Frame name="BananaFrame">
+        <Scripts>
+            <OnLoad>
+                Banana_OnLoad();
+            </OnLoad>
+            <OnEvent>
+                Banana_OnEvent(event);
+            </OnEvent>
+            <OnUpdate>
+                Banana_OnUpdate(arg1);
+            </OnUpdate>
+        </Scripts>
+    </Frame>
+    <Frame name="BananaMtSymbolTemplate" virtual="true" movable="false">
+        <Size>
+            <AbsDimension x="16" y="16"/>
+        </Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentSymbol" file="Interface\AddOns\SimpleRaidTargetIcons\img\star" hidden="false">
+					<Size>
+						<AbsDimension x="16" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+            </Layer>
+		</Layers>
+    </Frame>
+    <!-- 标记条按钮：普通 Button，**不继承 ActionButtonTemplate**。
+         那个模板自带一整套状态纹理（Normal=Pushed/Highlight/Checked=UI-QuickslotRed
+         纯红方底+黑圆角边、Disabled/DisabledChecked/Border），既跟标记图不搭，更要命的是
+         CheckButton 在 1.12 里"点一下就翻转勾选状态"，引擎随即把红底那张 CheckedTexture
+         显到图标上 —— 于是标记哪个图标哪个就变红。换成普通 Button 后这些纹理根本不存在。 -->
+    <Button name="BananaButtonTemplate" clampedToScreen="true" virtual="true" movable="false">
+        <Size>
+            <AbsDimension x="36" y="36"/>
+        </Size>
+        <Scripts>
+            <OnLoad>
+                Banana_RaidTargetButtonOnLoad();
+                this:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonDown", "MiddleButtonUp");
+            </OnLoad>
+            <OnClick>
+                Banana_ButtonOnClick(arg1);
+            </OnClick>
+            <OnMouseUp>
+                Banana_ButtonOnMouseUp(arg1);
+            </OnMouseUp>
+            <OnMouseDown>
+                Banana_ButtonOnMouseDown(arg1);
+            </OnMouseDown>
+            <OnEnter>
+                Banana_ButtonOnEnter();
+            </OnEnter>
+            <OnLeave>
+                GameTooltip:Hide();
+            </OnLeave>
+        </Scripts>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString name="$parentMobName" inherits="GameFontNormalSmall" justifyH="LEFT">
+					<Size>
+						<AbsDimension x="300" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativePoint="RIGHT">
+							<Offset>
+								<AbsDimension x="0" y="-8"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentTargetSymbol" file="Interface\AddOns\SimpleRaidTargetIcons\img\star" hidden="false">
+					<Size>
+						<AbsDimension x="16" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+            </Layer>
+			<!-- 以下三件原先由 ActionButtonTemplate 提供，现按原几何自己定义 -->
+			<Layer level="ARTWORK">
+				<Texture name="$parentIcon" file="Interface\AddOns\SimpleRaidTargetIcons\img\star" hidden="false">
+					<Size>
+						<AbsDimension x="32" y="32"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="2" y="-2"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentFlash" file="Interface\AddOns\SimpleRaidTargetIcons\img\blank" hidden="true">
+					<Size>
+						<AbsDimension x="18" y="18"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="$parentCount" inherits="NumberFontNormal" justifyH="RIGHT" hidden="true">
+					<Size>
+						<AbsDimension x="30" y="12"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" relativeTo="$parentIcon" relativePoint="BOTTOMRIGHT">
+							<Offset>
+								<AbsDimension x="-4" y="2"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Button> 
+	<Button name="RaidTargetFrame1Button" parent="UIParent" id="1" inherits="BananaButtonTemplate" hidden="false"/>
+	<Button name="RaidTargetFrame2Button" parent="UIParent" id="2" inherits="BananaButtonTemplate" hidden="false"/>
+	<Button name="RaidTargetFrame3Button" parent="UIParent" id="3" inherits="BananaButtonTemplate" hidden="false"/>
+	<Button name="RaidTargetFrame4Button" parent="UIParent" id="4" inherits="BananaButtonTemplate" hidden="false"/>
+	<Button name="RaidTargetFrame5Button" parent="UIParent" id="5" inherits="BananaButtonTemplate" hidden="false"/>
+	<Button name="RaidTargetFrame6Button" parent="UIParent" id="6" inherits="BananaButtonTemplate" hidden="false"/>
+	<Button name="RaidTargetFrame7Button" parent="UIParent" id="7" inherits="BananaButtonTemplate" hidden="false"/>
+	<Button name="RaidTargetFrame8Button" parent="UIParent" id="8" inherits="BananaButtonTemplate" hidden="false"/>
+	<Button name="RaidTargetFrame9Button" parent="UIParent" id="9" inherits="BananaButtonTemplate" hidden="false"/>
+</Ui>

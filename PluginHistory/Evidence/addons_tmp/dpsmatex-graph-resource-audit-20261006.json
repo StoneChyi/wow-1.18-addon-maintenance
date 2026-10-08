@@ -1,0 +1,102 @@
+{
+  "measurement": "Actual bundled GraphLib with mock UI objects; counts are not game memory, FPS or CPU timings.",
+  "line_examples": [
+    {
+      "segments": 20,
+      "objects": {
+        "Frame": 34,
+        "Texture": 33,
+        "FontString": 11
+      },
+      "first_line_pool_visits": 528,
+      "repeat_line_pool_visits": 1089,
+      "objects_reused": true
+    },
+    {
+      "segments": 100,
+      "objects": {
+        "Frame": 114,
+        "Texture": 113,
+        "FontString": 11
+      },
+      "first_line_pool_visits": 6328,
+      "repeat_line_pool_visits": 12769,
+      "objects_reused": true
+    },
+    {
+      "segments": 199,
+      "objects": {
+        "Frame": 213,
+        "Texture": 212,
+        "FontString": 11
+      },
+      "first_line_pool_visits": 22366,
+      "repeat_line_pool_visits": 44944,
+      "objects_reused": true
+    }
+  ],
+  "seven_skill_pie": {
+    "Frame": 9,
+    "Texture": 25,
+    "FontString": 0
+  },
+  "latest_matching_character_saved_sample": [
+    {
+      "file_bytes": 759155,
+      "amount_categories": {
+        "DPSMateXDamageDone": {
+          "bins": 2245,
+          "serialized_bin_table_bytes": 39106,
+          "tables": 57
+        },
+        "DPSMateXDamageTaken": {
+          "bins": 11,
+          "serialized_bin_table_bytes": 261,
+          "tables": 7
+        },
+        "DPSMateXEDD": {
+          "bins": 11,
+          "serialized_bin_table_bytes": 261,
+          "tables": 7
+        },
+        "DPSMateXEDT": {
+          "bins": 2244,
+          "serialized_bin_table_bytes": 41487,
+          "tables": 69
+        },
+        "DPSMateXTHealing": {
+          "bins": 141,
+          "serialized_bin_table_bytes": 2410,
+          "tables": 7
+        },
+        "DPSMateXEHealing": {
+          "bins": 43,
+          "serialized_bin_table_bytes": 758,
+          "tables": 7
+        },
+        "DPSMateXHealingTaken": {
+          "bins": 141,
+          "serialized_bin_table_bytes": 2558,
+          "tables": 7
+        },
+        "DPSMateXEHealingTaken": {
+          "bins": 43,
+          "serialized_bin_table_bytes": 808,
+          "tables": 7
+        },
+        "DPSMateXOverhealing": {
+          "bins": 98,
+          "serialized_bin_table_bytes": 1673,
+          "tables": 3
+        },
+        "DPSMateXOverhealingTaken": {
+          "bins": 98,
+          "serialized_bin_table_bytes": 1774,
+          "tables": 3
+        }
+      },
+      "total_bins": 5075,
+      "serialized_bin_table_bytes": 91096
+    }
+  ]
+}

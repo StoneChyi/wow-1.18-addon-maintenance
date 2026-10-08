@@ -1,0 +1,16 @@
+--- a/Cat/CatEvent-Paladin.lua
++++ b/Cat/CatEvent-Paladin.lua
+@@ -411,10 +411,13 @@
+ 
+ -- 获取自己是否有圣印效果
+ -- 注：SuperWow支持更加准确
+ -- return 存在返回真
+ function MPSeal(name)
++    if name == "公正圣印" then
++        return MPBuff(name)
++    end
+ 
+     --[[
+     -- 检测是否有SuperWow模组
+     if not MP_SuperWoW then
+ 	    if name=="正义圣印" then

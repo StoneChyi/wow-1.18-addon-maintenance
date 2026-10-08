@@ -1,0 +1,10 @@
+--- a/PallyPower/PallyPower.toc
++++ b/PallyPower/PallyPower.toc
+@@ -7,6 +7,7 @@
+ ## LoadOnDemand: 0
+ ## SavedVariablesPerCharacter: PallyPower_Assignments, TenMinuteBlessingOn, PP_PerUser
+ ## DefaultState: disabled
+ PallyPower.lua
+ PallyPower.xml
++PallyPower-Extensions.lua
+ Bindings.xml

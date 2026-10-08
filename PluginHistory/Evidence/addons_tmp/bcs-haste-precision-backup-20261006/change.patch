@@ -1,0 +1,37 @@
+--- BCS_PropertiesPanel.lua.original
++++ BCS_PropertiesPanel.lua
+@@ -1283,7 +1283,11 @@
+     if canIdentifyWeapon and self.hasteWeaponBase and self.hasteWeaponKey == weaponKey then
+         base = self.hasteWeaponBase
+     else
+-        base = ReadNumber(BCS.GetOriWeaponSpeed, BCS, 16)
++        -- Prefer the item's original millisecond delay to the rounded tooltip.
++        local _, _, itemID = string.find(weaponKey or "", "item:(%d+)")
++        local delay = itemID and ReadNumber(GetItemStatsField, tonumber(itemID), "delay")
++        if delay and delay > 0 then base = delay / 1000 end
++        if not base then base = ReadNumber(BCS.GetOriWeaponSpeed, BCS, 16) end
+         if base and base > 0 then
+             self.hasteWeaponKey, self.hasteWeaponBase = weaponKey, base
+         else self.hasteWeaponBase = nil end
+@@ -1295,7 +1299,20 @@
+         elseif ok and form == BCS.L_FORM.CAT then base = 1 end
+     end
+     local current = ReadNumber(UnitAttackSpeed, "player")
+-    if base and base > 0 and current and current > 0 then return (base / current - 1) * 100 end
++    if base and base > 0 and current and current > 0 then
++        -- The client's integer attack timer can lose a millisecond when
++        -- converting a float back to milliseconds. Normalize only this
++        -- boundary error, never all haste values below a fixed percentage.
++        local boundaryTolerance = 0.00000025
++        local baseRounded = math.floor(base * 1000 + 0.5) / 1000
++        local currentRounded = math.floor(current * 1000 + 0.5) / 1000
++        if math.abs(base - current) <= 0.001 + boundaryTolerance
++            and math.abs(base - baseRounded) <= boundaryTolerance
++            and math.abs(current - currentRounded) <= boundaryTolerance then
++            return 0
++        end
++        return (base / current - 1) * 100
++    end
+ end
+ 
+ function P:DisplayDualAttackSpeed()

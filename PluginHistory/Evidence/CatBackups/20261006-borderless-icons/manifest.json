@@ -1,0 +1,10 @@
+{
+  "Cat/UI/CatUI-PaladinSeal.lua": {
+    "before": "ae801b08d9e08d5545b6a8412678e84ad3dc10c0af1b7746e7b34410bbc23ab5",
+    "after": "f1dfa6c64c00110ad0767512ab08868b5b8327417facd9cdebaa1de76d2170e3"
+  },
+  "pfUI-addonskinner/skins/Cat.lua": {
+    "before": "ae30bc026f7020e203fda8282575c185630ca2475641fc3336a8cf278df613b2",
+    "after": "a8697f6d9f4f51b9ca4859b0b765460f4c5e63b3d8ce2afaff39d531994041dc"
+  }
+}

@@ -1,0 +1,64 @@
+--- a/S_ItemTip/ItemSocre.lua
++++ b/S_ItemTip/ItemSocre.lua
+@@ -2,10 +2,29 @@
+ --别特鸣谢：天乖乖
+ 
+ local lib = LibStub("LibItem-enUS-1.0")
+ local libLevel = LibStub("LibItemLevel-1.0")
+ LibItem_Level = libLevel and libLevel.Item_Level or LibItem_Level or {}
++
++-- Cache only names actually requested; avoid allocating a complete database
++-- index during the first character-panel opening.
++local scoreNameIndex
++local scoreNameSource
++local function GetScoreItemIDByName(name)
++    if not lib or not lib.Item_enUS then return nil end
++    if not scoreNameIndex or scoreNameSource ~= lib.Item_enUS then
++        scoreNameIndex = {}
++        scoreNameSource = lib.Item_enUS
++    end
++    if scoreNameIndex[name] == nil then
++        scoreNameIndex[name] = false
++        for itemID, itemName in pairs(scoreNameSource) do
++            if itemName == name then scoreNameIndex[name] = itemID; break end
++        end
++    end
++    return scoreNameIndex[name] or nil
++end
+ local USE_PFUI_STYLE = (pfUI and type(pfUI) == "table") or IsAddOnLoaded("pfUI")
+ 
+ local EquipSoltList = {
+ 	INVTYPE_2HWEAPON,
+ 	INVTYPE_BODY,
+@@ -268,21 +287,13 @@
+             if itemLink then
+                 local _, _, itemID = string.find(itemLink, "item:(%d+):%d+:%d+:%d+")
+                 local itemLevel = LibItem_Level[tonumber(itemID)] or 0
+                 local itemName, _, itemRarity = GetItemInfo(itemID)
+ 
+-                if itemLevel == 0 then              
+-                    local itemName = GetItemInfo(itemID)
+-                    if itemName and lib and lib.Item_enUS then
+-                        for realID, engName in pairs(lib.Item_enUS) do
+-                            if engName == itemName then
+-                                local newItemLevel = LibItem_Level[realID] or 0
+-                                itemLevel = newItemLevel
+-                                break
+-                            end
+-                        end
+-                    end
++                if itemLevel == 0 and itemName then
++                    local realID = GetScoreItemIDByName(itemName)
++                    if realID then itemLevel = LibItem_Level[realID] or 0 end
+                 end
+ 
+                 local coef = slotCoefficients[i] or 1
+ 
+                 if i == 16 then
+@@ -448,6 +459,5 @@
+ 				end
+ 			end
+ 		end
+ 	end
+ end
+-

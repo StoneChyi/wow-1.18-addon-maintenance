@@ -1,0 +1,79 @@
+--- a/pfUI-addonskinner/skins/Cat.lua
++++ b/pfUI-addonskinner/skins/Cat.lua
+@@ -33,16 +33,28 @@
+     CreateBackdrop(frame, nil, nil, .75)
+ 
+     local closeBtn = FindCloseButton(frame)
+     for _, child in ipairs({frame:GetChildren()}) do
+       local t = child:GetObjectType()
+-      if t == "Button" then
+-        if child == closeBtn then
+-          SkinCloseButton(child, frame.backdrop, -6, -6)
+-        else
+-          SkinButton(child)
++      if t == "Button" and child == closeBtn then
++        SkinCloseButton(child, frame.backdrop, -6, -6)
++      elseif (t == "Button" or t == "CheckButton") and child.icon
++         and child.icon.SetDrawLayer then
++        -- 图标按钮：图标必须位于按钮深色底板上方，保留图标本身的颜色。
++        -- 审判控制图标保留无边框外观，避免皮肤重新添加底板边框和图标留白。
++        if not child.MPCatBorderlessIcon then
++          SkinButton(child, nil, nil, nil, child.icon)
+         end
++        child.icon:SetDrawLayer("ARTWORK")
++        child.icon:SetVertexColor(1, 1, 1)
++        child.icon:Show()
++        -- 保留 Cat 自己的选中/未选亮度，不能一律恢复为白色。
++        if type(child.MPCatRefreshAppearance) == "function" then
++          child.MPCatRefreshAppearance()
++        end
++      elseif t == "Button" then
++        SkinButton(child)
+       elseif t == "CheckButton" then
+         SkinCheckbox(child)
+       elseif t == "EditBox" then
+         StripTextures(child, true, "BACKGROUND")
+         CreateBackdrop(child)
+@@ -57,6 +69,10 @@
+     if type(k) == "string" and string.find(k, "^Cat")
+        and type(v) == "table" and v.GetObjectType and v:GetObjectType() == "Frame" then
+       pcall(ApplyCatUISkin, v)
+     end
+   end
++  -- pfUI 可能在 Cat 初始化后才创建背景；完整套用皮肤后恢复整体透明度。
++  if type(MPCatPaladinSealApplyAppearance) == "function" then
++    MPCatPaladinSealApplyAppearance()
++  end
+ end)
+--- a/pfUI-addonskinner/skins/PallyPower.lua
++++ b/pfUI-addonskinner/skins/PallyPower.lua
+@@ -171,10 +171,13 @@
+     -- 同批新增的两个勾选框
+     SkinCheckbox(_G["PallyPower_OptionsFrameSolo"])
+     SkinCheckbox(_G["PallyPower_OptionsFrameSoloForce"])
+   end
+ 
++  -- 皮肤可能晚于角色存档加载；恢复用户的背景透明度与锁定状态。
++  if PallyPower_ApplyBuffBarAppearance then PallyPower_ApplyBuffBarAppearance() end
++
+   _G.FLAG_OK = true
+ end
+ 
+ -- (1) 尝试登记到 addonskinner（供 GUI 列表/统一禁用），pcall 防止时序 nil
+ pcall(function()
+--- a/pfUI-addonskinner/skins/StatCompare.lua
++++ b/pfUI-addonskinner/skins/StatCompare.lua
+@@ -24,7 +24,13 @@
+ end
+ 
+ ReposSpellButton(StatCompareSelfFrameSpellsButton, StatCompareSelfFrame)
+ ReposSpellButton(StatCompareTargetFrameSpellsButton, StatCompareTargetFrame)
+ 
++if SCApplyPanelStyle then
++  SCApplyPanelStyle(StatCompareSelfFrame)
++  SCApplyPanelStyle(StatCompareTargetFrame)
++end
++if SCRequestPanelLayout then SCRequestPanelLayout() end
++
+   pfUI.addonskinner:UnregisterSkin("StatCompare")
+ end)

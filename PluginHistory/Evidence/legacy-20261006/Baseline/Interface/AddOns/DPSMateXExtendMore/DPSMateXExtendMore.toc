@@ -1,0 +1,71 @@
+## Interface: 11200
+## Title: |CFFEE7600[DPS统计]|RDPSMateXExtendMore
+## Notes: DPSMateX is an advanced combat analyzation tool, providing helpful graphs and statistics to evaluate the fight.
+## Notes-deDE: DPSMateX ist ein Analysewerkzeug, das hilfreiche Graphen und Statistiken bereitstellt, um den Kampf zu evaluieren.
+## Title-zhCN:|CFFEE7600[DPS统计]|RDPSMateX更多扩展模块
+## Notes-zhCN:|CFFFF8080DPSMateX|R|NDPSMateX更多扩展模块包含了更多统计数据。
+## X-Repple: 战斗
+## Version: 1.0.7
+## Dependencies: DPSMateX
+
+DPSMateX_Absorbs\DPSMateX_Absorbs.lua
+DPSMateX_Absorbs\DPSMateX_Details_Absorbs.lua
+DPSMateX_Absorbs\DPSMateX_Details_Absorbs.xml
+DPSMateX_Absorbs\DPSMateX_Details_AbsorbsTotal.lua
+DPSMateX_Absorbs\DPSMateX_Details_AbsorbsTotal.xml
+
+DPSMateX_AbsorbsTaken\DPSMateX_AbsorbsTaken.lua
+DPSMateX_AbsorbsTaken\DPSMateX_Details_AbsorbsTaken.lua
+DPSMateX_AbsorbsTaken\DPSMateX_Details_AbsorbsTaken.xml
+DPSMateX_AbsorbsTaken\DPSMateX_Details_AbsorbsTakenTotal.lua
+DPSMateX_AbsorbsTaken\DPSMateX_Details_AbsorbsTakenTotal.xml
+
+DPSMateX_Activity\DPSMateX_Activity.lua
+
+DPSMateX_CCBreaker\DPSMateX_CCBreaker.lua
+DPSMateX_CCBreaker\DPSMateX_Details_CCBreaker.lua
+DPSMateX_CCBreaker\DPSMateX_Details_CCBreaker.xml
+DPSMateX_CCBreaker\DPSMateX_Details_CCBreakerTotal.lua
+DPSMateX_CCBreaker\DPSMateX_Details_CCBreakerTotal.xml
+
+DPSMateX_EHealingTaken\DPSMateX_EffectiveHealingTaken.lua
+DPSMateX_EHealingTaken\DPSMateX_Details_EHealingTaken.lua
+DPSMateX_EHealingTaken\DPSMateX_Details_EHealingTaken.xml
+DPSMateX_EHealingTaken\DPSMateX_Details_EHealingTakenTotal.lua
+DPSMateX_EHealingTaken\DPSMateX_Details_EHealingTakenTotal.xml
+
+DPSMateX_FriendlyFireTaken\DPSMateX_FriendlyFireTaken.lua
+DPSMateX_FriendlyFireTaken\DPSMateX_Details_FriendlyFireTaken.lua
+DPSMateX_FriendlyFireTaken\DPSMateX_Details_FriendlyFireTaken.xml
+DPSMateX_FriendlyFireTaken\DPSMateX_Details_FriendlyFireTakenTotal.lua
+DPSMateX_FriendlyFireTaken\DPSMateX_Details_FriendlyFireTakenTotal.xml
+
+DPSMateX_HealingAndAbsorbs\DPSMateX_HealingAndAbsorbs.lua
+DPSMateX_HealingAndAbsorbs\DPSMateX_Details_HealingAndAbsorbs.lua
+DPSMateX_HealingAndAbsorbs\DPSMateX_Details_HealingAndAbsorbs.xml
+DPSMateX_HealingAndAbsorbs\DPSMateX_Details_HealingAndAbsorbsTotal.lua
+DPSMateX_HealingAndAbsorbs\DPSMateX_Details_HealingAndAbsorbsTotal.xml
+
+DPSMateX_OHealingTaken\DPSMateX_OHealingTaken.lua
+DPSMateX_OHealingTaken\DPSMateX_Details_OHealingTaken.lua
+DPSMateX_OHealingTaken\DPSMateX_Details_OHealingTaken.xml
+DPSMateX_OHealingTaken\DPSMateX_Details_OverhealingTakenTotal.lua
+DPSMateX_OHealingTaken\DPSMateX_Details_OverhealingTakenTotal.xml
+
+DPSMateX_Overhealing\DPSMateX_Overhealing.lua
+DPSMateX_Overhealing\DPSMateX_OHPS.lua
+DPSMateX_Overhealing\DPSMateX_Details_Overhealing.lua
+DPSMateX_Overhealing\DPSMateX_Details_Overhealing.xml
+DPSMateX_Overhealing\DPSMateX_Details_OverhealingTotal.lua
+DPSMateX_Overhealing\DPSMateX_Details_OverhealingTotal.xml
+
+DPSMateX_Procs\DPSMateX_Procs.lua
+DPSMateX_Procs\DPSMateX_Details_Procs.lua
+DPSMateX_Procs\DPSMateX_Details_Procs.xml
+DPSMateX_Procs\DPSMateX_Details_ProcsTotal.lua
+DPSMateX_Procs\DPSMateX_Details_ProcsTotal.xml
+
+## X-PluginId: 267
+## X-PublishTime: 2026-06-07 03:49:51
+## X-Version: 20260607002
+## X-OverrideMode: 2

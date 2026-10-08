@@ -1,0 +1,15 @@
+--- a/DPSMateX/DPSMateX_Healing/DPSMateX_Details_Healing.lua
++++ b/DPSMateX/DPSMateX_Healing/DPSMateX_Details_Healing.lua
+@@ -70,11 +70,11 @@
+ 	
+ 	DPSMateX_Details_CompareHealing.proc = "None"
+ 	UIDropDownMenu_SetSelectedValue(DPSMateX_Details_CompareHealing_DiagramLegend_Procs, "None")
+ 	DetailsUserComp = comp
+ 	DPSMateX_Details_CompareHealing_Title:SetText(DPSMateX.L["healdoneby"]..comp)
+-	DPSMateX_Details_CompareHealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.1f", DPSMateX.CombatTime["effective"][key][comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.1f", cbt).."s ("..strformat("%.1f", 100*(DPSMateX.CombatTime["effective"][key][comp] or 0)/cbt).."%)")
++	DPSMateX_Details_CompareHealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.1f", DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.1f", cbt).."s ("..strformat("%.1f", 100*(DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0)/cbt).."%)")
+ 	UIDropDownMenu_Initialize(DPSMateX_Details_CompareHealing_DiagramLegend_Procs, DPSMateX.Modules.DetailsHealing.ProcsDropDown_CompareHealing)
+ 	DetailsArrComp, DetailsTotalComp, DmgArrComp = DPSMateX:EvalTable(DPSMateX.RegistredModules[DPSMateX.Settings["windows"][curKey]["CurMode"]], DPSMateX.CacheUser[comp], curKey)
+ 	t1Comp, t2Comp, TTotalComp = self:EvalToggleTable(comp)
+ 	
+ 	if not g4 then

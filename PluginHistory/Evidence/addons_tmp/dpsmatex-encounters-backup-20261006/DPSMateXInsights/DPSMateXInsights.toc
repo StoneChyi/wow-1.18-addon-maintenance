@@ -1,0 +1,13 @@
+## Interface: 11200
+## Title: |CFFEE7600[DPS统计]|RDPSMateXInsights
+## Notes: Actual absorbs, successful spell casts and action timelines for DPSMateX.
+## Title-zhCN: |CFFEE7600[DPS统计]|RDPSMateX 精确统计扩展
+## Notes-zhCN: 治疗与实际吸收、成功施放、动作回放及详细数据界面。
+## Version: 1.0.1
+## Dependencies: DPSMateX
+## SavedVariablesPerCharacter: DPSMateXInsightsDB
+
+Core.lua
+Parser.lua
+Modules.lua
+Details.lua

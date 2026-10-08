@@ -1,0 +1,60 @@
+--- a/DPSMateXExtendMore/DPSMateX_EHealingTaken/DPSMateX_Details_EHealingTakenTotal.lua
++++ b/DPSMateXExtendMore/DPSMateX_EHealingTaken/DPSMateX_Details_EHealingTakenTotal.lua
+@@ -276,11 +276,11 @@
+ 								totCrit=totCrit+va[3]+va[2]
+ 								totMiss=totMiss+va[2]+va[3]
+ 								crit=crit+va[3]
+ 								miss=miss+va[2]
+ 							else
+-								time = tonumber(strformat("%.2f", DPSMateX.CombatTime["effective"][curKey][name] or 0))
++								time = tonumber(strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(curKey)[name] or 0))
+ 							end
+ 						end
+ 					end
+ 				end
+ 				tinsert(arr, {name, val["i"], crit, miss, time, totCrit, totMiss, cat})
+--- a/DPSMateXExtendMore/DPSMateX_OHealingTaken/DPSMateX_Details_OverhealingTakenTotal.lua
++++ b/DPSMateXExtendMore/DPSMateX_OHealingTaken/DPSMateX_Details_OverhealingTakenTotal.lua
+@@ -275,11 +275,11 @@
+ 								totCrit=totCrit+va[3]+va[2]
+ 								totMiss=totMiss+va[2]+va[3]
+ 								crit=crit+va[3]
+ 								miss=miss+va[2]
+ 							else
+-								time = tonumber(strformat("%.2f", DPSMateX.CombatTime["effective"][curKey][name] or 0))
++								time = tonumber(strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(curKey)[name] or 0))
+ 							end
+ 						end
+ 					end
+ 				end
+ 				tinsert(arr, {name, val["i"], crit, miss, time, totCrit, totMiss, cat})
+--- a/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_Overhealing.lua
++++ b/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_Overhealing.lua
+@@ -70,11 +70,11 @@
+ 	
+ 	DPSMateX_Details_CompareOverhealing.proc = "None"
+ 	UIDropDownMenu_SetSelectedValue(DPSMateX_Details_CompareOverhealing_DiagramLegend_Procs, "None")
+ 	DetailsUserComp = comp
+ 	DPSMateX_Details_CompareOverhealing_Title:SetText(DPSMateX.L["overhealby"]..comp)
+-	DPSMateX_Details_CompareOverhealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX.CombatTime["effective"][key][comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX.CombatTime["effective"][key][comp] or 0)/cbt).."%)")
++	DPSMateX_Details_CompareOverhealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0)/cbt).."%)")
+ 	UIDropDownMenu_Initialize(DPSMateX_Details_CompareOverhealing_DiagramLegend_Procs, DPSMateX.Modules.DetailsOverhealing.ProcsDropDown_CompareOverhealing)
+ 	DetailsArrComp, DetailsTotalComp, DmgArrComp = DPSMateX:EvalTable(DPSMateX.RegistredModules[DPSMateX.Settings["windows"][curKey]["CurMode"]], DPSMateX.CacheUser[comp], curKey)
+ 	t1Comp, t2Comp, TTotalComp = self:EvalToggleTable(comp)
+ 	
+ 	if not g4 then
+--- a/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_OverhealingTotal.lua
++++ b/DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_OverhealingTotal.lua
+@@ -266,11 +266,11 @@
+ 					totCrit=totCrit+va[3]+va[2]
+ 					totMiss=totMiss+va[2]+va[3]
+ 					crit=crit+va[3]
+ 					miss=miss+va[2]
+ 				else
+-					time = tonumber(strformat("%.2f", DPSMateX.CombatTime["effective"][curKey][name] or 0))
++					time = tonumber(strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(curKey)[name] or 0))
+ 				end
+ 			end
+ 			tinsert(arr, {name, val["i"], crit, miss, time, totCrit, totMiss, cat})
+ 			total = total + val["i"]
+ 		end

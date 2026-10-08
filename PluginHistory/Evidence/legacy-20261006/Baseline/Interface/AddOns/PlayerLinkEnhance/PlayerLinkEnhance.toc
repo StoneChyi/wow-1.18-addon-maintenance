@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title:PlayerLinkEnhance
+## Notes:PlayerLinkEnhance
+## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 头像右键菜单增强
+## Version: 1.7
+## Author: hdll, 夜晨, 最爱
+## Notes-zhCN: 让玩家可以在乌龟服内直接右击敌对阵营玩家头像来私聊或邀请公会。
+PlayerLinkEnhance.xml

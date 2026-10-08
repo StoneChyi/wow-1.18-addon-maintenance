@@ -1,0 +1,87 @@
+--- a/DPSMateX/DPSMateX_DataBuilder.lua
++++ b/DPSMateX/DPSMateX_DataBuilder.lua
+@@ -226,10 +226,12 @@
+ 	DPSMateX.Options:HideWhenSolo()
+ 	if (not CombatState and cheatCombat<GT()) then
+ 		DPSMateX.Options:NewSegment()
+ 	end
+ 	CombatState = true
++	if DPSMateX.Insights then DPSMateX.Insights:StartCombat() end
++		if DPSMateX.Encounters then DPSMateX.Encounters:Start() end
+ end
+ 
+ DPSMateX.DB.PLAYER_REGEN_ENABLED = function()
+ 	if DPSMateX.Settings["hideincombat"] then
+ 		for _, val in pairs(DPSMateX.Settings["windows"]) do
+@@ -915,10 +917,12 @@
+ 	Duser, DuserName = self:BuildUser(Duser)
+ 
+ 	if (not CombatState and cheatCombat<GT()) then
+ 		DPSMateX.Options:NewSegment()
+ 		CombatState = true
++		if DPSMateX.Insights then DPSMateX.Insights:StartCombat() end
++		if DPSMateX.Encounters then DPSMateX.Encounters:Start() end
+ 	else
+ 		--if victim and UnitClassification(victim) == "worldboss" then
+ 			--try make boss fight
+ 		--end
+ 	end
+@@ -2293,10 +2297,11 @@
+ 	return org_collectgarbage();
+ end
+ 
+ function DPSMateX.DB:OnUpdate()
+ 	local arg1 = arg1
++	if DPSMateX.Encounters then DPSMateX.Encounters:OnUpdate(arg1) end
+ 
+ 	if (CombatState) then
+ 		notInCombat = false
+ 		LastUpdate = LastUpdate + arg1
+ 		if LastUpdate>=UpdateTime then
+@@ -2324,10 +2329,12 @@
+ 			end
+ 		end
+ 
+ 		if notInCombat then
+ 			CombatState = false
++			if DPSMateX.Insights then DPSMateX.Insights:EndCombat() end
++			if DPSMateX.Encounters then DPSMateX.Encounters:End() end
+ 
+ 			if DPSMateX.Settings.collectgarbage then
+ 				local curmem = gcinfo()
+ 				meminfo = meminfo or curmem
+ 				gc_time = gc_time or 0
+@@ -2536,11 +2543,32 @@
+ 	if sc and sc[effect] then
+ 		sc[effect] = nil
+ 	end
+ end
+ 
+-DPSMateX.DB:SetScript("OnEvent", function() this[event](arg1) end)
++DPSMateX.DB:SetScript("OnEvent", function()
++	-- Copy event arguments before legacy handlers can invoke other frame scripts.
++	local extension, ev, receiver = DPSMateX.Insights, event, this
++	local a1,a2,a3,a4,a5,a6,a7,a8,a9 = arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
++	if extension then extension:PrepareEvent(ev,a1,a2,a3,a4) end
++	if DPSMateX.Encounters then DPSMateX.Encounters:PrepareEvent(ev,a1,a2,a3,a4) end
++	receiver[ev](a1)
++	if extension then extension:OnEvent(ev, a1,a2,a3,a4,a5,a6,a7,a8,a9) end
++end)
++
++function DPSMateX.DB:IsCombatActive()
++	return CombatState
++end
++
++function DPSMateX.DB:BeginInsightsCombat()
++	if not CombatState then
++		DPSMateX.Options:NewSegment()
++		CombatState = true
++		if DPSMateX.Insights then DPSMateX.Insights:StartCombat() end
++		if DPSMateX.Encounters then DPSMateX.Encounters:Start() end
++	end
++end
+ DPSMateX.DB:SetScript("OnUpdate", function() this:OnUpdate() end)
+ 
+ DPSMateX.DB.trackedSpells = {
+ 	[9907] = "Faerie Fire",
+ 	[17392] = "Faerie Fire (Feral)",

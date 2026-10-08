@@ -1,0 +1,96 @@
+--- helper.lua.original
++++ helper.lua
+@@ -2114,7 +2114,7 @@
+ -- talent bonus. The Crusader Strike spell tooltip exposes the per-stack value.
+ function BCS:GetZealHastePerStack()
+     local index = self:GetSpellIndex("十字军打击") or self:GetSpellIndex("Crusader Strike")
+-    if not index then return nil end
++    if not index then return nil, "技能书中未找到十字军打击" end
+     if not zealSpellTooltip then
+         zealSpellTooltip = CreateFrame("GameTooltip", "BCSZealSpellTooltip", nil, "GameTooltipTemplate")
+         zealSpellTooltip:SetOwner(UIParent, "ANCHOR_NONE")
+@@ -2130,9 +2130,11 @@
+         "attack speed by%s+(%d+%.?%d*)%%",
+         "attack and casting speed by%s+(%d+%.?%d*)%%",
+     }
++    local spellText = {}
+     for line = 1, tooltip:NumLines() do
+         local font = getglobal("BCSZealSpellTooltipTextLeft" .. line)
+         local text = CleanHasteText(font and font:GetText())
++        if text ~= "" then tinsert(spellText, text) end
+         for _, pattern in ipairs(patterns) do
+             local _, _, value = strfind(text, pattern)
+             value = tonumber(value)
+@@ -2143,7 +2145,7 @@
+         end
+     end
+     tooltip:Hide()
+-    return nil
++    return nil, "未识别速度数值，技能提示：" .. table.concat(spellText, " / ")
+ end
+ 
+ function BCS:GetLiveHaste(mode)
+--- BCS_PropertiesPanel.lua.original
++++ BCS_PropertiesPanel.lua
+@@ -1252,10 +1252,28 @@
+ 
+     local haste
+     local _, class = UnitClass("player")
+-    -- Paladin Zeal affects attack speed. Use the same measured melee haste
+-    -- as the character panel instead of the unstable cast-speed coefficient.
++    -- Paladin Zeal affects attack speed. The cast coefficient may only remove
++    -- millisecond timer rounding when it agrees with the actual melee interval.
+     if class == "PALADIN" then
+-        haste = ReadNumber(self.GetMeleeHaste, self)
++        local ok, measured, base, current = pcall(self.GetMeleeHaste, self)
++        if ok and IsFiniteNumber(measured) then
++            haste = measured
++            local tolerance = 0.00000025
++            if measured > 0 and IsFiniteNumber(base) and base > 0
++                and IsFiniteNumber(current) and current > 0
++                and math.abs(current - math.floor(current * 1000 + 0.5) / 1000) <= tolerance then
++                local castSpeed = ReadNumber(GetUnitField, "player", "modCastSpeed")
++                if castSpeed and castSpeed > 0 then
++                    local precise = (1 / castSpeed - 1) * 100
++                    local expected = base * castSpeed
++                    local rounding = expected - current
++                    if IsFiniteNumber(precise) and precise > 0
++                        and rounding >= -tolerance and rounding <= 0.001 + tolerance then
++                        haste = precise
++                    end
++                end
++            end
++        end
+         if not IsFiniteNumber(haste) then
+             local previousForce = BCS.ForceCalculate
+             BCS.ForceCalculate = true
+@@ -1321,9 +1339,9 @@
+         if math.abs(base - current) <= 0.001 + boundaryTolerance
+             and math.abs(base - baseRounded) <= boundaryTolerance
+             and math.abs(current - currentRounded) <= boundaryTolerance then
+-            return 0
+-        end
+-        return (base / current - 1) * 100
++            return 0, base, current
++        end
++        return (base / current - 1) * 100, base, current
+     end
+ end
+ 
+@@ -1833,7 +1851,15 @@
+         local _, class = UnitClass("player")
+         Report("装备与增益统计（%）", BCS and ReadNumber(BCS.GetLiveHaste, BCS, class == "PALADIN" and "melee" or nil))
+         Report("近战急速（%）", P:GetMeleeHaste())
+-        Report("狂热每层（%）", BCS and ReadNumber(BCS.GetZealHastePerStack, BCS))
++        local zealValue, zealReason
++        if BCS and type(BCS.GetZealHastePerStack) == "function" then
++            local ok, value, reason = pcall(BCS.GetZealHastePerStack, BCS)
++            if ok then zealValue, zealReason = value, reason end
++        end
++        Report("狂热每层（%）", zealValue)
++        if not IsFiniteNumber(zealValue) and zealReason then
++            DEFAULT_CHAT_FRAME:AddMessage("狂热技能读取 · " .. zealReason)
++        end
+         DEFAULT_CHAT_FRAME:AddMessage("浮窗当前值 · " .. P:DisplayHaste())
+         if BCS and BCS.GetHasteAuraDetails then
+             local ok, auras = pcall(BCS.GetHasteAuraDetails, BCS)

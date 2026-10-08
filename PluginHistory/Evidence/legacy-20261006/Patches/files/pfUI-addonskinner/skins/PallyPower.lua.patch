@@ -1,0 +1,16 @@
+--- a/pfUI-addonskinner/skins/PallyPower.lua
++++ b/pfUI-addonskinner/skins/PallyPower.lua
+@@ -171,10 +171,13 @@
+     -- 同批新增的两个勾选框
+     SkinCheckbox(_G["PallyPower_OptionsFrameSolo"])
+     SkinCheckbox(_G["PallyPower_OptionsFrameSoloForce"])
+   end
+ 
++  -- 皮肤可能晚于角色存档加载；恢复用户的背景透明度与锁定状态。
++  if PallyPower_ApplyBuffBarAppearance then PallyPower_ApplyBuffBarAppearance() end
++
+   _G.FLAG_OK = true
+ end
+ 
+ -- (1) 尝试登记到 addonskinner（供 GUI 列表/统一禁用），pcall 防止时序 nil
+ pcall(function()

@@ -1,0 +1,14 @@
+{
+  "Cat/CatEvent-Paladin.lua": {
+    "before": "d149d1379df49a8ea9588d1d19d987ad73d9d100cf36b50bcda2153a5d971507",
+    "after": "92541f33c8497ea3c7411b4b4540ebd2e37e632678d58a06fd3b8114d655e1ae"
+  },
+  "Cat/PaladinTank.lua": {
+    "before": "6c289cf3c8a31b28c7eb7459199bd5f937a5c1684dc776a925d2829bf6773905",
+    "after": "181c9d9cf4d8e4c3ecdb78b8b86029373acb66d2a9abbd14c2f3aa7a56f403a1"
+  },
+  "Cat/PaladinCJ.lua": {
+    "before": "e2674133017ab6a25664a1954e68fae7daa731f15f3fb2b80cf67fa78525244f",
+    "after": "9a89cd22005825b25f121780ff1cb2046f3bc607ac69e55c397ccd46913c1543"
+  }
+}

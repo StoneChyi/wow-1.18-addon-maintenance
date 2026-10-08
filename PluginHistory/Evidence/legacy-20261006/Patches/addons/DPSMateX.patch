@@ -1,0 +1,394 @@
+--- a/DPSMateX/DPSMateX.lua
++++ b/DPSMateX/DPSMateX.lua
+@@ -565,11 +565,11 @@
+ 		user, val, perc, strt = self:GetSettingValues(arr,cbt,k,ecbt,no_reset)
+ 		if DPSMateX.Settings["showtotals"] then
+ 			_G("DPSMateX_"..c["name"].."_ScrollFrame_Child_Total_Value"):SetText(strt[1]..strt[2])
+ 		end
+ 		if not c["cbtdisplay"] then
+-			_G("DPSMateX_"..c["name"].."_Head_Font"):SetText(self.Options.Options[1]["args"][c["CurMode"]].name.." ["..self.Options:FormatTime(cbt).."]".." "..DPSMateX.Pool.size())
++			_G("DPSMateX_"..c["name"].."_Head_Font"):SetText(self.Options.Options[1]["args"][c["CurMode"]].name.." ["..self.Options:FormatTime(cbt).."]".." "..DPSMateX.Pool.size()..((self.Encounters and self.Encounters.ready and self.Encounters:Scope(k)) and (" · "..self.Encounters:ScopeName(k)) or ""))
+ 		end
+ 		len = 0
+ 		for i=1, DPSMateX.MaxRows do
+ 			statusbar = _G("DPSMateX_"..c["name"].."_ScrollFrame_Child_StatusBar"..i)
+ 			if user[i] then
+@@ -716,11 +716,18 @@
+ 	return classcolor[class].r, classcolor[class].g, classcolor[class].b, class
+ end
+ 
+ function DPSMateX:GetMode(k)
+ 	k = k or 1
++	self:NormalizeEncounterScope(k)
+ 	local Handler = DPSMateX.RegistredModules[DPSMateX.Settings["windows"][k]["CurMode"]]
++	if Handler.Insights and DPSMateX.Insights then
++		return DPSMateX.Insights:GetMode(k, Handler.Kind)
++	end
++	if self.Encounters and self.Encounters.ready and self.Encounters:Scope(k) then
++		return self.Encounters:GetCore(k, Handler.Hist)
++	end
+ 	local result = {
+ 		total={
+ 			Handler.DB[1], 
+ 			math.max(DPSMateX.CombatTime["total"], 1.5),
+ 			DPSMateX.CombatTime["effective"][1]
+@@ -747,10 +754,13 @@
+ 		end
+ 	end
+ end
+ 
+ function DPSMateX:GetModeByArr(arr, k, Hist)
++	k = k or 1
++	self:NormalizeEncounterScope(k)
++	if self.Encounters and self.Encounters.ready and self.Encounters:Scope(k) then return self.Encounters:GetCoreByArr(arr,k) end
+ 	local result = {total={arr[1], DPSMateX.CombatTime["total"], DPSMateX.CombatTime["effective"][1]}, currentfight={arr[2], DPSMateX.CombatTime["current"], DPSMateX.CombatTime["effective"][2]}}
+ 	local num
+ 	for cat, val in pairs(DPSMateX.Settings["windows"][k]["options"][2]) do
+ 		if val then
+ 			if strfind(cat, "segment") then
+@@ -767,10 +777,12 @@
+ 	end
+ end
+ 
+ function DPSMateX:GetModeName(k)
+ 	k = k or 1
++	self:NormalizeEncounterScope(k)
++	if self.Encounters and self.Encounters.ready and self.Encounters:Scope(k) then return self.Encounters:ScopeName(k) end
+ 	local result = {total="Total", currentfight="Current fight"}
+ 	local num
+ 	for cat, val in pairs(DPSMateX.Settings["windows"][k]["options"][2]) do
+ 		if val then
+ 			if strfind(cat, "segment") then
+@@ -779,10 +791,27 @@
+ 			else
+ 				return result[cat]
+ 			end
+ 		end
+ 	end
++end
++
++function DPSMateX:NormalizeEncounterScope(k)
++    local options=self.Settings.windows[k].options[2]
++    if not options.bossall and not options.trashall then return end
++    if self.Encounters and self.Encounters.ready then self.Encounters:Normalize(k)
++    else
++        for key in pairs(options) do options[key]=false end
++        options.currentfight=true
++        local module=self.RegistredModules[self.Settings.windows[k].CurMode]
++        if module then module.acceptNewValues=module.acceptNewValues or {};module.acceptNewValues[k]=true end
++    end
++end
++
++function DPSMateX:GetSelectedEffectiveTime(k)
++    local rows,duration,effective=self:GetMode(k)
++    return type(effective)=="table" and effective or {}
+ end
+ 
+ local nampower_events = {
+ 	"AUTO_ATTACK_SELF",
+ 	"AUTO_ATTACK_OTHER",
+@@ -972,10 +1001,12 @@
+ 	end
+ end
+ 
+ function DPSMateX.DB:ResetDB(forceReset, allReset)
+ 	if forceReset then
++		if DPSMateX.Encounters then DPSMateX.Encounters:Reset() end
++		if DPSMateX.Insights then DPSMateX.Insights:Reset() end
+ 		DPSMateXHistory = nil
+ 		
+ 		if allReset then
+ 			DPSMateXAbility = nil
+ 			DPSMateXUser = nil
+@@ -1500,13 +1531,20 @@
+ 	DPSMateX.DB:AssoicateModuleDB(DPSMateX.Modules.Fails, DPSMateX.DBCache.Fails)
+ 	DPSMateX.DB:AssoicateModuleDB(DPSMateX.Modules.CCBreaker, DPSMateX.DBCache.CCBreaker)
+ 	DPSMateX.DB:AssoicateModuleDB(DPSMateX.Modules.OHPS, DPSMateX.DBCache.Overhealing)
+ 	DPSMateX.DB:AssoicateModuleDB(DPSMateX.Modules.OHealingTaken, DPSMateX.DBCache.OverhealingTaken)
+ 	DPSMateX.DB:AssoicateModuleDB(DPSMateX.Modules.Activity, DPSMateX.CombatTime)
++	if DPSMateX.Insights then
++		DPSMateX.Insights:Initialize()
++		if self:IsCombatActive() then DPSMateX.Insights:StartCombat() end
++	end
++	if DPSMateX.Encounters then DPSMateX.Encounters:Initialize() end
+ end
+ 
+ function DPSMateX.DB:ResetCurrentFight()
++	if DPSMateX.Encounters then DPSMateX.Encounters:BeforeReset() end
++	if DPSMateX.Insights then DPSMateX.Insights:ResetCurrent() end
+ 	DPSMateX.DBCache.DamageDone[2] = DPSMateX.WipeTable(DPSMateX.DBCache.DamageDone[2])
+ 	DPSMateX.DBCache.DamageTaken[2] = DPSMateX.WipeTable(DPSMateX.DBCache.DamageTaken[2])
+ 	DPSMateX.DBCache.EDD[2] = DPSMateX.WipeTable(DPSMateX.DBCache.EDD[2])
+ 	DPSMateX.DBCache.EDT[2] = DPSMateX.WipeTable(DPSMateX.DBCache.EDT[2])
+ 	DPSMateX.DBCache.THealing[2] = DPSMateX.WipeTable(DPSMateX.DBCache.THealing[2])
+--- a/DPSMateX/DPSMateX_DataBuilder.lua
++++ b/DPSMateX/DPSMateX_DataBuilder.lua
+@@ -226,10 +226,12 @@
+ 	DPSMateX.Options:HideWhenSolo()
+ 	if (not CombatState and cheatCombat<GT()) then
+ 		DPSMateX.Options:NewSegment()
+ 	end
+ 	CombatState = true
++	if DPSMateX.Insights then DPSMateX.Insights:StartCombat() end
++		if DPSMateX.Encounters then DPSMateX.Encounters:Start() end
+ end
+ 
+ DPSMateX.DB.PLAYER_REGEN_ENABLED = function()
+ 	if DPSMateX.Settings["hideincombat"] then
+ 		for _, val in pairs(DPSMateX.Settings["windows"]) do
+@@ -915,10 +917,12 @@
+ 	Duser, DuserName = self:BuildUser(Duser)
+ 
+ 	if (not CombatState and cheatCombat<GT()) then
+ 		DPSMateX.Options:NewSegment()
+ 		CombatState = true
++		if DPSMateX.Insights then DPSMateX.Insights:StartCombat() end
++		if DPSMateX.Encounters then DPSMateX.Encounters:Start() end
+ 	else
+ 		--if victim and UnitClassification(victim) == "worldboss" then
+ 			--try make boss fight
+ 		--end
+ 	end
+@@ -2293,10 +2297,11 @@
+ 	return org_collectgarbage();
+ end
+ 
+ function DPSMateX.DB:OnUpdate()
+ 	local arg1 = arg1
++	if DPSMateX.Encounters then DPSMateX.Encounters:OnUpdate(arg1) end
+ 
+ 	if (CombatState) then
+ 		notInCombat = false
+ 		LastUpdate = LastUpdate + arg1
+ 		if LastUpdate>=UpdateTime then
+@@ -2324,10 +2329,12 @@
+ 			end
+ 		end
+ 
+ 		if notInCombat then
+ 			CombatState = false
++			if DPSMateX.Insights then DPSMateX.Insights:EndCombat() end
++			if DPSMateX.Encounters then DPSMateX.Encounters:End() end
+ 
+ 			if DPSMateX.Settings.collectgarbage then
+ 				local curmem = gcinfo()
+ 				meminfo = meminfo or curmem
+ 				gc_time = gc_time or 0
+@@ -2536,11 +2543,32 @@
+ 	if sc and sc[effect] then
+ 		sc[effect] = nil
+ 	end
+ end
+ 
+-DPSMateX.DB:SetScript("OnEvent", function() this[event](arg1) end)
++DPSMateX.DB:SetScript("OnEvent", function()
++	-- Copy event arguments before legacy handlers can invoke other frame scripts.
++	local extension, ev, receiver = DPSMateX.Insights, event, this
++	local a1,a2,a3,a4,a5,a6,a7,a8,a9 = arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9
++	if extension then extension:PrepareEvent(ev,a1,a2,a3,a4) end
++	if DPSMateX.Encounters then DPSMateX.Encounters:PrepareEvent(ev,a1,a2,a3,a4) end
++	receiver[ev](a1)
++	if extension then extension:OnEvent(ev, a1,a2,a3,a4,a5,a6,a7,a8,a9) end
++end)
++
++function DPSMateX.DB:IsCombatActive()
++	return CombatState
++end
++
++function DPSMateX.DB:BeginInsightsCombat()
++	if not CombatState then
++		DPSMateX.Options:NewSegment()
++		CombatState = true
++		if DPSMateX.Insights then DPSMateX.Insights:StartCombat() end
++		if DPSMateX.Encounters then DPSMateX.Encounters:Start() end
++	end
++end
+ DPSMateX.DB:SetScript("OnUpdate", function() this:OnUpdate() end)
+ 
+ DPSMateX.DB.trackedSpells = {
+ 	[9907] = "Faerie Fire",
+ 	[17392] = "Faerie Fire (Feral)",
+--- a/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealing.lua
++++ b/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealing.lua
+@@ -70,11 +70,11 @@
+ 	
+ 	DPSMateX_Details_CompareEHealing.proc = "None"
+ 	UIDropDownMenu_SetSelectedValue(DPSMateX_Details_CompareEHealing_DiagramLegend_Procs, "None")
+ 	DetailsUserComp = comp
+ 	DPSMateX_Details_CompareEHealing_Title:SetText(DPSMateX.L["effhealdoneby"]..comp)
+-	DPSMateX_Details_CompareEHealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX.CombatTime["effective"][key][comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX.CombatTime["effective"][key][comp] or 0)/cbt).."%)")
++	DPSMateX_Details_CompareEHealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0)/cbt).."%)")
+ 	UIDropDownMenu_Initialize(DPSMateX_Details_CompareEHealing_DiagramLegend_Procs, DPSMateX.Modules.DetailsEHealing.ProcsDropDown_CompareEHealing)
+ 	DetailsArrComp, DetailsTotalComp, DmgArrComp = DPSMateX:EvalTable(DPSMateX.RegistredModules[DPSMateX.Settings["windows"][curKey]["CurMode"]], DPSMateX.CacheUser[comp], curKey)
+ 	t1Comp, t2Comp, TTotalComp = self:EvalToggleTable(comp)
+ 	
+ 	if not g4 then
+--- a/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealingTotal.lua
++++ b/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealingTotal.lua
+@@ -266,11 +266,11 @@
+ 					totCrit=totCrit+va[3]+va[2]
+ 					totMiss=totMiss+va[2]+va[3]
+ 					crit=crit+va[3]
+ 					miss=miss+va[2]
+ 				else
+-					time = tonumber(strformat("%.2f", DPSMateX.CombatTime["effective"][curKey][name] or 0))
++					time = tonumber(strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(curKey)[name] or 0))
+ 				end
+ 			end
+ 			tinsert(arr, {name, val["i"], crit, miss, time, totCrit, totMiss, cat})
+ 			total = total + val["i"]
+ 		end
+--- a/DPSMateX/DPSMateX_Healing/DPSMateX_Details_Healing.lua
++++ b/DPSMateX/DPSMateX_Healing/DPSMateX_Details_Healing.lua
+@@ -70,11 +70,11 @@
+ 	
+ 	DPSMateX_Details_CompareHealing.proc = "None"
+ 	UIDropDownMenu_SetSelectedValue(DPSMateX_Details_CompareHealing_DiagramLegend_Procs, "None")
+ 	DetailsUserComp = comp
+ 	DPSMateX_Details_CompareHealing_Title:SetText(DPSMateX.L["healdoneby"]..comp)
+-	DPSMateX_Details_CompareHealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.1f", DPSMateX.CombatTime["effective"][key][comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.1f", cbt).."s ("..strformat("%.1f", 100*(DPSMateX.CombatTime["effective"][key][comp] or 0)/cbt).."%)")
++	DPSMateX_Details_CompareHealing_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.1f", DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.1f", cbt).."s ("..strformat("%.1f", 100*(DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0)/cbt).."%)")
+ 	UIDropDownMenu_Initialize(DPSMateX_Details_CompareHealing_DiagramLegend_Procs, DPSMateX.Modules.DetailsHealing.ProcsDropDown_CompareHealing)
+ 	DetailsArrComp, DetailsTotalComp, DmgArrComp = DPSMateX:EvalTable(DPSMateX.RegistredModules[DPSMateX.Settings["windows"][curKey]["CurMode"]], DPSMateX.CacheUser[comp], curKey)
+ 	t1Comp, t2Comp, TTotalComp = self:EvalToggleTable(comp)
+ 	
+ 	if not g4 then
+--- a/DPSMateX/DPSMateX_Healing/DPSMateX_Details_HealingTotal.lua
++++ b/DPSMateX/DPSMateX_Healing/DPSMateX_Details_HealingTotal.lua
+@@ -265,11 +265,11 @@
+ 					totCrit=totCrit+va[3]+va[2]
+ 					totMiss=totMiss+va[2]+va[3]
+ 					crit=crit+va[3]
+ 					miss=miss+va[2]
+ 				else
+-					time = tonumber(strformat("%.2f", DPSMateX.CombatTime["effective"][curKey][name] or 0))
++					time = tonumber(strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(curKey)[name] or 0))
+ 				end
+ 			end
+ 			tinsert(arr, {name, val["i"], crit, miss, time, totCrit, totMiss, cat})
+ 			total = total + val["i"]
+ 		end
+--- a/DPSMateX/DPSMateX_Options.lua
++++ b/DPSMateX/DPSMateX_Options.lua
+@@ -1501,11 +1501,11 @@
+ 					tinsert(DPSMateX.DelayMsg, {i..". "..DPSMateX.Modules.Fails:Type(ablity).." - "..p, chn, index})
+ 				else
+ 					SendChatMessage(i..". "..DPSMateX.Modules.Fails:Type(ablity).." - "..p, chn, nil, index)
+ 				end
+ 			else
+-				if DPSMateX:TContains(AbilityModes, DPSMateX.Settings["windows"][Key]["CurMode"]) then
++				if DPSMateX:TContains(AbilityModes, DPSMateX.Settings["windows"][Key]["CurMode"]) or DPSMateX.RegistredModules[DPSMateX.Settings["windows"][Key]["CurMode"]].Insights then
+ 					if DPSMateX.Settings["reportdelay"] then
+ 						tinsert(DPSMateX.DelayMsg, {i..". "..DPSMateX:GetAbilityById(ablity).." - "..p, chn, index})
+ 					else
+ 						SendChatMessage(i..". "..DPSMateX:GetAbilityById(ablity).." - "..p, chn, nil, index)
+ 					end
+@@ -1659,11 +1659,15 @@
+ 			name = DPSMateX:GetUserById(a)
+ 			name = name or DPSMateX.L["unknown"]
+ 			extra = " - CBT: "..self:FormatTime(DPSMateX.CombatTime["current"])
+ 		end
+ 		if name ~= DPSMateX.L["unknown"] or (name == DPSMateX.L["unknown"]) then
+-			local bossname = DPSMateX.BabbleBoss:Contains(name)
++			local encounter=DPSMateX.Encounters
++			local fight=encounter and encounter.ready and encounter.db.current
++			local classifiedBoss=fight and fight.kind=="boss"
++			if classifiedBoss and fight.name and not segname then name=fight.name end
++			local bossname = classifiedBoss or DPSMateX.BabbleBoss:Contains(name)
+ 			if bossname and type(bossname) == "string" then name = bossname end
+ 
+ 			if DPSMateX.Settings["onlybossfights"] then
+ 				if bossname then
+ 					DPSMateX.Options:CreateSegment(name..extra)
+@@ -1696,11 +1700,13 @@
+ 		["Interrupts"] = DPSMateX.DBCache.Interrupts[2],
+ 		["Dispels"] = DPSMateX.DBCache.Dispels[2],
+ 		["Auras"] = DPSMateX.DBCache.AurasGained[2],
+ 	}
+ 	
+-	tinsert(DPSMateX.DPSMateXHistory["names"], 1, name.." - "..GameTime_GetTime())
++	local segmentLabel = name.." - "..GameTime_GetTime()
++	if DPSMateX.Insights then DPSMateX.Insights:SaveSegment(segmentLabel) end
++	tinsert(DPSMateX.DPSMateXHistory["names"], 1, segmentLabel)
+ 	for cat, val in pairs(modes) do
+ 		tinsert(DPSMateX.DPSMateXHistory[cat], 1, DPSMateX:CopyTable(val))
+ 		if DPSMateX:TableLength(DPSMateX.DPSMateXHistory[cat])>DPSMateX.Settings["datasegments"] then
+ 			for i=DPSMateX.Settings["datasegments"]+1, DPSMateX:TableLength(DPSMateX.DPSMateXHistory[cat]) do
+ 				tremove(DPSMateX.DPSMateXHistory[cat], i)
+@@ -1735,10 +1741,11 @@
+ 			desc = DPSMateX.L["currentmode"],
+ 			get = function() return DPSMateX.Settings["windows"][DPSMateX.Options.Dewdrop:GetOpenedParent().Key]["options"][2]["currentfight"] end,
+ 			set = function() DPSMateX.Options:ToggleDrewDrop(2, "currentfight", DPSMateX.Options.Dewdrop:GetOpenedParent()) end,
+ 		},
+ 	}
++	if DPSMateX.Encounters and DPSMateX.Encounters.ready then DPSMateX.Encounters:InstallMenus() end
+ 	DPSMateX.Options.Options[3]["args"]["deletesegment"]["args"] = {}
+ 	for cat, val in pairs(DPSMateX.DPSMateXHistory["DMGDone"]) do
+ 		if not val then break end
+ 		DPSMateX.Options.Options[2]["args"]["segment"..i] = {
+ 			order = 20+i*10,
+@@ -1777,19 +1784,21 @@
+ 		 end
+ 	end
+ end
+ 
+ function DPSMateX.Options:ToggleSegment(k, obj)
++	if DPSMateX.Encounters then obj=DPSMateX.Encounters:ValidateScope(k,obj)
++	elseif obj=="bossall" or obj=="trashall" then obj="currentfight" end
+ 	for cat, _ in pairs(DPSMateX.Settings["windows"][k]["options"][2]) do
+ 		DPSMateX.Settings["windows"][k]["options"][2][cat] = false
+ 	end
+ 	DPSMateX.Settings["windows"][k]["options"][2][obj] = true
+ 
+ 	local module = DPSMateX.RegistredModules[DPSMateX.Settings["windows"][k]["CurMode"]]
+ 	if module then 
+ 		module.acceptNewValues = module.acceptNewValues or {}
+-		module.acceptNewValues[k] = (obj == "total" or obj == "currentfight")
++		module.acceptNewValues[k] = (obj == "total" or obj == "currentfight" or obj == "bossall" or obj == "trashall")
+ 	end
+ end
+ 
+ function DPSMateX.Options:OnVerticalScroll(obj, arg1, pre, spec)
+ 	pre = pre or 20
+@@ -1997,10 +2006,11 @@
+ 	DPSMateX.Settings["windows"][frame.Key]["hidden"] = false
+ 	frame:Show()
+ end
+ 
+ function DPSMateX.Options:RemoveSegment(i)
++	if DPSMateX.Insights then DPSMateX.Insights:RemoveSegment(i) end
+ 	for cat, val in DPSMateX.DPSMateXHistory do
+ 		tremove(DPSMateX.DPSMateXHistory[cat], i)
+ 	end
+ 	DPSMateX.Options:InitializeSegments()
+ 	DPSMateX.Options.Dewdrop:Close()
+--- a/DPSMateX/Damage/DPSMateX_Details_Damage.lua
++++ b/DPSMateX/Damage/DPSMateX_Details_Damage.lua
+@@ -73,11 +73,11 @@
+ 	
+ 	DPSMateX_Details_CompareDamage.proc = "None"
+ 	UIDropDownMenu_SetSelectedValue(DPSMateX_Details_CompareDamage_DiagramLegend_Procs, "None")
+ 	DetailsUserComp = comp
+ 	DPSMateX_Details_CompareDamage_Title:SetText(DPSMateX.L["dmgdoneby"]..comp)
+-	DPSMateX_Details_CompareDamage_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX.CombatTime["effective"][key][comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX.CombatTime["effective"][key][comp] or 0)/cbt).."%)")
++	DPSMateX_Details_CompareDamage_SubTitle:SetText(DPSMateX.L["activity"]..strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0).."s "..DPSMateX.L["of"].." "..strformat("%.2f", cbt).."s ("..strformat("%.2f", 100*(DPSMateX:GetSelectedEffectiveTime(key)[comp] or 0)/cbt).."%)")
+ 	UIDropDownMenu_Initialize(DPSMateX_Details_CompareDamage_DiagramLegend_Procs, DPSMateX.Modules.DetailsDamage.ProcsDropDown_CompareDamage)
+ 	DetailsArrComp, DetailsTotalComp, DmgArrComp = DPSMateX:EvalTable(DPSMateX.RegistredModules[DPSMateX.Settings["windows"][curKey]["CurMode"]], DPSMateX.CacheUser[comp], curKey)
+ 	t1Comp, t2Comp, TTotalComp = self:EvalToggleTable(comp)
+ 	
+ 	if not g4 then
+--- a/DPSMateX/Damage/DPSMateX_Details_DamageTotal.lua
++++ b/DPSMateX/Damage/DPSMateX_Details_DamageTotal.lua
+@@ -266,11 +266,11 @@
+ 					totCrit=totCrit+va[1]+va[5]+va[9]+va[10]+va[11]+va[12]+va[14]
+ 					crit=crit+va[5]
+ 					totMiss=totMiss+va[1]+va[5]+va[9]+va[10]+va[11]+va[12]+va[14]
+ 					miss=miss+va[9]+va[10]+va[11]+va[12]
+ 				else
+-					time = tonumber(strformat("%.2f", DPSMateX.CombatTime["effective"][curKey][name] or 0))
++					time = tonumber(strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(curKey)[name] or 0))
+ 				end
+ 			end
+ 			tinsert(arr, {name, val["i"], crit, miss, time, totCrit, totMiss, cat})
+ 			total = total + val["i"]
+ 		end

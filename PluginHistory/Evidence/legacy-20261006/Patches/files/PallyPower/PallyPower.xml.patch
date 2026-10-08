@@ -1,0 +1,43 @@
+--- a/PallyPower/PallyPower.xml
++++ b/PallyPower/PallyPower.xml
+@@ -128,11 +128,11 @@
+                     </Anchors>
+                 </Texture>
+             </Layer>
+         </Layers>
+         <Scripts>
+-            <OnLoad>PallyPowerBuffButton_OnLoad(this); this:RegisterForClicks("LeftButtonUp", "RightButtonUp")</OnLoad>
++            <OnLoad>PallyPowerBuffButton_OnLoad(this); this:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")</OnLoad>
+             <OnClick>PallyPowerBuffButton_OnClick(this, arg1)</OnClick>
+             <OnEnter>PallyPowerBuffButton_OnEnter(this)</OnEnter>
+             <OnLeave>PallyPowerBuffButton_OnLeave(this)</OnLeave>
+         </Scripts>
+     </Button>
+@@ -1293,11 +1293,11 @@
+                                 <AbsDimension x="7" y="-50"/>
+                             </Offset>
+                         </Anchor>
+                     </Anchors>
+                 </FontString>
+-                <FontString name="$parentOption3" inherits="GameFontHighlight" text="PALLYPOWER_OPTIONS_FEEDBACK_CHAT"
++                <FontString name="$parentOption3" inherits="GameFontHighlight" text="屏幕提示（不写入聊天框）"
+                             justifyH="LEFT">
+                     <Size>
+                         <AbsDimension x="200" y="16"/>
+                     </Size>
+                     <Anchors>
+@@ -1524,12 +1524,12 @@
+                             <AbsDimension x="-5" y="-75"/>
+                         </Offset>
+                     </Anchor>
+                 </Anchors>
+                 <Scripts>
+-                    <OnShow>if (PP_PerUser.chatfeedback) then this:SetChecked(true) else this:SetChecked(false) end</OnShow>
+-                    <OnClick>PP_PerUser.chatfeedback = this:GetChecked()</OnClick>
++                    <OnShow>if (PP_PerUser.screenfeedback ~= 0) then this:SetChecked(true) else this:SetChecked(false) end</OnShow>
++                    <OnClick>PP_PerUser.screenfeedback = this:GetChecked() and 1 or 0</OnClick>
+                 </Scripts>
+             </CheckButton>
+             <CheckButton name="$parentSmart" inherits="OptionsCheckButtonTemplate">
+                 <Size>
+                     <AbsDimension x="20" y="20"/>

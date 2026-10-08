@@ -1,0 +1,35 @@
+from pathlib import Path
+import re
+root = Path('E:/1.18/Interface/AddOns/CatPotion')
+core = (root/'Core.lua').read_text(encoding='utf8')
+lines = core.splitlines()
+removed = [line for line in lines if line.strip().startswith('{ key =') and 'requiresEquipped = true' in line]
+core = '\n'.join(line for line in lines if line not in removed)+'\n'
+start = core.index('-- 装備型工程道具')
+end = core.index('function addon.GetCooldownInfo',start)
+core = core[:start]+core[end:]
+core = core.replace('local bag, slot, count, texture, link, inventorySlot = addon.FindUsableItem(itemName)','local bag, slot = addon.FindBagItem(itemName)')
+core = core.replace('    if inventorySlot and type(GetInventoryItemCooldown) == "function" then\n        startTime, duration, enable = GetInventoryItemCooldown("player", inventorySlot)\n    elseif bag ~= nil and type(GetContainerItemCooldown) == "function" then','    if bag ~= nil and type(GetContainerItemCooldown) == "function" then')
+core = core.replace('local bag, slot, itemCount, itemTexture, itemLink, inventorySlot = addon.FindUsableItem(itemName)','local bag, slot, itemCount = addon.FindBagItem(itemName)')
+core = core.replace('if bag == nil and not inventorySlot then','if bag == nil then')
+core = re.sub(r'    if itemData and itemData.requiresEquipped and not inventorySlot then\n.*?\n    end\n','',core,flags=re.S)
+core = core.replace('    local texture, count, locked\n    if bag ~= nil then texture, count, locked = GetContainerItemInfo(bag, slot) end','    local texture, count, locked = GetContainerItemInfo(bag, slot)')
+core = core.replace('    if inventorySlot then\n        UseInventoryItem(inventorySlot)\n    else\n        if itemData then pendingItemUses[itemData.key] = { item = itemData, count = itemCount, time = GetTime() } end\n        UseContainerItem(bag, slot)\n    end','    if itemData then pendingItemUses[itemData.key] = { item = itemData, count = itemCount, time = GetTime() } end\n    UseContainerItem(bag, slot)')
+core = core.replace('    local unusedRemaining, cooldownKind, unavailable = addon.GetCooldownInfo(itemName)','    local unusedRemaining, unusedKind, unavailable = addon.GetCooldownInfo(itemName)')
+core = core.replace('    local macroExcluded = profile and profile.macroExcluded or {}\n','')
+core = core.replace('key = "limitedInvulnerability", category = "功能药水", item = "有限无敌药水", label = "有限无敌", buff = "无敌", detail = "物理免疫/6秒"','key = "limitedInvulnerability", category = "功能药水", item = "有限无敌药水", label = "有限无敌", buff = "无敌", detail = "短暂物理免疫"')
+(root/'Core.lua').write_text(core,encoding='utf8',newline='\r\n')
+
+window = (root/'Window.lua').read_text(encoding='utf8')
+window = window.replace('local bag, slot, itemCount, texture, link, inventorySlot = addon.FindUsableItem(row.itemData.item)','local bag, slot, itemCount = addon.FindBagItem(row.itemData.item)')
+window = window.replace('        if inventorySlot then\n            GameTooltip:AddLine("已装备：可直接使用", 0.35, 0.9, 0.45)\n        elseif bag then','        if bag then')
+window = window.replace('        if item.requiresEquipped and not inventorySlot then\n            GameTooltip:AddLine("需先装备，再左键使用", 1, 0.55, 0.2)\n        elseif bag or inventorySlot then GameTooltip:AddLine("左键：使用物品", 0.48, 0.55, 0.62) end','        if bag then GameTooltip:AddLine("左键：使用物品", 0.48, 0.55, 0.62) end')
+window = window.replace('        elseif item.requiresEquipped and not row.inventorySlot then\n            row.statusText:SetTextColor(1, 0.55, 0.2)\n            row.statusText:SetText(minimized and "未装" or "需先装备")\n','')
+window = window.replace('        local bag, slot, count, texture, link, inventorySlot = addon.FindUsableItem(item.item)\n        row.inventorySlot = inventorySlot','        local bag, slot, count, texture = addon.FindBagItem(item.item)')
+window = window.replace('row:SetAlpha((bag or inventorySlot) and 1 or 0.62)','row:SetAlpha(bag and 1 or 0.62)')
+window = window.replace('            pendingWeaponRefresh = true\n            pendingBagRefresh = true','            pendingWeaponRefresh = true')
+(root/'Window.lua').write_text(window,encoding='utf8',newline='\r\n')
+settings = (root/'Settings.lua').read_text(encoding='utf8')
+settings = re.sub(r'                        if data.requiresEquipped then.*?\n','',settings)
+(root/'Settings.lua').write_text(settings,encoding='utf8',newline='\r\n')
+print('Excluded',len(removed),'engineering equipment; retained',68-len(removed),'new items')

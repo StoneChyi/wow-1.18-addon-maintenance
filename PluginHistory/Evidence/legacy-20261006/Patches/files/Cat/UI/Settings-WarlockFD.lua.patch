@@ -1,0 +1,14 @@
+--- a/Cat/UI/Settings-WarlockFD.lua
++++ b/Cat/UI/Settings-WarlockFD.lua
+@@ -713,10 +713,11 @@
+     checkButton_CurseElements:SetChecked(MPToBoolean(MPWarlockFDSaved[ConfigCurrent].CurseElements))
+     checkButton_CurseShadow:SetChecked(MPToBoolean(MPWarlockFDSaved[ConfigCurrent].CurseShadow))
+     checkButton_CurseTongues:SetChecked(MPToBoolean(MPWarlockFDSaved[ConfigCurrent].CurseTongues))
+     checkButton_CurseFatigue:SetChecked(MPToBoolean(MPWarlockFDSaved[ConfigCurrent].CurseFatigue))
+     checkButton_CurseDoom:SetChecked(MPToBoolean(MPWarlockFDSaved[ConfigCurrent].CurseDoom))
++    checkButton_CurseWeakness:SetChecked(MPToBoolean(MPWarlockFDSaved[ConfigCurrent].CurseWeakness))
+ 
+ 
+ end
+ 
+ function MPInitWarlockFDSettings()

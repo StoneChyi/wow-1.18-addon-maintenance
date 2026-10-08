@@ -1,0 +1,88 @@
+{
+  "original_sha256": "191d192710990886edcb6e2aa9d10ac69592f2a66b10fa9d53228b443ed7fd15",
+  "candidate_sha256": "f64bae9ee322c7fb75293219947aad82d015531ac949e24c9765876d5f137c39",
+  "patch_rva": "0x2304",
+  "stub_rva": "0x944000",
+  "changed_original_offsets": [
+    "0x7e",
+    "0x95",
+    "0xc9",
+    "0xd0",
+    "0xd1",
+    "0xd2",
+    "0x260",
+    "0x261",
+    "0x262",
+    "0x263",
+    "0x264",
+    "0x265",
+    "0x266",
+    "0x268",
+    "0x26d",
+    "0x26e",
+    "0x271",
+    "0x275",
+    "0x276",
+    "0x284",
+    "0x287",
+    "0x1704",
+    "0x1705",
+    "0x1706",
+    "0x1707",
+    "0x1708",
+    "0x1709"
+  ],
+  "guard_listing": [
+    {
+      "rva": "0x944000",
+      "operation": "mov edi, [0x00ce26e0] ; replay displaced instruction",
+      "bytes": "8b 3d e0 26 ce 00"
+    },
+    {
+      "rva": "0x944006",
+      "operation": "cmp edi, 8192 ; unsigned capacity check",
+      "bytes": "81 ff 00 20 00 00"
+    },
+    {
+      "rva": "0x94400c",
+      "operation": "jb normal ; preserve original path below capacity",
+      "bytes": "72 12"
+    },
+    {
+      "rva": "0x94400e",
+      "operation": "mov edi, [esp+8] ; query context already stored by original function",
+      "bytes": "8b 7c 24 08"
+    },
+    {
+      "rva": "0x944012",
+      "operation": "mov edi, [edi] ; optional overflow/fallback flag pointer",
+      "bytes": "8b 3f"
+    },
+    {
+      "rva": "0x944014",
+      "operation": "test edi, edi",
+      "bytes": "85 ff"
+    },
+    {
+      "rva": "0x944016",
+      "operation": "jz done",
+      "bytes": "74 03"
+    },
+    {
+      "rva": "0x944018",
+      "operation": "or byte [edi], 1 ; same overflow indication as sibling spatial path",
+      "bytes": "80 0f 01"
+    },
+    {
+      "rva": "0x94401b",
+      "operation": "jmp done ; original successful epilogue",
+      "bytes": "e9 ef e4 6b ff"
+    },
+    {
+      "rva": "0x944020",
+      "operation": "jmp normal ; original store and subsequent collision calculation",
+      "bytes": "e9 e5 e2 6b ff"
+    }
+  ],
+  "note": "Candidate only; original DLL and configuration are unchanged."
+}

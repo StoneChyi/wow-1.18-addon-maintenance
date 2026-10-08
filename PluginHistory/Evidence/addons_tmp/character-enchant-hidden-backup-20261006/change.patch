@@ -1,0 +1,24 @@
+--- before/S_ItemTip/InspectGemAndEnchant.lua
++++ after/S_ItemTip/InspectGemAndEnchant.lua
+@@ -82,7 +82,9 @@
+     
+     -- 启用鼠标事件，阻止穿透到下层
+     icon:EnableMouse(true)
+-    icon:SetToplevel(true)
++    -- A static child icon needs its explicit frame level, not independent
++    -- window promotion when it becomes visible with its parent.
++    icon:SetToplevel(false)
+     
+     icon:SetScript("OnEnter", function()
+         if this.title then
+@@ -389,7 +391,9 @@
+     end
+     
+     local frame = S_ItemTip_InspectFrame
+-    if not frame or not frame:IsShown() then
++    -- Equipment is populated before its parent is shown. Prepare the child
++    -- icons in the same update; their visibility follows the parent frame.
++    if not frame then
+         return
+     end
+     

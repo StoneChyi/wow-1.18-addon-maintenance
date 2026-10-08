@@ -1,0 +1,1029 @@
+--- before/BetterCharacterStats/helper.lua
++++ after/BetterCharacterStats/helper.lua
+@@ -4,6 +4,57 @@
+ local BCS_Tooltip = getglobal("BetterCharacterStatsTooltip") or CreateFrame("GameTooltip", "BetterCharacterStatsTooltip", nil, "GameTooltipTemplate")
+ local BCS_Prefix = "BetterCharacterStatsTooltip"
+ BCS_Tooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
++
++-- Share immutable equipment text only within one UpdateStats call. Buffs and
++-- talents keep their live reads; no equipment cache survives an update.
++local equipmentReadDepth = 0
++local equipmentReadCache
++-- Standalone consumers retain native tooltip reads without allocating a
++-- snapshot for every slot. The live view never stores item text.
++local liveEquipment = {
++    left=setmetatable({}, {__index=function(_, line)
++        local font = getglobal(BCS_Prefix .. "TextLeft" .. line)
++        return font and font:GetText()
++    end}),
++    right=setmetatable({}, {__index=function(_, line)
++        local font = getglobal(BCS_Prefix .. "TextRight" .. line)
++        return font and font:GetText()
++    end})
++}
++function BCS:BeginEquipmentRead()
++    if equipmentReadDepth == 0 then equipmentReadCache = {} end
++    equipmentReadDepth = equipmentReadDepth + 1
++end
++function BCS:EndEquipmentRead()
++    equipmentReadDepth = equipmentReadDepth - 1
++    if equipmentReadDepth <= 0 then
++        equipmentReadDepth = 0
++        equipmentReadCache = nil
++    end
++end
++local function ReadEquipmentTooltip(slot)
++    if equipmentReadCache and equipmentReadCache[slot] then
++        local cached = equipmentReadCache[slot]
++        return cached.hasItem, cached
++    end
++    local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++    if not equipmentReadCache then
++        liveEquipment.count = hasItem and BCS_Tooltip:NumLines() or 0
++        return hasItem, liveEquipment
++    end
++    local snapshot = {hasItem=hasItem, count=0, left={}, right={}}
++    if hasItem then
++        snapshot.count = BCS_Tooltip:NumLines()
++        for line=1, snapshot.count do
++            local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
++            local right = getglobal(BCS_Prefix .. "TextRight" .. line)
++            snapshot.left[line] = left and left:GetText()
++            snapshot.right[line] = right and right:GetText()
++        end
++    end
++    if equipmentReadCache then equipmentReadCache[slot] = snapshot end
++    return hasItem, snapshot
++end
+ 
+ local L = BCS["L"]
+ local L_RACE = BCS["L_RACE"]
+@@ -180,39 +231,39 @@
+ 	hit_debuff = 0
+ 	
+ 	for slot=0, MAX_INVENTORY_SLOTS do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		if hasItem then
+ 
+-			local MAX_LINES = BCS_Tooltip:NumLines()
++			local MAX_LINES = equipment.count
+ 			local SET_NAME = nil
+ 			
+ 			for line=1, MAX_LINES do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+-				if left:GetText() then
+-					local _,_, value = strfind(left:GetText(), L["Equip: Improves your chance to hit by (%d)%%."])
++				local left = equipment.left[line]
++				if left then
++					local _,_, value = strfind(left, L["Equip: Improves your chance to hit by (%d)%%."])
+ 					if value then
+ 						hit = hit + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L["/Hit %+(%d+)"])
++					_,_, value = strfind(left, L["/Hit %+(%d+)"])
+ 					if value then
+ 						hit = hit + tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), L_HIT["Rune_of_the_Guard_Captain"])
++					_,_, value = strfind(left, L_HIT["Rune_of_the_Guard_Captain"])
+ 					if value then
+ 						hit = hit + tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), L_HIT["Signet_of_Howling_Nightmares"])
++					_,_, value = strfind(left, L_HIT["Signet_of_Howling_Nightmares"])
+ 					if value then
+ 						hit = hit - tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+-					_,_, value = strfind(left:GetText(), L["^Set: Improves your chance to hit by (%d)%%."])
++					_,_, value = strfind(left, L["^Set: Improves your chance to hit by (%d)%%."])
+ 					if value and SET_NAME and not tContains(Hit_Set_Bonus, SET_NAME) then
+ 						tinsert(Hit_Set_Bonus, SET_NAME)
+ 						hit = hit + tonumber(value)
+@@ -411,13 +462,13 @@
+ 	local ranged_hit = melee_hit
+ 	local debuff = hit_debuff
+ 
+-	local hasItem = BCS_Tooltip:SetInventoryItem("player", 18) -- ranged enchant
++	local hasItem, equipment = ReadEquipmentTooltip(18) -- ranged enchant
+ 	if hasItem then
+-		local MAX_LINES = BCS_Tooltip:NumLines()
++		local MAX_LINES = equipment.count
+ 		for line=1, MAX_LINES do
+-			local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+-			if left:GetText() then
+-				local _,_, value = strfind(left:GetText(), L["+(%d)%% Hit"])
++			local left = equipment.left[line]
++			if left then
++				local _,_, value = strfind(left, L["+(%d)%% Hit"])
+ 				if value then
+ 					ranged_hit = ranged_hit + tonumber(value)
+ 					line = MAX_LINES
+@@ -472,40 +523,40 @@
+ 	-- scan gear
+ 	local MAX_INVENTORY_SLOTS = 19
+ 	for slot=0, MAX_INVENTORY_SLOTS do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		
+ 		if hasItem then
+ 			local SET_NAME
+-			local MAX_LINES = BCS_Tooltip:NumLines()
++			local MAX_LINES = equipment.count
+ 			
+ 			for line=1, MAX_LINES do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
++				local left = equipment.left[line]
+ 				
+-				if left:GetText() then
+-					local _,_, value = strfind(left:GetText(), L_SPELLHIT["Equip: Improves your chance to hit with spells by (%d)%%."])
++				if left then
++					local _,_, value = strfind(left, L_SPELLHIT["Equip: Improves your chance to hit with spells by (%d)%%."])
+ 					if value then
+ 						hit = hit + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELLHIT["/Spell Hit %+(%d+)"])
++					_,_, value = strfind(left, L_SPELLHIT["/Spell Hit %+(%d+)"])
+ 					if value then
+ 						hit = hit + tonumber(value)
+ 					end
+ 
+-					_,_, value = strfind(left:GetText(), L_SPELLHIT["Scythe_of_Elune"])
++					_,_, value = strfind(left, L_SPELLHIT["Scythe_of_Elune"])
+ 					if value then
+ 						hit = hit + tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), L_SPELLHIT["Rune_of_the_Guard_Captain"])
++					_,_, value = strfind(left, L_SPELLHIT["Rune_of_the_Guard_Captain"])
+ 					if value then
+ 						hit = hit + tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+-					_, _, value = strfind(left:GetText(), L_SPELLHIT["^Set: Improves your chance to hit with spells by (%d)%%."])
++					_, _, value = strfind(left, L_SPELLHIT["^Set: Improves your chance to hit with spells by (%d)%%."])
+ 					if value and SET_NAME and not tContains(hit_Set_Bonus, SET_NAME) then
+ 						tinsert(hit_Set_Bonus, SET_NAME)
+ 						hit = hit + tonumber(value)
+@@ -690,12 +741,12 @@
+ 	local MAX_INVENTORY_SLOTS = 19
+ 	for slot=0, MAX_INVENTORY_SLOTS do
+ 		if slot == 18 then  --远程武器处理专用
+-			local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++			local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 			if hasItem then
+-				for line=1, BCS_Tooltip:NumLines() do
+-					local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+-					if left and left:GetText() then
+-						local _,_, value = strfind(left:GetText(), L_RANGECRIT["RANGECRIT_1"])
++				for line=1, equipment.count do
++					local left = equipment.left[line]
++					if left then
++						local _,_, value = strfind(left, L_RANGECRIT["RANGECRIT_1"])
+ 						if value then
+ 							crit = crit + tonumber(value)
+ 						end
+@@ -772,69 +823,69 @@
+ 	local MAX_INVENTORY_SLOTS = 19
+ 	
+ 	for slot=0, MAX_INVENTORY_SLOTS do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		
+ 		if hasItem then
+ 			local SET_NAME = nil
+ 			
+-			for line=1, BCS_Tooltip:NumLines() do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+-
+-				if left:GetText() then
+-					local _,_, value = strfind(left:GetText(), L_SPELLCRIT["Equip: Improves your chance to get a critical strike with spells by (%d)%%."])
++			for line=1, equipment.count do
++				local left = equipment.left[line]
++
++				if left then
++					local _,_, value = strfind(left, L_SPELLCRIT["Equip: Improves your chance to get a critical strike with spells by (%d)%%."])
+ 					if value then
+ 						spellCrit = spellCrit + tonumber(value)
+ 					end
+ 
+-					_,_, value = strfind(left:GetText(), L_SPELLCRIT["Eye of Diminution"])
++					_,_, value = strfind(left, L_SPELLCRIT["Eye of Diminution"])
+ 					if value then
+ 						spellCrit = spellCrit + tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), L_SPELLCRIT["Brilliant_Wizard_Oil"])
++					_,_, value = strfind(left, L_SPELLCRIT["Brilliant_Wizard_Oil"])
+ 					if value then
+ 						spellCrit = spellCrit + 1
+ 					end
+ 
+-					_,_,_, value = strfind(left:GetText(), L_SPELLCRIT["Power of the Scourge"])
++					_,_,_, value = strfind(left, L_SPELLCRIT["Power of the Scourge"])
+ 					if value then
+ 						spellCrit = spellCrit + tonumber(value)
+ 					end
+ 
+-					_,_,_, value = strfind(left:GetText(), L_SPELLCRIT["Scythe_of_Elune"])
++					_,_,_, value = strfind(left, L_SPELLCRIT["Scythe_of_Elune"])
+ 					if value then
+ 						spellCrit = spellCrit + tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), L_SPELLCRIT["Mantle_of_the_Horusath"])
++					_,_, value = strfind(left, L_SPELLCRIT["Mantle_of_the_Horusath"])
+ 					if value then
+ 						spellCrit = spellCrit + tonumber(value)
+ 					end
+ 					
+ 					
+ 
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+ 
+-					_, _, value = strfind(left:GetText(), L_SPELLCRIT["^Set: Improves your chance to get a critical strike with spells by (%d)%%."])
++					_, _, value = strfind(left, L_SPELLCRIT["^Set: Improves your chance to get a critical strike with spells by (%d)%%."])
+ 					if value and SET_NAME and not tContains(Crit_Set_Bonus, SET_NAME) then
+ 						tinsert(Crit_Set_Bonus, SET_NAME)
+ 						spellCrit = spellCrit + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELLCRIT["nature_spell_crit_set_1"])
++					_,_, value = strfind(left, L_SPELLCRIT["nature_spell_crit_set_1"])
+ 					if value and SET_NAME and not tContains(Crit_Set_Bonus, SET_NAME) then
+ 						tinsert(Crit_Set_Bonus, SET_NAME)
+ 						spellCritBySchool[L.SPELL_SCHOOL_NATURE] = spellCritBySchool[L.SPELL_SCHOOL_NATURE] or 0 + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELLCRIT["holy_spell_crit_set_1"])
++					_,_, value = strfind(left, L_SPELLCRIT["holy_spell_crit_set_1"])
+ 					if value and SET_NAME and not tContains(Crit_Set_Bonus, SET_NAME) then
+ 						tinsert(Crit_Set_Bonus, SET_NAME)
+ 						spellCritBySchool[L.SPELL_SCHOOL_HOLY] = spellCritBySchool[L.SPELL_SCHOOL_HOLY] or 0 + tonumber(value)
+ 					end
+ 					if class == "SHAMAN" then
+-						_,_, value = strfind(left:GetText(), L_SPELLCRIT["shock_spell_crit_set_1"])
++						_,_, value = strfind(left, L_SPELLCRIT["shock_spell_crit_set_1"])
+ 						if value and SET_NAME and not tContains(Crit_Set_Bonus, SET_NAME) then
+ 							tinsert(Crit_Set_Bonus, SET_NAME)
+ 							spellCritBySchool[L.SPELL_SCHOOL_SHOCK] = spellCritBySchool[L.SPELL_SCHOOL_SHOCK] or 0 + tonumber(value)
+@@ -1069,184 +1120,184 @@
+ 		
+ 	-- scan gear
+ 	for slot=0, MAX_INVENTORY_SLOTS do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		if hasItem then
+ 			local SET_NAME
+-			for line=1, BCS_Tooltip:NumLines() do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+-				if left:GetText() then
+-					local _,_, value = strfind(left:GetText(), L_SPELLPOWER["Equip: Increases damage and healing done by magical spells and effects by up to (%d+)."])
++			for line=1, equipment.count do
++				local left = equipment.left[line]
++				if left then
++					local _,_, value = strfind(left, L_SPELLPOWER["Equip: Increases damage and healing done by magical spells and effects by up to (%d+)."])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 					end
+ 
+-					_,_, value = strfind(left:GetText(), L_SPELLPOWER["jewel_5_spell_power"])
++					_,_, value = strfind(left, L_SPELLPOWER["jewel_5_spell_power"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 					end
+ 
+-					_,_, value = strfind(left:GetText(), L_SPELLPOWER["Desecration"])
++					_,_, value = strfind(left, L_SPELLPOWER["Desecration"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 					end
+ 														
+-					_,_, value,_ = strfind(left:GetText(), L_SPELLPOWER["Atiesh, Greatstaff of the Guardian_Druid"])
++					_,_, value,_ = strfind(left, L_SPELLPOWER["Atiesh, Greatstaff of the Guardian_Druid"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 						damagePower = damagePower + tonumber(value)
+ 					end
+ 
+-					_,_, value,_ = strfind(left:GetText(), L_SPELLPOWER["Atiesh, Greatstaff of the Guardian_Priest"])
++					_,_, value,_ = strfind(left, L_SPELLPOWER["Atiesh, Greatstaff of the Guardian_Priest"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 						damagePower = damagePower + tonumber(value)
+ 					end
+ 
+-					_,_,_,_, value = strfind(left:GetText(), L_SPELLPOWER["Scythe_of_Elune"])
++					_,_,_,_, value = strfind(left, L_SPELLPOWER["Scythe_of_Elune"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 						damagePower = damagePower + tonumber(value)
+ 					end
+ 
+-					_,_, value,_ = strfind(left:GetText(), L_SPELLPOWER["Power of the Scourge"])
++					_,_, value,_ = strfind(left, L_SPELLPOWER["Power of the Scourge"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 					end
+ 						
+-					_,_, value = strfind(left:GetText(), L_SPELLPOWER["Spell Damage %+(%d+)"])
++					_,_, value = strfind(left, L_SPELLPOWER["Spell Damage %+(%d+)"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELLPOWER["^%+(%d+) Spell Damage and Healing"])
++					_,_, value = strfind(left, L_SPELLPOWER["^%+(%d+) Spell Damage and Healing"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELLPOWER["^%+(%d+) Damage and Healing Spells"])
++					_,_, value = strfind(left, L_SPELLPOWER["^%+(%d+) Damage and Healing Spells"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELLPOWER["fm_12_spell_damage"])
++					_,_, value = strfind(left, L_SPELLPOWER["fm_12_spell_damage"])
+ 					if value then
+ 						spellPower = spellPower + tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), L_SPELLPOWER["Minor_Wizard_Oil"])
++					_,_, value = strfind(left, L_SPELLPOWER["Minor_Wizard_Oil"])
+ 					if value then
+ 						spellPower = spellPower + 8
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELLPOWER["Wizard_Oil"])
++					_,_, value = strfind(left, L_SPELLPOWER["Wizard_Oil"])
+ 					if value then
+ 						spellPower = spellPower + 24
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELLPOWER["Brilliant_Wizard_Oil"])
++					_,_, value = strfind(left, L_SPELLPOWER["Brilliant_Wizard_Oil"])
+ 					if value then
+ 						spellPower = spellPower + 36
+ 					end
+ 					
+ 						
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Equip: Increases damage done by Arcane spells and effects by up to (%d+)."])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Arcane spells and effects by up to (%d+)."])
+ 					if value then
+ 						arcanePower = arcanePower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["^%+(%d+) Arcane Spell Damage"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Arcane Spell Damage"])
+ 					if value then
+ 						arcanePower = arcanePower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Netherwind Epaulets"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Netherwind Epaulets"])
+ 					if value then
+ 						arcanePower = arcanePower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["glove_20_arcane_power"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["glove_20_arcane_power"])
+ 					if value then
+ 						arcanePower = arcanePower + tonumber(value)
+ 					end
+ 						
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Equip: Increases damage done by Fire spells and effects by up to (%d+)."])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Fire spells and effects by up to (%d+)."])
+ 					if value then
+ 						firePower = firePower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Fire Damage %+(%d+)"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Fire Damage %+(%d+)"])
+ 					if value then
+ 						firePower = firePower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["^%+(%d+) Fire Spell Damage"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Fire Spell Damage"])
+ 					if value then
+ 						firePower = firePower + tonumber(value)
+ 					end
+ 						
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Equip: Increases damage done by Frost spells and effects by up to (%d+)."])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Frost spells and effects by up to (%d+)."])
+ 					if value then
+ 						frostPower = frostPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Frost Damage %+(%d+)"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Frost Damage %+(%d+)"])
+ 					if value then
+ 						frostPower = frostPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Frost_Spell_Damage1"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Frost_Spell_Damage1"])
+ 					if value then
+ 						frostPower = frostPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["^%+(%d+) Frost Spell Damage"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Frost Spell Damage"])
+ 					if value then
+ 						frostPower = frostPower + tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Equip: Increases damage done by Holy spells and effects by up to (%d+)."])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Holy spells and effects by up to (%d+)."])
+ 					if value then
+ 						holyPower = holyPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["^%+(%d+) Holy Spell Damage"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Holy Spell Damage"])
+ 					if value then
+ 						holyPower = holyPower + tonumber(value)
+ 					end
+ 						
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Equip: Increases damage done by Nature spells and effects by up to (%d+)."])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Nature spells and effects by up to (%d+)."])
+ 					if value then
+ 						naturePower = naturePower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["^%+(%d+) Nature Spell Damage"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Nature Spell Damage"])
+ 					if value then
+ 						naturePower = naturePower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["jewel_9_nature_power"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["jewel_9_nature_power"])
+ 					if value then
+ 						naturePower = naturePower + tonumber(value)
+ 					end
+ 				
+ 						
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Equip: Increases damage done by Shadow spells and effects by up to (%d+)."])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Shadow spells and effects by up to (%d+)."])
+ 					if value then
+ 						shadowPower = shadowPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Equip: Increases damage done by Shadow spells and effects by up (%d+)."])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Equip: Increases damage done by Shadow spells and effects by up (%d+)."])
+ 					if value then
+ 						shadowPower = shadowPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Shadow_effect_3"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Shadow_effect_3"])
+ 					if value then
+ 						shadowPower = shadowPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["Shadow Damage %+(%d+)"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["Shadow Damage %+(%d+)"])
+ 					if value then
+ 						shadowPower = shadowPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_SPELL_SCHOOL["^%+(%d+) Shadow Spell Damage"])
++					_,_, value = strfind(left, L_SPELL_SCHOOL["^%+(%d+) Shadow Spell Damage"])
+ 					if value then
+ 						shadowPower = shadowPower + tonumber(value)
+ 					end
+ 						
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+ 
+-					_, _, value = strfind(left:GetText(), L_SPELLPOWER["^Set: Increases damage and healing done by magical spells and effects by up to (%d+)%."])
++					_, _, value = strfind(left, L_SPELLPOWER["^Set: Increases damage and healing done by magical spells and effects by up to (%d+)%."])
+ 					if value and SET_NAME and not tContains(SpellPower_Set_Bonus, SET_NAME) then
+ 						tinsert(SpellPower_Set_Bonus, SET_NAME)
+ 						spellPower = spellPower + tonumber(value)
+ 					end
+ 					
+-					_, _, value = strfind(left:GetText(), L_SPELL_SCHOOL["Set_Nature_damage"])
++					_, _, value = strfind(left, L_SPELL_SCHOOL["Set_Nature_damage"])
+ 					if value and SET_NAME and not tContains(SpellPower_Set_Bonus, SET_NAME) then
+ 						tinsert(SpellPower_Set_Bonus, SET_NAME)
+ 						naturePower = naturePower + tonumber(value)
+@@ -1459,78 +1510,78 @@
+ 	local MAX_INVENTORY_SLOTS = 19
+ 	
+ 	for slot=0, MAX_INVENTORY_SLOTS do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		
+ 		if hasItem then
+ 			local SET_NAME
+ 			
+-			for line=1, BCS_Tooltip:NumLines() do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
++			for line=1, equipment.count do
++				local left = equipment.left[line]
+ 				
+-				if left:GetText() then
+-					local _,_, value = strfind(left:GetText(), L_HEALPOWER["Equip: Increases healing done by spells and effects by up to (%d+)."])
++				if left then
++					local _,_, value = strfind(left, L_HEALPOWER["Equip: Increases healing done by spells and effects by up to (%d+)."])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_HEALPOWER["Healing Spells %+(%d+)"])
++					_,_, value = strfind(left, L_HEALPOWER["Healing Spells %+(%d+)"])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_HEALPOWER["Equip: Increases healing (%d+)."])
++					_,_, value = strfind(left, L_HEALPOWER["Equip: Increases healing (%d+)."])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_HEALPOWER["^%+(%d+) Healing Spells"])
++					_,_, value = strfind(left, L_HEALPOWER["^%+(%d+) Healing Spells"])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+ 
+-					_,_, value = strfind(left:GetText(), L_HEALPOWER["jewel_12_heal_power"])
++					_,_, value = strfind(left, L_HEALPOWER["jewel_12_heal_power"])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+ 
+-					_,_, value = strfind(left:GetText(), L_HEALPOWER["Hammer of the Twisting Nether"])
++					_,_, value = strfind(left, L_HEALPOWER["Hammer of the Twisting Nether"])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+ 
+-					_,_, value = strfind(left:GetText(), L_HEALPOWER["Scepter of the False Prophet"])
++					_,_, value = strfind(left, L_HEALPOWER["Scepter of the False Prophet"])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+ 
+-					_,_,_, value = strfind(left:GetText(), L_HEALPOWER["Atiesh, Greatstaff of the Guardian_Druid"])
++					_,_,_, value = strfind(left, L_HEALPOWER["Atiesh, Greatstaff of the Guardian_Druid"])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+ 
+-					_,_,_, value = strfind(left:GetText(), L_HEALPOWER["Atiesh, Greatstaff of the Guardian_Priest"])
++					_,_,_, value = strfind(left, L_HEALPOWER["Atiesh, Greatstaff of the Guardian_Priest"])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+ 
+-					_,_, value = strfind(left:GetText(), L_HEALPOWER["Resilience of the Scourge"])
++					_,_, value = strfind(left, L_HEALPOWER["Resilience of the Scourge"])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+ 					
+ 					--[[
+-					_,_, value = strfind(left:GetText(), L_HEALPOWER["fm_12_spell_damage"])
++					_,_, value = strfind(left, L_HEALPOWER["fm_12_spell_damage"])
+ 					if value then
+ 						healPower = healPower + tonumber(value)
+ 					end
+ 					]]
+-					_,_, value = strfind(left:GetText(), L_HEALPOWER["Brilliant_Mana_Oil"])
++					_,_, value = strfind(left, L_HEALPOWER["Brilliant_Mana_Oil"])
+ 					if value then
+ 						healPower = healPower + 25
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+-					_, _, value = strfind(left:GetText(), L_HEALPOWER["^Set: Increases healing done by spells and effects by up to (%d+)%."])
++					_, _, value = strfind(left, L_HEALPOWER["^Set: Increases healing done by spells and effects by up to (%d+)%."])
+ 					if value and SET_NAME and not tContains(healPower_Set_Bonus, SET_NAME) then
+ 						tinsert(healPower_Set_Bonus, SET_NAME)
+ 						healPower = healPower + tonumber(value)
+@@ -1714,63 +1765,63 @@
+ 	local arcane_mage_3T2 = 0
+ 	
+ 	for slot=0, MAX_INVENTORY_SLOTS do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		 
+ 		
+ 		
+ 		if hasItem then
+ 			local SET_NAME
+-			for line=1, BCS_Tooltip:NumLines() do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
++			for line=1, equipment.count do
++				local left = equipment.left[line]
+ 				
+-				if left:GetText() then
+-					local _,_, value = strfind(left:GetText(), L_MANAREGEN["^Mana Regen %+(%d+)"])
++				if left then
++					local _,_, value = strfind(left, L_MANAREGEN["^Mana Regen %+(%d+)"])
+ 					if value then
+ 						mp5 = mp5 + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_MANAREGEN["Equip: Restores (%d+) mana per 5 sec."])
++					_,_, value = strfind(left, L_MANAREGEN["Equip: Restores (%d+) mana per 5 sec."])
+ 					if value then
+ 						mp5 = mp5 + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_MANAREGEN["^%+(%d+) mana every 5 sec."])
++					_,_, value = strfind(left, L_MANAREGEN["^%+(%d+) mana every 5 sec."])
+ 					if value then
+ 						mp5 = mp5 + tonumber(value)
+ 					end
+-					_,_,_, value = strfind(left:GetText(), L_MANAREGEN["Resilience of the Scourge"])
++					_,_,_, value = strfind(left, L_MANAREGEN["Resilience of the Scourge"])
+ 					if value then
+ 						mp5 = mp5 + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_MANAREGEN["Brilliant_Mana_Oil"])
++					_,_, value = strfind(left, L_MANAREGEN["Brilliant_Mana_Oil"])
+ 					if value then
+ 						mp5 = mp5 + 12
+ 					end
+ 		
+ 					
+-					_,_, value = strfind(left:GetText(), L_MANAREGEN["cast_mana_percent_regen_1"])
++					_,_, value = strfind(left, L_MANAREGEN["cast_mana_percent_regen_1"])
+ 					if value then
+ 						casting_percent = casting_percent + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_MANAREGEN["cast_mana_percent_regen_2"])
++					_,_, value = strfind(left, L_MANAREGEN["cast_mana_percent_regen_2"])
+ 					if value then
+ 						casting_percent = casting_percent + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_MANAREGEN["cast_mana_percent_regen_3"])
++					_,_, value = strfind(left, L_MANAREGEN["cast_mana_percent_regen_3"])
+ 					if value then
+ 						casting_percent = casting_percent + tonumber(value)
+ 					end
+ 					
+ 					--from set
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+-					_, _, value = strfind(left:GetText(), L_MANAREGEN["cast_mana_percent_regen_set"])
++					_, _, value = strfind(left, L_MANAREGEN["cast_mana_percent_regen_set"])
+ 					if value and SET_NAME and not tContains(ManaRegenCastPercent_Set_bonus, SET_NAME) then
+ 						tinsert(ManaRegenCastPercent_Set_bonus, SET_NAME)
+ 						casting_percent = casting_percent + tonumber(value)
+ 					end
+ 					
+-					_, _, value = strfind(left:GetText(), L_MANAREGEN["arcane_mage_3T2"])
++					_, _, value = strfind(left, L_MANAREGEN["arcane_mage_3T2"])
+ 					if value then
+ 						arcane_mage_3T2 = 1
+ 					end
+@@ -1965,41 +2016,41 @@
+ 	local MAX_INVENTORY_SLOTS = 19
+ 	--from gear
+ 	for slot=0, MAX_INVENTORY_SLOTS do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		if hasItem then
+ 			local SET_NAME = nil
+-			for line=1, BCS_Tooltip:NumLines() do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
++			for line=1, equipment.count do
++				local left = equipment.left[line]
+ 				
+-				if left:GetText() then
+-
+-					local _,_, value = strfind(left:GetText(), L_HASTE["HASTE_improve_equip_1"])
++				if left then
++
++					local _,_, value = strfind(left, L_HASTE["HASTE_improve_equip_1"])
+ 					if value then
+ 						haste = haste * (1+tonumber(value)/100)
+ 					end
+ 
+-					local _,_, value = strfind(left:GetText(), L_HASTE["HASTE_improve_equip_2"])
++					local _,_, value = strfind(left, L_HASTE["HASTE_improve_equip_2"])
+ 					if value then
+ 						haste = haste * (1+tonumber(value)/100)
+ 					end
+ 
+-					local _,_, value = strfind(left:GetText(), L_HASTE["HASTE_improve_enchant"])
++					local _,_, value = strfind(left, L_HASTE["HASTE_improve_enchant"])
+ 					if value then
+ 						haste = haste * (1+tonumber(value)/100)
+ 					end
+ 
+-					local _,_, value = strfind(left:GetText(), L_HASTE["Libram of Rapidity"])
++					local _,_, value = strfind(left, L_HASTE["Libram of Rapidity"])
+ 					if value then
+ 						haste = haste * (1+tonumber(value)/100)
+ 					end
+ 					
+ 					--from set
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+ 
+-					_, _, value = strfind(left:GetText(), L_HASTE["HASTE_improve_set"])
++					_, _, value = strfind(left, L_HASTE["HASTE_improve_set"])
+ 					if value and SET_NAME and not tContains(haste_Set_bonus, SET_NAME) then
+ 						tinsert(haste_Set_bonus, SET_NAME)
+ 						haste = haste * (1+tonumber(value)/100)
+@@ -2081,12 +2132,12 @@
+ 		return nil
+ 	end 
+ 	local weaponSpeed = 0
+-	local hasItem = BCS_Tooltip:SetInventoryItem("player", slotID)
++	local hasItem, equipment = ReadEquipmentTooltip(slotID)
+ 	if hasItem then
+-		for line=1, BCS_Tooltip:NumLines() do
+-			local right = getglobal(BCS_Prefix .. "TextRight" .. line)
+-			if right:GetText() then
+-				local _, _, v1, v2 = strfind(right:GetText(), L["weaponSpeed"])
++		for line=1, equipment.count do
++			local right = equipment.right[line]
++			if right then
++				local _, _, v1, v2 = strfind(right, L["weaponSpeed"])
+ 				if v1 then
+ 					weaponSpeed = v2/100+v1
+ 					break
+@@ -2138,22 +2189,22 @@
+ 	local armor = 0
+ 	local Set_bonus = {}
+ 	for slot=0, 19 do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		if hasItem then
+ 			local SET_NAME = nil
+-			for line=1, BCS_Tooltip:NumLines() do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+-				if left:GetText() then
+-					local _,_, value = strfind(left:GetText(), L_ARMOR["gainarmor"])
++			for line=1, equipment.count do
++				local left = equipment.left[line]
++				if left then
++					local _,_, value = strfind(left, L_ARMOR["gainarmor"])
+ 					if value then
+ 						armor = armor + tonumber(value)
+ 					end
+ 					--from set
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+-					_, _, value = strfind(left:GetText(), L_ARMOR["gainarmor_set"])
++					_, _, value = strfind(left, L_ARMOR["gainarmor_set"])
+ 					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+ 						tinsert(Set_bonus, SET_NAME)
+ 						armor = armor + tonumber(value)
+@@ -2224,32 +2275,32 @@
+ 	--from equip
+ 	local Set_bonus = {}
+ 	for slot=0, 19 do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		if hasItem then
+ 			local SET_NAME = nil
+-			for line=1, BCS_Tooltip:NumLines() do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+-				if left:GetText() then
+-					local _,_, value = strfind(left:GetText(), L_BLOCKVALUE["BLOCKVALUE_1"])
++			for line=1, equipment.count do
++				local left = equipment.left[line]
++				if left then
++					local _,_, value = strfind(left, L_BLOCKVALUE["BLOCKVALUE_1"])
+ 					if value then
+ 						blockvalue = blockvalue + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_BLOCKVALUE["BLOCKVALUE_2"])
++					_,_, value = strfind(left, L_BLOCKVALUE["BLOCKVALUE_2"])
+ 					if value then
+ 						blockvalue = blockvalue + tonumber(value)
+ 					end
+ 					
+ 					--from set
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+-					_, _, value = strfind(left:GetText(), L_BLOCKVALUE["BLOCKVALUE_SET_1"])
++					_, _, value = strfind(left, L_BLOCKVALUE["BLOCKVALUE_SET_1"])
+ 					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+ 						tinsert(Set_bonus, SET_NAME)
+ 						blockvalue = blockvalue + tonumber(value)
+ 					end
+-					_, _, value = strfind(left:GetText(), L_BLOCKVALUE["BLOCKVALUE_SET_2"])
++					_, _, value = strfind(left, L_BLOCKVALUE["BLOCKVALUE_SET_2"])
+ 					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+ 						tinsert(Set_bonus, SET_NAME)
+ 						blockvalue = blockvalue + tonumber(value)
+@@ -2338,38 +2389,38 @@
+ 	--from equip
+ 	local Set_bonus = {}
+ 	for slot=0, 19 do
+-		local hasItem = BCS_Tooltip:SetInventoryItem("player", slot)
++		local hasItem, equipment = ReadEquipmentTooltip(slot)
+ 		if hasItem then
+ 			local SET_NAME = nil
+-			for line=1, BCS_Tooltip:NumLines() do
+-				local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
+-				if left:GetText() then
+-					local _,_, value = strfind(left:GetText(), L_ARMORPENETRATION["ARMORPENETRATION_1"])
++			for line=1, equipment.count do
++				local left = equipment.left[line]
++				if left then
++					local _,_, value = strfind(left, L_ARMORPENETRATION["ARMORPENETRATION_1"])
+ 					if value then
+ 						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+ 					end
+-					_,_, value = strfind(left:GetText(), L_ARMORPENETRATION["ARMORPENETRATION_2"])
++					_,_, value = strfind(left, L_ARMORPENETRATION["ARMORPENETRATION_2"])
+ 					if value then
+ 						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+ 					end
+ 					
+-					_,_, value = strfind(left:GetText(), L_ARMORPENETRATION["ARMORPENETRATION_3"])
++					_,_, value = strfind(left, L_ARMORPENETRATION["ARMORPENETRATION_3"])
+ 					if value then
+ 						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+ 					end
+ 					
+ 					--[[
+ 					--from set
+-					_,_, value = strfind(left:GetText(), "(.+)（%d/%d）")
++					_,_, value = strfind(left, "(.+)（%d/%d）")
+ 					if value then
+ 						SET_NAME = value
+ 					end
+-					_, _, value = strfind(left:GetText(), L_BLOCKVALUE["ARMORPENETRATION_SET_1"])
++					_, _, value = strfind(left, L_BLOCKVALUE["ARMORPENETRATION_SET_1"])
+ 					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+ 						tinsert(Set_bonus, SET_NAME)
+ 						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+ 					end
+-					_, _, value = strfind(left:GetText(), L_BLOCKVALUE["ARMORPENETRATION_SET_2"])
++					_, _, value = strfind(left, L_BLOCKVALUE["ARMORPENETRATION_SET_2"])
+ 					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
+ 						tinsert(Set_bonus, SET_NAME)
+ 						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+@@ -2671,4 +2722,4 @@
+ 	local _, _, _, _, itemType = GetItemInfo(n)
+ 	if not itemType then return nil end
+ 	return itemType
+-end+end
+--- before/BetterCharacterStats/BetterCharacterStats.lua
++++ after/BetterCharacterStats/BetterCharacterStats.lua
+@@ -270,10 +270,16 @@
+ end
+ ]]
+ 
++local function UpdateBothPaperdollStats()
++	BCS:UpdatePaperdollStats("PlayerStatFrameLeft", IndexLeft)
++	BCS:UpdatePaperdollStats("PlayerStatFrameRight", IndexRight)
++end
+ function BCS:UpdateStats()
+ 	if not BCS:IsCharacterPanelEnabled() then return end
+-	BCS:UpdatePaperdollStats("PlayerStatFrameLeft", IndexLeft)
+-	BCS:UpdatePaperdollStats("PlayerStatFrameRight", IndexRight)
++	BCS:BeginEquipmentRead()
++	local ok, message = pcall(UpdateBothPaperdollStats)
++	BCS:EndEquipmentRead()
++	if not ok then error(message, 0) end
+ end
+ 
+ function BCS:SetStat(statFrame, statIndex)
+--- before/S_ItemTip/InspectFrame.lua
++++ after/S_ItemTip/InspectFrame.lua
+@@ -197,7 +197,7 @@
+ local currentUnit = "player"
+ 
+ --创建主框架
+-local function CreateFrame_Delayed()
++function S_ItemTip_CreateInspectFrame()
+     if S_ItemTip_InspectFrame then return S_ItemTip_InspectFrame end
+     
+     S_ItemTip_InspectFrame = CreateFrame("Frame", "S_ItemTip_InspectFrame_UI", UIParent)
+@@ -715,7 +715,7 @@
+ -- 在查看他人时显示装备面板（根据设置）
+ function S_ItemTip_ShowForInspect(unit)
+     if not S_ItemTip_InspectFrame then
+-        CreateFrame_Delayed()
++        S_ItemTip_CreateInspectFrame()
+     end
+     local frame = S_ItemTip_InspectFrame
+     if frame then
+@@ -730,7 +730,7 @@
+                     frame:SetPoint("TOPLEFT", InspectFrame, "TOPRIGHT", -35, -5.2)
+                 end
+             end
+-            frame:Show()
++            if not frame:IsShown() then frame:Show() end
+             S_ItemTip_UpdateFrame(unit)
+         else
+             frame:Hide()
+@@ -742,7 +742,7 @@
+ --当角色面板打开时
+ function S_ItemTip_OnCharacterShow()
+     if not S_ItemTip_InspectFrame then
+-        CreateFrame_Delayed()
++        S_ItemTip_CreateInspectFrame()
+     end
+ 
+     local frame = S_ItemTip_InspectFrame
+@@ -766,7 +766,7 @@
+                     end
+                 end
+             end
+-            frame:Show()
++            if not frame:IsShown() then frame:Show() end
+             S_ItemTip_UpdateFrame("player")
+         else
+             frame:Hide()
+@@ -905,7 +905,7 @@
+         -- 当查看其他玩家的装备数据准备好时
+         if InspectFrame and InspectFrame:IsShown() and InspectFrame.unit then
+             if not S_ItemTip_InspectFrame then
+-                CreateFrame_Delayed()
++                S_ItemTip_CreateInspectFrame()
+             end
+             local frame = S_ItemTip_InspectFrame
+             if frame then
+@@ -932,7 +932,7 @@
+     elseif msg == "target" then
+         if UnitExists("target") and UnitIsPlayer("target") then
+             if not S_ItemTip_InspectFrame then
+-                CreateFrame_Delayed()
++                S_ItemTip_CreateInspectFrame()
+             end
+             local frame = S_ItemTip_InspectFrame
+             if frame then
+@@ -950,7 +950,7 @@
+     else
+         -- 默认显示自己
+         if not S_ItemTip_InspectFrame then
+-            CreateFrame_Delayed()
++            S_ItemTip_CreateInspectFrame()
+         end
+         local frame = S_ItemTip_InspectFrame
+         if frame then
+--- before/StatCompare/StatCompare.lua
++++ after/StatCompare/StatCompare.lua
+@@ -290,7 +290,7 @@
+     end
+     local sample = {hooks={}, entries={}, elapsed=0}
+     openProfile = sample
+-    local function Install(owner, key, label, script)
++    local function Install(owner, key, label, script, after)
+         if not owner then return end
+         local previous = script and owner:GetScript(key) or owner[key]
+         if type(previous) ~= "function" then return end
+@@ -318,6 +318,7 @@
+                 end
+             end
+             if not results[1] then StopOpenProfile(false); error(results[2],0) end
++            if after then after(UnpackProfileRange(results,2,results.n)) end
+             return UnpackProfileRange(results,2,results.n)
+         end
+         table.insert(sample.hooks,{owner=owner,key=key,previous=previous,wrapper=wrapper,script=script})
+@@ -335,14 +336,27 @@
+     Install(_G,"S_ItemTip_UpdateFrame","装备列表与附魔刷新")
+     Install(_G,"S_ItemTip_OnCharacterShow","装备列表打开处理")
+     Install(_G,"S_ItemTip_RelayoutStatCompare","装备列表调用的布局处理")
+-    Install(S_ItemTip_InspectFrame,"Show","装备列表显示操作")
+-    Install(S_ItemTip_InspectFrame,"ClearAllPoints","装备列表清空锚点")
+-    Install(S_ItemTip_InspectFrame,"SetPoint","装备列表定位")
++    local profiledEquipment
++    local function ProfileEquipment(frame)
++        if not frame or frame == profiledEquipment then return end
++        profiledEquipment = frame
++        Install(frame,"Show","装备列表显示操作")
++        Install(frame,"ClearAllPoints","装备列表清空锚点")
++        Install(frame,"SetPoint","装备列表定位")
++    end
++    ProfileEquipment(S_ItemTip_InspectFrame)
++    Install(_G,"S_ItemTip_CreateInspectFrame","装备列表首次创建",false,ProfileEquipment)
+     Install(CharacterModelFrame,"SetUnit","角色三维模型载入")
+     Install(CharacterModelFrame,"RefreshUnit","角色三维模型刷新")
+     Install(BetterCharacterAttributesFrame,"OnShow","BCS 子属性区显示",true)
+     Install(ItemSocre,"ScanUnit","装等计算")
+     Install(BCS,"UpdateStats","BCS 角色属性刷新")
++    Install(BCS,"GetLiveSpellPower","BCS 法伤计算")
++    Install(BCS,"GetLiveSpellHitRating","BCS 法术命中计算")
++    Install(BCS,"GetLiveSpellCritChance","BCS 法术暴击计算")
++    Install(BCS,"GetLiveHealingPower","BCS 治疗计算")
++    Install(BCS,"GetLiveManaRegen","BCS 回蓝计算")
++    Install(BCS,"GetLiveHaste","BCS 急速计算")
+     Install(BCS,"SyncCharacterPanelContent","角色属性区域切换")
+     Install(BCS and BCS.PropertiesPanel,"GetDisplayLines","浮动属性内容计算")
+     Install(_G,"SCRelayoutPanels","面板布局")

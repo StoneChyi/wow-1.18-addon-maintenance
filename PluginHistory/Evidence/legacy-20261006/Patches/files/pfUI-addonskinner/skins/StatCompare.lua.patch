@@ -1,0 +1,16 @@
+--- a/pfUI-addonskinner/skins/StatCompare.lua
++++ b/pfUI-addonskinner/skins/StatCompare.lua
+@@ -24,7 +24,13 @@
+ end
+ 
+ ReposSpellButton(StatCompareSelfFrameSpellsButton, StatCompareSelfFrame)
+ ReposSpellButton(StatCompareTargetFrameSpellsButton, StatCompareTargetFrame)
+ 
++if SCApplyPanelStyle then
++  SCApplyPanelStyle(StatCompareSelfFrame)
++  SCApplyPanelStyle(StatCompareTargetFrame)
++end
++if SCRequestPanelLayout then SCRequestPanelLayout() end
++
+   pfUI.addonskinner:UnregisterSkin("StatCompare")
+ end)

@@ -1,0 +1,610 @@
+{
+  "date": "2026-10-06",
+  "timezone": "Asia/Shanghai",
+  "root": "E:\\1.18\\Interface\\AddOns",
+  "generatedAt": "2026-10-06 09:44:18",
+  "confirmedAddonCount": 16,
+  "note": "Inventory only; no source backup. Timestamps cross-checked against modification records. CatPotion is an installation, not a confirmed personal source edit.",
+  "files": [
+    {
+      "path": "ActionBarProfiles/ActionBarProfiles.lua",
+      "addon": "ActionBarProfiles",
+      "shanghaiModified": "2026-10-06 09:28:47",
+      "bytes": 22259,
+      "sha256": "A10FA80903E38477E32CC07DC57FB0923508F4A7F1BD597006C9D639569DC467",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "BetterCharacterStats/BCS_PropertiesPanel.lua",
+      "addon": "BetterCharacterStats",
+      "shanghaiModified": "2026-10-06 09:34:54",
+      "bytes": 73241,
+      "sha256": "BB36DE2B5F492926BDEB39C9760D998653991533802FB0904D1E042A9FB515FB",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "BetterCharacterStats/BetterCharacterStats.lua",
+      "addon": "BetterCharacterStats",
+      "shanghaiModified": "2026-10-06 08:06:41",
+      "bytes": 44501,
+      "sha256": "85B481BC27E3ABFD4E0D2898F4D4F34892B42484EE53E7551F3963F76C2706FA",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "BetterCharacterStats/helper.lua",
+      "addon": "BetterCharacterStats",
+      "shanghaiModified": "2026-10-06 08:17:08",
+      "bytes": 83024,
+      "sha256": "563A76BB39840DA6F0B4896DAEC056E703B8882A152C2D8133CC4A7C9D99D83D",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "BrainwasherPro/BrainwasherPro.lua",
+      "addon": "BrainwasherPro",
+      "shanghaiModified": "2026-10-06 09:28:47",
+      "bytes": 61633,
+      "sha256": "5517D95EEA72A5A1D3D4033C88A2D3B53F5F5459D97DCBCE6FB3DDEC321EC26F",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "Cat/CatEvent-Paladin.lua",
+      "addon": "Cat",
+      "shanghaiModified": "2026-10-06 02:49:12",
+      "bytes": 16146,
+      "sha256": "D149D1379DF49A8EA9588D1D19D987AD73D9D100CF36B50BCDA2153A5D971507",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "Cat/PaladinCJ.lua",
+      "addon": "Cat",
+      "shanghaiModified": "2026-10-06 05:10:35",
+      "bytes": 16897,
+      "sha256": "E2674133017AB6A25664A1954E68FAE7DAA731F15F3FB2B80CF67FA78525244F",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "Cat/PaladinMeleeHeal.lua",
+      "addon": "Cat",
+      "shanghaiModified": "2026-10-06 02:49:12",
+      "bytes": 13520,
+      "sha256": "B933E9E16B1835E2EE4956B0CE67CEB65B955E05CA56350F3B8A9F6FC2EE0EAF",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "Cat/PaladinTank.lua",
+      "addon": "Cat",
+      "shanghaiModified": "2026-10-06 05:33:53",
+      "bytes": 22063,
+      "sha256": "6C289CF3C8A31B28C7EB7459199BD5F937A5C1684DC776A925D2829BF6773905",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "Cat/UI/CatUI-PaladinSeal.lua",
+      "addon": "Cat",
+      "shanghaiModified": "2026-10-06 09:00:25",
+      "bytes": 23539,
+      "sha256": "F1DFA6C64C00110AD0767512AB08868B5B8327417FACD9CDEBAA1DE76D2170E3",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "Cat/UI/Settings-PaladinCJ.lua",
+      "addon": "Cat",
+      "shanghaiModified": "2026-10-06 05:04:58",
+      "bytes": 39299,
+      "sha256": "33EB9445818626C7EE057E069B820546E9CCAA0ED7B249FA8F793F14625D9386",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "Cat/UI/Settings-PaladinTank.lua",
+      "addon": "Cat",
+      "shanghaiModified": "2026-10-06 05:10:35",
+      "bytes": 37099,
+      "sha256": "F8CD25DC2E3CF90EF9E3BAF2B13F4CA73E14F5694FBBC6C2798825EB5C89319E",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "CatPotion/Bindings.xml",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 231,
+      "sha256": "289C08C91B0C70EF4AA938ED7298B4D59C72D7F9C7AF0FAF1DC1DCE783874235",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/CatPotion.toc",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 405,
+      "sha256": "D979EE357E34DA3873436562E82CB3C2F9B3484DAA7B8B3BEE265986F80825BA",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/Core.lua",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 51342,
+      "sha256": "23F61F5FF24EFD1F6EA0E70D5A77F86FB36C71FC201145B1B5FDDD706B297A5E",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/helper_version.ini",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 316,
+      "sha256": "D4BD6AF47CD3F8E9E1A5EDA1302CABF0F32499C9ED3B8855F84FB0646BB0A4AB",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/MinimapButton.lua",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 3706,
+      "sha256": "F5AADEA465F1A2464EF940E0D881DBC413347D488402B19C13E250F0481A7E8D",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/README.md",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 15292,
+      "sha256": "4F318E750FDEB63B547B4D58A09008B0BE50789A187B63755DAF67C846920347",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/Settings.lua",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 49816,
+      "sha256": "85845E77DF29329D14FD0BC54D6CFE37D76B093C2E2F8A131595C273AD527A55",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/tests/multiple-windows.lua",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 7495,
+      "sha256": "79634438FD46309B23FFDCE0A31BDF5BB7599F2805A551E26B3660F90F83C6AC",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/tests/profile-layout.lua",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 2095,
+      "sha256": "1654CE60E49135647069FD3B4FCD923E1C021515E7E8E808354C1B385D076A76",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/tests/weapon-charges.lua",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 10033,
+      "sha256": "EC439D3F3148D2C69ED76906BB182A1D98A4F32FBC0B12BEC38F6ED8B51F4CB3",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/tests/weapon-macro.lua",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 2949,
+      "sha256": "732F202BB2344A4D54BE53EB049D5C62D55FC91C4AFEA8272C54ADBBB90A4AB3",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "CatPotion/Window.lua",
+      "addon": "CatPotion",
+      "shanghaiModified": "2026-10-06 09:17:05",
+      "bytes": 47124,
+      "sha256": "42D2366906B3F35CA816A72C93F3DB667AB138EF8A0E9AD90CE9F33A7E5FFD84",
+      "classification": "installed_not_confirmed_custom"
+    },
+    {
+      "path": "DPSMateX/Damage/DPSMateX_Details_Damage.lua",
+      "addon": "DPSMateX",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 41052,
+      "sha256": "74512438031DDA3061EBF5566592761BD2EB9E5EC8353FB5CC27D3CC6784731D",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateX/Damage/DPSMateX_Details_DamageTotal.lua",
+      "addon": "DPSMateX",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 14762,
+      "sha256": "BEAAF3EACEDEC741856EF7CCB67F2316FBE4B4E222CFF3AB4AA2102F6651722C",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateX/DPSMateX_DataBuilder.lua",
+      "addon": "DPSMateX",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 90040,
+      "sha256": "29D238CECDEFB58B1A532546DEF6A2DD706E350FA99EFE71B32B5E56F72C37B0",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealing.lua",
+      "addon": "DPSMateX",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 32301,
+      "sha256": "28002D08F2ADB774BDF0753A3904FEB2B5C40CEBFF8EE0C73D5D7FD82BE557AC",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealingTotal.lua",
+      "addon": "DPSMateX",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 13905,
+      "sha256": "B2C283A78F124DE1537EA971CA980B96FD1D5F81BBC013600FE2DBFAB1C45301",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateX/DPSMateX_Healing/DPSMateX_Details_Healing.lua",
+      "addon": "DPSMateX",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 32117,
+      "sha256": "F4B4380C648966844EE1764C748C9C1F7BE257E239C509D5C00298A487D13FFC",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateX/DPSMateX_Healing/DPSMateX_Details_HealingTotal.lua",
+      "addon": "DPSMateX",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 13825,
+      "sha256": "DB440241AE5591D34DAC9BC57408227070392CBDF5D67B66D58A65F6222ADDDC",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateX/DPSMateX_Options.lua",
+      "addon": "DPSMateX",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 92034,
+      "sha256": "D16F534946ED30ABCB72E5DE9409014101FF03C1F88E8FC92F02C4462925D46D",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateX/DPSMateX.lua",
+      "addon": "DPSMateX",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 49388,
+      "sha256": "E663FC931EDDF241B1D227CFC6FA664A6E07102D3499C30427BC99574C6D7B0F",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXEncounters/DPSMateXEncounters.toc",
+      "addon": "DPSMateXEncounters",
+      "shanghaiModified": "2026-10-06 08:23:24",
+      "bytes": 381,
+      "sha256": "8B0D51765456CD62256FC99CE5B8543073E990BE295DF8CEFB9031B15126D366",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXEncounters/Encounter.lua",
+      "addon": "DPSMateXEncounters",
+      "shanghaiModified": "2026-10-06 08:37:48",
+      "bytes": 12260,
+      "sha256": "B697D65C62FC5103857F66C81B6FB6FA9FF8C88F3547ADD28885BFF1CC1871AC",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXEncounters/Merge.lua",
+      "addon": "DPSMateXEncounters",
+      "shanghaiModified": "2026-10-06 08:26:01",
+      "bytes": 7318,
+      "sha256": "FB015B0588B3B4E5FA184B3F6D3BF904FED13E9CA828DDFA4703C119C0DB6121",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXEncounters/README.md",
+      "addon": "DPSMateXEncounters",
+      "shanghaiModified": "2026-10-06 08:42:17",
+      "bytes": 5593,
+      "sha256": "111AA487FDDD4AE0D11434C51AABA23105B11B8F25B7218FC51D8AFA2B5D77F3",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXEncounters/Views.lua",
+      "addon": "DPSMateXEncounters",
+      "shanghaiModified": "2026-10-06 08:38:33",
+      "bytes": 13317,
+      "sha256": "EA7444541FADE58493184D817EE14729582ACA5E04211005D96EDD8D5D48E7BC",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXExtend/DPSMateX_EDD/DPSMateX_Details_EDDTotal.lua",
+      "addon": "DPSMateXExtend",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 14285,
+      "sha256": "73F3D5BC4E2156C5703B584689DCB02F1E42AF1938EE05FDB7ADFBEB56BB4755",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXExtend/DPSMateX_EDT/DPSMateX_Details_EDTTotal.lua",
+      "addon": "DPSMateXExtend",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 14284,
+      "sha256": "B8EC3B99363B81F56DB03A7FA3529B12C4A35A9B4171880BB39515B846A1AAC9",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXExtend/DPSMateX_HealingTaken/DPSMateX_Details_HealingTakenTotal.lua",
+      "addon": "DPSMateXExtend",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 14863,
+      "sha256": "0D5766E7BC9554023640085BD1823E194911DFA48BCD833AE059A758FF5F2EED",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXExtendMore/DPSMateX_EHealingTaken/DPSMateX_Details_EHealingTakenTotal.lua",
+      "addon": "DPSMateXExtendMore",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 14916,
+      "sha256": "4013AD2943EB007992CA56377FF6FDE91105F2451F863C671D3B13D8705952F7",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXExtendMore/DPSMateX_OHealingTaken/DPSMateX_Details_OHealingTaken.lua",
+      "addon": "DPSMateXExtendMore",
+      "shanghaiModified": "2026-10-06 08:38:33",
+      "bytes": 19626,
+      "sha256": "1775110C874267C8A3D8D7B1484CF0B8CB95295FCB4E22F41FE017CAA8AFF132",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXExtendMore/DPSMateX_OHealingTaken/DPSMateX_Details_OverhealingTakenTotal.lua",
+      "addon": "DPSMateXExtendMore",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 15100,
+      "sha256": "B9E1E998ED3B1C763A664F018D88851B2597BE6F33E2DE7228DB80878CEBB784",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_Overhealing.lua",
+      "addon": "DPSMateXExtendMore",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 32737,
+      "sha256": "D4802C0A960BA2D311E0818BB36D5AD4757D390B03AB3862F9C00B52EFDCDAE8",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXExtendMore/DPSMateX_Overhealing/DPSMateX_Details_OverhealingTotal.lua",
+      "addon": "DPSMateXExtendMore",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 14087,
+      "sha256": "DBC24A9BF37F2D666508C1A952862C1629C160C8456B693925E0824A67074EDB",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXInsights/Core.lua",
+      "addon": "DPSMateXInsights",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 14179,
+      "sha256": "624623AA6FC278F5BEDB020A246650C08D4EED4007599D8AD2C1E9D2A1207F51",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXInsights/Details.lua",
+      "addon": "DPSMateXInsights",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 21398,
+      "sha256": "31D3E6EDC8027BD8536E7036D8DA05B482F8D47DF21D4F80989684C6A6326D7A",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXInsights/DPSMateXInsights.toc",
+      "addon": "DPSMateXInsights",
+      "shanghaiModified": "2026-10-06 07:59:31",
+      "bytes": 450,
+      "sha256": "6A6CAF81C2DE244A846A6E6EA6CC15F7AE705765F57BD9666E4A8BC024111E26",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXInsights/Modules.lua",
+      "addon": "DPSMateXInsights",
+      "shanghaiModified": "2026-10-06 08:33:35",
+      "bytes": 4298,
+      "sha256": "108694451CC1BD3916C9466C0792F31AAF7A8D29C8931118F4E4D57A148AC97D",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXInsights/Parser.lua",
+      "addon": "DPSMateXInsights",
+      "shanghaiModified": "2026-10-06 07:57:24",
+      "bytes": 19643,
+      "sha256": "6CC6D2CDB3B4E3DCA09A0C14EE89A06120EE03F1557AD8FF0F722E0ACAB40046",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "DPSMateXInsights/README.md",
+      "addon": "DPSMateXInsights",
+      "shanghaiModified": "2026-10-06 07:59:32",
+      "bytes": 6206,
+      "sha256": "B7692984356290A4CB9A3173ED630834AC2F83C3CF0C0CFF7AA7C30F0562946B",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "PallyPower/PallyPower-Extensions.lua",
+      "addon": "PallyPower",
+      "shanghaiModified": "2026-10-06 09:25:24",
+      "bytes": 33036,
+      "sha256": "D7D44C5809EB03208A5F79118EECC5A9977E0473DF5C2EF85D85333D02D2B209",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "PallyPower/PallyPower.lua",
+      "addon": "PallyPower",
+      "shanghaiModified": "2026-10-06 04:20:58",
+      "bytes": 69776,
+      "sha256": "F517D0D10B88E8DD89603D3175AA5F5DBE34A7C68A20D06DA6C4DD5041C5B25E",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "PallyPower/PallyPower.toc",
+      "addon": "PallyPower",
+      "shanghaiModified": "2026-10-06 04:05:10",
+      "bytes": 478,
+      "sha256": "6CFA35A55019A9C1A8909097A09B0D90EDFAFB9A94EAB7D43607406A629F5ECF",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "PallyPower/PallyPower.xml",
+      "addon": "PallyPower",
+      "shanghaiModified": "2026-10-06 04:05:10",
+      "bytes": 70546,
+      "sha256": "562B0BBD58CB307360B01F5372E703B6B519E382EB588C9FE5F14452A6D82BE8",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "pfUI-addonskinner/skins/Cat.lua",
+      "addon": "pfUI-addonskinner",
+      "shanghaiModified": "2026-10-06 09:00:25",
+      "bytes": 3119,
+      "sha256": "A8697F6D9F4F51B9CA4859B0B765460F4C5E63B3D8CE2AFAFF39D531994041DC",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "pfUI-addonskinner/skins/PallyPower.lua",
+      "addon": "pfUI-addonskinner",
+      "shanghaiModified": "2026-10-06 04:05:10",
+      "bytes": 7766,
+      "sha256": "92ED72B0D55F4E95698D10798C1C6F43D7F7BBFD47074AB17E26CCC55F6DFB54",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "pfUI-addonskinner/skins/StatCompare.lua",
+      "addon": "pfUI-addonskinner",
+      "shanghaiModified": "2026-10-06 06:53:28",
+      "bytes": 1532,
+      "sha256": "AB68053EA16BB68B6CD905177B49F79E0175F7F2153E10046C9437DF2F7FE7A0",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "PlayerLinkEnhance/PlayerLinkEnhance.lua",
+      "addon": "PlayerLinkEnhance",
+      "shanghaiModified": "2026-10-06 08:51:24",
+      "bytes": 28459,
+      "sha256": "A3ABB31C86F9657403D4DFBC733DD891FA63520C7500605223F9D20C33186989",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "PlayerLinkEnhance/PlayerLinkEnhance.toc",
+      "addon": "PlayerLinkEnhance",
+      "shanghaiModified": "2026-10-06 08:51:24",
+      "bytes": 353,
+      "sha256": "C1A64CA2768EE427CD09AA3091AC04F10EDD8EF159D505A7ADCA76FA22BCF855",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "PlayerLinkEnhance/SaferMenu.lua",
+      "addon": "PlayerLinkEnhance",
+      "shanghaiModified": "2026-10-06 08:47:27",
+      "bytes": 65,
+      "sha256": "26E3108C93278EE76A2AC37034322171C47B7BCF7A95483AF098E334161FFD4C",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "S_ItemTip/InspectFrame.lua",
+      "addon": "S_ItemTip",
+      "shanghaiModified": "2026-10-06 08:25:03",
+      "bytes": 43062,
+      "sha256": "9198AE78619C3861F112941FCDF1A29FB1F9667B0BDDC221431F5A5264893547",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "S_ItemTip/InspectGemAndEnchant.lua",
+      "addon": "S_ItemTip",
+      "shanghaiModified": "2026-10-06 08:30:11",
+      "bytes": 20168,
+      "sha256": "6F784B8B42F4CA865A68F0E397921F719BD4ACC31D9466EFCF2B8446D1AB87BE",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "S_ItemTip/ItemSocre.lua",
+      "addon": "S_ItemTip",
+      "shanghaiModified": "2026-10-06 07:39:38",
+      "bytes": 14639,
+      "sha256": "37308F4CF26EEABE7F6F335CBE6242124C6B9E056966F9367B6BB0E2467A473E",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "StatCompare/PanelLayout.lua",
+      "addon": "StatCompare",
+      "shanghaiModified": "2026-10-06 07:03:51",
+      "bytes": 97,
+      "sha256": "C3EF46C8DB3B7C95A6854891814B60B2D58559D27745FC04E22C2F8B4F431668",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "StatCompare/SCOptions.lua",
+      "addon": "StatCompare",
+      "shanghaiModified": "2026-10-06 06:55:04",
+      "bytes": 9657,
+      "sha256": "0D192C93AED56BE0FF72F50671703D88DB42DB56827C6302232D29DABC36F9FF",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "StatCompare/StatCompare.lua",
+      "addon": "StatCompare",
+      "shanghaiModified": "2026-10-06 08:56:09",
+      "bytes": 89029,
+      "sha256": "AA4C8ECB989D9D9242E82B9F8F37696DA26607F4F0D219BDA1E4D2BE0E8ECA8D",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "StatCompare/StatCompare.toc",
+      "addon": "StatCompare",
+      "shanghaiModified": "2026-10-06 07:03:52",
+      "bytes": 1010,
+      "sha256": "54B0ACE64CC2FD4BC15466AEA5277798186710DCCFBDD07E5425CF38290FED3E",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "StatCompare/StatCompare.xml",
+      "addon": "StatCompare",
+      "shanghaiModified": "2026-10-06 06:53:28",
+      "bytes": 30937,
+      "sha256": "4A7D98A2AFDF3CE998E8A8E5DCF2FFA8C3931848A4F504E6F7447B015E3BE90A",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "STSMmayor/STSMmayor.lua",
+      "addon": "STSMmayor",
+      "shanghaiModified": "2026-10-06 03:03:57",
+      "bytes": 73990,
+      "sha256": "173D647A226324727CCCA808D55AB8D6F2D3CA5A33A99FED9AA1FC5653D9D049",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "STSMmayor/STSMmayor.toc",
+      "addon": "STSMmayor",
+      "shanghaiModified": "2026-10-06 03:03:57",
+      "bytes": 467,
+      "sha256": "13F9549E6C1F76930249ADD75701956B8F25DBE9DCCB38B911157F4CCF22B1E1",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "YGB_OTAlarm/UI.lua",
+      "addon": "YGB_OTAlarm",
+      "shanghaiModified": "2026-10-06 05:16:41",
+      "bytes": 157,
+      "sha256": "C4E4EE68B4752CF7DD341538D5F7EE8B22875AD8D3A07CBDC26C46D143FD2FF7",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "YGB_OTAlarm/YGB_OTAlarm.lua",
+      "addon": "YGB_OTAlarm",
+      "shanghaiModified": "2026-10-06 05:29:05",
+      "bytes": 84983,
+      "sha256": "03F2B01CD26DE887290B26F561849B09C2C0D8D755ED77C36173E6471AC183B6",
+      "classification": "confirmed_custom_addon"
+    },
+    {
+      "path": "YGB_OTAlarm/YGB_OTAlarm.toc",
+      "addon": "YGB_OTAlarm",
+      "shanghaiModified": "2026-10-06 05:16:41",
+      "bytes": 307,
+      "sha256": "57E9872DF0A97CCDE64A60FA47E58E37DE9F9577086FA6BFA3C5D615D7A97887",
+      "classification": "confirmed_custom_addon"
+    }
+  ]
+}

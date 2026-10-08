@@ -1,0 +1,228 @@
+--- BCS_PropertiesPanel.lua.original
++++ BCS_PropertiesPanel.lua
+@@ -1246,34 +1246,19 @@
+ end
+ 
+ function P:DisplayHaste()
+-    if not BCS then
+-        return "急速: 数据不可用"
+-    end
+-
+-    local haste = nil
+-
+-    -- 若安装了 Nampower，使用 GetUnitField 获取施法速度系数
+-    if BCS:IsNampowerReady() then
+-        local castSpeed = GetUnitField("player", "modCastSpeed")
+-        if castSpeed then
+-            haste = (1 / castSpeed - 1) * 100
+-        end
+-    end
+-
+-    -- 回退到 BCS 内置估算
+-    if not haste then
+-        local val1, val2 = BCS:EstimateHaste()
+-        if val1 == nil then
+-            haste = BCS:GetHaste()
+-        else
+-            haste = val1
+-        end
+-    end
+-
+-    if haste == nil then
+-        return "急速: 数据不可用"
+-    end
+-
++    if not BCS then return "急速: 数据不可用" end
++
++    local haste
++    if type(BCS.IsNampowerReady) == "function" then
++        local ok, ready = pcall(BCS.IsNampowerReady, BCS)
++        if ok and ready then
++            local castSpeed = ReadNumber(GetUnitField, "player", "modCastSpeed")
++            if castSpeed and castSpeed > 0 then haste = (1 / castSpeed - 1) * 100 end
++        end
++    end
++    if not IsFiniteNumber(haste) then haste = ReadNumber(BCS.EstimateHaste, BCS) end
++    if not IsFiniteNumber(haste) then haste = ReadNumber(BCS.GetHaste, BCS) end
++    if not IsFiniteNumber(haste) then return "急速: 数据不可用" end
+     return "急速: " .. string.format("%.2f", haste) .. "%"
+ end
+ 
+@@ -1646,6 +1631,7 @@
+ P.frame:RegisterEvent("ADDON_LOADED")
+ P.frame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+ P.frame:RegisterEvent("UNIT_AURA")
++P.frame:RegisterEvent("PLAYER_AURAS_CHANGED")
+ P.frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+ P.frame:RegisterEvent("UNIT_LEVEL")
+ 
+@@ -1672,6 +1658,12 @@
+         P:Init()
+ 
+         DEFAULT_CHAT_FRAME:AddMessage("|cFFF5F54A PropertiesPanel:|r 已加载，输入 /mb 呼出配置选择窗口", 1, 1, 1)
++    end
++
++    if event == "PLAYER_AURAS_CHANGED"
++        or (event == "UNIT_AURA" and (not arg1 or arg1 == "player"))
++        or (event == "UNIT_INVENTORY_CHANGED" and arg1 == "player") then
++        if BCS and BCS.InvalidateHasteCache then BCS:InvalidateHasteCache() end
+     end
+ 
+     -- 切换目标时立即更新减伤参照，其余事件保留节流。
+@@ -1760,6 +1752,16 @@
+         BCSConfig.PropertiesPanel.align = "RIGHT"
+         P:RefreshNow()
+         DEFAULT_CHAT_FRAME:AddMessage("|cFFF5F54A PropertiesPanel:|r 对齐方式设置为右对齐", 1, 1, 1)
++    elseif arg == "haste" then
++        local function Report(label, value)
++            DEFAULT_CHAT_FRAME:AddMessage("急速取值 · " .. label .. ": "
++                .. (IsFiniteNumber(value) and string.format("%.4f", value) or "不可用"))
++        end
++        local castSpeed = ReadNumber(GetUnitField, "player", "modCastSpeed")
++        Report("施法速度系数", castSpeed)
++        Report("接口急速（%）", castSpeed and castSpeed > 0 and (1 / castSpeed - 1) * 100 or nil)
++        Report("施法时间估算（%）", BCS and ReadNumber(BCS.LiveEstimateHaste, BCS))
++        Report("装备与增益统计（%）", BCS and ReadNumber(BCS.GetLiveHaste, BCS))
+     elseif arg == "lock" then
+         P:SetLocked(true, true)
+     elseif arg == "unlock" then
+--- helper.lua.original
++++ helper.lua
+@@ -95,7 +95,7 @@
+ local MELEE_HIT = nil
+ local GET_MELEE_HIT_TIME = 0
+ local HASTE_CACHE = 0
+-local GET_HASTE_CACHE_TIME = 0
++local GET_HASTE_CACHE_TIME = nil
+ local SPELL_CRIT = 0
+ local GET_SPELL_CRIT_TIME = 0
+ local RANGE_HIT = 0
+@@ -133,7 +133,7 @@
+ local GET_ARMORPENETRATION_VALUE_TIME = 0
+ local ESTIMATE_HASTE = 0
+ local ESTIMATE_HASTE_SCHOOL = 0
+-local GET_ESTIMATE_HASTE_TIME = 0
++local GET_ESTIMATE_HASTE_TIME = nil
+ 
+ 
+ 
+@@ -2013,6 +2013,12 @@
+ 	return base, casting, mp5, casting_percent
+ end
+ 
++-- Equipment/aura changes invalidate only the two haste caches.
++function BCS:InvalidateHasteCache()
++	GET_HASTE_CACHE_TIME = nil
++	GET_ESTIMATE_HASTE_TIME = nil
++end
++
+ function BCS:GetHaste()
+ 
+ 	if BCS_GET_ON_DEMAND and not BCS.ForceCalculate then 
+@@ -2556,40 +2562,36 @@
+ 	return spellIndex
+ end
+ 
++local hasteSpellTooltip
+ function BCS:GetSpellCastTime(spellName)
+-    
+ 	local spellIndex = self:GetSpellIndex(spellName)
+-	if not spellIndex then
+-		return nil
+-	end
+-	
+-    local tt = CreateFrame("GameTooltip", "SpellTT"..spellIndex, nil, "GameTooltipTemplate")
+-    tt:SetOwner(UIParent, "ANCHOR_NONE")
+-    tt:SetSpell(spellIndex, BOOKTYPE_SPELL)
+-            
+-    for j = 1, tt:NumLines() do
+-		local line = getglobal("SpellTT"..spellIndex.."TextLeft"..j)
+-        local text = line:GetText()
+-                
+-        if text and string.find(text, "秒施法时间") then
+-			local match = string.match(text, "(%d+[%.]%d+)秒施法时间")
+-            if match then
++	if not spellIndex then return nil end
++	if not hasteSpellTooltip then
++		hasteSpellTooltip = CreateFrame("GameTooltip", "BCSHasteSpellTooltip", nil, "GameTooltipTemplate")
++		hasteSpellTooltip:SetOwner(UIParent, "ANCHOR_NONE")
++	end
++	local tt = hasteSpellTooltip
++	tt:ClearLines()
++	tt:SetSpell(spellIndex, BOOKTYPE_SPELL)
++	local channel = false
++	for j = 1, tt:NumLines() do
++		local line = getglobal("BCSHasteSpellTooltipTextLeft" .. j)
++		local text = line and line:GetText()
++		if text then
++			local _, _, duration = strfind(text, "(%d+%.?%d*)%s*秒施法时间")
++			if not duration and channel then
++				_, _, duration = strfind(text, "在%s*(%d+%.?%d*)%s*秒内")
++			end
++			local seconds = tonumber(duration)
++			if seconds and seconds > 0 then
+ 				tt:Hide()
+-                return string.format("%.2f", tonumber(match))
+-            end
+-		elseif text and string.find(text, "需引导") then
+-			local line = getglobal("SpellTT"..spellIndex.."TextLeft"..j+1)
+-			local text = line:GetText()
+-			local match = string.match(text, "在(%d+[%.]?%d*)秒内")
+-			if match then
+-				tt:Hide()
+-				return string.format("%.2f", tonumber(match))
+-			end
+-		end
+-    end
+-	
+-    tt:Hide()
+-    return nil
++				return seconds
++			end
++			channel = strfind(text, "需引导") ~= nil
++		end
++	end
++	tt:Hide()
++	return nil
+ end
+ 
+ function BCS:EstimateHaste()
+--- Localization.lua.original
++++ Localization.lua
+@@ -192,21 +192,21 @@
+ }
+ 
+ BCS["L_HASTE"] = {
+-	["Libram of Rapidity"] = "^攻击速度 %+(%d)%%",
+-	["HASTE_improve_set"] = "^套装：使你的攻击速度和施法速度提高(%d)%%。",
+-	["HASTE_improve_equip_1"] = "^装备： 使你的攻击速度和施法速度提高(%d)%%。",
+-	["HASTE_improve_equip_2"] = "^装备： 使你的攻击和施法速度提高(%d)%%。",
+-	["HASTE_improve_enchant"] = "^%+(%d)%% 急速",
+-	["HASTE_BUFF_1"] = "^施法速度提高(%d+)%%。",
+-	["HASTE_BUFF_2"] = "^攻击速度和施法速度提高(%d+)%%。",
+-	["HASTE_BUFF_3"] = "^急速提高(%d+)%%。",
+-	["HASTE_PALADIN_ZEAL"] = "^攻击和施法速度提高(%d+)%%。",
+-	["ARCANE_POWER"] = "^施法速度提高(%d+)%%，但损失法力值",
+-	["Atiesh, Greatstaff of the Guardian_Druid_aura"] = "^你的攻击和施法速度提高(%d)%%。",
+-	["HASTE_WARLOCK_Master_Demonologist"] = "^攻击和施法速度提高(%d+)%%，受到治疗减少(%d+)%%。",
+-	
+-	["Contagion_of_Rot"] = "施法速度降低(%d+)%%。",
+-	["Shard_of_Dreams"] = "施法时保持(%d+)%%的法力值回复速度，施法速度提高(%d+)%%。",
++	["Libram of Rapidity"] = "^攻击速度 %+(%d+%.?%d*)%%",
++	["HASTE_improve_set"] = "^套装：使你的攻击速度和施法速度提高(%d+%.?%d*)%%。",
++	["HASTE_improve_equip_1"] = "^装备：%s*使你的攻击速度和施法速度提高(%d+%.?%d*)%%。",
++	["HASTE_improve_equip_2"] = "^装备：%s*使你的攻击和施法速度提高(%d+%.?%d*)%%。",
++	["HASTE_improve_enchant"] = "^%+(%d+%.?%d*)%% 急速",
++	["HASTE_BUFF_1"] = "^施法速度提高(%d+%.?%d*)%%。",
++	["HASTE_BUFF_2"] = "^攻击速度和施法速度提高(%d+%.?%d*)%%。",
++	["HASTE_BUFF_3"] = "^急速提高(%d+%.?%d*)%%。",
++	["HASTE_PALADIN_ZEAL"] = "^攻击和施法速度提高(%d+%.?%d*)%%。",
++	["ARCANE_POWER"] = "^施法速度提高(%d+%.?%d*)%%，但损失法力值",
++	["Atiesh, Greatstaff of the Guardian_Druid_aura"] = "^你的攻击和施法速度提高(%d+%.?%d*)%%。",
++	["HASTE_WARLOCK_Master_Demonologist"] = "^攻击和施法速度提高(%d+%.?%d*)%%，受到治疗减少(%d+%.?%d*)%%。",
++	
++	["Contagion_of_Rot"] = "施法速度降低(%d+%.?%d*)%%。",
++	["Shard_of_Dreams"] = "施法时保持(%d+%.?%d*)%%的法力值回复速度，施法速度提高(%d+%.?%d*)%%。",
+ }
+ 
+ BCS["L_ARMOR"] = {

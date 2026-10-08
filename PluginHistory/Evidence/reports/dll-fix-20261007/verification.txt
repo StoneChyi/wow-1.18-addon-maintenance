@@ -1,0 +1,33 @@
+PASS normal-path parity count=0 base=0x10000000
+PASS normal-path parity count=1 base=0x10000000
+PASS normal-path parity count=8190 base=0x10000000
+PASS normal-path parity count=8191 base=0x10000000
+PASS overflow count=8192 owner=True base=0x10000000
+PASS overflow count=8192 owner=False base=0x10000000
+PASS overflow count=8193 owner=True base=0x10000000
+PASS overflow count=8193 owner=False base=0x10000000
+PASS overflow count=8232 owner=True base=0x10000000
+PASS overflow count=8232 owner=False base=0x10000000
+PASS overflow count=65535 owner=True base=0x10000000
+PASS overflow count=65535 owner=False base=0x10000000
+PASS overflow count=4294967295 owner=True base=0x10000000
+PASS overflow count=4294967295 owner=False base=0x10000000
+PASS corruption reproduction original-weirdperformance.dll candidate=False victim=0x1bcb1bca base=0x10000000
+PASS corruption reproduction weirdperformance.dll candidate=True victim=0x1234568 base=0x10000000
+PASS normal-path parity count=0 base=0x5b730000
+PASS normal-path parity count=1 base=0x5b730000
+PASS normal-path parity count=8190 base=0x5b730000
+PASS normal-path parity count=8191 base=0x5b730000
+PASS overflow count=8192 owner=True base=0x5b730000
+PASS overflow count=8192 owner=False base=0x5b730000
+PASS overflow count=8193 owner=True base=0x5b730000
+PASS overflow count=8193 owner=False base=0x5b730000
+PASS overflow count=8232 owner=True base=0x5b730000
+PASS overflow count=8232 owner=False base=0x5b730000
+PASS overflow count=65535 owner=True base=0x5b730000
+PASS overflow count=65535 owner=False base=0x5b730000
+PASS overflow count=4294967295 owner=True base=0x5b730000
+PASS overflow count=4294967295 owner=False base=0x5b730000
+PASS corruption reproduction original-weirdperformance.dll candidate=False victim=0x1bcb1bca base=0x5b730000
+PASS corruption reproduction weirdperformance.dll candidate=True victim=0x1234568 base=0x5b730000
+PASS PE structure, checksum, imports, entry point and original-section preservation

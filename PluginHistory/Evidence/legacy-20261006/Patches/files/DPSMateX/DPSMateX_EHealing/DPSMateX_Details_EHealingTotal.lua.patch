@@ -1,0 +1,15 @@
+--- a/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealingTotal.lua
++++ b/DPSMateX/DPSMateX_EHealing/DPSMateX_Details_EHealingTotal.lua
+@@ -266,11 +266,11 @@
+ 					totCrit=totCrit+va[3]+va[2]
+ 					totMiss=totMiss+va[2]+va[3]
+ 					crit=crit+va[3]
+ 					miss=miss+va[2]
+ 				else
+-					time = tonumber(strformat("%.2f", DPSMateX.CombatTime["effective"][curKey][name] or 0))
++					time = tonumber(strformat("%.2f", DPSMateX:GetSelectedEffectiveTime(curKey)[name] or 0))
+ 				end
+ 			end
+ 			tinsert(arr, {name, val["i"], crit, miss, time, totCrit, totMiss, cat})
+ 			total = total + val["i"]
+ 		end

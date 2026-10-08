@@ -1,0 +1,12 @@
+## Interface: 11200
+## Title: SimpleRaidTargetIcons  |cffabd473小疯子修改版|r
+## Author: Brodrick (aka Kirov) (小疯子修改)
+## Version: 0.4‑edit
+## Notes: ctrl+左键或双击快速标记；含可开关的标记条（/srti 打开设置面板） |cffabd473· 单人本地标记需 SuperWoW 模组支持|r
+## SavedVariables: BANANA_CONFIG SRTI_MARKS
+SimpleRaidTargetIcons.lua
+Banana.lua
+Banana.xml
+BananaConfig.xml
+Bindings.xml
+Localization.lua

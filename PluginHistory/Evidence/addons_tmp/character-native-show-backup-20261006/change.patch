@@ -1,0 +1,306 @@
+--- before/BetterCharacterStats/helper.lua
++++ after/BetterCharacterStats/helper.lua
+@@ -5,10 +5,11 @@
+ local BCS_Prefix = "BetterCharacterStatsTooltip"
+ BCS_Tooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
+ 
+--- Share immutable equipment text only within one UpdateStats call. Buffs and
+--- talents keep their live reads; no equipment cache survives an update.
++-- Share immutable equipment/aura text only within one UpdateStats call.
++-- Neither cache survives the update; standalone consumers retain live reads.
+ local equipmentReadDepth = 0
+ local equipmentReadCache
++local auraReadCache
+ -- Standalone consumers retain native tooltip reads without allocating a
+ -- snapshot for every slot. The live view never stores item text.
+ local liveEquipment = {
+@@ -22,7 +23,7 @@
+     end})
+ }
+ function BCS:BeginEquipmentRead()
+-    if equipmentReadDepth == 0 then equipmentReadCache = {} end
++    if equipmentReadDepth == 0 then equipmentReadCache = {}; auraReadCache = {} end
+     equipmentReadDepth = equipmentReadDepth + 1
+ end
+ function BCS:EndEquipmentRead()
+@@ -30,6 +31,7 @@
+     if equipmentReadDepth <= 0 then
+         equipmentReadDepth = 0
+         equipmentReadCache = nil
++        auraReadCache = nil
+     end
+ end
+ local function ReadEquipmentTooltip(slot)
+@@ -147,6 +149,37 @@
+ end
+ 
+ function BCS:GetPlayerAura(searchText, auraType)
++	-- The same active buffs are otherwise rebuilt once for every searched
++	-- pattern. Capture their text once, preserving buff/line search order.
++	if auraReadCache and (not auraType or auraType == 'HARMFUL') then
++		local kind = auraType or 'HELPFUL'
++		local auras = auraReadCache[kind]
++		if not auras then
++			auras = {}
++			for i=0, kind == 'HELPFUL' and 31 or 6 do
++				local index = GetPlayerBuff(i, kind)
++				if index > -1 then
++					BCS_Tooltip:SetPlayerBuff(index)
++					local lines = {count=BCS_Tooltip:NumLines()}
++					for line=1, lines.count do
++						local left = getglobal(BCS_Prefix .. "TextLeft" .. line)
++						lines[line] = left and left:GetText()
++					end
++					tinsert(auras, lines)
++				end
++			end
++			auraReadCache[kind] = auras
++		end
++		for _, lines in ipairs(auras) do
++			for line=1, lines.count do
++				if lines[line] then
++					local value = {strfind(lines[line], searchText)}
++					if value[1] then return unpack(value) end
++				end
++			end
++		end
++		return
++	end
+ 	if not auraType then
+ 		-- buffs
+ 		-- http://blue.cardplace.com/cache/wow-dungeons/624230.htm
+--- before/S_ItemTip/InspectFrame.lua
++++ after/S_ItemTip/InspectFrame.lua
+@@ -196,6 +196,35 @@
+ S_ItemTip_InspectFrame = nil
+ local currentUnit = "player"
+ 
++function S_ItemTip_ApplyLayoutPolicy(frame)
++    -- Automatic anchors belong to the shared chain. Independent screen
++    -- clamping can move that chain while its root is becoming visible.
++    local clamp = not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "free"
++    if frame.sItemTipClamped ~= clamp then
++        frame:SetClampedToScreen(clamp)
++        frame.sItemTipClamped = clamp
++    end
++end
++
++local function SetPanelText(font, value)
++    value = tostring(value or "")
++    if font:GetText() ~= value then font:SetText(value) end
++end
++
++local function ItemNameWidth(font)
++    local text = font:GetText()
++    local file, size, flags = font:GetFont()
++    local cache = font.sItemTipMeasurement
++    if cache and cache.text == text and cache.file == file and cache.size == size and cache.flags == flags then
++        return cache.width
++    end
++    font:SetWidth(0)
++    local width = font:GetWidth()
++    font:SetWidth(width)
++    font.sItemTipMeasurement = {text=text,file=file,size=size,flags=flags,width=width}
++    return width
++end
++
+ --创建主框架
+ function S_ItemTip_CreateInspectFrame()
+     if S_ItemTip_InspectFrame then return S_ItemTip_InspectFrame end
+@@ -219,7 +248,7 @@
+     if SCApplyPanelStyle then SCApplyPanelStyle(frame) end
+     frame:EnableMouse(true)
+     frame:SetMovable(true)
+-    frame:SetClampedToScreen(true)
++    S_ItemTip_ApplyLayoutPolicy(frame)
+     frame:Hide()
+ 
+     -- 点击时提升层级
+@@ -443,7 +472,7 @@
+     
+     --设置头像和等级
+     local level = UnitLevel(unit)
+-    frame.levelText:SetText(level)
++    SetPanelText(frame.levelText, level)
+     
+     -- 每次都刷新头像（参考 SUCC-bag 的做法）
+     if frame.portrait and UnitExists(unit) then
+@@ -453,7 +482,7 @@
+     
+     --设置姓名
+     local name = UnitName(unit)
+-    frame.nameText:SetText(name)
++    SetPanelText(frame.nameText, name)
+     
+     --设置职业和颜色
+     local localizedClass, class = UnitClass(unit)
+@@ -479,7 +508,7 @@
+     end
+     
+     --隐藏职业文字（因为有图标了）
+-    frame.classText:SetText("")
++    SetPanelText(frame.classText, "")
+     
+     --更新装备槽位并计算最大宽度
+     local maxWidth = 200  -- 最小宽度
+@@ -521,9 +550,9 @@
+                 
+                 -- 显示装备等级
+                 if itemLevel > 0 then
+-                    slotFrame.itemLevel:SetText(itemLevel)
++                    SetPanelText(slotFrame.itemLevel, itemLevel)
+                 else
+-                    slotFrame.itemLevel:SetText("")
++                    SetPanelText(slotFrame.itemLevel, "")
+                 end
+                 
+                 -- 显示装备名称（不再显示附魔文本，改用图标）
+@@ -534,13 +563,8 @@
+ 						-- 传入 itemID 作为第二个参数，提高准确率
+ 						itemName = ItemSocre:TranslatedItem(itemName, tonumber(itemID))
+ 					end
+-					slotFrame.itemName:SetText(itemName)
+-                    -- 先重置宽度以获取实际文本宽度
+-                    slotFrame.itemName:SetWidth(0)
+-                    local actualNameWidth = slotFrame.itemName:GetWidth()
+-                    
+-                    -- 设置为实际宽度，让名称完整显示
+-                    slotFrame.itemName:SetWidth(actualNameWidth)
++					SetPanelText(slotFrame.itemName, itemName)
++                    local actualNameWidth = ItemNameWidth(slotFrame.itemName)
+                     
+                     -- 计算这一行的总宽度（宝石和附魔图标会在 InspectGemAndEnchant.lua 中添加）
+                     -- 预留附魔图标空间（最多2个图标，每个21像素）
+@@ -555,7 +579,7 @@
+                         slotFrame.itemName:SetTextColor(r, g, b)
+                     end
+                 else
+-                    slotFrame.itemName:SetText("")
++                    SetPanelText(slotFrame.itemName, "")
+                 end
+                 
+                 -- 保存品质信息
+@@ -574,8 +598,8 @@
+                 slotFrame.slotName:SetTextColor(r, g, b)
+                 slotFrame:SetAlpha(1)
+             else
+-                slotFrame.itemLevel:SetText("")
+-                slotFrame.itemName:SetText("")
++                SetPanelText(slotFrame.itemLevel, "")
++                SetPanelText(slotFrame.itemName, "")
+                 slotFrame.itemID = nil
+                 slotFrame.localizedName = nil											 
+                 slotFrame.itemLink = nil
+@@ -588,8 +612,8 @@
+             end
+         else
+             -- 没有装备时显示灰色
+-            slotFrame.itemLevel:SetText("")
+-            slotFrame.itemName:SetText("")
++            SetPanelText(slotFrame.itemLevel, "")
++            SetPanelText(slotFrame.itemName, "")
+             slotFrame.itemID = nil
+             slotFrame.localizedName = nil
+             slotFrame.itemLink = nil
+@@ -603,18 +627,15 @@
+     end
+     
+     -- 调整框体宽度
+-    if maxWidth > 200 then
+-        frame:SetWidth(maxWidth + 20)
+-    else
+-        frame:SetWidth(200)
+-    end
++    local desiredWidth = maxWidth > 200 and maxWidth + 20 or 200
++    if frame:GetWidth() ~= desiredWidth then frame:SetWidth(desiredWidth) end
+     
+     --使用 ItemSocre 的计算方法获取总装等
+     local avgLevel = 0
+     if ItemSocre and ItemSocre.ScanUnit then
+         avgLevel = ItemSocre:ScanUnit(unit) or 0
+     end
+-    frame.ilevelText:SetText(string.format("装等 %.1f", avgLevel))
++    SetPanelText(frame.ilevelText, string.format("装等 %.1f", avgLevel))
+     -- Throttle from completion, even if the first update itself took >80ms.
+     frame.lastUpdateTime = GetTime()
+     if SCRequestPanelLayout then SCRequestPanelLayout() end
+@@ -719,6 +740,7 @@
+     end
+     local frame = S_ItemTip_InspectFrame
+     if frame then
++        S_ItemTip_ApplyLayoutPolicy(frame)
+         local settings = S_ItemTip_Settings or { showInspect = true }
+         if settings.showInspect then
+             if frame:GetFrameStrata() ~= InspectFrame:GetFrameStrata() then frame:SetFrameStrata(InspectFrame:GetFrameStrata()) end
+@@ -730,8 +752,8 @@
+                     frame:SetPoint("TOPLEFT", InspectFrame, "TOPRIGHT", -35, -5.2)
+                 end
+             end
++            S_ItemTip_UpdateFrame(unit)
+             if not frame:IsShown() then frame:Show() end
+-            S_ItemTip_UpdateFrame(unit)
+         else
+             frame:Hide()
+         end
+@@ -747,6 +769,7 @@
+ 
+     local frame = S_ItemTip_InspectFrame
+     if frame then
++        S_ItemTip_ApplyLayoutPolicy(frame)
+         local settings = S_ItemTip_Settings or { showInspect = true }
+ 
+         -- ★ 新增：如果正在观察别人，先关闭观察界面
+@@ -766,8 +789,8 @@
+                     end
+                 end
+             end
++            S_ItemTip_UpdateFrame("player")
+             if not frame:IsShown() then frame:Show() end
+-            S_ItemTip_UpdateFrame("player")
+         else
+             frame:Hide()
+         end
+--- before/StatCompare/StatCompare.lua
++++ after/StatCompare/StatCompare.lua
+@@ -133,6 +133,7 @@
+     HookLifecycle(StatCompareTargetFrame)
+     HookLifecycle(StatCompareSelfFrame)
+     SCEnsureSettingsButton()
++    if S_ItemTip_InspectFrame and S_ItemTip_ApplyLayoutPolicy then S_ItemTip_ApplyLayoutPolicy(S_ItemTip_InspectFrame) end
+     SCApplyPanelStyle(S_ItemTip_InspectFrame)
+     SCApplyPanelStyle(StatCompareTargetFrame)
+     SCApplyPanelStyle(StatCompareSelfFrame)
+@@ -269,6 +270,9 @@
+     for _, entry in ipairs(sample.entries) do
+         if entry.calls > 0 then
+             ProfileMessage(string.format("%s：%.2f ms / %d 次", entry.label, entry.ms, entry.calls))
++            if entry.label == "装备列表显示操作" then
++                ProfileMessage(string.format("装备显示扣除已计时内部调用：%.2f ms",entry.selfMs or entry.ms))
++            end
+         end
+         if entry.memoryDrop and entry.memoryDrop > 64 then
+             ProfileMessage(string.format("%s期间内存回落 %.0f KB，可能发生了内存回收。",entry.label,entry.memoryDrop))
+@@ -308,8 +312,14 @@
+             if not sample.started or openProfile ~= sample then return previous(UnpackProfileRange(arg,1,arg.n)) end
+             local memoryBefore = script and type(gcinfo) == "function" and gcinfo()
+             local started = debugprofilestop()
++            local span = {parent=sample.current,children=0}
++            sample.current = span
+             local results = PackProfileResults(pcall(previous,UnpackProfileRange(arg,1,arg.n)))
+-            entry.ms = entry.ms + math.max(0, debugprofilestop()-started)
++            local elapsed = math.max(0, debugprofilestop()-started)
++            sample.current = span.parent
++            if span.parent then span.parent.children = span.parent.children + elapsed end
++            entry.ms = entry.ms + elapsed
++            entry.selfMs = (entry.selfMs or 0) + math.max(0,elapsed-span.children)
+             entry.calls = entry.calls + 1
+             if type(memoryBefore) == "number" then
+                 local memoryAfter = gcinfo()
+@@ -341,6 +351,7 @@
+         if not frame or frame == profiledEquipment then return end
+         profiledEquipment = frame
+         Install(frame,"Show","装备列表显示操作")
++        Install(frame,"OnShow","装备窗口显示回调",true)
+         Install(frame,"ClearAllPoints","装备列表清空锚点")
+         Install(frame,"SetPoint","装备列表定位")
+     end

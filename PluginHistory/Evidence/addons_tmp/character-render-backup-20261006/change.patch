@@ -1,0 +1,277 @@
+--- before/StatCompare.lua
++++ after/StatCompare.lua
+@@ -18,6 +18,31 @@
+     insets={left=0, right=0, top=0, bottom=0}}
+ local function SameNumber(a, b)
+     return a == b or (type(a) == "number" and type(b) == "number" and math.abs(a-b) < 0.000001)
++end
++function SCSetPanelPoint(frame, point, relative, relativePoint, x, y)
++    if type(relative) == "string" then relative = getglobal(relative) end
++    local p, r, rp, ox, oy = frame:GetPoint()
++    if type(r) == "string" then r = getglobal(r) end
++    if p == point and r == relative and rp == relativePoint and SameNumber(ox,x) and SameNumber(oy,y)
++        and (not frame.GetNumPoints or frame:GetNumPoints() == 1) then return end
++    frame:ClearAllPoints()
++    frame:SetPoint(point, relative, relativePoint, x, y)
++end
++function SCSetPanelText(fontString, value)
++    value = tostring(value or "")
++    if fontString:GetText() ~= value then fontString:SetText(value) end
++end
++function SCGetPanelTextSize(fontString)
++    local file, size, flags = fontString:GetFont()
++    local content = fontString:GetText()
++    local measured = fontString.scMeasuredContent
++    if measured and measured.text == content and measured.file == file
++        and measured.size == size and measured.flags == flags then
++        return measured.width, measured.height
++    end
++    local width, height = fontString:GetWidth(), fontString:GetHeight()
++    fontString.scMeasuredContent = {text=content, file=file, size=size, flags=flags, width=width, height=height}
++    return width, height
+ end
+ local function SameBackdrop(a, b)
+     if not a or not b then return a == b end
+@@ -159,14 +184,7 @@
+     local x, y = root.backdrop and 4 or -26, root.backdrop and 0 or -10
+     local function Attach(frame)
+         if not Visible(frame) then return end
+-        local point, relative, relativePoint, ox, oy = frame:GetPoint()
+-        if type(relative) == "string" then relative = getglobal(relative) end
+-        if point ~= "TOPLEFT" or relative ~= anchor or relativePoint ~= "TOPRIGHT"
+-            or not SameNumber(ox,x) or not SameNumber(oy,y)
+-            or (frame.GetNumPoints and frame:GetNumPoints() ~= 1) then
+-            frame:ClearAllPoints()
+-            frame:SetPoint("TOPLEFT", anchor, "TOPRIGHT", x, y)
+-        end
++        SCSetPanelPoint(frame, "TOPLEFT", anchor, "TOPRIGHT", x, y)
+         if frame:GetFrameStrata() ~= root:GetFrameStrata() then frame:SetFrameStrata(root:GetFrameStrata()) end
+         anchor, x, y = frame, 4, 0
+     end
+@@ -306,8 +324,17 @@
+     Install(_G,"S_ItemTip_UpdateFrame","装备列表与附魔刷新")
+     Install(ItemSocre,"ScanUnit","装等计算")
+     Install(BCS,"UpdateStats","BCS 角色属性刷新")
++    Install(BCS,"SyncCharacterPanelContent","角色属性区域切换")
+     Install(BCS and BCS.PropertiesPanel,"GetDisplayLines","浮动属性内容计算")
+     Install(_G,"SCRelayoutPanels","面板布局")
++    Install(_G,"StatCompare_RefreshPortrait","副面板头像处理")
++    Install(_G,"SetPortraitTexture","头像渲染（含其他面板）")
++    Install(_G,"SCGetPanelTextSize","副面板文字尺寸处理")
++    Install(StatCompareSelfFrameText,"SetText","副面板正文写入")
++    Install(StatCompareSelfFrame,"Show","副面板显示操作")
++    Install(StatCompareSelfFrame,"SetHeight","副面板高度调整")
++    Install(StatCompareSelfFrame,"SetWidth","副面板宽度调整")
++    Install(StatCompareSelfFramePortraitBorder,"SetTexture","副面板边框贴图")
+     ProfileMessage("已准备采样，请关闭角色窗口，再按 C 打开一次。结果会自动显示。")
+ end
+ 
+@@ -740,6 +767,12 @@
+ 
+ local StatCompare_isLoaded=0
+ function StatCompare_OnEvent()
++	if event == "PLAYER_ENTERING_WORLD" then
++		StatCompareSelfFrame.scPortraitDirty = true
++		StatCompareTargetFrame.scPortraitDirty = true
++	elseif event == "UNIT_INVENTORY_CHANGED" and arg1 == "player" then
++		StatCompareSelfFrame.scPortraitDirty = true
++	end
+ 	if( event == "VARIABLES_LOADED" ) then
+ 		if( not StatCompare_SaveVar ) then
+ 			StatCompare_SaveVar = { };
+@@ -854,18 +887,14 @@
+ 
+ 	elseif ( event == "UNIT_PORTRAIT_UPDATE" or event == "UNIT_MODEL_CHANGED" ) then
+ 		-- 处理头像更新事件
+-		if arg1 == "player" and StatCompareSelfFrame:IsVisible() then
+-			local portrait = getglobal("StatCompareSelfFramePortrait")
+-			if portrait and UnitExists("player") then
+-				SetPortraitTexture(portrait, "player")
+-				portrait:Show()
+-			end
+-		elseif arg1 == "target" and StatCompareTargetFrame:IsVisible() then
+-			local portrait = getglobal("StatCompareTargetFramePortrait")
+-			if portrait and UnitExists("target") then
+-				SetPortraitTexture(portrait, "target")
+-				portrait:Show()
+-			end
++		if arg1 == "player" then
++			StatCompareSelfFrame.scPortraitDirty = true
++			if StatCompareSelfFrame:IsVisible() then StatCompare_RefreshPortrait(StatCompareSelfFrame,"player") end
++		end
++		local inspectedUnit = InspectFrame and InspectFrame.unit or "target"
++		if arg1 == inspectedUnit then
++			StatCompareTargetFrame.scPortraitDirty = true
++			if StatCompareTargetFrame:IsVisible() then StatCompare_RefreshPortrait(StatCompareTargetFrame,inspectedUnit) end
+ 		end
+ 	elseif ( event == "PLAYER_LOGOUT" ) then
+ 		-- save the player settings
+@@ -879,15 +908,22 @@
+ 	
+ 	local portrait = getglobal(frame:GetName().."Portrait")
+ 	if portrait then
++		if frame.portraitUpdateFrame then frame.portraitUpdateFrame:SetScript("OnUpdate", nil) end
++		local name = UnitName(unit)
++		if unit == "player" and frame.scPortraitUnit == unit and frame.scPortraitName == name
++			and frame.scPortraitTexture == portrait and not frame.scPortraitDirty
++			and (not portrait.GetTexture or portrait:GetTexture()) then
++			portrait:Show()
++			return
++		end
+ 		-- 立即设置头像
+ 		SetPortraitTexture(portrait, unit)
+ 		portrait:Show()
++		frame.scPortraitUnit, frame.scPortraitName, frame.scPortraitTexture = unit, name, portrait
++		frame.scPortraitDirty = nil
+ 		
+ 		-- Own portrait is available immediately. Keep one reusable retry frame
+ 		-- only for inspected players whose model can arrive asynchronously.
+-		if frame.portraitUpdateFrame then
+-			frame.portraitUpdateFrame:SetScript("OnUpdate", nil)
+-		end
+ 		if unit == "player" then return end
+ 		local timer = 0
+ 		local updateFrame = frame.portraitUpdateFrame or CreateFrame("Frame", nil, frame)
+@@ -1099,16 +1135,18 @@
+ 	
+ 	-- 设置头像边框
+ 	local portraitBorder = getglobal(frame:GetName().."PortraitBorder")
+-	if portraitBorder then
++	if portraitBorder and (not portraitBorder.scBorderInitialized
++		or (portraitBorder.GetTexture and not portraitBorder:GetTexture())) then
+ 		portraitBorder:SetTexture("Interface\\AddOns\\S_ItemTip\\边框")
+ 		portraitBorder:SetBlendMode("BLEND")
++		portraitBorder.scBorderInitialized = true
+ 	end
+ 	
+ 	-- Portrait refresh is centralized after Show below.
+ 	-- 设置等级（金色字体）
+ 	if levelText and UnitExists(unit) then
+ 		local level = UnitLevel(unit)
+-		levelText:SetText(level)
++		SCSetPanelText(levelText,level)
+ 		levelText:SetTextColor(1, 0.82, 0)  -- 金色
+ 	end
+ 	
+@@ -1118,7 +1156,7 @@
+ 		local localizedClass, class = UnitClass(unit)
+ 		local classColor = RAID_CLASS_COLORS[class]
+ 		if classColor then
+-			title:SetText(name)
++			SCSetPanelText(title,name)
+ 			title:SetTextColor(classColor.r, classColor.g, classColor.b)
+ 			-- 头像边框也使用职业颜色
+ 			if portraitBorder then
+@@ -1129,7 +1167,7 @@
+ 				frame.levelBg:SetBackdropBorderColor(classColor.r, classColor.g, classColor.b)
+ 			end
+ 		else
+-			title:SetText(name)
++			SCSetPanelText(title,name)
+ 			-- 默认白色边框
+ 			if portraitBorder then
+ 				portraitBorder:SetVertexColor(1, 1, 1)
+@@ -1139,7 +1177,7 @@
+ 			end
+ 		end
+ 	else
+-		title:SetText(tiptitle)
++		SCSetPanelText(title,tiptitle)
+ 	end
+ 	
+ 	-- 设置装等（如果有 S_ItemTip）
+@@ -1148,32 +1186,32 @@
+ 		displayScore = ItemSocre:ScanUnit(unit)
+ 	end
+ 	if ilevelText and displayScore and displayScore > 0 then
+-		ilevelText:SetText(string.format("装等 %.1f", displayScore))
++		SCSetPanelText(ilevelText,string.format("装等 %.1f", displayScore))
+ 		ilevelText:SetTextColor(1, 0.82, 0)  -- 金色
+ 		ilevelText:Show()
+ 	elseif ilevelText then
+ 		ilevelText:Hide()
+ 	end
+ 	
+-	text:SetText(tiptext);
+-	height = text:GetHeight();
+-	width = text:GetWidth();
++	SCSetPanelText(text,tiptext)
++	local width, height = SCGetPanelTextSize(text)
++	local titleWidth = SCGetPanelTextSize(title)
+ 	
+ 	-- 计算最大宽度，考虑标题、装等文本
+-	if(width < title:GetWidth()) then
+-		width = title:GetWidth();
++	if(width < titleWidth) then
++		width = titleWidth;
+ 	end
+ 	
+ 	-- 考虑装等文本的宽度
+ 	if ilevelText and ilevelText:IsVisible() then
+-		local ilevelWidth = ilevelText:GetWidth()
++		local ilevelWidth = SCGetPanelTextSize(ilevelText)
+ 		if width < ilevelWidth then
+ 			width = ilevelWidth
+ 		end
+ 	end
+ 	
+ 	-- 确保至少能容纳头像+名字的宽度（头像56px + 间距10px + 名字）
+-	local minWidth = 56 + 10 + title:GetWidth()
++	local minWidth = 56 + 10 + titleWidth
+ 	if width < minWidth then
+ 		width = minWidth
+ 	end
+@@ -1183,12 +1221,12 @@
+ 	
+ 	-- 调整高度以容纳头像和等级
+ 	local extraHeight = 80  -- 头像和等级区域的高度
++	local panelHeight = height + extraHeight
+ 	if displayScore and displayScore > 0 then
+-		frame:SetHeight(height + extraHeight + 30)
+-	else
+-		frame:SetHeight(height + extraHeight)
+-	end
+-	frame:SetWidth(width+40);  -- 增加左右边距
++		panelHeight = panelHeight + 30
++	end
++	if frame:GetHeight() ~= panelHeight then frame:SetHeight(panelHeight) end
++	if frame:GetWidth() ~= width+40 then frame:SetWidth(width+40) end
+ 	
+ 	-- 检查是否有保存的位置
+ 	local hasCustomPosition = false;
+@@ -1200,28 +1238,25 @@
+ 		savedPos = StatCompare_Player["FramePositions"][frame:GetName()];
+ 	end
+ 	
+-	-- 先清除所有锚点
+-	frame:ClearAllPoints()
+-	
+ 	if hasCustomPosition and savedPos then
+ 		-- 如果有保存的位置，直接恢复
+ 		if savedPos.point and savedPos.relativePoint and savedPos.xOfs and savedPos.yOfs then
+-			frame:SetPoint(savedPos.point, savedPos.relativeTo or "UIParent", savedPos.relativePoint, savedPos.xOfs, savedPos.yOfs);
+-		end
+-	else
++			SCSetPanelPoint(frame,savedPos.point,savedPos.relativeTo or "UIParent",savedPos.relativePoint,savedPos.xOfs,savedPos.yOfs)
++		end
++	elseif not SCIsManagedPanel(frame) or SCGetPanelLayoutMode() == "free" then
+ 		-- 没有保存位置时使用默认定位
+ 		-- 如果 target 是 StatCompareTargetFrame，说明是 SelfFrame 要定位在 TargetFrame 右侧
+ 		if target:GetName() == "StatCompareTargetFrame" then
+ 			-- SelfFrame 定位在 TargetFrame 的右侧，anchorx 就是间距
+-			frame:SetPoint("TOPLEFT", target:GetName(), "TOPRIGHT", anchorx, anchory);
++			SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx,anchory)
+ 		elseif(IsAddOnLoaded("oSkin") or IsAddOnLoaded("Skinner")) then
+ 			if(target:GetName() == "InspectFrame" or target:GetName() == "PaperDollFrame") then
+-				frame:SetPoint("TOPLEFT", target:GetName(), "TOPRIGHT", anchorx + 30, anchory + 12);
++				SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx+30,anchory+12)
+ 			else
+-				frame:SetPoint("TOPLEFT", target:GetName(), "TOPRIGHT", anchorx, anchory);
++				SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx,anchory)
+ 			end
+ 		else
+-			frame:SetPoint("TOPLEFT", target:GetName(), "TOPRIGHT", anchorx, anchory);
++			SCSetPanelPoint(frame,"TOPLEFT",target,"TOPRIGHT",anchorx,anchory)
+ 		end
+ 	end
+ 	

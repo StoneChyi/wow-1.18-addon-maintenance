@@ -1,0 +1,1098 @@
+--独立装备查看界面
+--显示装备列表、人物头像、姓名、职业、装等
+--支持隐藏/显示，并自动保存状态
+
+-- 测试加载
+DEFAULT_CHAT_FRAME:AddMessage("|cFFFFFF00S_ItemTip InspectFrame.lua 开始加载...|r")
+
+local INSPECT_FRAME_WIDTH = 220
+local INSPECT_FRAME_HEIGHT = 440.5  -- 增加框体高度以容纳更大的行间距
+local INSPECT_FRAME_TOP_HEIGHT = 109.5  -- 顶部区域高度（头像、姓名、装等）- 增加以容纳等级框
+
+local lib = LibStub and LibStub:GetLibrary("LibItem-enUS-1.0", true) or nil
+
+-- 职业图标：与 RaidCheck 同款 classicons.blp 图集（256x256，8列x8行网格）
+-- 每职业为纹理坐标 {left, right, top, bottom}，按英文职业 token 索引
+-- （顺序沿用 RaidCheck ClassNames：战/贼/法/猎/牧/骑/德/术/萨）
+local CLASS_ICON_TEXTURE = "Interface\\AddOns\\S_ItemTip\\Icons\\classicons"
+local CLASS_ICON_TCOORDS_MAP = {
+    WARRIOR = { 0.000, 0.122, 0.000, 0.123 },  -- 战士
+    ROGUE   = { 0.250, 0.372, 0.000, 0.123 },  -- 盗贼
+    MAGE    = { 0.125, 0.247, 0.000, 0.123 },  -- 法师
+    HUNTER  = { 0.000, 0.122, 0.125, 0.248 },  -- 猎人
+    PRIEST  = { 0.250, 0.372, 0.125, 0.248 },  -- 牧师
+    PALADIN = { 0.000, 0.122, 0.250, 0.373 },  -- 圣骑士
+    DRUID   = { 0.375, 0.497, 0.000, 0.123 },  -- 德鲁伊
+    WARLOCK = { 0.373, 0.504, 0.121, 0.238 },  -- 术士
+    SHAMAN  = { 0.125, 0.247, 0.125, 0.248 },  -- 萨满祭司
+}
+
+-- 用户设置（自动保存）
+S_ItemTip_Settings = S_ItemTip_Settings or { showInspect = true }
+
+-- GetItemInfo 缓存
+local itemInfoCache = {}
+local unitScoreCache = {}
+local translatedNameCache = {}
+local S_ITEMTIP_UPDATE_THROTTLE = 0.08
+
+local function GetItemInfoCached(itemID)
+    if not itemID then return nil end
+    if itemInfoCache[itemID] then
+        return unpack(itemInfoCache[itemID])
+    end
+    local result = {GetItemInfo(itemID)}
+    if result[1] then
+        itemInfoCache[itemID] = result
+    end
+    return unpack(result)
+end
+
+-- 英文名到物品ID的反向映射表（延迟初始化）
+local engNameToItemID = nil
+local function GetEngNameToItemIDMapping()
+    if engNameToItemID then
+        return engNameToItemID
+    end
+    if not lib or not lib.Item_enUS then
+        engNameToItemID = {}
+        return engNameToItemID
+    end
+    engNameToItemID = {}
+    for itemID, engName in pairs(lib.Item_enUS) do
+        engNameToItemID[engName] = itemID
+    end
+    return engNameToItemID
+end
+
+local function GetDatabaseLocalizedItemName(itemID)
+    itemID = tonumber(itemID)
+    if not itemID then
+        return nil
+    end
+
+    if RDbItems and RDbItems.item and RDbItems.item[itemID] and RDbItems.item[itemID][2] and RDbItems.item[itemID][2] ~= "" then
+        return RDbItems.item[itemID][2]
+    end
+
+    if pfDB and pfDB["items"] then
+        if pfDB["items"]["zhCN-turtle"] and pfDB["items"]["zhCN-turtle"][itemID] and pfDB["items"]["zhCN-turtle"][itemID] ~= "" then
+            return pfDB["items"]["zhCN-turtle"][itemID]
+        end
+
+        if pfDB["items"]["zhCN"] and pfDB["items"]["zhCN"][itemID] and pfDB["items"]["zhCN"][itemID] ~= "" then
+            return pfDB["items"]["zhCN"][itemID]
+        end
+    end
+
+    return nil
+end
+
+local function GetDatabaseItemLevel(itemID)
+    itemID = tonumber(itemID)
+    if not itemID then
+        return 0
+    end
+
+    if RDbItems and RDbItems.item and RDbItems.item[itemID] and RDbItems.item[itemID][3] then
+        return tonumber(RDbItems.item[itemID][3]) or 0
+    end
+
+    return 0
+end
+
+local function GetLocalizedItemName(itemID, itemName)
+    itemID = tonumber(itemID)
+    if itemID then
+        local cachedName = GetItemInfoCached(itemID)
+        if cachedName and cachedName ~= "" and not (ItemSocre and ItemSocre.IsEnglinshName and ItemSocre:IsEnglinshName(cachedName)) then
+            return cachedName
+        end
+
+        local dbName = GetDatabaseLocalizedItemName(itemID)
+        if dbName and dbName ~= "" then
+            return dbName
+        end
+    end
+
+    if itemName and ItemSocre and ItemSocre.IsEnglinshName and ItemSocre:IsEnglinshName(itemName) then
+        local mapping = GetEngNameToItemIDMapping()
+        local realID = mapping[itemName]
+        if realID then
+            local dbName = GetDatabaseLocalizedItemName(realID)
+            if dbName and dbName ~= "" then
+                return dbName
+            end
+
+            local cachedName = GetItemInfoCached(realID)
+            if cachedName and cachedName ~= "" and not ItemSocre:IsEnglinshName(cachedName) then
+                return cachedName
+            end
+        end
+    end
+
+    return itemName
+end
+
+local function ApplyLocalizedTooltipTitle(itemID, localizedName, itemQuality)
+    if not itemID or not localizedName or localizedName == "" then
+        return
+    end
+
+    local title = getglobal("GameTooltipTextLeft1")
+    if not title then
+        return
+    end
+
+    title:SetText(localizedName)
+    if itemQuality then
+        local r, g, b = GetItemQualityColor(itemQuality)
+        title:SetTextColor(r, g, b)
+    end
+end
+
+local function GetUnitScoreCached(unit)
+    if not unit or not UnitExists(unit) or not ItemSocre or not ItemSocre.ScanUnit then
+        return 0
+    end
+
+    local cacheKey = unit .. ":" .. tostring(UnitName(unit) or "")
+    local now = GetTime()
+    local cached = unitScoreCache[cacheKey]
+    if cached and now - cached.time < S_ITEMTIP_UPDATE_THROTTLE then
+        return cached.value
+    end
+
+    local value = ItemSocre:ScanUnit(unit) or 0
+    unitScoreCache[cacheKey] = { value = value, time = now }
+    return value
+end
+--装备槽位列表
+local SLOT_LIST = {
+    {id = 1, name = "头部"},
+    {id = 2, name = "颈部"},
+    {id = 3, name = "肩部"},
+    {id = 5, name = "胸部"},
+    {id = 6, name = "腰部"},
+    {id = 7, name = "腿部"},
+    {id = 8, name = "脚部"},
+    {id = 9, name = "手腕"},
+    {id = 10, name = "手部"},
+    {id = 11, name = "手指"},
+    {id = 12, name = "手指"},
+    {id = 13, name = "饰品"},
+    {id = 14, name = "饰品"},
+    {id = 15, name = "背部"},
+    {id = 16, name = "主手"},
+    {id = 17, name = "副手"},
+    {id = 18, name = "远程"},
+}
+
+-- 根据槽位数量动态计算每个槽位的高度
+local SLOT_COUNT = table.getn(SLOT_LIST)
+local SLOT_HEIGHT = 18  -- 固定槽位高度为20像素，增加行间距
+
+--全局变量（供 InspectGemAndEnchant.lua 使用）
+S_ItemTip_InspectFrame = nil
+local currentUnit = "player"
+
+function S_ItemTip_ApplyLayoutPolicy(frame)
+    -- Automatic anchors belong to the shared chain. Independent screen
+    -- clamping can move that chain while its root is becoming visible.
+    local clamp = not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "free"
+    if frame.sItemTipClamped ~= clamp then
+        frame:SetClampedToScreen(clamp)
+        frame.sItemTipClamped = clamp
+    end
+end
+
+local function SetPanelText(font, value)
+    value = tostring(value or "")
+    if font:GetText() ~= value then font:SetText(value) end
+end
+
+local function ItemNameWidth(font)
+    local text = font:GetText()
+    local file, size, flags = font:GetFont()
+    local cache = font.sItemTipMeasurement
+    if cache and cache.text == text and cache.file == file and cache.size == size and cache.flags == flags then
+        return cache.width
+    end
+    font:SetWidth(0)
+    local width = font:GetWidth()
+    font:SetWidth(width)
+    font.sItemTipMeasurement = {text=text,file=file,size=size,flags=flags,width=width}
+    return width
+end
+
+--创建主框架
+function S_ItemTip_CreateInspectFrame()
+    if S_ItemTip_InspectFrame then return S_ItemTip_InspectFrame end
+    
+    S_ItemTip_InspectFrame = CreateFrame("Frame", "S_ItemTip_InspectFrame_UI", UIParent)
+    local frame = S_ItemTip_InspectFrame
+    frame:SetWidth(INSPECT_FRAME_WIDTH)
+    frame:SetHeight(INSPECT_FRAME_HEIGHT)  -- 保持原来的固定高度
+    frame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -35, -10)
+    frame:SetFrameStrata("MEDIUM")
+    frame:SetToplevel(true)
+    frame:SetBackdrop({
+        bgFile = "Interface\\AddOns\\pfUI\\img\\bar",
+        edgeFile = "",  -- 空字符串，无边框
+        tile = true,
+        tileSize = 16,
+        edgeSize = 10,
+        insets = {left = 5, right = 5, top = 5, bottom = 5}
+    })
+    frame:SetBackdropColor(0, 0, 0, 0.75)
+    if SCApplyPanelStyle then SCApplyPanelStyle(frame) end
+    frame:EnableMouse(true)
+    frame:SetMovable(true)
+    S_ItemTip_ApplyLayoutPolicy(frame)
+    frame:Hide()
+
+    -- 点击时提升层级
+    frame:SetScript("OnMouseDown", function()
+        this:Raise()
+    end)
+
+    -- 添加拖动功能
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", function()
+        if not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "free" then this:StartMoving() end
+    end)
+    frame:SetScript("OnDragStop", function()
+        this:StopMovingOrSizing()
+        this.scFreePosition = true
+        if SCRequestPanelLayout then SCRequestPanelLayout() end
+    end)
+
+    --头像框架
+    frame.portraitFrame = CreateFrame("Frame", nil, frame)
+    frame.portraitFrame:SetWidth(64)
+    frame.portraitFrame:SetHeight(64)
+    frame.portraitFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -16)
+
+    --头像纹理
+    frame.portrait = frame.portraitFrame:CreateTexture(nil, "BACKGROUND")
+    frame.portrait:SetWidth(56)
+    frame.portrait:SetHeight(56)
+    frame.portrait:SetPoint("CENTER", frame.portraitFrame, "CENTER", 0, 0)
+
+    --头像边框
+    frame.portraitBorder = frame.portraitFrame:CreateTexture(nil, "OVERLAY")
+    frame.portraitBorder:SetTexture("Interface\\AddOns\\S_ItemTip\\边框")
+    frame.portraitBorder:SetWidth(254)
+    frame.portraitBorder:SetHeight(254)
+    frame.portraitBorder:SetPoint("CENTER", frame.portraitFrame, "CENTER", 5, -10)
+    frame.portraitBorder:SetBlendMode("BLEND")
+    frame.portraitBorder:SetVertexColor(1, 1, 1)  -- 默认白色
+
+    --等级背景框
+    frame.levelBg = CreateFrame("Frame", nil, frame)
+    frame.levelBg:SetWidth(40)
+    frame.levelBg:SetHeight(16)
+    frame.levelBg:SetPoint("BOTTOM", frame.portraitFrame, "BOTTOM", 0, -10)
+    frame.levelBg:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 8,
+        insets = {left = 2, right = 2, top = 2, bottom = 2}
+    })
+    frame.levelBg:SetBackdropColor(0, 0, 0, 0.8)
+
+    --等级文本（显示在背景框中，金色字体）
+    frame.levelText = frame.levelBg:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    frame.levelText:SetPoint("CENTER", frame.levelBg, "CENTER", 0, 0)
+    frame.levelText:SetTextColor(1, 0.82, 0)  -- 金色
+
+    --职业图标（大图标，显示在头像右上角，与 RaidCheck 同款 classicons 图集）
+    frame.classIcon = frame:CreateTexture(nil, "ARTWORK")
+    frame.classIcon:SetWidth(40)
+    frame.classIcon:SetHeight(40)
+    frame.classIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -10, -25)
+    frame.classIcon:SetTexture(CLASS_ICON_TEXTURE)
+
+    --姓名
+    frame.nameText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.nameText:SetPoint("TOPLEFT", frame.portrait, "TOPRIGHT", 8, -5)
+    frame.nameText:SetJustifyH("LEFT")
+
+    --总装等（显示在姓名下方）
+    frame.ilevelText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.ilevelText:SetPoint("TOPLEFT", frame.nameText, "BOTTOMLEFT", 0, -5)
+    frame.ilevelText:SetTextColor(1, 0.82, 0)
+    frame.ilevelText:SetJustifyH("LEFT")
+
+    --职业文字（隐藏，因为有图标了）
+    frame.classText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    frame.classText:SetPoint("TOPLEFT", frame.ilevelText, "BOTTOMLEFT", 0, -3)
+    frame.classText:SetJustifyH("LEFT")
+
+    --装备列表容器
+    frame.slotFrames = {}
+    local yOffset = -INSPECT_FRAME_TOP_HEIGHT
+    for i, slotData in ipairs(SLOT_LIST) do
+        local slotFrame = CreateFrame("Frame", nil, frame)
+        slotFrame:SetWidth(INSPECT_FRAME_WIDTH - 30)
+        slotFrame:SetHeight(SLOT_HEIGHT)
+        slotFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, yOffset)
+        
+        --槽位名称标签背景（只有这一小块有背景）
+        slotFrame.labelBg = CreateFrame("Frame", nil, slotFrame)
+        slotFrame.labelBg:SetWidth(32)
+        slotFrame.labelBg:SetHeight(16)
+        slotFrame.labelBg:SetPoint("LEFT", slotFrame, "LEFT", 1, 0)
+        slotFrame.labelBg:SetBackdrop({
+            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Buttons\\WHITE8X8",
+            tile = true,
+            tileSize = 8,
+            edgeSize = 1,
+            insets = {left = 1, right = 1, top = 1, bottom = 1}
+        })
+        slotFrame.labelBg:SetBackdropColor(0, 0.9, 0.9, 0.2)
+        slotFrame.labelBg:SetBackdropBorderColor(0, 0.9, 0.9, 0.2)
+        
+        --槽位名称
+        slotFrame.slotName = slotFrame.labelBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        slotFrame.slotName:SetPoint("CENTER", slotFrame.labelBg, "CENTER", 0, 0)
+        slotFrame.slotName:SetText(slotData.name)
+        slotFrame.slotName:SetTextColor(0, 0.9, 0.9)
+        slotFrame.slotName:SetWidth(30)
+        slotFrame.slotName:SetJustifyH("CENTER")
+        slotFrame.slotName:SetFont(slotFrame.slotName:GetFont(), 11)
+        
+        --装备等级
+        slotFrame.itemLevel = slotFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        slotFrame.itemLevel:SetPoint("LEFT", slotFrame.labelBg, "RIGHT", 4, 0)
+        slotFrame.itemLevel:SetTextColor(1, 1, 1)
+        slotFrame.itemLevel:SetJustifyH("RIGHT")
+        slotFrame.itemLevel:SetFont(slotFrame.itemLevel:GetFont(), 13)
+        -- 不设置固定宽度，让它自动适应
+        
+        --装备名称
+        slotFrame.itemName = slotFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        slotFrame.itemName:SetPoint("LEFT", slotFrame.itemLevel, "RIGHT", 2, 0)
+        slotFrame.itemName:SetJustifyH("LEFT")
+        slotFrame.itemName:SetWidth(100)  -- 固定宽度防止换行
+        slotFrame.itemName:SetFont(slotFrame.itemName:GetFont(), 11)
+        
+        slotFrame.slotId = slotData.id
+        slotFrame.itemLink = nil
+        slotFrame.quality = nil
+        
+        --鼠标提示
+        slotFrame:EnableMouse(true)
+        slotFrame:SetScript("OnEnter", function()
+            if this.slotId and frame.currentUnit and UnitExists(frame.currentUnit) then
+                local itemLink = GetInventoryItemLink(frame.currentUnit, this.slotId)
+                if not itemLink then return end
+                
+                -- 使用 ANCHOR_RIGHT，让 tooltip 显示在装备行的右侧
+                GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+                GameTooltip:SetInventoryItem(frame.currentUnit, this.slotId)
+                GameTooltip:Show()
+            end
+        end)
+        slotFrame:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+        
+        frame.slotFrames[i] = slotFrame
+        yOffset = yOffset - SLOT_HEIGHT
+    end
+    
+    return S_ItemTip_InspectFrame
+end
+
+--获取单位装备槽位的物品链接
+local function GetUnitItemLink(unit, slotId)
+    if not UnitExists(unit) then return nil end
+    
+    -- 直接使用 GetInventoryItemLink
+    -- 注意：对于 player 单位，这个函数返回的链接中附魔ID可能是0
+    -- 但这是魔兽世界 1.12 客户端的限制，无法通过 Lua 代码解决
+    -- 附魔信息需要通过其他方式获取（例如扫描 tooltip）
+    return GetInventoryItemLink(unit, slotId)
+end
+
+--获取附魔信息
+local function GetEnchantText(itemLink)
+    if not itemLink then return "" end
+    
+    -- 从物品链接中提取附魔ID
+    local enchantID = tonumber(string.match(itemLink, "item:%d+:(%d+)"))
+    if not enchantID or enchantID == 0 then return "" end
+    
+    -- 尝试使用 LibItemEnchant 获取附魔名称
+    if LibStub then
+        local LibItemEnchant = LibStub:GetLibrary("LibItemEnchant.7000", true)
+        if LibItemEnchant then
+            local spellID = LibItemEnchant:GetEnchantSpellID(itemLink)
+            if spellID then
+                local enchantName = GetSpellInfo(spellID)
+                if enchantName then
+                    return " |cFF00FF00[" .. enchantName .. "]|r"
+                end
+            end
+        end
+    end
+    
+    -- 如果无法获取附魔名称，显示附魔ID
+    return " |cFF00FF00[+" .. enchantID .. "]|r"
+end
+
+--更新装备信息（全局函数，供 InspectGemAndEnchant.lua 使用）
+function S_ItemTip_UpdateFrame(unit)
+    local frame = S_ItemTip_InspectFrame
+    if not frame then return false end
+    if not UnitExists(unit) then return false end
+
+    local now = GetTime()
+    if frame.lastUpdateUnit == unit and frame.lastUpdateTime and (now - frame.lastUpdateTime) < S_ITEMTIP_UPDATE_THROTTLE then
+        return false
+    end
+    frame.lastUpdateUnit = unit
+    frame.lastUpdateTime = now
+    currentUnit = unit
+    frame.currentUnit = unit  -- 保存到框架上，供 tooltip 使用
+    
+    -- 先清空所有附魔图标（在 InspectGemAndEnchant.lua 中会重新创建）
+    local index = 1
+    while frame["gemIcon"..index] do
+        frame["gemIcon"..index]:Hide()
+        frame["gemIcon"..index].title = nil
+        frame["gemIcon"..index].itemLink = nil
+        frame["gemIcon"..index].spellID = nil
+        index = index + 1
+    end
+    
+    --设置头像和等级
+    local level = UnitLevel(unit)
+    SetPanelText(frame.levelText, level)
+    
+    -- 每次都刷新头像（参考 SUCC-bag 的做法）
+    if frame.portrait and UnitExists(unit) then
+        SetPortraitTexture(frame.portrait, unit)
+        frame.portrait:Show()
+    end
+    
+    --设置姓名
+    local name = UnitName(unit)
+    SetPanelText(frame.nameText, name)
+    
+    --设置职业和颜色
+    local localizedClass, class = UnitClass(unit)
+    local classColor = RAID_CLASS_COLORS[class]
+    if classColor then
+        frame.nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
+        -- 主框架边框使用职业颜色
+        frame:SetBackdropBorderColor(classColor.r, classColor.g, classColor.b, 1)
+        frame.levelBg:SetBackdropBorderColor(classColor.r, classColor.g, classColor.b)
+        -- 头像边框也使用职业颜色
+        frame.portraitBorder:SetVertexColor(classColor.r, classColor.g, classColor.b)
+    else
+        frame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)  -- 默认深灰色边框
+    end
+    
+    --设置职业图标（RaidCheck 同款 classicons 图集坐标）
+    local iconCoords = class and CLASS_ICON_TCOORDS_MAP[class]
+    if iconCoords then
+        frame.classIcon:SetTexCoord(iconCoords[1], iconCoords[2], iconCoords[3], iconCoords[4])
+        frame.classIcon:Show()
+    else
+        frame.classIcon:Hide()
+    end
+    
+    --隐藏职业文字（因为有图标了）
+    SetPanelText(frame.classText, "")
+    
+    --更新装备槽位并计算最大宽度
+    local maxWidth = 200  -- 最小宽度
+    local itemCount = 0
+    for i, slotFrame in ipairs(frame.slotFrames) do
+        local itemLink = GetUnitItemLink(unit, slotFrame.slotId)
+        if itemLink then
+            itemCount = itemCount + 1
+            local _, _, itemID = string.find(itemLink, "item:(%d+):")
+            if itemID then
+                -- 获取物品信息（使用缓存）
+                local rawItemName, _, itemQuality, _, _, _, _, _, _, _, _ = GetItemInfoCached(tonumber(itemID))
+                local itemName = GetLocalizedItemName(itemID, rawItemName)
+
+                -- 尝试从多个来源获取装备等级
+                local itemLevel = 0
+
+                -- 优先使用 lib (LibItem-enUS-1.0)
+                if lib and lib.itemstats and lib.itemstats[tonumber(itemID)] then
+                    itemLevel = lib.itemstats[tonumber(itemID)].level or 0
+                end
+
+                -- 如果 lib 没有，尝试 LibItem_Level
+                if itemLevel == 0 and LibItem_Level then
+                    itemLevel = LibItem_Level[tonumber(itemID)] or 0
+                end
+
+                if itemLevel == 0 then
+                    itemLevel = GetDatabaseItemLevel(itemID)
+                end
+                -- 如果还是没有，尝试通过英文名称匹配（处理英文物品名）
+                if itemLevel == 0 and rawItemName and lib and lib.Item_enUS and LibItem_Level then
+                    local mapping = GetEngNameToItemIDMapping()
+                    local realID = mapping[rawItemName]
+                    if realID then
+                        itemLevel = LibItem_Level[realID] or 0
+                    end
+                end
+                
+                -- 显示装备等级
+                if itemLevel > 0 then
+                    SetPanelText(slotFrame.itemLevel, itemLevel)
+                else
+                    SetPanelText(slotFrame.itemLevel, "")
+                end
+                
+                -- 显示装备名称（不再显示附魔文本，改用图标）
+                if itemName then
+                    
+					--if ItemSocre:IsEnglinshName(itemName) then
+					if lib and ItemSocre and ItemSocre:IsEnglinshName(itemName) then
+						-- 传入 itemID 作为第二个参数，提高准确率
+						itemName = ItemSocre:TranslatedItem(itemName, tonumber(itemID))
+					end
+					SetPanelText(slotFrame.itemName, itemName)
+                    local actualNameWidth = ItemNameWidth(slotFrame.itemName)
+                    
+                    -- 计算这一行的总宽度（宝石和附魔图标会在 InspectGemAndEnchant.lua 中添加）
+                    -- 预留附魔图标空间（最多2个图标，每个21像素）
+                    local rowWidth = 15 + 32 + 24 + actualNameWidth + 50  -- 50是附魔图标预留空间（增加）
+                    if rowWidth > maxWidth then
+                        maxWidth = rowWidth
+                    end
+                    
+                    -- 设置品质颜色（装备名称）
+                    if itemQuality then
+                        local r, g, b = GetItemQualityColor(itemQuality)
+                        slotFrame.itemName:SetTextColor(r, g, b)
+                    end
+                else
+                    SetPanelText(slotFrame.itemName, "")
+                end
+                
+                -- 保存品质信息
+                slotFrame.itemID = tonumber(itemID)
+                slotFrame.localizedName = itemName
+                slotFrame.quality = itemQuality
+                slotFrame.itemLink = itemLink
+                
+                -- 根据品质设置标签颜色
+                local r, g, b = 0, 0.9, 0.9
+                if itemQuality then
+                    r, g, b = GetItemQualityColor(itemQuality)
+                end
+                slotFrame.labelBg:SetBackdropColor(r, g, b, 0.2)
+                slotFrame.labelBg:SetBackdropBorderColor(r, g, b, 0.2)
+                slotFrame.slotName:SetTextColor(r, g, b)
+                slotFrame:SetAlpha(1)
+            else
+                SetPanelText(slotFrame.itemLevel, "")
+                SetPanelText(slotFrame.itemName, "")
+                slotFrame.itemID = nil
+                slotFrame.localizedName = nil											 
+                slotFrame.itemLink = nil
+                slotFrame.quality = nil
+                -- 重置为默认颜色
+                slotFrame.labelBg:SetBackdropColor(0, 0.9, 0.9, 0.2)
+                slotFrame.labelBg:SetBackdropBorderColor(0, 0.9, 0.9, 0.2)
+                slotFrame.slotName:SetTextColor(0, 0.9, 0.9)
+                slotFrame:SetAlpha(0.5)
+            end
+        else
+            -- 没有装备时显示灰色
+            SetPanelText(slotFrame.itemLevel, "")
+            SetPanelText(slotFrame.itemName, "")
+            slotFrame.itemID = nil
+            slotFrame.localizedName = nil
+            slotFrame.itemLink = nil
+            slotFrame.quality = nil
+            -- 设置为灰色
+            slotFrame.labelBg:SetBackdropColor(0.6, 0.6, 0.6, 0.2)
+            slotFrame.labelBg:SetBackdropBorderColor(0.6, 0.6, 0.6, 0.2)
+            slotFrame.slotName:SetTextColor(0.6, 0.6, 0.6)
+            slotFrame:SetAlpha(0.5)
+        end
+    end
+    
+    -- 调整框体宽度
+    local desiredWidth = maxWidth > 200 and maxWidth + 20 or 200
+    if frame:GetWidth() ~= desiredWidth then frame:SetWidth(desiredWidth) end
+    
+    --使用 ItemSocre 的计算方法获取总装等
+    local avgLevel = 0
+    if ItemSocre and ItemSocre.ScanUnit then
+        avgLevel = ItemSocre:ScanUnit(unit) or 0
+    end
+    SetPanelText(frame.ilevelText, string.format("装等 %.1f", avgLevel))
+    -- Throttle from completion, even if the first update itself took >80ms.
+    frame.lastUpdateTime = GetTime()
+    if SCRequestPanelLayout then SCRequestPanelLayout() end
+    return true
+end
+
+-- 重新布局 StatCompare 框架（根据装备面板的显示状态）
+function S_ItemTip_RelayoutStatCompare()
+    if SCRelayoutPanels then
+        SCRelayoutPanels()
+        SCRequestPanelLayout()
+        return
+    end
+    local settings = S_ItemTip_Settings or { showInspect = true }
+    local showInspect = settings.showInspect
+
+    local charVisible = CharacterFrame:IsVisible() and PaperDollFrame:IsVisible()
+    local inspectVisible = InspectFrame and InspectFrame:IsVisible() and InspectFrame.unit
+
+    if charVisible and inspectVisible then
+        -- 两者都可见：按用户期望顺序布局
+        if StatCompareTargetFrame and StatCompareTargetFrame:IsVisible() then
+            StatCompareTargetFrame:ClearAllPoints()
+            StatCompareTargetFrame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -30, -10)
+        end
+        if StatCompareSelfFrame and StatCompareSelfFrame:IsVisible() then
+            StatCompareSelfFrame:ClearAllPoints()
+            if StatCompareTargetFrame and StatCompareTargetFrame:IsVisible() then
+                StatCompareSelfFrame:SetPoint("TOPLEFT", StatCompareTargetFrame, "TOPRIGHT", 0.5, 0)
+            else
+                StatCompareSelfFrame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -30, -10)
+            end
+        end
+    elseif inspectVisible then
+        -- 仅查看面板可见
+        if StatCompareTargetFrame and StatCompareTargetFrame:IsVisible() then
+            StatCompareTargetFrame:ClearAllPoints()
+            if showInspect and S_ItemTip_InspectFrame and S_ItemTip_InspectFrame:IsShown() then
+                StatCompareTargetFrame:SetPoint("TOPLEFT", S_ItemTip_InspectFrame, "TOPRIGHT", -5, -6)
+            else
+                StatCompareTargetFrame:SetPoint("TOPLEFT", InspectFrame, "TOPRIGHT", -25, -5)
+            end
+        end
+        if StatCompareSelfFrame and StatCompareSelfFrame:IsVisible() then
+            StatCompareSelfFrame:ClearAllPoints()
+            if StatCompareTargetFrame and StatCompareTargetFrame:IsVisible() then
+                StatCompareSelfFrame:SetPoint("TOPLEFT", StatCompareTargetFrame, "TOPRIGHT", 0.5, 0)
+            else
+                StatCompareSelfFrame:SetPoint("TOPLEFT", InspectFrame, "TOPRIGHT", -30, -5)
+            end
+        end
+    elseif charVisible then
+        -- 仅角色面板可见
+        if StatCompareSelfFrame and StatCompareSelfFrame:IsVisible() then
+            StatCompareSelfFrame:ClearAllPoints()
+            if showInspect and S_ItemTip_InspectFrame and S_ItemTip_InspectFrame:IsShown() then
+                StatCompareSelfFrame:SetPoint("TOPLEFT", S_ItemTip_InspectFrame, "TOPRIGHT", -5, -5)
+            else
+                -- 装备界面隐藏时，直接锚定到 CharacterFrame 右侧
+                StatCompareSelfFrame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -30, -10)
+                -- 清除保存的位置缓存，防止后续被覆盖
+                if StatCompare_Player and StatCompare_Player["FramePositions"] then
+                    StatCompare_Player["FramePositions"]["StatCompareSelfFrame"] = nil
+                end
+            end
+        end
+    end
+end
+
+-- 切换装备面板显示状态
+function S_ItemTip_ToggleInspect(show)
+    -- 确保 S_ItemTip_Settings 存在
+    if not S_ItemTip_Settings then
+        S_ItemTip_Settings = { showInspect = true }
+    end
+
+    if show == nil then
+        S_ItemTip_Settings.showInspect = not S_ItemTip_Settings.showInspect
+    else
+        S_ItemTip_Settings.showInspect = show
+    end
+
+    if S_ItemTip_InspectFrame then
+        if S_ItemTip_Settings.showInspect then
+            -- 如果当前应该显示，但框架可能被隐藏，根据打开的面板决定是否显示
+            if CharacterFrame:IsVisible() and PaperDollFrame:IsVisible() then
+                S_ItemTip_OnCharacterShow()
+            elseif InspectFrame and InspectFrame:IsVisible() then
+                S_ItemTip_ShowForInspect(InspectFrame.unit)
+            end
+        else
+            S_ItemTip_InspectFrame:Hide()
+            S_ItemTip_RelayoutStatCompare()
+        end
+    end
+end
+
+-- 在查看他人时显示装备面板（根据设置）
+function S_ItemTip_ShowForInspect(unit)
+    if not S_ItemTip_InspectFrame then
+        S_ItemTip_CreateInspectFrame()
+    end
+    local frame = S_ItemTip_InspectFrame
+    if frame then
+        S_ItemTip_ApplyLayoutPolicy(frame)
+        local settings = S_ItemTip_Settings or { showInspect = true }
+        if settings.showInspect then
+            if frame:GetFrameStrata() ~= InspectFrame:GetFrameStrata() then frame:SetFrameStrata(InspectFrame:GetFrameStrata()) end
+            local managed = SCRelayoutPanels and SCGetPanelLayoutMode and SCGetPanelLayoutMode() == "auto"
+            if not managed and (not SCGetPanelLayoutMode or not frame.scFreePosition) then
+                if SCSetPanelPoint then SCSetPanelPoint(frame,"TOPLEFT",InspectFrame,"TOPRIGHT",-35,-5.2)
+                else
+                    frame:ClearAllPoints()
+                    frame:SetPoint("TOPLEFT", InspectFrame, "TOPRIGHT", -35, -5.2)
+                end
+            end
+            S_ItemTip_UpdateFrame(unit)
+            if not frame:IsShown() then frame:Show() end
+        else
+            frame:Hide()
+        end
+        S_ItemTip_RelayoutStatCompare()
+    end
+end
+
+--当角色面板打开时
+function S_ItemTip_OnCharacterShow()
+    if not S_ItemTip_InspectFrame then
+        S_ItemTip_CreateInspectFrame()
+    end
+
+    local frame = S_ItemTip_InspectFrame
+    if frame then
+        S_ItemTip_ApplyLayoutPolicy(frame)
+        local settings = S_ItemTip_Settings or { showInspect = true }
+
+        -- ★ 新增：如果正在观察别人，先关闭观察界面
+        if InspectFrame and InspectFrame:IsVisible() then
+            HideUIPanel(InspectFrame)
+        end
+
+        if settings.showInspect then
+            local managed = SCRelayoutPanels and SCGetPanelLayoutMode and SCGetPanelLayoutMode() == "auto"
+            if not managed then
+                if frame:GetFrameStrata() ~= "MEDIUM" then frame:SetFrameStrata("MEDIUM") end
+                if not SCGetPanelLayoutMode or not frame.scFreePosition then
+                    if SCSetPanelPoint then SCSetPanelPoint(frame,"TOPLEFT",CharacterFrame,"TOPRIGHT",-35.5,-5)
+                    else
+                        frame:ClearAllPoints()
+                        frame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -35.5, -5)
+                    end
+                end
+            end
+            S_ItemTip_UpdateFrame("player")
+            if not frame:IsShown() then frame:Show() end
+        else
+            frame:Hide()
+        end
+        S_ItemTip_RelayoutStatCompare()
+    end
+end
+
+--当角色面板关闭时
+function S_ItemTip_OnCharacterHide()
+    if S_ItemTip_InspectFrame then
+        S_ItemTip_InspectFrame:Hide()
+    end
+    -- 角色面板关闭后，如果查看面板仍开着，则恢复显示他人装备
+    if InspectFrame and InspectFrame:IsVisible() and InspectFrame.unit then
+        local settings = S_ItemTip_Settings or { showInspect = true }
+        if settings.showInspect then
+            S_ItemTip_ShowForInspect(InspectFrame.unit)
+        end
+    end
+end
+
+--装备变化时
+local function OnEquipmentChanged()
+    if S_ItemTip_InspectFrame and CharacterFrame:IsShown() and S_ItemTip_InspectFrame:IsShown() then
+        S_ItemTip_UpdateFrame("player")
+    end
+end
+
+--Hook角色面板的显示/隐藏
+local oldCharacterFrame_OnShow = CharacterFrame:GetScript("OnShow")
+CharacterFrame:SetScript("OnShow", function()
+    if oldCharacterFrame_OnShow then
+        oldCharacterFrame_OnShow()
+    end
+    -- 只在"角色"标签页显示
+    if PaperDollFrame:IsVisible() then
+        S_ItemTip_OnCharacterShow()
+    end
+end)
+
+local oldCharacterFrame_OnHide = CharacterFrame:GetScript("OnHide")
+CharacterFrame:SetScript("OnHide", function()
+    if oldCharacterFrame_OnHide then
+        oldCharacterFrame_OnHide()
+    end
+    S_ItemTip_OnCharacterHide()
+end)
+
+-- Hook PaperDollFrame 的显示/隐藏（当切换标签页时）
+local oldPaperDollFrame_OnShow = PaperDollFrame:GetScript("OnShow")
+PaperDollFrame:SetScript("OnShow", function()
+    if oldPaperDollFrame_OnShow then
+        oldPaperDollFrame_OnShow()
+    end
+    -- 切换到"角色"标签页时显示
+    if CharacterFrame:IsVisible() then
+        S_ItemTip_OnCharacterShow()
+    end
+end)
+
+local oldPaperDollFrame_OnHide = PaperDollFrame:GetScript("OnHide")
+PaperDollFrame:SetScript("OnHide", function()
+    if oldPaperDollFrame_OnHide then
+        oldPaperDollFrame_OnHide()
+    end
+    -- 切换到其他标签页时隐藏
+    S_ItemTip_OnCharacterHide()
+end)
+
+--Hook查看面板的显示/隐藏（延迟执行，确保 InspectFrame 已加载）
+local function HookInspectFrame()
+    if not InspectFrame then
+        return
+    end
+    
+    local oldInspectFrame_OnShow = InspectFrame:GetScript("OnShow")
+    InspectFrame:SetScript("OnShow", function()
+        if oldInspectFrame_OnShow then
+            oldInspectFrame_OnShow()
+        end
+        -- 查看其他玩家时
+        if InspectFrame.unit then
+            S_ItemTip_ShowForInspect(InspectFrame.unit)
+        end
+    end)
+    
+    local oldInspectFrame_OnHide = InspectFrame:GetScript("OnHide")
+    InspectFrame:SetScript("OnHide", function()
+        if oldInspectFrame_OnHide then
+            oldInspectFrame_OnHide()
+        end
+        if S_ItemTip_InspectFrame then
+            S_ItemTip_InspectFrame:Hide()
+        end
+        -- 查看面板关闭后，如果角色面板仍开着，则恢复显示自己装备
+        if CharacterFrame and CharacterFrame:IsVisible() then
+            local settings = S_ItemTip_Settings or { showInspect = true }
+            if settings.showInspect then
+                S_ItemTip_OnCharacterShow()
+            end
+        end
+    end)
+end
+
+-- 延迟 Hook，确保 InspectFrame 已加载
+local hookTimer = 0
+local hookFrame = CreateFrame("Frame")
+hookFrame:SetScript("OnUpdate", function()
+    hookTimer = hookTimer + arg1
+    if hookTimer > 1 then
+        if InspectFrame then
+            HookInspectFrame()
+            hookFrame:SetScript("OnUpdate", nil)
+        end
+    end
+end)
+
+--注册装备变化事件
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+eventFrame:RegisterEvent("INSPECT_READY")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:SetScript("OnEvent", function()
+    if event == "UNIT_INVENTORY_CHANGED" then
+        -- 1.12 版本中 arg1 就是单位名称
+        if arg1 == "player" and S_ItemTip_InspectFrame and CharacterFrame:IsShown() and S_ItemTip_InspectFrame:IsShown() then
+            S_ItemTip_UpdateFrame("player")
+        end
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        -- 刷新玩家头像（确保头像正确显示）
+        if S_ItemTip_InspectFrame and S_ItemTip_InspectFrame.portrait then
+            SetPortraitTexture(S_ItemTip_InspectFrame.portrait, "player")
+        end
+    elseif event == "INSPECT_READY" then
+        -- 当查看其他玩家的装备数据准备好时
+        if InspectFrame and InspectFrame:IsShown() and InspectFrame.unit then
+            if not S_ItemTip_InspectFrame then
+                S_ItemTip_CreateInspectFrame()
+            end
+            local frame = S_ItemTip_InspectFrame
+            if frame then
+                local settings = S_ItemTip_Settings or { showInspect = true }
+                if settings.showInspect then
+                    S_ItemTip_UpdateFrame(InspectFrame.unit)
+                end
+                S_ItemTip_RelayoutStatCompare()
+            end
+        end
+    end
+end)
+
+DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00S_ItemTip装备查看已加载|r - 按C键打开角色面板查看")
+
+--斜杠命令
+SLASH_SITEMINSPECT1 = "/si"
+SLASH_SITEMINSPECT2 = "/siteminspect"
+SlashCmdList["SITEMINSPECT"] = function(msg)
+    msg = string.lower(msg or "")
+    if msg == "hide" or msg == "toggle" then
+        S_ItemTip_ToggleInspect()
+        DEFAULT_CHAT_FRAME:AddMessage("S_ItemTip 装备查看已" .. (S_ItemTip_Settings.showInspect and "显示" or "隐藏"))
+    elseif msg == "target" then
+        if UnitExists("target") and UnitIsPlayer("target") then
+            if not S_ItemTip_InspectFrame then
+                S_ItemTip_CreateInspectFrame()
+            end
+            local frame = S_ItemTip_InspectFrame
+            if frame then
+                local settings = S_ItemTip_Settings or { showInspect = true }
+                if settings.showInspect then
+                    S_ItemTip_UpdateFrame("target")
+                    frame:Show()
+                else
+                    DEFAULT_CHAT_FRAME:AddMessage("S_ItemTip 装备查看当前为隐藏状态，无法显示")
+                end
+            end
+        else
+            DEFAULT_CHAT_FRAME:AddMessage("请选择一个玩家目标")
+        end
+    else
+        -- 默认显示自己
+        if not S_ItemTip_InspectFrame then
+            S_ItemTip_CreateInspectFrame()
+        end
+        local frame = S_ItemTip_InspectFrame
+        if frame then
+            local settings = S_ItemTip_Settings or { showInspect = true }
+            if settings.showInspect then
+                S_ItemTip_UpdateFrame("player")
+                frame:Show()
+            else
+                DEFAULT_CHAT_FRAME:AddMessage("S_ItemTip 装备查看当前为隐藏状态，无法显示")
+            end
+        end
+    end
+end
+
+-- ========== 修改 ItemSocre 相关函数，使其也使用缓存 ==========
+function ItemSocre:IsEnglinshName(name)
+	if name and string.find(string.sub(name,1,3), "[a-zA-Z]") then
+		return true
+	else
+		return false
+	end
+end
+
+function ItemSocre:TranslatedItem(itemName, specificID)
+    local cacheKey = tostring(specificID or "") .. ":" .. tostring(itemName or "")
+    if translatedNameCache[cacheKey] then
+        return translatedNameCache[cacheKey]
+    end
+
+    local localizedName = GetLocalizedItemName(specificID, itemName)
+    translatedNameCache[cacheKey] = localizedName
+    return localizedName
+end
+
+function ItemSocre:TranslatedItem(itemName, specificID)
+    if specificID then
+        local name = GetItemInfoCached(specificID)
+        if name and name ~= "" and not self:IsEnglinshName(name) then
+            return name
+        end
+    end
+
+    if not itemName or not lib or not lib.Item_enUS then
+        return itemName
+    end
+
+    local mapping = GetEngNameToItemIDMapping()
+    local realID = mapping[itemName]
+    if realID then
+        local name = GetItemInfoCached(realID)
+        if name and name ~= "" and not self:IsEnglinshName(name) then
+            return name
+        end
+    end
+    
+    return itemName
+end
+-- ==========================================================
+
+-- ========== 强制修正 StatCompareSelfFrame 位置（解决空白问题） ==========
+local function ForceStatComparePosition()
+    if SCRequestPanelLayout then
+        SCRequestPanelLayout()
+        return
+    end
+    if not StatCompareSelfFrame then
+        -- 如果框架还未创建，延迟重试
+        local timer = 0
+        local waitFrame = CreateFrame("Frame")
+        waitFrame:SetScript("OnUpdate", function()
+            timer = timer + arg1
+            if timer > 1 then
+                waitFrame:SetScript("OnUpdate", nil)
+                ForceStatComparePosition()
+            end
+        end)
+        return
+    end
+    
+    -- 避免重复 Hook
+    if StatCompareSelfFrame._positionHooked then
+        return
+    end
+    StatCompareSelfFrame._positionHooked = true
+    
+    local oldOnShow = StatCompareSelfFrame:GetScript("OnShow")
+    StatCompareSelfFrame:SetScript("OnShow", function()
+        -- 先执行原有的 OnShow 逻辑
+        if oldOnShow then
+            oldOnShow()
+        end
+        
+        -- 检查当前设置
+        local settings = S_ItemTip_Settings or { showInspect = true }
+        local charVisible = CharacterFrame and CharacterFrame:IsVisible() and PaperDollFrame and PaperDollFrame:IsVisible()
+        
+        if charVisible and not settings.showInspect then
+            -- 装备界面隐藏，强制锚定到 CharacterFrame 右侧
+            StatCompareSelfFrame:ClearAllPoints()
+            StatCompareSelfFrame:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -30, -10)
+            
+            -- 清除保存的位置缓存，防止后续被覆盖
+            if StatCompare_Player and StatCompare_Player["FramePositions"] then
+                StatCompare_Player["FramePositions"]["StatCompareSelfFrame"] = nil
+            end
+        end
+    end)
+end
+
+-- 在插件加载完成后尝试 Hook
+local hookTimer2 = 0
+local hookFrame2 = CreateFrame("Frame")
+hookFrame2:SetScript("OnUpdate", function()
+    hookTimer2 = hookTimer2 + arg1
+    if hookTimer2 > 2 then
+        ForceStatComparePosition()
+        hookFrame2:SetScript("OnUpdate", nil)
+    end
+end)
+-- ==========================================================
+
+DEFAULT_CHAT_FRAME:AddMessage("|cFFFFFF00S_ItemTip InspectFrame.lua 加载完成|r")

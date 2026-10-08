@@ -1,0 +1,13 @@
+## Interface: 11200
+## Title: 斯坦索姆镇长-盾牌耐久检测自动换盾插件
+## Notes: 请将备用盾牌放在背包前8个格子中，使用/STSM命令 开启/关闭，支持interact和无双交互两种模组
+## Author: jimmy
+## Version: 2.4.9
+## OptionalDeps: pfUI
+## SavedVariablesPerCharacter: STSMmayorDB
+## DefaultState: disabled
+
+Libs\Ace2\AceLibrary\AceLibrary.lua
+Libs\Deformat-2.0\Deformat-2.0.lua
+Libs\Gratuity-2.0\Gratuity-2.0.lua
+STSMmayor.lua
