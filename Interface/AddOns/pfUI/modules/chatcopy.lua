@@ -580,9 +580,9 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
     fsFrame:SetFrameLevel(child:GetFrameLevel() + 2)
     f.fsFrame = fsFrame
 
-    f.hits = {}      -- 行热区 Button 池（点击选择 + 选中底色 + 该行 FontString）
+    f.hits = {}      -- 消息热区 Button 池（拖选文字 + 该消息的视觉行）
 
-    -- 拖动选择字符；单击保留整条消息选择，Shift+单击扩展原来的选区。
+    -- 拖动选择字符；单击清除选区，Shift+单击扩展已有的文字选区。
     -- ⚠️ 用全局 this（本客户端 SetScript 回调不传 self），this.pfIndex = 行号。
     local function OnLineDown()
       if not win then return end
@@ -594,7 +594,7 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
       local pos = TextAtCursor()
       if not pos then return end
       local cx, cy = GetCursorPosition()
-      win.drag = {index=i, start=pos, x=cx, y=cy, shift=IsShiftKeyDown()}
+      win.drag = {start=pos, x=cx, y=cy, shift=IsShiftKeyDown()}
       if win.drag.shift and win.textStart then
         win.drag.start = win.textStart
         win.drag.moved = true
@@ -611,7 +611,6 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
         if scrollY > win.scroll:GetTop() then win.scroll:Scroll(5)
         elseif scrollY < win.scroll:GetBottom() then win.scroll:Scroll(-5) end
         win.textStart, win.textEnd = d.start, TextAtCursor()
-        win.selected = {}
         win:PaintSelection()
       end)
     end
@@ -623,14 +622,6 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
         win.textStart, win.textEnd = d.start, TextAtCursor()
       else
         win.textStart, win.textEnd = nil, nil
-        if d.shift and win.anchor then
-          local a, b = win.anchor, d.index
-          if a > b then a, b = b, a end
-          for k=a, b do win.selected[k] = true end
-        else
-          win.selected[d.index] = not win.selected[d.index] or nil
-          win.anchor = d.index
-        end
       end
       win.drag = nil
       win:SetScript("OnUpdate", nil)
@@ -661,11 +652,6 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
       b:SetHeight(16)
       b:SetFrameLevel(fsFrame:GetFrameLevel() + 1)
       b.pfIndex = i
-
-      b.bg = b:CreateTexture(nil, "BACKGROUND")
-      b.bg:SetAllPoints(b)
-      b.bg:SetTexture(.25, .45, .85, .45)
-      b.bg:Hide()
 
       b.fs = b:CreateFontString(nil, "OVERLAY", "ChatFontNormal")
       b.fs:SetPoint("TOPLEFT", b, "TOPLEFT", 0, 0)
@@ -735,10 +721,6 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
       return b
     end
 
-    -- 选中状态：selected[行号] = true。行号是**显示顺序**（1 = 最旧、末尾 = 最新）。
-    f.selected = {}
-    f.anchor   = nil      -- Shift+点击的区间起点
-
     -- 当前窗口的完整文本（行数组优先；退路形态下退回 EditBox 里的内容）
     -- ⚠️ 判据用 lineText 是否存在，不用"行数 > 0"：空窗口时行数组是空表，
     --    拼出来就是 ""，而**不能**退回 EditBox（那里可能还残留着别的内容）。
@@ -747,36 +729,21 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
       return (win.edit:GetText() or "")
     end
 
-    -- 只拼被选中的那几行
+    -- 只复制鼠标选中的文字，不再回退到整条消息。
     f.SelectedText = function()
-      local text = PartialText()
-      if text then return text, 0 end
-      local sel = win.selected
-      local buf, n = {}, 0
-      for i=1, (win.lineCount or 0) do
-        if sel[i] and win.lineText[i] then n = n + 1; buf[n] = win.lineText[i] end
-      end
-      if n == 0 then return nil, 0 end
-      return table.concat(buf, "\n"), n
+      return PartialText()
     end
 
-    -- 重绘选中底色 + 状态行
+    -- 重绘文字选区与状态行。
     f.PaintSelection = function()
-      local sel, cnt = win.selected, 0
-      for i=1, (win.lineCount or 0) do
-        local b = win.hits[i]
-        if b then
-          if sel[i] then cnt = cnt + 1; b.bg:Show() else b.bg:Hide() end
-        end
-      end
-      win.selCount = cnt
       PaintTextSelection()
-      local plain = (win.lineCount or 0) .. " " .. T["lines"]
-      if cnt > 0 then
-        win.count:SetText(plain .. "  |cff88ff88" .. T["Selected"] .. " " .. cnt .. "|r")
-      else
-        win.count:SetText(plain)
+      local count = win.textStart and win.textEnd and math.abs(win.textEnd-win.textStart) or 0
+      win.selCount = count
+      local label = (win.lineCount or 0) .. " " .. T["lines"]
+      if count > 0 then
+        label = label .. "  |cff88ff88" .. T["Selected"] .. " " .. count .. " " .. T["chars"] .. "|r"
       end
+      win.count:SetText(label)
     end
 
     local function DoCopy(text)
@@ -801,9 +768,9 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
 
     f.btnCopySel = Button(T["Copy Selected"], 92, 76, function()
       if not win then return end
-      local text, n = win:SelectedText()
+      local text = win:SelectedText()
       if not text then
-        win.count:SetText("|cffff8888" .. T["No lines selected"] .. "|r")
+        win.count:SetText("|cffff8888" .. T["No text selected"] .. "|r")
         return
       end
       DoCopy(text)
@@ -811,8 +778,6 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
 
     f.btnClearSel = Button(T["Clear Selection"], 172, 56, function()
       if not win then return end
-      win.selected = {}
-      win.anchor   = nil
       win.textStart, win.textEnd = nil, nil
       win.edit:HighlightText(0, 0)
       win.edit:ClearFocus()
@@ -834,7 +799,7 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
     f.hint = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.hint:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -26, 40)
     f.hint:SetTextColor(.6, .6, .6, 1)
-    f.hint:SetText(T["Drag to select text; click to select a message"])
+    f.hint:SetText(T["Drag to select text"])
 
     f:SetScript("OnHide", function()
       f.drag = nil
@@ -878,12 +843,9 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
   Fill = function()
     if not win or not source then return end
 
-    -- 换窗口（点"切换窗口"或换标签）时清掉上一次的选中：行号是索引，
-    -- 不清就会把"上一个窗口的第 3 行"错套到新窗口上。
+    -- 换窗口时清掉旧的字符选区，避免索引指向另一份聊天内容。
     if win.lastSource ~= source then
       win.lastSource = source
-      win.selected   = {}
-      win.anchor     = nil
       win.textStart, win.textEnd, win.drag = nil, nil, nil
       win.edit:HighlightText(0, 0)
       win.edit:ClearFocus()
@@ -896,7 +858,6 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
     end
     if changed then
       win.textStart, win.textEnd, win.drag = nil, nil, nil
-      win.selected, win.anchor = {}, nil
       win.edit:HighlightText(0, 0)
       win.edit:ClearFocus()
     end
@@ -941,7 +902,6 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
     for i=n+1, old do
       if pool[i] then
         pool[i]:Hide()
-        pool[i].bg:Hide()
         pool[i].pfIndex = nil
       end
     end

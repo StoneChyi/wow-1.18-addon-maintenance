@@ -14,10 +14,9 @@ pfUI_translation["zhCN"] = {
   ["Usage"] = "用法",
   ["Copy Selected"] = "复制选中",
   ["Clear Selection"] = "清除选择",
-  ["No lines selected"] = "还没选中任何行（点一下要复制的行）",
+  ["No text selected"] = "请先拖动鼠标选择要复制的文字",
   ["Selected"] = "已选",
-  ["Click a line to select, Shift+click for a range"] = "点击行=选中/取消；Shift+点击=选一整段",
-  ["Drag to select text; click to select a message"] = "拖动选取文字；单击选择整条消息",
+  ["Drag to select text"] = "拖动选取文字，按 Ctrl+C 复制",
   ["Text selected: Ctrl+C or Copy Selected"] = "已选取文字：按 Ctrl+C 或点复制选中",
   ["No raid YY"] = "暂无团队YY",
   

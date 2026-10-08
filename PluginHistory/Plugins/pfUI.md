@@ -153,3 +153,14 @@
 ## 2026-10-09 技能栏初始化兼容修复（本次确认）
 
 技能栏监控调用旧客户端缺少的 GameTooltip:GetOwner 导致后续模块未加载；已改用 IsOwned。六项离线模拟检查通过，用户执行 /reload 后确认头像、小地图和按钮收纳均恢复。主要文件：modules/actionbar.lua、tests/monitor-tooltip-owner.lua。详见[本次修复与验证记录](../pfUI-tooltip-fix-20261009.md)。此结论不代表所有监控方案均已实测；哨塔隐藏需求尚未重新实施。
+
+
+## 2026-10-09 聊天复制取消单击整条消息选择
+
+目的：按用户反馈移除单击即选中整条消息及 Shift 点击按消息范围选择的机制，避免误选。单击现在清除文字选区；拖动鼠标选取任意文字，Shift 点击只扩展已有字符选区；“复制选中”没有选区时仅提示，不回退复制整条消息。“复制全部”按钮与团队 YY 提取保留。
+
+主要文件：[modules/chatcopy.lua](../../Interface/AddOns/pfUI/modules/chatcopy.lua)、[env/translations_zhCN.lua](../../Interface/AddOns/pfUI/env/translations_zhCN.lua)。关联功能：中文字符拖选、跨消息选择、透明 EditBox 的 Ctrl+C 回退、团队 YY 去空格复制。移除整条消息选区状态和底色，提示改为拖选文字。
+
+验证：[Tools/tests/test_pfui_chatcopy_drag_only.py](../../Tools/tests/test_pfui_chatcopy_drag_only.py) 使用 Lua 5.1 模拟界面，验证单击/无文字锚点的 Shift 点击不会选择整条消息，无选区复制不会改写剪贴板；已有文字的 Shift 点击扩选、中文/反向/跨消息拖选、复制全部、剪贴板 API 与 Ctrl+C 回退均通过。团队 YY 的 12 种输入回归通过，包含 `YY:123 123 123` → `123123123`；频道隔离、退团清空、换行、缓存和拖动释放检查也通过。
+
+未确认事项：尚未进行本次改动的游戏内实测；离线界面模拟不等同于客户端验收。历史依据与初始化清单保持原样。
