@@ -204,10 +204,13 @@ function Banana_OnUpdate()
 	else
 		this.tick = GetTime() + 0.2
 	end
+	-- Clear the temporary player marker before scanning, including the final retry.
+	if attempts > 0 then
+		Banana_SetSymbol("player", 0)
+	end
 	Banana_UpdateStatus()
     Banana_CtRaMainTankUpdate()
 	if attempts > 0 then
-		Banana_SetSymbol("player", 0)
 		attempts = attempts - 1
 	end
 end
@@ -544,7 +547,7 @@ function Banana_ScanNpcs()
 	if not superwow then return end
 	for i = 1, 8 do
 		local unit = "mark" .. i
-		if UnitExists(unit) and GetRaidTargetIndex(unit) == i then
+		if UnitExists(unit) and Banana_GetSymbol(unit) == i then
 			icons[i].Target = UnitName(unit)
 			icons[i].Unit = unit
 			icons[i].IsDeath = UnitIsDead(unit) and 1 or 0
@@ -995,7 +998,10 @@ function Banana_ClearAllSymbols()
 	for i = 1, 8 do
     	Banana_SetSymbol("player", i)
 	end
+	-- The loop borrows each unique marker; never leave the final skull on the player.
+	Banana_SetSymbol("player", 0)
 	attempts = 10
+	Banana_UpdateStatus()
 end
 
 function Banana_SaveFramePos(frame)
@@ -1111,6 +1117,11 @@ end
 
 function Banana_GetSymbol(unit)
 	local result = GetRaidTargetIndex(unit)
+	-- Server acknowledgement can lag behind clearing. Ignore only our borrowed marker,
+	-- including aliases such as party/raid units and SuperWoW's mark8.
+	if attempts > 0 and result and result >= 1 and result <= 8 and UnitIsUnit(unit, "player") then
+		return 0
+	end
 	if (not result) or (result == 0) then
 		local now = GetTime()
 		if now > huntersMarkCacheExpire then
@@ -1133,6 +1144,8 @@ function Banana_GetSymbol(unit)
 end
 
 function Banana_SetSymbol(unit, index)
+	-- A new explicit raid marker supersedes any pending clear-all retries.
+	if index >= 1 and index <= 8 then attempts = 0 end
 	Banana_InvalidateSymbolCache()
 	if index <= 8 then
 		if superwow and not InGroupOrRaid() then
