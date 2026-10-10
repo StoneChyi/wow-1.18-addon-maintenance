@@ -4,25 +4,26 @@
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "snapshot_difference": 2,
-    "unconfirmed": 59,
-    "documented_history": 42,
+    "documented_history": 45,
+    "unconfirmed": 57,
+    "snapshot_difference": 1,
     "related_skin_only": 2
   },
   "addons": [
     {
       "addon": "!Libs",
-      "status": "snapshot_difference",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/!Libs.md",
-      "purpose": "补记可核对的共享词库差异。",
+      "purpose": "补记共享词库差异，并修复 HealComm 群体治疗预估清理。",
       "sources": [
         "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua.20260918125911.bak"
       ],
       "maintenance_files": [
-        "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua"
+        "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua",
+        "Interface/AddOns/!Libs/HealComm-1.0/HealComm-1.0.lua"
       ],
       "tracked_files_at_reference": 93,
-      "pending": "这些词条是个人补充还是整合包更新，以及修改时间/原因，请补充；备份文件名日期不是可信提交时间。"
+      "pending": "真实团队通讯与其他插件验收待补充；原词库差异归属仍待确认。"
     },
     {
       "addon": "Accountant",
@@ -962,13 +963,15 @@
     },
     {
       "addon": "NotGrid",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/NotGrid.md",
-      "purpose": "等待确认是否有个人修改",
+      "purpose": "修复治疗祷言后预估条持续残留及死亡、满血后的旧显示。",
       "sources": [],
-      "maintenance_files": [],
+      "maintenance_files": [
+        "Interface/AddOns/NotGrid/core.lua"
+      ],
       "tracked_files_at_reference": 22,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "团队实测待确认；2026-10-10 前的个人修改归属仍待补充。"
     },
     {
       "addon": "OneBag",
@@ -1082,13 +1085,15 @@
     },
     {
       "addon": "QuickHeal",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/QuickHeal.md",
-      "purpose": "等待确认是否有个人修改",
+      "purpose": "同步内置 HealComm 预估清理修复，保证库加载顺序兼容。",
       "sources": [],
-      "maintenance_files": [],
+      "maintenance_files": [
+        "Interface/AddOns/QuickHeal/libs/HealComm-1.0/HealComm-1.0.lua"
+      ],
       "tracked_files_at_reference": 25,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "真实团队通讯与完整选人流程待验收；此前个人修改归属待补充。"
     },
     {
       "addon": "QuickReply",

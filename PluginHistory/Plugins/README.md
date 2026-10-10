@@ -2,9 +2,9 @@
 
 本索引按仓库中的 **105 个插件目录**逐一建档，整理于 2026-10-09。原先已有零散报告的插件也统一归入独立页面。
 
-已找到维护记录 **42 个**；可核对备份差异但来源待确认 **2 个**；仅确认关联皮肤适配 **2 个**；尚未确认个人修改 **59 个**。这不是“105 个均已修改”的结论。
+已找到维护记录 **45 个**；可核对备份差异但来源待确认 **1 个**；仅确认关联皮肤适配 **2 个**；尚未确认个人修改 **57 个**。这不是“105 个均已修改”的结论。
 
-页面中的修改是历史总结，本次没有更改插件功能。日期/长期笔记存在返工时，优先保留较晚的明确决定，撤回项单列；没有记录的内容等待补充。历史笔记中提到其他客户端路径的，不自动认定也修改了当前安装。
+初始化内容为历史总结；后续实际维护按真实日期记录在各插件页，当前状态统计更新至 2026-10-10。日期/长期笔记存在返工时，优先保留较晚的明确决定，撤回项单列；没有记录的内容等待补充。历史笔记中提到其他客户端路径的，不自动认定也修改了当前安装。
 
 [集中补充入口](../待补充清单.md) · [维护方法](../README.md) · [机器可读索引](../maintenance-index.json)
 
@@ -14,7 +14,7 @@
 
 | 插件 | 证据状态 | 修改目的 / 待确认范围 |
 | --- | --- | --- |
-| [!Libs](!Libs.md) | 有备份差异，来源待确认 | 补记可核对的共享词库差异。 |
+| [!Libs](!Libs.md) | 有维护记录 | 补记共享词库差异，并修复 HealComm 群体治疗预估清理。 |
 | [Accountant](Accountant.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [ActionBarProfiles](ActionBarProfiles.md) | 有维护记录 | 让天赋切换后动作条完整恢复，减少残留和无效重复加载。 |
 | [AdvancedTradeSkillWindow2](AdvancedTradeSkillWindow2.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
@@ -69,14 +69,14 @@
 | [ModernMapMarkers](ModernMapMarkers.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [ModifiedPowerAuras](ModifiedPowerAuras.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [MySlash](MySlash.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [NotGrid](NotGrid.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
+| [NotGrid](NotGrid.md) | 有维护记录 | 修复治疗祷言后预估条持续残留及死亡、满血后的旧显示。 |
 | [OneBag](OneBag.md) | 有维护记录 | 解决整理卡灰、油类次数和拆分回归。 |
 | [Outfitter](Outfitter.md) | 有维护记录 | 完善快速换装和天赋切换联动。 |
 | [PallyPower](PallyPower.md) | 有维护记录 | 增加单人操作与个人祝福，同时修正团队目标判断。 |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [PlayTurtle](PlayTurtle.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [PlayerLinkEnhance](PlayerLinkEnhance.md) | 有维护记录 | 让头像/玩家菜单更紧凑并减少互相干扰。 |
-| [QuickHeal](QuickHeal.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
+| [QuickHeal](QuickHeal.md) | 有维护记录 | 同步内置 HealComm 预估清理修复，保证库加载顺序兼容。 |
 | [QuickReply](QuickReply.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [RaidCheck](RaidCheck.md) | 有维护记录 | 区分未检测成员，并增加团队分配工具。 |
 | [Rinse](Rinse.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |

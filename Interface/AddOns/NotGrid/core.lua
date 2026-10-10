@@ -494,6 +494,11 @@ function NotGrid:UNIT_MAIN(unitid)
                 healamount = self.HealComm:getHeal(name)
             end
 
+            local isDead = UnitIsDead(unitid)
+            local isGhost = UnitIsGhost(unitid) or currhealth <= 0
+            -- Do not redraw incoming heals after UnitHealthZero clears a dead unit.
+            if isDead or isGhost then healamount = 0 end
+
             if healamount > 999 then
                 healtext = string.format("+%.1fk", healamount/1000.0)
             else
@@ -506,9 +511,9 @@ function NotGrid:UNIT_MAIN(unitid)
             f.powerbar:SetMinMaxValues(0, maxpower)
             f.powerbar:SetValue(currpower)
 
-            if UnitIsDead(unitid) then
+            if isDead then
                 self:UnitHealthZero(f, L["Dead"], shortname)
-            elseif UnitIsGhost(unitid) or (deficit >= maxhealth) then
+            elseif isGhost then
                 self:UnitHealthZero(f, L["Ghost"], shortname)
             elseif currhealth/maxhealth*100 <= self.o.healththreshhold then
                 local deficittext
@@ -522,16 +527,15 @@ function NotGrid:UNIT_MAIN(unitid)
                 f.namehealthtext:SetText(shortname)
             end
 
-            if healamount > 0 then
-                if o.showhealcommbar then
-                    self:SetIncHealFrame(f, healamount, currhealth, maxhealth)
-                end
-                if o.showhealcommtext then
-                    f.healcommtext:SetText(healtext)
-                    f.healcommtext:Show()
-                end
+            if healamount > 0 and o.showhealcommbar then
+                self:SetIncHealFrame(f, healamount, currhealth, maxhealth)
             else
                 f.incheal:SetBackdropColor(0,0,0,0)
+            end
+            if healamount > 0 and o.showhealcommtext then
+                f.healcommtext:SetText(healtext)
+                f.healcommtext:Show()
+            else
                 f.healcommtext:Hide()
             end
 
@@ -557,13 +561,16 @@ function NotGrid:UnitHealthZero(f, state, shortname)
 end
 
 function NotGrid:SetIncHealFrame(f, healamount, currhealth, maxhealth)
+    if maxhealth <= 0 or currhealth <= 0 or currhealth >= maxhealth or healamount <= 0 then
+        f.incheal:SetBackdropColor(0,0,0,0)
+        return
+    end
     local o = self.o
     if o.unithealthorientation == 1 then
         local modifier = maxhealth/o.unitheight
         local healheight = healamount/modifier
         local currheight = currhealth/modifier
         local maxheight = o.unitheight-currheight
-        if maxheight == 0 then return end
         if healheight >= maxheight then healheight = maxheight end
         f.incheal:SetHeight(healheight)
         f.incheal:ClearAllPoints()
@@ -573,7 +580,6 @@ function NotGrid:SetIncHealFrame(f, healamount, currhealth, maxhealth)
         local healwidth = healamount/modifier
         local currwidth = currhealth/modifier
         local maxwidth = o.unitwidth-currwidth
-        if maxwidth == 0 then return end
         if healwidth >= maxwidth then healwidth = maxwidth end
         f.incheal:SetWidth(healwidth)
         f.incheal:ClearAllPoints()

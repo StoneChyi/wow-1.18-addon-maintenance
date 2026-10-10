@@ -8,7 +8,7 @@ Dependencies: AceLibrary, AceEvent-2.0, RosterLib-2.0, ItemBonusLib-1.0
 ]]
 
 local MAJOR_VERSION = "HealComm-1.0"
-local MINOR_VERSION = "$Revision: 11732 $"
+local MINOR_VERSION = 11733 -- Local maintenance revision; upstream remains 11732.
 
 if not AceLibrary then error(MAJOR_VERSION .. " requires AceLibrary") end
 if not AceLibrary:IsNewVersion(MAJOR_VERSION, MINOR_VERSION) then return end
@@ -1241,46 +1241,51 @@ function HealComm:stopHeal(caster)
 	if self:IsEventScheduled("Healcomm_"..caster) then
 		self:CancelScheduledEvent("Healcomm_"..caster)
 	end
-	if self.Lookup[caster] then
-		self.Heals[self.Lookup[caster]][caster] = nil
-		self:TriggerEvent("HealComm_Healupdate", self.Lookup[caster])
+	local target = self.Lookup[caster]
+	if target then
+		if self.Heals[target] then self.Heals[target][caster] = nil end
 		self.Lookup[caster] = nil
+		self:TriggerEvent("HealComm_Healupdate", target)
 	end
 end
 
 function HealComm:startHeal(caster, target, size, casttime)
-	self:ScheduleEvent("Healcomm_"..caster, self.stopHeal, (casttime/1000), self, caster)
+	-- A caster can only have one active direct heal, including group heals.
+	self:stopGrpHeal(caster)
+	self:stopHeal(caster)
 	if not self.Heals[target] then
 		self.Heals[target] = {}
 	end
-	if self.Lookup[caster] then
-		self.Heals[self.Lookup[caster]][caster] = nil
-		self.Lookup[caster] = nil
-	end
 	self.Heals[target][caster] = {amount = math.floor(size), ctime = (casttime/1000)+GetTime()}
 	self.Lookup[caster] = target
+	self:ScheduleEvent("Healcomm_"..caster, self.stopHeal, (casttime/1000), self, caster)
 	self:TriggerEvent("HealComm_Healupdate", target)
 end
 
 function HealComm:delayHeal(caster, delay)
 	self:CancelScheduledEvent("Healcomm_"..caster)
-	if self.Lookup[caster] and self.Heals[self.Lookup[caster]] then
-		self.Heals[self.Lookup[caster]][caster].ctime = self.Heals[self.Lookup[caster]][caster].ctime + (delay/1000)
-		self:ScheduleEvent("Healcomm_"..caster, self.stopHeal, (self.Heals[self.Lookup[caster]][caster].ctime-GetTime()), self, caster)
+	local target = self.Lookup[caster]
+	local heal = target and self.Heals[target] and self.Heals[target][caster]
+	if heal then
+		heal.ctime = heal.ctime + (delay/1000)
+		self:ScheduleEvent("Healcomm_"..caster, self.stopHeal, (heal.ctime-GetTime()), self, caster)
 	end
 end
 
 function HealComm:startGrpHeal(caster, size, casttime, party1, party2, party3, party4, party5)
-	self:ScheduleEvent("Healcomm_"..caster, self.stopGrpHeal, (casttime/1000), self, caster)
+	self:stopHeal(caster)
+	self:stopGrpHeal(caster)
 	self.GrpHeals[caster] = {amount = math.floor(size), ctime = (casttime/1000)+GetTime(), targets = {party1, party2, party3, party4, party5}}
+	-- Separate timer IDs prevent single-heal stop/delay messages cancelling this heal.
+	self:ScheduleEvent("Healcomm_Group_"..caster, self.stopGrpHeal, (casttime/1000), self, caster)
 	for i=1,getn(self.GrpHeals[caster].targets) do
 		self:TriggerEvent("HealComm_Healupdate", self.GrpHeals[caster].targets[i])
 	end
 end
 
 function HealComm:stopGrpHeal(caster)
-	if self:IsEventScheduled("Healcomm_"..caster) then
-		self:CancelScheduledEvent("Healcomm_"..caster)
+	if self:IsEventScheduled("Healcomm_Group_"..caster) then
+		self:CancelScheduledEvent("Healcomm_Group_"..caster)
 	end
 	local targets
 	if self.GrpHeals[caster] then
@@ -1295,10 +1300,10 @@ function HealComm:stopGrpHeal(caster)
 end
 
 function HealComm:delayGrpHeal(caster, delay)
-	self:CancelScheduledEvent("Healcomm_"..caster)
+	self:CancelScheduledEvent("Healcomm_Group_"..caster)
 	if self.GrpHeals[caster] then
 		self.GrpHeals[caster].ctime = self.GrpHeals[caster].ctime + (delay/1000)
-		self:ScheduleEvent("Healcomm_"..caster, self.stopGrpHeal, (self.GrpHeals[caster].ctime-GetTime()), self, caster)
+		self:ScheduleEvent("Healcomm_Group_"..caster, self.stopGrpHeal, (self.GrpHeals[caster].ctime-GetTime()), self, caster)
 	end
 end
 
@@ -1422,6 +1427,17 @@ end
 
 function HealComm:SPELLCAST_STOP()
 	if not self.SpellCastInfo then return end
+	-- Successful casts must clear predictions too, rather than relying only on timers.
+	if self.Spells[self.spellIsCasting] then
+		if self.spellIsCasting == L["Prayer of Healing"] then
+			self:SendAddonMessage("GrpHealstop")
+			self:stopGrpHeal(UnitName("player"))
+		else
+			self:SendAddonMessage("Healstop")
+			self:stopHeal(UnitName("player"))
+		end
+	end
+	self.spellIsCasting = nil
 	local targetUnit = roster:GetUnitIDFromName(self.SpellCastInfo[3])
 	if targetUnit then
 		if self.SpellCastInfo[1] == L["Renew"] then
@@ -1584,17 +1600,21 @@ end
 function HealComm:getHeal(unit)
 	if unit == UNKNOWNOBJECT or unit == UKNOWNBEING then
 		return 0
- 	end
-	local healamount = 0
+	end
+	local healamount, now = 0, GetTime()
 	if self.Heals[unit] then
-		for k,v in self.Heals[unit] do
-			healamount = healamount+v.amount
+		for k,v in pairs(self.Heals[unit]) do
+			if v.ctime and v.ctime > now then
+				healamount = healamount+v.amount
+			end
 		end
 	end
 	for k,v in pairs(self.GrpHeals) do
-		for j,c in pairs(v.targets) do
-			if unit == c then
-				healamount = healamount+v.amount
+		if v.ctime and v.ctime > now then
+			for j,c in pairs(v.targets) do
+				if unit == c then
+					healamount = healamount+v.amount
+				end
 			end
 		end
 	end
@@ -1618,17 +1638,17 @@ end
 function HealComm:getNumHeals(unit)
 	if unit == UNKNOWNOBJECT or unit == UKNOWNBEING then
 		return 0
- 	end
-	local heals = 0
+	end
+	local heals, now = 0, GetTime()
 	if self.Heals[unit] then
-		for _ in self.Heals[unit] do
-			heals = heals + 1
+		for _,v in pairs(self.Heals[unit]) do
+			if v.ctime and v.ctime > now then heals = heals + 1 end
 		end
 	end
 	for _,v in pairs(self.GrpHeals) do
-		for _,c in pairs(v.targets) do
-			if unit == c then
-				heals = heals + 1
+		if v.ctime and v.ctime > now then
+			for _,c in pairs(v.targets) do
+				if unit == c then heals = heals + 1 end
 			end
 		end
 	end
