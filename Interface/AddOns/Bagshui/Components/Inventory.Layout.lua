@@ -1287,6 +1287,7 @@ function Inventory:AssignItemsToSlots(
 		local frames = self.ui.frames
 
 		local groupFrame = frames.groups[uiGroupNum]
+		local perf = Bagshui.components.Performance
 
 		-- Prepare for layout
 		local initialOffset = groupPadding + itemSlotMargin
@@ -1350,15 +1351,21 @@ function Inventory:AssignItemsToSlots(
 
 
 			if not hideItem then
-				-- Ensure slot button exists.
-				self.ui:CreateInventoryItemSlotButton(currentItemSlotButtonNum)
+				-- New buttons can create their children under the final group immediately.
+				local newButton = buttons.itemSlots[currentItemSlotButtonNum] == nil
+				self.ui:CreateInventoryItemSlotButton(currentItemSlotButtonNum, groupFrame)
 
 				button = buttons.itemSlots[currentItemSlotButtonNum]
 
 				-- Ensure parentage of item slot button is set to current group frame.
 				-- This is required to get the layering right -- without it, stuff can end up behind groups.
-				if button:GetParent() ~= groupFrame then
+				local checkSpan = perf and perf.enabled and perf:Begin(self, "ParentCheck")
+				local changeParent = button:GetParent() ~= groupFrame
+				if checkSpan then perf:Finish(checkSpan) end
+				if changeParent then
+					local parentSpan = perf and perf.enabled and perf:Begin(self, newButton and "ParentApplyNew" or "ParentApplyReused")
 					button:SetParent(groupFrame)
+					if parentSpan then perf:Finish(parentSpan) end
 				end
 
 				-- Record details of this button's assignments so we can access

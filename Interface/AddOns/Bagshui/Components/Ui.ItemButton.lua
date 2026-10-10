@@ -333,6 +333,17 @@ function Ui:SkinItemButton(button, buttonType)
 		edgeSize = BsSkin.itemSlotEdgeSize,
 		insets = { left = BsSkin.itemSlotInset, right = BsSkin.itemSlotInset, top = BsSkin.itemSlotInset, bottom = BsSkin.itemSlotInset }
 	}
+	-- Inventory slots are laid out at the configured size. Apply their final
+	-- border thickness once, including prebuilt slots; sizing still sets scale
+	-- and verifies the actual backdrop before the button is displayed.
+	local inventory = buttonInfo.inventory
+	local itemSize = inventory and inventory.settings and inventory.settings.itemSize
+	if buttonType == BS_UI_ITEM_BUTTON_TYPE.ITEM and BsSkin.itemSlotBorderInverseScale
+		and not buttonInfo.noBorderScale and type(itemSize) == "number" and itemSize > 0
+		and buttonInfo.originalSizeAdjusted > 0
+	then
+		buttonInfo.borderBackdropTable.edgeSize = BsSkin.itemSlotEdgeSize * (1/self:GetItemButtonScale(button, itemSize))
+	end
 	buttonComponents.border:SetBackdrop(buttonInfo.borderBackdropTable)
 	buttonInfo.forceBorderDisplay = BsSkin.itemSlotBorderAlwaysShow
 	buttonInfo.qualityColor = BsSkin.itemSlotBorderDefaultColor
@@ -1106,7 +1117,8 @@ function Ui:InvertItemButtonBorderScale(button, deferColors)
 		if readSpan then perf:Finish(readSpan) end
 		local appliedInsets = applied and applied.insets or {}
 		if not applied
-			or applied.edgeSize ~= backdrop.edgeSize
+			or type(applied.edgeSize) ~= "number"
+			or math.abs(applied.edgeSize - backdrop.edgeSize) > 0.000001 * math.max(1, math.abs(backdrop.edgeSize))
 			or applied.edgeFile ~= backdrop.edgeFile
 			or (applied.tile or false) ~= (backdrop.tile or false)
 			or (applied.tileSize or 0) ~= (backdrop.tileSize or 0)

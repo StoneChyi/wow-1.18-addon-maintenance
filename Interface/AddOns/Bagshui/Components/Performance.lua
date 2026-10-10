@@ -18,6 +18,7 @@ local order = { "UiFrame_OnShow", "OpenBags", "OpenBank", "Open", "Update", "Upd
 	"ManageDryRun", "FindSpecialItems", "UpdateWindow", "UpdateItemButtons", "UpdateBagBar", "UpdateToolbar" }
 local detailOrder = { "GetGroupItemCountForLayout", "GroupWidths", "GroupLabels",
 	"CreateGroup", "CreateGroupMoveTarget", "AssignItemsToSlots", "CreateInventoryItemSlotButton",
+	"ParentCheck", "ParentApplyNew", "ParentApplyReused",
 	"CreateItemSlotButton", "SkinItemButton", "CreateShadowedTexture", "CreateItemButtonCooldown",
 	"SetItemButtonSize", "InvertItemButtonBorderScale", "BorderRead", "BorderApply",
 	"SizeAndShowFrame", "PositionFrames", "ReadGeometry", "RowGeometry", "WindowGeometry", "WindowFinish",
@@ -26,6 +27,7 @@ local detailLabels = {
 	GetGroupItemCountForLayout = "分组可见格计数", GroupWidths = "分组宽度计算", GroupLabels = "分组颜色与标签",
 	CreateGroup = "分组准备（含复用）", CreateGroupMoveTarget = "移动目标准备（含复用）",
 	AssignItemsToSlots = "分组物品分配", CreateInventoryItemSlotButton = "库存按钮准备（含复用）",
+	ParentCheck = "按钮父框架检查", ParentApplyNew = "新建按钮父框架更换", ParentApplyReused = "复用按钮父框架更换",
 	CreateItemSlotButton = "新建物品按钮", SkinItemButton = "按钮皮肤初始化",
 	CreateShadowedTexture = "阴影装饰创建", CreateItemButtonCooldown = "冷却控件创建",
 	SetItemButtonSize = "按钮缩放处理", InvertItemButtonBorderScale = "边框反向缩放",
@@ -247,12 +249,13 @@ local function CreationText(data)
 end
 
 function Performance:ReportText()
-	local lines = { "乾坤袋卡顿诊断 v3 / Bagshui " .. tostring(BS_VERSION),
+	local lines = { "乾坤袋卡顿诊断 v3.1 / Bagshui " .. tostring(BS_VERSION),
 		"诊断不改变刷新策略；数据仅保留在本次登录内。",
 		"毫秒为墙钟耗时，包含诊断开销。包含内部调用的耗时不能相加。",
 		"自身耗时仅扣除已测量的子调用；窗口绘制表示 Lua 布局/按钮处理，不是 GPU 渲染。",
 		"下一帧等待和最大帧间隔包含其他插件、游戏及系统耗时，不能单独归因乾坤袋。",
 		"v3 细分有额外诊断开销，勿与 v2 直接比较绝对耗时；细分阶段互相包含，不能相加。",
+		"v3.1 新增父框架检查/更换计时，更换次数区分新建与复用按钮；与 v3 比较须考虑额外开销。",
 		"准备次数包含复用；实际新建数量另列。缩放边框读取/应用仅测缩放路径，皮肤初始化另列。" }
 	if not self.startedAt then
 		table.insert(lines, "尚无采样。输入 /bs perf on，然后复现卡顿。")
@@ -292,6 +295,9 @@ function Performance:ReportText()
 		local function Total(key)
 			return sample.stats[key] and sample.stats[key].total or 0
 		end
+		local function Calls(key)
+			return sample.stats[key] and sample.stats[key].calls or 0
+		end
 		local tooltip = sample.stats.GetTooltip
 		local age = (self.enabled and _G.GetTime() or self.stoppedAt) - sample.startedAt
 		table.insert(lines, string.format("#%d %s %s：%d 格/%d 占用格；刷新 %d；布局 %d；排队 %d；窗口观察 %.2f/1 秒。",
@@ -306,6 +312,9 @@ function Performance:ReportText()
 			Total("SkinItemButton"), Total("SizeAndShowFrame"), Total("AssignItemToItemButton"), Total("UpdateItemButtonColorsAndBadges")))
 		table.insert(lines, string.format("  定位/边框 ms：锚点显示 %.2f；GetTop %.2f；缩放 %.2f；边框读取 %.2f；边框应用 %.2f。",
 			Total("PositionFrames"), Total("ReadGeometry"), Total("SetItemButtonSize"), Total("BorderRead"), Total("BorderApply")))
+		table.insert(lines, string.format("  父框架：检查 %d 次/%.2f ms；新建按钮更换 %d 次/%.2f ms；复用按钮更换 %d 次/%.2f ms。",
+			Calls("ParentCheck"), Total("ParentCheck"), Calls("ParentApplyNew"), Total("ParentApplyNew"),
+			Calls("ParentApplyReused"), Total("ParentApplyReused")))
 		table.insert(lines, string.format("  窗口 ms：行宽坐标 %.2f；尺寸测量 %.2f；收尾设置 %.2f。",
 			Total("RowGeometry"), Total("WindowGeometry"), Total("WindowFinish")))
 		table.insert(lines, "  打开至下一帧：" .. (sample.nextFrame and sample.nextFrame >= 0

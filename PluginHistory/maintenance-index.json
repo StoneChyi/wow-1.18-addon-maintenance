@@ -183,20 +183,21 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "复用布局并优化规则；v3 已测出按钮补建与边框应用开销，进一步方案待实施。",
+      "purpose": "复用布局并优化规则；v3.1 合并首次边框初始化、新按钮直接归组，增加父框架计时，待游戏复测。",
       "sources": [],
       "maintenance_files": [
         "Interface/AddOns/Bagshui/Bagshui.xml",
         "Interface/AddOns/Bagshui/Components/Inventory.Cache.lua",
         "Interface/AddOns/Bagshui/Components/Inventory.Layout.lua",
         "Interface/AddOns/Bagshui/Components/Inventory.Ui.lua",
+        "Interface/AddOns/Bagshui/Components/Inventory.Ui.ItemButton.lua",
         "Interface/AddOns/Bagshui/Components/Inventory.lua",
         "Interface/AddOns/Bagshui/Components/Bank.lua",
         "Interface/AddOns/Bagshui/Components/Rules.lua",
         "Interface/AddOns/Bagshui/Components/Ui.ItemButton.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "v3 已确认首次补建与边框应用开销，分配自身 50/109 ms 待归因；进一步方案尚未实施，多轮首次样本与移动拆分、换包、充能、搜索、皮肤和离线银行待客户端验收，早期个人修改未确认。",
+      "pending": "v3.1 三项优化与 110 组受控检查已完成；父框架实耗与首次收益、多轮首次样本、移动拆分、换包、充能、冷却、搜索、实际层级/皮肤、第三方操作和离线银行待验收，早期修改待补充。",
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua"
       ]

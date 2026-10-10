@@ -26,8 +26,9 @@ end
 --- Create a new item slot button.
 --- This is a separate function instead of overriding InventoryUi:CreateItemSlotButton()
 --- because they need to take completely different parameters.
----@param buttonNum number? When provided, only create the group if it doesn't exist.
-function InventoryUi:CreateInventoryItemSlotButton(buttonNum)
+---@param buttonNum number? When provided, only create the button if it doesn't exist.
+---@param parent table? Final group when creating during layout; defaults to the inventory window.
+function InventoryUi:CreateInventoryItemSlotButton(buttonNum, parent)
 	local ui = self
 	local inventory = self.inventory
 
@@ -66,7 +67,7 @@ function InventoryUi:CreateInventoryItemSlotButton(buttonNum)
 			-- The button is created normally, then customized for Inventory use.
 			local slotButton = ui:CreateItemSlotButton(
 				"Item"..elementNum,
-				inventory.uiFrame
+				parent or inventory.uiFrame
 			)
 			ui.buttons.itemSlots[elementNum] = slotButton
 
