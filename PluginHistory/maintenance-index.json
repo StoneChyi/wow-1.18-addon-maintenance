@@ -183,7 +183,7 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "复用有效布局并优化规则；加入 v3 窗口细分诊断，待定位首次布局尖峰。",
+      "purpose": "复用布局并优化规则；v3 已测出按钮补建与边框应用开销，进一步方案待实施。",
       "sources": [],
       "maintenance_files": [
         "Interface/AddOns/Bagshui/Bagshui.xml",
@@ -196,7 +196,7 @@
         "Interface/AddOns/Bagshui/Components/Ui.ItemButton.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "新 v2 分类约减半、重复打开保持轻量；已加 v3 窗口细分诊断，91 组受控行为检查通过，待客户端多轮采样定位首次尖峰；移动拆分、换包、充能、搜索、皮肤和离线银行待客户端验收，早期个人修改未确认。",
+      "pending": "v3 已确认首次补建与边框应用开销，分配自身 50/109 ms 待归因；进一步方案尚未实施，多轮首次样本与移动拆分、换包、充能、搜索、皮肤和离线银行待客户端验收，早期个人修改未确认。",
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua"
       ]

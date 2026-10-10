@@ -26,7 +26,7 @@
 | [AutoBar](AutoBar.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [AutoMarker](AutoMarker.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [Automatonex](Automatonex.md) | 有维护记录 | 完善模块配置、物品监控及与其他界面的协作。 |
-| [Bagshui](Bagshui.md) | 有维护记录 | 复用有效布局并优化规则；加入 v3 窗口细分诊断，待定位首次布局尖峰。 |
+| [Bagshui](Bagshui.md) | 有维护记录 | 复用布局并优化规则；v3 已测出按钮补建与边框应用开销，进一步方案待实施。 |
 | [BetterCharacterStats](BetterCharacterStats.md) | 有维护记录 | 保持角色属性面板布局稳定，并与观察、换天赋功能协调。 |
 | [BigWigs](BigWigs.md) | 有维护记录 | 适配乌龟服首领、中文日志以及竖行计时条。 |
 | [Blizzard_AuctionUI](Blizzard_AuctionUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
