@@ -183,7 +183,7 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "v3.1 单轮实测首次同步低约 26%；边框重复应用及新按钮迁移为 0，剩余预建迁移与创建成本待优化。",
+      "purpose": "v3.2 预建按钮隐藏归组，细分迁移可见性、首次边框和打开入口；127 组受控检查通过，待游戏复测。",
       "sources": [],
       "maintenance_files": [
         "Interface/AddOns/Bagshui/Bagshui.xml",
@@ -197,7 +197,7 @@
         "Interface/AddOns/Bagshui/Components/Ui.ItemButton.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "v3.1 已测预建迁移 29.85/89.70 ms、新建 54.42/58.56 ms；可见性/皮肤/完整入口方案待实施，多轮首次与银行首帧等待、物品操作、层级/皮肤及离线银行待验收，早期修改待补充。",
+      "pending": "v3.2 隐藏归组及入口诊断已实施；原生迁移/首帧收益、皮肤成本、多轮首次与物品操作、实际层级、第三方回调和离线银行待复测，早期修改待补充。",
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua"
       ]

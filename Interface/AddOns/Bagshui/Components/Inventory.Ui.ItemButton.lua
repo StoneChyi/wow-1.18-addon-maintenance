@@ -28,7 +28,8 @@ end
 --- because they need to take completely different parameters.
 ---@param buttonNum number? When provided, only create the button if it doesn't exist.
 ---@param parent table? Final group when creating during layout; defaults to the inventory window.
-function InventoryUi:CreateInventoryItemSlotButton(buttonNum, parent)
+---@param startHidden boolean? Used only for unused slots prebuilt under the hidden window.
+function InventoryUi:CreateInventoryItemSlotButton(buttonNum, parent, startHidden)
 	local ui = self
 	local inventory = self.inventory
 
@@ -67,7 +68,8 @@ function InventoryUi:CreateInventoryItemSlotButton(buttonNum, parent)
 			-- The button is created normally, then customized for Inventory use.
 			local slotButton = ui:CreateItemSlotButton(
 				"Item"..elementNum,
-				parent or inventory.uiFrame
+				parent or inventory.uiFrame,
+				startHidden
 			)
 			ui.buttons.itemSlots[elementNum] = slotButton
 

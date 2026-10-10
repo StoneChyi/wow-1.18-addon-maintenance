@@ -218,13 +218,13 @@ P:Start(); freshRender()
 assert(P.inventories.Bags.stats.ParentApplyNew.calls==1 and not P.inventories.Bags.stats.ParentApplyReused)
 ''')
 
-check('v3.1 report includes per-open migration counts and preserves disabled-clock behavior', r'''
+check('current report includes per-open migration counts and preserves disabled-clock behavior', r'''
 local update=inventory.Update
 prebuild(); freshRender(); assert(clockCalls==0 and P.startedAt==nil)
 ui.frames.groups[1]=otherGroup
 P:Start(); P:StartOpen(inventory); freshRender(); P:Stop()
 local report=P:ReportText()
-for _,text in ipairs({'诊断 v3.1','按钮父框架检查','复用按钮父框架更换','父框架：检查 1 次',
+for _,text in ipairs({'诊断 v3.2','按钮父框架检查','复用按钮父框架更换','父框架：检查 1 次',
  '新建按钮更换 0 次','复用按钮更换 1 次'}) do assert(string.find(report,text,1,true),text) end
 assert(inventory.Update==update)
 ''')

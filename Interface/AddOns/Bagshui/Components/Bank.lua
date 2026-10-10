@@ -244,7 +244,10 @@ function Bank:Open()
 		or (self.settings.replaceBank == false and self.ui:IsFrameVisible(self.blizzBankFrame))
 	)
 	self.itemButtonsUpdateNeeded = true
+	local perf = Bagshui.components.Performance
+	local updateSpan = perf and perf.enabled and perf:Begin(self, "BankPreShowUpdate")
 	self:Update()
+	if updateSpan then perf:Finish(updateSpan) end
 
 	-- Don't respond to open event when we're not hooking the Bank,
 	-- but do update online state via `Bank:Update()`.

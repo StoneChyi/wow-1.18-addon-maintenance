@@ -591,7 +591,9 @@ function Inventory:InitUi()
 	-- Pre-create item slot buttons. More will be created on the fly as needed.
 	-- This needs to happen before bag slot buttons because the size of item slot buttons dictates things about bag slot buttons
 	for buttonNum = 1, self.initialItemSlotButtons do
-		ui:CreateInventoryItemSlotButton(buttonNum)
+		-- Keep unused prebuilt slots hidden through the window's first Show().
+		-- Layout will parent and position them before its normal Show() call.
+		ui:CreateInventoryItemSlotButton(buttonNum, nil, true)
 	end
 
 
@@ -1393,9 +1395,16 @@ function Inventory:Open()
 			)
 			or nil
 	end
+	local perf = Bagshui.components.Performance
+	local showSpan = perf and perf.enabled and perf:Begin(self, "OpenShow")
 	self.uiFrame:Show()
+	if showSpan then perf:Finish(showSpan) end
+	local raiseSpan = perf and perf.enabled and perf:Begin(self, "OpenRaise")
 	self.uiFrame:Raise()
+	if raiseSpan then perf:Finish(raiseSpan) end
+	local dockSpan = perf and perf.enabled and perf:Begin(self, "OpenDock")
 	self:SetDockedToFrameVisibility(BS_INVENTORY_UI_VISIBILITY_ACTION.OPEN)
+	if dockSpan then perf:Finish(dockSpan) end
 end
 
 

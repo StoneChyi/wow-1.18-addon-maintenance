@@ -1364,7 +1364,9 @@ function Inventory:AssignItemsToSlots(
 				if checkSpan then perf:Finish(checkSpan) end
 				if changeParent then
 					local parentSpan = perf and perf.enabled and perf:Begin(self, newButton and "ParentApplyNew" or "ParentApplyReused")
+					local stateSpan = parentSpan and perf:Begin(self, button:IsVisible() and "ParentApplyVisible" or "ParentApplyHidden")
 					button:SetParent(groupFrame)
+					if stateSpan then perf:Finish(stateSpan) end
 					if parentSpan then perf:Finish(parentSpan) end
 				end
 

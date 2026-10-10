@@ -160,7 +160,8 @@ end
 ---@param name string Unique name for the button (will be passed to `Ui:CreateElementName()`).
 ---@param parent table Parent frame.
 ---@return table itemSlotButton
-function Ui:CreateItemSlotButton(name, parent)
+---@param startHidden boolean? Hide before skinning and custom scripts; standalone callers default to shown.
+function Ui:CreateItemSlotButton(name, parent, startHidden)
 	assert(name, "CreateItemSlotButton(): name is required")
 
 	local button = _G.CreateFrame(
@@ -169,6 +170,10 @@ function Ui:CreateItemSlotButton(name, parent)
 		parent,
 		"ItemButtonTemplate"
 	)
+
+	-- Prebuilt inventory slots have no assignment yet. Their window is hidden,
+	-- so this does not fire their later tooltip/stack-split OnHide handler.
+	if startHidden then button:Hide() end
 
 	button.bagshuiData = {
 		type = BS_UI_ITEM_BUTTON_TYPE.ITEM,
@@ -344,7 +349,10 @@ function Ui:SkinItemButton(button, buttonType)
 	then
 		buttonInfo.borderBackdropTable.edgeSize = BsSkin.itemSlotEdgeSize * (1/self:GetItemButtonScale(button, itemSize))
 	end
+	local perf = Bagshui.components.Performance
+	local borderSpan = perf and perf.enabled and perf:Begin(inventory, "SkinBorderInit")
 	buttonComponents.border:SetBackdrop(buttonInfo.borderBackdropTable)
+	if borderSpan then perf:Finish(borderSpan) end
 	buttonInfo.forceBorderDisplay = BsSkin.itemSlotBorderAlwaysShow
 	buttonInfo.qualityColor = BsSkin.itemSlotBorderDefaultColor
 
