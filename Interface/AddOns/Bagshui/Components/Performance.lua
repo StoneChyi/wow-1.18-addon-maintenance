@@ -16,6 +16,34 @@ local labels = {
 local order = { "UiFrame_OnShow", "OpenBags", "OpenBank", "Open", "Update", "UpdateCache",
 	"GetTooltip", "ValidateLayout", "UpdateLayoutLookupTables", "CategorizeItems", "SortGroups",
 	"ManageDryRun", "FindSpecialItems", "UpdateWindow", "UpdateItemButtons", "UpdateBagBar", "UpdateToolbar" }
+local detailOrder = { "GetGroupItemCountForLayout", "GroupWidths", "GroupLabels",
+	"CreateGroup", "CreateGroupMoveTarget", "AssignItemsToSlots", "CreateInventoryItemSlotButton",
+	"CreateItemSlotButton", "SkinItemButton", "CreateShadowedTexture", "CreateItemButtonCooldown",
+	"SetItemButtonSize", "InvertItemButtonBorderScale", "BorderRead", "BorderApply",
+	"SizeAndShowFrame", "PositionFrames", "ReadGeometry", "RowGeometry", "WindowGeometry", "WindowFinish",
+	"AssignItemToItemButton", "UpdateItemButtonColorsAndBadges" }
+local detailLabels = {
+	GetGroupItemCountForLayout = "分组可见格计数", GroupWidths = "分组宽度计算", GroupLabels = "分组颜色与标签",
+	CreateGroup = "分组准备（含复用）", CreateGroupMoveTarget = "移动目标准备（含复用）",
+	AssignItemsToSlots = "分组物品分配", CreateInventoryItemSlotButton = "库存按钮准备（含复用）",
+	CreateItemSlotButton = "新建物品按钮", SkinItemButton = "按钮皮肤初始化",
+	CreateShadowedTexture = "阴影装饰创建", CreateItemButtonCooldown = "冷却控件创建",
+	SetItemButtonSize = "按钮缩放处理", InvertItemButtonBorderScale = "边框反向缩放",
+	BorderRead = "缩放边框读取", BorderApply = "缩放边框应用",
+	SizeAndShowFrame = "控件尺寸定位", PositionFrames = "锚点/点击区域/显示", ReadGeometry = "定位后 GetTop",
+	RowGeometry = "行宽坐标读取", WindowGeometry = "窗口尺寸测量", WindowFinish = "窗口收尾设置",
+	AssignItemToItemButton = "物品绑定与显示", UpdateItemButtonColorsAndBadges = "颜色与徽标",
+}
+local function ItemPool(inventory)
+	local ui = inventory.ui
+	return ui and ui.buttons and ui.buttons.itemSlots and table.getn(ui.buttons.itemSlots) or 0
+end
+local function CreationPool(ui, key)
+	if key == "CreateGroup" then return ui.frames and ui.frames.groups end
+	if key == "CreateGroupMoveTarget" then return ui.frames and ui.frames.groupMoveTargets end
+end
+local creations = { CreateItemSlotButton = true, CreateGroup = true, CreateGroupMoveTarget = true,
+	CreateShadowedTexture = true, CreateItemButtonCooldown = true }
 local inventoryNames = { Bags = "背包", Bank = "银行", Keyring = "钥匙链" }
 
 -- Lua 5.0 unpack() has no range arguments. Preserve nil holes and all returns.
@@ -50,7 +78,7 @@ function Performance:GetInventory(inventory)
 	local id = inventory.inventoryType
 	local data = self.inventories[id]
 	if not data then
-		data = { stats = {}, events = {}, updates = 0, skipped = 0, queues = 0, redraws = 0 }
+		data = { stats = {}, events = {}, updates = 0, skipped = 0, queues = 0, redraws = 0, created = {}, poolStart = ItemPool(inventory), poolEnd = ItemPool(inventory) }
 		self.inventories[id] = data
 	end
 	return data
@@ -64,13 +92,38 @@ end
 function Performance:StartOpen(inventory)
 	local sample = {
 		inventoryType = inventory.inventoryType, startedAt = _G.GetTime(), clockStart = self.clock(),
-		stats = {}, updates = 0, queues = 0, redraws = 0,
+		stats = {}, updates = 0, queues = 0, redraws = 0, created = {}, poolStart = ItemPool(inventory), poolEnd = ItemPool(inventory),
 		event = inventory.lastEvent or "无最近事件", online = inventory.online,
 	}
 	self.active[inventory.inventoryType] = sample
 	table.insert(self.opens, sample)
 	if table.getn(self.opens) > 20 then table.remove(self.opens, 1) end
 	return sample
+end
+
+-- Manual block spans use the same nesting tree as method spans. The enclosing
+-- protected method closes unfinished blocks on error, preserving error identity.
+function Performance:Begin(inventory, key)
+	if not self.enabled or not inventory or not inventory.inventoryType then return end
+	local span = { parent = self.stack, children = 0, inventory = inventory, key = key,
+		data = self:GetInventory(inventory), sample = self:GetOpen(inventory) }
+	span.started = self.clock()
+	self.stack = span
+	return span
+end
+
+function Performance:Finish(span, failed)
+	local elapsed = self.clock() - span.started
+	self.stack = span.parent
+	if elapsed < 0 or span.invalid then
+		self.invalidSpans = self.invalidSpans + 1
+		if span.parent then span.parent.invalid = true end
+	else
+		if span.parent then span.parent.children = span.parent.children + elapsed end
+		local own = math.max(0, elapsed - span.children)
+		AddStat(span.data.stats, span.key, elapsed, own, failed)
+		if span.sample then AddStat(span.sample.stats, span.key, elapsed, own, failed) end
+	end
 end
 
 function Performance:Measure(original, key, inventory, args)
@@ -90,20 +143,22 @@ function Performance:Measure(original, key, inventory, args)
 		if sample then sample.redraws = sample.redraws + 1 end
 	end
 
-	local span = { parent = self.stack, children = 0 }
-	self.stack = span
-	local started = self.clock()
+	local pool = CreationPool(args[1], key)
+	local element = pool and (args[2] or table.getn(pool) + 1)
+	local existed = pool and pool[element]
+	local span = self:Begin(inventory, key)
 	local results = Pack(_G.pcall(original, Expand(args, 1, args.n)))
-	local elapsed = self.clock() - started
-	self.stack = span.parent
-	if elapsed < 0 then
-		-- Another addon may reset the shared profiling clock. Do not report false times.
-		self.invalidSpans = self.invalidSpans + 1
-	else
-		if span.parent then span.parent.children = span.parent.children + elapsed end
-		local own = math.max(0, elapsed - span.children)
-		AddStat(data.stats, key, elapsed, own, not results[1])
-		if sample then AddStat(sample.stats, key, elapsed, own, not results[1]) end
+	-- A native call inside a manual block can fail before its Finish().
+	while self.stack ~= span do self:Finish(self.stack, not results[1]) end
+	self:Finish(span, not results[1])
+	if results[1] and creations[key] then
+		local count = (not pool or (not existed and pool[element])) and 1 or 0
+		data.created[key] = (data.created[key] or 0) + count
+		if sample then sample.created[key] = (sample.created[key] or 0) + count end
+	end
+	if key == "CreateInventoryItemSlotButton" or key == "UpdateWindow" or key == "UiFrame_OnShow" then
+		data.poolEnd = ItemPool(inventory)
+		if sample then sample.poolEnd = data.poolEnd end
 	end
 	if key == "UiFrame_OnShow" and sample then
 		sample.online, sample.slots, sample.items = inventory.online, 0, 0
@@ -118,11 +173,13 @@ function Performance:Measure(original, key, inventory, args)
 end
 
 function Performance:Wrap(owner, key, label, itemInfo)
-	local original = owner[key]
+	local original = owner and owner[key]
 	if type(original) ~= "function" then return end
 	owner[key] = function(...)
 		if not Performance.enabled then return original(Expand(arg, 1, arg.n)) end
-		local inventory = itemInfo and arg[3] or arg[1]
+		local inventory = arg[1]
+		if itemInfo == "ui" then inventory = arg[1].inventory
+		elseif itemInfo then inventory = arg[3] end
 		-- Standalone tooltips/catalog entries are outside the inventory measurement.
 		if not inventory or not inventory.inventoryType then return original(Expand(arg, 1, arg.n)) end
 		return Performance:Measure(original, label or key, inventory, arg)
@@ -182,12 +239,21 @@ local function EventsText(events)
 	return table.concat(text, ", ")
 end
 
+local function CreationText(data)
+	local c = data.created
+	return string.format("按钮池 %d→%d；实际新建：物品按钮 %d，分组 %d，移动目标 %d，阴影装饰 %d，冷却控件 %d。",
+		data.poolStart, data.poolEnd, c.CreateItemSlotButton or 0, c.CreateGroup or 0,
+		c.CreateGroupMoveTarget or 0, c.CreateShadowedTexture or 0, c.CreateItemButtonCooldown or 0)
+end
+
 function Performance:ReportText()
-	local lines = { "乾坤袋卡顿诊断 v2 / Bagshui " .. tostring(BS_VERSION),
+	local lines = { "乾坤袋卡顿诊断 v3 / Bagshui " .. tostring(BS_VERSION),
 		"诊断不改变刷新策略；数据仅保留在本次登录内。",
 		"毫秒为墙钟耗时，包含诊断开销。包含内部调用的耗时不能相加。",
 		"自身耗时仅扣除已测量的子调用；窗口绘制表示 Lua 布局/按钮处理，不是 GPU 渲染。",
-		"下一帧等待和最大帧间隔包含其他插件、游戏及系统耗时，不能单独归因乾坤袋。" }
+		"下一帧等待和最大帧间隔包含其他插件、游戏及系统耗时，不能单独归因乾坤袋。",
+		"v3 细分有额外诊断开销，勿与 v2 直接比较绝对耗时；细分阶段互相包含，不能相加。",
+		"准备次数包含复用；实际新建数量另列。缩放边框读取/应用仅测缩放路径，皮肤初始化另列。" }
 	if not self.startedAt then
 		table.insert(lines, "尚无采样。输入 /bs perf on，然后复现卡顿。")
 		return table.concat(lines, "\n")
@@ -209,6 +275,15 @@ function Performance:ReportText()
 						labels[key], row.calls, row.total, row.own, row.max, row.errors))
 				end
 			end
+			table.insert(lines, CreationText(data))
+			table.insert(lines, "窗口处理细分 | 次数 | 总耗时 ms | 自身 ms | 单次最大 ms | 错误")
+			for _, key in ipairs(detailOrder) do
+				local row = data.stats[key]
+				if row then
+					table.insert(lines, string.format("%s | %d | %.2f | %.2f | %.2f | %d",
+						detailLabels[key], row.calls, row.total, row.own, row.max, row.errors))
+				end
+			end
 			table.insert(lines, "常见事件：" .. EventsText(data.events))
 		end
 	end
@@ -225,6 +300,14 @@ function Performance:ReportText()
 		table.insert(lines, string.format("  打开同步 %.2f ms；扫描 %.2f；分类 %.2f；排序 %.2f；绘制 %.2f；按钮 %.2f；提示 %d 次/%.2f ms。",
 			Total("UiFrame_OnShow"), Total("UpdateCache"), Total("CategorizeItems"), Total("SortGroups"),
 			Total("UpdateWindow"), Total("UpdateItemButtons"), tooltip and tooltip.calls or 0, Total("GetTooltip")))
+		table.insert(lines, "  " .. CreationText(sample))
+		table.insert(lines, string.format("  细分 ms：计数 %.2f；组宽 %.2f；标签 %.2f；新按钮 %.2f；皮肤 %.2f；尺寸定位 %.2f；绑定 %.2f；颜色 %.2f。",
+			Total("GetGroupItemCountForLayout"), Total("GroupWidths"), Total("GroupLabels"), Total("CreateItemSlotButton"),
+			Total("SkinItemButton"), Total("SizeAndShowFrame"), Total("AssignItemToItemButton"), Total("UpdateItemButtonColorsAndBadges")))
+		table.insert(lines, string.format("  定位/边框 ms：锚点显示 %.2f；GetTop %.2f；缩放 %.2f；边框读取 %.2f；边框应用 %.2f。",
+			Total("PositionFrames"), Total("ReadGeometry"), Total("SetItemButtonSize"), Total("BorderRead"), Total("BorderApply")))
+		table.insert(lines, string.format("  窗口 ms：行宽坐标 %.2f；尺寸测量 %.2f；收尾设置 %.2f。",
+			Total("RowGeometry"), Total("WindowGeometry"), Total("WindowFinish")))
 		table.insert(lines, "  打开至下一帧：" .. (sample.nextFrame and sample.nextFrame >= 0
 			and string.format("%.2f ms", sample.nextFrame) or "未取得有效样本") .. "；最近事件：" .. sample.event)
 	end
@@ -254,6 +337,18 @@ end
 Performance:Wrap(Bagshui.components.Bags, "Open", "OpenBags")
 Performance:Wrap(Bagshui.components.Bank, "Open", "OpenBank")
 Performance:Wrap(BsItemInfo, "GetTooltip", nil, true)
+for _, key in ipairs({ "GetGroupItemCountForLayout", "AssignItemsToSlots", "SizeAndShowFrame" }) do
+	Performance:Wrap(Inventory, key)
+end
+local InventoryUi = Bagshui.prototypes.InventoryUi
+for _, key in ipairs({ "CreateGroup", "CreateGroupMoveTarget", "CreateInventoryItemSlotButton" }) do
+	Performance:Wrap(InventoryUi, key, nil, "ui")
+end
+local Ui = Bagshui.prototypes.Ui
+for _, key in ipairs({ "CreateItemSlotButton", "SkinItemButton", "CreateShadowedTexture", "CreateItemButtonCooldown",
+	"SetItemButtonSize", "InvertItemButtonBorderScale", "AssignItemToItemButton", "UpdateItemButtonColorsAndBadges" }) do
+	Performance:Wrap(Ui, key, nil, "ui")
+end
 
 local originalQueue = Inventory.QueueUpdate
 Inventory.QueueUpdate = function(inventory, delay, cascade)

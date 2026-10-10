@@ -1100,7 +1100,10 @@ function Ui:InvertItemButtonBorderScale(button, deferColors)
 		backdrop.edgeSize = BsSkin.itemSlotEdgeSize * (1/data.scale)
 		-- Compare the actual border, so skin changes and external SetBackdrop()
 		-- calls cannot leave a cached style out of date. Replacement resets colors.
+		local perf = Bagshui.components.Performance
+		local readSpan = perf and perf.enabled and perf:Begin(self.inventory, "BorderRead")
 		local applied = border:GetBackdrop()
+		if readSpan then perf:Finish(readSpan) end
 		local appliedInsets = applied and applied.insets or {}
 		if not applied
 			or applied.edgeSize ~= backdrop.edgeSize
@@ -1113,7 +1116,9 @@ function Ui:InvertItemButtonBorderScale(button, deferColors)
 			or (appliedInsets.top or 0) ~= (insets.top or 0)
 			or (appliedInsets.bottom or 0) ~= (insets.bottom or 0)
 		then
+			local applySpan = perf and perf.enabled and perf:Begin(self.inventory, "BorderApply")
 			border:SetBackdrop(backdrop)
+			if applySpan then perf:Finish(applySpan) end
 		end
 		-- Inventory assignment will restore colors immediately after sizing.
 		-- Standalone callers still receive the original immediate color update.

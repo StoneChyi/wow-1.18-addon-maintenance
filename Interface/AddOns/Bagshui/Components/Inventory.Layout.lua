@@ -563,6 +563,7 @@ function Inventory:UpdateWindow()
 
 		BsUtil.TableClear(self.groupsIdsToFrames)
 
+		local perf = Bagshui.components.Performance
 		local uiFrames = self.ui.frames
 		local groupFrames = uiFrames.groups
 		local uiButtons = self.ui.buttons
@@ -786,6 +787,7 @@ function Inventory:UpdateWindow()
 			-- 2. Loop through all columns and decrease width of each by 1 (so long as that's possible and won't make it too tall).
 			-- 3. See if everything fits now. If not, go back to step 2 unless all groups are now too tall, in which case, go back to step 1.
 			-- (No need to do any of this unless there are too many items in the row to fit in the configured number of columns.)
+			local widthSpan = perf and perf.enabled and perf:Begin(self, "GroupWidths")
 			while rowWidthInItems > maxColumns do
 				rowHeightInItems = rowHeightInItems + 1
 				repeat
@@ -810,6 +812,8 @@ function Inventory:UpdateWindow()
 					end
 				until rowWidthInItems <= maxColumns or unshrinkableGroupCount >= numGroupsInRow
 			end
+
+			if widthSpan then perf:Finish(widthSpan) end
 
 			-- Is there anything to display on this row?
 			if totalItemsInRow == 0 and not self.editMode then
@@ -926,6 +930,7 @@ function Inventory:UpdateWindow()
 							firstFrame = self.positioningTables.UpdateWindow.anchorToFrame
 						end
 
+						local labelSpan = perf and perf.enabled and perf:Begin(self, "GroupLabels")
 						-- Set background and border colors.
 						self.ui:SetGroupColors(group)
 
@@ -958,6 +963,8 @@ function Inventory:UpdateWindow()
 							-- Labels are turned off.
 							group.bagshuiData.labelFrame:Hide()
 						end
+
+						if labelSpan then perf:Finish(labelSpan) end
 
 						-- Assign items to the group (only if there are items in the group).
 						if self.groupItemCounts[groupId] > 0 then
@@ -996,6 +1003,7 @@ function Inventory:UpdateWindow()
 					)
 				end
 
+				local rowGeometrySpan = perf and perf.enabled and perf:Begin(self, "RowGeometry")
 				-- Update the widest row record so we can make the window the correct width.
 				currentRowLastFrameOutsideX = (
 					anchorLeft
@@ -1013,6 +1021,7 @@ function Inventory:UpdateWindow()
 					widestRowLastFrameOutsideX = currentRowLastFrameOutsideX
 					widestRowLastFrame = self.positioningTables.UpdateWindow.anchorToFrame
 				end
+				if rowGeometrySpan then perf:Finish(rowGeometrySpan) end
 
 			end
 
@@ -1057,6 +1066,7 @@ function Inventory:UpdateWindow()
 			self.ui.text.noData:Hide()
 		end
 
+		local windowGeometrySpan = perf and perf.enabled and perf:Begin(self, "WindowGeometry")
 		-- Calculate what we always know for width and height (header/footer are added next).
 		finalWindowWidth =
 			-- Inventory content.
@@ -1099,6 +1109,9 @@ function Inventory:UpdateWindow()
 			+ BsSkin.inventoryWindowPadding * 2
 
 
+		if windowGeometrySpan then perf:Finish(windowGeometrySpan) end
+
+		local finishSpan = perf and perf.enabled and perf:Begin(self, "WindowFinish")
 		-- Show/hide header/footer (toolbars) and add to window dimensions.
 		if showHeader then
 			-- Ensure main frame anchor is correct.
@@ -1223,6 +1236,7 @@ function Inventory:UpdateWindow()
 			-- WoW will change the anchor point to TOPLEFT when the frame is dragged, so we need to reset it.
 			self:FixWindowPosition()
 		end
+		if finishSpan then perf:Finish(finishSpan) end
 	end
 
 	-- Check for mouse over state for interact-able elements to ensure tooltips stay current.
@@ -1715,6 +1729,8 @@ function Inventory:SizeAndShowFrame(
 		sizeAndShow_frame:SetScale(sizeAndShow_finalScale)
 	end
 
+	local perf = Bagshui.components.Performance
+	local positionSpan = perf and perf.enabled and perf:Begin(self, "PositionFrames")
 	-- Move frame to the specified point.
 	sizeAndShow_frame:ClearAllPoints()
 	sizeAndShow_frame:SetPoint(
@@ -1731,10 +1747,13 @@ function Inventory:SizeAndShowFrame(
 	end
 
 	sizeAndShow_frame:Show()
+	if positionSpan then perf:Finish(positionSpan) end
 
+	local geometrySpan = perf and perf.enabled and perf:Begin(self, "ReadGeometry")
 	-- For some reason, an initial call to GetTop() is sometimes necessary to prevent it
 	-- from returning nil later.
 	sizeAndShow_frame:GetTop()
+	if geometrySpan then perf:Finish(geometrySpan) end
 end
 
 
