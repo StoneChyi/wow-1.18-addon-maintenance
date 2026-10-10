@@ -48,7 +48,12 @@ function Inventory:Update(cascade)
 	self:UpdateOnlineStatus()
 
 	-- Always update the cache if we get this far.
-	self:UpdateCache()
+	if self:UpdateCache() == false then
+		-- Preserve open/resort intent while a locked bag or uncached item is pending.
+		self.windowUpdateBlocked = false
+		self:QueueUpdate(0.1, cascade)
+		return
+	end
 
 	-- self.forceCacheUpdate was true, but the window might not be visible.
 	if not self:Visible() then
@@ -57,14 +62,30 @@ function Inventory:Update(cascade)
 		return
 	end
 
-	-- Perform all updates in the necessary order.
-	self:ValidateLayout()
-	self:ManageDryRun(true)  -- First call decides whether we're in dry run mode (`self.dryRun`).
-	self:UpdateLayoutLookupTables()
-	self:CategorizeAndSort()
-	self:ManageDryRun(false)  -- Second call re-points lookup tables if needed and sets `self.enableResortIcon`.
+	-- Decide only after scanning: content may have changed while the window was closed.
+	if self._resortOnOpen and (self.resortNeeded or self.forceResort or self.windowUpdateNeeded
+		or self.enableResortIcon or self.hasSlotsWithStackingPrevented or not self._layoutInitialized)
+	then
+		self.forceResort = true
+	end
+	self._resortOnOpen = nil
+
+	-- Keep the current/proposed layout intact when nothing affecting it changed.
+	if self.resortNeeded or self.forceResort or self.windowUpdateNeeded or not self._layoutInitialized then
+		self:ValidateLayout()
+		self:ManageDryRun(true)
+		self:UpdateLayoutLookupTables()
+		self:CategorizeAndSort()
+		self:ManageDryRun(false)
+		self._layoutInitialized = true
+	end
 	self:FindSpecialItems()
+	local redrawWindow = self.windowUpdateNeeded
 	self:UpdateWindow()
+	if self.itemButtonsUpdateNeeded and not redrawWindow then
+		self:UpdateItemButtons()
+	end
+	self.itemButtonsUpdateNeeded = false
 	self:UpdateBagBar()
 	self:UpdateToolbar()
 
@@ -87,6 +108,19 @@ function Inventory:ForceUpdateWindow(cascade, updateCache)
 	self.windowUpdateNeeded = true
 	self.forceResort = false
 	self:Update(cascade)
+end
+
+
+
+--- Refresh assigned buttons without recomputing groups or moving any slots.
+--- Includes cooldowns, counts, lock/desaturation, stock badges and offline colors.
+function Inventory:UpdateItemButtons()
+	for _, button in ipairs(self.ui.buttons.itemSlots) do
+		local data = button.bagshuiData
+		if button:IsVisible() and data.item then
+			self.ui:AssignItemToItemButton(button, data.item, data.groupId)
+		end
+	end
 end
 
 

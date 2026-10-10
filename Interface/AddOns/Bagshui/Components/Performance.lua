@@ -9,13 +9,13 @@ local labels = {
 	Update = "刷新入口", UpdateCache = "格子扫描", ValidateLayout = "布局校验",
 	UpdateLayoutLookupTables = "分类索引", CategorizeItems = "分类规则",
 	SortGroups = "组内排序", ManageDryRun = "布局比较", FindSpecialItems = "特殊物品查找",
-	UpdateWindow = "窗口绘制", UpdateBagBar = "背包栏", UpdateToolbar = "工具栏",
+	UpdateWindow = "窗口绘制", UpdateItemButtons = "物品按钮刷新", UpdateBagBar = "背包栏", UpdateToolbar = "工具栏",
 	GetTooltip = "物品提示扫描", UiFrame_OnShow = "打开同步处理",
 	Open = "基础打开入口", OpenBags = "背包打开入口", OpenBank = "银行打开入口",
 }
 local order = { "UiFrame_OnShow", "OpenBags", "OpenBank", "Open", "Update", "UpdateCache",
 	"GetTooltip", "ValidateLayout", "UpdateLayoutLookupTables", "CategorizeItems", "SortGroups",
-	"ManageDryRun", "FindSpecialItems", "UpdateWindow", "UpdateBagBar", "UpdateToolbar" }
+	"ManageDryRun", "FindSpecialItems", "UpdateWindow", "UpdateItemButtons", "UpdateBagBar", "UpdateToolbar" }
 local inventoryNames = { Bags = "背包", Bank = "银行", Keyring = "钥匙链" }
 
 -- Lua 5.0 unpack() has no range arguments. Preserve nil holes and all returns.
@@ -183,7 +183,7 @@ local function EventsText(events)
 end
 
 function Performance:ReportText()
-	local lines = { "乾坤袋卡顿诊断 v1 / Bagshui " .. tostring(BS_VERSION),
+	local lines = { "乾坤袋卡顿诊断 v2 / Bagshui " .. tostring(BS_VERSION),
 		"诊断不改变刷新策略；数据仅保留在本次登录内。",
 		"毫秒为墙钟耗时，包含诊断开销。包含内部调用的耗时不能相加。",
 		"自身耗时仅扣除已测量的子调用；窗口绘制表示 Lua 布局/按钮处理，不是 GPU 渲染。",
@@ -222,9 +222,9 @@ function Performance:ReportText()
 		table.insert(lines, string.format("#%d %s %s：%d 格/%d 占用格；刷新 %d；布局 %d；排队 %d；窗口观察 %.2f/1 秒。",
 			index, inventoryNames[sample.inventoryType] or sample.inventoryType, sample.online and "在线" or "离线",
 			sample.slots or 0, sample.items or 0, sample.updates, sample.redraws, sample.queues, math.min(1, age)))
-		table.insert(lines, string.format("  打开同步 %.2f ms；扫描 %.2f；分类 %.2f；排序 %.2f；绘制 %.2f；提示 %d 次/%.2f ms。",
+		table.insert(lines, string.format("  打开同步 %.2f ms；扫描 %.2f；分类 %.2f；排序 %.2f；绘制 %.2f；按钮 %.2f；提示 %d 次/%.2f ms。",
 			Total("UiFrame_OnShow"), Total("UpdateCache"), Total("CategorizeItems"), Total("SortGroups"),
-			Total("UpdateWindow"), tooltip and tooltip.calls or 0, Total("GetTooltip")))
+			Total("UpdateWindow"), Total("UpdateItemButtons"), tooltip and tooltip.calls or 0, Total("GetTooltip")))
 		table.insert(lines, "  打开至下一帧：" .. (sample.nextFrame and sample.nextFrame >= 0
 			and string.format("%.2f ms", sample.nextFrame) or "未取得有效样本") .. "；最近事件：" .. sample.event)
 	end

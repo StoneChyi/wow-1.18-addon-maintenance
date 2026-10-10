@@ -183,13 +183,18 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "增加背包、银行打开卡顿诊断，先测量刷新和分阶段耗时。",
+      "purpose": "修复背包、银行重复扫描和分类卡顿，保留可复制性能诊断。",
       "sources": [],
       "maintenance_files": [
-        "Interface/AddOns/Bagshui/Bagshui.xml"
+        "Interface/AddOns/Bagshui/Bagshui.xml",
+        "Interface/AddOns/Bagshui/Components/Inventory.Cache.lua",
+        "Interface/AddOns/Bagshui/Components/Inventory.Layout.lua",
+        "Interface/AddOns/Bagshui/Components/Inventory.Ui.lua",
+        "Interface/AddOns/Bagshui/Components/Inventory.lua",
+        "Interface/AddOns/Bagshui/Components/Bank.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "待游戏内采样报告与真实客户端验收；早期个人修改仍未确认。",
+      "pending": "待修复后的 v2 客户端复测报告；首次创建界面和其他插件开销仍需实测，早期个人修改仍未确认。",
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua"
       ]

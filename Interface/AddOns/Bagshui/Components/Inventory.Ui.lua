@@ -1149,6 +1149,10 @@ function Inventory:UiFrame_OnShow()
 
 	_G.PlaySound(self.openSound)
 
+	-- These reset operations alter geometry; other opens can reuse the layout.
+	if self.editMode or self.expandEmptySlotStacks or self.temporarilyShowWindowHeader then
+		self.windowUpdateNeeded = true
+	end
 	self.online = true
 	self.editMode = false
 	self.expandEmptySlotStacks = false
@@ -1161,14 +1165,9 @@ function Inventory:UiFrame_OnShow()
 	self.highlightItemsInContainerId = nil
 	self.highlightItemsContainerSlot = nil
 
-	-- Because Update() is called from the UI frame's OnShow function, self:Visible() becomes true
-	-- before CategorizeAndSort() executes. Normally, CategorizeAndSort() bails if self:Visible() is true,
-	-- so forceResort is set to true to ensure inventory is properly sorted whenever the window is opened.
-	-- Of course, we don't want this to happen when automatic resorting is off.
-	if not self.settings.disableAutomaticResort then
-		self.forceResort = true
-	end
-	self.resortNeeded = true
+	-- Update() will decide whether a real resort is needed after checking the cache.
+	self._resortOnOpen = not self.settings.disableAutomaticResort
+	self.itemButtonsUpdateNeeded = true
 	self.inventoryUpdateAllowed = true
 	self.cacheUpdateNeeded = true
 	self:NotifySkinOfPositionChange()

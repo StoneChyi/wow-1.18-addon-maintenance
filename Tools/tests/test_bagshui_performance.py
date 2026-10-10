@@ -49,7 +49,8 @@ function Inventory:NotifySkinOfPositionChange() end
 function Inventory:SetDockedToFrameVisibility() end
 function makeInventory(id)
  local inv=setmetatable({inventoryType=id,initialized=true,settings={},events={},myContainerIds={[0]=true},
-  containers={[0]={numSlots=20,slotsFilled=12}},online=true, inventoryUpdateAllowed=true}, {__index=Inventory})
+  containers={[0]={numSlots=20,slotsFilled=12}},online=true, inventoryUpdateAllowed=true,
+  resortNeeded=true,windowUpdateNeeded=true}, {__index=Inventory})
  inv._super=Inventory
  inv.uiFrame={shown=false}
  function inv.uiFrame:IsVisible() return self.shown end
@@ -93,12 +94,13 @@ function Inventory:UpdateCache()
  self.cacheUpdateNeeded=false; self.forceCacheUpdate=false
 end
 function Inventory:ValidateLayout() cost(1) end
-function Inventory:ManageDryRun() cost(1) end
+function Inventory:ManageDryRun(phase1) cost(1); if phase1 then self.forceResort=false end end
 function Inventory:UpdateLayoutLookupTables() cost(2) end
 function Inventory:CategorizeItems() cost(5) end
 function Inventory:SortGroups() cost(4) end
 function Inventory:FindSpecialItems() cost(1) end
 function Inventory:UpdateWindow() cost(6); self.windowUpdateNeeded=false end
+function Inventory:UpdateItemButtons() cost(1) end
 function Inventory:UpdateBagBar() cost(1) end
 function Inventory:UpdateToolbar() cost(1) end
 function Bags:Open() self._super.Open(self) end
@@ -135,12 +137,14 @@ assert(d.stats.CategorizeItems.total==5 and d.stats.SortGroups.total==4)
 assert(d.stats.ManageDryRun.calls==2)
 assert(s.stats.UiFrame_OnShow.total==28)
 ''')
-check('events use actual debounce queue and record follow-up refresh', r'''
+check('open consumes its scan; real later events still debounce and refresh', r'''
 command('on'); event='BANKFRAME_OPENED'; Bank.events.BANKFRAME_OPENED='Open'
 Bank:OnEvent('BANKFRAME_OPENED')
 local d=P.inventories.Bank
-assert(d.updates==1 and d.skipped==1 and d.queues==1)
+assert(d.updates==1 and d.skipped==1 and d.queues==0)
 assert(d.events.BANKFRAME_OPENED==1 and P.opens[1].updates==1)
+assert(next(Bagshui.queuedEvents.events)==nil)
+Bank:OnEvent('BAG_UPDATE',0); Bank:OnEvent('BAG_UPDATE',0)
 local callbacks=0
 for _,fn in pairs(Bagshui.queuedEvents.classFunction) do assert(fn==Bank.Update); callbacks=callbacks+1 end
 assert(callbacks==1)
@@ -244,7 +248,7 @@ command('on'); Bags:Open(); Keyring:Open()
 Bags.dockedInventory=Keyring
 Bags:Update(true)
 assert(P.inventories.Bags.updates==2 and P.inventories.Keyring.updates==2)
-assert(P.inventories.Bags.stats.Update.total==78)
+assert(P.inventories.Bags.stats.Update.total==50)
 assert(P.inventories.Bags.stats.Update.own==0)
 assert(not Bags.windowUpdateBlocked and not Keyring.windowUpdateBlocked)
 ''')

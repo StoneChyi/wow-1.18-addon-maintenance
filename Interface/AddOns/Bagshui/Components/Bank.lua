@@ -243,7 +243,7 @@ function Bank:Open()
 		_G.event == "BANKFRAME_OPENED"
 		or (self.settings.replaceBank == false and self.ui:IsFrameVisible(self.blizzBankFrame))
 	)
-	self.windowUpdateNeeded = true
+	self.itemButtonsUpdateNeeded = true
 	self:Update()
 
 	-- Don't respond to open event when we're not hooking the Bank,
@@ -266,7 +266,7 @@ function Bank:Close()
 	if self.atBank then
 		self.atBank = (_G.event ~= "BANKFRAME_CLOSED")
 	end
-	self.windowUpdateNeeded = true
+	self.itemButtonsUpdateNeeded = true
 	self:Update()
 
 	-- Don't respond to close event when we're not hooking the Bank.

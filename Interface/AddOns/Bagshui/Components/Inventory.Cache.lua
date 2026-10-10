@@ -36,7 +36,7 @@ function Inventory:UpdateCache()
 		-- Queuing another update here instead of completely ignoring to ensure that an update
 		-- does happen eventually (and it should typically happen sooner than the delay here).
 		self:QueueUpdate(0.1)
-		return
+		return false
 	end
 
 
@@ -69,7 +69,7 @@ function Inventory:UpdateCache()
 	self.hasSlotsWithStackingPrevented = false
 
 	-- Bag (outer loop) variables.
-	local bagName, bagNumSlots, bagTexture, bagType, bagSlotLink, bagItemCode, bagInfo
+	local bagName, bagNumSlots, bagTexture, bagType, bagSlotLink, bagItemCode, bagInfo, bagChanged
 
 	-- Slot (inner loop) variables.
 	local itemReadable
@@ -84,6 +84,8 @@ function Inventory:UpdateCache()
 	-- Reset tracking tables.
 	BsUtil.TableClear(self.partialStacks)
 	BsUtil.TableClear(self.emptyGenericContainerSlots)
+	-- A failed/deferred pass must not contribute duplicate totals on retry.
+	BsUtil.TableClear(self.postUpdateItemCounts)
 
 	-- Identify any container changes triggered by moving bags between slots.
 	if Bagshui.pickedUpBagSlotNum and Bagshui.putDownBagSlotNum then
@@ -109,6 +111,7 @@ function Inventory:UpdateCache()
 
 
 		-- Get bag info.
+		bagChanged = false
 		bagName = nil
 		bagNumSlots = self:GetContainerNumSlots(bagNum)  -- self:GetContainerNumSlots() intelligently handles this for for all container types.
 		bagTexture = nil
@@ -158,6 +161,7 @@ function Inventory:UpdateCache()
 			)
 			or self.initialInventoryUpdateNeeded
 		then
+			bagChanged = true
 			-- When the bag changes after startup, wipe its cache.
 			if (bagInfo.numSlots or 0) > 0 and not self.initialInventoryUpdateNeeded then
 				BsUtil.TableClear(self.inventory[bagNum])
@@ -190,7 +194,10 @@ function Inventory:UpdateCache()
 		if bagNumSlots > 0 then
 
 			-- Prepare to stack empty slots (actual stacking is handled during UpdateWindow()).
-			self:InitializeEmptySlotStackTracking(bagInfo)
+			-- Preserve the displayed empty-slot proxy when no layout rebuild is needed.
+			if bagChanged or not self.emptySlotStacks[bagInfo.genericType] then
+				self:InitializeEmptySlotStackTracking(bagInfo)
+			end
 
 			-- Time to go through all the bag slots and look at each item.
 			for slotNum = 1, bagNumSlots do
@@ -211,7 +218,7 @@ function Inventory:UpdateCache()
 				preItemString = item.itemString
 				preCharges = item.charges or 0
 				preCount = item.count or 0
-				preLocked = item.locked
+				preLocked = (item.locked == 1 or item.locked == true) and 1 or 0
 				preTooltip = item.tooltip
 
 				-- Get current item information.
@@ -222,6 +229,8 @@ function Inventory:UpdateCache()
 				-- We'll obtain it from GetItemInfo() instead. (We also don't need
 				-- texture since that will be obtained during ItemInfo:Get()).
 				_, nowCount, nowLocked, _, itemReadable = _G.GetContainerItemInfo(bagNum, slotNum)
+				-- Vanilla may return nil for unlocked; the cache stores numeric 0/1.
+				nowLocked = (nowLocked == 1 or nowLocked == true) and 1 or 0
 
 				-- Update filled slot count for this container.
 				if nowItemLink ~= nil then
@@ -250,7 +259,6 @@ function Inventory:UpdateCache()
 				if
 					preItemLink ~= nowItemLink  -- Item has changed.
 					or item.bagNum == nil  -- AddItemBagInfo() hasn't been called on this slot yet.
-					or preLocked ~= nowLocked  -- Locked/unlocked.
 					or preCount ~= nowCount  -- Count has changed (changes to charges are checked separately).
 					or preTooltip ~= item.tooltip
 					or self.initialInventoryUpdateNeeded
@@ -289,7 +297,7 @@ function Inventory:UpdateCache()
 						-- Add a flag to this item's cache entry so we know that it absolutely has to be refreshed
 						-- next time around.
 						item._getItemInfoFailed = true
-						return
+						return false
 					end
 
 
@@ -297,8 +305,6 @@ function Inventory:UpdateCache()
 					if item.itemString ~= nil then
 						-- Slot contains an item.
 						item.count = nowCount
-						item.locked = nowLocked or BS_ITEM_SKELETON.locked
-						item.readable = itemReadable or BS_ITEM_SKELETON.readable
 						-- We got charges from GetContainerItemInfo() and need to restore
 						-- because ItemInfo:Get() might have wiped them.
 						if nowCharges > 0 then
@@ -318,11 +324,6 @@ function Inventory:UpdateCache()
 							item._bagshuiPreventEmptySlotStack = true
 						end
 
-						-- Add to empty slot tracking table.
-						-- See `Inventory:SwapBag()` comments regarding the exclusion of profession bags.
-						if bagInfo.genericType == BsGameInfo.itemSubclasses["Container"]["Bag"] then
-							table.insert(self.emptyGenericContainerSlots, item)
-						end
 					end
 
 					-- Check for stock state changes.
@@ -379,6 +380,7 @@ function Inventory:UpdateCache()
 
 				elseif
 					not BS_SUPER_WOW_LOADED
+					and item.emptySlot ~= 1
 					and preCharges ~= item.charges
 					-- Tooltip gets loaded earlier when a full cache update happens.
 					and not self.forceFullCacheUpdate
@@ -391,6 +393,23 @@ function Inventory:UpdateCache()
 
 				end  -- Item changes check.
 
+
+				-- Empty slots use a sentinel, not a consumable charge count.
+				if item.emptySlot == 1 then item.charges = -1 end
+
+				-- Lock changes only need button state; they do not change item tooltips.
+				item.locked = nowLocked
+				item.readable = itemReadable or BS_ITEM_SKELETON.readable
+				if preItemLink ~= nowItemLink or preCount ~= nowCount
+					or preTooltip ~= item.tooltip or self.forceFullCacheUpdate
+				then
+					majorChanges = true
+				end
+
+				-- Rebuild free-slot tracking even for unchanged empty slots.
+				if item.emptySlot == 1 and bagInfo.genericType == BsGameInfo.itemSubclasses["Container"]["Bag"] then
+					table.insert(self.emptyGenericContainerSlots, item)
+				end
 
 				-- When charges has changed, a re-sort is probably needed.
 				-- This check is here so that it works for both SuperWoW and native charges parsing.

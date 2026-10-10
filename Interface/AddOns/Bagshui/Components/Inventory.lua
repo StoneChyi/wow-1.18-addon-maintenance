@@ -777,8 +777,18 @@ function Inventory:OnEvent(event, arg1, arg2)
 	-- Call the event function if it exists.
 	-- If the function returns false, don't continue processing.
 	local eventFunction = self[eventAction]
+	if eventAction == "Open" then
+		-- Let the synchronous open consume this scan, including an already-visible bank.
+		self.cacheUpdateNeeded = true
+	end
 	if type(eventFunction) == "function" then
 		if eventFunction(self) == false then
+			return
+		end
+		if eventAction == "Open" and self:Visible() and not self.cacheUpdateNeeded
+			and not self.forceCacheUpdate and not self.forceFullCacheUpdate
+		then
+			-- The open already checked contents. Keep any independently queued callback.
 			return
 		end
 	end
@@ -883,8 +893,9 @@ function Inventory:OnEvent(event, arg1, arg2)
 	end
 
 
-	-- Assume any other event that gets this far may require a cache update.
+	-- Assume any other event that gets this far may require a cache/button update.
 	self.cacheUpdateNeeded = true
+	self.itemButtonsUpdateNeeded = true
 
 	-- If we get this far, it's a normal event that should just trigger inventory and window updates.
 	self:QueueUpdate()
