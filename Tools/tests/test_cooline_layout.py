@@ -196,11 +196,28 @@ def check(name,fn):
     global checks
     fn(); checks+=1; print('PASS',name)
 
+def assert_internal_marks(lua):
+    g=lua.globals();cl=g.cooline;vertical=g.cooline_theme.vertical
+    cx,cy=cl.GetCenter(cl)
+    for i,mark in cl.tick_marks.items():
+        x,y=mark.GetCenter(mark)
+        assert mark.shown and mark.alpha==1
+        assert abs(x-cx)+mark.width/2 <= cl.width/2+1e-8
+        assert abs(y-cy)+mark.height/2 <= cl.height/2+1e-8
+        assert (mark.width,mark.height)==((cl.thickness,1) if vertical else (1,cl.thickness))
+        assert mark.point[4 if vertical else 5]==0
+        position=cl.time_position(cl.axis_times[i])
+        # Interior dividers align exactly; endpoint lines are inset half a pixel.
+        expected=max(.5,min(cl.length-.5,position))
+        if g.cooline_theme.reverse:expected=cl.length-expected
+        assert abs(mark.point[5 if vertical else 4]-expected)<1e-8
+
+
 def axis():
     lua=new();g=lua.globals();cl=g.cooline;theme=g.cooline_theme
     assert theme.max_time==600
     for horizon in [60,180,300,600,900,1800]:
-        theme.max_time=horizon;cl.apply_theme()
+        theme.max_time=horizon;cl.apply_theme();assert_internal_marks(lua)
         assert abs(cl.time_position(horizon)-cl.length)<1e-8
         for i,t in cl.axis_times.items():
             assert abs(cl.time_position(t)-cl.axis_positions[i]*cl.length)<1e-8
@@ -456,10 +473,11 @@ def close_ticks_and_local_fade():
             lua=new({'theme':{'vertical':vertical,'reverse':reverse,
                             'width':18 if vertical else 200,'height':200 if vertical else 18}})
             g=lua.globals();cl=g.cooline;t=g.cooline_theme
+            assert_internal_marks(lua)
             coordinates=[]
             for i,fs in cl.ticks.items():
                 assert abs(abs(fs.cross_position)-fs.half_cross-cl.thickness/2-4)<1e-8
-                assert abs(cl.tick_marks[i].point[4 if vertical else 5])==10
+                assert cl.tick_marks[i].point[4 if vertical else 5]==0
                 assert cl.tick_marks[i].shown
                 coordinates.append((fs.axis_position,fs.cross_position))
             if not vertical:assert cl.ticks[2].cross_position==-19
@@ -481,15 +499,15 @@ def close_ticks_and_local_fade():
             cl.animate_ticks(.08);assert tick.tick_alpha==1
             # Change length/size/orientation without forcing the numbers outward.
             t.icon_size=40;t.max_rows=3
-            if vertical:t.height=400
-            else:t.width=400
-            cl.apply_theme()
+            if vertical:t.height=400;t.width=36
+            else:t.width=400;t.height=36
+            cl.apply_theme();assert_internal_marks(lua)
             for fs in cl.ticks.values():
                 assert abs(abs(fs.cross_position)-fs.half_cross-cl.thickness/2-4)<1e-8
             # Narrow bars retain all small markers even when some text is omitted.
             if vertical:t.height=50
             else:t.width=50
-            cl.apply_theme()
+            cl.apply_theme();assert_internal_marks(lua)
             assert all(m.shown for m in cl.tick_marks.values())
             assert any(not f.fits for f in cl.ticks.values())
             assert cl.ticks[1].fits and cl.ticks[7].fits
@@ -501,7 +519,7 @@ def close_ticks_and_local_fade():
     for delta,blocked in [(edge+.5,True),(edge+2,True),(edge+3.5,False)]:
         f.axis_position=tick.axis_position+delta
         cl.update_tick_collisions();assert tick.blocked==blocked
-check('four fixed-edge layouts, local fade/restore, stable numbers, all tick marks and collision hysteresis',close_ticks_and_local_fade)
+check('four layouts, full internal dividers, resized bounds, local text fade and collision hysteresis',close_ticks_and_local_fade)
 
 def optional_icon_countdown():
     lua=new();g=lua.globals();cl=g.cooline;t=g.cooline_theme
@@ -545,6 +563,7 @@ def settings_preview():
             assert before==dict(g.cooline_settings.theme.items())
             length=next(o for o in g.objects.values() if o.kind=='Slider' and o.high==400)
             length.SetValue(length,350);assert cl.width==350
+            assert_internal_marks(lua)
             assert abs(frames(lua)[0].axis_position-cl.time_position(8))<1e-8
             previous_hides=[f.hides for f in frames(lua)]
             g.now+=3600;cl.on_update(True);assert g.flashCalls==0 and len(frames(lua))==3

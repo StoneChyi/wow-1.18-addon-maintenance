@@ -317,9 +317,10 @@ function cooline.refresh_ticks()
             mark:SetTexture(1, 1, 1, 0.6)
             cooline.tick_marks[i] = mark
         end
-        mark:SetWidth(cooline_theme.vertical and 4 or 1)
-        mark:SetHeight(cooline_theme.vertical and 1 or 4)
-        cooline.place(mark, position, (cooline_theme.vertical and 1 or -1) * (cooline.thickness / 2 + 1))
+        -- Span the bar itself; keep endpoint lines entirely inside its bounds.
+        mark:SetWidth(cooline_theme.vertical and cooline.thickness or 1)
+        mark:SetHeight(cooline_theme.vertical and 1 or cooline.thickness)
+        cooline.place(mark, math.max(0.5, math.min(cooline.length - 0.5, position)), 0)
         mark:Show()
     end
 end
