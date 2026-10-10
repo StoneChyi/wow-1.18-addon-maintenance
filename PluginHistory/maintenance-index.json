@@ -183,7 +183,7 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "v3.2 单轮实测隐藏归组显著降低首次迁移，首次同步 62.96/67.48 ms；保留完整功能，待多轮与操作验收。",
+      "purpose": "保留 v3.2 性能优化；新增登录前 60 秒的 B 键入口诊断，按钮能开且稍后恢复的根因与修复尚未确认。",
       "sources": [],
       "maintenance_files": [
         "Interface/AddOns/Bagshui/Bagshui.xml",
@@ -197,9 +197,10 @@
         "Interface/AddOns/Bagshui/Components/Ui.ItemButton.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "v3.2 单轮首次迁移与首帧已明显改善；多轮稳定性、银行显示前扫描关联及重复打开波动、物品操作/层级/第三方钩子/离线银行待确认，早期修改待补充。",
+      "pending": "登录初期 B 键失效、按钮可开且等待后恢复，需 /bs keys 登录记录确认；性能多轮稳定性、物品操作/层级/第三方钩子/离线银行及早期修改待补充。",
       "maintenance_files_added_after_reference": [
-        "Interface/AddOns/Bagshui/Components/Performance.lua"
+        "Interface/AddOns/Bagshui/Components/Performance.lua",
+        "Interface/AddOns/Bagshui/Components/StartupKeys.lua"
       ]
     },
     {
