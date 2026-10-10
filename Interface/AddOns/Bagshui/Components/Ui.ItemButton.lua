@@ -1046,12 +1046,15 @@ end
 --- and instead of fixing them, this should be used in lieu of SetHeight/SetWidth.
 ---@param button table Button to scale.
 ---@param newSize number Height/width.
+---@param deferColors boolean? The caller will bind the item and apply colors immediately.
 ---@return number scale
-function Ui:SetItemButtonSize(button, newSize)
+function Ui:SetItemButtonSize(button, newSize, deferColors)
 	button.bagshuiData.scale = self:GetItemButtonScale(button, newSize)
-	button:SetScale(button.bagshuiData.scale)
+	if button:GetScale() ~= button.bagshuiData.scale then
+		button:SetScale(button.bagshuiData.scale)
+	end
 
-	self:InvertItemButtonBorderScale(button)
+	self:InvertItemButtonBorderScale(button, deferColors)
 
 	return button.bagshuiData.scale
 end
@@ -1083,15 +1086,40 @@ end
 --- skin has requested it. This is necessary for 1px borders to stay 1px when scaling
 --- is applied to the parent frame (the item button).
 ---@param button any
-function Ui:InvertItemButtonBorderScale(button)
+---@param deferColors boolean? The caller will apply final item colors immediately.
+function Ui:InvertItemButtonBorderScale(button, deferColors)
 	if not button.bagshuiData.scale then
 		return
 	end
 
 	if BsSkin.itemSlotBorderInverseScale and not button.bagshuiData.noBorderScale then
-		button.bagshuiData.borderBackdropTable.edgeSize = BsSkin.itemSlotEdgeSize * (1/button.bagshuiData.scale)
-		button.bagshuiData.buttonComponents.border:SetBackdrop(button.bagshuiData.borderBackdropTable)
-		self:UpdateItemButtonColorsAndBadges(button, true)
+		local data = button.bagshuiData
+		local backdrop = data.borderBackdropTable
+		local border = data.buttonComponents.border
+		local insets = backdrop.insets or {}
+		backdrop.edgeSize = BsSkin.itemSlotEdgeSize * (1/data.scale)
+		-- Compare the actual border, so skin changes and external SetBackdrop()
+		-- calls cannot leave a cached style out of date. Replacement resets colors.
+		local applied = border:GetBackdrop()
+		local appliedInsets = applied and applied.insets or {}
+		if not applied
+			or applied.edgeSize ~= backdrop.edgeSize
+			or applied.edgeFile ~= backdrop.edgeFile
+			or (applied.tile or false) ~= (backdrop.tile or false)
+			or (applied.tileSize or 0) ~= (backdrop.tileSize or 0)
+			or (applied.bgFile or "") ~= (backdrop.bgFile or "")
+			or (appliedInsets.left or 0) ~= (insets.left or 0)
+			or (appliedInsets.right or 0) ~= (insets.right or 0)
+			or (appliedInsets.top or 0) ~= (insets.top or 0)
+			or (appliedInsets.bottom or 0) ~= (insets.bottom or 0)
+		then
+			border:SetBackdrop(backdrop)
+		end
+		-- Inventory assignment will restore colors immediately after sizing.
+		-- Standalone callers still receive the original immediate color update.
+		if not deferColors then
+			self:UpdateItemButtonColorsAndBadges(button, true)
+		end
 	end
 end
 

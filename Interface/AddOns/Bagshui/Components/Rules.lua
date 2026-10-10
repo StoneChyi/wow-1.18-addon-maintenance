@@ -22,6 +22,13 @@ local Rules = {
 	-- a Lua memory leak (see notes in `Rules:AddEnvironmentFunction()` for details).
 	ruleFunctionArguments = {},
 
+	-- Text transformations only; never cache rule results or item/category assignments.
+	-- Values are scoped to the current item session. Argument caches are bounded.
+	lowercaseMatchValues = {},
+	lowercaseMatchValueCount = 0,
+	normalizedMatchArguments = { EQUALS = {}, CONTAINS = {} },
+	normalizedMatchArgumentCount = 0,
+
 	-- Known rule functions `{ <environmentFunctionName (string)> = <actualFunction> }`.
 	ruleFunctions = {},
 
@@ -456,6 +463,56 @@ end
 
 
 
+--- Normalize only immutable string inputs; dynamic arguments retain normal evaluation.
+function Rules:NormalizeMatchArgument(argument, matchType)
+	local cache = self.normalizedMatchArguments[matchType]
+	local cacheKey = type(argument) == "string" and string.len(argument) <= 2048 and argument or nil
+	if cacheKey and cache and cache[cacheKey] ~= nil then
+		return cache[cacheKey]
+	end
+
+	argument = BsUtil.Trim(tostring(argument) or "")
+
+	-- Wrapping a string in slashes triggers Lua pattern matching.
+	-- Otherwise, magic characters will be escaped.
+	if string.find(argument, "^/.-/$") then
+		-- Avoid lowercasing escaped Lua pattern class complements (%A, for example),
+		-- by wrapping them with a unique string, then unwrapping them afterwards.
+		argument = string.gsub(
+			string.lower(
+				string.gsub(
+					string.gsub(argument, "^/(.-)/$", "%1"),  -- Remove wrapping slashes.
+					"(%%[ACDGLPSUWX])",
+					"~~~@@@%1@@@~~~"
+				)
+			),
+			"~~~@@@(%%[acdglpsuwx])@@@~~~",
+			function(match)
+				return string.upper(match)
+			end
+		)
+	else
+		-- String literal -- just lowercase it.
+		argument = string.lower(argument)
+		-- Also need to escape pattern characters if this will be run through `string.find()`.
+		if matchType == BS_RULE_MATCH_TYPE.CONTAINS then
+			argument = BsUtil.EscapeMagicCharacters(argument)
+		end
+	end
+
+	if cacheKey and cache then
+		if self.normalizedMatchArgumentCount >= 256 then
+			BsUtil.TableClear(self.normalizedMatchArguments.EQUALS)
+			BsUtil.TableClear(self.normalizedMatchArguments.CONTAINS)
+			self.normalizedMatchArgumentCount = 0
+		end
+		cache[cacheKey] = argument
+		self.normalizedMatchArgumentCount = self.normalizedMatchArgumentCount + 1
+	end
+	return argument
+end
+
+
 --- Test an item attribute to see if it matches.
 --- This is the function that most rules will use to perform their tests.
 ---@param value any One of the properties in the `BS_ITEM_SKELETON` table.
@@ -571,7 +628,18 @@ function Rules:TestValue(
 
 		-- Convert to lowercase string if needed.
 		if isString then
-			value = string.lower(tostring(value) or "")
+			-- Reuse the lowercase tooltip/name across this item's category tests.
+			local valueKey = type(value) == "string" and value or nil
+			local cached = valueKey and self.lowercaseMatchValues[valueKey]
+			if cached ~= nil then
+				value = cached
+			else
+				value = string.lower(tostring(value) or "")
+				if valueKey and self.lowercaseMatchValueCount < 16 then
+					self.lowercaseMatchValues[valueKey] = value
+					self.lowercaseMatchValueCount = self.lowercaseMatchValueCount + 1
+				end
+			end
 		end
 
 		-- Compare arguments.
@@ -583,36 +651,9 @@ function Rules:TestValue(
 				return false
 			end
 
-			-- Convert to lowercase string if needed.
+			-- Validate on every call, but reuse the pure text transformation.
 			if isString then
-				argument = BsUtil.Trim(tostring(argument) or "")
-
-				-- Wrapping a string in slashes triggers Lua pattern matching.
-				-- Otherwise, magic characters will be escaped.
-				if string.find(argument, "^/.-/$") then
-					-- Avoid lowercasing escaped Lua pattern class complements (%A, for example),
-					-- by wrapping them with a unique string, then unwrapping them afterwards.
-					argument = string.gsub(
-						string.lower(
-							string.gsub(
-								string.gsub(argument, "^/(.-)/$", "%1"),  -- Remove wrapping slashes.
-								"(%%[ACDGLPSUWX])",
-								"~~~@@@%1@@@~~~"
-							)
-						),
-						"~~~@@@(%%[acdglpsuwx])@@@~~~",
-						function(match)
-							return string.upper(match)
-						end
-					)
-				else
-					-- String literal -- just lowercase it.
-					argument = string.lower(argument)
-					-- Also need to escape pattern characters if this will be run through `string.find()`.
-					if matchType == BS_RULE_MATCH_TYPE.CONTAINS then
-						argument = BsUtil.EscapeMagicCharacters(argument)
-					end
-				end
+				argument = self:NormalizeMatchArgument(argument, matchType)
 			end
 
 			-- Bagshui:PrintDebug("TESTING " .. value .. " == " .. argument)
@@ -847,6 +888,10 @@ function Rules:SetItemAndCharacter(item, character, session)
 	end
 
 	assert(type(item) == "table", "item is required for rule evaluation to occur")
+
+	-- A new evaluation session must see current item text, including same-table edits.
+	BsUtil.TableClear(self.lowercaseMatchValues)
+	self.lowercaseMatchValueCount = 0
 
 	-- Only update item in the rule environment if it has changed.
 	if self.item ~= item then
@@ -1089,58 +1134,66 @@ function Rules:AddEnvironmentFunction(ruleFunction, primaryName, alias, replacea
 			self.error = string.format(L.Error_RuleTooManyArguments, ruleFunctionName, ruleFunctionName)
 			return false
 		end
-		-- Reset reusable argument table and fill it up.
-		BsUtil.TableClear(self.ruleFunctionArguments)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a1)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a2)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a3)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a4)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a5)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a6)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a7)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a8)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a9)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a10)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a11)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a12)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a13)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a14)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a15)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a16)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a17)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a18)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a19)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a20)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a21)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a22)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a23)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a24)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a25)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a26)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a27)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a28)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a29)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a30)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a31)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a32)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a33)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a34)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a35)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a36)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a37)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a38)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a39)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a40)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a41)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a42)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a43)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a44)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a45)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a46)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a47)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a48)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a49)
-		BsUtil.TableInsertNonNil(self.ruleFunctionArguments, a50)
+		-- Keep fixed parameters for Vanilla Lua and compact non-nil values as before.
+		-- Avoid 50 helper calls and repeated type checks for every rule invocation.
+		local arguments = self.ruleFunctionArguments
+		BsUtil.TableClear(arguments)
+		local count = 0
+		if a1 ~= nil then count = count + 1; arguments[count] = a1 end
+		if a2 ~= nil then count = count + 1; arguments[count] = a2 end
+		if a3 ~= nil then count = count + 1; arguments[count] = a3 end
+		if a4 ~= nil then count = count + 1; arguments[count] = a4 end
+		if a5 ~= nil then count = count + 1; arguments[count] = a5 end
+		if a6 ~= nil then count = count + 1; arguments[count] = a6 end
+		if a7 ~= nil then count = count + 1; arguments[count] = a7 end
+		if a8 ~= nil then count = count + 1; arguments[count] = a8 end
+		if a9 ~= nil then count = count + 1; arguments[count] = a9 end
+		if a10 ~= nil then count = count + 1; arguments[count] = a10 end
+		if a11 ~= nil then count = count + 1; arguments[count] = a11 end
+		if a12 ~= nil then count = count + 1; arguments[count] = a12 end
+		if a13 ~= nil then count = count + 1; arguments[count] = a13 end
+		if a14 ~= nil then count = count + 1; arguments[count] = a14 end
+		if a15 ~= nil then count = count + 1; arguments[count] = a15 end
+		if a16 ~= nil then count = count + 1; arguments[count] = a16 end
+		if a17 ~= nil then count = count + 1; arguments[count] = a17 end
+		if a18 ~= nil then count = count + 1; arguments[count] = a18 end
+		if a19 ~= nil then count = count + 1; arguments[count] = a19 end
+		if a20 ~= nil then count = count + 1; arguments[count] = a20 end
+		if a21 ~= nil then count = count + 1; arguments[count] = a21 end
+		if a22 ~= nil then count = count + 1; arguments[count] = a22 end
+		if a23 ~= nil then count = count + 1; arguments[count] = a23 end
+		if a24 ~= nil then count = count + 1; arguments[count] = a24 end
+		if a25 ~= nil then count = count + 1; arguments[count] = a25 end
+		if a26 ~= nil then count = count + 1; arguments[count] = a26 end
+		if a27 ~= nil then count = count + 1; arguments[count] = a27 end
+		if a28 ~= nil then count = count + 1; arguments[count] = a28 end
+		if a29 ~= nil then count = count + 1; arguments[count] = a29 end
+		if a30 ~= nil then count = count + 1; arguments[count] = a30 end
+		if a31 ~= nil then count = count + 1; arguments[count] = a31 end
+		if a32 ~= nil then count = count + 1; arguments[count] = a32 end
+		if a33 ~= nil then count = count + 1; arguments[count] = a33 end
+		if a34 ~= nil then count = count + 1; arguments[count] = a34 end
+		if a35 ~= nil then count = count + 1; arguments[count] = a35 end
+		if a36 ~= nil then count = count + 1; arguments[count] = a36 end
+		if a37 ~= nil then count = count + 1; arguments[count] = a37 end
+		if a38 ~= nil then count = count + 1; arguments[count] = a38 end
+		if a39 ~= nil then count = count + 1; arguments[count] = a39 end
+		if a40 ~= nil then count = count + 1; arguments[count] = a40 end
+		if a41 ~= nil then count = count + 1; arguments[count] = a41 end
+		if a42 ~= nil then count = count + 1; arguments[count] = a42 end
+		if a43 ~= nil then count = count + 1; arguments[count] = a43 end
+		if a44 ~= nil then count = count + 1; arguments[count] = a44 end
+		if a45 ~= nil then count = count + 1; arguments[count] = a45 end
+		if a46 ~= nil then count = count + 1; arguments[count] = a46 end
+		if a47 ~= nil then count = count + 1; arguments[count] = a47 end
+		if a48 ~= nil then count = count + 1; arguments[count] = a48 end
+		if a49 ~= nil then count = count + 1; arguments[count] = a49 end
+		if a50 ~= nil then count = count + 1; arguments[count] = a50 end
+		-- Lua 5.0 table.remove() can retain an explicit length after clearing.
+		-- Publish direct writes when getn() still reports that previous length.
+		if table.getn(arguments) ~= count then
+			table.setn(arguments, count)
+		end
 		-- Call the actual rule function.
 		return self:Call(ruleFunctionName, self.ruleFunctionArguments)
 	end

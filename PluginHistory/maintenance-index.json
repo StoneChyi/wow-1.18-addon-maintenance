@@ -183,7 +183,7 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "修复重复扫描和分类卡顿，v2 已确认重复打开改善；首次布局尖峰待细分。",
+      "purpose": "复用有效布局，并优化规则参数、文本匹配和按钮处理；本轮收益待客户端复测。",
       "sources": [],
       "maintenance_files": [
         "Interface/AddOns/Bagshui/Bagshui.xml",
@@ -191,10 +191,12 @@
         "Interface/AddOns/Bagshui/Components/Inventory.Layout.lua",
         "Interface/AddOns/Bagshui/Components/Inventory.Ui.lua",
         "Interface/AddOns/Bagshui/Components/Inventory.lua",
-        "Interface/AddOns/Bagshui/Components/Bank.lua"
+        "Interface/AddOns/Bagshui/Components/Bank.lua",
+        "Interface/AddOns/Bagshui/Components/Rules.lua",
+        "Interface/AddOns/Bagshui/Components/Ui.ItemButton.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "已收到 v2 复测并确认重复打开改善；首次完整布局尖峰待细分，移动拆分、换包、充能及离线银行待客户端操作验收，早期个人修改仍未确认。",
+      "pending": "此前 v2 已确认布局复用后重复打开改善；本轮规则/按钮优化 74 组受控行为检查通过，新耗时及移动拆分、换包、充能、搜索、皮肤和离线银行待客户端验收，早期个人修改未确认。",
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua"
       ]

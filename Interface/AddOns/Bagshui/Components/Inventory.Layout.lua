@@ -1343,7 +1343,9 @@ function Inventory:AssignItemsToSlots(
 
 				-- Ensure parentage of item slot button is set to current group frame.
 				-- This is required to get the layering right -- without it, stuff can end up behind groups.
-				button:SetParent(groupFrame)
+				if button:GetParent() ~= groupFrame then
+					button:SetParent(groupFrame)
+				end
 
 				-- Record details of this button's assignments so we can access
 				-- them during UI events.
@@ -1360,7 +1362,10 @@ function Inventory:AssignItemsToSlots(
 					"AssignItemsToSlots",
 					rowNum,
 					button,
-					itemSlotSize
+					itemSlotSize,
+					nil,
+					nil,
+					true  -- AssignItemToItemButton() applies final colors just below.
 				)
 
 				-- Add the item to the button (texture, tooltip, etc.).
@@ -1581,13 +1586,15 @@ end
 ---@param width number Frame width.
 ---@param height number? Frame height (will use width if not specified).
 ---@param scale number? Frame scale.
+---@param deferColors boolean? Item binding will apply colors immediately after positioning.
 function Inventory:ShowFrameInNextPosition(
 	positioningTableName,
 	rowNum,
 	frame,
 	width,
 	height,
-	scale
+	scale,
+	deferColors
 )
 	local positioningTable = self.positioningTables[positioningTableName]
 
@@ -1627,7 +1634,8 @@ function Inventory:ShowFrameInNextPosition(
 		width,
 		height,
 		scale,
-		-positioningTable.frameXSpacing  -- HitRectInsets
+		-positioningTable.frameXSpacing,  -- HitRectInsets
+		deferColors
 	)
 
 	-- The next element in a row always anchors to the previous one.
@@ -1664,6 +1672,7 @@ local sizeAndShow_frame, sizeAndShow_finalScale, sizeAndShow_inverseScale, sizeA
 ---@param height number? Height of the frame (will use width if not specified).
 ---@param scale number? Scaling factor (0 - 1) that should be applied to the frame.
 ---@param hitRectInsets number? Hit rectangle insets to should be applied to the frame.
+---@param deferColors boolean? Item binding will apply colors immediately after positioning.
 function Inventory:SizeAndShowFrame(
 	frameObjOrName,
 	frameAttachPoint,
@@ -1674,7 +1683,8 @@ function Inventory:SizeAndShowFrame(
 	width,
 	height,
 	scale,
-	hitRectInsets
+	hitRectInsets,
+	deferColors
 )
 	-- Get the frame object.
 	sizeAndShow_frame = frameObjOrName
@@ -1689,7 +1699,7 @@ function Inventory:SizeAndShowFrame(
 
 	-- Item slot buttons should always be sized by scaling if possible, so do it automatically.
 	if not scale and sizeAndShow_frame.bagshuiData and sizeAndShow_frame.bagshuiData.type == BS_UI_ITEM_BUTTON_TYPE.ITEM then
-		scale = self.ui:SetItemButtonSize(sizeAndShow_frame, width)
+		scale = self.ui:SetItemButtonSize(sizeAndShow_frame, width, deferColors)
 		sizeAndShow_sizeWasSetViaScaling = scale ~= nil
 	end
 
