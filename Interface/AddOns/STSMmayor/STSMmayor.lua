@@ -186,12 +186,14 @@ function STSMmayor_RestorePosition()
     if type(position) == "table" and type(position.x) == "number" and type(position.y) == "number"
         and position.x - position.x == 0 and position.y - position.y == 0 then
         local width, height = UIParent:GetWidth(), UIParent:GetHeight()
-        local x = math.max(0, math.min(position.x * width, math.max(0, width - 320 * scale)))
-        local bottom = math.max(0, math.min(position.y * height, math.max(0, height - 34 * scale)))
-        local y = bottom + 34 * scale
+        local panelWidth, panelHeight = durabilityFrame:GetWidth(), durabilityFrame:GetHeight()
+        local x = math.max(0, math.min(position.x * width, math.max(0, width - panelWidth * scale)))
+        local bottom = math.max(0, math.min(position.y * height, math.max(0, height - panelHeight * scale)))
+        local y = bottom + panelHeight * scale
         STSMmayor_SetPositionAnchor("TOPLEFT", "BOTTOMLEFT", x, y)
     else
-        STSMmayor_SetPositionAnchor("TOPLEFT", "CENTER", -160 * scale, -UIParent:GetHeight() / 4 + 34 * scale)
+        STSMmayor_SetPositionAnchor("TOPLEFT", "CENTER", -durabilityFrame:GetWidth() / 2 * scale,
+            -UIParent:GetHeight() / 4 + durabilityFrame:GetHeight() * scale)
     end
 end
 
@@ -516,7 +518,7 @@ function STSMmayor_IsOffHandItem(itemLink)
     return equipLoc == "INVTYPE_SHIELD"
 end
 
--- 单行操作面板；背景透明度与缩放单独保存，文字不随背景变淡。
+-- 两行操作面板；背景透明度与缩放单独保存，文字不随背景变淡。
 function STSMmayor_GetUIFont()
     return (pfUI and pfUI.font_default) or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 end
@@ -534,10 +536,10 @@ end
 
 function STSMmayor_LayoutFooter()
     if not durabilityFrame then return end
-    -- Dependency and robot details live in tooltips, keeping the main panel one row.
+    -- Details stay in tooltips; the header and action row keep a fixed height.
     if autoRepairInteractHint then autoRepairInteractHint:Hide() end
     if repairBotText then repairBotText:Hide() end
-    durabilityFrame:SetHeight(34)
+    durabilityFrame:SetHeight(62)
 end
 
 function STSMmayor_ApplyAppearance()
@@ -809,8 +811,8 @@ function STSMmayor_CreateDurabilityFrame()
     positionFrame:EnableMouse(false)
     durabilityFrame = CreateFrame("Frame", "STSMmayorDurabilityFrame", positionFrame)
     durabilityFrame:SetPoint("TOPLEFT", positionFrame, "TOPLEFT", 0, 0)
-    durabilityFrame:SetWidth(320)
-    durabilityFrame:SetHeight(34)
+    durabilityFrame:SetWidth(192)
+    durabilityFrame:SetHeight(62)
     durabilityFrame:SetFrameStrata("MEDIUM")
     durabilityFrame:SetScale(STSMmayorDB.UIScale)
     durabilityFrame:SetMovable(false)
@@ -839,9 +841,9 @@ function STSMmayor_CreateDurabilityFrame()
 
     local function makeButton(name, label, x, callback)
         local button = CreateFrame("Button", name, durabilityFrame, "UIPanelButtonTemplate")
-        button:SetWidth(32)
+        button:SetWidth(56)
         button:SetHeight(24)
-        button:SetPoint("LEFT", durabilityFrame, "LEFT", x, 0)
+        button:SetPoint("TOPLEFT", durabilityFrame, "TOPLEFT", x, -32)
         button:SetNormalTexture("")
         button:SetPushedTexture("")
         button:SetDisabledTexture("")
@@ -855,9 +857,9 @@ function STSMmayor_CreateDurabilityFrame()
         button:SetScript("OnClick", callback)
         return button
     end
-    equipButton = makeButton("STSMmayorEquipButton", "换盾", 118, function() STSMmayor_ManualEquip() end)
-    repairButton = makeButton("STSMmayorRepairButton", "修理", 154, function() STSMmayor_AutoRepair() end)
-    pickupButton = makeButton("STSMmayorPickupButton", "拾取", 190, function() STSMmayor_AutoPickup() end)
+    equipButton = makeButton("STSMmayorEquipButton", "换盾", 8, function() STSMmayor_ManualEquip() end)
+    repairButton = makeButton("STSMmayorRepairButton", "修理", 68, function() STSMmayor_AutoRepair() end)
+    pickupButton = makeButton("STSMmayorPickupButton", "拾取", 128, function() STSMmayor_AutoPickup() end)
     equipButton:SetScript("OnEnter", function()
         GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
         GameTooltip:SetText("手动换盾 (/STSMC)", 0.9, 0.9, 0.9)
@@ -868,7 +870,7 @@ function STSMmayor_CreateDurabilityFrame()
     robotIndicator = CreateFrame("Button", "STSMmayorRobotIndicator", durabilityFrame)
     robotIndicator:SetWidth(18)
     robotIndicator:SetHeight(18)
-    robotIndicator:SetPoint("LEFT", durabilityFrame, "LEFT", 232, 0)
+    robotIndicator:SetPoint("TOPLEFT", durabilityFrame, "TOPLEFT", 120, -7)
     robotIndicator:EnableMouse(true)
     STSMmayor_FlatBackdrop(robotIndicator)
     robotIndicator.Icon = robotIndicator:CreateTexture(nil, "ARTWORK")
@@ -882,12 +884,18 @@ function STSMmayor_CreateDurabilityFrame()
     end)
     robotIndicator:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    STSMmayorSettingsButton = makeButton("STSMmayorSettingsButton", "设置", 260,
+    STSMmayorSettingsButton = makeButton("STSMmayorSettingsButton", "设", 146,
         function() STSMmayor_ToggleAppearance() end)
-    STSMmayorSettingsButton:SetWidth(34)
-    STSMmayorSettingsButton:SetHeight(20)
+    STSMmayorSettingsButton:SetWidth(18)
+    STSMmayorSettingsButton:SetHeight(18)
     STSMmayorSettingsButton:ClearAllPoints()
-    STSMmayorSettingsButton:SetPoint("LEFT", durabilityFrame, "LEFT", 260, 0)
+    STSMmayorSettingsButton:SetPoint("TOPLEFT", durabilityFrame, "TOPLEFT", 146, -7)
+    STSMmayorSettingsButton:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+        GameTooltip:SetText("设置：自动换盾、自动修理、检测、外观与位置锁定", 0.9, 0.9, 0.9)
+        GameTooltip:Show()
+    end)
+    STSMmayorSettingsButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     closeButton = CreateFrame("Button", "STSMmayorCloseButton", durabilityFrame, "UIPanelButtonTemplate")
     closeButton:SetWidth(16)
@@ -903,8 +911,8 @@ function STSMmayor_CreateDurabilityFrame()
 
     durabilityText = durabilityFrame:CreateFontString(nil, "OVERLAY")
     durabilityText:SetFont(STSMmayor_GetUIFont(), 12, "OUTLINE")
-    durabilityText:SetPoint("LEFT", durabilityFrame, "LEFT", 8, 0)
-    durabilityText:SetHeight(24)
+    durabilityText:SetPoint("TOPLEFT", durabilityFrame, "TOPLEFT", 8, -6)
+    durabilityText:SetHeight(20)
     durabilityText:SetJustifyV("MIDDLE")
     durabilityText:SetWidth(104)
     durabilityText:SetJustifyH("LEFT")
@@ -912,7 +920,7 @@ function STSMmayor_CreateDurabilityFrame()
 
     autoRepairInteractHint = durabilityFrame:CreateFontString(nil, "OVERLAY")
     autoRepairInteractHint:SetFont(STSMmayor_GetUIFont(), 11, "OUTLINE")
-    autoRepairInteractHint:SetWidth(296)
+    autoRepairInteractHint:SetWidth(176)
     autoRepairInteractHint:SetJustifyH("LEFT")
     autoRepairInteractHint:SetTextColor(0.85, 0.45, 0.35)
     autoRepairInteractHint:SetText("拾取与修理不可用：未加载交互模组")
@@ -935,7 +943,9 @@ function STSMmayor_CreateDurabilityFrame()
         button.Label:SetJustifyV("MIDDLE")
     end
     closeButton:ClearAllPoints()
-    closeButton:SetPoint("RIGHT", durabilityFrame, "RIGHT", -6, 0)
+    closeButton:SetWidth(16)
+    closeButton:SetHeight(16)
+    closeButton:SetPoint("TOPRIGHT", durabilityFrame, "TOPRIGHT", -6, -8)
     if not closeButton.icon then
         local label = closeButton:GetFontString()
         label:ClearAllPoints()
