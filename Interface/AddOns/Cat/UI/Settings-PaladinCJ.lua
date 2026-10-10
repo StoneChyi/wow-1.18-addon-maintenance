@@ -224,55 +224,31 @@ slider_Strike:SetScript("OnMouseWheel", function()
 end)
 
 local color_Strike = "|cFFFFD100"
-
--- 值变化时的回调函数
+local strikeLabels = {
+    "只用 神圣打击", "主用 神圣打击 (均衡)", "主用 十字军打击 (均衡)",
+    "只用 十字军打击", "主用 神圣打击 (三层狂热)"
+}
+local function RefreshStrikeLabel()
+    local saved = GetCurrentSaved()
+    color_Strike = saved.Strike == 1 and "|cFFFFD100" or "|cFF888888"
+    _G[slider_Strike:GetName().."Text"]:SetText(color_Strike..(strikeLabels[saved.Strike_Value] or strikeLabels[3]))
+end
+local function NotifyStrikeChanged()
+    if not restoring and not MPCatPaladinControlUpdating() then
+        MPCatPaladinRetStrikeChanged(ConfigCurrent)
+    end
+end
 slider_Strike:SetScript("OnValueChanged", function()
-    --print("HerbalTea当前值:", arg1)
-    MPPaladinCJSaved[ConfigCurrent].Strike_Value = math.max(1, math.min(5, math.floor(arg1 + 0.5)))
-    if MPPaladinCJSaved[ConfigCurrent].Strike_Value==1 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 神圣打击")
-    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==2 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (均衡)")
-    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==3 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 十字军打击 (均衡)")
-    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==4 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 十字军打击")
-    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==5 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (三层狂热)")
+    if not restoring then
+        GetCurrentSaved().Strike_Value = math.max(1, math.min(5, math.floor(arg1 + 0.5)))
     end
+    RefreshStrikeLabel()
+    NotifyStrikeChanged()
 end)
-
--- 设置点击事件
-checkButton_Strike:SetScript("OnClick", function(self)
-    if this:GetChecked() then
-        MPPaladinCJSaved[ConfigCurrent].Strike = 1
-        color_Strike = "|cFFFFD100"
-        if MPPaladinCJSaved[ConfigCurrent].Strike_Value==1 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 神圣打击")
-        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==2 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (均衡)")
-        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==3 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 十字军打击 (均衡)")
-        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==4 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 十字军打击")
-        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==5 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (三层狂热)")
-        end
-    else
-        MPPaladinCJSaved[ConfigCurrent].Strike = 0
-        color_Strike = "|cFF888888"
-        if MPPaladinCJSaved[ConfigCurrent].Strike_Value==1 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 神圣打击")
-        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==2 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (均衡)")
-        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==3 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 十字军打击 (均衡)")
-        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==4 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 十字军打击")
-        elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==5 then
-            _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (三层狂热)")
-        end
-    end
+checkButton_Strike:SetScript("OnClick", function()
+    GetCurrentSaved().Strike = this:GetChecked() and 1 or 0
+    RefreshStrikeLabel()
+    NotifyStrikeChanged()
 end)
 
 
@@ -756,26 +732,7 @@ end
 function InitPaladinCJSetPart2()
     MPCatRefreshPaladinCJSeal(ConfigCurrent)
 
-    checkButton_Strike:SetChecked(MPPaladinCJSaved[ConfigCurrent].Strike)
-    slider_Strike:SetMinMaxValues(1, 5)
-    slider_Strike:SetValue(MPPaladinCJSaved[ConfigCurrent].Strike_Value)
-    if MPPaladinCJSaved[ConfigCurrent].Strike==1 then
-        color_Strike = "|cFFFFD100"
-    else
-        color_Strike = "|cFF888888"
-    end
-    if MPPaladinCJSaved[ConfigCurrent].Strike_Value==1 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 神圣打击")
-    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==2 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (均衡)")
-    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==3 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 十字军打击 (均衡)")
-    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==4 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."只用 十字军打击")
-    elseif MPPaladinCJSaved[ConfigCurrent].Strike_Value==5 then
-        _G[slider_Strike:GetName().."Text"]:SetText(color_Strike.."主用 神圣打击 (三层狂热)")
-    end
-
+    MPCatRefreshPaladinCJStrike(ConfigCurrent)
 
     checkButton_Relic:SetChecked(MPPaladinCJSaved[ConfigCurrent].Relic)
     for idx_Relic_Low, data_Relic_Low in pairs(modes_Relic_Low) do
@@ -883,6 +840,19 @@ function MPCatRefreshPaladinCJSeal(config)
     checkButton_Seal:SetChecked(MPToBoolean(saved.Seal))
     slider_Seal:SetValue(saved.Seal_Value or 1)
     RefreshSealLabel()
+    restoring = previous
+end
+
+-- 输出技能只修改/刷新当前惩戒配置，不反向同步圣印或奉献。
+function MPCatRefreshPaladinCJStrike(config)
+    if ConfigCurrent ~= config then return end
+    local saved = MPPaladinCJSaved and MPPaladinCJSaved[config]
+    if not saved then return end
+    local previous = restoring
+    restoring = true
+    checkButton_Strike:SetChecked(MPToBoolean(saved.Strike))
+    slider_Strike:SetValue(saved.Strike_Value or 3)
+    RefreshStrikeLabel()
     restoring = previous
 end
 

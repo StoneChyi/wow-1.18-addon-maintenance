@@ -257,7 +257,7 @@ end
 AlignHeaders()
 
 local consecration = CreateFrame("Button", ADDON_NAME.."ConsecrationButton", CatPaladinSeal)
-consecration:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", 285, -65)
+consecration:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", 285, -40)
 consecration:SetWidth(36)
 consecration:SetHeight(36)
 consecration.icon = consecration:CreateTexture(nil, "ARTWORK")
@@ -306,11 +306,81 @@ consecration:EnableMouseWheel(true)
 consecration:SetScript("OnMouseWheel", function()
     if arg1 > 0 then ChangeConsecration(1) elseif arg1 < 0 then ChangeConsecration(-1) end
 end)
+local strikeButton = CreateFrame("Button", ADDON_NAME.."StrikeButton", CatPaladinSeal)
+strikeButton:SetPoint("TOPLEFT", CatPaladinSeal, "TOPLEFT", 285, -90)
+strikeButton:SetWidth(36)
+strikeButton:SetHeight(36)
+strikeButton.icon = strikeButton:CreateTexture(nil, "ARTWORK")
+strikeButton.icon:SetAllPoints()
+PrepareBorderlessIcon(strikeButton)
+strikeButton.text = strikeButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+strikeButton.text:SetPoint("BOTTOM", strikeButton, "BOTTOM", 0, 3)
+-- GameFontNormal remains a valid fallback if the font file cannot load on 1.12.
+strikeButton.text:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+local strikeModes = {
+    [0] = { "Spell_Nature_WispSplode", "输出\n关闭", "关闭输出技能" },
+    [1] = { "Spell_Holy_SearingLight", "神打\n单打", "只用神圣打击" },
+    [2] = { "Spell_Holy_HolySmite", "神打\n均衡", "主用神圣打击（均衡）" },
+    [3] = { "Spell_Holy_RighteousFury", "十打\n均衡", "主用十字军打击（均衡）" },
+    [4] = { "Ability_ThunderBolt", "十打\n单打", "只用十字军打击" },
+    [5] = { "Ability_Warrior_InnerRage", "神打\n三层", "主用神圣打击，保持三层狂热" },
+}
+local function GetRetStrikeSettings()
+    local config = activeConfigs.RET or MPPaladinCJConfig or 1
+    if type(config) ~= "number" or config < 1 or config > 3 or config ~= math.floor(config) then config = 1 end
+    return MPPaladinCJSaved and MPPaladinCJSaved[config], config
+end
+local function RetStrikeMode(saved)
+    if not saved or saved.Strike ~= 1 then return 0 end
+    local value = saved.Strike_Value
+    if type(value) ~= "number" or value ~= value then return 3 end
+    return math.max(1, math.min(5, math.floor(value + 0.5)))
+end
+strikeButton.MPCatRefreshAppearance = function()
+    local saved = GetRetStrikeSettings()
+    local mode = RetStrikeMode(saved)
+    strikeButton.icon:SetTexture("Interface\\Icons\\"..strikeModes[mode][1])
+    strikeButton.text:SetText(strikeModes[mode][2])
+    SetIconSelected(strikeButton, mode ~= 0)
+end
+function MPCatPaladinRetStrikeChanged(config)
+    if config then activeConfigs.RET = config end
+    strikeButton.MPCatRefreshAppearance()
+end
+local function ChangeRetStrike(direction)
+    local saved, config = GetRetStrikeSettings()
+    if not saved and type(MPInitPaladinCJSettings) == "function" then
+        MPInitPaladinCJSettings()
+        saved, config = GetRetStrikeSettings()
+    end
+    if not saved then return end
+    local mode = math.mod(RetStrikeMode(saved) + direction + 6, 6)
+    saved.Strike = mode == 0 and 0 or 1
+    if mode ~= 0 then saved.Strike_Value = mode end
+    if type(MPCatRefreshPaladinCJStrike) == "function" then MPCatRefreshPaladinCJStrike(config) end
+    strikeButton.MPCatRefreshAppearance()
+end
+strikeButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+strikeButton:SetScript("OnClick", function()
+    ChangeRetStrike(arg1 == "RightButton" and -1 or 1)
+end)
+strikeButton:SetScript("OnEnter", function()
+    local saved, config = GetRetStrikeSettings()
+    GameTooltip:SetOwner(strikeButton, "ANCHOR_RIGHT")
+    GameTooltip:SetText("惩戒输出 - 配置 "..config)
+    GameTooltip:AddLine(strikeModes[RetStrikeMode(saved)][3], 1, 1, 1)
+    GameTooltip:AddLine("左键下一档，右键上一档", 0.8, 0.8, 0.8)
+    GameTooltip:Show()
+end)
+strikeButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+strikeButton.MPCatRefreshAppearance()
+
 function MPCatPaladinSealRefreshIcons()
     if MPCatPaladinTankRecoveryActive then sealLabel:SetText("圣印\n|cff66ccff回蓝|r") else sealLabel:SetText("圣印") end
     SelectButtons(justiceButtons)
     SelectButtons(sealButtons)
     consecration.MPCatRefreshAppearance()
+    strikeButton.MPCatRefreshAppearance()
 end
 -- 背景透明度独立于图标、文字和按钮；兼容原生背景及 pfUI 的独立背景框。
 function MPCatPaladinSealApplyAppearance()
@@ -456,7 +526,10 @@ function MPCatPaladinApplyControl(role, config)
     if not MPPaladinSealSaved or MPPaladinSealSaved.SharedConsecration ~= 1 then MPCatPaladinSealInit() end
     config = ValidValue(config, 1, 1, 3, true)
     activeConfigs[role] = config
-    if role == "RET" then MPCatPaladinSyncRetSeal(config) end
+    if role == "RET" then
+        MPCatPaladinSyncRetSeal(config)
+        MPCatPaladinRetStrikeChanged(config)
+    end
     local profiles = MPPaladinCJSaved
     local refresh = MPCatRefreshPaladinCJConsecration
     if role == "TANK" then profiles = MPPaladinTankSaved; refresh = MPCatRefreshPaladinTankConsecration end

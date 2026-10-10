@@ -262,7 +262,7 @@ function MPPaladinCJSpell()
 	GCD = MPGetGCD()
 	SP=MPSpellReady("审判")
 	QXS=MPSpellReady("驱邪术")
-	SZJ=MPSpellReadyOffset("十字军打击", 1.0)
+	SZJ=MPPaladinCJSaved[MPPaladinCJConfig].Strike==1 and MPSpellReadyOffset("十字军打击", 1.0)
 	FX=MPSpellReadyOffset("奉献",1.0)
 	FNZC=MPSpellReady("愤怒之锤")
 	if MPPaladinRepentance==1 then CH=MPSpellReady("忏悔") end
