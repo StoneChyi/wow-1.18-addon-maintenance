@@ -561,7 +561,7 @@
       "addon": "Cooline",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Cooline.md",
-      "purpose": "短冷却优先，支持 30 分钟；提供居中分行、贴边数字、条内时间分割线与设置预览，并修复字体初始化报错。",
+      "purpose": "短冷却优先，支持 30 分钟；居中分行、设置预览、像素对齐分割线与清晰黑白对比，并修复字体初始化报错。",
       "sources": [
         "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-15.md",
         "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-24.md"
@@ -571,7 +571,7 @@
         "Interface/AddOns/Cooline/settings.lua"
       ],
       "tracked_files_at_reference": 5,
-      "pending": "2026-10-11：修复字体报错并将分割线移入条内；15 组检查通过，含四向布局、六档时间范围、缩放与边界；真实游戏验收待确认。"
+      "pending": "2026-10-11：统一分割线物理像素宽度并提高黑白对比；16 组检查通过，含 36 种缩放/分辨率/方向组合；真实游戏观感待验收。"
     },
     {
       "addon": "Cryolysis",

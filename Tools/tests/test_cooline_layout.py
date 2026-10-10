@@ -40,6 +40,7 @@ function methods:SetWidth(v) assert(type(v)=='number' and v>=0);self.width=v end
 function methods:SetHeight(v) assert(type(v)=='number' and v>=0);self.height=v end
 function methods:GetWidth() return self.width end
 function methods:GetHeight() return self.height end
+function methods:GetEffectiveScale() return (self.scale or 1)*(self.parent and self.parent:GetEffectiveScale() or 1) end
 function methods:SetPoint(...)
  local args={...};assert(#args>=3,'1.12 SetPoint needs offsets')
  self.points[args[1]]=args;self.point=args
@@ -75,11 +76,11 @@ function methods:SetFrameStrata(v) self.strata=v end
 function methods:SetBackdrop(v) self.backdropSpec=v end
 function methods:SetBackdropColor(...) self.color={...} end
 function methods:SetBackdropBorderColor(...) end
-function methods:SetTexture(...) self.texture=(...) end
+function methods:SetTexture(...) self.texture=(...);self.textureArgs={...} end
 function methods:GetTexture() return self.texture end
 function methods:SetTexCoord(...) end
-function methods:SetVertexColor(...) end
-function methods:SetTextColor(...) end
+function methods:SetVertexColor(...) self.vertexColor={...} end
+function methods:SetTextColor(...) self.textColor={...} end
 function methods:SetShadowColor(...) end
 function methods:SetShadowOffset(...) end
 function methods:SetJustifyH(...) end
@@ -122,6 +123,8 @@ end
 UIParent=newObject('Frame','UIParent');UIParent.width=1920;UIParent.height=1080
 GameTooltip=newObject('GameTooltip','GameTooltip');GameTooltip:Hide()
 DEFAULT_CHAT_FRAME=newObject('Frame','DEFAULT_CHAT_FRAME')
+resolution='1920x768'
+function GetCVar(name) assert(name=='gxResolution');return resolution end
 function GetTime() return now end
 function IsShiftKeyDown() return shift end
 function GetContainerNumSlots(b) return bags[b] and #bags[b] or 0 end
@@ -199,18 +202,22 @@ def check(name,fn):
 def assert_internal_marks(lua):
     g=lua.globals();cl=g.cooline;vertical=g.cooline_theme.vertical
     cx,cy=cl.GetCenter(cl)
+    physical_height=float(g.resolution.split('x')[-1])
+    pixel=768/physical_height/cl.GetEffectiveScale(cl)
     for i,mark in cl.tick_marks.items():
         x,y=mark.GetCenter(mark)
         assert mark.shown and mark.alpha==1
         assert abs(x-cx)+mark.width/2 <= cl.width/2+1e-8
         assert abs(y-cy)+mark.height/2 <= cl.height/2+1e-8
-        assert (mark.width,mark.height)==((cl.thickness,1) if vertical else (1,cl.thickness))
-        assert mark.point[4 if vertical else 5]==0
+        assert abs((mark.height if vertical else mark.width)/pixel-1)<1e-8
+        for edge in [x-mark.width/2,x+mark.width/2,y-mark.height/2,y+mark.height/2]:
+            assert abs(edge/pixel-round(edge/pixel))<1e-7
         position=cl.time_position(cl.axis_times[i])
-        # Interior dividers align exactly; endpoint lines are inset half a pixel.
-        expected=max(.5,min(cl.length-.5,position))
-        if g.cooline_theme.reverse:expected=cl.length-expected
-        assert abs(mark.point[5 if vertical else 4]-expected)<1e-8
+        if g.cooline_theme.reverse:position=cl.length-position
+        actual=(y-cy if vertical else x-cx)+cl.length/2
+        allowance=1.5 if i in [1,7] else .500001
+        assert abs(actual-position)<=allowance*pixel+1e-8
+        assert list(mark.textureArgs.values())==[1,1,1,.65]
 
 
 def axis():
@@ -477,7 +484,6 @@ def close_ticks_and_local_fade():
             coordinates=[]
             for i,fs in cl.ticks.items():
                 assert abs(abs(fs.cross_position)-fs.half_cross-cl.thickness/2-4)<1e-8
-                assert cl.tick_marks[i].point[4 if vertical else 5]==0
                 assert cl.tick_marks[i].shown
                 coordinates.append((fs.axis_position,fs.cross_position))
             if not vertical:assert cl.ticks[2].cross_position==-19
@@ -636,6 +642,38 @@ def font_lifecycle():
             if missing:assert text.font[1]!=missing
         g.CoolineConfigPanel.Hide(g.CoolineConfigPanel)
 check('font initialization, disabled/long/active/recycled timers, preview and missing-font fallback',font_lifecycle)
+
+def pixel_dividers_and_contrast():
+    for vertical in [False,True]:
+        for reverse in [False,True]:
+            lua=new({'x':.37,'y':-123.23,'theme':{
+                'vertical':vertical,'reverse':reverse,
+                'width':19 if vertical else 233,'height':233 if vertical else 19}})
+            g=lua.globals();cl=g.cooline
+            add(lua,'Contrast',20);cl.on_update(True)
+            assert cl.alpha==1 and frames(lua)[0].alpha==1
+            assert list(cl.bg.vertexColor.values())==[0,0,0,.8]
+            assert cl.bg.texture=='Interface\\Buttons\\WHITE8X8'
+            assert list(cl.ticks[1].textColor.values())==[1,1,1,1]
+            for height in [768,1080,1440]:
+                g.resolution=f'2560x{height}'
+                for scale in [.64,1,1.25]:
+                    g.UIParent.scale=scale
+                    cl.on_update(True) # scale/resolution changes also update while settings stay closed
+                    assert_internal_marks(lua)
+                    old=list(cl.tick_marks.values())
+                    cl.SetPoint(cl,'CENTER',g.UIParent,'CENTER',.71,-122.91)
+                    cl.on_update(True);assert_internal_marks(lua)
+                    assert all(equal(lua,a,b) for a,b in zip(old,cl.tick_marks.values()))
+            # A drag stop refreshes raster alignment without changing saved logical dimensions.
+            g.shift=True;cl.begin_drag();cl.end_drag();assert_internal_marks(lua)
+            lua.execute('SlashCmdList.COOLINECONFIG()')
+            cl.clear_cooldown('spell:Contrast');cl.on_update(True)
+            assert cl.alpha==1 and len(frames(lua))==3
+            assert_internal_marks(lua)
+            g.CoolineConfigPanel.Hide(g.CoolineConfigPanel)
+            assert cl.alpha==0 # original idle visibility is retained
+check('36 scale/resolution layouts, fractional dragging, one-pixel edges, cached marks and neutral contrast',pixel_dividers_and_contrast)
 
 def original_bytes():
     for path in FILES:

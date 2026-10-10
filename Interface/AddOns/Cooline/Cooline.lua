@@ -171,6 +171,7 @@ function cooline.end_drag()
     local ux, uy = UIParent:GetCenter()
     cooline_settings.x, cooline_settings.y = floor(x - ux + 0.5), floor(y - uy + 0.5)
     cooline.dragging = false
+    cooline.refresh_dividers()
 end
 
 local function remaining_text(seconds)
@@ -267,6 +268,51 @@ local function compact_size()
     return math.max(12, math.floor(cooline.icon_size * 0.75))
 end
 
+-- 1.12 renders a 768-unit canvas. Convert through the actual frame scale,
+-- then snap texture EDGES (not centers) to physical pixels, including reverse.
+local divider_geometry = {}
+function cooline.refresh_dividers(force)
+    if not cooline.ticks then return end
+    local x, y = cooline:GetCenter()
+    if not x or not y then return end
+    local _, _, height = string.find(GetCVar('gxResolution') or '', '^%d+x(%d+)$')
+    height = tonumber(height) or 768
+    if height <= 0 then height = 768 end
+    local pixel = 768 / height / cooline:GetEffectiveScale()
+    local width, thickness = cooline.length, cooline.thickness
+    local vertical, reverse = cooline_theme.vertical, cooline_theme.reverse
+    local old = divider_geometry
+    if not force and old.x == x and old.y == y and old.pixel == pixel and
+        old.width == width and old.thickness == thickness and
+        old.vertical == vertical and old.reverse == reverse then return end
+    old.x, old.y, old.pixel = x, y, pixel
+    old.width, old.thickness, old.vertical, old.reverse = width, thickness, vertical, reverse
+    local left, bottom = x - cooline_theme.width / 2, y - cooline_theme.height / 2
+    local origin, cross_origin = vertical and bottom or left, vertical and left or bottom
+    -- Entire pixels inside the background, even after fractional-position drags.
+    local first = math.ceil(origin / pixel - 0.000001)
+    local last = math.floor((origin + width) / pixel + 0.000001) - 1
+    local cross_first = math.ceil(cross_origin / pixel - 0.000001) * pixel
+    local cross_last = math.floor((cross_origin + thickness) / pixel + 0.000001) * pixel
+    for i, fs in ipairs(cooline.ticks) do
+        local mark = cooline.tick_marks[i]
+        if not mark then
+            mark = cooline.overlay:CreateTexture(nil, 'BACKGROUND')
+            mark:SetTexture(1, 1, 1, 0.65)
+            cooline.tick_marks[i] = mark
+        end
+        local position = reverse and width - fs.axis_position or fs.axis_position
+        local edge = math.floor((origin + position) / pixel)
+        edge = math.max(first, math.min(last, edge))
+        local along, cross = edge * pixel - origin, cross_first - cross_origin
+        mark:SetWidth(vertical and cross_last - cross_first or pixel)
+        mark:SetHeight(vertical and pixel or cross_last - cross_first)
+        mark:ClearAllPoints()
+        mark:SetPoint('BOTTOMLEFT', cooline, 'BOTTOMLEFT', vertical and cross or along, vertical and along or cross)
+        mark:Show()
+    end
+end
+
 function cooline.refresh_ticks()
     if not cooline.ticks then return end
     local size = compact_size()
@@ -311,18 +357,8 @@ function cooline.refresh_ticks()
         end
         fs.tick_alpha = fs.tick_alpha or 1
         fs:SetAlpha(fs.tick_alpha)
-        local mark = cooline.tick_marks[i]
-        if not mark then
-            mark = cooline.overlay:CreateTexture(nil, 'BACKGROUND')
-            mark:SetTexture(1, 1, 1, 0.6)
-            cooline.tick_marks[i] = mark
-        end
-        -- Span the bar itself; keep endpoint lines entirely inside its bounds.
-        mark:SetWidth(cooline_theme.vertical and cooline.thickness or 1)
-        mark:SetHeight(cooline_theme.vertical and 1 or cooline.thickness)
-        cooline.place(mark, math.max(0.5, math.min(cooline.length - 0.5, position)), 0)
-        mark:Show()
     end
+    cooline.refresh_dividers(true)
 end
 
 -- Compare cached coordinates in bar space. Reversing the time axis preserves
@@ -538,6 +574,7 @@ function cooline.on_update(force)
     local now = GetTime()
     if not force and now - last_update < throttle then return end
     last_update, throttle = now, 1
+    cooline.refresh_dividers()
     local entries = {}
     for key, frame in pairs(cooldowns) do
         local left = frame.end_time - now
