@@ -217,7 +217,15 @@ def assert_internal_marks(lua):
         actual=(y-cy if vertical else x-cx)+cl.length/2
         allowance=1.5 if i in [1,7] else .500001
         assert abs(actual-position)<=allowance*pixel+1e-8
-        assert list(mark.textureArgs.values())==[1,1,1,.65]
+        assert list(mark.textureArgs.values())==[154/255,181/255,187/255,.7]
+        span=(mark.width if vertical else mark.height)/pixel
+        assert span>=1-1e-8
+        if cl.thickness/pixel>=6:
+            origin=(cx-cl.width/2) if vertical else (cy-cl.height/2)
+            edge=(x-mark.width/2) if vertical else (y-mark.height/2)
+            end=(x+mark.width/2) if vertical else (y+mark.height/2)
+            assert 2-1e-8 <= (edge-origin)/pixel < 3+1e-8
+            assert 2-1e-8 <= (origin+cl.thickness-end)/pixel < 3+1e-8
 
 
 def axis():
@@ -525,7 +533,7 @@ def close_ticks_and_local_fade():
     for delta,blocked in [(edge+.5,True),(edge+2,True),(edge+3.5,False)]:
         f.axis_position=tick.axis_position+delta
         cl.update_tick_collisions();assert tick.blocked==blocked
-check('four layouts, full internal dividers, resized bounds, local text fade and collision hysteresis',close_ticks_and_local_fade)
+check('four layouts, inset internal dividers, resized bounds, local text fade and collision hysteresis',close_ticks_and_local_fade)
 
 def optional_icon_countdown():
     lua=new();g=lua.globals();cl=g.cooline;t=g.cooline_theme
@@ -652,9 +660,9 @@ def pixel_dividers_and_contrast():
             g=lua.globals();cl=g.cooline
             add(lua,'Contrast',20);cl.on_update(True)
             assert cl.alpha==1 and frames(lua)[0].alpha==1
-            assert list(cl.bg.vertexColor.values())==[0,0,0,.8]
+            assert list(cl.bg.vertexColor.values())==[87/255,112/255,122/255,.45]
             assert cl.bg.texture=='Interface\\Buttons\\WHITE8X8'
-            assert list(cl.ticks[1].textColor.values())==[1,1,1,1]
+            assert list(cl.ticks[1].textColor.values())==[216/255,222/255,223/255,1]
             for height in [768,1080,1440]:
                 g.resolution=f'2560x{height}'
                 for scale in [.64,1,1.25]:
@@ -665,6 +673,13 @@ def pixel_dividers_and_contrast():
                     cl.SetPoint(cl,'CENTER',g.UIParent,'CENTER',.71,-122.91)
                     cl.on_update(True);assert_internal_marks(lua)
                     assert all(equal(lua,a,b) for a,b in zip(old,cl.tick_marks.values()))
+                    # Minimum bar thickness still leaves a visible, aligned divider.
+                    if vertical:g.cooline_theme.width=8
+                    else:g.cooline_theme.height=8
+                    cl.apply_theme();assert_internal_marks(lua)
+                    if vertical:g.cooline_theme.width=19
+                    else:g.cooline_theme.height=19
+                    cl.apply_theme()
             # A drag stop refreshes raster alignment without changing saved logical dimensions.
             g.shift=True;cl.begin_drag();cl.end_drag();assert_internal_marks(lua)
             lua.execute('SlashCmdList.COOLINECONFIG()')
@@ -673,7 +688,7 @@ def pixel_dividers_and_contrast():
             assert_internal_marks(lua)
             g.CoolineConfigPanel.Hide(g.CoolineConfigPanel)
             assert cl.alpha==0 # original idle visibility is retained
-check('36 scale/resolution layouts, fractional dragging, one-pixel edges, cached marks and neutral contrast',pixel_dividers_and_contrast)
+check('36 scale/resolution layouts, thin bars, inset one-pixel dividers and approved mist palette',pixel_dividers_and_contrast)
 
 def original_bytes():
     for path in FILES:

@@ -294,13 +294,16 @@ function cooline.refresh_dividers(force)
     local last = math.floor((origin + width) / pixel + 0.000001) - 1
     local cross_first = math.ceil(cross_origin / pixel - 0.000001) * pixel
     local cross_last = math.floor((cross_origin + thickness) / pixel + 0.000001) * pixel
+    -- Two physical pixels of breathing room; keep at least one on thin bars.
+    local inset = math.min(2, math.max(0, math.floor(((cross_last - cross_first) / pixel - 1) / 2 + 0.000001))) * pixel
+    cross_first, cross_last = cross_first + inset, cross_last - inset
     for i, fs in ipairs(cooline.ticks) do
         local mark = cooline.tick_marks[i]
         if not mark then
             mark = cooline.overlay:CreateTexture(nil, 'BACKGROUND')
-            mark:SetTexture(1, 1, 1, 0.65)
             cooline.tick_marks[i] = mark
         end
+        mark:SetTexture(unpack(cooline_theme.tickcolor))
         local position = reverse and width - fs.axis_position or fs.axis_position
         local edge = math.floor((origin + position) / pixel)
         edge = math.max(first, math.min(last, edge))
