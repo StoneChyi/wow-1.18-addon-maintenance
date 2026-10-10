@@ -183,7 +183,7 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "复用有效布局，并优化规则参数、文本匹配和按钮处理；本轮收益待客户端复测。",
+      "purpose": "复用有效布局，优化规则和按钮处理；新 v2 分类约减半，首次布局尖峰仍待定位。",
       "sources": [],
       "maintenance_files": [
         "Interface/AddOns/Bagshui/Bagshui.xml",
@@ -196,7 +196,7 @@
         "Interface/AddOns/Bagshui/Components/Ui.ItemButton.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "此前 v2 已确认布局复用后重复打开改善；本轮规则/按钮优化 74 组受控行为检查通过，新耗时及移动拆分、换包、充能、搜索、皮肤和离线银行待客户端验收，早期个人修改未确认。",
+      "pending": "新 v2 分类约减半、重复打开保持轻量；首次窗口处理更慢，整体首次打开尚未明显改善，需细分定位及多次对照；移动拆分、换包、充能、搜索、皮肤和离线银行待客户端验收，早期个人修改未确认。",
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua"
       ]
