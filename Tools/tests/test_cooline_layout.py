@@ -690,6 +690,134 @@ def pixel_dividers_and_contrast():
             assert cl.alpha==0 # original idle visibility is retained
 check('36 scale/resolution layouts, thin bars, inset one-pixel dividers and approved mist palette',pixel_dividers_and_contrast)
 
+def shared_book(lua, names=('十字军打击','神圣打击'), duration=6):
+    g=lua.globals()
+    g.spells=lua.table_from([
+        {'name':name,'texture':'icon-'+name,'start':g.now,'duration':duration}
+        for name in names
+    ],recursive=True)
+    g.cooline.detect_cooldowns()
+
+
+def shared_scan_and_layout():
+    for names in [('十字军打击','神圣打击'),('Crusader Strike','Holy Strike')]:
+        for mode in ['lanes','compact','overlap']:
+            for rows in [1,2,3]:
+                lua=new({'theme':{'layout':mode,'max_rows':rows,'show_countdown':True}})
+                g=lua.globals();cl=g.cooline
+                shared_book(lua,names)
+                fs=frames(lua);assert len(fs)==1
+                f=fs[0]
+                assert f.name==names[0] and f.icon.texture=='icon-'+names[0]
+                assert f.width==22 and f.cross_position==0 and f.count.text==''
+                assert f.timer.shown and f.timer.text=='6' and len(f.members)==1
+                cl.show_tooltip(f)
+                lines=[(line[1],line[2]) for line in g.GameTooltip.lines.values()]
+                assert lines==[('共享冷却','6.0 秒'),(names[0],'当前图标'),(names[1],'')]
+                lua.execute('SlashCmdList.COOLINECONFIG()')
+                assert len(frames(lua))==1
+                if cl.preview_frames:assert not any(f.shown for f in cl.preview_frames.values())
+                # Same-timed unrelated spells and identically named items are independent.
+                lua.execute("spells[3]={name='Other',texture='other',start=now,duration=6};bags[0]={{link='|Hitem:1|h["+names[0]+"]|h',texture='item',start=now,duration=6}}")
+                cl.detect_cooldowns()
+                assert sum(len(f.members) for f in frames(lua))==3
+    lua=new();g=lua.globals();cl=g.cooline
+    shared_book(lua)
+    lua.execute("spells[3]={name='十字军打击',texture='lower-rank',duration=0};cooline.detect_cooldowns()")
+    assert len(frames(lua))==1 # a ready lower rank cannot cancel the shared timer
+    lua.execute('spells[2].enabled=0;cooline.detect_cooldowns()')
+    assert len(frames(lua))==1 and frames(lua)[0].shared_names is None
+    lua.execute('spells[1].duration=1.5;spells[2].enabled=1;spells[2].duration=1.5;cooline.detect_cooldowns()')
+    assert not frames(lua) # global cooldowns never become a shared cooldown icon
+check('18 localized layout combinations: one shared timer, no badge/shrink, tooltip and independent CDs/items',shared_scan_and_layout)
+
+
+def shared_success_selection():
+    for names in [('十字军打击','神圣打击'),('Crusader Strike','Holy Strike')]:
+        lua=new(saved_zmd={'enabled':False});g=lua.globals();cl=g.cooline
+        shared_book(lua,names);f=frames(lua)[0]
+        assert cl.events.UNIT_CASTEVENT
+        for source,state,spell in [('player-guid','START',2),('player-guid','FAIL',2),('other-guid','CAST',2),('player-guid','CAST',None)]:
+            g.fire(cl,'UNIT_CASTEVENT',source,None,state,spell)
+            cl.detect_cooldowns();assert frames(lua)[0].name==names[0]
+        # Success may arrive just after the first scan. It still selects this cycle's icon.
+        g.now=100.05;g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',2)
+        g.now=100.151;g.invoke(cl.rescan_timer,'OnUpdate')
+        assert equal(lua,frames(lua)[0],f) and f.name==names[1]
+        assert f.icon.texture=='icon-'+names[1] and f.shared_confirmed
+        assert not g.CoolineZMDDB.enabled
+        g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',1)
+        for _ in range(3):cl.detect_cooldowns()
+        assert f.name==names[1] # never oscillate between confirmed representatives
+        # Next cycle gets a new representative, even when it reuses the group frame.
+        g.now=107;shared_book(lua,names)
+        g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',1);cl.detect_cooldowns()
+        assert frames(lua)[0].name==names[0]
+    # Success before the cooldown scan, including a ranked event name.
+    lua=new(saved_zmd={'enabled':False});g=lua.globals();cl=g.cooline
+    lua.execute("spells={{name='十字军打击',texture='crusader',start=now,duration=6},{name='神圣打击',texture='holy',start=now,duration=6}};GetSpellNameAndRankForId=function(id) return id==2 and '神圣打击（等级 2）' or '十字军打击' end")
+    g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',2);cl.detect_cooldowns()
+    assert frames(lua)[0].name=='神圣打击'
+    # Old success records cannot decide a later cooldown, and native fallback remains deterministic.
+    g.now=120;shared_book(lua);assert frames(lua)[0].name=='十字军打击'
+    lua=new(superwow=False,saved_zmd={'enabled':False});g=lua.globals();cl=g.cooline
+    shared_book(lua);assert not cl.events.UNIT_CASTEVENT
+    g.hooks.CastSpellByName('神圣打击');cl.detect_cooldowns()
+    assert len(frames(lua))==1 and frames(lua)[0].name=='十字军打击'
+check('shared representatives follow player CAST success independently of history; stable cycles, ranked names and native fallback',shared_success_selection)
+
+
+def shared_timing_transitions():
+    for field,delta in [('start',.25),('duration',.25)]:
+        lua=new();g=lua.globals();cl=g.cooline
+        shared_book(lua);g.spells[2][field]+=delta;cl.detect_cooldowns()
+        assert sum(len(f.members) for f in frames(lua))==2
+        assert all(f.shared_names is None for f in frames(lua))
+        g.spells[2][field]-=delta;cl.detect_cooldowns();assert len(frames(lua))==1
+    # Matching end times alone are insufficient, as are individually close starts/durations
+    # whose combined end-time discrepancy exceeds the tolerance.
+    for start,duration in [(99,7),(100.08,6.08)]:
+        lua=new();g=lua.globals();shared_book(lua)
+        g.spells[2].start=start;g.spells[2].duration=duration;g.cooline.detect_cooldowns()
+        assert sum(len(f.members) for f in frames(lua))==2
+    lua=new();g=lua.globals();cl=g.cooline;shared_book(lua)
+    lua.execute('spells[2].start=100.04;spells[2].duration=6.04;cooline.detect_cooldowns()')
+    assert len(frames(lua))==1 and abs(frames(lua)[0].end_time-106.08)<1e-8
+    # Group disappearance and early reset clear immediately without completion reminders.
+    lua.execute('flashCalls=0;cooline.show_flash=function() flashCalls=flashCalls+1 end;spells[2]=nil;cooline.detect_cooldowns()')
+    assert len(frames(lua))==1 and frames(lua)[0].shared_names is None
+    lua.execute('spells[1].duration=0;cooline.detect_cooldowns()')
+    assert not frames(lua) and g.flashCalls==0
+    # Splitting just before expiry must remove the old shared record as well.
+    g.now=200;shared_book(lua);g.now=205.98
+    lua.execute('spells[2].duration=7;cooline.detect_cooldowns()')
+    assert sum(len(f.members) for f in frames(lua))==2
+    assert all(f.shared_names is None for f in frames(lua))
+check('shared timing gates, conservative end time, split/rejoin, early reset and near-expiry replacement',shared_timing_transitions)
+
+
+def shared_expiry_overflow_and_reuse():
+    lua=new({'theme':{'layout':'compact','show_countdown':True}});g=lua.globals();cl=g.cooline
+    shared_book(lua)
+    lua.execute("spells[3]={name='Other',texture='other',start=now,duration=6};cooline.detect_cooldowns()")
+    f=frames(lua)[0];assert len(frames(lua))==1 and f.count.text=='+1' and not f.timer.shown
+    cl.show_tooltip(f)
+    text='\n'.join(line[1] for line in g.GameTooltip.lines.values())
+    assert all(name in text for name in ['Other','十字军打击','神圣打击'])
+    # A clean shared cycle produces exactly one completion, even through scans at expiry.
+    lua=new({'theme':{'show_countdown':True}});g=lua.globals();cl=g.cooline;shared_book(lua);f=frames(lua)[0]
+    lua.execute('flashCalls=0;cooline.show_flash=function() flashCalls=flashCalls+1 end;now=106;spells[1].duration=0;spells[2].duration=0;cooline.detect_cooldowns();cooline.detect_cooldowns()')
+    assert g.flashCalls==1 and f.flashed
+    g.now=106.5;cl.on_update(True);assert abs(f.alpha-.5)<1e-8
+    g.now=107.1;cl.on_update(True);assert not frames(lua)
+    add(lua,'Recycled',5);cl.on_update(True);recycled=frames(lua)[0]
+    assert equal(lua,recycled,f) and recycled.shared_names is None and recycled.shared_group is None
+    assert not recycled.flashed and recycled.count.text=='' and recycled.timer.text=='5'
+    cl.show_tooltip(recycled)
+    assert len(g.GameTooltip.lines)==1 and g.GameTooltip.lines[1][1]=='Recycled'
+check('overflow counts shared CD once, full tooltip, single completion, fade and clean pool reuse',shared_expiry_overflow_and_reuse)
+
+
 def original_bytes():
     for path in FILES:
         previous=subprocess.check_output(['git','show','HEAD:'+path.relative_to(ROOT).as_posix()],cwd=ROOT)

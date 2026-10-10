@@ -13,6 +13,25 @@ cooline_settings = { x = 0, y = -240, flash_enabled = true, show_cooline = true 
 local frame_pool = {}
 local cooldowns = {}
 
+-- Explicitly confirmed shared cooldowns only. Equal timings alone are not proof.
+-- Ordered aliases supply a deterministic representative after reload.
+local shared_groups = {
+    {key = 'paladin_strikes', names = {'十字军打击', '神圣打击', 'Crusader Strike', 'Holy Strike'}},
+}
+local shared_by_name, shared_casts = {}, {}
+local SHARED_EPS = 0.1
+for _, group in ipairs(shared_groups) do
+    for _, name in ipairs(group.names) do shared_by_name[name] = group end
+end
+
+local function shared_base_name(name)
+    if type(name) ~= 'string' then return nil end
+    local cut = string.find(name, '(', 1, true)
+    local wide = string.find(name, '（', 1, true)
+    if wide and (not cut or wide < cut) then cut = wide end
+    return string.gsub(cut and string.sub(name, 1, cut - 1) or name, '%s+$', '')
+end
+
 function cooline.set_shown(shown)
 	if shown or cooline.preview_enabled then
 		cooline:Show()
@@ -37,10 +56,10 @@ local function ignored(name)
     return false
 end
 
-function cooline.start_cooldown(name, texture, start_time, duration, is_spell)
+function cooline.start_cooldown(name, texture, start_time, duration, is_spell, record_name)
     if ignored(name) or type(start_time) ~= 'number' or type(duration) ~= 'number' then return end
     if duration <= 0 or start_time + duration <= GetTime() then return end
-    local key = (is_spell and 'spell:' or 'item:') .. name
+    local key = (is_spell and 'spell:' or 'item:') .. (record_name or name)
     local frame = cooldowns[key]
     if not frame then
         frame = tremove(frame_pool) or cooline.cooldown_frame()
@@ -54,8 +73,11 @@ function cooline.start_cooldown(name, texture, start_time, duration, is_spell)
         frame.flashed = false
     end
     frame.name, frame.is_spell, frame.end_time = name, is_spell, end_time
+    frame.scan_name, frame.start_time = record_name or name, start_time
+    frame.shared_group, frame.shared_names, frame.shared_confirmed = nil, nil, nil
     frame.icon:SetTexture(texture or 'Interface\\Icons\\INV_Misc_QuestionMark')
     frame:SetBackdropColor(unpack(is_spell and cooline_theme.spellcolor or cooline_theme.nospellcolor))
+    return frame
 end
 
 function cooline.clear_cooldown(key)
@@ -64,6 +86,7 @@ function cooline.clear_cooldown(key)
     if GameTooltip:IsOwned(frame) then GameTooltip:Hide() end
     frame:Hide()
     frame.members = nil
+    frame.shared_group, frame.shared_names, frame.shared_confirmed = nil, nil, nil
     tinsert(frame_pool, frame)
     cooldowns[key] = nil
 end
@@ -81,15 +104,68 @@ local function scan_record(records, seen, name, texture, start, duration, enable
     end
 end
 
+local function merge_shared_records(records)
+    for _, group in ipairs(shared_groups) do
+        local names, first, start, finish, same = {}, nil, nil, nil, true
+        for _, name in ipairs(group.names) do
+            local data = records[name]
+            if data then
+                tinsert(names, name)
+                if not first then first = data; start = data.start; finish = data.start + data.duration end
+                if math.abs(data.start - first.start) > SHARED_EPS or
+                    math.abs(data.duration - first.duration) > SHARED_EPS or
+                    math.abs(data.start + data.duration - first.start - first.duration) > SHARED_EPS then same = false end
+                start, finish = math.max(start, data.start), math.max(finish, data.start + data.duration)
+            end
+        end
+        if same and table.getn(names) > 1 then
+            local key = 'shared:' .. group.key
+            local old = cooldowns['spell:' .. key]
+            local current = old and old.shared_group == group.key and
+                math.abs(old.start_time - start) <= SHARED_EPS and math.abs(old.end_time - finish) <= SHARED_EPS
+            local cast = shared_casts[group.key]
+            -- A confirmed success must belong to this cooldown, not a previous cast.
+            local confirmed = cast and records[cast.name] and math.abs(cast.at - start) <= 0.5
+            local chosen = names[1]
+            if current and old.shared_confirmed and records[old.name] then
+                chosen, confirmed = old.name, true
+            elseif confirmed then
+                chosen = cast.name
+            elseif current and records[old.name] then
+                chosen = old.name
+            end
+            records[key] = {name = chosen, texture = records[chosen].texture, start = start,
+                duration = finish - start, shared_group = group.key, shared_names = names,
+                shared_confirmed = confirmed and true or false}
+            for _, name in ipairs(names) do records[name] = nil end
+        end
+    end
+end
+
+local function replaced_shared_record(frame, records)
+    local group = shared_by_name[frame.name]
+    if group and records['shared:' .. group.key] then return true end
+    for _, name in ipairs(frame.shared_names or {}) do
+        local data = records[name]
+        if data and data.start + data.duration > GetTime() then return true end
+    end
+    return false
+end
+
 local function finish_scan(records, seen, is_spell)
+    if is_spell then merge_shared_records(records) end
     for name, data in pairs(records) do
-        cooline.start_cooldown(name, data.texture, data.start, data.duration, is_spell)
+        local frame = cooline.start_cooldown(data.name or name, data.texture, data.start, data.duration, is_spell, name)
+        if frame then
+            frame.shared_group, frame.shared_names, frame.shared_confirmed = data.shared_group, data.shared_names, data.shared_confirmed
+        end
     end
     for key, frame in pairs(cooldowns) do
-        if frame.is_spell == is_spell and not records[frame.name] then
+        if frame.is_spell == is_spell and not records[frame.scan_name] then
             -- Consumed/removed items keep their running timer. Natural expiry
             -- is handled by the animation driver, so completion can still flash.
-            if (is_spell or seen[frame.name]) and frame.end_time > GetTime() + 0.05 then
+            if (is_spell and replaced_shared_record(frame, records)) or
+                ((is_spell or seen[frame.name]) and frame.end_time > GetTime() + 0.05) then
                 cooline.clear_cooldown(key)
             end
         end
@@ -160,6 +236,19 @@ function cooline.request_item_rescan()
     cooline.rescan_timer:Show()
 end
 
+-- Independent of cast-history settings. CAST is success; START/FAIL and cast
+-- function hooks must never select a representative for a shared cooldown.
+function cooline.UNIT_CASTEVENT()
+    if arg3 ~= 'CAST' or not arg4 or type(GetSpellNameAndRankForId) ~= 'function' then return end
+    local _, player_guid = UnitExists('player')
+    if not player_guid or arg1 ~= player_guid then return end
+    local name = shared_base_name(GetSpellNameAndRankForId(arg4))
+    local group = name and shared_by_name[name]
+    if not group then return end
+    shared_casts[group.key] = {name = name, at = GetTime()}
+    cooline.request_spell_rescan()
+end
+
 function cooline.begin_drag()
     if not IsShiftKeyDown() then return end
     cooline.dragging = true
@@ -184,7 +273,14 @@ function cooline.show_tooltip(frame)
     GameTooltip:SetOwner(frame, 'ANCHOR_RIGHT')
     GameTooltip:ClearLines()
     for _, member in ipairs(frame.members or {frame}) do
-        GameTooltip:AddDoubleLine(member.name, remaining_text(member.end_time - GetTime()), 1, 1, 1, 1, 0.82, 0)
+        if member.shared_names then
+            GameTooltip:AddDoubleLine('共享冷却', remaining_text(member.end_time - GetTime()), 1, 1, 1, 1, 0.82, 0)
+            for _, name in ipairs(member.shared_names) do
+                GameTooltip:AddDoubleLine(name, name == member.name and '当前图标' or '', 1, 1, 1, 1, 1, 1)
+            end
+        else
+            GameTooltip:AddDoubleLine(member.name, remaining_text(member.end_time - GetTime()), 1, 1, 1, 1, 0.82, 0)
+        end
     end
     GameTooltip:Show()
 end
@@ -730,6 +826,7 @@ function cooline.VARIABLES_LOADED()
 	cooline:RegisterEvent('SPELLS_CHANGED')
 	cooline:RegisterEvent('PLAYER_ENTERING_WORLD')
 
+    if type(GetSpellNameAndRankForId) == 'function' then cooline:RegisterEvent('UNIT_CASTEVENT') end
 	cooline:RegisterEvent('SPELL_UPDATE_COOLDOWN')
 	cooline:RegisterEvent('BAG_UPDATE_COOLDOWN')
 	cooline:SetFrameStrata("LOW")
