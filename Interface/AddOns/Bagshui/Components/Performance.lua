@@ -1,0 +1,300 @@
+-- Opt-in inventory diagnostics. No SavedVariables, item names or account data.
+-- Stable wrappers are installed before inventory initialization so queued callback
+-- identities never change when recording is toggled. Disabled path only forwards.
+Bagshui:AddComponent(function()
+local Performance = { enabled = false, inventories = {}, opens = {}, active = {} }
+Bagshui.components.Performance = Performance
+
+local labels = {
+	Update = "刷新入口", UpdateCache = "格子扫描", ValidateLayout = "布局校验",
+	UpdateLayoutLookupTables = "分类索引", CategorizeItems = "分类规则",
+	SortGroups = "组内排序", ManageDryRun = "布局比较", FindSpecialItems = "特殊物品查找",
+	UpdateWindow = "窗口绘制", UpdateBagBar = "背包栏", UpdateToolbar = "工具栏",
+	GetTooltip = "物品提示扫描", UiFrame_OnShow = "打开同步处理",
+	Open = "基础打开入口", OpenBags = "背包打开入口", OpenBank = "银行打开入口",
+}
+local order = { "UiFrame_OnShow", "OpenBags", "OpenBank", "Open", "Update", "UpdateCache",
+	"GetTooltip", "ValidateLayout", "UpdateLayoutLookupTables", "CategorizeItems", "SortGroups",
+	"ManageDryRun", "FindSpecialItems", "UpdateWindow", "UpdateBagBar", "UpdateToolbar" }
+local inventoryNames = { Bags = "背包", Bank = "银行", Keyring = "钥匙链" }
+
+-- Lua 5.0 unpack() has no range arguments. Preserve nil holes and all returns.
+local function Pack(...) return arg end
+local function Expand(values, first, last)
+	if first > last then return end
+	return values[first], Expand(values, first + 1, last)
+end
+
+local function AddStat(stats, key, elapsed, own, failed)
+	local row = stats[key]
+	if not row then
+		row = { calls = 0, total = 0, own = 0, max = 0, errors = 0 }
+		stats[key] = row
+	end
+	row.calls = row.calls + 1
+	row.total = row.total + elapsed
+	row.own = row.own + own
+	row.max = math.max(row.max, elapsed)
+	if failed then row.errors = row.errors + 1 end
+end
+
+function Performance:Reset()
+	self.inventories, self.opens, self.active = {}, {}, {}
+	self.startedAt = _G.GetTime()
+	self.stoppedAt = nil
+	self.frameMax, self.frameCount, self.invalidSpans = 0, 0, 0
+	self.stack = nil
+end
+
+function Performance:GetInventory(inventory)
+	local id = inventory.inventoryType
+	local data = self.inventories[id]
+	if not data then
+		data = { stats = {}, events = {}, updates = 0, skipped = 0, queues = 0, redraws = 0 }
+		self.inventories[id] = data
+	end
+	return data
+end
+
+function Performance:GetOpen(inventory)
+	local sample = self.active[inventory.inventoryType]
+	if sample and _G.GetTime() - sample.startedAt <= 1 then return sample end
+end
+
+function Performance:StartOpen(inventory)
+	local sample = {
+		inventoryType = inventory.inventoryType, startedAt = _G.GetTime(), clockStart = self.clock(),
+		stats = {}, updates = 0, queues = 0, redraws = 0,
+		event = inventory.lastEvent or "无最近事件", online = inventory.online,
+	}
+	self.active[inventory.inventoryType] = sample
+	table.insert(self.opens, sample)
+	if table.getn(self.opens) > 20 then table.remove(self.opens, 1) end
+	return sample
+end
+
+function Performance:Measure(original, key, inventory, args)
+	local data = self:GetInventory(inventory)
+	local sample
+	if key == "UiFrame_OnShow" then sample = self:StartOpen(inventory) end
+	sample = sample or self:GetOpen(inventory)
+	if key == "Update" then
+		if not inventory.windowUpdateBlocked and (inventory:Visible() or inventory.forceCacheUpdate) then
+			data.updates = data.updates + 1
+			if sample then sample.updates = sample.updates + 1 end
+		else
+			data.skipped = data.skipped + 1
+		end
+	elseif key == "UpdateWindow" and inventory.windowUpdateNeeded then
+		data.redraws = data.redraws + 1
+		if sample then sample.redraws = sample.redraws + 1 end
+	end
+
+	local span = { parent = self.stack, children = 0 }
+	self.stack = span
+	local started = self.clock()
+	local results = Pack(_G.pcall(original, Expand(args, 1, args.n)))
+	local elapsed = self.clock() - started
+	self.stack = span.parent
+	if elapsed < 0 then
+		-- Another addon may reset the shared profiling clock. Do not report false times.
+		self.invalidSpans = self.invalidSpans + 1
+	else
+		if span.parent then span.parent.children = span.parent.children + elapsed end
+		local own = math.max(0, elapsed - span.children)
+		AddStat(data.stats, key, elapsed, own, not results[1])
+		if sample then AddStat(sample.stats, key, elapsed, own, not results[1]) end
+	end
+	if key == "UiFrame_OnShow" and sample then
+		sample.online, sample.slots, sample.items = inventory.online, 0, 0
+		for _, container in pairs(inventory.containers or {}) do
+			sample.slots = sample.slots + (container.numSlots or 0)
+			sample.items = sample.items + (container.slotsFilled or 0)
+		end
+	end
+	-- Observe errors without swallowing or changing the original error object.
+	if not results[1] then error(results[2], 0) end
+	return Expand(results, 2, results.n)
+end
+
+function Performance:Wrap(owner, key, label, itemInfo)
+	local original = owner[key]
+	if type(original) ~= "function" then return end
+	owner[key] = function(...)
+		if not Performance.enabled then return original(Expand(arg, 1, arg.n)) end
+		local inventory = itemInfo and arg[3] or arg[1]
+		-- Standalone tooltips/catalog entries are outside the inventory measurement.
+		if not inventory or not inventory.inventoryType then return original(Expand(arg, 1, arg.n)) end
+		return Performance:Measure(original, label or key, inventory, arg)
+	end
+end
+
+function Performance:OnFrame(elapsed)
+	if not self.enabled then return end
+	elapsed = elapsed or 0
+	self.frameCount = self.frameCount + 1
+	self.frameMax = math.max(self.frameMax, elapsed * 1000)
+	for _, sample in pairs(self.active) do
+		if not sample.nextFrame then
+			local delta = self.clock() - sample.clockStart
+			if delta >= 0 then sample.nextFrame = delta else sample.nextFrame = -1 end
+		end
+	end
+	if _G.GetTime() - self.startedAt >= 60 then
+		self:Stop()
+		Bagshui:Print("卡顿采样已满 60 秒并停止。输入 /bs perf report 查看并复制报告。")
+	end
+end
+
+function Performance:Start()
+	if type(_G.debugprofilestop) ~= "function" then
+		Bagshui:Print("当前客户端缺少精确计时接口 debugprofilestop，无法可靠测量；未开启诊断。")
+		return
+	end
+	self.clock = _G.debugprofilestop
+	self:Reset()
+	self.enabled = true
+	if not self.frame then
+		self.frame = _G.CreateFrame("Frame")
+		self.frame:SetScript("OnUpdate", function() Performance:OnFrame(_G.arg1) end)
+	end
+	self.frame:Show()
+	Bagshui:Print("卡顿诊断已开启（新采样，60 秒后自动停止）。请打开/关闭背包和银行数次，再输入 /bs perf report。")
+end
+
+function Performance:Stop()
+	if self.enabled then self.stoppedAt = _G.GetTime() end
+	self.enabled = false
+	if self.frame then self.frame:Hide() end
+end
+
+local function EventsText(events)
+	local entries = {}
+	for name, count in pairs(events) do table.insert(entries, { name = name, count = count }) end
+	table.sort(entries, function(a, b)
+		if a.count == b.count then return a.name < b.name end
+		return a.count > b.count
+	end)
+	local text = {}
+	for i = 1, math.min(8, table.getn(entries)) do
+		table.insert(text, entries[i].name .. "=" .. entries[i].count)
+	end
+	return table.concat(text, ", ")
+end
+
+function Performance:ReportText()
+	local lines = { "乾坤袋卡顿诊断 v1 / Bagshui " .. tostring(BS_VERSION),
+		"诊断不改变刷新策略；数据仅保留在本次登录内。",
+		"毫秒为墙钟耗时，包含诊断开销。包含内部调用的耗时不能相加。",
+		"自身耗时仅扣除已测量的子调用；窗口绘制表示 Lua 布局/按钮处理，不是 GPU 渲染。",
+		"下一帧等待和最大帧间隔包含其他插件、游戏及系统耗时，不能单独归因乾坤袋。" }
+	if not self.startedAt then
+		table.insert(lines, "尚无采样。输入 /bs perf on，然后复现卡顿。")
+		return table.concat(lines, "\n")
+	end
+	table.insert(lines, string.format("采样时长 %.1f 秒；状态：%s；帧数 %d；最大帧间隔 %.2f ms；计时失效 %d 段。",
+		(self.enabled and _G.GetTime() or self.stoppedAt) - self.startedAt,
+		self.enabled and "采样中" or "已停止", self.frameCount, self.frameMax, self.invalidSpans))
+	for _, id in ipairs(BS_INVENTORY_TYPE_UI_ORDER) do
+		local data = self.inventories[id]
+		if data then
+			table.insert(lines, "\n[" .. (inventoryNames[id] or id) .. "]")
+			table.insert(lines, string.format("实际刷新 %d；跳过入口 %d；排队请求 %d（不等于实际刷新）；完整布局 %d。",
+				data.updates, data.skipped, data.queues, data.redraws))
+			table.insert(lines, "阶段 | 次数 | 总耗时 ms | 自身 ms | 单次最大 ms | 错误")
+			for _, key in ipairs(order) do
+				local row = data.stats[key]
+				if row then
+					table.insert(lines, string.format("%s | %d | %.2f | %.2f | %.2f | %d",
+						labels[key], row.calls, row.total, row.own, row.max, row.errors))
+				end
+			end
+			table.insert(lines, "常见事件：" .. EventsText(data.events))
+		end
+	end
+	table.insert(lines, "\n[最近打开，最多 20 次；统计打开后 1 秒内的工作]")
+	for index, sample in ipairs(self.opens) do
+		local function Total(key)
+			return sample.stats[key] and sample.stats[key].total or 0
+		end
+		local tooltip = sample.stats.GetTooltip
+		local age = (self.enabled and _G.GetTime() or self.stoppedAt) - sample.startedAt
+		table.insert(lines, string.format("#%d %s %s：%d 格/%d 占用格；刷新 %d；布局 %d；排队 %d；窗口观察 %.2f/1 秒。",
+			index, inventoryNames[sample.inventoryType] or sample.inventoryType, sample.online and "在线" or "离线",
+			sample.slots or 0, sample.items or 0, sample.updates, sample.redraws, sample.queues, math.min(1, age)))
+		table.insert(lines, string.format("  打开同步 %.2f ms；扫描 %.2f；分类 %.2f；排序 %.2f；绘制 %.2f；提示 %d 次/%.2f ms。",
+			Total("UiFrame_OnShow"), Total("UpdateCache"), Total("CategorizeItems"), Total("SortGroups"),
+			Total("UpdateWindow"), tooltip and tooltip.calls or 0, Total("GetTooltip")))
+		table.insert(lines, "  打开至下一帧：" .. (sample.nextFrame and sample.nextFrame >= 0
+			and string.format("%.2f ms", sample.nextFrame) or "未取得有效样本") .. "；最近事件：" .. sample.event)
+	end
+	return table.concat(lines, "\n")
+end
+
+function Performance:ShowReport()
+	-- Freeze first: building/displaying the report must not contaminate samples.
+	self:Stop()
+	if not self.reportWindow then
+		self.reportWindow = Bagshui.prototypes.ScrollableTextWindow:New({
+			name = "PerformanceReport", title = "乾坤袋卡顿诊断（Ctrl+A / Ctrl+C 复制）",
+			width = 780, height = 520, readOnly = true, selectAllOnFocus = true,
+		})
+	end
+	self.reportWindow:Open(self:ReportText())
+	Bagshui:Print("采样已停止。诊断报告可 Ctrl+A、Ctrl+C 复制；/bs perf on 开始新采样。")
+end
+
+-- Hook the prototype once, after subclasses exist but before their Init() runs.
+local Inventory = Bagshui.prototypes.Inventory
+for _, key in ipairs(order) do
+	if key ~= "GetTooltip" and key ~= "OpenBags" and key ~= "OpenBank" then
+		Performance:Wrap(Inventory, key)
+	end
+end
+Performance:Wrap(Bagshui.components.Bags, "Open", "OpenBags")
+Performance:Wrap(Bagshui.components.Bank, "Open", "OpenBank")
+Performance:Wrap(BsItemInfo, "GetTooltip", nil, true)
+
+local originalQueue = Inventory.QueueUpdate
+Inventory.QueueUpdate = function(inventory, delay, cascade)
+	if Performance.enabled then
+		local data = Performance:GetInventory(inventory)
+		data.queues = data.queues + 1
+		local sample = Performance:GetOpen(inventory)
+		if sample then sample.queues = sample.queues + 1 end
+	end
+	return originalQueue(inventory, delay, cascade)
+end
+
+local originalEvent = Inventory.OnEvent
+Inventory.OnEvent = function(inventory, event, arg1, arg2)
+	if Performance.enabled then
+		local events = Performance:GetInventory(inventory).events
+		-- Store event identifiers only, never arguments (which may contain user data).
+		if type(event) == "string" and string.len(event) <= 80 then
+			events[event] = (events[event] or 0) + 1
+		end
+	end
+	return originalEvent(inventory, event, arg1, arg2)
+end
+
+L.Slash_Perf = "perf"
+BsSlash:AddHandler("Perf", function(tokens)
+	local action = string.lower(tokens[2] or "help")
+	if action == "on" then Performance:Start()
+	elseif action == "off" then
+		Performance:Stop()
+		Bagshui:Print("卡顿诊断已关闭；已有采样保留，可用 /bs perf report 查看。")
+	elseif action == "report" then Performance:ShowReport()
+	elseif action == "clear" then
+		Performance:Stop()
+		Performance:Reset()
+		Performance.startedAt = nil
+		Bagshui:Print("诊断已关闭，采样已清空。")
+	elseif action == "status" then
+		Bagshui:Print(Performance.enabled and "卡顿诊断采样中。" or "卡顿诊断已关闭。")
+	else
+		Bagshui:Print("/bs perf on 开启并清空旧采样（60 秒）；off 停止；report 停止并打开可复制报告；clear 清空；status 状态。")
+	end
+end)
+end)

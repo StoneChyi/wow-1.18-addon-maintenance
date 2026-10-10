@@ -109,6 +109,7 @@ Don't move things around unless you're sure it won't break anything.
 <Include file="Components\Bags.lua" />
 <Include file="Components\Bank.lua" />
 <Include file="Components\Keyring.lua" />
+<Include file="Components\Performance.lua" />
 
 
 

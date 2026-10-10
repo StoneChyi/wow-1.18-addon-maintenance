@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
+  "updated_on": "2026-10-11",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "documented_history": 45,
-    "unconfirmed": 57,
+    "documented_history": 46,
+    "unconfirmed": 56,
     "snapshot_difference": 1,
     "related_skin_only": 2
   },
@@ -180,13 +181,18 @@
     },
     {
       "addon": "Bagshui",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "等待确认是否有个人修改",
+      "purpose": "增加背包、银行打开卡顿诊断，先测量刷新和分阶段耗时。",
       "sources": [],
-      "maintenance_files": [],
+      "maintenance_files": [
+        "Interface/AddOns/Bagshui/Bagshui.xml"
+      ],
       "tracked_files_at_reference": 161,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "待游戏内采样报告与真实客户端验收；早期个人修改仍未确认。",
+      "maintenance_files_added_after_reference": [
+        "Interface/AddOns/Bagshui/Components/Performance.lua"
+      ]
     },
     {
       "addon": "BetterCharacterStats",
