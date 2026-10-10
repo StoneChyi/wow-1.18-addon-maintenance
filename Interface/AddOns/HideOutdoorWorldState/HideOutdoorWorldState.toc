@@ -1,7 +1,0 @@
-## Interface: 11200
-## Title: HideOutdoorWorldState
-## Notes: Automatically hide outdoor world-state counters and capture bars.
-## Version: 1.1.0
-## SavedVariables: HideOutdoorWorldStateDB
-
-HideOutdoorWorldState.lua

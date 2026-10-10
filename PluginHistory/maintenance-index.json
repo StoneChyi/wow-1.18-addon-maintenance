@@ -878,7 +878,7 @@
       "addon": "HideOutdoorWorldState",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/HideOutdoorWorldState.md",
-      "purpose": "保存并自动应用隐藏野外世界状态条的选择。",
+      "purpose": "已移除：2026-10-10 用户确认不再需要并主动删除；保留原功能维护历史。",
       "sources": [
         "PluginHistory/pfUI-tooltip-fix-20261009.md"
       ],
@@ -889,7 +889,9 @@
         "Interface/AddOns/HideOutdoorWorldState/tests/lifecycle.lua"
       ],
       "tracked_files_at_reference": 4,
-      "pending": "是否继续保留该插件、删除后的原始野外计数隐藏需求如何处理，请由对应维护任务补充。"
+      "pending": "",
+      "current_state": "removed",
+      "removal_confirmed_on": "2026-10-10"
     },
     {
       "addon": "HolyHope",
