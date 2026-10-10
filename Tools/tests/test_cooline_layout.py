@@ -12,7 +12,9 @@ sys.path.insert(0, str(ROOT / 'addons_tmp/bcs-test-runtime'))
 from lupa.lua51 import LuaRuntime
 
 FILES = [ROOT / 'Interface/AddOns/Cooline' / f for f in ['settings.lua', 'Cooline.lua']]
+FONT_CONTRACT = ROOT / 'Tools/tests/wow112_fontstring_mock.lua'
 STUB = r'''
+local installFontContract = ...
 objects={}; names={}; now=100; spells={}; bags={}; inventory={}; hooks={}
 BOOKTYPE_SPELL='spell'; UISpecialFrames={}; SlashCmdList={}; shift=false
 min=math.min; max=math.max; floor=math.floor; random=math.random
@@ -77,13 +79,10 @@ function methods:SetTexture(...) self.texture=(...) end
 function methods:GetTexture() return self.texture end
 function methods:SetTexCoord(...) end
 function methods:SetVertexColor(...) end
-function methods:SetFont(...) self.font={...} end
-function methods:SetFontObject(...) end
 function methods:SetTextColor(...) end
 function methods:SetShadowColor(...) end
 function methods:SetShadowOffset(...) end
 function methods:SetJustifyH(...) end
-function methods:SetText(v) self.text=tostring(v) end
 function methods:GetText() return self.text end
 function methods:GetStringWidth() return #(self.text or '')*5 end
 function methods:SetChecked(v) self.checked=v end
@@ -96,7 +95,7 @@ function methods:SetValue(v)
 end
 function methods:GetValue() return self.value end
 function methods:CreateTexture(name,...) return newObject('Texture',name,self) end
-function methods:CreateFontString(name,...) return newObject('FontString',name,self) end
+installFontContract(methods, newObject)
 function methods:SetOwner(o,a) self.owner=o end
 function methods:IsOwned(o) return self.owner==o and self.shown end
 function methods:ClearLines() self.lines={} end
@@ -105,7 +104,7 @@ function methods:AddMessage(msg) end
 function methods:SetAction(slot) CoolineZMD_ScanTipTextLeft1:SetText('SpellA') end
 function CreateFrame(kind,name,parent,template)
  local obj=newObject(kind,name,parent or UIParent)
- if template=='GameTooltipTemplate' then newObject('FontString',name..'TextLeft1',obj) end
+ if template=='GameTooltipTemplate' then obj:CreateFontString(name..'TextLeft1','OVERLAY','GameFontNormal') end
  return obj
 end
 function invoke(o,event,...)
@@ -140,7 +139,6 @@ function IsPassiveSpell(id) return false end
 function GetSpellNameAndRankForId(id) return spells[id] and spells[id].name end
 function hooksecurefunc(name,callback) hooks[name]=callback end
 function GetActionText(slot) return nil end
-GameFontHighlightSmall={}
 function activeFrames()
  local out={}
  for _,o in ipairs(objects) do
@@ -164,15 +162,18 @@ function pfEnvironment()
 end
 '''
 
-def new(saved=None, pf=False, superwow=True, saved_zmd=None):
+def new(saved=None, pf=False, superwow=True, saved_zmd=None, theme_font=None):
     lua=LuaRuntime(unpack_returned_tuples=True)
-    lua.execute(STUB)
+    lua.execute(STUB, lua.execute(FONT_CONTRACT.read_text(encoding='utf-8')))
     if not superwow:
         lua.execute('GetSpellNameAndRankForId=nil')
     if pf:
         lua.execute('pfUI={GetEnvironment=pfEnvironment}')
     for file in FILES:
         lua.execute(file.read_text(encoding='utf-8-sig'))
+    if theme_font:
+        lua.globals().cooline_theme.font=theme_font
+        lua.globals().failedFontPaths[theme_font]=True
     if saved:
         lua.globals().cooline_settings=lua.table_from(saved,recursive=True)
     if saved_zmd:
@@ -562,6 +563,60 @@ def settings_preview():
             assert not cl.preview_enabled and cl.shown==enabled
             assert not frames(lua) and cl.alpha==0
 check('preview with/without pfUI preserves preferences, resizes live, yields to real CDs and exits cleanly',settings_preview)
+
+def font_contract():
+    lua=LuaRuntime(unpack_returned_tuples=True)
+    lua.execute(STUB, lua.execute(FONT_CONTRACT.read_text(encoding='utf-8')))
+    lua.execute("""
+        local f=UIParent:CreateFontString(nil,'OVERLAY')
+        for _,text in ipairs({'', 'text'}) do
+            local ok,err=pcall(function() f:SetText(text) end)
+            assert(not ok and string.find(err,'SetText(): Font not set',1,true))
+        end
+        f:Hide()
+        assert(not pcall(function() f:SetText('') end))
+        failedFontPaths['missing.ttf']=true
+        assert(not f:SetFont('missing.ttf',10))
+        assert(not f:SetFont('valid.ttf',0))
+        assert(not pcall(function() f:SetText('') end))
+        assert(f:SetFont('valid.ttf',10))
+        f:SetText('');f:SetText('ready')
+        assert(not f:SetFont('missing.ttf',10))
+        f:SetText('existing font survives failure')
+        local inherited=UIParent:CreateFontString(nil,'OVERLAY','GameFontNormal')
+        inherited:SetText('template ready')
+        local explicit=UIParent:CreateFontString(nil,'OVERLAY')
+        explicit:SetFontObject(GameFontHighlightSmall);explicit:SetText('object ready')
+        assert(not pcall(function() explicit:SetFontObject({}) end))
+        assert(not pcall(function() UIParent:CreateFontString(nil,'OVERLAY','unknown') end))
+    """)
+check('1.12 font contract rejects empty/hidden uninitialized text and failed font loads',font_contract)
+
+def font_lifecycle():
+    for missing in [None, 'MissingConfiguredFont.ttf']:
+        lua=new(theme_font=missing);g=lua.globals();cl=g.cooline;t=g.cooline_theme
+        fresh=cl.cooldown_frame()
+        assert fresh.timer.font and fresh.count.font
+        fresh.timer.SetText(fresh.timer,'')
+        add(lua,'LongFont',20);cl.on_update(True)
+        f=frames(lua)[0];assert not f.timer.shown and f.timer.text==''
+        t.show_countdown=True;cl.apply_theme()
+        assert not f.timer.shown
+        g.now+=11;cl.on_update(True);assert f.timer.shown and f.timer.text=='9'
+        t.show_countdown=False;cl.apply_theme();assert not f.timer.shown and f.timer.text==''
+        cl.clear_cooldown('spell:LongFont');cl.on_update(True)
+        add(lua,'ReusedFont',5);cl.on_update(True)
+        assert equal(lua,frames(lua)[0],f) and f.timer.font
+        cl.clear_cooldown('spell:ReusedFont');cl.on_update(True)
+        lua.execute('SlashCmdList.COOLINECONFIG()')
+        assert len(frames(lua))==3
+        t.show_countdown=True;cl.apply_theme()
+        assert all(frame.timer.shown for frame in frames(lua))
+        for text in [o for o in g.objects.values() if o.kind=='FontString']:
+            assert text.font, 'every Cooline text control must be initialized'
+            if missing:assert text.font[1]!=missing
+        g.CoolineConfigPanel.Hide(g.CoolineConfigPanel)
+check('font initialization, disabled/long/active/recycled timers, preview and missing-font fallback',font_lifecycle)
 
 def original_bytes():
     for path in FILES:

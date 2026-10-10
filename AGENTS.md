@@ -6,6 +6,7 @@
 - 开始修改前先检查 Git 状态、暂存区和近期提交。已有未提交改动时先辨明归属；不得覆盖、撤销或擅自夹带他人改动。
 - 每完成一项插件修改，运行适用检查，按插件或关联功能提交本次明确负责的文件，提交说明写明插件名、目的、验证结果。用户已经授权本地提交，不要再次询问是否记录。可使用 `Tools/plugin_git.py checkpoint --addon 插件目录 --message 说明`；暂存区非空时工具会拒绝操作，需要先审查。
 - 提交前检查差异、未跟踪文件和删除文件；包括 Lua、XML、TOC、贴图、字体及配套依赖，不要遗漏新增扩展。不要使用无范围的 `git add .`。必要时对明确属于插件的新文件使用 `git add -f`，避免插件自带忽略规则造成遗漏。
+- 乌龟服插件按实际 1.12 客户端接口维护。新增或修改 `FontString` 时，必须在首次 `SetText`（包括空字符串、隐藏控件、关闭分支和预览）前通过有效字体模板、`SetFontObject` 或成功的 `SetFont` 初始化字体；可配置字体应保留内置字体后备，不能假定字体文件必然加载成功。检查创建、开关切换、复用和预览路径。界面模拟测试不得把这些前置条件实现为空操作：字体未初始化时 `SetText` 必须失败，并覆盖 `SetFont` 失败；可复用 `Tools/tests/wow112_fontstring_mock.lua`，参考 `Tools/tests/test_cooline_layout.py`。其他新增客户端接口也须核对旧版签名和前置条件，模拟检查与实际游戏验收分别记录，不能以模拟通过声称游戏已验证。
 - 所有文件保留原始编码、BOM 与换行。不要全局转换换行；`.gitattributes` 已禁用自动文本转换。
 - 部分插件自带独立 `.git` 目录和 `.gitattributes`。保留原有仓库，但主仓库必须记录实际文件，不能使用 gitlink 代替；不要把 `.git` 内部数据加入插件快照。这些插件必须使用 `Tools/plugin_git.py checkpoint`，普通 `git add` 可能跳过文件或生成 gitlink；工具将实际文件逐个按原始字节存入主仓库。`.git/info/attributes` 中的 `* -text -filter -ident` 必须保留，它用于覆盖插件自带换行转换规则，重建时可从 `Tools/git-info-attributes` 恢复。
 - 当前基线标签 `baseline/current-2026-10-08` 是含历史个人修改的使用版，绝不是官方原版。`PluginHistory/Evidence/legacy-20261006/Baseline` 是逐文件的阶段备份，也不是完整官方原版。不得伪造历史提交时间或未经证实的原版分支。

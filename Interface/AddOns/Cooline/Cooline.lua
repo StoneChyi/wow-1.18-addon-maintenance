@@ -197,10 +197,12 @@ function cooline.cooldown_frame()
     frame.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
     frame.icon:SetPoint('TOPLEFT', 1, -1)
     frame.icon:SetPoint('BOTTOMRIGHT', -1, 1)
-    frame.count = frame:CreateFontString(nil, 'OVERLAY')
+    frame.count = frame:CreateFontString(nil, 'OVERLAY', 'GameFontHighlightSmall')
     frame.count:SetFont(cooline_theme.font, 9, 'OUTLINE')
     frame.count:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', 0, 0)
-    frame.timer = frame:CreateFontString(nil, 'OVERLAY')
+    -- Even SetText('') needs a font in the 1.12 client. Initialize before any branch.
+    frame.timer = frame:CreateFontString(nil, 'OVERLAY', 'GameFontHighlightSmall')
+    frame.timer:SetFont(cooline_theme.font, 9, 'OUTLINE')
     frame.timer:SetPoint('CENTER', frame, 'CENTER', 0, 0)
     frame.timer:SetTextColor(1, 1, 1, 1)
     frame.timer:SetShadowColor(0, 0, 0, 1)
@@ -680,7 +682,7 @@ function cooline.VARIABLES_LOADED()
 
 	cooline.ticks = {}
 	for i = 1, 7 do
-		cooline.ticks[i] = cooline.overlay:CreateFontString(nil, 'OVERLAY')
+		cooline.ticks[i] = cooline.overlay:CreateFontString(nil, 'OVERLAY', 'GameFontHighlightSmall')
 	end
 	cooline.apply_theme()
 	-- A changed spellbook can reset or remove running spell cooldowns.
