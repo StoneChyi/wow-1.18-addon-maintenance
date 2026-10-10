@@ -18,7 +18,47 @@ cooline_theme = {
 	inactivealpha = 0,
 	activealpha = 0.8,
 	treshold = 3.0,
+	max_time = 600,
+	icon_size = 22,
+	layout = 'lanes',
+	max_rows = 3,
 }
+
+-- Only user-adjustable theme fields belong to character SavedVariables.
+local CL_ThemeKeys = {'vertical', 'reverse', 'width', 'height', 'treshold', 'max_time', 'icon_size', 'layout', 'max_rows'}
+local CL_DefaultTheme = {}
+for _, key in ipairs(CL_ThemeKeys) do CL_DefaultTheme[key] = cooline_theme[key] end
+local function CL_Number(value, fallback, low, high)
+	if type(value) ~= 'number' or value ~= value or value == math.huge or value == -math.huge then return fallback end
+	return math.max(low, math.min(high, value))
+end
+function Cooline_LoadSettings()
+	if type(cooline_settings) ~= 'table' then cooline_settings = {} end
+	local db = cooline_settings
+	if type(db.show_cooline) ~= 'boolean' then db.show_cooline = true end
+	if type(db.flash_enabled) ~= 'boolean' then db.flash_enabled = true end
+	db.x = CL_Number(db.x, 0, -10000, 10000)
+	db.y = CL_Number(db.y, -240, -10000, 10000)
+	local saved = type(db.theme) == 'table' and db.theme or {}
+	for _, key in ipairs(CL_ThemeKeys) do
+		cooline_theme[key] = saved[key] == nil and CL_DefaultTheme[key] or saved[key]
+	end
+	if type(cooline_theme.vertical) ~= 'boolean' then cooline_theme.vertical = false end
+	if type(cooline_theme.reverse) ~= 'boolean' then cooline_theme.reverse = false end
+	local vertical = cooline_theme.vertical
+	cooline_theme.width = CL_Number(cooline_theme.width, vertical and 18 or 200, vertical and 8 or 50, vertical and 60 or 400)
+	cooline_theme.height = CL_Number(cooline_theme.height, vertical and 200 or 18, vertical and 50 or 8, vertical and 400 or 60)
+	cooline_theme.treshold = CL_Number(cooline_theme.treshold, 3, 0, 10)
+	cooline_theme.icon_size = math.floor(CL_Number(cooline_theme.icon_size, 22, 12, 40) + 0.5)
+	cooline_theme.max_rows = math.floor(CL_Number(cooline_theme.max_rows, 3, 1, 3) + 0.5)
+	local allowed = {[60]=true, [180]=true, [300]=true, [600]=true, [900]=true, [1800]=true}
+	if not allowed[cooline_theme.max_time] then cooline_theme.max_time = 600 end
+	if cooline_theme.layout ~= 'lanes' and cooline_theme.layout ~= 'overlap' and cooline_theme.layout ~= 'compact' then cooline_theme.layout = 'lanes' end
+end
+function Cooline_SaveTheme()
+	cooline_settings.theme = {}
+	for _, key in ipairs(CL_ThemeKeys) do cooline_settings.theme[key] = cooline_theme[key] end
+end
 
 cooline_ignore_list = {
 	'hearthstone',
@@ -31,6 +71,10 @@ cooline_ignore_list = {
 
 local cl_frame = nil
 local cl_uid = 0
+local cl_refresh = {}
+local function CL_RefreshPanel()
+	for _, update in ipairs(cl_refresh) do update() end
+end
 
 -- ============================================================
 -- PFUI 皮肤（参考 Automaton 的 pfUI 支持写法，仅外观、不动逻辑）
@@ -163,6 +207,10 @@ local function CL_Check2(parent, y, l1, g1, s1, l2, g2, s2)
 	lbl2:SetPoint("LEFT", cb2, "RIGHT", 6, 0)
 	cb2:SetChecked(g2() and 1 or nil)
 	CL_SkinCheckbox(cb2)
+	tinsert(cl_refresh, function()
+		cb1:SetChecked(g1() and 1 or nil)
+		cb2:SetChecked(g2() and 1 or nil)
+	end)
 end
 
 local function CL_Slider(parent, y, label, minV, maxV, step, decimals, get, set)
@@ -178,12 +226,22 @@ local function CL_Slider(parent, y, label, minV, maxV, step, decimals, get, set)
 	s:SetValueStep(step)
 	s:SetValue(get())
 	s:SetScript("OnValueChanged", function()
-		local v = this:GetValue()
+		if s.refreshing then return end
+		local v = math.floor(this:GetValue() / step + 0.5) * step
+		s.refreshing = true
+		s:SetValue(v)
+		s.refreshing = nil
 		val:SetText(string.format("%." .. decimals .. "f", v))
 		set(v)
 	end)
 	val:SetText(string.format("%." .. decimals .. "f", get()))
 	CL_SkinSlider(s)
+	tinsert(cl_refresh, function()
+		s.refreshing = true
+		s:SetValue(get())
+		s.refreshing = nil
+		val:SetText(string.format("%." .. decimals .. "f", get()))
+	end)
 	return s
 end
 
@@ -197,11 +255,38 @@ local function CL_Button(parent, text, point, relTo, relPoint, x, y, w, h)
 	return b
 end
 
+local function CL_Choice(parent, y, label, values, labels, get, set)
+	local button = CL_Button(parent, '', 'LEFT', parent, 'TOPLEFT', 150, y, 150, 22)
+	local caption = parent:CreateFontString(nil, 'OVERLAY', 'GameFontNormal')
+	caption:SetText(label)
+	caption:SetPoint('LEFT', parent, 'TOPLEFT', 34, y)
+	local function refresh()
+		for i, value in ipairs(values) do
+			if value == get() then button:SetText(labels[i] .. ' >'); return end
+		end
+	end
+	button:SetScript('OnClick', function()
+		for i, value in ipairs(values) do
+			if value == get() then set(values[math.mod(i, table.getn(values)) + 1]); break end
+		end
+		refresh()
+	end)
+	button:SetScript('OnEnter', function()
+		GameTooltip:SetOwner(button, 'ANCHOR_RIGHT')
+		GameTooltip:SetText('点击切换：' .. table.concat(labels, ' / '))
+		GameTooltip:Show()
+	end)
+	button:SetScript('OnLeave', function() GameTooltip:Hide() end)
+	tinsert(cl_refresh, refresh)
+	refresh()
+	return button
+end
+
 local function CL_CreatePanel()
 	cl_frame = CreateFrame("Frame", "CoolineConfigPanel", UIParent)
 	tinsert(UISpecialFrames, "CoolineConfigPanel")
 	cl_frame:SetWidth(380)
-	cl_frame:SetHeight(490)
+	cl_frame:SetHeight(594)
 	cl_frame:SetPoint("CENTER", 0, 0)
 	cl_frame:SetClampedToScreen(true)
 	cl_frame:SetMovable(true)
@@ -211,6 +296,7 @@ local function CL_CreatePanel()
 	cl_frame:SetScript("OnDragStart", function() this:StartMoving() end)
 	cl_frame:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
 	cl_frame:Hide()
+	cl_frame:SetScript('OnShow', CL_RefreshPanel)
 
 	CL_SkinWindow(cl_frame)
 
@@ -232,29 +318,50 @@ local function CL_CreatePanel()
 		if not v then cooline.flash:Hide() end
 	end)
 	CL_Check2(cl_frame, -104, "垂直方向", function() return cooline_theme.vertical end, function(v)
-		cooline_theme.vertical = v
+		if cooline_theme.vertical ~= v then
+			cooline_theme.width, cooline_theme.height = cooline_theme.height, cooline_theme.width
+			cooline_theme.vertical = v
+		end
 		cooline.apply_theme()
+		CL_RefreshPanel()
 	end, "反向排列", function() return cooline_theme.reverse end, function(v)
 		cooline_theme.reverse = v
 		cooline.apply_theme()
 	end)
-	CL_Slider(cl_frame, -146, "宽度", 50, 400, 1, 0, function() return cooline_theme.width end, function(v)
-		cooline_theme.width = v
+	CL_Slider(cl_frame, -146, "长度", 50, 400, 1, 0, function() return cooline_theme.vertical and cooline_theme.height or cooline_theme.width end, function(v)
+		if cooline_theme.vertical then cooline_theme.height = v else cooline_theme.width = v end
 		cooline.apply_theme()
 	end)
-	CL_Slider(cl_frame, -172, "高度", 8, 60, 1, 0, function() return cooline_theme.height end, function(v)
-		cooline_theme.height = v
+	CL_Slider(cl_frame, -172, "厚度", 8, 60, 1, 0, function() return cooline_theme.vertical and cooline_theme.width or cooline_theme.height end, function(v)
+		if cooline_theme.vertical then cooline_theme.width = v else cooline_theme.height = v end
 		cooline.apply_theme()
 	end)
 	CL_Slider(cl_frame, -198, "提醒阈值(秒)", 0, 10, 0.1, 1, function() return cooline_theme.treshold end, function(v)
 		cooline_theme.treshold = v
+		Cooline_SaveTheme()
+	end)
+
+	CL_Choice(cl_frame, -224, '最长显示时间', {60,180,300,600,900,1800},
+		{'1 分钟','3 分钟','5 分钟','10 分钟','15 分钟','30 分钟'},
+		function() return cooline_theme.max_time end, function(v)
+			cooline_theme.max_time = v; cooline.apply_theme()
+		end)
+	CL_Slider(cl_frame, -250, '图标大小', 12, 40, 1, 0, function() return cooline_theme.icon_size end, function(v)
+		cooline_theme.icon_size = v; cooline.apply_theme()
+	end)
+	CL_Choice(cl_frame, -276, '图标排列', {'lanes','overlap','compact'}, {'居中分行','单行重叠','紧凑分组'},
+		function() return cooline_theme.layout end, function(v)
+			cooline_theme.layout = v; cooline.apply_theme()
+		end)
+	CL_Slider(cl_frame, -302, '最多行数', 1, 3, 1, 0, function() return cooline_theme.max_rows end, function(v)
+		cooline_theme.max_rows = v; cooline.apply_theme()
 	end)
 
 	-- ===== 走马灯 =====
-	CL_Section(cl_frame, -234, "走马灯（施法序列）")
-	CL_Divider(cl_frame, -248)
+	CL_Section(cl_frame, -338, "走马灯（施法序列）")
+	CL_Divider(cl_frame, -352)
 
-	CL_Check2(cl_frame, -262, "启用走马灯", function() return CoolineZMDDB.enabled end, function(v)
+	CL_Check2(cl_frame, -366, "启用走马灯", function() return CoolineZMDDB.enabled end, function(v)
 		CoolineZMDDB.enabled = v
 		ZMD_ApplyEnabled()
 	end, "显示技能名", function() return CoolineZMDDB.name end, function(v)
@@ -262,7 +369,7 @@ local function CL_CreatePanel()
 		ZMD_ApplyName()
 	end)
 
-	local btnLeft = CL_Button(cl_frame, "向左", "TOPLEFT", cl_frame, "TOPLEFT", 150, -288, 70, 22)
+	local btnLeft = CL_Button(cl_frame, "向左", "TOPLEFT", cl_frame, "TOPLEFT", 150, -392, 70, 22)
 	local btnRight = CL_Button(cl_frame, "向右", "LEFT", btnLeft, "RIGHT", 8, 0, 70, 22)
 	btnLeft:SetScript("OnClick", function() CoolineZMDDB.dir = "left" end)
 	btnRight:SetScript("OnClick", function() CoolineZMDDB.dir = "right" end)
@@ -270,11 +377,14 @@ local function CL_CreatePanel()
 	dirLabel:SetText("滚动方向")
 	dirLabel:SetPoint("RIGHT", btnLeft, "LEFT", -10, 0)
 
-	local btnStageStart = CL_Button(cl_frame, "读条时", "TOPLEFT", cl_frame, "TOPLEFT", 150, -318, 70, 22)
+	local btnStageStart = CL_Button(cl_frame, "读条时", "TOPLEFT", cl_frame, "TOPLEFT", 150, -422, 70, 22)
 	local btnStageFinish = CL_Button(cl_frame, "读条后", "LEFT", btnStageStart, "RIGHT", 8, 0, 70, 22)
 	local stageLabel = cl_frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	stageLabel:SetText("出现时机：" .. (CoolineZMDDB.castStage == "finish" and "读条后" or "读条时"))
 	stageLabel:SetPoint("RIGHT", btnStageStart, "LEFT", -10, 0)
+	tinsert(cl_refresh, function()
+		stageLabel:SetText("出现时机：" .. (CoolineZMDDB.castStage == "finish" and "读条后" or "读条时"))
+	end)
 	btnStageStart:SetScript("OnClick", function()
 		CoolineZMDDB.castStage = "start"
 		stageLabel:SetText("出现时机：读条时")
@@ -284,17 +394,17 @@ local function CL_CreatePanel()
 		stageLabel:SetText("出现时机：读条后")
 	end)
 
-	CL_Slider(cl_frame, -362, "滚动速度", 20, 200, 1, 0, function() return CoolineZMDDB.speed end, function(v)
+	CL_Slider(cl_frame, -466, "滚动速度", 20, 200, 1, 0, function() return CoolineZMDDB.speed end, function(v)
 		CoolineZMDDB.speed = v
 	end)
-	CL_Slider(cl_frame, -388, "存活时间(秒)", 2, 15, 0.5, 1, function() return CoolineZMDDB.life end, function(v)
+	CL_Slider(cl_frame, -492, "存活时间(秒)", 2, 15, 0.5, 1, function() return CoolineZMDDB.life end, function(v)
 		CoolineZMDDB.life = v
 	end)
-	CL_Slider(cl_frame, -414, "同名冷却(秒)", 0, 10, 0.5, 1, function() return CoolineZMDDB.sameCD end, function(v)
+	CL_Slider(cl_frame, -518, "同名冷却(秒)", 0, 10, 0.5, 1, function() return CoolineZMDDB.sameCD end, function(v)
 		CoolineZMDDB.sameCD = v
 	end)
 
-	CL_Divider(cl_frame, -450)
+	CL_Divider(cl_frame, -554)
 
 	local btnClose = CreateFrame("Button", "CoolineConfigCloseButton", cl_frame, "UIPanelCloseButton")
 	-- 原始锚点保留作为回退（无 pfUI 时），有 pfUI 时 SkinCloseButton 会按 backdrop 重新定位
@@ -318,6 +428,7 @@ SlashCmdList["COOLINECONFIG"] = function()
 	if CoolineZMDDB.dir == nil then CoolineZMDDB.dir = "left" end
 	if CoolineZMDDB.name == nil then CoolineZMDDB.name = false end
 	if CoolineZMDDB.castStage == nil then CoolineZMDDB.castStage = "finish" end
+	if CoolineZMDDB.sameCD == nil then CoolineZMDDB.sameCD = 1.5 end
 	if not cl_frame then CL_CreatePanel() end
 	if cl_frame:IsVisible() then
 		cl_frame:Hide()

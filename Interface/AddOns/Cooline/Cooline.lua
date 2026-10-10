@@ -16,376 +16,461 @@ local cooldowns = {}
 function cooline.set_shown(shown)
 	if shown then
 		cooline:Show()
+		if cooline.on_update then cooline.on_update(true) end
 	else
 		cooline:Hide()
 	end
 end
 
-function cooline.hyperlink_name(hyperlink)
-    local _, _, name = strfind(hyperlink, '|Hitem:%d+:%d+:%d+:%d+|h[[]([^]]+)[]]|h')
+-- Item links can be absent while slots are empty or item data is loading.
+function cooline.hyperlink_name(link)
+    if type(link) ~= 'string' then return nil end
+    local _, _, name = string.find(link, '|h%[([^%]]+)%]|h')
     return name
 end
 
-function cooline.start_cooldown(name, texture, start_time, duration, is_spell)
-	for _, ignored_name in cooline_ignore_list do
-		if strupper(name) == strupper(ignored_name) then
-			return
-		end
-	end
-
-	local end_time = start_time + duration
-
-	-- 已按 name 作 key 去重（cooldowns[name]），去掉原先 O(N²) 的 end_time 浮点相等遍历
-	cooldowns[name] = cooldowns[name] or tremove(frame_pool) or cooline.cooldown_frame()
-	local frame = cooldowns[name]
-	frame:SetWidth(cooline.icon_size)
-	frame:SetHeight(cooline.icon_size)
-	frame.icon:SetTexture(texture)
-	if is_spell then
-		frame:SetBackdropColor(unpack(cooline_theme.spellcolor))
-	else
-		frame:SetBackdropColor(unpack(cooline_theme.nospellcolor))
-	end
-	frame:SetAlpha(1)
-	frame.end_time = end_time
-	frame:Show()
+local function ignored(name)
+    if type(name) ~= 'string' or name == '' then return true end
+    for _, value in ipairs(cooline_ignore_list) do
+        if string.upper(name) == string.upper(value) then return true end
+    end
+    return false
 end
 
--- 只扫描背包 + 装备槽（响应 BAG_UPDATE_COOLDOWN）
-function cooline.detect_item_cooldowns()
-    for bag = 0,4 do
-        if GetBagName(bag) then
-            for slot = 1, GetContainerNumSlots(bag) do
-				local start_time, duration, enabled = GetContainerItemCooldown(bag, slot)
-				if enabled == 1 then
-					local name = cooline.hyperlink_name(GetContainerItemLink(bag, slot))
-					if duration > 3 and duration < 3601 then
-						cooline.start_cooldown(
-							name,
-							GetContainerItemInfo(bag, slot),
-							start_time,
-							duration,
-							false
-						)
-					elseif duration == 0 then
-						cooline.clear_cooldown(name)
-					end
-				end
+function cooline.start_cooldown(name, texture, start_time, duration, is_spell)
+    if ignored(name) or type(start_time) ~= 'number' or type(duration) ~= 'number' then return end
+    if duration <= 0 or start_time + duration <= GetTime() then return end
+    local key = (is_spell and 'spell:' or 'item:') .. name
+    local frame = cooldowns[key]
+    if not frame then
+        frame = tremove(frame_pool) or cooline.cooldown_frame()
+        cooldowns[key] = frame
+        frame.layout_lane = nil
+        frame.crowded = false
+        frame.end_time = nil
+    end
+    local end_time = start_time + duration
+    if not frame.end_time or math.abs(frame.end_time - end_time) > 0.05 then
+        frame.flashed = false
+    end
+    frame.name, frame.is_spell, frame.end_time = name, is_spell, end_time
+    frame.icon:SetTexture(texture or 'Interface\\Icons\\INV_Misc_QuestionMark')
+    frame:SetBackdropColor(unpack(is_spell and cooline_theme.spellcolor or cooline_theme.nospellcolor))
+end
+
+function cooline.clear_cooldown(key)
+    local frame = key and cooldowns[key]
+    if not frame then return end
+    if GameTooltip:IsOwned(frame) then GameTooltip:Hide() end
+    frame:Hide()
+    frame.members = nil
+    tinsert(frame_pool, frame)
+    cooldowns[key] = nil
+end
+
+-- Reconcile a whole source at once: a ready duplicate/rank must not clear an
+-- active cooldown with the same name. Spells and items have separate keys.
+local function scan_record(records, seen, name, texture, start, duration, enabled, minimum)
+    if ignored(name) then return end
+    seen[name] = true
+    if enabled ~= 1 or type(start) ~= 'number' or type(duration) ~= 'number' then return end
+    if duration <= minimum or start + duration <= GetTime() then return end
+    local old = records[name]
+    if not old or start + duration > old.start + old.duration then
+        records[name] = {texture = texture, start = start, duration = duration}
+    end
+end
+
+local function finish_scan(records, seen, is_spell)
+    for name, data in pairs(records) do
+        cooline.start_cooldown(name, data.texture, data.start, data.duration, is_spell)
+    end
+    for key, frame in pairs(cooldowns) do
+        if frame.is_spell == is_spell and not records[frame.name] then
+            -- Consumed/removed items keep their running timer. Natural expiry
+            -- is handled by the animation driver, so completion can still flash.
+            if (is_spell or seen[frame.name]) and frame.end_time > GetTime() + 0.05 then
+                cooline.clear_cooldown(key)
             end
         end
     end
-
-	for slot=0,19 do
-		local start_time, duration, enabled = GetInventoryItemCooldown('player', slot)
-		if enabled == 1 then
-			local name = cooline.hyperlink_name(GetInventoryItemLink('player', slot))
-			if duration > 3 and duration < 3601 then
-				cooline.start_cooldown(
-					name,
-					GetInventoryItemTexture('player', slot),
-					start_time,
-					duration,
-					false
-				)
-			elseif duration == 0 then
-				cooline.clear_cooldown(name)
-			end
-		end
-	end
 end
 
--- 只扫描技能书（响应 SPELL_UPDATE_COOLDOWN）
+function cooline.detect_item_cooldowns()
+    local records, seen = {}, {}
+    for bag = 0, 4 do
+        for slot = 1, (GetContainerNumSlots(bag) or 0) do
+            local start, duration, enabled = GetContainerItemCooldown(bag, slot)
+            scan_record(records, seen, cooline.hyperlink_name(GetContainerItemLink(bag, slot)),
+                GetContainerItemInfo(bag, slot), start, duration, enabled, 3)
+        end
+    end
+    for slot = 0, 19 do
+        local start, duration, enabled = GetInventoryItemCooldown('player', slot)
+        scan_record(records, seen, cooline.hyperlink_name(GetInventoryItemLink('player', slot)),
+            GetInventoryItemTexture('player', slot), start, duration, enabled, 3)
+    end
+    finish_scan(records, seen, false)
+end
+
 function cooline.detect_spell_cooldowns()
-	local _, _, offset, spell_count = GetSpellTabInfo(GetNumSpellTabs())
-	local total_spells = offset + spell_count
-	for id=1,total_spells do
-		local start_time, duration, enabled = GetSpellCooldown(id, BOOKTYPE_SPELL)
-		local name = GetSpellName(id, BOOKTYPE_SPELL)
-		if enabled == 1 and duration > 2.5 then
-			cooline.start_cooldown(
-				name,
-				GetSpellTexture(id, BOOKTYPE_SPELL),
-				start_time,
-				duration,
-				true
-			)
-		elseif duration == 0 then
-			cooline.clear_cooldown(name)
-		end
-	end
+    local records, seen = {}, {}
+    local id = 1
+    while true do
+        local name = GetSpellName(id, BOOKTYPE_SPELL)
+        if not name then break end
+        local start, duration, enabled = GetSpellCooldown(id, BOOKTYPE_SPELL)
+        scan_record(records, seen, name, GetSpellTexture(id, BOOKTYPE_SPELL), start, duration, enabled, 2.5)
+        id = id + 1
+    end
+    finish_scan(records, seen, true)
 end
 
 function cooline.detect_cooldowns()
-	cooline.detect_item_cooldowns()
-	cooline.detect_spell_cooldowns()
-	cooline.on_update(true)
+    cooline.detect_item_cooldowns()
+    cooline.detect_spell_cooldowns()
+    cooline.on_update(true)
 end
 
--- ============================================================
--- 冷却重扫防抖：战斗中 SPELL_UPDATE_COOLDOWN / BAG_UPDATE_COOLDOWN 常一帧连发多次，
--- 把 0.1s 内的连发事件合并成一次扫描，消除 CPU 尖峰
--- ============================================================
-local cooline_pending_spell, cooline_pending_item = false, false
-local cooline_pending_spell_at, cooline_pending_item_at = 0, 0
-
+local pending_spell, pending_item = nil, nil
 cooline.rescan_timer = CreateFrame('Frame')
 cooline.rescan_timer:Hide()
 cooline.rescan_timer:SetScript('OnUpdate', function()
-	local now = GetTime()
-	local did = false
-	if cooline_pending_spell and now - cooline_pending_spell_at >= 0.1 then
-		cooline_pending_spell = false
-		cooline.detect_spell_cooldowns()
-		did = true
-	end
-	if cooline_pending_item and now - cooline_pending_item_at >= 0.1 then
-		cooline_pending_item = false
-		cooline.detect_item_cooldowns()
-		did = true
-	end
-	if did then
-		cooline.on_update(true)
-	end
-	if not cooline_pending_spell and not cooline_pending_item then
-		this:Hide()
-	end
+    local now, did = GetTime(), false
+    if pending_spell and now >= pending_spell then
+        pending_spell = nil
+        cooline.detect_spell_cooldowns()
+        did = true
+    end
+    if pending_item and now >= pending_item then
+        pending_item = nil
+        cooline.detect_item_cooldowns()
+        did = true
+    end
+    if did then cooline.on_update(true) end
+    if not pending_spell and not pending_item then cooline.rescan_timer:Hide() end
 end)
 
 function cooline.request_spell_rescan()
-	cooline_pending_spell = true
-	cooline_pending_spell_at = GetTime()
-	cooline.rescan_timer:Show()
+    pending_spell = pending_spell or GetTime() + 0.1
+    cooline.rescan_timer:Show()
+end
+function cooline.request_item_rescan()
+    pending_item = pending_item or GetTime() + 0.1
+    cooline.rescan_timer:Show()
 end
 
-function cooline.request_item_rescan()
-	cooline_pending_item = true
-	cooline_pending_item_at = GetTime()
-	cooline.rescan_timer:Show()
+function cooline.begin_drag()
+    if not IsShiftKeyDown() then return end
+    cooline.dragging = true
+    cooline:StartMoving()
+end
+function cooline.end_drag()
+    cooline:StopMovingOrSizing()
+    local x, y = cooline:GetCenter()
+    local ux, uy = UIParent:GetCenter()
+    cooline_settings.x, cooline_settings.y = floor(x - ux + 0.5), floor(y - uy + 0.5)
+    cooline.dragging = false
+end
+
+local function remaining_text(seconds)
+    seconds = math.max(0, seconds)
+    if seconds < 60 then return string.format('%.1f 秒', seconds) end
+    return string.format('%d 分 %02d 秒', math.floor(seconds / 60), math.floor(math.mod(seconds, 60)))
+end
+
+function cooline.show_tooltip(frame)
+    GameTooltip:SetOwner(frame, 'ANCHOR_RIGHT')
+    GameTooltip:ClearLines()
+    for _, member in ipairs(frame.members or {frame}) do
+        GameTooltip:AddDoubleLine(member.name, remaining_text(member.end_time - GetTime()), 1, 1, 1, 1, 0.82, 0)
+    end
+    GameTooltip:Show()
 end
 
 function cooline.cooldown_frame()
-	local frame = CreateFrame('Frame', nil, cooline.border)
-	frame:SetBackdrop({ bgFile=[[Interface\AddOns\cooline\backdrop.tga]] })
-	frame.icon = frame:CreateTexture(nil, 'ARTWORK')
-	frame.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-	frame.icon:SetPoint('TOPLEFT', 1, -1)
-	frame.icon:SetPoint('BOTTOMRIGHT', -1, 1)
-	return frame
+    local frame = CreateFrame('Button', nil, cooline)
+    frame:SetBackdrop({bgFile = 'Interface\\Buttons\\WHITE8X8'})
+    frame.guide = frame:CreateTexture(nil, 'BACKGROUND')
+    frame.guide:SetTexture(1, 1, 1, 0.25)
+    frame.icon = frame:CreateTexture(nil, 'ARTWORK')
+    frame.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    frame.icon:SetPoint('TOPLEFT', 1, -1)
+    frame.icon:SetPoint('BOTTOMRIGHT', -1, 1)
+    frame.count = frame:CreateFontString(nil, 'OVERLAY')
+    frame.count:SetFont(cooline_theme.font, 9, 'OUTLINE')
+    frame.count:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', 0, 0)
+    frame:EnableMouse(true)
+    frame:RegisterForDrag('LeftButton')
+    frame:RegisterForClicks('RightButtonUp')
+    frame:SetScript('OnDragStart', cooline.begin_drag)
+    frame:SetScript('OnDragStop', cooline.end_drag)
+    frame:SetScript('OnClick', function()
+        local callback = cooline:GetScript('OnClick')
+        if callback then callback() end
+    end)
+    frame:SetScript('OnEnter', function() cooline.show_tooltip(this) end)
+    frame:SetScript('OnLeave', function() GameTooltip:Hide() end)
+    frame:Hide()
+    return frame
 end
 
-local function place_H(this, offset, just)
-	this:SetPoint(just or 'CENTER', cooline, 'LEFT', offset, 0)
-end
-local function place_HR(this, offset, just)
-	this:SetPoint(just or 'CENTER', cooline, 'LEFT', cooline_theme.width - offset, 0)
-end
-local function place_V(this, offset, just)
-	this:SetPoint(just or 'CENTER', cooline, 'BOTTOM', 0, offset)
-end
-local function place_VR(this, offset, just)
-	this:SetPoint(just or 'CENTER', cooline, 'BOTTOM', 0, cooline_theme.height - offset)
-end
-
-function cooline.clear_cooldown(name)
-	if cooldowns[name] then
-		cooldowns[name]:Hide()
-		tinsert(frame_pool, cooldowns[name])
-		cooldowns[name] = nil
-	end
+function cooline.build_axis()
+    local maximum = cooline_theme.max_time
+    if maximum == 60 then
+        cooline.axis_times = {0, 1, 3, 5, 10, 30, 60}
+        cooline.axis_positions = {0, 0.12, 0.24, 0.38, 0.55, 0.78, 1}
+    elseif maximum < 600 then
+        cooline.axis_times = {0, 1, 3, 10, 30, 60, maximum}
+        cooline.axis_positions = {0, 0.08, 0.17, 0.32, 0.5, 0.7, 1}
+    else
+        -- Keep the first three minutes identical for 10/15/30 minute modes.
+        cooline.axis_times = {0, 3, 10, 30, 60, 180, maximum}
+        cooline.axis_positions = {0, 0.17, 0.32, 0.5, 0.64, 0.83, 1}
+    end
 end
 
-local relevel, throt = false, 0
-
-function getKeysSortedByValue(tbl, sortFunction)
-	local keys = {}
-	for key in pairs(tbl) do
-		table.insert(keys, key)
-	end
-
-	table.sort(keys, function(a, b)
-		return sortFunction(tbl[a], tbl[b])
-	end)
-
-	return keys
+function cooline.time_position(seconds)
+    local times, points = cooline.axis_times, cooline.axis_positions
+    if seconds <= 0 then return 0 end
+    for i = 2, table.getn(times) do
+        if seconds <= times[i] then
+            return cooline.length * (points[i-1] + (points[i] - points[i-1]) *
+                (seconds - times[i-1]) / (times[i] - times[i-1]))
+        end
+    end
+    return cooline.length
 end
 
-function cooline.update_cooldown(name, frame, position, tthrot, relevel, levelMap)
-	throt = min(throt, tthrot)
-	frame:SetFrameStrata("LOW")
-	
-	if frame.end_time - GetTime() < cooline_theme.treshold then
-		frame:SetFrameLevel((levelMap and levelMap[name]) or 2)
-	else
-		if relevel then
-			frame:SetFrameLevel(random(1,5) + 2)
-		end
-	end
-	
-	cooline.place(frame, position)
+-- Only the perpendicular coordinate changes between rows; the time coordinate
+-- always stays exact. Both rows and the optional guide stay centered on the bar.
+function cooline.place(object, position, cross)
+    cross = cross or 0
+    if cooline_theme.reverse then position = cooline.length - position end
+    object:ClearAllPoints()
+    if cooline_theme.vertical then
+        object:SetPoint('CENTER', cooline, 'BOTTOM', cross, position)
+    else
+        object:SetPoint('CENTER', cooline, 'LEFT', position, cross)
+    end
 end
 
-do
-	local last_update, last_relevel = GetTime(), GetTime()
-	
-	function cooline.show_flash(texture)
-		if not cooline_settings.flash_enabled then return end
-		if cooline.flash:IsVisible() and cooline.flash:GetScript('OnUpdate') then return end
-		
-		cooline.flash.texture:SetTexture(texture)
-		cooline.flash:SetAlpha(0.75)
-		cooline.flash:Show()
-		
-		local startTime = GetTime()
-		cooline.flash:SetScript('OnUpdate', function()
-			local elapsed = GetTime() - startTime
-			if elapsed > 0.8 then
-				this:Hide()
-				this:SetScript('OnUpdate', nil)
-			else
-				this:SetAlpha(0.75 * (1 - elapsed / 0.8))
-			end
-		end)
-	end
-	
-	function cooline.on_update(force)
-		if GetTime() - last_update < throt and not force then return end
-		last_update = GetTime()
-		
-		relevel = false
-		if GetTime() - last_relevel > 0.4 then
-			relevel, last_relevel = true, GetTime()
-		end
-		
-		isactive, throt = false, 1.5
-
-		-- 每帧只排一次序，供临近结束的冷却定位层级（替代原先每个冷却都全表排序）
-		local sorted = getKeysSortedByValue(cooldowns, function(a, b) return a.end_time > b.end_time end)
-		local levelMap = {}
-		for i, k in ipairs(sorted) do
-			levelMap[k] = i + 2
-		end
-
-		for name, frame in pairs(cooldowns) do
-			local time_left = frame.end_time - GetTime()
-			isactive = isactive or time_left < 60
-
-			if time_left > 60 then
-				frame:Hide()
-			else
-				frame:Show()
-			end
-
-			if time_left < -1 then
-				throt = min(throt, 0.2)
-				isactive = true
-				cooline.clear_cooldown(name)
-			elseif time_left < 0 then
-				cooline.update_cooldown(name, frame, 0, 0, relevel, levelMap)
-				local alpha = 1 + time_left
-				frame:SetAlpha(alpha)
-				if cooline_settings.flash_enabled and not cooline.flash:IsVisible() and time_left > -0.2 then
-					cooline.show_flash(frame.icon:GetTexture())
-				end
-			elseif time_left < 1 then
-				cooline.update_cooldown(name, frame, cooline.section * time_left, 0, relevel, levelMap)
-			elseif time_left < 3 then
-				cooline.update_cooldown(name, frame, cooline.section * (time_left + 1) * 0.5, 0.02, relevel, levelMap)
-			elseif time_left < 10 then
-				cooline.update_cooldown(name, frame, cooline.section * (time_left + 11) * 0.14286, time_left > 4 and 0.05 or 0.02, relevel, levelMap)
-			elseif time_left < 30 then
-				cooline.update_cooldown(name, frame, cooline.section * (time_left + 50) * 0.05, 0.06, relevel, levelMap)
-			elseif time_left < 120 then
-				cooline.update_cooldown(name, frame, cooline.section * (time_left + 330) * 0.011111, 0.18, relevel, levelMap)
-			elseif time_left < 360 then
-				cooline.update_cooldown(name, frame, cooline.section * (time_left + 1080) * 0.0041667, 1.2, relevel, levelMap)
-				frame:SetAlpha(cooline_theme.activealpha)
-			else
-				cooline.update_cooldown(name, frame, 6 * cooline.section, 2, relevel, levelMap)
-			end
-		end
-		cooline:SetAlpha(isactive and cooline_theme.activealpha or cooline_theme.inactivealpha)
-	end
+local function compact_size()
+    return math.max(12, math.floor(cooline.icon_size * 0.75))
 end
 
-function cooline.style_label(fs, text, offset, just)
-	fs:SetFont(cooline_theme.font, cooline_theme.fontsize)
-	fs:SetTextColor(unpack(cooline_theme.fontcolor))
-	fs:SetText(text)
-	fs:SetWidth(cooline_theme.fontsize * 3)
-	fs:SetHeight(cooline_theme.fontsize + 2)
-	fs:SetShadowColor(unpack(cooline_theme.bgcolor))
-	fs:SetShadowOffset(1, -1)
-	fs:ClearAllPoints()
-	if just then
-		if cooline_theme.vertical then
-			fs:SetJustifyH('CENTER')
-			just = cooline_theme.reverse and ((just == 'LEFT' and 'TOP') or 'BOTTOM') or ((just == 'LEFT' and 'BOTTOM') or 'TOP')
-		elseif cooline_theme.reverse then
-			just = (just == 'LEFT' and 'RIGHT') or 'LEFT'
-			offset = offset + ((just == 'LEFT' and 1) or -1)
-			fs:SetJustifyH(just)
-		else
-			offset = offset + ((just == 'LEFT' and 1) or -1)
-			fs:SetJustifyH(just)
-		end
-	else
-		fs:SetJustifyH('CENTER')
-	end
-	cooline.place(fs, offset, just)
+function cooline.refresh_ticks()
+    if not cooline.ticks then return end
+    local size = compact_size()
+    local rows = cooline_theme.layout == 'lanes' and cooline_theme.max_rows or 1
+    local extent = math.max(cooline.thickness / 2, cooline.icon_size / 2,
+        rows == 3 and size * 1.5 + 2 or (rows == 2 and size + 1 or size / 2))
+    cooline.label_extent = extent
+    local cross = cooline_theme.vertical and (extent + 20) or -(extent + 5 + cooline_theme.fontsize / 2)
+    local last_edge = -1000
+    for i, fs in ipairs(cooline.ticks) do
+        local seconds = cooline.axis_times[i]
+        local text = seconds == 0 and '0' or (seconds < 60 and tostring(seconds) .. 's' or tostring(seconds / 60) .. 'm')
+        fs:SetFont(cooline_theme.font, cooline_theme.fontsize)
+        fs:SetTextColor(unpack(cooline_theme.fontcolor))
+        fs:SetText(text)
+        fs:SetWidth(36)
+        fs:SetHeight(cooline_theme.fontsize + 2)
+        fs:SetJustifyH('CENTER')
+        fs:SetShadowColor(0, 0, 0, 1)
+        fs:SetShadowOffset(1, -1)
+        local position = cooline.time_position(seconds)
+        cooline.place(fs, position, cross)
+        local half = cooline_theme.vertical and (cooline_theme.fontsize + 2) / 2 or fs:GetStringWidth() / 2
+        local endpoint = i == table.getn(cooline.ticks)
+        local end_half = cooline_theme.vertical and (cooline_theme.fontsize + 2) / 2 or 12
+        if endpoint or (position - half >= last_edge + 4 and position + half < cooline.length - end_half - 4) then
+            fs:Show()
+            last_edge = position + half
+        else
+            fs:Hide()
+        end
+    end
 end
 
-function cooline.label(text, offset, just)
-	local fs = cooline.overlay:CreateFontString(nil, 'OVERLAY')
-	cooline.style_label(fs, text, offset, just)
-	return fs
+local function position_frame(frame, position, cross, size, level)
+    frame:SetWidth(size)
+    frame:SetHeight(size)
+    frame:SetFrameLevel(level)
+    cooline.place(frame, position, cross)
+    frame.guide:ClearAllPoints()
+    if cross == 0 then
+        frame.guide:Hide()
+    else
+        if cooline_theme.vertical then
+            frame.guide:SetWidth(math.abs(cross))
+            frame.guide:SetHeight(1)
+            frame.guide:SetPoint('CENTER', frame, 'CENTER', -cross / 2, 0)
+        else
+            frame.guide:SetWidth(1)
+            frame.guide:SetHeight(math.abs(cross))
+            frame.guide:SetPoint('CENTER', frame, 'CENTER', 0, -cross / 2)
+        end
+        frame.guide:Show()
+    end
+    frame.count:SetText(table.getn(frame.members) > 1 and '+' .. (table.getn(frame.members) - 1) or '')
+    frame:Show()
 end
 
--- 重新应用主题设置（宽度/高度/方向/字号等），使配置面板改动即时生效
+local function layout_group(entries, first, last)
+    local count = last - first + 1
+    local crowded = count > 1 and cooline_theme.layout ~= 'overlap'
+    local size = crowded and compact_size() or cooline.icon_size
+    local rows = 1
+    if crowded and cooline_theme.layout == 'lanes' then
+        local left, peak = first, 1
+        for i = first, last do
+            while entries[i].position - entries[left].position >= size + 2 do left = left + 1 end
+            peak = math.max(peak, i - left + 1)
+        end
+        rows = math.min(cooline_theme.max_rows, peak)
+    end
+    local lanes, placed = {}, {}
+    for i = 1, rows do lanes[i] = {} end
+    for i = first, last do
+        local entry, lane = entries[i], nil
+        local frame = entry.frame
+        frame.crowded = crowded
+        if cooline_theme.layout == 'overlap' then
+            lane = 1
+        else
+            -- Try the previous lane first. Extra clearance when joining separate
+            -- groups supplies hysteresis without moving icons along the axis.
+            local preferred = frame.layout_lane
+            for attempt = 0, rows do
+                local candidate = attempt == 0 and preferred or attempt
+                if candidate and candidate >= 1 and candidate <= rows then
+                    local fits = true
+                    for _, other in ipairs(lanes[candidate]) do
+                        if math.abs(entry.position - other.position) < size + 2 then fits = false; break end
+                    end
+                    if fits then lane = candidate; break end
+                end
+            end
+        end
+        if lane then
+            frame.layout_lane = lane
+            frame.members = {frame}
+            entry.lane = lane
+            tinsert(lanes[lane], entry)
+            tinsert(placed, entry)
+        else
+            -- Entries are processed soonest first. Overflow is attached to the
+            -- nearest, least urgent representative; short timers stay visible.
+            local representative, distance
+            for _, other in ipairs(placed) do
+                local delta = math.abs(other.position - entry.position)
+                if not distance or delta <= distance then representative, distance = other, delta end
+            end
+            tinsert(representative.frame.members, frame)
+            if GameTooltip:IsOwned(frame) then GameTooltip:Hide() end
+            frame:Hide()
+        end
+    end
+    for i, entry in ipairs(placed) do
+        local cross = 0
+        if rows == 2 then cross = (entry.lane == 1 and -0.5 or 0.5) * (size + 2) end
+        if rows == 3 then cross = (entry.lane == 1 and 0 or (entry.lane == 2 and -1 or 1)) * (size + 2) end
+        position_frame(entry.frame, entry.position, cross, size, cooline:GetFrameLevel() + 2 + last - first - i + 1)
+        if GameTooltip:IsOwned(entry.frame) then cooline.show_tooltip(entry.frame) end
+    end
+end
+
+function cooline.layout_icons(entries)
+    local first = 1
+    while first <= table.getn(entries) do
+        local last = first
+        while last < table.getn(entries) do
+            local a, b = entries[last], entries[last+1]
+            local margin = (a.frame.crowded or b.frame.crowded) and 6 or 2
+            if b.position - a.position >= cooline.icon_size + margin then break end
+            last = last + 1
+        end
+        layout_group(entries, first, last)
+        first = last + 1
+    end
+end
+
+function cooline.show_flash(texture)
+    if not cooline_settings.flash_enabled or not cooline.flash then return end
+    if cooline.flash:IsVisible() and cooline.flash:GetScript('OnUpdate') then return end
+    cooline.flash.texture:SetTexture(texture)
+    cooline.flash:SetAlpha(0.75)
+    cooline.flash:Show()
+    local start = GetTime()
+    cooline.flash:SetScript('OnUpdate', function()
+        local elapsed = GetTime() - start
+        if elapsed >= 0.8 then
+            cooline.flash:Hide()
+            cooline.flash:SetScript('OnUpdate', nil)
+        else
+            cooline.flash:SetAlpha(0.75 * (1 - elapsed / 0.8))
+        end
+    end)
+end
+
+local last_update, throttle = 0, 0
+function cooline.on_update(force)
+    if not cooline.axis_times then return end
+    local now = GetTime()
+    if not force and now - last_update < throttle then return end
+    last_update, throttle = now, 1
+    local entries = {}
+    for key, frame in pairs(cooldowns) do
+        local left = frame.end_time - now
+        if left <= 0 and not frame.flashed then
+            frame.flashed = true
+            if left > -0.25 then cooline.show_flash(frame.icon:GetTexture()) end
+        end
+        if left <= -1 then
+            cooline.clear_cooldown(key)
+        elseif left > cooline_theme.max_time then
+            frame:Hide()
+        else
+            frame:SetAlpha(left < 0 and 1 + left or 1)
+            if left >= 0 and left <= cooline_theme.treshold then
+                frame:SetBackdropColor(1, 0.82, 0, 1)
+            else
+                frame:SetBackdropColor(unpack(frame.is_spell and cooline_theme.spellcolor or cooline_theme.nospellcolor))
+            end
+            tinsert(entries, {frame = frame, key = key, position = cooline.time_position(left)})
+            throttle = math.min(throttle, left < 10 and 0.02 or (left < 30 and 0.06 or (left < 180 and 0.15 or 0.4)))
+        end
+    end
+    table.sort(entries, function(a, b)
+        if a.frame.end_time == b.frame.end_time then return a.key < b.key end
+        return a.frame.end_time < b.frame.end_time
+    end)
+    cooline.layout_icons(entries)
+    cooline:SetAlpha(table.getn(entries) > 0 and cooline_theme.activealpha or cooline_theme.inactivealpha)
+end
+
 function cooline.apply_theme()
-	cooline:SetWidth(cooline_theme.width)
-	cooline:SetHeight(cooline_theme.height)
-	cooline.section = (cooline_theme.vertical and cooline_theme.height or cooline_theme.width) / 6
-	cooline.icon_size = (cooline_theme.vertical and cooline_theme.width or cooline_theme.height) + cooline_theme.iconoutset * 2
-	cooline.place = cooline_theme.vertical and (cooline_theme.reverse and place_VR or place_V) or (cooline_theme.reverse and place_HR or place_H)
-
-	if cooline.bg then
-		cooline.bg:SetTexture(cooline_theme.statusbar)
-		cooline.bg:SetVertexColor(unpack(cooline_theme.bgcolor))
-		if cooline_theme.vertical then
-			cooline.bg:SetTexCoord(1, 0, 0, 0, 1, 1, 0, 1)
-		else
-			cooline.bg:SetTexCoord(0, 1, 0, 1)
-		end
-	end
-
-	if cooline.ticks then
-		local ticks = {
-			{ '0', 0, 'LEFT' },
-			{ '1', cooline.section, nil },
-			{ '3', cooline.section * 2, nil },
-			{ '5', cooline.section * 3, nil },
-			{ '10', cooline.section * 4, nil },
-			{ '30', cooline.section * 5, nil },
-			{ '1m', cooline.section * 6, 'RIGHT' },
-		}
-		for i, t in ipairs(ticks) do
-			if cooline.ticks[i] then
-				cooline.style_label(cooline.ticks[i], t[1], t[2], t[3])
-			end
-		end
-	end
-
-	if ZMD_ApplyDimensions then
-		ZMD_ApplyDimensions()
-	end
+    cooline:SetWidth(cooline_theme.width)
+    cooline:SetHeight(cooline_theme.height)
+    cooline.length = cooline_theme.vertical and cooline_theme.height or cooline_theme.width
+    cooline.thickness = cooline_theme.vertical and cooline_theme.width or cooline_theme.height
+    cooline.icon_size = cooline_theme.icon_size
+    cooline.build_axis()
+    if cooline.bg then
+        cooline.bg:SetTexture(cooline_theme.statusbar)
+        cooline.bg:SetVertexColor(unpack(cooline_theme.bgcolor))
+        if cooline_theme.vertical then cooline.bg:SetTexCoord(1, 0, 0, 0, 1, 1, 0, 1)
+        else cooline.bg:SetTexCoord(0, 1, 0, 1) end
+    end
+    cooline.refresh_ticks()
+    Cooline_SaveTheme()
+    if CoolineZMDDB and ZMD_ApplyDimensions then ZMD_ApplyDimensions() end
+    cooline.on_update(true)
 end
 
 function cooline.VARIABLES_LOADED()
-	if type(cooline_settings) ~= 'table' then cooline_settings = {} end
-	if cooline_settings.show_cooline == nil then cooline_settings.show_cooline = true end
-	if cooline_settings.flash_enabled == nil then cooline_settings.flash_enabled = true end
-	if cooline_settings.x == nil then cooline_settings.x = 0 end
-	if cooline_settings.y == nil then cooline_settings.y = -240 end
+	Cooline_LoadSettings()
 
     cooline.flash = CreateFrame('Frame', nil, UIParent)
     cooline.flash:SetWidth(64)
@@ -431,27 +516,14 @@ function cooline.VARIABLES_LOADED()
 		end
 	end)
 	
-	function cooline:on_drag_stop()
-		this:StopMovingOrSizing()
-		local x, y = this:GetCenter()
-		local ux, uy = UIParent:GetCenter()
-		cooline_settings.x, cooline_settings.y = floor(x - ux + 0.5), floor(y - uy + 0.5)
-		this.dragging = false
-	end
-	
-	cooline:SetScript('OnDragStart', function()
-		this.dragging = true
-		this:StartMoving()
-	end)
-	cooline:SetScript('OnDragStop', function()
-		this:on_drag_stop()
-	end)
+	cooline:SetScript('OnDragStart', cooline.begin_drag)
+	cooline:SetScript('OnDragStop', cooline.end_drag)
 	cooline:SetScript('OnUpdate', function()
-		if not IsShiftKeyDown() and this.dragging then
-			this:on_drag_stop()
-		end
-		cooline.on_update()
+		if not IsShiftKeyDown() and cooline.dragging then cooline.end_drag() end
 	end)
+	-- Independent driver keeps expiry/flash correct when the bar is hidden.
+	cooline.driver = CreateFrame('Frame', nil, UIParent)
+	cooline.driver:SetScript('OnUpdate', function() cooline.on_update() end)
 
 	cooline:SetScript('OnLeave', function()
 		GameTooltip:Hide()
@@ -476,23 +548,28 @@ function cooline.VARIABLES_LOADED()
 
 	cooline.overlay = CreateFrame('Frame', nil, cooline)
 
-	cooline.section = (cooline_theme.vertical and cooline_theme.height or cooline_theme.width) / 6
-	cooline.icon_size = (cooline_theme.vertical and cooline_theme.width or cooline_theme.height) + cooline_theme.iconoutset * 2
-	cooline.place = cooline_theme.vertical and (cooline_theme.reverse and place_VR or place_V) or (cooline_theme.reverse and place_HR or place_H)
+	cooline.ticks = {}
+	for i = 1, 7 do
+		cooline.ticks[i] = cooline.overlay:CreateFontString(nil, 'OVERLAY')
+	end
+	cooline.apply_theme()
+	-- A changed spellbook can reset or remove running spell cooldowns.
+	cooline:RegisterEvent('SPELLS_CHANGED')
+	cooline:RegisterEvent('PLAYER_ENTERING_WORLD')
 
-	cooline.tick0 = cooline.label('0', 0, 'LEFT')
-	cooline.tick1 = cooline.label('1', cooline.section)
-	cooline.tick3 = cooline.label('3', cooline.section * 2)
-	cooline.tick10 = cooline.label('5', cooline.section * 3)
-	cooline.tick30 = cooline.label('10', cooline.section * 4)
-	cooline.tick120 = cooline.label('30', cooline.section * 5)
-	cooline.tick300 = cooline.label('1m', cooline.section * 6, 'RIGHT')
-	
 	cooline:RegisterEvent('SPELL_UPDATE_COOLDOWN')
 	cooline:RegisterEvent('BAG_UPDATE_COOLDOWN')
 	cooline:SetFrameStrata("LOW")
 	
 	cooline.detect_cooldowns()
+end
+
+function cooline.SPELLS_CHANGED()
+    cooline.request_spell_rescan()
+end
+function cooline.PLAYER_ENTERING_WORLD()
+    cooline.request_spell_rescan()
+    cooline.request_item_rescan()
 end
 
 function cooline.BAG_UPDATE_COOLDOWN()
@@ -615,17 +692,35 @@ local function ZMD_Debug(msg)
   end
 end
 
+local function ZMD_DefaultOffsetY()
+  local extent = cooline_theme.vertical and (cooline.length or 200) / 2 or (cooline.label_extent or 26)
+  return -extent - cooline_theme.fontsize - 18 - math.max(cooline.thickness or 18, 16) / 2
+end
+
 local function ZMD_InitDB()
-  if not CoolineZMDDB then CoolineZMDDB = {} end
+  if type(CoolineZMDDB) ~= 'table' then CoolineZMDDB = {} end
   CoolineZMDDB.locked = nil
   for k, v in pairs(ZMD_DEFAULTS) do
     if CoolineZMDDB[k] == nil then
       CoolineZMDDB[k] = v
     end
   end
-  if CoolineZMDDB.relativeOffY == nil then
-    local height = cooline_theme and cooline_theme.height or 18
-    CoolineZMDDB.relativeOffY = -height - 2
+  local db = CoolineZMDDB
+  if db.relativeOffY == nil then db.relativeOffY = ZMD_DefaultOffsetY() end
+  if not db.centered_layout_spacing then
+    -- Move only the exact old default below the larger icon/label footprint.
+    -- Independently positioned histories keep their saved screen coordinates.
+    local oldY = -(cooline.thickness or 18) - 2
+    local baseX, baseY = 0, 0
+    if db.converted_to_ui then
+      local cx, cy = cooline:GetCenter()
+      local sx, sy = UIParent:GetCenter()
+      baseX, baseY = cx - sx, cy - sy
+    end
+    if math.abs(db.relativeOffX - baseX) < 0.5 and math.abs(db.relativeOffY - baseY - oldY) < 0.5 then
+      db.relativeOffY = baseY + ZMD_DefaultOffsetY()
+    end
+    db.centered_layout_spacing = true
   end
 end
 
@@ -659,7 +754,7 @@ local function ZMD_FindSpell(query)
 end
 
 local function ZMD_GetIconSize()
-  local height = cooline_theme and cooline_theme.height or 18
+  local height = cooline.thickness or 18
   return math.max(height, 16)
 end
 
@@ -675,16 +770,26 @@ ZMD_anchor:SetScript("OnDragStart", function()
 end)
 ZMD_anchor:SetScript("OnDragStop", function()
   this:StopMovingOrSizing()
-  local point, _, relPoint, xOff, yOff = this:GetPoint()
+  local x, y = this:GetCenter()
+  local sx, sy = UIParent:GetCenter()
   if CoolineZMDDB then
-    CoolineZMDDB.relativeOffX = xOff
-    CoolineZMDDB.relativeOffY = yOff
+    CoolineZMDDB.relativeOffX = x - sx
+    CoolineZMDDB.relativeOffY = y - sy
+    CoolineZMDDB.converted_to_ui = true
   end
 end)
 
 -- 全局启用/禁用函数
 function ZMD_ApplyEnabled()
   if not ZMD_anchor then return end
+  ZMD_pending = nil
+  for i = table.getn(ZMD_active), 1, -1 do
+    local entry = table.remove(ZMD_active, i)
+    entry.frame:Hide()
+    table.insert(ZMD_pool, entry.frame)
+  end
+  ZMD_lastSpellTime = {}
+  ZMD_recentCastId, ZMD_recentCastAt = nil, 0
   if CoolineZMDDB and CoolineZMDDB.enabled then
     ZMD_anchor:Show()
   else
@@ -732,7 +837,7 @@ end
 local function ZMD_MaxX()
   local width = ZMD_anchor:GetWidth()
   if width == 0 then width = 200 end
-  return width - ZMD_GetIconSize()
+  return math.max(0, width - ZMD_GetIconSize())
 end
 
 local function ZMD_SpawnX()
@@ -800,6 +905,7 @@ local function ZMD_SpawnByName(name)
 end
 
 local function ZMD_TryInstant(query)
+  if not CoolineZMDDB or not CoolineZMDDB.enabled then return end
   local info, name = ZMD_FindSpell(query)
   if not info then return end
 
@@ -945,8 +1051,8 @@ local function ZMD_OnUpdate()
 end
 
 function ZMD_ApplyDimensions()
-  local width = cooline_theme and cooline_theme.width or 200
-  local height = cooline_theme and cooline_theme.height or 18
+  local width = cooline.length or 200
+  local height = cooline.thickness or 18
   ZMD_anchor:SetWidth(width)
   ZMD_anchor:SetHeight(height)
   local size = ZMD_GetIconSize()
@@ -970,9 +1076,8 @@ end
 -- ★ 走马灯位置独立于冷却条，相对于屏幕中心
 local function ZMD_ApplyRelativeOffset()
   if CoolineZMDDB.relativeOffX == nil or CoolineZMDDB.relativeOffY == nil then
-    local height = cooline_theme and cooline_theme.height or 18
     CoolineZMDDB.relativeOffX = 0
-    CoolineZMDDB.relativeOffY = -height - 2
+    CoolineZMDDB.relativeOffY = ZMD_DefaultOffsetY()
   end
   ZMD_anchor:ClearAllPoints()
   ZMD_anchor:SetPoint("CENTER", UIParent, "CENTER", CoolineZMDDB.relativeOffX, CoolineZMDDB.relativeOffY)
@@ -1028,8 +1133,7 @@ ZMD_anchor:SetScript("OnEvent", function()
         local name, texture = ZMD_GetSpellById(spellId)
         if name then
           ZMD_SpawnIcon(name, texture)
-          ZMD_recentCastId = nil
-          ZMD_recentCastAt = 0
+          -- Keep the cast marker until CAST/FAIL, including when sameCD is 0.
         end
       end
       -- stage == "finish"：此时不生成，等 CAST（施法完成）再出现
