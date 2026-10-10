@@ -14,7 +14,7 @@ local frame_pool = {}
 local cooldowns = {}
 
 function cooline.set_shown(shown)
-	if shown then
+	if shown or cooline.preview_enabled then
 		cooline:Show()
 		if cooline.on_update then cooline.on_update(true) end
 	else
@@ -200,6 +200,12 @@ function cooline.cooldown_frame()
     frame.count = frame:CreateFontString(nil, 'OVERLAY')
     frame.count:SetFont(cooline_theme.font, 9, 'OUTLINE')
     frame.count:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', 0, 0)
+    frame.timer = frame:CreateFontString(nil, 'OVERLAY')
+    frame.timer:SetPoint('CENTER', frame, 'CENTER', 0, 0)
+    frame.timer:SetTextColor(1, 1, 1, 1)
+    frame.timer:SetShadowColor(0, 0, 0, 1)
+    frame.timer:SetShadowOffset(1, -1)
+    frame.timer:Hide()
     frame:EnableMouse(true)
     frame:RegisterForDrag('LeftButton')
     frame:RegisterForClicks('RightButtonUp')
@@ -265,8 +271,11 @@ function cooline.refresh_ticks()
     local rows = cooline_theme.layout == 'lanes' and cooline_theme.max_rows or 1
     local extent = math.max(cooline.thickness / 2, cooline.icon_size / 2,
         rows == 3 and size * 1.5 + 2 or (rows == 2 and size + 1 or size / 2))
-    cooline.label_extent = extent
-    local cross = cooline_theme.vertical and (extent + 20) or -(extent + 5 + cooline_theme.fontsize / 2)
+    local height = cooline_theme.fontsize + 2
+    -- Reserve the full footprint only for the separate cast-history default.
+    -- Tick text itself always stays four pixels outside the actual bar edge.
+    cooline.label_extent = math.max(extent, cooline.thickness / 2 + 4 + height)
+    cooline.tick_marks = cooline.tick_marks or {}
     local last_edge = -1000
     for i, fs in ipairs(cooline.ticks) do
         local seconds = cooline.axis_times[i]
@@ -275,20 +284,78 @@ function cooline.refresh_ticks()
         fs:SetTextColor(unpack(cooline_theme.fontcolor))
         fs:SetText(text)
         fs:SetWidth(36)
-        fs:SetHeight(cooline_theme.fontsize + 2)
+        local width = math.ceil(fs:GetStringWidth()) + 2
+        fs:SetWidth(width)
+        fs:SetHeight(height)
         fs:SetJustifyH('CENTER')
         fs:SetShadowColor(0, 0, 0, 1)
         fs:SetShadowOffset(1, -1)
         local position = cooline.time_position(seconds)
+        local half_axis = (cooline_theme.vertical and height or width) / 2
+        local half_cross = (cooline_theme.vertical and width or height) / 2
+        local cross = cooline.thickness / 2 + 4 + half_cross
+        if not cooline_theme.vertical then cross = -cross end
         cooline.place(fs, position, cross)
-        local half = cooline_theme.vertical and (cooline_theme.fontsize + 2) / 2 or fs:GetStringWidth() / 2
+        fs.axis_position, fs.cross_position = position, cross
+        fs.half_axis, fs.half_cross = half_axis, half_cross
         local endpoint = i == table.getn(cooline.ticks)
-        local end_half = cooline_theme.vertical and (cooline_theme.fontsize + 2) / 2 or 12
-        if endpoint or (position - half >= last_edge + 4 and position + half < cooline.length - end_half - 4) then
+        local end_half = cooline_theme.vertical and height / 2 or 12
+        fs.fits = endpoint or (position - half_axis >= last_edge + 4 and position + half_axis < cooline.length - end_half - 4)
+        if fs.fits then
             fs:Show()
-            last_edge = position + half
+            last_edge = position + half_axis
         else
             fs:Hide()
+        end
+        fs.tick_alpha = fs.tick_alpha or 1
+        fs:SetAlpha(fs.tick_alpha)
+        local mark = cooline.tick_marks[i]
+        if not mark then
+            mark = cooline.overlay:CreateTexture(nil, 'BACKGROUND')
+            mark:SetTexture(1, 1, 1, 0.6)
+            cooline.tick_marks[i] = mark
+        end
+        mark:SetWidth(cooline_theme.vertical and 4 or 1)
+        mark:SetHeight(cooline_theme.vertical and 1 or 4)
+        cooline.place(mark, position, (cooline_theme.vertical and 1 or -1) * (cooline.thickness / 2 + 1))
+        mark:Show()
+    end
+end
+
+-- Compare cached coordinates in bar space. Reversing the time axis preserves
+-- distances; avoiding GetCenter here also keeps this work independent of scale.
+function cooline.update_tick_collisions()
+    if not cooline.ticks then return end
+    local now = GetTime()
+    for _, fs in ipairs(cooline.ticks) do
+        local blocked = false
+        local margin = fs.blocked and 3 or 1
+        if fs.fits then
+            for _, frame in ipairs(cooline.visible_icons or {}) do
+                if frame.end_time > now - 0.85 and
+                    math.abs(frame.axis_position - fs.axis_position) < frame.display_size / 2 + fs.half_axis + margin and
+                    math.abs(frame.cross_position - fs.cross_position) < frame.display_size / 2 + fs.half_cross + margin then
+                    blocked = true
+                    break
+                end
+            end
+        end
+        fs.blocked = blocked
+        fs.target_alpha = blocked and 0 or 1
+    end
+end
+
+function cooline.animate_ticks(elapsed)
+    if not cooline.ticks or type(elapsed) ~= 'number' then return end
+    elapsed = math.max(0, elapsed)
+    for _, fs in ipairs(cooline.ticks) do
+        local target = fs.target_alpha or 1
+        local alpha = fs.tick_alpha or 1
+        if alpha ~= target then
+            local step = elapsed / (target == 0 and 0.1 or 0.16)
+            alpha = target == 0 and math.max(0, alpha - step) or math.min(1, alpha + step)
+            fs.tick_alpha = alpha
+            fs:SetAlpha(alpha)
         end
     end
 end
@@ -297,6 +364,8 @@ local function position_frame(frame, position, cross, size, level)
     frame:SetWidth(size)
     frame:SetHeight(size)
     frame:SetFrameLevel(level)
+    frame.axis_position, frame.cross_position, frame.display_size = position, cross, size
+    tinsert(cooline.visible_icons, frame)
     cooline.place(frame, position, cross)
     frame.guide:ClearAllPoints()
     if cross == 0 then
@@ -313,7 +382,19 @@ local function position_frame(frame, position, cross, size, level)
         end
         frame.guide:Show()
     end
-    frame.count:SetText(table.getn(frame.members) > 1 and '+' .. (table.getn(frame.members) - 1) or '')
+    local member_count = table.getn(frame.members)
+    frame.count:SetText(member_count > 1 and '+' .. (member_count - 1) or '')
+    local left = frame.end_time - GetTime()
+    if cooline_theme.show_countdown and member_count == 1 and left > 0 and left <= 10 then
+        frame.timer:SetFont(cooline_theme.font, math.max(8, math.min(12, math.floor(size * 0.65))), 'OUTLINE')
+        frame.timer:SetWidth(size - 2)
+        frame.timer:SetHeight(size - 2)
+        frame.timer:SetText(tostring(math.ceil(left)))
+        frame.timer:Show()
+    else
+        frame.timer:Hide()
+        frame.timer:SetText('')
+    end
     frame:Show()
 end
 
@@ -382,6 +463,7 @@ local function layout_group(entries, first, last)
 end
 
 function cooline.layout_icons(entries)
+    cooline.visible_icons = {}
     local first = 1
     while first <= table.getn(entries) do
         local last = first
@@ -394,6 +476,39 @@ function cooline.layout_icons(entries)
         layout_group(entries, first, last)
         first = last + 1
     end
+end
+
+-- Preview frames never enter the real cooldown registry or completion path.
+function cooline.begin_preview()
+    cooline.preview_enabled = true
+    cooline.set_shown(true)
+end
+
+function cooline.end_preview()
+    cooline.preview_enabled = false
+    cooline.on_update(true)
+    cooline.set_shown(cooline_settings.show_cooline)
+end
+
+local function preview_entries(now)
+    cooline.preview_frames = cooline.preview_frames or {}
+    local icons = {'Spell_Holy_HolyBolt', 'Spell_Holy_SealOfProtection', 'Spell_Holy_DevotionAura'}
+    local entries = {}
+    for i = 1, 3 do
+        local frame = cooline.preview_frames[i]
+        if not frame then
+            frame = cooline.cooldown_frame()
+            frame.name = '预览技能 ' .. i
+            frame.is_spell = true
+            frame.icon:SetTexture('Interface\\Icons\\' .. icons[i])
+            cooline.preview_frames[i] = frame
+        end
+        frame.end_time = now + 8 + (i - 1) * 0.05
+        frame:SetAlpha(1)
+        frame:SetBackdropColor(unpack(cooline_theme.spellcolor))
+        tinsert(entries, {frame = frame, key = 'preview:' .. i, position = cooline.time_position(frame.end_time - now)})
+    end
+    return entries
 end
 
 function cooline.show_flash(texture)
@@ -446,7 +561,18 @@ function cooline.on_update(force)
         if a.frame.end_time == b.frame.end_time then return a.key < b.key end
         return a.frame.end_time < b.frame.end_time
     end)
+    if cooline.preview_frames and (not cooline.preview_enabled or table.getn(entries) > 0) then
+        for _, frame in ipairs(cooline.preview_frames) do
+            if GameTooltip:IsOwned(frame) then GameTooltip:Hide() end
+            frame:Hide()
+        end
+    end
+    if cooline.preview_enabled and table.getn(entries) == 0 then
+        entries = preview_entries(now)
+        throttle = math.min(throttle, 0.1)
+    end
     cooline.layout_icons(entries)
+    cooline.update_tick_collisions()
     cooline:SetAlpha(table.getn(entries) > 0 and cooline_theme.activealpha or cooline_theme.inactivealpha)
 end
 
@@ -523,7 +649,11 @@ function cooline.VARIABLES_LOADED()
 	end)
 	-- Independent driver keeps expiry/flash correct when the bar is hidden.
 	cooline.driver = CreateFrame('Frame', nil, UIParent)
-	cooline.driver:SetScript('OnUpdate', function() cooline.on_update() end)
+	cooline.driver:SetScript('OnUpdate', function()
+		local elapsed = arg1
+		cooline.on_update()
+		cooline.animate_ticks(elapsed)
+	end)
 
 	cooline:SetScript('OnLeave', function()
 		GameTooltip:Hide()

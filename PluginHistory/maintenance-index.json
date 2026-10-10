@@ -556,7 +556,7 @@
       "addon": "Cooline",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Cooline.md",
-      "purpose": "优先监视短冷却，扩展至 30 分钟，修复尺寸刷新并提供居中缩小分行。",
+      "purpose": "短冷却优先，支持 30 分钟；提供居中分行、贴边刻度和设置预览。",
       "sources": [
         "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-15.md",
         "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-24.md"
@@ -566,7 +566,7 @@
         "Interface/AddOns/Cooline/settings.lua"
       ],
       "tracked_files_at_reference": 5,
-      "pending": "2026-10-11：10 组 Lua 模拟行为检查通过；真实游戏事件、字体纹理、战斗帧率与个人界面布局待验收。"
+      "pending": "2026-10-11：13 组 Lua 模拟行为检查通过；贴边文字、局部淡出、设置预览及真实游戏交互待验收。"
     },
     {
       "addon": "Cryolysis",

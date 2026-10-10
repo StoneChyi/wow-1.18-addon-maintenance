@@ -22,10 +22,11 @@ cooline_theme = {
 	icon_size = 22,
 	layout = 'lanes',
 	max_rows = 3,
+	show_countdown = false,
 }
 
 -- Only user-adjustable theme fields belong to character SavedVariables.
-local CL_ThemeKeys = {'vertical', 'reverse', 'width', 'height', 'treshold', 'max_time', 'icon_size', 'layout', 'max_rows'}
+local CL_ThemeKeys = {'vertical', 'reverse', 'width', 'height', 'treshold', 'max_time', 'icon_size', 'layout', 'max_rows', 'show_countdown'}
 local CL_DefaultTheme = {}
 for _, key in ipairs(CL_ThemeKeys) do CL_DefaultTheme[key] = cooline_theme[key] end
 local function CL_Number(value, fallback, low, high)
@@ -45,6 +46,7 @@ function Cooline_LoadSettings()
 	end
 	if type(cooline_theme.vertical) ~= 'boolean' then cooline_theme.vertical = false end
 	if type(cooline_theme.reverse) ~= 'boolean' then cooline_theme.reverse = false end
+	if type(cooline_theme.show_countdown) ~= 'boolean' then cooline_theme.show_countdown = false end
 	local vertical = cooline_theme.vertical
 	cooline_theme.width = CL_Number(cooline_theme.width, vertical and 18 or 200, vertical and 8 or 50, vertical and 60 or 400)
 	cooline_theme.height = CL_Number(cooline_theme.height, vertical and 200 or 18, vertical and 50 or 8, vertical and 400 or 60)
@@ -177,15 +179,14 @@ end
 
 local function CL_Check(parent, y, label, get, set)
 	local cb = CreateFrame("CheckButton", CL_NewName("Check"), parent, "UICheckButtonTemplate")
-	cb:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, y)
-	cb:SetScript("OnClick", function()
-		set(this:GetChecked() and true or false)
-	end)
+	cb:SetPoint("TOPLEFT", parent, "TOPLEFT", 34, y)
+	cb:SetScript("OnClick", function() set(this:GetChecked() and true or false) end)
 	local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	lbl:SetText(label)
-	lbl:SetPoint("RIGHT", cb, "LEFT", -8, 0)
+	lbl:SetPoint("LEFT", cb, "RIGHT", 6, 0)
 	cb:SetChecked(get() and 1 or nil)
 	CL_SkinCheckbox(cb)
+	tinsert(cl_refresh, function() cb:SetChecked(get() and 1 or nil) end)
 	return cb
 end
 
@@ -286,7 +287,7 @@ local function CL_CreatePanel()
 	cl_frame = CreateFrame("Frame", "CoolineConfigPanel", UIParent)
 	tinsert(UISpecialFrames, "CoolineConfigPanel")
 	cl_frame:SetWidth(380)
-	cl_frame:SetHeight(594)
+	cl_frame:SetHeight(624)
 	cl_frame:SetPoint("CENTER", 0, 0)
 	cl_frame:SetClampedToScreen(true)
 	cl_frame:SetMovable(true)
@@ -296,7 +297,11 @@ local function CL_CreatePanel()
 	cl_frame:SetScript("OnDragStart", function() this:StartMoving() end)
 	cl_frame:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
 	cl_frame:Hide()
-	cl_frame:SetScript('OnShow', CL_RefreshPanel)
+	cl_frame:SetScript('OnShow', function()
+		CL_RefreshPanel()
+		cooline.begin_preview()
+	end)
+	cl_frame:SetScript('OnHide', function() cooline.end_preview() end)
 
 	CL_SkinWindow(cl_frame)
 
@@ -357,11 +362,16 @@ local function CL_CreatePanel()
 		cooline_theme.max_rows = v; cooline.apply_theme()
 	end)
 
-	-- ===== 走马灯 =====
-	CL_Section(cl_frame, -338, "走马灯（施法序列）")
-	CL_Divider(cl_frame, -352)
+	CL_Check(cl_frame, -326, '最后10秒图标倒计时', function() return cooline_theme.show_countdown end, function(v)
+		cooline_theme.show_countdown = v
+		cooline.apply_theme()
+	end)
 
-	CL_Check2(cl_frame, -366, "启用走马灯", function() return CoolineZMDDB.enabled end, function(v)
+	-- ===== 走马灯 =====
+	CL_Section(cl_frame, -368, "走马灯（施法序列）")
+	CL_Divider(cl_frame, -382)
+
+	CL_Check2(cl_frame, -396, "启用走马灯", function() return CoolineZMDDB.enabled end, function(v)
 		CoolineZMDDB.enabled = v
 		ZMD_ApplyEnabled()
 	end, "显示技能名", function() return CoolineZMDDB.name end, function(v)
@@ -369,7 +379,7 @@ local function CL_CreatePanel()
 		ZMD_ApplyName()
 	end)
 
-	local btnLeft = CL_Button(cl_frame, "向左", "TOPLEFT", cl_frame, "TOPLEFT", 150, -392, 70, 22)
+	local btnLeft = CL_Button(cl_frame, "向左", "TOPLEFT", cl_frame, "TOPLEFT", 150, -422, 70, 22)
 	local btnRight = CL_Button(cl_frame, "向右", "LEFT", btnLeft, "RIGHT", 8, 0, 70, 22)
 	btnLeft:SetScript("OnClick", function() CoolineZMDDB.dir = "left" end)
 	btnRight:SetScript("OnClick", function() CoolineZMDDB.dir = "right" end)
@@ -377,7 +387,7 @@ local function CL_CreatePanel()
 	dirLabel:SetText("滚动方向")
 	dirLabel:SetPoint("RIGHT", btnLeft, "LEFT", -10, 0)
 
-	local btnStageStart = CL_Button(cl_frame, "读条时", "TOPLEFT", cl_frame, "TOPLEFT", 150, -422, 70, 22)
+	local btnStageStart = CL_Button(cl_frame, "读条时", "TOPLEFT", cl_frame, "TOPLEFT", 150, -452, 70, 22)
 	local btnStageFinish = CL_Button(cl_frame, "读条后", "LEFT", btnStageStart, "RIGHT", 8, 0, 70, 22)
 	local stageLabel = cl_frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	stageLabel:SetText("出现时机：" .. (CoolineZMDDB.castStage == "finish" and "读条后" or "读条时"))
@@ -394,17 +404,17 @@ local function CL_CreatePanel()
 		stageLabel:SetText("出现时机：读条后")
 	end)
 
-	CL_Slider(cl_frame, -466, "滚动速度", 20, 200, 1, 0, function() return CoolineZMDDB.speed end, function(v)
+	CL_Slider(cl_frame, -496, "滚动速度", 20, 200, 1, 0, function() return CoolineZMDDB.speed end, function(v)
 		CoolineZMDDB.speed = v
 	end)
-	CL_Slider(cl_frame, -492, "存活时间(秒)", 2, 15, 0.5, 1, function() return CoolineZMDDB.life end, function(v)
+	CL_Slider(cl_frame, -522, "存活时间(秒)", 2, 15, 0.5, 1, function() return CoolineZMDDB.life end, function(v)
 		CoolineZMDDB.life = v
 	end)
-	CL_Slider(cl_frame, -518, "同名冷却(秒)", 0, 10, 0.5, 1, function() return CoolineZMDDB.sameCD end, function(v)
+	CL_Slider(cl_frame, -548, "同名冷却(秒)", 0, 10, 0.5, 1, function() return CoolineZMDDB.sameCD end, function(v)
 		CoolineZMDDB.sameCD = v
 	end)
 
-	CL_Divider(cl_frame, -554)
+	CL_Divider(cl_frame, -584)
 
 	local btnClose = CreateFrame("Button", "CoolineConfigCloseButton", cl_frame, "UIPanelCloseButton")
 	-- 原始锚点保留作为回退（无 pfUI 时），有 pfUI 时 SkinCloseButton 会按 backdrop 重新定位

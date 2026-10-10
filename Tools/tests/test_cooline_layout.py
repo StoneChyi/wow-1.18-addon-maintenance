@@ -60,7 +60,11 @@ function methods:Show()
  local was=self.shown;self.shown=true
  if not was and self.scripts.OnShow then invoke(self,'OnShow') end
 end
-function methods:Hide() self.shown=false end
+function methods:Hide()
+ self.hides=(self.hides or 0)+1
+ local was=self.shown;self.shown=false
+ if was and self.scripts.OnHide then invoke(self,'OnHide') end
+end
 function methods:IsVisible() return self.shown and (not self.parent or self.parent:IsVisible()) end
 function methods:SetAlpha(v) self.alpha=v end
 function methods:SetFrameLevel(v) assert(v>=0);self.level=v end
@@ -364,8 +368,14 @@ def panel():
     for pf in [False,True]:
         lua=new(pf=pf);g=lua.globals();lua.execute("SlashCmdList.COOLINECONFIG()")
         panel=g.CoolineConfigPanel
-        assert panel.height==594 and panel.shown
+        assert panel.height==624 and panel.shown
         assert 'CoolineConfigPanel' in list(g.UISpecialFrames.values())
+        buttons=[o for o in g.objects.values() if o.kind=='Button' and equal(lua,o.parent,panel) and o.width>0 and o.height>0]
+        for i,a in enumerate(buttons):
+            ax,ay=a.GetCenter(a)
+            for b in buttons[i+1:]:
+                bx,by=b.GetCenter(b)
+                assert abs(ax-bx)>=(a.width+b.width)/2 or abs(ay-by)>=(a.height+b.height)/2, (a.text,b.text)
         for o in g.objects.values():
             if equal(lua,o.parent,panel) and o.point:
                 x,y=o.GetCenter(o);px,py=panel.GetCenter(panel)
@@ -438,6 +448,120 @@ def history_spacing_and_drag():
     lua.execute("fire(ZMD_anchor,'PLAYER_LOGIN')")
     assert before==g.ZMD_anchor.GetCenter(g.ZMD_anchor)
 check('cast-history default spacing, one-time migration, custom positions and drag/reload coordinates',history_spacing_and_drag)
+
+def close_ticks_and_local_fade():
+    for vertical in [False,True]:
+        for reverse in [False,True]:
+            lua=new({'theme':{'vertical':vertical,'reverse':reverse,
+                            'width':18 if vertical else 200,'height':200 if vertical else 18}})
+            g=lua.globals();cl=g.cooline;t=g.cooline_theme
+            coordinates=[]
+            for i,fs in cl.ticks.items():
+                assert abs(abs(fs.cross_position)-fs.half_cross-cl.thickness/2-4)<1e-8
+                assert abs(cl.tick_marks[i].point[4 if vertical else 5])==10
+                assert cl.tick_marks[i].shown
+                coordinates.append((fs.axis_position,fs.cross_position))
+            if not vertical:assert cl.ticks[2].cross_position==-19
+            for rows in [1,2,3]:
+                t.max_rows=rows;cl.apply_theme()
+                assert coordinates==[(f.axis_position,f.cross_position) for f in cl.ticks.values()]
+            for i,name in enumerate(['A','B','C']):add(lua,name,3+i*.01)
+            cl.on_update(True)
+            tick=cl.ticks[2]
+            assert tick.blocked and tick.target_alpha==0
+            assert cl.ticks[1].target_alpha==1 and cl.ticks[7].target_alpha==1
+            assert coordinates==[(f.axis_position,f.cross_position) for f in cl.ticks.values()]
+            g.invoke(cl.driver,'OnUpdate',.05);assert abs(tick.tick_alpha-.5)<1e-8
+            g.invoke(cl.driver,'OnUpdate',.05);assert tick.tick_alpha<1e-8
+            assert cl.tick_marks[2].shown # text fade never removes the time marker
+            for name in ['A','B','C']:cl.clear_cooldown('spell:'+name)
+            cl.on_update(True);assert not tick.blocked and tick.target_alpha==1
+            cl.animate_ticks(.08);assert abs(tick.tick_alpha-.5)<1e-8
+            cl.animate_ticks(.08);assert tick.tick_alpha==1
+            # Change length/size/orientation without forcing the numbers outward.
+            t.icon_size=40;t.max_rows=3
+            if vertical:t.height=400
+            else:t.width=400
+            cl.apply_theme()
+            for fs in cl.ticks.values():
+                assert abs(abs(fs.cross_position)-fs.half_cross-cl.thickness/2-4)<1e-8
+            # Narrow bars retain all small markers even when some text is omitted.
+            if vertical:t.height=50
+            else:t.width=50
+            cl.apply_theme()
+            assert all(m.shown for m in cl.tick_marks.values())
+            assert any(not f.fits for f in cl.ticks.values())
+            assert cl.ticks[1].fits and cl.ticks[7].fits
+    # A small clearance band prevents repeated disappear/reappear at a boundary.
+    lua=new();g=lua.globals();cl=g.cooline;add(lua,'Boundary',3);cl.on_update(True)
+    f=frames(lua)[0];tick=cl.ticks[2]
+    f.cross_position=tick.cross_position
+    edge=f.display_size/2+tick.half_axis
+    for delta,blocked in [(edge+.5,True),(edge+2,True),(edge+3.5,False)]:
+        f.axis_position=tick.axis_position+delta
+        cl.update_tick_collisions();assert tick.blocked==blocked
+check('four fixed-edge layouts, local fade/restore, stable numbers, all tick marks and collision hysteresis',close_ticks_and_local_fade)
+
+def optional_icon_countdown():
+    lua=new();g=lua.globals();cl=g.cooline;t=g.cooline_theme
+    assert t.show_countdown is False
+    add(lua,'Short',10);cl.on_update(True);f=frames(lua)[0]
+    assert not f.timer.shown
+    t.show_countdown=True;cl.apply_theme();assert f.timer.shown and f.timer.text=='10'
+    for advance,text in [(.01,'10'),(1,'9'),(7.98,'2'),(.02,'1')]:
+        g.now+=advance;cl.on_update(True);assert f.timer.text==text
+    g.now=110;cl.on_update(True);assert not f.timer.shown and f.timer.text==''
+    g.now=112;cl.on_update(True)
+    add(lua,'Long',11);cl.on_update(True);f=frames(lua)[0]
+    assert not f.timer.shown
+    g.now+=1;cl.on_update(True);assert f.timer.text=='10'
+    t.show_countdown=False;cl.apply_theme();assert not f.timer.shown
+    t.show_countdown=True;t.layout='compact';cl.apply_theme()
+    add(lua,'AlsoShort',9);cl.on_update(True)
+    representative=frames(lua)[0]
+    assert representative.count.text=='+1' and not representative.timer.shown
+    # Settings persist both enabled and disabled, including legacy defaults.
+    for enabled in [False,True]:
+        a=new({'theme':{'show_countdown':enabled}}).globals()
+        assert a.cooline_theme.show_countdown==enabled and a.cooline_settings.theme.show_countdown==enabled
+    lua=new();g=lua.globals();lua.execute('SlashCmdList.COOLINECONFIG()')
+    cb=next(o for o in g.objects.values() if o.kind=='CheckButton' and o.point[5]==-326)
+    cb.SetChecked(cb,True);g.invoke(cb,'OnClick')
+    assert g.cooline_settings.theme.show_countdown
+    assert all(f.timer.shown for f in frames(lua))
+check('optional last-ten-second numbers, rounding, expiry, grouped-badge priority and saved checkbox',optional_icon_countdown)
+
+def settings_preview():
+    for enabled in [False,True]:
+        for pf in [False,True]:
+            lua=new({'show_cooline':enabled,'flash_enabled':True},pf=pf)
+            g=lua.globals();cl=g.cooline
+            before=dict(g.cooline_settings.theme.items())
+            lua.execute('flashCalls=0;cooline.show_flash=function() flashCalls=flashCalls+1 end;SlashCmdList.COOLINECONFIG()')
+            assert cl.preview_enabled and cl.shown and cl.alpha>0
+            assert len(frames(lua))==3 and all(f.name.startswith('预览技能') for f in frames(lua))
+            assert g.cooline_settings.show_cooline==enabled
+            assert before==dict(g.cooline_settings.theme.items())
+            length=next(o for o in g.objects.values() if o.kind=='Slider' and o.high==400)
+            length.SetValue(length,350);assert cl.width==350
+            assert abs(frames(lua)[0].axis_position-cl.time_position(8))<1e-8
+            previous_hides=[f.hides for f in frames(lua)]
+            g.now+=3600;cl.on_update(True);assert g.flashCalls==0 and len(frames(lua))==3
+            assert previous_hides==[f.hides for f in frames(lua)]
+            # A visibility toggle in the open panel keeps its preview visible.
+            g.cooline_settings.show_cooline=False;cl.set_shown(False);assert cl.shown
+            add(lua,'Real',20);cl.on_update(True)
+            assert [f.name for f in frames(lua)]==['Real']
+            assert all(not f.shown for f in cl.preview_frames.values())
+            g.invoke(g.CoolineConfigCloseButton,'OnClick')
+            assert not cl.preview_enabled and not cl.shown and g.flashCalls==0
+            assert [f.name for f in frames(lua)]==['Real'] # closing did not clear real cooldowns
+            cl.clear_cooldown('spell:Real');g.cooline_settings.show_cooline=enabled
+            lua.execute('SlashCmdList.COOLINECONFIG()');assert len(frames(lua))==3
+            g.CoolineConfigPanel.Hide(g.CoolineConfigPanel) # ESC reaches the same OnHide path
+            assert not cl.preview_enabled and cl.shown==enabled
+            assert not frames(lua) and cl.alpha==0
+check('preview with/without pfUI preserves preferences, resizes live, yields to real CDs and exits cleanly',settings_preview)
 
 def original_bytes():
     for path in FILES:
