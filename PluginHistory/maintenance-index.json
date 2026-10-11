@@ -183,7 +183,7 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "保留 v3.2 性能优化；新增登录前 60 秒的 B 键入口诊断，按钮能开且稍后恢复的根因与修复尚未确认。",
+      "purpose": "v3.2 银行首次同步 67.91 ms、重复约 8 ms；重新登录后 B 键本次未复现，保留诊断，根因待确认。",
       "sources": [],
       "maintenance_files": [
         "Interface/AddOns/Bagshui/Bagshui.xml",
@@ -197,7 +197,7 @@
         "Interface/AddOns/Bagshui/Components/Ui.ItemButton.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "登录初期 B 键失效、按钮可开且等待后恢复，需 /bs keys 登录记录确认；性能多轮稳定性、物品操作/层级/第三方钩子/离线银行及早期修改待补充。",
+      "pending": "B 键重新登录后本次未复现，持续恢复及根因待确认，复发用 /bs keys 取证；本轮未捕获背包首次构建，多轮性能与物品操作/层级/第三方钩子/离线银行及早期修改待补充。",
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua",
         "Interface/AddOns/Bagshui/Components/StartupKeys.lua"
