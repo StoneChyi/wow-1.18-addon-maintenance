@@ -54,14 +54,6 @@ end
 
 -- 下拉菜单
 function MailTo_ToList_Init()
-    -- 兜底：确保 Server 与收件人列表已初始化（防止 OnEvent 未触发时 nil 报错）
-    if not Server then
-        Server = GetRealmName()
-    end
-    if not S_MailTo_List[Server] then
-        S_MailTo_List[Server] = {}
-    end
-
     local info = {value = 0, notCheckable = 1}
     MailTo_Name = SendMailNameEditBox:GetText()
     if MailTo_Name ~= "" then
@@ -85,46 +77,52 @@ function MailTo_ToList_Init()
     end
 end
 
---创建下拉按钮（标准 UIDropDownMenu，便于 pfUI SkinDropDown 美化）
-local MailToDropDownMenu = CreateFrame("Button", "MailToDropDownMenu", SendMailNameEditBox, "UIDropDownMenuTemplate")
+--创建下拉按钮
+local MailToDropDownMenu = CreateFrame("Button", "MailToDropDownMenu", SendMailNameEditBox)
     local xOffset
     if pfUI and pfUI.env then
-        xOffset = 34
+        xOffset = 6
     else
         xOffset = -10
     end
 MailToDropDownMenu:Show()
-UIDropDownMenu_SetWidth(24, MailToDropDownMenu)
-MailToDropDownMenu:SetPoint("RIGHT", SendMailNameEditBox, "RIGHT", xOffset, -3)
+MailToDropDownMenu:SetWidth(24)
+MailToDropDownMenu:SetHeight(24)
+MailToDropDownMenu:SetPoint("RIGHT", SendMailNameEditBox, "RIGHT", xOffset, 0)
+MailToDropDownMenu:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
+MailToDropDownMenu:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Down")
+MailToDropDownMenu:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
 
--- 下拉列表弹出位置（锚定收件人输入框右下方）
-MailToDropDownMenu.point = "TOPRIGHT"
-MailToDropDownMenu.relativeTo = SendMailNameEditBox
-MailToDropDownMenu.relativePoint = "BOTTOMRIGHT"
-MailToDropDownMenu.xOffset = 0
-MailToDropDownMenu.yOffset = 0
-UIDropDownMenu_Initialize(MailToDropDownMenu, MailTo_ToList_Init, "MENU")
+MailToDropDownMenu:SetScript("OnShow", function()
+	if not S_MailTo_Menu then
+		S_MailTo_Menu = CreateFrame("Button", "S_MailTo_Menu", this, "UIDropDownMenuTemplate")
+		S_MailTo_Menu:Hide()
+		S_MailTo_Menu.point = "TOPRIGHT"
+		S_MailTo_Menu.relativeTo = SendMailNameEditBox
+		S_MailTo_Menu.relativePoint = "BOTTOMRIGHT"
+		S_MailTo_Menu.xOffset = 0
+		S_MailTo_Menu.yOffset = 0
+		UIDropDownMenu_Initialize(S_MailTo_Menu, MailTo_ToList_Init, "MENU")
+	end
+end)
 
--- 点击下拉按钮切换列表
-MailToDropDownMenuButton:SetScript("OnClick", function()
-	ToggleDropDownMenu(1, nil, MailToDropDownMenu)
+MailToDropDownMenu:SetScript("OnHide", function()
+	CloseDropDownMenus()
+end)
+
+MailToDropDownMenu:SetScript("OnClick", function()
+	ToggleDropDownMenu(nil, nil, S_MailTo_Menu)
 	PlaySound("igMainMenuOptionCheckBoxOn")
 end)
 
--- 鼠标提示
-MailToDropDownMenuButton:SetScript("OnEnter", function()
+MailToDropDownMenu:SetScript("OnEnter", function()
 	GameTooltip:SetOwner(this,"ANCHOR_TOPRIGHT")
 	GameTooltip:SetText(MAILTO_TOOLTIP)
 	GameTooltip:Show()
 end)
 
-MailToDropDownMenuButton:SetScript("OnLeave", function()
+MailToDropDownMenu:SetScript("OnLeave", function()
 	GameTooltip:Hide()
-end)
-
--- 关闭时收起菜单
-MailToDropDownMenu:SetScript("OnHide", function()
-	CloseDropDownMenus()
 end)
 
 MailToDropDownMenu:RegisterEvent("VARIABLES_LOADED");

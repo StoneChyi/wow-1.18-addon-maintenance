@@ -23,8 +23,8 @@ function M.new()
   local select_func
 
   for i = 1, 12 do
-    local timestamp = time( { year = 2025, month = i, day = 1 } )
-    months[ i ] = date( "%B", timestamp )
+    -- 月份直接用中文（客户端 locale 是英文时 %B 会给出 January 等英文名）
+    months[ i ] = i .. "月"
   end
 
   local function get_end_day_of_month( year, month )
