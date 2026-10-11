@@ -698,7 +698,7 @@ function Flyout_UpdateFlyoutArrow(button)
    end
 end
 
-hooksecurefunc("UseAction", function(slot, checkCursor, onSelf)
+local function Flyout_OnUseAction(slot)
     local button = Flyout_GetActionButton(slot)
     if not button or not button.flyoutActions or not button.flyoutActions[1] then
         return
@@ -716,30 +716,57 @@ hooksecurefunc("UseAction", function(slot, checkCursor, onSelf)
     end
 
     if mouseFocus == button and arg1 ~= "RightButton" and not button.sticky then
-        local firstAction = button.flyoutActions[1]
-        local action, actionType = GetFlyoutActionInfo(firstAction)
-
-        if actionType == 0 then        -- 技能
-            CastSpell(action, "spell")
-        elseif actionType == 1 then    -- 宏
-            Flyout_ExecuteMacro(action)
-        elseif actionType == 2 then    -- 物品
-            local itemName = GetICurtemNameByID(tonumber(firstAction))
-            if itemName and itemName ~= "" then
-                local macroIdx = GetMacroIndexByName(itemName)
-                if macroIdx ~= 0 then
-                    Flyout_ExecuteMacro(macroIdx)
-                else
-                    MPUseItemByName(itemName)
+        -- 左键：按顺序用第一个“可用”的条目（如没有炉石就顺延到下一个可用物品）。
+        -- 可用判定：技能在技能书 / 宏存在 / 物品在背包或身上（数量 > 0）。
+        local firstAction, firstActionInfo, firstActionType
+        for i = 1, sizeof(button.flyoutActions) do
+            local cand = button.flyoutActions[i]
+            local action, actionType = GetFlyoutActionInfo(cand)
+            if action and actionType then
+                if actionType ~= 2 or MPItemNumByName(action) > 0 then
+                    firstAction = cand
+                    firstActionInfo = action
+                    firstActionType = actionType
+                    break
                 end
             end
         end
 
-        Flyout_Hide()
+        if firstAction then
+            if firstActionType == 0 then        -- 技能：直接施放
+                CastSpell(firstActionInfo, "spell")
+            elseif firstActionType == 1 then    -- 宏
+                Flyout_ExecuteMacro(firstActionInfo)
+            elseif firstActionType == 2 then    -- 物品
+                local itemName = GetICurtemNameByID(firstActionInfo)
+                if itemName and itemName ~= "" then
+                    local macroIdx = GetMacroIndexByName(itemName)
+                    if macroIdx ~= 0 then
+                        Flyout_ExecuteMacro(macroIdx)
+                    else
+                        MPUseItemByName(itemName)
+                    end
+                end
+            end
+
+            Flyout_Hide()
+        end
         return
     end
 
     if not button.sticky then
         Flyout_Show(button)
     end
-end)
+end
+
+-- 1.12 客户端原生没有 hooksecurefunc（2.0+ 才加入），pfUI 加载晚于本插件，
+-- 加载时直接调用会报 nil 错误导致挂接失败 —— 手动包裹 UseAction 兜底。
+if hooksecurefunc then
+    hooksecurefunc('UseAction', Flyout_OnUseAction)
+else
+    local Flyout_UseAction_Original = UseAction
+    UseAction = function(slot, checkCursor, onSelf)
+        Flyout_UseAction_Original(slot, checkCursor, onSelf)
+        Flyout_OnUseAction(slot)
+    end
+end
