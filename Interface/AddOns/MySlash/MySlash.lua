@@ -15,7 +15,6 @@ local function SlashLibSavedDatainit()
         {"今日价格", "/aux tooltip daily", 1},
         {"平均价格", "/aux tooltip value", 1},
         {"自动工具箱", "/auto", 1},
-        {"TT助手", "/at", 1},
         {"bufftool技能触发配置", "/bufftool config", 1},
         {"bufftool技能触发锁定", "/bufftool lock", 1},
         {"世界BOSS击杀查询", "/bwcd", 1},
