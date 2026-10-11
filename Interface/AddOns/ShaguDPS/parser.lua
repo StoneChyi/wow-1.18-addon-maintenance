@@ -85,7 +85,7 @@ function parser:RefreshEventRegistration()
     reg("SPELL_DAMAGE_EVENT_OTHER", true)
     reg("AUTO_ATTACK_SELF", true)
     reg("AUTO_ATTACK_OTHER", true)
-    local missRelated = E.damage or E.enemy_damage_taken or E.invalid_damage
+    local missRelated = E.damage or E.enemy_damage_taken or E.invalid_damage or E.sunder
     reg("SPELL_MISS_SELF", missRelated)
     reg("SPELL_MISS_OTHER", missRelated)
     local healRelated = E.heal or E.heal_taken or E.spellcast
@@ -545,8 +545,11 @@ local function mergeCurrentToSmallFight()
     for name, unitdata in pairs(data.sunder[1]) do
         if not small.sunder[name] then small.sunder[name] = { ["_total"] = 0 } end
         for k, v in pairs(unitdata) do
-            if k == "_total" then
-                small.sunder[name]["_total"] = (small.sunder[name]["_total"] or 0) + v
+            if type(v) == "table" then
+                if not small.sunder[name][k] then small.sunder[name][k] = {} end
+                for sk, sv in pairs(v) do
+                    small.sunder[name][k][sk] = (small.sunder[name][k][sk] or 0) + sv
+                end
             else
                 small.sunder[name][k] = (small.sunder[name][k] or 0) + v
             end
@@ -3068,6 +3071,190 @@ local function onSpellFailedOther(casterGuid, spellId)
 end
 
 -- ============================================================================
+-- 27b. 破甲统计（按施法者，累计进 data.sunder 的全程段[0]/当前段[1]）
+--   四段互斥，总数 = 叠层 + 有效 + 无效 + 失败（总数 = SPELL_GO 施放次数）
+--   失败 = SPELL_MISS_SELF/OTHER 命中的破甲（被躲闪/招架/抵抗/闪避等，missInfo≠0）
+--   叠层 = DEBUFF_ADDED 命中的破甲（state0→新，state2→叠）。DEBUFF_ADDED 不含施法者，
+--          故每目标维护"最近若干次 AURA_CAST"暂定队列（含施法者），DEBUFF_ADDED 按
+--          同 spellId + 最近时间（窗口 0.2s）配对，把该次暂定的有效/无效改判为叠层
+--   有效 = 落地但未叠层，且施放时目标破甲剩余 <20s（战士看破甲攻击、盗贼看盗贼破甲）
+--   无效 = 落地但未叠层，且剩余 >=20s；或战士破甲攻击打在"已有盗贼破甲"的目标上
+--          （盗贼破甲打在"只有战士破甲、无盗贼破甲"的目标上，按剩余正常判定，不算无效）
+--   错误目标 = 打在"无效伤害名单"目标上的破甲，单独计数（_wrong + _wrong_targets），不计入四段
+--   by 武藤纯子酱 2026.10.8
+-- ============================================================================
+local SUNDER_WARRIOR_IDS = { [7386]=true, [7405]=true, [8380]=true, [11596]=true, [11597]=true }
+local SUNDER_ROGUE_IDS   = { [8647]=true, [8649]=true, [8650]=true, [11197]=true, [11198]=true }
+local SUNDER_DURATION    = 30
+local SUNDER_EFFECTIVE_REMAIN = 20
+local SUNDER_ADD_WINDOW  = 0.2
+
+-- 每目标的破甲实时状态（会话级，不存档）：到期时间 + AURA_CAST 暂定队列
+local sunderTargets = {}
+
+local function sdTarget(targetGuid)
+    if not targetGuid or targetGuid == "0x0000000000000000" then return nil end
+    local t = sunderTargets[targetGuid]
+    if not t then
+        t = { sunderUntil = 0, exposeUntil = 0, pending = {} }
+        sunderTargets[targetGuid] = t
+    end
+    return t
+end
+
+-- 施法者名（含宠物归属/合并），与 _total 的 caster 键保持一致  by 武藤纯子酱 2026.10.8
+local function sdCasterName(casterGuid)
+    local name = SafeUnitName(casterGuid)
+    if not name or isUnknownName(name) then return nil end
+    local ownerName = GetOwnerInfoFromPetGUID(casterGuid)
+    if ownerName then
+        if config.merge_pets == 1 then return ownerName end
+        return ownerName .. " - " .. name
+    end
+    return name
+end
+
+-- 该施法者是否应纳入统计（自身/小队/团队，或 track_all_units=1；宠物随主人）。
+-- 与 onSpellGo 的口径一致，避免把附近非队伍玩家的破甲计入  by 武藤纯子酱 2026.10.8
+local function sdIsTracked(casterGuid)
+    if not casterGuid or casterGuid == "0x0000000000000000" then return false end
+    if isUnitTracked(casterGuid) then return true end
+    local _, _, ownerGUID = GetOwnerInfoFromPetGUID(casterGuid)
+    if not ownerGUID or ownerGUID == "0x0000000000000000" then return false end
+    return isUnitTracked(ownerGUID)
+end
+
+-- 把本次施放/叠层的分类累计进 data.sunder（全程段[0]与当前段[1]）；delta 可为 -1（改判用）
+local function sdAccumulate(casterName, field, delta)
+    if not casterName then return end
+    delta = delta or 1
+    for segment = 0, 1 do
+        local entry = data.sunder[segment]
+        local e = entry[casterName]
+        if not e then e = { _total = 0 }; entry[casterName] = e end
+        e[field] = (e[field] or 0) + delta
+    end
+end
+
+-- 记录"错误目标"（无效伤害名单内的目标）的破甲：单独计数 + 按目标名记录，不计入四段
+-- by 武藤纯子酱 2026.10.8
+local function sdAccumulateWrong(casterName, targetName)
+    if not casterName then return end
+    for segment = 0, 1 do
+        local entry = data.sunder[segment]
+        local e = entry[casterName]
+        if not e then e = { _total = 0 }; entry[casterName] = e end
+        e._wrong = (e._wrong or 0) + 1
+        if targetName then
+            if not e._wrong_targets then e._wrong_targets = {} end
+            e._wrong_targets[targetName] = (e._wrong_targets[targetName] or 0) + 1
+        end
+    end
+end
+
+-- 破甲暂定队列（每目标）：记录最近若干次 AURA_CAST（含施法者），供 DEBUFF_ADDED 按
+-- "同 spellId + 最近时间"配对归因（DEBUFF_ADDED 本身不含施法者）  by 武藤纯子酱 2026.10.8
+local function sdPushPending(t, casterName, field, spellId, noMove, now)
+    local i = 1
+    while i <= table.getn(t.pending) do
+        if (now - t.pending[i].time) > SUNDER_ADD_WINDOW then
+            table.remove(t.pending, i)
+        else
+            i = i + 1
+        end
+    end
+    table.insert(t.pending, { caster = casterName, field = field, spellId = spellId, noMove = noMove, time = now })
+end
+
+local function sdFindPending(t, spellId, now)
+    local idx, bestTime = nil, nil
+    for i, p in ipairs(t.pending) do
+        if p.spellId == spellId and (now - p.time) <= SUNDER_ADD_WINDOW then
+            if not bestTime or p.time > bestTime then
+                bestTime = p.time
+                idx = i
+            end
+        end
+    end
+    return idx
+end
+
+-- 事件挂钩集中挂到 parser.sunderHooks：分发器/onSpellGo 只引用已存在的 parser 上值，
+-- 避免 Lua 5.0.2 单函数 32 上值上限被突破  by 武藤纯子酱 2026.10.8
+parser.sunderHooks = {
+    casterName = sdCasterName,
+    -- AURA_CAST：破甲成功落地（带准确施法者）。先按剩余时间暂定有效/无效；
+    -- 若随后 DEBUFF_ADDED 说明本次叠层，再改判为叠层（避免读光环字段读到旧层数）
+    onAuraCast = function(casterName, spellId, targetGuid, casterGuid)
+        if not sunderSpellIds[spellId] then return end
+        if not sdIsTracked(casterGuid) then return end
+        local tgtName = SafeUnitName(targetGuid)
+        if isNameIgnored(tgtName) then
+            sdAccumulateWrong(casterName, tgtName)   -- 无效伤害名单目标 → 错误目标
+            return
+        end
+        local t = sdTarget(targetGuid)
+        if not t then return end
+        local now = GetTime()
+        local isWarrior = SUNDER_WARRIOR_IDS[spellId]
+        local field, noMove
+        if isWarrior and t.exposeUntil > now then
+            field = "_invalid"                       -- 战士打在盗贼破甲目标 → 固定无效，不改判
+            noMove = true
+        else
+            local untilTime = isWarrior and t.sunderUntil or t.exposeUntil
+            local remaining = untilTime - now
+            if remaining < 0 then remaining = 0 end
+            if remaining < SUNDER_EFFECTIVE_REMAIN then
+                field = "_effective"                 -- 剩余 <20s → 有效
+            else
+                field = "_invalid"                   -- 剩余 >=20s → 无效
+            end
+        end
+        sdAccumulate(casterName, field)
+        sdPushPending(t, casterName, field, spellId, noMove, now)
+        if isWarrior then t.sunderUntil = now + SUNDER_DURATION else t.exposeUntil = now + SUNDER_DURATION end
+    end,
+    -- DEBUFF_ADDED：本次落地确实叠了层 → 把暂定的有效/无效改判为叠层（新=state0 / 叠=state2）
+    onDebuffAdd = function(targetGuid, spellId, stacks, state)
+        local t = sdTarget(targetGuid)
+        if not t then return end
+        if not sunderSpellIds[spellId] then return end
+        local now = GetTime()
+        local idx = sdFindPending(t, spellId, now)
+        if not idx then return end
+        local p = t.pending[idx]
+        table.remove(t.pending, idx)
+        if p.noMove then return end
+        sdAccumulate(p.caster, p.field, -1)
+        sdAccumulate(p.caster, state == 0 and "_stack_new" or "_stack_add")
+    end,
+    -- SPELL_MISS：破甲被躲闪/招架/抵抗等 → 失败
+    onMiss = function(casterGuid, targetGuid, spellId, missInfo)
+        if not sunderSpellIds[spellId] then return end
+        if not missInfo or missInfo == 0 then return end
+        if not sdIsTracked(casterGuid) then return end
+        local casterName = sdCasterName(casterGuid)
+        local tgtName = SafeUnitName(targetGuid)
+        if isNameIgnored(tgtName) then
+            sdAccumulateWrong(casterName, tgtName)   -- 无效伤害名单目标 → 错误目标
+            return
+        end
+        sdAccumulate(casterName, "_fail")
+    end,
+    -- DEBUFF_REMOVED：破甲消失 → 清零到期（下次落地重新计"新"）
+    onDebuffRemove = function(targetGuid, spellId)
+        local t = sdTarget(targetGuid)
+        if not t then return end
+        if SUNDER_WARRIOR_IDS[spellId] then
+            t.sunderUntil = 0
+        elseif SUNDER_ROGUE_IDS[spellId] then
+            t.exposeUntil = 0
+        end
+    end,
+}
+
+-- ============================================================================
 -- 28. Nampower 事件处理与注册（hasNampower 分支）
 --     前半部分定义全部事件回调函数；本分支末尾为事件注册与 OnEvent 分发器
 -- ============================================================================
@@ -4339,7 +4526,7 @@ if ShaguDPS.hasNampower then
         if sunderSpellIds[spellId] then
             local sunderCaster = finalName
             local targetNameSunder = SafeUnitName(targetGuid)
-            if targetNameSunder and not isUnknownName(targetNameSunder) then
+            if targetNameSunder and not isUnknownName(targetNameSunder) and not isNameIgnored(targetNameSunder) then
                 for segment = 0, 1 do
                     local entry = data.sunder[segment]
                     if not entry[sunderCaster] then entry[sunderCaster] = { ["_total"] = 0 } end
@@ -4415,6 +4602,7 @@ if ShaguDPS.hasNampower then
             onAutoAttackOther(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
         elseif event == "SPELL_MISS_SELF" or event == "SPELL_MISS_OTHER" then
             onSpellMiss(arg1, arg2, arg3, arg4)
+            parser.sunderHooks.onMiss(arg1, arg2, arg3, arg4)
         elseif event == "SPELL_HEAL_BY_SELF" then
             onSpellHealBySelf(arg1, arg2, arg3, arg4, arg5, arg6)
         elseif event == "SPELL_HEAL_BY_OTHER" then
@@ -4451,6 +4639,7 @@ if ShaguDPS.hasNampower then
             -- 进入世界/换地图/传送时无需额外操作（数据段管理由 combat 状态机负责）
         elseif event == "AURA_CAST_ON_SELF" or event == "AURA_CAST_ON_OTHER" then
             onAuraCast(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+            parser.sunderHooks.onAuraCast(parser.sunderHooks.casterName(arg2), arg1, arg3, arg2)
         elseif event == "BUFF_REMOVED_SELF" or event == "BUFF_REMOVED_OTHER" or event == "DEBUFF_REMOVED_SELF" or event == "DEBUFF_REMOVED_OTHER" then
             onBuffRemoved(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
             local auraType = string.find(event, "DEBUFF") and "debuff" or "buff"
@@ -4459,8 +4648,10 @@ if ShaguDPS.hasNampower then
                 UnmarkBadDispelDebuff(arg1, arg3)
             end
             parser:handleWeaknessAuraRemove(arg1, arg3, arg7, auraType)
+            if auraType == "debuff" then parser.sunderHooks.onDebuffRemove(arg1, arg3) end
         elseif event == "DEBUFF_ADDED_SELF" or event == "DEBUFF_ADDED_OTHER" then
             onBuffAdded(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+            parser.sunderHooks.onDebuffAdd(arg1, arg3, arg4, arg7)
             parser:handleBuffAdd(arg1, arg3, arg7, "debuff")
             MarkBadDispelDebuff(arg1, arg3)
             parser:handleWeaknessAuraAdd(arg1, arg3, arg7, "debuff")
@@ -4517,17 +4708,13 @@ local function calcTPS(name, currentThreat)
     return 0
 end
 
--- 坦克模式 GUID->名称 缓存（参考 TWThreat v9.9.9 TWTtargetGUIDCache）：
--- TMTv1 包只带怪物 NPC 数字 ID，客户端需自行解析怪物名与完整 GUID。
--- SuperWoW 下 UnitExists/UnitName 可直接接受 GUID 字符串。
+-- 坦克模式 GUID->名称 缓存：TMTv1 包只带怪物 NPC 数字 ID，客户端需自行解析怪物名与完整 GUID。
+-- Nampower 单位 Token 扩展 / SuperWoW 下，UnitExists/UnitName 可直接接受 GUID 字符串。
 ShaguDPS.tankModeGUIDCache = ShaguDPS.tankModeGUIDCache or {}
 
--- 解析坦克模式数据包（TMTv1 协议，参考 TWThreat v9.9.9）：
--- 格式 "x:NPCID:二仇恨玩家名:百分比;..."，字段以冒号分隔、条目以分号分隔。
--- 第二字段为怪物 NPC 数字 ID，怪物名由客户端 GUID 缓存解析（见 window.lua 坦克模式窗口）。
--- 存入 data.tank_mode[字段2原串] = { id, name, perc, creature, guid }。
--- guid 供外部（pfUI 姓名板等）按 GUID 精确取用：解析时即用 GUID 缓存
--- 尾 6 位 hex == NPC ID hex 匹配；匹配不到再按服务器怪物名匹配；仍无则留空。
+-- 解析坦克模式数据包（TMTv1 协议）：格式 "x:NPCID:二仇恨玩家名:百分比;..."，
+-- 第二字段为怪物 NPC 数字 ID，怪物名由 GUID 缓存解析。
+-- 存入 data.tank_mode[字段2原串] = { id, name(二仇恨玩家), perc, creature(服务器怪物名), guid }。  by 武藤纯子酱 2026.10.4
 local function parseTankModePacket(content)
     if not data.tank_mode then data.tank_mode = {} end
     for k in pairs(data.tank_mode) do data.tank_mode[k] = nil end
@@ -4548,7 +4735,7 @@ local function parseTankModePacket(content)
                 }
                 -- GUID 解析：优先尾 6 位 hex 匹配，回退怪物名匹配
                 local hexID = string.upper(string.sub(string.rep("0", 6) .. string.format("%X", id), -6))
-                for guid, gname in pairs(guidCache) do
+                for guid in pairs(guidCache) do
                     if string.upper(string.sub(guid, -6)) == hexID then
                         entry.guid = guid
                         break
@@ -4569,8 +4756,8 @@ local function parseTankModePacket(content)
 end
 
 -- 解析敌方插件广播的仇恨数据包（TWTv4 协议）：
--- 格式 "TWTv4=玩家名:tank标志:威胁值:百分比:...;..."，字段以冒号分隔、玩家以分号分隔
--- 开启坦克模式时服务器会在包尾以 # 附加 "TMTv1=..." 坦克模式数据，一并解析
+-- 格式 "TWTv4=玩家名:tank标志:威胁值:百分比:...;..."，字段以冒号分隔、玩家以分号分隔。
+-- 开启坦克模式时服务器会在包尾以 # 附加 "TMTv1=..." 坦克模式数据，一并解析。
 local function parseThreatPacket(msg)
     local prefix = "TWTv4="
     local start = string.find(msg, prefix, 1, true)
@@ -4638,7 +4825,7 @@ threatEventFrame:SetScript("OnEvent", function()
         end
     elseif event == "PLAYER_TARGET_CHANGED" then
         -- 只清当前目标仇恨（view 11 语义）；坦克模式多目标数据与观察者目标无关，
-        -- 清空会导致坦克视图/姓名板每次切目标闪空，等下个 TMTv1 包（0.5s）自愈即可
+        -- 清空会导致坦克视图每次切目标闪空，等下个 TMTv1 包（0.5s）自愈即可
         data.threat = {}
         for id, callback in pairs(parser.callbacks.refresh) do callback() end
     end
@@ -4656,17 +4843,15 @@ threatRequestFrame:SetScript("OnUpdate", function()
     local channel = (GetNumRaidMembers() > 0) and "RAID" or "PARTY"
     if GetNumRaidMembers() == 0 and GetNumPartyMembers() == 0 then return end
     SendAddonMessage("TWT", "TWT_UDTSv4_limit=" .. 10, channel)
-    -- TWT 同款：无条件双发 _TM 与基础前缀（各带 limit 参数），服务器才会在仇恨包尾
-    -- 附加 TMTv1 多目标数据。数据始终在收，坦克视图(26)与 pfUI 姓名板随时可取，
-    -- 与窗口是否打开无关（对应 TWThreat v9.9.9 threatQuery 的无条件双发）。
+    -- 无条件双发 _TM 与基础前缀（各带 limit 参数），服务器才会在仇恨包尾附加 TMTv1
+    -- 多目标数据；数据始终在收，坦克视图(26) 随时可取，与窗口是否打开无关。  by 武藤纯子酱 2026.10.4
     SendAddonMessage("TWT_UDTSv4_TM", "limit=" .. 10, channel)
     SendAddonMessage("TWT_UDTSv4", "limit=" .. 10, channel)
 end)
 
--- 坦克模式 GUID 缓存填充（借鉴 D:\ShaguDPS 改版：Nampower 单位 Token 扩展 / SuperWoW 双支持）：
--- TMTv1 包只带 NPC 数字 ID，窗口端用"完整 GUID 尾 6 位 hex == NPC ID hex"匹配
+-- 坦克模式 GUID 缓存填充（依赖 Nampower 单位 Token 扩展 / SuperWoW：UnitExists/UnitName 可直接吃 GUID）：
+-- TMTv1 包只带 NPC 数字 ID，窗口端用"完整 GUID 尾 6 位 hex == NPC ID hex"匹配，
 -- 本缓存解析怪物名与完整 GUID（供显示、团队标记与点击选中）。
--- Nampower 下 UnitExists/UnitName 也可接受 GUID；GetUnitGUID/GetUnitField 做兜底。
 if ShaguDPS.hasNampower or SUPERWOW_VERSION or SetAutoloot then
     local tankModeGUIDFrame = CreateFrame("Frame")
     tankModeGUIDFrame:RegisterEvent("UNIT_MODEL_CHANGED")
@@ -4701,8 +4886,8 @@ if ShaguDPS.hasNampower or SUPERWOW_VERSION or SetAutoloot then
             end
         end
         if event == "UNIT_MODEL_CHANGED" then
-            cacheUnit(arg1)              -- SuperWoW：arg1 即 GUID 字符串
-            cacheUnit("target")          -- 同时缓存自己的当前目标（参考 TWThreat）
+            cacheUnit(arg1)
+            cacheUnit("target")
         elseif event == "UPDATE_MOUSEOVER_UNIT" then
             cacheUnit("mouseover")
         elseif event == "PLAYER_TARGET_CHANGED" then

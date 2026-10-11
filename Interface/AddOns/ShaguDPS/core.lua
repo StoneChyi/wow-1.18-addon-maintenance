@@ -168,10 +168,10 @@ local data = {
     weakness_coverage = { [0] = {}, [1] = {} },
     interrupt = { [0] = {}, [1] = {} },
     playback = { [1] = {} },
+    tank_mode = {},
     enemy_max_health = {},
     classes = {},
     threat = {},
-    tank_mode = {},
     threat_history = {},
     death_timestamps = {},
     death_replays = {},
@@ -229,7 +229,6 @@ local config = {
     show_overkill = 0,
     hide_nondefault_threat_out_of_combat = 0,
     show_only_tank_and_self_in_threat = 0,
-    tank_mode = 0,
     menu_grow_upwards = 0,
     scale = 1.0,
     report_lines = 10,
@@ -260,6 +259,12 @@ local internals = {
     ["_esum"] = true,
     ["_effective"] = true,
     ["_total"] = true,
+    ["_stack_new"] = true,
+    ["_stack_add"] = true,
+    ["_invalid"] = true,
+    ["_fail"] = true,
+    ["_wrong"] = true,
+    ["_wrong_targets"] = true,
     ["_offensive"] = true,
     ["_defensive"] = true,
     ["_overkill"] = true,
@@ -381,7 +386,7 @@ end
 --  12 = BOSS战, 15 = BOSS汇总, 23 = 最近战斗 —— 不受右侧开关控制，始终可见
 --  25 = 动作回放（仅 Nampower 环境），受右侧开关控制
 --  11 = 仇恨 —— 无 Nampower 时仍可用
---  26 = 坦克模式 —— 无 Nampower 时仍可用（依赖 TWTv4/TMTv1 服务器仇恨广播）
+--  26 = 坦克模式 —— 无 Nampower 时仍可用（依赖 TWTv4/TMTv1 服务器仇恨广播）  by 武藤纯子酱 2026.10.4
 function ShaguDPS.IsStatEnabled(viewId)
     if viewId == 12 or viewId == 15 or viewId == 23 then return true end
     if viewId == 25 then return ShaguDPS.hasNampower and ShaguDPS.config.enabled_stats[25] ~= 0 end
@@ -837,7 +842,6 @@ function ShaguDPS.ClearCache()
     ShaguDPS.buff_coverage_active = {}
     data.threat_history = {}
     data.threat = {}
-    data.tank_mode = {}
     data.small_fight = {
         damage = {},
         heal = {},
@@ -861,6 +865,7 @@ function ShaguDPS.ClearCache()
     }
     ShaguDPS.small_fight_total_time = 0
     ShaguDPS.hostile_targets = {}
+    data.tank_mode = {}
     data.enemy_max_health = {}
 end
 

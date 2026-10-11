@@ -211,7 +211,7 @@ local menubuttons = {
     ["Heal"]     = { 2, 3, 25.5,  "治疗量",     "|cffffffff显示治疗量",        "view" },
     ["HPS"]      = { 3, 4, 25.5,  "HPS",   "|cffffffff显示每秒治疗",      "view" },
     ["Threat"]   = { 10, 11, 25.5,  "仇恨",   "|cffffffff显示当前目标仇恨",  "view" },
-    ["TankMode"] = { 22, 26, 25.5,  "坦克",   "|cffffffff显示坦克多目标仇恨（实时）", "view" },
+    ["TankMode"] = { 22, 26, 25.5,  "坦克模式",   "|cffffffff显示坦克多目标仇恨（实时）", "view" },
 }
 if ShaguDPS.hasNampower then
     menubuttons["BossMenu"] = { 3, 12, -25.5, "BOSS", "|cffffffff查看BOSS战记录", "segment" }
@@ -754,7 +754,11 @@ local sort_algorithms = {
     dispel_total = function(t,a,b) return (t[b]._total or 0) < (t[a]._total or 0) end,
     threat_total = function(t,a,b) return (t[b].perc or 0) < (t[a].perc or 0) end,
     tank_mode = function(t,a,b) return (t[b].perc or 0) < (t[a].perc or 0) end,
-    sunder_total = function(t,a,b) return (t[b]._total or 0) < (t[a]._total or 0) end,
+    sunder_total = function(t,a,b)
+        local va = (t[a]._stack_new or 0) + (t[a]._stack_add or 0) + (t[a]._effective or 0)
+        local vb = (t[b]._stack_new or 0) + (t[b]._stack_add or 0) + (t[b]._effective or 0)
+        return vb < va
+    end,
     single_spell = function(t,a,b)
         if t["_effective"] and t["_effective"][a] and t["_effective"][b] and t["_effective"][a] ~= t["_effective"][b] then
             return t["_effective"][b] < t["_effective"][a]
@@ -1271,7 +1275,7 @@ local function barTooltipShow()
             TooltipAddDoubleLine("|cffffffffNPC ID|r", "|cffaaaaaa" .. unitData.tm_id .. "|r")
         end
         if unitData.tm_guid then
-            TooltipAddLine("|cff88ccff点击行选中该目标（需 SuperWoW GUID 支持）|r")
+            TooltipAddLine("|cff88ccff点击行选中该目标|r")
         end
         GameTooltip:Show()
         return
@@ -1672,6 +1676,39 @@ local function barTooltipShow()
             end
         end
 
+        -- 破甲视图：总数 = 叠层 + 有效 + 无效 + 失败，另列各目标明细  by 武藤纯子酱 2026.10.8
+        if this.parent.isSunderView then
+            TooltipAddLine(this.title .. ":")
+            TooltipAddDoubleLine("|cffffffff总数", "|cffffffff" .. (unitData._total or 0))
+            local stackNew = unitData._stack_new or 0
+            local stackAdd = unitData._stack_add or 0
+            TooltipAddDoubleLine("|cff88ccff叠层", string.format("|cffffffff%d (新%d/叠%d)", stackNew + stackAdd, stackNew, stackAdd))
+            TooltipAddDoubleLine("|cff88ccff有效", "|cffffffff" .. (unitData._effective or 0))
+            TooltipAddDoubleLine("|cff88ccff无效", "|cffffffff" .. (unitData._invalid or 0))
+            TooltipAddDoubleLine("|cff88ccff失败", "|cffffffff" .. (unitData._fail or 0))
+            if (unitData._wrong or 0) > 0 then
+                TooltipAddDoubleLine("|cffff8888错误目标", "|cffff8888" .. (unitData._wrong or 0))
+                local wt = unitData._wrong_targets
+                if wt then
+                    for wn, wc in pairs(wt) do
+                        TooltipAddDoubleLine("|cffff8888  " .. wn, "|cffff8888" .. wc)
+                    end
+                end
+            end
+            TooltipAddLine(" ")
+            TooltipAddLine("详情:")
+            local targets = {}
+            for k, v in pairs(unitData) do
+                if not internals[k] then table.insert(targets, {name = k, count = v}) end
+            end
+            table.sort(targets, function(a, b) return a.count > b.count end)
+            for _, tg in ipairs(targets) do
+                TooltipAddDoubleLine("|cffffffff" .. tg.name, "|cffffffff" .. tg.count)
+            end
+            GameTooltip:Show()
+            return
+        end
+
         -- 回退：扁平显示
         TooltipAddLine(this.title .. ":")
         TooltipAddDoubleLine("|cffffffff总计", "|cffffffff" .. unitData._total)
@@ -1679,7 +1716,7 @@ local function barTooltipShow()
         TooltipAddLine("详情:")
         local spells = {}
         for spellName, count in pairs(unitData) do
-            if spellName ~= "_total" then table.insert(spells, {name=spellName, count=count}) end
+            if not internals[spellName] then table.insert(spells, {name=spellName, count=count}) end
         end
         table.sort(spells, function(a,b) return a.count > b.count end)
         for _, spell in ipairs(spells) do
@@ -2440,6 +2477,38 @@ local function GetBarDetailLines(bar)
             end
         end
 
+        -- 破甲视图：总数 = 叠层 + 有效 + 无效 + 失败，另列各目标明细  by 武藤纯子酱 2026.10.8
+        if bar.parent.isSunderView then
+            table.insert(lines, bar.title .. ":")
+            table.insert(lines, "|cffffffff总数: |cffffffff" .. (unitData._total or 0))
+            local stackNew = unitData._stack_new or 0
+            local stackAdd = unitData._stack_add or 0
+            table.insert(lines, string.format("|cff88ccff叠层: |cffffffff%d (新%d/叠%d)", stackNew + stackAdd, stackNew, stackAdd))
+            table.insert(lines, "|cff88ccff有效: |cffffffff" .. (unitData._effective or 0))
+            table.insert(lines, "|cff88ccff无效: |cffffffff" .. (unitData._invalid or 0))
+            table.insert(lines, "|cff88ccff失败: |cffffffff" .. (unitData._fail or 0))
+            if (unitData._wrong or 0) > 0 then
+                table.insert(lines, "|cffff8888错误目标: " .. (unitData._wrong or 0))
+                local wt = unitData._wrong_targets
+                if wt then
+                    for wn, wc in pairs(wt) do
+                        table.insert(lines, "|cffff8888  " .. wn .. ": " .. wc)
+                    end
+                end
+            end
+            table.insert(lines, " ")
+            table.insert(lines, "详情:")
+            local targets = {}
+            for k, v in pairs(unitData) do
+                if not internals[k] then table.insert(targets, {name = k, count = v}) end
+            end
+            table.sort(targets, function(a, b) return a.count > b.count end)
+            for _, tg in ipairs(targets) do
+                table.insert(lines, "|cffffffff" .. tg.name .. ": |cffffffff" .. tg.count)
+            end
+            return lines
+        end
+
         -- 扁平显示
         table.insert(lines, bar.title .. ":")
         table.insert(lines, "|cffffffff总计: |cffffffff" .. unitData._total)
@@ -2447,7 +2516,7 @@ local function GetBarDetailLines(bar)
         table.insert(lines, "详情:")
         local spells = {}
         for spellName, count in pairs(unitData) do
-            if spellName ~= "_total" then table.insert(spells, {name=spellName, count=count}) end
+            if not internals[spellName] then table.insert(spells, {name=spellName, count=count}) end
         end
         table.sort(spells, function(a,b) return a.count > b.count end)
         for _, spell in ipairs(spells) do
@@ -3908,7 +3977,8 @@ local function CreateBar(parent, i)
             return
         end
 
-        -- 坦克模式：点击行选中对应怪物（SuperWoW GUID 直选，回退协助二仇恨玩家）
+        -- 坦克模式：点击行选中对应怪物（Nampower 单位 Token 扩展 / SuperWoW 下 GUID 直选，
+        -- 回退协助二仇恨玩家）
         if parent.isTankModeView then
             local entry = segment[unit]
             if arg1 == "LeftButton" then
@@ -4437,7 +4507,8 @@ local function GetCaps(view, values, isHealTaken, isBuffCoverage, segmentType, t
             if data["_total"] and type(data["_total"]) == "number" then
                 local total = data["_total"]
                 if total > values.spellcast_best then values.spellcast_best = total end
-                if total > values.sunder_best then values.sunder_best = total end
+                local sval = (data._stack_new or 0) + (data._stack_add or 0) + (data._effective or 0)
+                if sval > values.sunder_best then values.sunder_best = sval end
                 if not data["_offensive"] and not data["_sum"] and not data["_history"] then
                     local isRevive = false
                     for k, v in pairs(data) do
@@ -4620,8 +4691,9 @@ local function GetData(unitdata, values, isHealTaken, view, isBuffCoverage, segm
                 values.friendly_fire_total = unitdata._total
                 values.value = unitdata._total
             elseif view == 13 then
-                values.sunder_value = unitdata._total
-                values.value = unitdata._total
+                values.sunder_value = (unitdata._stack_new or 0) + (unitdata._stack_add or 0) + (unitdata._effective or 0)
+                values.sunder_wrong = (unitdata._wrong or 0) + (unitdata._invalid or 0) + (unitdata._fail or 0)
+                values.value = values.sunder_value
             elseif view == 19 then
                 values.revive_value = unitdata._total
                 values.percent = (values.revive_all or 0) > 0 and round(unitdata._total / values.revive_all * 100, 1) or 0
@@ -4710,7 +4782,7 @@ local function Refresh(self, force, report)
     local values, buttons = self.values, self.buttons
     local wid = self:GetID()
 
-    -- 无 Nampower 时仅支持基础视图及仇恨(11)/坦克模式(26)，其他强制回到伤害视图
+    -- 无 Nampower 时仅支持基础视图及仇恨(11)，其他强制回到伤害视图
     if not ShaguDPS.hasNampower and (config[wid].view >= 5) and config[wid].view ~= 11 and config[wid].view ~= 26 then
         config[wid].view = 1
     end
@@ -4768,7 +4840,6 @@ local function Refresh(self, force, report)
     end
 
     local isThreatView = (config[wid].view == 11)
-    local isTankModeView = (config[wid].view == 26)
     local isBossView = (config[wid].view == 12)
     local isBossSummaryView = (config[wid].view == 15)
     local isRecentFightView = (config[wid].view == 23)
@@ -4783,6 +4854,9 @@ local function Refresh(self, force, report)
     local isEnemyTakenView = (config[wid].view == 22) or ((isBossView or isBossSummaryView or isRecentFightView) and config[wid].boss_stat_view == 19)
     local isVulnCoverageView = (config[wid].view == 24) or ((isBossView or isBossSummaryView or isRecentFightView) and config[wid].boss_stat_view == 20)
     local isPlaybackView = (config[wid].view == 25) or ((isBossView or isRecentFightView) and config[wid].boss_stat_view == 21)
+    local isTankModeView = (config[wid].view == 26)
+    -- 破甲视图：直接视图13，或 BOSS/汇总/近期战斗的统计类型11（boss_stat_view 11 → 视图13）  by 武藤纯子酱 2026.10.8
+    local isSunderStatView = isSunderView or ((isBossView or isBossSummaryView or isRecentFightView) and config[wid].boss_stat_view == 11)
 
     self.isHealTakenView = isHealTakenView
     self.isEnergizeView = isEnergizeView
@@ -4793,6 +4867,7 @@ local function Refresh(self, force, report)
     self.isInterruptView = isInterruptView
     self.isPlaybackView = isPlaybackView
     self.isTankModeView = isTankModeView
+    self.isSunderView = isSunderStatView
 
     local segmentType = config[wid].segment or 1
     local isSmallFight = (segmentType == 2)
@@ -5045,6 +5120,7 @@ local function Refresh(self, force, report)
     self.btnHeal.caption:SetTextColor(1,1,1,1)
     self.btnHPS.caption:SetTextColor(1,1,1,1)
     self.btnThreat.caption:SetTextColor(1,1,1,1)
+    self.btnTankMode.caption:SetTextColor(1,1,1,1)
     if ShaguDPS.hasNampower then
         self.btnEffHeal.caption:SetTextColor(1,1,1,1)
         self.btnOverHeal.caption:SetTextColor(1,1,1,1)
@@ -5100,6 +5176,7 @@ local function Refresh(self, force, report)
         [16] = "btnEnergize", [17] = "btnInvalidDamage", [18] = "btnHealTaken",
         [19] = "btnRevive", [20] = "btnBuffCov", [21] = "btnInterrupt",
         [22] = "btnEnemyTaken", [24] = "btnVulnCov", [25] = "btnPlayback",
+        [26] = "btnTankMode",
     }
     if viewToButton[highlightView] then
         self[viewToButton[highlightView]].caption:SetTextColor(1,.9,0,1)
@@ -5172,16 +5249,13 @@ local function Refresh(self, force, report)
             self.segment = filtered
         end
     elseif isTankModeView then
-        -- 坦克模式：把 data.tank_mode（guid 键）转换为 segment（怪物名键，重名加序号）
-        -- 每条：{ tank_mode_entry, perc, tank_player, class }；perc 驱动排序与进度条
-        -- 怪物名解析优先级：客户端本地化名（GUID 缓存/UnitName）> 服务器附带英文名 > 目标-ID。
-        -- TMTv1 的 creature 字段是 TWThreat 服务端发的英文名，直接用会显示英文，
-        -- 所以先用 GUID 缓存按 尾6位hex==NPC ID 匹配，取 UnitName 的客户端名字。
+        -- 坦克模式：把 data.tank_mode（NPC ID 键）转换为 segment（怪物名键，重名加序号）
+        -- 每条：{ tank_mode_entry, perc, tank_player, class, tm_id, tm_guid, rt }；perc 驱动排序与进度条
+        -- 怪物名解析优先级：客户端本地化名（UnitName(guid) / GUID 缓存）> 服务器附带怪物名 > 目标-ID。  by 武藤纯子酱 2026.10.4
         local seg = {}
         local usedNames = {}
         local guidCache = ShaguDPS.tankModeGUIDCache or {}
         -- Nampower：本地团队标记表（1..8 -> GUID）反查，避免依赖 GetRaidTargetIndex 的 GUID 支持
-        -- （借鉴 D:\ShaguDPS 改版）
         local markByGuid = nil
         if GetRaidTargets then
             markByGuid = {}
@@ -5193,8 +5267,7 @@ local function Refresh(self, force, report)
                 end
             end
         end
-        -- TWT 同款显示条件（updateUI 1696 行）：战斗中 且 多目标（>1）才渲染；
-        -- 脱战或单目标时 TWT 整窗 Hide，这里等价于空列表
+        -- 显示条件：战斗中 且 多目标（>1）才渲染；脱战或单目标时显示空列表  by 武藤纯子酱 2026.10.4
         local tmTargetCount = 0
         for _ in pairs(data.tank_mode or {}) do tmTargetCount = tmTargetCount + 1 end
         if ShaguDPS.Combat() and tmTargetCount > 1 then
@@ -5207,13 +5280,12 @@ local function Refresh(self, force, report)
                 for g in pairs(guidCache) do
                     if string.upper(string.sub(g, -6)) == hexID then
                         guid = g
-                        -- 回写：pfUI 姓名板等外部数据源直接读 entry.guid，晚到的解析也要可见
                         entry.guid = g
                         break
                     end
                 end
             end
-            -- 团队标记（星星/骷髅等）：Nampower GetRaidTargets 反查，回退 GetRaidTargetIndex
+            -- 团队标记（星星/骷髅等）：用 Nampower GetRaidTargets 反查，回退 GetRaidTargetIndex
             local rt = 0
             if guid and UnitExists(guid) then
                 if markByGuid then
@@ -5567,7 +5639,7 @@ local function Refresh(self, force, report)
 
             -- 设置职业图标：有职业则显示对应图标，否则隐藏贴图（保留文字对齐）
             if self.bars[bar].classIcon then
-                -- 坦克模式：怪物无职业，该槽位改显示团队标记（星星/骷髅等，参考 TWThreat）
+                -- 坦克模式：怪物无职业，该槽位改显示团队标记（星星/骷髅等）
                 if isTankModeView then
                     local rt = unitdata.rt or 0
                     if rt > 0 and config.show_class_icon ~= 0 then
@@ -5602,7 +5674,7 @@ local function Refresh(self, force, report)
             end
 
             if isTankModeView then
-                -- 坦克模式：perc 0-100 固定满刻度（与 TWThreat 一致，100% 即快 OT）
+                -- 坦克模式：perc 0-100 固定满刻度（100% 即快 OT）
                 self.bars[bar]:SetMinMaxValues(0, 100)
                 self.bars[bar]:SetValue(self.values.tank_perc or 0)
             elseif isThreatView then
@@ -5706,9 +5778,14 @@ local function Refresh(self, force, report)
                 end
             end
 
-            if isSunderView then
-                bar_string = "%s"
-                bar_params = { "sunder_value" }
+            if self.isSunderView then
+                if (self.values.sunder_wrong or 0) > 0 then
+                    bar_string = "|cffff8888(+%s)|r %s"
+                    bar_params = { "sunder_wrong", "sunder_value" }
+                else
+                    bar_string = "%s"
+                    bar_params = { "sunder_value" }
+                end
             end
 
             if isReviveView then

@@ -466,6 +466,9 @@ if ShaguDPS.hasNampower then
     leftPanel:CreateConfig("分开统计主副手伤害", "separate_mh_oh_damage", "boolean")
 end
 
+-- 坦克模式：TMTv1 多目标数据现为无条件请求（见 parser.lua threatRequestFrame），
+-- 不再需要开关；显示在窗口右侧菜单"坦克"视图(26)  by 武藤纯子酱 2026.10.4
+
 leftPanel:CreateConfig("窗口", nil, "header")
 leftPanel:CreateConfig("条材质", "texture", ShaguDPS.textures)
 leftPanel:CreateConfig("条高度", "height", "number", {min=10})
@@ -499,7 +502,8 @@ local statLabelMap = {
     [14] = "承受伤害", [16] = "能量回复", [17] = "无效伤害",
     [18] = "受到治疗", [19] = "复活", [20] = "光环覆盖", [21] = "打断",
     [22] = "敌人承伤",[24] = "易伤覆盖",
-    [25] = "动作回放", [26] = "坦克模式",
+    [25] = "动作回放",
+    [26] = "坦克模式",
 }
 
 -- 在右侧面板底部添加警告信息（仅当没有 Nampower 时）
@@ -613,8 +617,6 @@ SlashCmdList["SHAGUMETER"] = function(msg, editbox)
         p("  /sdps toggle |cffcccccc- 切换窗口显示")
         p("  /sdps cache reset |cffcccccc- 清除战斗日志缓存")
         p("  /sdps autoreset " .. config.auto_reset_on_new_group .. " |cffcccccc- 加入新队伍时是否询问清空（0=否，1=是）")
-        p("  /sdps tankmode " .. config.tank_mode .. " |cffcccccc- （已废弃，TMTv1 请求现为无条件发送）")
-        p("  /sdps tankdebug |cffcccccc- 坦克模式调试（数据链路各环节状态）")
         return
     end
 
@@ -744,38 +746,6 @@ SlashCmdList["SHAGUMETER"] = function(msg, editbox)
         else
             p("|cffffcc00Shagu|cffffffffDPS:|cffff5511 Valid Options are 0-1")
         end
-    elseif strlower(cmd) == "tankmode" then
-        if tonumber(args) and (tonumber(args) == 1 or tonumber(args) == 0) then
-            config.tank_mode = tonumber(args)
-            SaveConfig()
-            window.Refresh(true)
-            p("|cffffcc00Shagu|cffffffffDPS:|cffffddcc 坦克模式: " .. config.tank_mode)
-        else
-            p("|cffffcc00Shagu|cffffffffDPS:|cffff5511 Valid Options are 0-1")
-        end
-    elseif strlower(cmd) == "tankdebug" then
-        -- 坦克模式调试：输出数据链路各环节状态，用于定位窗口不显示问题
-        p("|cffffcc00Shagu|cffffffffDPS 坦克模式调试:")
-        p("  开关 tank_mode: " .. tostring(config.tank_mode))
-        p("  SuperWoW: " .. tostring(SUPERWOW_VERSION or SetAutoloot))
-        local tCount = 0
-        for _ in pairs(ShaguDPS.data.threat or {}) do tCount = tCount + 1 end
-        p("  当前仇恨包人数(TWTv4已收到): " .. tCount)
-        local tmCount = 0
-        local sample = ""
-        for _, v in pairs(ShaguDPS.data.tank_mode or {}) do
-            tmCount = tmCount + 1
-            if sample == "" then
-                sample = "id=" .. tostring(v.id) .. " 玩家=" .. tostring(v.name)
-                    .. " perc=" .. tostring(v.perc) .. " 服务器怪物名=" .. tostring(v.creature)
-            end
-        end
-        p("  坦克模式目标数(TMTv1已收到): " .. tmCount)
-        if sample ~= "" then p("  样例: " .. sample) end
-        local cacheCount = 0
-        for _ in pairs(ShaguDPS.tankModeGUIDCache or {}) do cacheCount = cacheCount + 1 end
-        p("  GUID名称缓存条数: " .. cacheCount)
-        p("  显示方式: 窗口右侧菜单\"坦克\"按钮(视图26)；TMTv1 请求无条件发送（TWT 同款）")
     elseif strlower(cmd) == "cunits" then
         if tonumber(args) and (tonumber(args) == 1 or tonumber(args) == 0) then
             config.chinese_units = tonumber(args)
