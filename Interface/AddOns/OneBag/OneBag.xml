@@ -230,6 +230,11 @@
             getglobal(this:GetParent():GetName() .. "Name"):ClearAllPoints()
             getglobal(this:GetParent():GetName() .. "Name"):SetPoint("LEFT", this:GetName(), "RIGHT", 5, 1)
         </OnLoad>
+        <OnEnter>
+            GameTooltip:SetOwner(this, "ANCHOR_TOPRIGHT");
+            GameTooltip:SetText("更换背包");
+        </OnEnter>
+        <OnLeave> GameTooltip:Hide(); </OnLeave>
     </Scripts>
     <NormalTexture file="Interface\AddOns\OneBag\media\bags.BLP"/>
     <PushedTexture file="Interface\AddOns\OneBag\media\bags.BLP"/>
