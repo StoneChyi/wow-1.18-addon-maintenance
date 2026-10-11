@@ -1,0 +1,287 @@
+{
+  "review_date": "2026-10-12",
+  "code_reference_commit": "57ef100b15bdf5f39658e65007335e315fc1e3b5",
+  "roots": {
+    "old": "D:\\下载\\Interface2026年10月5日\\Interface\\AddOns\\S_ItemTip",
+    "personal": "E:\\1.18\\Interface\\AddOns\\S_ItemTip",
+    "new": "D:\\下载\\Interface2026年10月10日\\Interface\\AddOns\\S_ItemTip"
+  },
+  "scope": "Original source in isolated Lua 5.1 runtime; scoring/link/tooltip-hook data only. No interface rendering, client-event verification or deployment.",
+  "different_files": [
+    {
+      "path": ".workbuddy/memory/2026-10-08.md",
+      "old": null,
+      "personal": null,
+      "new": {
+        "bytes": 3452,
+        "sha256": "f374e1f7256e80d8c9f437c295cdcb10c45d83d34f6f5cc71e4c430dc0126cf4"
+      }
+    },
+    {
+      "path": ".workbuddy/memory/MEMORY.md",
+      "old": null,
+      "personal": null,
+      "new": {
+        "bytes": 2081,
+        "sha256": "2006d671fde57d527710b7994f3e0b1e92a645b91fe48349aa1cdd378cc5b8ec"
+      }
+    },
+    {
+      "path": ".workbuddy/sim/report.txt",
+      "old": null,
+      "personal": null,
+      "new": {
+        "bytes": 995,
+        "sha256": "a3ebdea0e089c5f38d0cc3dd946cee1d4d877a498088eeb29e465b154b7ea3b0"
+      }
+    },
+    {
+      "path": ".workbuddy/sim/sim_sitemtip.js",
+      "old": null,
+      "personal": null,
+      "new": {
+        "bytes": 13423,
+        "sha256": "94b6f19acb60e269f64b0629265515fabb447422e3c88a3e3580f8cd53731688"
+      }
+    },
+    {
+      "path": "InspectFrame.lua",
+      "old": {
+        "bytes": 40514,
+        "sha256": "c7ef06f979301056867eb7befed1bd0b1f5ac71c5bacc137be88ed43bf7e986a"
+      },
+      "personal": {
+        "bytes": 43062,
+        "sha256": "9198ae78619c3861f112941fcdf1a29fb1f9667b0bddc221431f5a5264893547"
+      },
+      "new": {
+        "bytes": 40514,
+        "sha256": "c7ef06f979301056867eb7befed1bd0b1f5ac71c5bacc137be88ed43bf7e986a"
+      }
+    },
+    {
+      "path": "InspectGemAndEnchant.lua",
+      "old": {
+        "bytes": 19738,
+        "sha256": "def169e4949a5398a5795bd0289d9d178425ecc31bb83792d83f81d211756bde"
+      },
+      "personal": {
+        "bytes": 20168,
+        "sha256": "6f784b8b42f4ca865a68f0e397921f719bd4acc31d9466efcf2b8446d1ab87be"
+      },
+      "new": {
+        "bytes": 19738,
+        "sha256": "def169e4949a5398a5795bd0289d9d178425ecc31bb83792d83f81d211756bde"
+      }
+    },
+    {
+      "path": "ItemSocre.lua",
+      "old": {
+        "bytes": 14314,
+        "sha256": "64264b5cc3779d2bd6975671f63487aeeaadbc5bfae81f697c2d05499ea8bbe8"
+      },
+      "personal": {
+        "bytes": 14639,
+        "sha256": "37308f4cf26eeabe7f6f335cbe6242124c6b9e056966f9367b6bb0e2467a473e"
+      },
+      "new": {
+        "bytes": 16339,
+        "sha256": "7e340e1e3c37c3f9ad310186e9fb638ade8a4fb2fb0ef2657168a9041522c84f"
+      }
+    }
+  ],
+  "text_merge": {
+    "returncode": 1,
+    "conflict_blocks": 1
+  },
+  "mock_results": {
+    "old": {
+      "syntax_files": 3,
+      "score": 4.8,
+      "scan_calls_after_first": 17,
+      "scan_calls_after_second": 34,
+      "scan_calls_after_ttl": 51,
+      "negative_charge_fields": {
+        "SetBagItem": 5,
+        "SetAuctionItem": 5,
+        "SetAuctionSellItem": 5
+      },
+      "link_after_item_info_becomes_ready": "|cffffffff|Hitem:100:0:0:0|h[Example]|h|r",
+      "alias_event": {
+        "before": 4.8,
+        "target_after_player_event": 6.4,
+        "player_after_event": 6.4
+      },
+      "name_source_replacement": {
+        "before": 4.8,
+        "after": 6.4
+      }
+    },
+    "personal": {
+      "syntax_files": 3,
+      "score": 4.8,
+      "scan_calls_after_first": 17,
+      "scan_calls_after_second": 34,
+      "scan_calls_after_ttl": 51,
+      "negative_charge_fields": {
+        "SetBagItem": 5,
+        "SetAuctionItem": 5,
+        "SetAuctionSellItem": 5
+      },
+      "link_after_item_info_becomes_ready": "|cffffffff|Hitem:100:0:0:0|h[Example]|h|r",
+      "alias_event": {
+        "before": 4.8,
+        "target_after_player_event": 6.4,
+        "player_after_event": 6.4
+      },
+      "name_source_replacement": {
+        "before": 4.8,
+        "after": 6.4
+      }
+    },
+    "new": {
+      "syntax_files": 3,
+      "score": 4.8,
+      "scan_calls_after_first": 17,
+      "scan_calls_after_second": 17,
+      "scan_calls_after_ttl": 34,
+      "negative_charge_fields": {
+        "SetBagItem": -5,
+        "SetAuctionItem": -5,
+        "SetAuctionSellItem": -5
+      },
+      "link_after_item_info_becomes_ready": null,
+      "link_after_explicit_clear": "|cffffffff|Hitem:100:0:0:0|h[Example]|h|r",
+      "alias_event": {
+        "before": 4.8,
+        "target_after_player_event": 4.8,
+        "player_after_event": 6.4
+      },
+      "name_source_replacement": {
+        "before": 4.8,
+        "after": 4.8
+      }
+    }
+  },
+  "name_collision_inventory": {
+    "library_sha256": {
+      "LibItem-enUS-1.0.lua": "cfad3ce84a0819d195f8b16628e0cf98599003000d4620b7df0dd80eebdf8af9",
+      "LibItem-Level-1.0.lua": "e144943ff8d58f37fb3d0445f7ed5e2a6978858184041b1b0dc3f60f39808261"
+    },
+    "item_ids": 24893,
+    "unique_names": 23940,
+    "duplicate_names": 562,
+    "duplicate_names_with_different_levels": 204,
+    "examples": [
+      {
+        "name": "Candy Bar",
+        "items": [
+          {
+            "id": 7807,
+            "level": 5
+          },
+          {
+            "id": 20390,
+            "level": 55
+          }
+        ]
+      },
+      {
+        "name": "Senior Sergeant's Insignia",
+        "items": [
+          {
+            "id": 18428,
+            "level": 50
+          },
+          {
+            "id": 15200,
+            "level": 35
+          },
+          {
+            "id": 16335,
+            "level": 63
+          }
+        ]
+      },
+      {
+        "name": "First Sergeant's Plate Bracers",
+        "items": [
+          {
+            "id": 18429,
+            "level": 63
+          },
+          {
+            "id": 18430,
+            "level": 50
+          }
+        ]
+      },
+      {
+        "name": "Signet of Expertise",
+        "items": [
+          {
+            "id": 8703,
+            "level": 45
+          },
+          {
+            "id": 60793,
+            "level": 65
+          }
+        ]
+      },
+      {
+        "name": "Raider Shortsword",
+        "items": [
+          {
+            "id": 2496,
+            "level": 8
+          },
+          {
+            "id": 15210,
+            "level": 16
+          }
+        ]
+      },
+      {
+        "name": "Onyx Choker",
+        "items": [
+          {
+            "id": 12032,
+            "level": 48
+          },
+          {
+            "id": 7548,
+            "level": 46
+          }
+        ]
+      },
+      {
+        "name": "First Sergeant's Mail Wristguards",
+        "items": [
+          {
+            "id": 18432,
+            "level": 50
+          },
+          {
+            "id": 16532,
+            "level": 63
+          }
+        ]
+      },
+      {
+        "name": "Skull of Grarr",
+        "items": [
+          {
+            "id": 60416,
+            "level": 65
+          },
+          {
+            "id": 80767,
+            "level": 63
+          }
+        ]
+      }
+    ],
+    "scope": "Collision inventory in currently installed libraries; first-versus-last match selection can differ. Not proof a given real equipped item needs name fallback."
+  }
+}
