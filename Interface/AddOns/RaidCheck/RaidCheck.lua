@@ -112,6 +112,25 @@ LOCALCLASS7,
 LOCALCLASS8,
 LOCALCLASS9,
 }
+-- 职业颜色（索引与 classlist 对应）
+local classColorHex = {
+	"C79C6E", -- 战士
+	"FFF569", -- 盗贼
+	"69CCF0", -- 法师
+	"ABD473", -- 猎人
+	"FFFFFF", -- 牧师
+	"F58CBA", -- 圣骑士
+	"FF7D0A", -- 德鲁伊
+	"9482C9", -- 术士
+	"0070DE", -- 萨满
+}
+-- 按职业色包裹玩家名
+local function RC_ColorName(classIdx, name)
+	if name and classIdx and classColorHex[classIdx] then
+		return "|cff"..classColorHex[classIdx]..name.."|r"
+	end
+	return name or ""
+end
 local shuliang = 0
 RC_version = "1.0"
 RC_MainLabel = "BUFF检查"
@@ -236,7 +255,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][6]==i and buffraidlist[j][7]==0) then
-						RC_ResultToolTip:AddLine((i.."队"..simclasslist[buffraidlist[j][5]]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((i.."队"..RC_ColorName(buffraidlist[j][5], simclasslist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -250,7 +269,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][6]==i and buffraidlist[j][8]==0) then
-						RC_ResultToolTip:AddLine((i.."队"..simclasslist[buffraidlist[j][5]]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((i.."队"..RC_ColorName(buffraidlist[j][5], simclasslist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end			
@@ -264,7 +283,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][6]==i and buffraidlist[j][9]==0) then
-						RC_ResultToolTip:AddLine((i.."队"..simclasslist[buffraidlist[j][5]]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((i.."队"..RC_ColorName(buffraidlist[j][5], simclasslist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -278,7 +297,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][6]==i and buffraidlist[j][10]==0) then
-						RC_ResultToolTip:AddLine((i.."队"..simclasslist[buffraidlist[j][5]]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((i.."队"..RC_ColorName(buffraidlist[j][5], simclasslist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -292,7 +311,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][6]==i and buffraidlist[j][11]==0) then
-						RC_ResultToolTip:AddLine((i.."队"..simclasslist[buffraidlist[j][5]]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((i.."队"..RC_ColorName(buffraidlist[j][5], simclasslist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -305,7 +324,7 @@ function RC_SetTip()
 			RC_ResultToolTip:AddLine(" ", 1, 0.82, 0)
 			for j=1,raidnumber,1 do
 				if (buffraidlist[j][4]>0 and buffraidlist[j][12]==1 and (buffraidlist[j][5]==5 or buffraidlist[j][5]==6)) then
-					RC_ResultToolTip:AddLine((classlist[buffraidlist[j][5]]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+					RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 				end
 			end
 		else
@@ -320,7 +339,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][13]==0) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -334,7 +353,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][14]==0) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -348,7 +367,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][15]==0) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -362,7 +381,7 @@ function RC_SetTip()
 			for i=1,2,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][16]==0) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -376,7 +395,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][17]==0) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -397,11 +416,11 @@ function RC_SetTip()
 						if buffraidlist[j][28] == 1 then yaojiCount = yaojiCount + 1; table.insert(yaojiNames, "精炼") end
 						if buffraidlist[j][29] == 1 then yaojiCount = yaojiCount + 1; table.insert(yaojiNames, "超能") end
 						if yaojiCount == 0 then
-							RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0, 0)  -- 无药剂显示红色
+							RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0, 0)  -- 无药剂显示红色
 						else
 							buttontypes[12] = shuliang
 							local yaojiText = table.concat(yaojiNames, "/")
-							RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]..":"..yaojiText), 1, 0.82, 0)
+							RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])..":"..yaojiText), 1, 0.82, 0)
 						end
 					end
 				end
@@ -417,7 +436,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][19]==0) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0, 0)
 					end
 				end
 			end
@@ -437,7 +456,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][20]<nlnum) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -457,7 +476,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][21]<nlnum) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -477,7 +496,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][22]<nlnum) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -491,7 +510,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][23]==0) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -511,7 +530,7 @@ function RC_SetTip()
 			for i=1,9,1 do
 				for j=1,raidnumber,1 do
 					if (buffraidlist[j][4]>0 and buffraidlist[j][5]==i and buffraidlist[j][24]<nlnum) then
-						RC_ResultToolTip:AddLine((classlist[i]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+						RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 					end
 				end
 			end
@@ -524,17 +543,17 @@ function RC_SetTip()
 			RC_ResultToolTip:AddLine(" ", 1, 0.82, 0)
 			for j=1,raidnumber,1 do
 				if (buffraidlist[j][2]==0) then
-					RC_ResultToolTip:AddLine(("掉线:"..buffraidlist[j][1]), 1, 0, 0)
+					RC_ResultToolTip:AddLine(("掉线:"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0, 0)
 				end
 			end
 			for j=1,raidnumber,1 do
 				if (buffraidlist[j][2]==1) then
-					RC_ResultToolTip:AddLine(("死亡:"..buffraidlist[j][1]), 1, 0, 0)
+					RC_ResultToolTip:AddLine(("死亡:"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0, 0)
 				end
 			end
 			for j=1,raidnumber,1 do
 				if (buffraidlist[j][2]==2) then
-					RC_ResultToolTip:AddLine(("过远:"..buffraidlist[j][1]), 1, 0.82, 0)
+					RC_ResultToolTip:AddLine(("过远:"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 				end
 			end
 		end
@@ -546,7 +565,7 @@ function RC_SetTip()
 			RC_ResultToolTip:AddLine(" ", 1, 0.82, 0)
 			for j=1,raidnumber,1 do
 				if (buffraidlist[j][4]>0 and buffraidlist[j][3]==1) then
-					RC_ResultToolTip:AddLine((classlist[buffraidlist[j][5]]..":"..buffraidlist[j][1]), 1, 0.82, 0)
+					RC_ResultToolTip:AddLine((RC_ColorName(buffraidlist[j][5], classlist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])), 1, 0.82, 0)
 				end
 			end
 		end
@@ -605,12 +624,12 @@ if this == RC_MainFrameBuffc3Button then
         RC_ResultToolTip:AddLine(" ", 1, 0.82, 0)
         
         for i=1,buttontypes[21],1 do
-            local displayText = hpsortgroup[i].."队"..simclasslist[hpsortclass[i]]..":"..hpsortname[i]..":"..hpsorthp[i]
+            local displayText = hpsortgroup[i].."队"..RC_ColorName(hpsortclass[i], simclasslist[hpsortclass[i]])..":"..RC_ColorName(hpsortclass[i], hpsortname[i])..":"..hpsorthp[i]
             RC_ResultToolTip:AddLine(displayText, 1, 0.82, 0)
         end
         for j=1,raidnumber,1 do
             if type(buffraidlist[j][31])=="string" then
-                RC_ResultToolTip:AddLine(buffraidlist[j][6].."队"..simclasslist[buffraidlist[j][5]]..":"..buffraidlist[j][1]..":"..buffraidlist[j][31], 0.6, 0.6, 0.6)
+                RC_ResultToolTip:AddLine(buffraidlist[j][6].."队"..RC_ColorName(buffraidlist[j][5], simclasslist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])..":"..buffraidlist[j][31], 0.6, 0.6, 0.6)
             end
         end
     end
@@ -677,7 +696,7 @@ end
 							colorR, colorG, colorB = 1, 0, 0
 						end
 						
-						RC_ResultToolTip:AddLine("["..buffCount.."]"..classlist[classIndex]..":"..table.concat(data.players, ",")..":"..data.potion, colorR, colorG, colorB)
+						RC_ResultToolTip:AddLine("["..buffCount.."]"..RC_ColorName(classIndex, classlist[classIndex])..":"..RC_ColorName(classIndex, table.concat(data.players, ","))..":"..data.potion, colorR, colorG, colorB)
 					end
 				end
 			end
@@ -718,10 +737,10 @@ end
             end
             RC_ResultToolTip:AddLine(" ", 1, 0.82, 0)
             for _, p in ipairs(lowResPlayers) do
-                RC_ResultToolTip:AddLine(p.group.."队"..simclasslist[p.class]..":"..p.name..":"..p.res, 1, 0.82, 0)
+                RC_ResultToolTip:AddLine(p.group.."队"..RC_ColorName(p.class, simclasslist[p.class])..":"..RC_ColorName(p.class, p.name)..":"..p.res, 1, 0.82, 0)
             end
             for _, p in ipairs(notDetectPlayers) do
-                RC_ResultToolTip:AddLine(p.group.."队"..simclasslist[p.class]..":"..p.name..":"..p.reason, 0.6, 0.6, 0.6)
+                RC_ResultToolTip:AddLine(p.group.."队"..RC_ColorName(p.class, simclasslist[p.class])..":"..RC_ColorName(p.class, p.name)..":"..p.reason, 0.6, 0.6, 0.6)
             end
         end
     end
@@ -743,7 +762,7 @@ function RC_Report()
                     if buffraidlist[j][28] == 1 then yaojiCount = yaojiCount + 1 end
                     if buffraidlist[j][29] == 1 then yaojiCount = yaojiCount + 1 end
                     if yaojiCount == 0 then
-                        table.insert(noHejiPlayers, classlist[i]..":"..buffraidlist[j][1])
+                        table.insert(noHejiPlayers, RC_ColorName(buffraidlist[j][5], classlist[i])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1]))
                     end
                 end
             end
@@ -766,14 +785,14 @@ function RC_Report()
                         end
                     end
                     if playerBuffCount == 1 then
-                        table.insert(lines, classlist[buffraidlist[j][5]]..":"..buffraidlist[j][1]..":"..buffraidlist[j][26])
+                        table.insert(lines, RC_ColorName(buffraidlist[j][5], classlist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])..":"..buffraidlist[j][26])
                     end
                 end
             end
             for j=1,raidnumber,1 do
                 if buffraidlist[j][4]>0 and (buffraidlist[j][5] == 1 or buffraidlist[j][5] == 2 or buffraidlist[j][5] == 3 or buffraidlist[j][5] == 4 or buffraidlist[j][5] == 8) then
                     if buffraidlist[j][26] == nil or buffraidlist[j][26] == "" then
-                        table.insert(lines, classlist[buffraidlist[j][5]]..":"..buffraidlist[j][1]..":无药剂")
+                        table.insert(lines, RC_ColorName(buffraidlist[j][5], classlist[buffraidlist[j][5]])..":"..RC_ColorName(buffraidlist[j][5], buffraidlist[j][1])..":无药剂")
                     end
                 end
             end

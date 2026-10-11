@@ -349,11 +349,14 @@ local function MakeDropInit(key, idx, className, dd)
 		for k = 1, table.getn(names) do
 			local nm = names[k]
 			-- 已被同组其它槽位选中的名字不再进入候选，防止同一人被分配到多个槽位
+			-- （仅诅咒/坦克去重；韧/智力/野性印记允许一人负责多个小队，与自动分配一致）
 			local taken = false
-			for j = 1, 8 do
-				if j ~= idx and List[key][j] == nm then
-					taken = true
-					break
+			if key == "Curse" or key == "Tank" then
+				for j = 1, 8 do
+					if j ~= idx and List[key][j] == nm then
+						taken = true
+						break
+					end
 				end
 			end
 			if not taken then
@@ -514,27 +517,54 @@ local function RefreshBlessingFrame()
 
 		local menu = CreateFrame("Frame", "RCBA_PalMenu" .. i, blessingFrame, "UIDropDownMenuTemplate")
 		w.menu = menu
+		-- HD 式换人：点骑士名 → 从团队中的圣骑士里选一人接替
+		-- 新骑士原地继承本行祝福分配；若选的人已在其它行，则两行（名字+祝福）整体对调
 		UIDropDownMenu_Initialize(menu, function()
-			for k = 1, List["Blessing"]["Nums"] do
-				local myk = k
-				local info = { text = List["Blessing"]["Names"][k] }
-				info.func = function()
-					if myk ~= myi then
-						local tmp = List["Blessing"]["Names"][myi]
-						List["Blessing"]["Names"][myi] = List["Blessing"]["Names"][myk]
-						List["Blessing"]["Names"][myk] = tmp
-						local tb = pb[myi]
-						pb[myi] = pb[myk]
-						pb[myk] = tb
-						RefreshBlessingFrame()
+			local _, cands = GetClassN("圣骑士")
+			for k = 1, table.getn(cands) do
+				local nm = cands[k]
+				-- 该候选当前占用行（nil=未分配）
+				local row = nil
+				for r = 1, List["Blessing"]["Nums"] do
+					if List["Blessing"]["Names"][r] == nm then
+						row = r
+						break
 					end
-					CloseDropDownMenus()
 				end
-				UIDropDownMenu_AddButton(info)
+				if nm ~= List["Blessing"]["Names"][myi] then
+					local info = { text = ColorName(nm) }
+					info.func = function()
+						if row and row ~= myi then
+							-- 已在其它行：两行整体对调
+							local tmp = List["Blessing"]["Names"][myi]
+							List["Blessing"]["Names"][myi] = List["Blessing"]["Names"][row]
+							List["Blessing"]["Names"][row] = tmp
+							local tb = pb[myi]
+							pb[myi] = pb[row]
+							pb[row] = tb
+						else
+							-- 未分配的新骑士：原地换名，本行祝福分配不变（由新骑士继承）
+							List["Blessing"]["Names"][myi] = nm
+						end
+						RefreshBlessingFrame()
+						CloseDropDownMenus()
+					end
+					UIDropDownMenu_AddButton(info)
+				end
 			end
 		end)
 		nb:SetScript("OnClick", function()
 			ToggleDropDownMenu(1, nil, menu, nb, 0, 0)
+		end)
+		-- 悬停提示换人玩法
+		nb:SetScript("OnEnter", function()
+			if not GameTooltip then return end
+			GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+			GameTooltip:SetText("点击更换骑士\n新骑士继承本行祝福分配")
+			GameTooltip:Show()
+		end)
+		nb:SetScript("OnLeave", function()
+			if GameTooltip then GameTooltip:Hide() end
 		end)
 
 		for j = 1, 9 do
@@ -588,7 +618,7 @@ local function RefreshBlessingFrame()
 
 	-- 底部提示
 	if blessingTip then
-		blessingTip:SetText("左键点图标换单个祝福，右键整行设为同一祝福")
+		blessingTip:SetText("左键点图标换单个祝福，右键整行设为同一祝福；点骑士名换人，新骑士继承本行祝福")
 	end
 end
 
@@ -1069,7 +1099,7 @@ local function CreateMain()
 	-- 操作提示固定在骑士分配窗口底部
 	blessingTip = blessingFrame:CreateFontString(nil, "OVERLAY")
 	blessingTip:SetFontObject(GameFontNormalSmall)
-	blessingTip:SetText("左键点图标换单个祝福，右键整行设为同一祝福")
+	blessingTip:SetText("左键点图标换单个祝福，右键整行设为同一祝福；点骑士名换人，新骑士继承本行祝福")
 	blessingTip:SetPoint("BOTTOMLEFT", blessingFrame, "BOTTOMLEFT", 12, 8)
 
 	-- 坦克分配（高级）子窗口 ------------------------------------------------
