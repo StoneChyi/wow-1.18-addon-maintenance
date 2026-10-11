@@ -183,8 +183,11 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "v3.2 银行首次同步 67.91 ms、重复约 8 ms；重新登录后 B 键本次未复现，保留诊断，根因待确认。",
-      "sources": [],
+      "purpose": "背包核心重构方案已记录、尚未实施；拟取消账户目录，分享暂缓，银行保持现用路径。v3.2 改善及 B 键未复现状态继续保留。",
+      "sources": [
+        "PluginHistory/Research/Bagshui重构方案-20261011.md",
+        "PluginHistory/Research/Bagshui分类与自定义需求模板.md"
+      ],
       "maintenance_files": [
         "Interface/AddOns/Bagshui/Bagshui.xml",
         "Interface/AddOns/Bagshui/Components/Inventory.Cache.lua",
@@ -197,7 +200,7 @@
         "Interface/AddOns/Bagshui/Components/Ui.ItemButton.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "B 键重新登录后本次未复现，持续恢复及根因待确认，复发用 /bs keys 取证；本轮未捕获背包首次构建，多轮性能与物品操作/层级/第三方钩子/离线银行及早期修改待补充。",
+      "pending": "背包核心重构/取消目录尚未实施，资源基线及游戏验收待补充；B 键本次未复现、根因待确认，复发用 /bs keys 取证；最近报告未捕获背包首次构建，多轮性能与物品操作/层级/第三方/离线银行及早期修改待补充。",
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua",
         "Interface/AddOns/Bagshui/Components/StartupKeys.lua"

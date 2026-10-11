@@ -26,7 +26,7 @@
 | [AutoBar](AutoBar.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [AutoMarker](AutoMarker.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [Automatonex](Automatonex.md) | 有维护记录 | 完善模块配置、物品监控及与其他界面的协作。 |
-| [Bagshui](Bagshui.md) | 有维护记录 | v3.2 银行首次同步 67.91 ms、重复约 8 ms；重新登录后 B 键本次未复现，保留诊断，根因待确认。 |
+| [Bagshui](Bagshui.md) | 有维护记录 | 背包核心重构方案已记录、尚未实施；拟取消账户目录，分享暂缓，银行保持现用路径。v3.2 改善及 B 键未复现状态继续保留。 |
 | [BetterCharacterStats](BetterCharacterStats.md) | 有维护记录 | 保持角色属性面板布局稳定，并与观察、换天赋功能协调。 |
 | [BigWigs](BigWigs.md) | 有维护记录 | 适配乌龟服首领、中文日志以及竖行计时条。 |
 | [Blizzard_AuctionUI](Blizzard_AuctionUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
