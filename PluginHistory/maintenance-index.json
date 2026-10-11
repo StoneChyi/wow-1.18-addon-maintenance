@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
-  "updated_on": "2026-10-11",
+  "updated_on": "2026-10-12",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
@@ -1877,6 +1877,8 @@
       "old_package_label": "用户提供的2026-10-05插件包，部分个人插件来源",
       "new_package_label": "用户提供的2026-10-10插件包",
       "report": "PluginHistory/Research/三方插件更新核对-20261005-20261010-20261011.md",
+      "side_by_side_report": "PluginHistory/Research/三版本插件并排对照-20261012.md",
+      "presentation_updated_on": "2026-10-12",
       "manifest": "PluginHistory/Research/三方插件更新核对-20261005-20261010-20261011.json",
       "deployed": false,
       "maintained_addons_with_package_function_updates": [
