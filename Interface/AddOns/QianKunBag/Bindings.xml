@@ -1,0 +1,5 @@
+<Bindings>
+    <Binding name="QIANKUNBAG_TOGGLE" header="QIANKUNBAG">
+        QianKunBag:Toggle()
+    </Binding>
+</Bindings>

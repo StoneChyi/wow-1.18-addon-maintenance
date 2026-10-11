@@ -10,6 +10,33 @@
     "snapshot_difference": 1,
     "related_skin_only": 2
   },
+  "added_counts": {
+    "documented_history": 1
+  },
+  "added_addons": [
+    {
+      "addon": "QianKunBag",
+      "status": "documented_history",
+      "added_on": "2026-10-11",
+      "creation_base_commit": "db2227c0c518de9a7a1d4074bac0211a0a27cfde",
+      "note": "PluginHistory/Plugins/QianKunBag.md",
+      "purpose": "独立背包首版 0.1.0；增量刷新、基础分类和本地归类；不替换或接管原乾坤袋。",
+      "sources": [
+        "PluginHistory/Research/Bagshui重构方案-20261011.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/QianKunBag/QianKunBag.toc",
+        "Interface/AddOns/QianKunBag/Bindings.xml",
+        "Interface/AddOns/QianKunBag/Core.lua",
+        "Interface/AddOns/QianKunBag/Categories.lua",
+        "Interface/AddOns/QianKunBag/Model.lua",
+        "Interface/AddOns/QianKunBag/View.lua",
+        "Interface/AddOns/QianKunBag/README.md"
+      ],
+      "tracked_files_at_reference": 0,
+      "pending": "首版受控检查通过，实际 1.12 加载/显示/原生操作/第三方钩子及性能资源验收待补充；复杂规则、徽标与后续功能分步推进。"
+    }
+  ],
   "addons": [
     {
       "addon": "!Libs",
@@ -183,7 +210,7 @@
       "addon": "Bagshui",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Bagshui.md",
-      "purpose": "背包核心重构方案已记录、尚未实施；拟取消账户目录，分享暂缓，银行保持现用路径。v3.2 改善及 B 键未复现状态继续保留。",
+      "purpose": "重构改为独立 QianKunBag，本体及账户目录保持原样；原 v3.2 性能改善和 B 键未复现记录继续保留。",
       "sources": [
         "PluginHistory/Research/Bagshui重构方案-20261011.md",
         "PluginHistory/Research/Bagshui分类与自定义需求模板.md"
@@ -200,7 +227,7 @@
         "Interface/AddOns/Bagshui/Components/Ui.ItemButton.lua"
       ],
       "tracked_files_at_reference": 161,
-      "pending": "背包核心重构/取消目录尚未实施，资源基线及游戏验收待补充；B 键本次未复现、根因待确认，复发用 /bs keys 取证；最近报告未捕获背包首次构建，多轮性能与物品操作/层级/第三方/离线银行及早期修改待补充。",
+      "pending": "独立重构见 QianKunBag，本体不替换；B 键本次未复现、根因待确认，复发用 /bs keys 取证；原插件多轮性能及物品操作/层级/第三方/离线银行和早期修改待补充。",
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua",
         "Interface/AddOns/Bagshui/Components/StartupKeys.lua"

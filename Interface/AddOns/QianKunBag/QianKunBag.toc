@@ -1,0 +1,11 @@
+## Interface: 11200
+## Title: 乾坤背包 |cff88ccff(独立重构试用)|r
+## Notes: 当前角色背包；独立分类与增量刷新，不接管原乾坤袋。
+## Author: Local maintenance
+## Version: 0.1.0
+## SavedVariablesPerCharacter: QianKunBagDB
+Core.lua
+Categories.lua
+Model.lua
+View.lua
+Bindings.xml

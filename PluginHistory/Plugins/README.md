@@ -26,7 +26,7 @@
 | [AutoBar](AutoBar.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [AutoMarker](AutoMarker.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [Automatonex](Automatonex.md) | 有维护记录 | 完善模块配置、物品监控及与其他界面的协作。 |
-| [Bagshui](Bagshui.md) | 有维护记录 | 背包核心重构方案已记录、尚未实施；拟取消账户目录，分享暂缓，银行保持现用路径。v3.2 改善及 B 键未复现状态继续保留。 |
+| [Bagshui](Bagshui.md) | 有维护记录 | 重构改为独立 QianKunBag，本体及账户目录保持原样；原 v3.2 改善和 B 键未复现记录保留。 |
 | [BetterCharacterStats](BetterCharacterStats.md) | 有维护记录 | 保持角色属性面板布局稳定，并与观察、换天赋功能协调。 |
 | [BigWigs](BigWigs.md) | 有维护记录 | 适配乌龟服首领、中文日志以及竖行计时条。 |
 | [Blizzard_AuctionUI](Blizzard_AuctionUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
@@ -119,6 +119,14 @@
 | [pfUI-eliteoverlay](pfUI-eliteoverlay.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [xNet](xNet.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
+
+## 初始化之后新增的插件
+
+2026-10-11 新增 **1 个**独立插件，单独记在 maintenance-index.json 的 added_addons；上述历史 105 项及其状态统计不改写。
+
+| 插件 | 证据状态 | 当前交付与待确认 |
+| --- | --- | --- |
+| [QianKunBag](QianKunBag.md) | 有维护记录 | 独立背包 0.1.0：基础分类/归类、增量刷新；原乾坤袋不动。受控检查通过，游戏验收待补充。 |
 
 ## 今后如何维护
 
