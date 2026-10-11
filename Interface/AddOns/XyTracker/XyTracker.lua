@@ -160,6 +160,7 @@ LootSortOrder = 1  -- 1为升序，-1为降序（改为全局变量）
 XY_BUTTON_HEIGHT = 25;
 Xy_SortOptions = { ["method"] = "", ["itemway"] = "" };
 UnitPopupButtons["GET_XY"] = { text = "查询许愿", dist = 0 };
+UnitPopupButtons["XY_TRANSFER"] = { text = "移交许愿权", dist = 0 };
 -- 同步控制变量
 local lastAutoSyncTime = nil  -- 上次自动同步时间（团长用）
 local lastSyncRequestTime = nil  -- 上次请求同步时间（团员用）
@@ -382,6 +383,34 @@ function XyTracker_RegisterRightClickMenuButtons()
         if not contain("GET_XY", UnitPopupMenus["PARTY"]) then
             table.insert(UnitPopupMenus["PARTY"], "GET_XY")
         end
+        XYT_ApplyTransferButton(UnitPopupMenus["PARTY"])
+    end
+    -- 团队成员右键菜单同样挂"移交许愿权"（ additive，不影响 GET_XY 原有范围 ）
+    if UnitPopupMenus["RAID"] then
+        XYT_ApplyTransferButton(UnitPopupMenus["RAID"])
+    end
+    if UnitPopupMenus["RAID_PLAYER"] then
+        XYT_ApplyTransferButton(UnitPopupMenus["RAID_PLAYER"])
+    end
+    -- 右键自己（SELF 菜单）：许愿权持有者/团长可把许愿权指定给自己（拿回）
+    if UnitPopupMenus["SELF"] then
+        XYT_ApplyTransferButton(UnitPopupMenus["SELF"])
+    end
+end
+
+-- "移交许愿权"按钮可见性控制：仅许愿权持有者或真实团长(rank 2)可见
+-- （团长权限更高：别人开了许愿，团长也可以随时把许愿权指定给任何人）
+function XYT_ApplyTransferButton(menu)
+    if not menu then return end
+    local canTransfer = IsLeader or (XyTracker_GetRaidRank(UnitName("player")) == 2)
+    local idx = nil
+    for i, v in ipairs(menu) do
+        if v == "XY_TRANSFER" then idx = i end
+    end
+    if canTransfer then
+        if not idx then table.insert(menu, "XY_TRANSFER") end
+    elseif idx then
+        table.remove(menu, idx)
     end
 end
 
@@ -1854,6 +1883,10 @@ function ple_unitpopup1()
 
     if (button == "GET_XY") then
         XyQuery(name);
+    -- 移交许愿权（仅许愿权持有者或真实团长可见，见 XYT_ApplyTransferButton）
+    -- SELF 菜单下 name 可能未设置，兜底取自己名字（用于团长/持有者把许愿权指定给自己）
+    elseif (button == "XY_TRANSFER") then
+        XyTracker_ConfirmTransfer(name or UnitName("player"));
     -- 处理增加分数的子菜单
     elseif button == "ADD_DKP_1" then
         XyAddDkp(name, 1);
@@ -3336,6 +3369,59 @@ function XyTracker_ShouldAcceptLeader(sender)
     return false
 end
 
+-- 移交许愿权来源校验：只接受当前许愿权持有者或真实团长(rank 2)发起的 XY_TRANSFER
+-- 团长权限更高：即使别人持有许愿权，团长也可以随时指定给任何人
+function XyTracker_ShouldAcceptTransfer(sender)
+    if not sender or sender == "" then return false end
+    if sender == UnitName("player") then return false end
+    if XyTracker_GetRaidRank(sender) == 2 then return true end
+    if LeaderName and LeaderName ~= "" and sender == LeaderName then return true end
+    return false
+end
+
+-- 移交许愿权确认弹窗目标（file-local，OnAccept 闭包读取）
+local XyTransferTargetName = ""
+StaticPopupDialogs["XYTRACKER_CONFIRM_TRANSFER"] = {
+    text = "确定将许愿权移交给 %s 吗？",
+    button1 = "确定",
+    button2 = "取消",
+    OnAccept = function()
+        XyTracker_DoTransfer(XyTransferTargetName)
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+function XyTracker_ConfirmTransfer(name)
+    if not name or name == "" then return end
+    -- 权限校验：许愿权持有者或真实团长
+    if not IsLeader and XyTracker_GetRaidRank(UnitName("player")) ~= 2 then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffff0000[XyTracker] 只有许愿权持有者或团长可以移交许愿权|r")
+        return
+    end
+    XyTransferTargetName = name
+    StaticPopup_Show("XYTRACKER_CONFIRM_TRANSFER", name)
+end
+
+function XyTracker_DoTransfer(target)
+    if not target or target == "" then return end
+    SendAddonMessage("XY_TRANSFER", target, "RAID")
+    SendChatMessage("许愿权已移交给 " .. target, "RAID", nil, nil)
+    -- 本地立即生效：自己不再广播 addon 消息，需手动让位
+    if IsLeader then
+        IsLeader = false
+        DisableLeaderOperation()
+    end
+    LeaderName = target
+    -- 移交后进入队员模式：隐藏全部团长按钮（开始/停止/放弃等）
+    getglobal("XyTrackerFrameRelinquishButton"):Hide()
+    getglobal("XyTrackerFrameStartButton"):Hide()
+    getglobal("XyTrackerFrameStopButton"):Hide()
+    XyTracker_UpdateLeaderText()
+end
+
 function XyTracker_OnEvent(event)
 	-- 处理变量加载完成事件，确保在所有保存的变量加载后执行
 	if event == "VARIABLES_LOADED" then
@@ -3537,6 +3623,41 @@ CML_Vars.BidBodSupport = CML_Vars.BidBodSupport or false;
         getglobal("XyTrackerFrameRelinquishButton"):Hide()
         getglobal("XyTrackerFrameStartButton"):Show()
         getglobal("XyTrackerFrameStopButton"):Hide()
+    end
+
+    -- 处理移交许愿权消息：发起者须为当前许愿权持有者或真实团长(rank 2)
+    if event == "CHAT_MSG_ADDON" and arg1 == "XY_TRANSFER" then
+        if XyTracker_ShouldAcceptTransfer(arg4) then
+            local target = arg2
+            if target and target ~= "" then
+                if target == UnitName("player") then
+                    -- 我成为新的许愿权持有者
+                    IsLeader = true
+                    LeaderName = UnitName("player")
+                    EnableLeaderOperation()
+                    -- EnableLeaderOperation 会重置 XyInProgress，移交发生在许愿进行中，恢复录入
+                    XyInProgress = true
+                    XyTracker_RegisterRightClickMenuButtons()
+                    XyTracker_ShowXyWindow()
+                    getglobal("XyTrackerFrameRelinquishButton"):Show()
+                    getglobal("XyTrackerFrameStartButton"):Hide()
+                    getglobal("XyTrackerFrameStopButton"):Show()
+                    DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[XyTracker] 你获得了许愿权|r")
+                else
+                    -- 非目标：让位并认领新持有者，保持队员模式（隐藏全部团长按钮）
+                    if IsLeader then
+                        IsLeader = false
+                        DisableLeaderOperation()
+                    end
+                    LeaderName = target
+                    getglobal("XyTrackerFrameRelinquishButton"):Hide()
+                    getglobal("XyTrackerFrameStartButton"):Hide()
+                    getglobal("XyTrackerFrameStopButton"):Hide()
+                    DEFAULT_CHAT_FRAME:AddMessage("[XyTracker] 许愿权已移交给 " .. target)
+                end
+                XyTracker_UpdateLeaderText()
+            end
+        end
     end
     
     -- 处理队员发送的拾取信息（仅团长接收）
