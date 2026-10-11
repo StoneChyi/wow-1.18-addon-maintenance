@@ -36,33 +36,26 @@ local unitScoreCache = {}
 local translatedNameCache = {}
 local S_ITEMTIP_UPDATE_THROTTLE = 0.08
 
+local panelDataGeneration
+local function SyncPanelData()
+    local generation = ItemSocre:GetDataGeneration()
+    if generation ~= panelDataGeneration then
+        panelDataGeneration = generation
+        itemInfoCache, translatedNameCache = {}, {}
+    end
+end
+
 local function GetItemInfoCached(itemID)
     if not itemID then return nil end
+    SyncPanelData()
     if itemInfoCache[itemID] then
         return unpack(itemInfoCache[itemID])
     end
     local result = {GetItemInfo(itemID)}
-    if result[1] then
+    if result[1] and result[2] and result[3] ~= nil then
         itemInfoCache[itemID] = result
     end
     return unpack(result)
-end
-
--- 英文名到物品ID的反向映射表（延迟初始化）
-local engNameToItemID = nil
-local function GetEngNameToItemIDMapping()
-    if engNameToItemID then
-        return engNameToItemID
-    end
-    if not lib or not lib.Item_enUS then
-        engNameToItemID = {}
-        return engNameToItemID
-    end
-    engNameToItemID = {}
-    for itemID, engName in pairs(lib.Item_enUS) do
-        engNameToItemID[engName] = itemID
-    end
-    return engNameToItemID
 end
 
 local function GetDatabaseLocalizedItemName(itemID)
@@ -116,8 +109,7 @@ local function GetLocalizedItemName(itemID, itemName)
     end
 
     if itemName and ItemSocre and ItemSocre.IsEnglinshName and ItemSocre:IsEnglinshName(itemName) then
-        local mapping = GetEngNameToItemIDMapping()
-        local realID = mapping[itemName]
+        local realID = ItemSocre:ResolveItemID(itemName)
         if realID then
             local dbName = GetDatabaseLocalizedItemName(realID)
             if dbName and dbName ~= "" then
@@ -447,13 +439,13 @@ local function GetEnchantText(itemLink)
 end
 
 --更新装备信息（全局函数，供 InspectGemAndEnchant.lua 使用）
-function S_ItemTip_UpdateFrame(unit)
+function S_ItemTip_UpdateFrame(unit, force)
     local frame = S_ItemTip_InspectFrame
     if not frame then return false end
     if not UnitExists(unit) then return false end
 
     local now = GetTime()
-    if frame.lastUpdateUnit == unit and frame.lastUpdateTime and (now - frame.lastUpdateTime) < S_ITEMTIP_UPDATE_THROTTLE then
+    if not force and frame.lastUpdateUnit == unit and frame.lastUpdateTime and (now - frame.lastUpdateTime) < S_ITEMTIP_UPDATE_THROTTLE then
         return false
     end
     frame.lastUpdateUnit = unit
@@ -542,11 +534,7 @@ function S_ItemTip_UpdateFrame(unit)
                 end
                 -- 如果还是没有，尝试通过英文名称匹配（处理英文物品名）
                 if itemLevel == 0 and rawItemName and lib and lib.Item_enUS and LibItem_Level then
-                    local mapping = GetEngNameToItemIDMapping()
-                    local realID = mapping[rawItemName]
-                    if realID then
-                        itemLevel = LibItem_Level[realID] or 0
-                    end
+                    itemLevel = ItemSocre:GetItemLevel(itemID, rawItemName, itemQuality)
                 end
                 
                 -- 显示装备等级
@@ -632,11 +620,17 @@ function S_ItemTip_UpdateFrame(unit)
     if frame:GetWidth() ~= desiredWidth then frame:SetWidth(desiredWidth) end
     
     --使用 ItemSocre 的计算方法获取总装等
-    local avgLevel = 0
+    local avgLevel, scoreComplete = 0, true
     if ItemSocre and ItemSocre.ScanUnit then
-        avgLevel = ItemSocre:ScanUnit(unit) or 0
+        avgLevel, scoreComplete = ItemSocre:ScanUnit(unit)
+        avgLevel = avgLevel or 0
     end
     SetPanelText(frame.ilevelText, string.format("装等 %.1f", avgLevel))
+    if not scoreComplete then
+        ItemSocre:ScheduleScoreRefresh(unit, "panel", function()
+            S_ItemTip_UpdateFrame(unit, true)
+        end, function() return frame:IsShown() and frame.currentUnit == unit end)
+    end
     -- Throttle from completion, even if the first update itself took >80ms.
     frame.lastUpdateTime = GetTime()
     if SCRequestPanelLayout then SCRequestPanelLayout() end
@@ -916,16 +910,21 @@ eventFrame:RegisterEvent("INSPECT_READY")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:SetScript("OnEvent", function()
     if event == "UNIT_INVENTORY_CHANGED" then
-        -- 1.12 版本中 arg1 就是单位名称
-        if arg1 == "player" and S_ItemTip_InspectFrame and CharacterFrame:IsShown() and S_ItemTip_InspectFrame:IsShown() then
-            S_ItemTip_UpdateFrame("player")
+        ItemSocre:InvalidateScores()
+        if S_ItemTip_InspectFrame and S_ItemTip_InspectFrame:IsShown() then
+            S_ItemTip_UpdateFrame(S_ItemTip_InspectFrame.currentUnit or "player", true)
         end
     elseif event == "PLAYER_ENTERING_WORLD" then
+        ItemSocre:InvalidateCaches()
         -- 刷新玩家头像（确保头像正确显示）
         if S_ItemTip_InspectFrame and S_ItemTip_InspectFrame.portrait then
             SetPortraitTexture(S_ItemTip_InspectFrame.portrait, "player")
         end
     elseif event == "INSPECT_READY" then
+        if InspectFrame and InspectFrame.unit then
+            ItemSocre:MarkInspectReady(InspectFrame.unit)
+            ItemSocre:RefreshInspectScore(InspectFrame.unit)
+        end
         -- 当查看其他玩家的装备数据准备好时
         if InspectFrame and InspectFrame:IsShown() and InspectFrame.unit then
             if not S_ItemTip_InspectFrame then
@@ -935,7 +934,7 @@ eventFrame:SetScript("OnEvent", function()
             if frame then
                 local settings = S_ItemTip_Settings or { showInspect = true }
                 if settings.showInspect then
-                    S_ItemTip_UpdateFrame(InspectFrame.unit)
+                    S_ItemTip_UpdateFrame(InspectFrame.unit, true)
                 end
                 S_ItemTip_RelayoutStatCompare()
             end
@@ -949,6 +948,13 @@ DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00S_ItemTip装备查看已加载|r - 按C
 SLASH_SITEMINSPECT1 = "/si"
 SLASH_SITEMINSPECT2 = "/siteminspect"
 SlashCmdList["SITEMINSPECT"] = function(msg)
+    if msg == "cacheclear" then
+        ItemSocre:InvalidateCaches()
+        if S_ItemTip_InspectFrame and S_ItemTip_InspectFrame:IsShown() then
+            S_ItemTip_UpdateFrame(S_ItemTip_InspectFrame.currentUnit or "player", true)
+        end
+        return
+    end
     msg = string.lower(msg or "")
     if msg == "hide" or msg == "toggle" then
         S_ItemTip_ToggleInspect()
@@ -1021,8 +1027,7 @@ function ItemSocre:TranslatedItem(itemName, specificID)
         return itemName
     end
 
-    local mapping = GetEngNameToItemIDMapping()
-    local realID = mapping[itemName]
+    local realID = self:ResolveItemID(itemName)
     if realID then
         local name = GetItemInfoCached(realID)
         if name and name ~= "" and not self:IsEnglinshName(name) then

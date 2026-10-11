@@ -2011,6 +2011,18 @@
       ],
       "deployed": true,
       "game_verified": false
+    },
+    {
+      "date": "2026-10-12",
+      "report": "PluginHistory/Research/S_ItemTip-合并实施-20261012.md",
+      "manifest": "PluginHistory/Research/S_ItemTip-合并实施-20261012.json",
+      "before_commit": "732e20162f431a220f252cc02c87e93c83c976ff",
+      "before_tag": "before/s-itemtip-merge-20261012",
+      "addons": [
+        "S_ItemTip"
+      ],
+      "deployed": true,
+      "game_verified": false
     }
   ]
 }

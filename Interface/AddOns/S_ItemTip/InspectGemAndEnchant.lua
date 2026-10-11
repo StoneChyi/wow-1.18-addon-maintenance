@@ -384,10 +384,10 @@ end)
 
 --Hook 到装备更新函数（立即执行，不延迟）
 local originalUpdateFrame = S_ItemTip_UpdateFrame
-function S_ItemTip_UpdateFrame(unit)
+function S_ItemTip_UpdateFrame(unit, force)
     if originalUpdateFrame then
         -- Respect the base update's throttle before redrawing enchant icons.
-        if originalUpdateFrame(unit) == false then return false end
+        if originalUpdateFrame(unit, force) == false then return false end
     end
     
     local frame = S_ItemTip_InspectFrame
