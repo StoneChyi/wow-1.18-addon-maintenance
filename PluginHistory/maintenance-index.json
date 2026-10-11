@@ -5,8 +5,8 @@
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "documented_history": 46,
-    "unconfirmed": 56,
+    "documented_history": 51,
+    "unconfirmed": 51,
     "snapshot_difference": 1,
     "related_skin_only": 2
   },
@@ -44,14 +44,22 @@
       "note": "PluginHistory/Plugins/!Libs.md",
       "purpose": "补记共享词库差异，并修复 HealComm 群体治疗预估清理。",
       "sources": [
-        "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua.20260918125911.bak"
+        "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua.20260918125911.bak",
+        "PluginHistory/Research/插件更新实施-20261012.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua",
         "Interface/AddOns/!Libs/HealComm-1.0/HealComm-1.0.lua"
       ],
       "tracked_files_at_reference": 93,
-      "pending": "真实团队通讯与其他插件验收待补充；原词库差异归属仍待确认。"
+      "pending": "真实团队通讯与其他插件验收待补充；原词库差异归属仍待确认。",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 41,
+        "game_verified": false
+      }
     },
     {
       "addon": "Accountant",
@@ -283,7 +291,8 @@
         "Interface/AddOns/BigWigs/.workbuddy/memory/2026-10-02.md",
         "Interface/AddOns/BigWigs/.workbuddy/memory/2026-10-03.md",
         "Interface/AddOns/BigWigs/.workbuddy/memory/MEMORY.md",
-        "Interface/AddOns/BigWigs/Raids/BWL/Ezzel.lua.20260918125911.bak"
+        "Interface/AddOns/BigWigs/Raids/BWL/Ezzel.lua.20260918125911.bak",
+        "PluginHistory/Research/插件更新实施-20261012.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/BigWigs/Plugins/Comm.lua",
@@ -324,7 +333,14 @@
         "Interface/AddOns/BigWigs/Raids/TMH/Ursol.lua"
       ],
       "tracked_files_at_reference": 339,
-      "pending": "首领模块数量较多，各场战斗的最终实测情况请按需补充。"
+      "pending": "首领模块数量较多，各场战斗的最终实测情况请按需补充。",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 24,
+        "game_verified": false
+      }
     },
     {
       "addon": "Blizzard_AuctionUI",
@@ -901,23 +917,41 @@
     },
     {
       "addon": "Flyout",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/Flyout.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
+      "purpose": "更新左键顺延选用可用条目及 1.12 UseAction 挂接回退。",
+      "sources": [
+        "PluginHistory/Research/插件更新实施-20261012.md"
+      ],
       "maintenance_files": [],
       "tracked_files_at_reference": 5,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 3,
+        "game_verified": false
+      }
     },
     {
       "addon": "GoubayuHeal",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/GoubayuHeal.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
+      "purpose": "更新瞬发人数限制、动作占用、迅捷治愈换目标及牧师驱病顺序。",
+      "sources": [
+        "PluginHistory/Research/插件更新实施-20261012.md"
+      ],
       "maintenance_files": [],
       "tracked_files_at_reference": 12,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 3,
+        "game_verified": false
+      }
     },
     {
       "addon": "HideOutdoorWorldState",
@@ -1000,13 +1034,22 @@
     },
     {
       "addon": "MySlash",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/MySlash.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
+      "purpose": "按新包删除 TT助手 /at 入口。",
+      "sources": [
+        "PluginHistory/Research/插件更新实施-20261012.md"
+      ],
       "maintenance_files": [],
       "tracked_files_at_reference": 5,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "NotGrid",
@@ -1028,14 +1071,22 @@
       "sources": [
         "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-18.md",
         "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-23.md",
-        "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-25.md"
+        "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-25.md",
+        "PluginHistory/Research/插件更新实施-20261012.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/OneBag/OneBag.lua",
         "Interface/AddOns/OneBag/SortBags.lua"
       ],
       "tracked_files_at_reference": 30,
-      "pending": ""
+      "pending": "",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 2,
+        "game_verified": false
+      }
     },
     {
       "addon": "Outfitter",
@@ -1162,7 +1213,8 @@
         "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-09-29.md",
         "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-09-30.md",
         "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-10-02.md",
-        "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-10-05.md"
+        "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-10-05.md",
+        "PluginHistory/Research/插件更新实施-20261012.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/RaidCheck/Icons/classicons.blp",
@@ -1171,7 +1223,14 @@
         "Interface/AddOns/RaidCheck/RaidCheckBuffAssign.lua"
       ],
       "tracked_files_at_reference": 11,
-      "pending": "分配数据在各阶段有会话保存的限制，当前所需持久化范围及团队实测结果请补充。"
+      "pending": "分配数据在各阶段有会话保存的限制，当前所需持久化范围及团队实测结果请补充。",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 4,
+        "game_verified": false
+      }
     },
     {
       "addon": "Rinse",
@@ -1214,13 +1273,21 @@
         "Interface/AddOns/S_ChatBar/.workbuddy/memory/2026-08-25.md",
         "Interface/AddOns/S_ChatBar/.workbuddy/memory/2026-09-02.md",
         "Interface/AddOns/RaidCheck/.workbuddy/memory/2026-09-27.md",
-        "PluginHistory/Evidence/reports/SimpleRaidTargetIcons-20261007.md"
+        "PluginHistory/Evidence/reports/SimpleRaidTargetIcons-20261007.md",
+        "PluginHistory/Research/插件更新实施-20261012.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/S_ChatBar/ChatBar.lua"
       ],
       "tracked_files_at_reference": 8,
-      "pending": ""
+      "pending": "",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "S_ItemTip",
@@ -1259,7 +1326,8 @@
       "purpose": "增加标准坦克模式统计视图并给 pfUI 提供多目标仇恨。",
       "sources": [
         "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-03.md",
-        "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-04.md"
+        "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-04.md",
+        "PluginHistory/Research/插件更新实施-20261012.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/ShaguDPS/core.lua",
@@ -1269,7 +1337,14 @@
         "Interface/AddOns/ShaguDPS/window.lua"
       ],
       "tracked_files_at_reference": 16,
-      "pending": "服务器响应、多人战斗及无 SuperWoW 时的兼容结果待补充。"
+      "pending": "服务器响应、多人战斗及无 SuperWoW 时的兼容结果待补充。",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 5,
+        "game_verified": false
+      }
     },
     {
       "addon": "ShaguScan",
@@ -1467,13 +1542,22 @@
     },
     {
       "addon": "TurtleMail",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/TurtleMail.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
+      "purpose": "迁入新包筛选、批量邮件、侧栏和皮肤；另修复正文金额缺省单位换算，增加金铜组合并按文本位置选择第一笔完整金额。",
+      "sources": [
+        "PluginHistory/Research/插件更新实施-20261012.md"
+      ],
       "maintenance_files": [],
       "tracked_files_at_reference": 10,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 8,
+        "game_verified": false
+      }
     },
     {
       "addon": "Turtle_General",
@@ -1557,13 +1641,22 @@
     },
     {
       "addon": "XyTracker",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/XyTracker.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
+      "purpose": "更新许愿权移交菜单、确认、权限判断及团队同步。",
+      "sources": [
+        "PluginHistory/Research/插件更新实施-20261012.md"
+      ],
       "maintenance_files": [],
       "tracked_files_at_reference": 38,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "last_package_update": {
+        "date": "2026-10-12",
+        "report": "PluginHistory/Research/插件更新实施-20261012.md",
+        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "files_changed": 2,
+        "game_verified": false
+      }
     },
     {
       "addon": "YGB_OTAlarm",
@@ -1891,6 +1984,33 @@
         "ShaguDPS"
       ],
       "note": "仅补充对照证据；不认证官方来源，不改变插件既有维护状态或初始化历史。"
+    }
+  ],
+  "package_deployments": [
+    {
+      "date": "2026-10-12",
+      "report": "PluginHistory/Research/插件更新实施-20261012.md",
+      "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+      "before_commit": "57ef100b15bdf5f39658e65007335e315fc1e3b5",
+      "before_tag": "before/package-update-20261012",
+      "addons": [
+        "BigWigs",
+        "RaidCheck",
+        "ShaguDPS",
+        "OneBag",
+        "Flyout",
+        "GoubayuHeal",
+        "TurtleMail",
+        "XyTracker",
+        "MySlash",
+        "!Libs",
+        "S_ChatBar"
+      ],
+      "deferred": [
+        "S_ItemTip"
+      ],
+      "deployed": true,
+      "game_verified": false
     }
   ]
 }
