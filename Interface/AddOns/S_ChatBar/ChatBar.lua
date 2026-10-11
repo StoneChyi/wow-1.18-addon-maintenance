@@ -431,7 +431,7 @@ local function CreateChatButton(name, text, tooltip, color, onClick)
         elseif name == "RaidCheck" then
             GameTooltip:AddLine("点击|cFF00CCFF 左键 |r打开BUFF检查界面", 1, 1, 0)
             GameTooltip:AddLine("点击|cFF00CCFF 右键 |r打开团队BUFF分配界面", 1, 1, 0)
-            GameTooltip:AddLine("点击|cFF00CCFF 中键 |r补BUFF检查（/rcbc）", 1, 1, 0)
+            GameTooltip:AddLine("点击|cFF00CCFF 中键 |r集合刷BUFF（全团语音广播）+补BUFF检查", 1, 1, 0)
         end
         GameTooltip:Show()
     end)
@@ -832,7 +832,14 @@ end
 function RaidCheck_OnClick()
     local button = arg1
     if button == "MiddleButton" then
-        -- 中键：补BUFF检查（等价 /rcbc，密语通知各加BUFF人员）
+        -- 中键：集合刷BUFF（BigWigs sync 全团广播：全员立刻播放 goforbuff 语音）+ 补BUFF检查
+        if BigWigsPulltimer and BigWigsPulltimer.BigWigs_BuffCommand and GetNumRaidMembers() > 0 and (IsRaidLeader() or IsRaidOfficer()) then
+            BigWigsPulltimer:BigWigs_BuffCommand()
+            SendChatMessage("全团集合刷BUFF！", "RAID_WARNING")
+        else
+            -- 兜底：BigWigs 未加载或无团队权限，仅本地播放语音
+            PlaySoundFile("Interface\\AddOns\\BigWigs\\Sounds\\goforbuff.wav")
+        end
         if RCBA_BuffCheckAndReport then
             RCBA_BuffCheckAndReport()
         else
