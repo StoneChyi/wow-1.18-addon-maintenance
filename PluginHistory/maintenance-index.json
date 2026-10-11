@@ -1870,5 +1870,25 @@
       "tracked_files_at_reference": 2,
       "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
     }
+  ],
+  "package_comparisons": [
+    {
+      "reviewed_on": "2026-10-11",
+      "old_package_label": "用户提供的2026-10-05插件包，部分个人插件来源",
+      "new_package_label": "用户提供的2026-10-10插件包",
+      "report": "PluginHistory/Research/三方插件更新核对-20261005-20261010-20261011.md",
+      "manifest": "PluginHistory/Research/三方插件更新核对-20261005-20261010-20261011.json",
+      "deployed": false,
+      "maintained_addons_with_package_function_updates": [
+        "!Libs",
+        "BigWigs",
+        "OneBag",
+        "RaidCheck",
+        "S_ChatBar",
+        "S_ItemTip",
+        "ShaguDPS"
+      ],
+      "note": "仅补充对照证据；不认证官方来源，不改变插件既有维护状态或初始化历史。"
+    }
   ]
 }
