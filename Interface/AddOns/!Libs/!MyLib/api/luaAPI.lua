@@ -450,7 +450,7 @@ function print(...)
 	pcall(print_inner, unpack(arg))
 end
 
-SLASH_PRINT1 = "/mylibprint"
+SLASH_PRINT1 = "/print"
 SlashCmdList["PRINT"] = print
 
 --新增

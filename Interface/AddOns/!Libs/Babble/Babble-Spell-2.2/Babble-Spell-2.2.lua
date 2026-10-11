@@ -7044,7 +7044,7 @@ BabbleSpell:RegisterTranslations("zhCN", function()
         ["Blessing of Kings"] = "王者祝福",
         ["Blessing of Light"] = "光明祝福",
         ["Blessing of Might"] = "力量祝福",
-        ["Blessing of Protection"] = "保护祝福",
+        ["Blessing of Protection"] = "保护之手",
         ["Blessing of Sacrifice"] = "牺牲之手",
         ["Blessing of Salvation"] = "拯救祝福",
         ["Blessing of Sanctuary"] = "庇护祝福",
