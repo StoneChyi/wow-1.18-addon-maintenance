@@ -6885,7 +6885,7 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
         end
 
         if not GoubayuHeal.CastingSpeed:ShouldHealTarget(targetGUID, playerGUID,
-            GetTime() + predictedCastSec) then
+            GetTime() + predictedCastSec, (casttime or 0) == 0) then
             SetCVar("autoSelfCast", selfcasting)
             cancelHealingEntry()
             return
@@ -7119,7 +7119,14 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
             if (string.find(GoubayuHeal.error_message, msg)) then
                 SetCVar("autoSelfCast", selfcasting)
                 GoubayuHeal.only_instant_spells = nil
-                return 1
+                -- "动作进行中"(SPELL_FAILED_SPELL_IN_PROGRESS)：仅当治疗技能确实在 GCD 上
+                -- （多半是自己刚放的技能占着）才当终态收尾；否则是别的动作（图腾等）占着，
+                -- 应顺延/重试，不能 return（否则本次按键彻底不出手，表现为卡死）
+                -- by 武藤纯子酱 2026.10.10
+                if not (msg == SPELL_FAILED_SPELL_IN_PROGRESS
+                    and not GoubayuHeal.IsSpellOnCooldown(spell)) then
+                    return 1
+                end
             end
         end
 
@@ -7362,6 +7369,26 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
                         skipSpell = true
                     end
                 end
+            end
+
+            -- 迅捷治愈（档位主技能）：目标没有回春/愈合时，先找其他"有HOT且受伤"的队友；
+            -- 找不到则本档直接跳过（skipSpell），落到下一档其他治疗技能
+            -- by 武藤纯子酱 2026.9.30
+            if curspell == GoubayuHeal.Swiftmend
+                and not (GoubayuHeal.UnitHasHOT(unit, GoubayuHeal.Rejuvenation)
+                    or GoubayuHeal.UnitHasHOT(unit, GoubayuHeal.Regrowth)) then
+                local altU = swiftmendAltUnit and swiftmendAltUnit(unit)
+                if altU then
+                    local altRank = rank
+                    if altRank == 0 then altRank = 1 end
+                    if GoubayuHeal.Heal(altU, curspell, altRank,
+                        GoubayuHeal.GetHealValue and GoubayuHeal.GetHealValue(altU) or 0,
+                        (noscale or forceMaxForCast), forceMaxForCast) then
+                        GoubayuHeal.only_instant_spells = nil
+                        return 1
+                    end
+                end
+                skipSpell = true
             end
 
             if not skipSpell then
@@ -7667,20 +7694,7 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
                                         end
                                     end
 
-                                    -- 迅捷治愈：本目标无HOT时优先找其他有HOT的受伤目标施放
-                                    -- （找不到则继续下方普通Heal→下一档其他治疗技能）
-                                    -- by 武藤纯子酱 2026.9.6
-                                    if finalSpell == GoubayuHeal.Swiftmend
-                                        and not (GoubayuHeal.UnitHasHOT(unit, GoubayuHeal.Rejuvenation)
-                                            or GoubayuHeal.UnitHasHOT(unit, GoubayuHeal.Regrowth)) then
-                                        local altU = swiftmendAltUnit(unit)
-                                        if altU and GoubayuHeal.Heal(altU, finalSpell, finalRank,
-                                            targetHealValue, (noscale or forceMaxForCast),
-                                            forceMaxForCast) then
-                                            GoubayuHeal.only_instant_spells = nil
-                                            return 1
-                                        end
-                                    end
+                                    -- 迅捷治愈：已在 curspell 命中时统一处理（见上方），此处不再重复
 
                                     -- 方案档神圣打击：需满足本档群疗条件且可近战攻击目标，才施放；
                                     -- 不满足则落到下一档（其他治疗技能）

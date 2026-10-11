@@ -977,7 +977,9 @@ if zhCN then
         },
         ["PRIEST"] = {
             Magic = { "驱散魔法" },
-            Disease = { "祛病术", "驱除疾病" },
+            -- 优先"驱除疾病"(Abolish Disease，持续解疾病)，与 enUS 列表一致；
+            -- 顺序反了会取到"祛病术"(Cure Disease，低级瞬解) by 武藤纯子酱 2026.10.9
+            Disease = { "驱除疾病", "祛病术" },
         },
         ["SHAMAN"] = {
             Poison = { "消毒术" },

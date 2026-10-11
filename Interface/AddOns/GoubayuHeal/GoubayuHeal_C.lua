@@ -488,7 +488,10 @@ end
 
 -- 判断是否应该治疗目标（竞争逻辑）
 -- predictedEndTime：本次施法的预测完成时间（GetTime() + casttime 秒）
-function CastingSpeed:ShouldHealTarget(targetGUID, casterGUID, predictedEndTime)
+-- isInstant：本次施法是否为瞬发（casttime==0）。瞬发立即落地，不受"竞争人数限制"约束
+-- （人数限制针对的是并发读条，瞬发不该被其它人的在途读条拦下）；"更快者限制"对瞬发本就恒放行
+-- by 武藤纯子酱 2026.10.9
+function CastingSpeed:ShouldHealTarget(targetGUID, casterGUID, predictedEndTime, isInstant)
     -- 比较前先同步自己在读条记录的最新完成时间（含推条/实时施法时间变化）
     CastingSpeed:SyncSelfCastInfo()
 
@@ -505,7 +508,7 @@ function CastingSpeed:ShouldHealTarget(targetGUID, casterGUID, predictedEndTime)
     -- 例：人数限制=3，目标有2个在读慢速治疗（强效/祷言）→ 人数通过；若我能读快速/圣光闪现
     --     且预测先落地 → 通过 → 正常施放；若有人读条会先于我落地 → 放弃
     local healerCount = CastingSpeed:GetHealerCount(targetGUID)
-    if type(healerCount) == "number" and type(config.healer_count_limit) == "number"
+    if (not isInstant) and type(healerCount) == "number" and type(config.healer_count_limit) == "number"
         and healerCount >= config.healer_count_limit then
         return false
     end
