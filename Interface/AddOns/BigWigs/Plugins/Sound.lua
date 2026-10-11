@@ -63,6 +63,7 @@ local sounds = {
 	Shakira = "Interface\\AddOns\\BigWigs\\Sounds\\Shakira.mp3",
 	Hide = "Interface\\AddOns\\BigWigs\\Sounds\\hide.mp3",
 	yuanlidatuan = "Interface\\AddOns\\BigWigs\\Sounds\\yuanlidatuan.mp3",
+	goforbuff = "Interface\\AddOns\\BigWigs\\Sounds\\goforbuff.wav",
 }
 
 

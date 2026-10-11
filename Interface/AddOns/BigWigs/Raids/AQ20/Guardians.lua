@@ -144,7 +144,7 @@ L:RegisterTranslations("zhCN", function() return {
 	trigger_shadowFrostReflect5 = "阿努比萨斯守卫者受到了侦测魔法效果的影响。",--CHAT_MSG_SPELL_PERIODIC_CREATURE_DAMAGE
     bar_shadowFrostReflect = "暗影 & 冰霜反射",
 	
-	trigger_selfReflect = "你的(.*)被阿努比萨斯守卫者反弹回来。",--CHAT_MSG_SPELL_SELF_DAMAGE
+	trigger_selfReflect = "^你的(.*)被阿努比萨斯守卫者反弹回来。",--CHAT_MSG_SPELL_SELF_DAMAGE
     msg_selfReflect = "法术反射 - 停止自残！",
 	
 	trigger_plagueYou = "你受到了瘟疫效果的影响。", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE

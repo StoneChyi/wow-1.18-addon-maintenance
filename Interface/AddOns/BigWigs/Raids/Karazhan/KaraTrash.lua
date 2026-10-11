@@ -218,12 +218,12 @@ L:RegisterTranslations("zhCN", function()
 		msg_unstable_mana = "不要驱散%s - 不稳定法力！",
 		bar_unstable_mana = "不稳定法力消失",
 	
-		trigger_overflowing_arcana = "你受到了溢出的奥术能量效果的影响（(%d+)）",
+		trigger_overflowing_arcana = "^你受到了溢出的奥术能量效果的影响（(%d+)）",
 		trigger_overflowing_arcanaFade = "溢出的奥术能量效果从你身上消失了",
 		warn_overflowing_arcana = "远离异常的法力！",
 		bar_overflowing_arcana = "溢出的奥术能量(%d)层",
 
-		trigger_astrologist_insight = "你受到了星界洞察效果的影响",
+		trigger_astrologist_insight = "^你受到了星界洞察效果的影响",
 		msg_astrologist_insight = "停止施法-星界洞察！",
 		warn_astrologist_insight = "停止施法！",
 

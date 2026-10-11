@@ -26,6 +26,7 @@ local timer = {
 local syncName = {
 	pulltimer = "PulltimerSync",
 	stoppulltimer = "PulltimerStopSync",
+	bufftimer = "BufftimerSync",
 }
 local icon = {
 	pulltimer = "RACIAL_ORC_BERSERKERSTRENGTH",
@@ -56,6 +57,9 @@ L:RegisterTranslations("enUS", function() return {
 	["Enable"] = true,
 	["Enable pulltimer."] = true,
 
+	["bufftimer"] = true,
+	buffstart_message = "Gather for buffs! (Sent by %s)",
+
 	-- Sunelegy，Wind汉化修复Turtle-WOW中文数据
 	-- Last update: 2024-06-22
 	["Pull Timer"] = "开怪计时",
@@ -77,6 +81,8 @@ L:RegisterTranslations("enUS", function() return {
 	
 	["Enable"] = "启用",
 	["Enable pulltimer."] = "启用开怪计时",
+
+	buffstart_message = "集合刷BUFF！(由 %s 发送)",
 } end )
 
 L:RegisterTranslations("esES", function() return {
@@ -123,6 +129,8 @@ L:RegisterTranslations("zhCN", function() return {
 	
 	["Enable"] = "启用",
 	["Enable pulltimer."] = "启用开怪计时",
+
+	buffstart_message = "集合刷BUFF！(由 %s 发送)",
 } end )
 
 -----------------------------------------------------------------------
@@ -164,6 +172,11 @@ local function BWPT(seconds)
 	BigWigsPulltimer:BigWigs_PullCommand(seconds)
 end
 
+-- 集合刷BUFF（全团广播，全员立刻播放 goforbuff 语音）
+local function BWBuff()
+	BigWigsPulltimer:BigWigs_BuffCommand()
+end
+
 function BigWigsPulltimer:OnRegister()
 --[[self:RegisterChatCommand({ L["slashpull_cmd"] }, {
 type = "group",
@@ -185,11 +198,16 @@ function BigWigsPulltimer:OnEnable()
 	self:RegisterEvent("BigWigs_PullCommand")
 	self:RegisterEvent("BigWigs_RecvSync")
 	self:ThrottleSync(0.5, syncName.pulltimer)
+	self:ThrottleSync(0.5, syncName.bufftimer)
 
 
 	if SlashCmdList then
 		SlashCmdList["BWPT_SHORTHAND"] = BWPT
 		setglobal("SLASH_BWPT_SHORTHAND1", "/"..L["pull"])
+
+		SlashCmdList["BWBUFF_SHORTHAND"] = BWBuff
+		setglobal("SLASH_BWBUFF_SHORTHAND1", "/bwbuff")
+		setglobal("SLASH_BWBUFF_SHORTHAND2", "/刷buff")
 	end
 end
 
@@ -213,6 +231,9 @@ function BigWigsPulltimer:BigWigs_RecvSync(sync, rest, nick)
 
 		self:Message(string.format(L["pullstop_message"], nick), "Attention", false)
 		PlaySound("igQuestFailed")
+	end
+	if sync == syncName.bufftimer then
+		self:BigWigs_Bufftimer(rest, nick)
 	end
 end
 
@@ -297,4 +318,21 @@ function BigWigsPulltimer:BigWigs_Pulltimer(duration, requester)
 		self:DelayedSound(timer.pulltimer - 5, "Five")
 		self:DelayedMessage(timer.pulltimer - 5, L["pull5_message"], "Attention", false, false, true)
 	end
+end
+
+-----------------------------------------------------------------------
+--      集合刷BUFF（Buff reminder）
+-----------------------------------------------------------------------
+
+function BigWigsPulltimer:BigWigs_BuffCommand()
+	if (IsRaidLeader() or IsRaidOfficer()) then
+		self:Sync(syncName.bufftimer)
+	else
+		self:Print(L["You have to be the raid leader or an assistant"])
+	end
+end
+
+function BigWigsPulltimer:BigWigs_Bufftimer(duration, requester)
+	-- 收到广播立刻提示 + 全员播放 goforbuff 语音（无倒数、无进度条）
+	self:Message(string.format(L["buffstart_message"], requester), "Important", false, "goforbuff")
 end

@@ -158,6 +158,101 @@ L:RegisterTranslations("zhCN", function()
 end)
 
 
+------------------------------
+--      Utility             --
+------------------------------
+
+local function trim(s)
+	return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
+end
+
+-- 自标在 emote 里显示为“你”，需转成本地玩家名才能正确提醒/喊话/打标记
+local function resolveName(s)
+	s = trim(s)
+	if s == "你" then return UnitName("player") end
+	return s
+end
+
+-- emote 中目标名若是未被替换的字面 token（%s / %t，已各踩过一次），
+-- 解析为腐嚎的当前目标。boss1~4 单位框 1.12 客户端不可靠，多级回退
+-- （参考 Onyxia.lua 的 CheckTarget / Trioch.lua 的 bossTargetName）。
+local function bossTargetName()
+	local enemy = module.translatedName
+	-- 1) boss 单位框（Turtle 1.17+ 若 boss 占用框）
+	for i = 1, 4 do
+		if UnitName("boss" .. i) == enemy then
+			local t = UnitName("boss" .. i .. "target")
+			if t then return t end
+		end
+	end
+	-- 2) 玩家正瞄着腐嚎，取其 target 即为腐嚎当前目标
+	if UnitName("target") == enemy then
+		local t = UnitName("targettarget")
+		if t then return t end
+	end
+	-- 3) 扫描全团：谁在瞄腐嚎，取其 target；兼容 raid / Raid 写法
+	local n = (GetNumRaidMembers and GetNumRaidMembers()) or 0
+	if n > 0 then
+		for i = 1, n do
+			if UnitName("raid" .. i .. "target") == enemy then
+				local t = UnitName("raid" .. i .. "targettarget")
+				if t then return t end
+			end
+			if UnitName("Raid" .. i .. "target") == enemy then
+				local t = UnitName("Raid" .. i .. "targettarget")
+				if t then return t end
+			end
+		end
+	end
+	-- 4) 小队兜底
+	n = (GetNumPartyMembers and GetNumPartyMembers()) or 0
+	if n > 0 then
+		for i = 1, n do
+			if UnitName("party" .. i .. "target") == enemy then
+				local t = UnitName("party" .. i .. "targettarget")
+				if t then return t end
+			end
+		end
+	end
+	return nil
+end
+
+-- 剥离名字尾部被贪婪捕获带上的句末标点（！ ! 。 ． . …）。
+-- Lua pattern 字符类不认多字节字符，逐个后缀做字节级比较最稳。
+local function stripPunct(s)
+	local suffixes = { "！", "!", "。", "．", ".", "…" }
+	local changed = true
+	while changed do
+		changed = false
+		for _, p in ipairs(suffixes) do
+			local lp = string.len(p)
+			if string.len(s) >= lp and string.sub(s, -lp) == p then
+				s = string.sub(s, 1, -(lp + 1))
+				changed = true
+			end
+		end
+	end
+	return s
+end
+
+-- 归一化 emote 里捕获的“目标名”：
+-- 1) 服务器未替换的目标 token（%s/%t）→ 解析腐嚎当前目标；
+-- 2) 去掉尾部句末标点（killcommand 的 (.+) 无尾部锚定会带「！」）；
+-- 3) 自标「你」→ 本地玩家名。
+-- 解析失败返回 nil，由调用方跳过提醒/喊话/标记。
+local function normalizeTarget(s)
+	if not s then return nil end
+	s = trim(s)
+	if s == "%t" or s == "%s" then
+		s = bossTargetName()
+		if not s then return nil end
+	else
+		s = stripPunct(s)
+	end
+	if s == "" then return nil end
+	return resolveName(s)
+end
+
 -- timer and icon variables
 local timer = {
 	volleyDuration = 3,
@@ -244,19 +339,33 @@ function module:CHAT_MSG_MONSTER_YELL(msg)
 	end
 end
 
+-- 服内自定义 boss emote 的通道不固定（实测 RAID_BOSS_EMOTE / MONSTER_EMOTE 都出现过，
+-- 参考 Trioch.lua 的做法），arrow/killcommand/fear 统一两通道共用处理，避免漏报。
 function module:CHAT_MSG_RAID_BOSS_EMOTE(msg)
-	local _, _, player = string.find(msg, L["trigger_arrow"])
-	if player then
-		self:Arrow(player)
-	end
-
-	local _, _, player = string.find(msg, L["trigger_killcommand"])
-	if player then
-		self:KillCommand(player)
-	end
+	self:EmoteEvent(msg)
 end
 
 function module:CHAT_MSG_MONSTER_EMOTE(msg)
+	self:EmoteEvent(msg)
+end
+
+function module:EmoteEvent(msg)
+	local _, _, name = string.find(msg, L["trigger_arrow"])
+	if name then
+		local player = normalizeTarget(name)
+		if player then
+			self:Arrow(player)
+		end
+	end
+
+	local _, _, name = string.find(msg, L["trigger_killcommand"])
+	if name then
+		local player = normalizeTarget(name)
+		if player then
+			self:KillCommand(player)
+		end
+	end
+
 	if self.db.profile.fear and string.find(msg, L["trigger_fear"]) then
 		self:Bar(L["bar_fear"], timer.fearCast, icon.fear)
 	end

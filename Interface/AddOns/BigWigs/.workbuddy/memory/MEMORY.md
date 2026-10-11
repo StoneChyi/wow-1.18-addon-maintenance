@@ -43,6 +43,7 @@
 - 免疫：用 `msg == L[trigger]` 精确比较的模块（Brainwasher/Mindslayer/Skeram/Huhuran 等）无需改。
 - 已修：Karrsh/Kronn/Perotharn/TimbermawTrash/Cthun/Fankriss/Defenders/Sentinels 共 8 文件；排查要点=看 trigger 是否 `string.find` 匹配 + 是否注册了 PARTY/FRIENDLYPLAYER/HOSTILEPLAYER 共享通道。
 - 2026-09-24 卡拉赞补修 6 文件（玩家名「我爱你」触发皇后下跪全团误报）：ChessFight（3 trigger+魅惑之心自身分支）、Anomalus、EchoOfMedivh（2）、Kruul、SanvTasdal 各锚定 `^你…`；Mephistroth 的 shackleShatter trigger 无代码引用未动。
+- 2026-10-08 全副本排查收尾（脚本 `bw_audit_you_shared.js`，报告 `bw_audit_you_report.txt` 在 node workspace）：再补修 14 文件 17 处（AQ20 Guardians/Kurinaxx、BWL Broodlord/Vaelastrasz、Karazhan ClawlordHowlfang/KaraTrash×2/Mephistroth、MC AncientCoreHound/Thaurissan×2、Naxx Anubrekhan/Gluth/Horsemen×2/Razuvious/SpiderTrash）。免疫三判据：①`msg ==` 精确比较 ②SELF 专属通道 ③enUS「You…」不可能被子串命中。假阳性甄别：msg_/bar_ 键会被泛 regex 误捞，taunt/parry 类自通道消息不需锚定。
 - 排查变体时注意：Edit 工具对中文行偶发匹配失败，用更短唯一子串重试；并行 Edit 同一文件会因竞争报 "not found"，需串行。
 
 ## zhCN 喊话 trigger 必须取「稳定核心子串」（必看，两例）

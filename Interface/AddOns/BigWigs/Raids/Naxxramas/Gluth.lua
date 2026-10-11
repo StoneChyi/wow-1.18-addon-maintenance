@@ -115,7 +115,7 @@ L:RegisterTranslations("zhCN", function() return {
     bar_fearCD = "恐惧 CD",
     msg_fear = "恐惧！",
 	
-	trigger_woundYou = "你受到了重伤效果的影响（(%d+)）",--CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
+	trigger_woundYou = "^你受到了重伤效果的影响（(%d+)）",--CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
 	trigger_woundOther = "(.+)受到了重伤效果的影响（(%d+)）",--CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE // CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE
     bar_wound = " 重伤",
 } end )

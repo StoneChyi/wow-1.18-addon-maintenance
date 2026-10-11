@@ -348,6 +348,41 @@ local function CreateIconFrame(self)
 	f.text:SetPoint("LEFT", f, "RIGHT", 6, 0)
 	f.text:SetJustifyH("LEFT")
 
+	-- 点击图标播报倒计时（对齐横向条 Bars.lua 的 OnBarClick 原逻辑）：
+	-- ctrl+左键 → 团队警报（RAID_WARNING）；shift+左键 → 团队/战场频道
+	-- this.data 由 DrawIcon 每帧绑定，点击时取当帧条目再实时算剩余秒数
+	f:EnableMouse(true)
+	f.data = nil
+	f:SetScript("OnMouseUp", function()
+		local data = this.data
+		if not data or not data.text then
+			return
+		end
+		local remain = data.endTime - GetTime()
+		if remain <= 0 then
+			return
+		end
+		local msg = data.text .. " in " .. SecondsToTime(math.floor(remain))
+		if IsControlKeyDown() then
+			SendChatMessage(msg, "RAID_WARNING")
+		elseif IsShiftKeyDown() then
+			SendChatMessage(msg, "RAID")
+			SendChatMessage(msg, "BATTLEGROUND")
+		end
+	end)
+	f:SetScript("OnEnter", function()
+		local data = this.data
+		if not data or not data.text then
+			return
+		end
+		GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+		GameTooltip:SetText(data.text)
+		GameTooltip:Show()
+	end)
+	f:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+
 	f:Hide()
 	return f
 end
@@ -470,6 +505,7 @@ function BigWigsVerticalBars:UpdateAllIcons()
 			y / curScale)
 		iconFrame:Show()
 		iconFrame.icon:SetTexture(data.icon or DEFAULT_ICON)
+		iconFrame.data = data
 
 		local fontSize = math.floor(iconSize * curScale * 0.45)
 		iconFrame.cooldown:SetFont(FONT, fontSize, "OUTLINE")

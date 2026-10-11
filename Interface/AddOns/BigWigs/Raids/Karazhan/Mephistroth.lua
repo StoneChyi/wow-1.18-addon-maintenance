@@ -232,7 +232,7 @@ L:RegisterTranslations("zhCN", function()
 		-- 触发条件
 		trigger_engage = "我预见到了你的到来", -- CHAT_MSG_MONSTER_YELL
 
-		trigger_shacklesDebuffYou = "你受到了军团镣铐效果的影响",
+		trigger_shacklesDebuffYou = "^你受到了军团镣铐效果的影响",
 		trigger_shacklesDebuffOther = "(.+)受到了军团镣铐效果的影响",
 		trigger_shacklesFadeYou = "军团镣铐效果从你身上消失了",
 

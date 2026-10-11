@@ -144,10 +144,10 @@ L:RegisterTranslations("zhCN", function() return {
     msg_blaumeuxTankReady = "准备好对黑马进行坦克",
     msg_mograineTankReady = "准备好对大领主进行坦克",
     
-    trigger_markYou = "你受到了(.+)印记效果的影响",
+    trigger_markYou = "^你受到了(.+)印记效果的影响",
     msg_doubleMark = "你被超过一个印记命中 - 注意位置！",
     
-    trigger_mark4 = "你受到了(.+)印记效果的影响（4）",
+    trigger_mark4 = "^你受到了(.+)印记效果的影响（4）",
     msg_mark4 = "你身上有4层印记 - 快跑开/吃暗抗！",
     msg_mark4Tank = "身上有4层印记 - 替换我！",
 	

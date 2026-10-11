@@ -95,7 +95,7 @@ L:RegisterTranslations("zhCN", function() return {
     bar_locustSwarmCd = "虫群风暴 CD",
     bar_locustSwarmOffCd = "虫群风暴随时可能开始！",
 	
-    trigger_locustSwarmYou = "你受到了虫群风暴效果的影响", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
+    trigger_locustSwarmYou = "^你受到了虫群风暴效果的影响", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     msg_locustYou = "远离Boss！",
     trigger_locustSwarmYouFade = "虫群风暴效果从你身上消失了。", --CHAT_MSG_SPELL_AURA_GONE_SELF
     

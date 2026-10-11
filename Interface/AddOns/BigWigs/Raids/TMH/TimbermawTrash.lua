@@ -429,11 +429,11 @@ function module:PoisonCloud(caster)
         if UnitName("target") == caster then
             local mark = self:GetAvailableRaidMark()
             if mark then
-                self:SetRaidTarget("target", mark)
+                SetRaidTarget("target", mark)
                 -- 5秒后清除标记（避免占用）
                 self:ScheduleEvent("ClearDefilerMark_" .. caster, function()
                     if UnitName("target") == caster then
-                        self:SetRaidTarget("target", 0)
+                        SetRaidTarget("target", 0)
                     end
                 end, 5)
             end

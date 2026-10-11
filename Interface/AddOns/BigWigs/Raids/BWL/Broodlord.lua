@@ -106,7 +106,7 @@ L:RegisterTranslations("zhCN", function() return {
     bar_knockSoon = "即将击飞...",
     you = "你",
 
-    trigger_serratedYou = "你受到了锯齿创伤效果的影响", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
+    trigger_serratedYou = "^你受到了锯齿创伤效果的影响", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
 	trigger_serratedOther = "(.+)受到了锯齿创伤效果的影响", --CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE // CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE
 	trigger_serratedFade = "锯齿创伤效果从(.+)身上消失", --CHAT_MSG_SPELL_AURA_GONE_SELF // CHAT_MSG_SPELL_AURA_GONE_PARTY // CHAT_MSG_SPELL_AURA_GONE_OTHER
 	bar_serratedDur = ">%s<流血",

@@ -56,7 +56,7 @@ L:RegisterTranslations("zhCN", function() return {
     msg_sandTrap = "沙尘陷阱",
     bar_trap = " 沙尘陷阱",
     
-    trigger_woundYou = "你受到了重伤效果的影响%（(.+)%）。",--CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
+    trigger_woundYou = "^你受到了重伤效果的影响%（(.+)%）。",--CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     trigger_woundOther = "(.+)受到了重伤效果的影响%（(.+)%）。",--CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE // CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE
     bar_wound = " 重伤",
 

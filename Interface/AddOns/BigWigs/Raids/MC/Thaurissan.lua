@@ -79,11 +79,11 @@ L:RegisterTranslations("zhCN", function() return {
 
     trigger_detonation = "受到了爆裂符文效果的影响",
     trigger_combustion = "受到了燃烧符文效果的影响",
-    trigger_you = "你受到了",
+    trigger_you = "^你受到了",
     trigger_runeOfDetonationFade = "爆裂符文效果从你身上消失了",
     trigger_runeOfCombustionFade = "燃烧符文效果从你身上消失了",
 
-    trigger_runeOfPowerYou = "你受到了能量符文效果的影响",
+    trigger_runeOfPowerYou = "^你受到了能量符文效果的影响",
     trigger_runeOfPowerFade = "能量符文效果从你身上消失了",
 
 	msg_detonation = "离开区域-爆裂符文",

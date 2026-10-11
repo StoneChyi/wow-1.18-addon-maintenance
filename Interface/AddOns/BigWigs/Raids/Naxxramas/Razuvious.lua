@@ -69,7 +69,7 @@ L:RegisterTranslations("zhCN", function() return {
     bar_shout = "瓦解怒吼",
     msg_shout = "瓦解怒吼！",
 	
-	trigger_mcYou = "你获得了精神控制的效果。", --CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS
+	trigger_mcYou = "^你获得了精神控制的效果。", --CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS
 	trigger_mcFadeYou = "精神控制效果从你身上消失了。", --CHAT_MSG_SPELL_AURA_GONE_SELF
     mc_bar = " 精神控制",
     mcLocked_bar = "无法精神控制 ",

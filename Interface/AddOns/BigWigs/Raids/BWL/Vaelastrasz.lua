@@ -144,7 +144,7 @@ L:RegisterTranslations("zhCN", function() return {
     bar_flameBreathCd = "火息术冷却",
     bar_flameBreathCast = "正在施放火息术！",
 
-    trigger_flameBreathDotYou = "你受到了火息术效果的影响%（(.+)%）。", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
+    trigger_flameBreathDotYou = "^你受到了火息术效果的影响%（(.+)%）。", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     trigger_flameBreathDotOther = "(.+)受到了火息术效果的影响%（(.+)%）。", --CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE // CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE
     trigger_flameBreathDotFade = "火息术效果从(.+)身上消失了。", --CHAT_MSG_SPELL_AURA_GONE_SELF // CHAT_MSG_SPELL_AURA_GONE_PARTY // CHAT_MSG_SPELL_AURA_GONE_OTHER
     bar_flameBreathDot = " 火息术DoT",

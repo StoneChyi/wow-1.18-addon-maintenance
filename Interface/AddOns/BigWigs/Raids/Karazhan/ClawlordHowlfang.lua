@@ -59,7 +59,7 @@ L:RegisterTranslations("zhCN", function() return {
     
 
 
-    trigger_terrifyingPresenceSelf = "你受到了恐怖之力效果的影响%（(.+)%）.",--CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
+    trigger_terrifyingPresenceSelf = "^你受到了恐怖之力效果的影响%（(.+)%）.",--CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
     --trigger_terrifyingPresence = "(.+) is afflicted by Terrifying Presence %((.+)%).",--CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE // CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE
     bar_terrifyingPresence = "%减益效果",
     

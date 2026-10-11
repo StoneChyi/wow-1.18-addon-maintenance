@@ -110,3 +110,11 @@
 - 两包变化：21 个 Lua 更新：集合刷 BUFF、竖行条通报、自身中文日志锚定、帕萨斯/腐嚎/木喉小怪/乌索尔提醒。
 - 个人版处理：21 个待更新文件当前均等于旧包；未发现额外独立个人功能文件差异，既有定制内容已出现在旧包。可按明确文件迁移，战斗与同步待验收。
 - 验证与未确认：本次只核对原始字节/差异及文本试算；新包本次改变或新增的 75 个 Lua 全部通过 Lua 5.1 语法检查。未修改本插件功能，未部署候选，真实 1.12 加载、界面和多人行为待后续验收。
+
+## 2026-10-12 迁入 10 月 10 日包（已部署）
+
+- 目的与处理：更新集合刷 BUFF 语音/命令、竖条点击通报及首领提醒，保留已有阶段备份。
+- 主要文件：`Plugins/Pulltimer.lua`、`Plugins/Sound.lua`、`Plugins/VerticalBars.lua`、`Raids/AQ20/Guardians.lua`、`Raids/AQ20/Kurinaxx.lua`、`Raids/BWL/Broodlord.lua`、`Raids/BWL/Vaelastrasz.lua`、`Raids/Karazhan/ClawlordHowlfang.lua`、`Raids/Karazhan/KaraTrash.lua`、`Raids/Karazhan/Mephistroth.lua`、`Raids/MC/AncientCoreHound.lua`、`Raids/MC/Thaurissan.lua`、`Raids/Naxxramas/Anubrekhan.lua`、`Raids/Naxxramas/Gluth.lua`、`Raids/Naxxramas/Horsemen.lua`、`Raids/Naxxramas/Razuvious.lua`、`Raids/Naxxramas/SpiderTrash.lua`、`Raids/TMH/Partath.lua`、`Raids/TMH/Rotgrowl.lua`、`Raids/TMH/TimbermawTrash.lua`、`Raids/TMH/Ursol.lua`。
+- 依据：[实施记录](../Research/插件更新实施-20261012.md)及[逐文件校验](../Research/插件更新实施-20261012.json)；更新前标签 `before/package-update-20261012`。
+- 验证：本次 74 个 Lua 语法、7 个 XML 与 TOC/XML 文件引用核对通过；新增库初始化、聊天条/BigWigs、字体前置条件和金额修复见关联检查，HealComm/NotGrid 106 组行为通过。现用文件与已审查候选逐字节一致。
+- 未确认：尚未做真实 1.12 游戏验收；具体多人通信、首领战斗、邮件操作或界面行为按实施记录列出的范围继续验证。
