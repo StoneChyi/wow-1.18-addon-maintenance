@@ -210,4 +210,72 @@ casting=false; RandomMount(); assert(#calls==1)
 module:ClearCustomMounts(); module:ClearExcludedMounts()
 assert(#namespace.char.customMounts==0 and #namespace.char.excludedMounts==0)
 ''')
+check('two mounts alternate and a single mount stays usable', BOOK, '''
+for i=1,20 do
+    RandomMount()
+    assert(calls[i][2]==(i%2==1 and '黑马' or '白马'))
+end
+module:ExcludeMount('白马')
+for i=1,3 do RandomMount(); assert(calls[#calls][2]=='黑马') end
+''')
+for previous in ['白马', '黑马', '红马']:
+    check('equal remaining choices after ' + previous,
+          "tabs={{'坐骑',0,3}};spells={'白马','黑马','红马'}", '''
+local previous=namespace.char.lastMountName
+local seen={}
+for draw=1,2 do
+    namespace.char.lastMountName=previous
+    function random(count) assert(count==2); return draw end
+    RandomMount()
+    local picked=calls[#calls][2]
+    assert(picked~=previous and not seen[picked]); seen[picked]=true
+end
+''', '{lastMountName="' + previous + '"}')
+check('absent previous mount leaves all current choices eligible', BOOK, '''
+namespace.char.lastMountName='旧坐骑'
+function random(count) assert(count==2); return 2 end
+RandomMount(); assert(calls[1][2]=='黑马')
+''')
+check('blocked and empty calls do not change previous selection', BOOK, '''
+RandomMount(); assert(namespace.char.lastMountName=='黑马')
+combat=true; RandomMount(); combat=false
+casting=true; RandomMount(); casting=false
+module:ExcludeMount('白马'); module:ExcludeMount('黑马'); RandomMount()
+assert(#calls==1 and namespace.char.lastMountName=='黑马')
+''')
+check('ordinary and AQ groups both avoid consecutive duplicates', '''
+tabs={{'坐骑',0,4}};spells={'蓝色其拉作战坦克','红色其拉作战坦克','白马','黑马'}
+''', '''
+RandomMount(); RandomMount()
+assert(calls[1][2]=='黑马' and calls[2][2]=='白马')
+zone='安其拉'; RandomMount(); RandomMount()
+assert(calls[3][2]=='红色其拉作战坦克' and calls[4][2]=='蓝色其拉作战坦克')
+zone='暴风城'; RandomMount(); assert(calls[5][2]=='黑马')
+''')
+check('bug-only fallback also avoids duplicates', '''
+tabs={{'坐骑',0,2}};spells={'蓝色其拉作战坦克','红色其拉作战坦克'}
+''', '''
+RandomMount(); RandomMount()
+assert(calls[1][2]=='红色其拉作战坦克' and calls[2][2]=='蓝色其拉作战坦克')
+''')
+check('repeat avoidance follows names across reordering and blacklist changes', BOOK, '''
+RandomMount(); assert(calls[1][2]=='黑马')
+spells[2]='黑马'; spells[3]='白马'
+RandomMount(); assert(calls[2][2]=='白马')
+module:ExcludeMount('白马'); RandomMount(); assert(calls[3][2]=='黑马')
+module:UnExcludeMount('白马'); RandomMount(); assert(calls[4][2]=='白马')
+''')
+last = world(BOOK)
+last.execute('RandomMount()')
+check('previous mount persists through reload with current spell positions', '''
+tabs={{'坐骑',0,2}};spells={'黑马','白马'}
+''', '''
+assert(namespace.char.lastMountName=='黑马')
+RandomMount(); assert(calls[1][2]=='白马')
+''', last.globals().save())
+check('custom and automatic duplicates still count as one candidate', BOOK, '''
+module:AddCustomMount('黑马')
+RandomMount(); RandomMount(); RandomMount()
+assert(calls[1][2]=='黑马' and calls[2][2]=='白马' and calls[3][2]=='黑马')
+''')
 print(f'PASS: {groups} RandomMount Lua 5.1 behavior groups')

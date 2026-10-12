@@ -311,6 +311,24 @@ local function GetPlayerMounts()
     return result
 end
 
+local function ChooseRandomMount(mounts)
+    local count = GetTableLength(mounts)
+    local lastName = Automaton_RandomMount.db.char.lastMountName
+    local skipIndex
+    if count > 1 and type(lastName) == "string" then
+        for i, mount in ipairs(mounts) do
+            if string.lower(mount.name) == string.lower(lastName) then
+                skipIndex = i
+                break
+            end
+        end
+    end
+    -- Skip one position without rerolling, preserving equal odds for the rest.
+    local index = random(count - (skipIndex and 1 or 0))
+    if skipIndex and index >= skipIndex then index = index + 1 end
+    return mounts[index]
+end
+
 -- 随机选择坐骑并释放
 local function RandomMount()
     if UnitAffectingCombat("player") then
@@ -342,8 +360,7 @@ local function RandomMount()
     if inAhnQiraj then
         local bugMountCount = GetTableLength(mounts.bugs)
         if bugMountCount > 0 then
-            local index = random(bugMountCount)
-            selectedMount = mounts.bugs[index]
+            selectedMount = ChooseRandomMount(mounts.bugs)
             DebugMessage("在安其拉神殿中，选择虫子坐骑: " .. selectedMount.name)
         else
             DebugMessage("您没有虫子坐骑，无法在安其拉神殿骑行！")
@@ -352,14 +369,12 @@ local function RandomMount()
     else
         local normalMountCount = GetTableLength(mounts.normal)
         if normalMountCount > 0 then
-            local index = random(normalMountCount)
-            selectedMount = mounts.normal[index]
+            selectedMount = ChooseRandomMount(mounts.normal)
             DebugMessage("选择普通坐骑: " .. selectedMount.name)
         else
             local bugMountCount = GetTableLength(mounts.bugs)
             if bugMountCount > 0 then
-                local index = random(bugMountCount)
-                selectedMount = mounts.bugs[index]
+                selectedMount = ChooseRandomMount(mounts.bugs)
                 DebugMessage("没有普通坐骑，只能使用虫子坐骑: " .. selectedMount.name)
             end
         end
@@ -367,6 +382,7 @@ local function RandomMount()
     
     if selectedMount then
         CastSpell(selectedMount.id, BOOKTYPE_SPELL)
+        Automaton_RandomMount.db.char.lastMountName = selectedMount.name
     end
 end
 
