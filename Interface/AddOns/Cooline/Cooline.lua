@@ -13,10 +13,28 @@ cooline_settings = { x = 0, y = -240, flash_enabled = true, show_cooline = true 
 local frame_pool = {}
 local cooldowns = {}
 
--- Explicitly confirmed shared cooldowns only. Equal timings alone are not proof.
+-- Reviewed client categories / Turtle patch notes only; never infer groups
+-- from equal timings alone. See PluginHistory/Research/Cooline-shared-cooldowns-20261012.md.
 -- Ordered aliases supply a deterministic representative after reload.
 local shared_groups = {
     {key = 'paladin_strikes', names = {'十字军打击', '神圣打击', 'Crusader Strike', 'Holy Strike'}},
+    {key = 'paladin_immunity', names = {'圣盾术', '圣佑术', 'Divine Shield', 'Divine Protection'}},
+    {key = 'warrior_reactions', names = {'压制', '复仇', 'Overpower', 'Revenge'}},
+    {key = 'warrior_interrupts', names = {'拳击', '盾击', 'Pummel', 'Shield Bash'}},
+    {key = 'warrior_major', names = {'盾墙', '鲁莽', '反击风暴', 'Shield Wall', 'Recklessness', 'Retaliation'}},
+    {key = 'warrior_intercept', names = {'拦截', '援护', 'Intercept', 'Intervene'}},
+    {key = 'warrior_attacks', names = {'致死打击', '嗜血', '盾牌猛击', 'Mortal Strike', 'Bloodthirst', 'Shield Slam'}},
+    {key = 'hunter_cleave', names = {'多重射击', '切碎', 'Multi-Shot', 'Carve'}},
+    {key = 'hunter_traps', names = {'冰冻陷阱', '冰霜陷阱', '献祭陷阱', '爆炸陷阱',
+        'Freezing Trap', 'Frost Trap', 'Immolation Trap', 'Explosive Trap'}},
+    {key = 'hunter_shots', names = {'奥术射击', '瞄准射击', 'Arcane Shot', 'Aimed Shot'}},
+    {key = 'rogue_interrupts', names = {'脚踢', '致命投掷', 'Kick', 'Deadly Throw'}},
+    {key = 'priest_prayers', names = {'绝望祷言', '太阳的拥抱', 'Desperate Prayer', "Sun's Embrace"}},
+    {key = 'priest_racials', names = {'艾露恩的赐福', '回馈', "Elune's Grace", 'Feedback'}},
+    {key = 'shaman_shocks', names = {'大地震击', '烈焰震击', '冰霜震击', 'Earth Shock', 'Flame Shock', 'Frost Shock'}},
+    {key = 'shaman_strikes', names = {'风暴打击', '熔岩猛击', 'Stormstrike', 'Lava Lash'}},
+    {key = 'mage_wards', names = {'防护火焰结界', '防护冰霜结界', 'Fire Ward', 'Frost Ward'}},
+    {key = 'mage_instant', names = {'燃烧', '气定神闲', 'Combustion', 'Presence of Mind'}},
 }
 local shared_by_name, shared_casts = {}, {}
 local SHARED_EPS = 0.1
@@ -106,48 +124,90 @@ end
 
 local function merge_shared_records(records)
     for _, group in ipairs(shared_groups) do
-        local names, first, start, finish, same = {}, nil, nil, nil, true
+        local cohorts = {}
         for _, name in ipairs(group.names) do
             local data = records[name]
             if data then
-                tinsert(names, name)
-                if not first then first = data; start = data.start; finish = data.start + data.duration end
-                if math.abs(data.start - first.start) > SHARED_EPS or
-                    math.abs(data.duration - first.duration) > SHARED_EPS or
-                    math.abs(data.start + data.duration - first.start - first.duration) > SHARED_EPS then same = false end
-                start, finish = math.max(start, data.start), math.max(finish, data.start + data.duration)
+                local matching
+                local ending = data.start + data.duration
+                for _, cohort in ipairs(cohorts) do
+                    if math.max(cohort.start_max, data.start) - math.min(cohort.start_min, data.start) <= SHARED_EPS and
+                        math.max(cohort.duration_max, data.duration) - math.min(cohort.duration_min, data.duration) <= SHARED_EPS and
+                        math.max(cohort.finish_max, ending) - math.min(cohort.finish_min, ending) <= SHARED_EPS then
+                        matching = cohort
+                        break
+                    end
+                end
+                if not matching then
+                    matching = {names = {}, start_min = data.start, start_max = data.start,
+                        duration_min = data.duration, duration_max = data.duration,
+                        finish_min = ending, finish_max = ending}
+                    tinsert(cohorts, matching)
+                end
+                tinsert(matching.names, name)
+                matching.start_min, matching.start_max = math.min(matching.start_min, data.start), math.max(matching.start_max, data.start)
+                matching.duration_min, matching.duration_max = math.min(matching.duration_min, data.duration), math.max(matching.duration_max, data.duration)
+                matching.finish_min, matching.finish_max = math.min(matching.finish_min, ending), math.max(matching.finish_max, ending)
             end
         end
-        if same and table.getn(names) > 1 then
-            local key = 'shared:' .. group.key
+        local merged = 0
+        for _, cohort in ipairs(cohorts) do
+          local names = cohort.names
+          if table.getn(names) > 1 then
+            local start, finish = cohort.start_max, cohort.finish_max
+            -- Keep the original key for the first synchronized subset. A second
+            -- subset (e.g. two pairs of traps) needs its own independent timer.
+            local key = 'shared:' .. group.key .. (merged == 0 and '' or ':' .. names[1])
+            merged = merged + 1
+            local contains = {}
+            for _, name in ipairs(names) do contains[name] = true end
             local old = cooldowns['spell:' .. key]
             local current = old and old.shared_group == group.key and
                 math.abs(old.start_time - start) <= SHARED_EPS and math.abs(old.end_time - finish) <= SHARED_EPS
+            -- A surviving subset can move to the primary key when another
+            -- subset disappears. Preserve this cycle's confirmed cast icon.
+            if not current then
+                for _, candidate in pairs(cooldowns) do
+                    if candidate.shared_group == group.key and contains[candidate.name] and
+                        math.abs(candidate.start_time - start) <= SHARED_EPS and
+                        math.abs(candidate.end_time - finish) <= SHARED_EPS then
+                        old, current = candidate, true
+                        break
+                    end
+                end
+            end
             local cast = shared_casts[group.key]
             -- A confirmed success must belong to this cooldown, not a previous cast.
-            local confirmed = cast and records[cast.name] and math.abs(cast.at - start) <= 0.5
+            local confirmed = cast and contains[cast.name] and math.abs(cast.at - start) <= 0.5
             local chosen = names[1]
-            if current and old.shared_confirmed and records[old.name] then
+            if current and old.shared_confirmed and contains[old.name] then
                 chosen, confirmed = old.name, true
             elseif confirmed then
                 chosen = cast.name
-            elseif current and records[old.name] then
+            elseif current and contains[old.name] then
                 chosen = old.name
             end
             records[key] = {name = chosen, texture = records[chosen].texture, start = start,
                 duration = finish - start, shared_group = group.key, shared_names = names,
                 shared_confirmed = confirmed and true or false}
             for _, name in ipairs(names) do records[name] = nil end
+          end
         end
     end
 end
 
 local function replaced_shared_record(frame, records)
     local group = shared_by_name[frame.name]
-    if group and records['shared:' .. group.key] then return true end
-    for _, name in ipairs(frame.shared_names or {}) do
-        local data = records[name]
-        if data and data.start + data.duration > GetTime() then return true end
+    if not group then return false end
+    local previous = {}
+    for _, name in ipairs(frame.shared_names or {frame.name}) do previous[name] = true end
+    for name, data in pairs(records) do
+        if previous[name] then return true end
+        if data.shared_group == group.key then
+            for _, member in ipairs(data.shared_names) do
+                if previous[member] then return true end
+            end
+        end
     end
     return false
 end

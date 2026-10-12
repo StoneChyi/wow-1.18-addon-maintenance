@@ -818,6 +818,113 @@ def shared_expiry_overflow_and_reuse():
 check('overflow counts shared CD once, full tooltip, single completion, fade and clean pool reuse',shared_expiry_overflow_and_reuse)
 
 
+EXPANDED_SHARED = [
+    (('圣盾术','圣佑术'),('Divine Shield','Divine Protection'),'paladin_immunity'),
+    (('压制','复仇'),('Overpower','Revenge'),'warrior_reactions'),
+    (('拳击','盾击'),('Pummel','Shield Bash'),'warrior_interrupts'),
+    (('盾墙','鲁莽','反击风暴'),('Shield Wall','Recklessness','Retaliation'),'warrior_major'),
+    (('拦截','援护'),('Intercept','Intervene'),'warrior_intercept'),
+    (('致死打击','嗜血','盾牌猛击'),('Mortal Strike','Bloodthirst','Shield Slam'),'warrior_attacks'),
+    (('多重射击','切碎'),('Multi-Shot','Carve'),'hunter_cleave'),
+    (('冰冻陷阱','冰霜陷阱','献祭陷阱','爆炸陷阱'),('Freezing Trap','Frost Trap','Immolation Trap','Explosive Trap'),'hunter_traps'),
+    (('奥术射击','瞄准射击'),('Arcane Shot','Aimed Shot'),'hunter_shots'),
+    (('脚踢','致命投掷'),('Kick','Deadly Throw'),'rogue_interrupts'),
+    (('绝望祷言','太阳的拥抱'),('Desperate Prayer',"Sun's Embrace"),'priest_prayers'),
+    (('艾露恩的赐福','回馈'),("Elune's Grace",'Feedback'),'priest_racials'),
+    (('大地震击','烈焰震击','冰霜震击'),('Earth Shock','Flame Shock','Frost Shock'),'shaman_shocks'),
+    (('风暴打击','熔岩猛击'),('Stormstrike','Lava Lash'),'shaman_strikes'),
+    (('防护火焰结界','防护冰霜结界'),('Fire Ward','Frost Ward'),'mage_wards'),
+    (('燃烧','气定神闲'),('Combustion','Presence of Mind'),'mage_instant'),
+]
+
+
+def expanded_shared_success_and_safety():
+    for chinese,english,key in EXPANDED_SHARED:
+        for names in (chinese,english):
+            lua=new(saved_zmd={'enabled':False});g=lua.globals();cl=g.cooline
+            shared_book(lua,names,duration=30)
+            f=frames(lua)[0];assert len(frames(lua))==1 and f.shared_group==key
+            assert set(f.shared_names.values())==set(names) and f.count.text=='' and f.width==22
+            g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',len(names));cl.detect_cooldowns()
+            assert f.name==names[-1] and f.icon.texture=='icon-'+names[-1] and f.shared_confirmed
+            # One distinct remaining CD must survive; other synchronized members may merge.
+            g.spells[1].duration=60;cl.detect_cooldowns()
+            assert sum(len(f.members) for f in frames(lua))==2
+            assert any(f.name==names[0] and f.shared_group is None for f in frames(lua))
+            # Only ready/disabled/global CDs must never manufacture a merged icon.
+            for spell in g.spells.values():spell.duration=1.5
+            cl.detect_cooldowns();assert not frames(lua)
+            shared_book(lua,(names[0],),duration=30)
+            assert len(frames(lua))==1 and frames(lua)[0].shared_group is None
+check('16 added groups in both languages: successful icon, split/subset safety, single learned spell and GCD filtering',expanded_shared_success_and_safety)
+
+
+def immunity_independence_and_reload():
+    for superwow in (True,False):
+        lua=new(superwow=superwow);g=lua.globals();cl=g.cooline
+        shared_book(lua,('圣盾术','圣佑术'),duration=300)
+        assert len(frames(lua))==1 and frames(lua)[0].name=='圣盾术'
+        # Forbearance-related protection and Lay on Hands are NOT a shared CD.
+        lua.execute("spells[3]={name='保护祝福',texture='protection',start=now,duration=300};spells[4]={name='圣疗术',texture='lay',start=now,duration=300};cooline.detect_cooldowns()")
+        assert sum(len(f.members) for f in frames(lua))==3
+        assert sorted(f.name for f in frames(lua))==sorted(['圣盾术','保护祝福','圣疗术'])
+    # No SuperWoW is needed to remove duplication; selection has a stable fallback.
+    lua=new(superwow=False);shared_book(lua,('Divine Shield','Divine Protection'),300)
+    assert len(frames(lua))==1 and frames(lua)[0].name=='Divine Shield'
+    # Unequal cooldowns remain independent (e.g. talented reduction, previous own CD).
+    g=lua.globals();g.spells[2].duration=60;g.cooline.detect_cooldowns()
+    assert sum(len(f.members) for f in frames(lua))==2
+check('reported bubble duplication fixed with/without SuperWoW; Forbearance, independent CDs and reload fallback',immunity_independence_and_reload)
+
+
+def partial_cohorts_and_replacement():
+    names=('Freezing Trap','Frost Trap','Immolation Trap','Explosive Trap')
+    lua=new({'theme':{'show_countdown':True}});g=lua.globals();cl=g.cooline
+    shared_book(lua,names,30)
+    g.spells[4].duration=60;cl.detect_cooldowns()
+    fs=frames(lua);assert len(fs)==2
+    grouped=next(f for f in fs if f.shared_names is not None)
+    assert set(grouped.shared_names.values())==set(names[:3])
+    g.spells[3].duration=60;cl.detect_cooldowns()
+    fs=frames(lua);assert len(fs)==2
+    assert {frozenset(f.shared_names.values()) for f in fs}=={frozenset(names[:2]),frozenset(names[2:])}
+    # Success for another cohort cannot choose an icon that belongs to this one.
+    g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',4);cl.detect_cooldowns()
+    assert {f.name for f in frames(lua)}=={names[0],names[3]}
+    # Clear/rekey the second cohort near the first expiry without ghost completions.
+    lua.execute('flashCalls=0;cooline.show_flash=function() flashCalls=flashCalls+1 end')
+    g.now=129.98;g.spells[1].duration=0;g.spells[2].duration=0;cl.detect_cooldowns()
+    assert len(frames(lua))==1 and set(frames(lua)[0].shared_names.values())==set(names[2:])
+    assert frames(lua)[0].name==names[3] and frames(lua)[0].shared_confirmed
+    assert g.flashCalls==0
+    g.spells[3].duration=0;cl.detect_cooldowns()
+    assert len(frames(lua))==1 and frames(lua)[0].name==names[3] and frames(lua)[0].shared_names is None
+    # All pairwise ranges, not just each distance from the first member, must fit.
+    lua=new();g=lua.globals();cl=g.cooline;shared_book(lua,names,30)
+    g.spells[2].start=99.94;g.spells[3].start=100.06;g.spells[4].duration=60
+    cl.detect_cooldowns()
+    assert sum(len(f.members) for f in frames(lua))==3
+check('three synchronized plus one independent, two cohorts, own success selection, near-expiry rekey and pairwise tolerance',partial_cohorts_and_replacement)
+
+
+def excluded_shared_relationships():
+    # Officially unlinked Baited Shot, independent summons/wards and same-timed
+    # cross-class category reuse must not turn into false shared timers.
+    for names in [('Arcane Shot','Baited Shot'),('Aimed Shot','Baited Shot'),
+                  ('Inferno','Ritual of Doom'),('Divine Shield','Cold Snap'),
+                  ('Earth Shock','Fire Blast'),('Hand of Sacrifice','Greater Blessing of Sacrifice')]:
+        lua=new();shared_book(lua,names,30)
+        assert sum(len(f.members) for f in frames(lua))==2
+        assert all(f.shared_names is None for f in frames(lua))
+    # Long warrior CDs are still recorded once and only shown on entering the range.
+    lua=new();g=lua.globals();cl=g.cooline
+    shared_book(lua,('Shield Wall','Recklessness','Retaliation'),1800)
+    assert not frames(lua)
+    g.now=1301;cl.on_update(True)
+    assert len(frames(lua))==1 and len(frames(lua)[0].shared_names)==3
+check('unlinked shots, summons, cross-class categories and own-only timers stay separate; long shared CD enters short range once',excluded_shared_relationships)
+
+
 def original_bytes():
     for path in FILES:
         previous=subprocess.check_output(['git','show','HEAD:'+path.relative_to(ROOT).as_posix()],cwd=ROOT)

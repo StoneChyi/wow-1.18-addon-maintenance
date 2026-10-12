@@ -611,7 +611,7 @@
       "addon": "Cooline",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Cooline.md",
-      "purpose": "短冷却优先，支持 30 分钟；共享打击冷却归并、居中分行、设置预览与雾蓝灰外观，并修复字体初始化报错。",
+      "purpose": "短冷却优先，支持 30 分钟；17 组共享技能候选按实际计时归并，修复圣盾/圣佑重复，保留居中分行、设置预览、雾蓝灰与字体保护。",
       "sources": [
         "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-15.md",
         "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-24.md"
@@ -621,7 +621,7 @@
         "Interface/AddOns/Cooline/settings.lua"
       ],
       "tracked_files_at_reference": 5,
-      "pending": "2026-10-11：十字军打击/神圣打击共享冷却合并，成功事件独立选择代表图标；20 组检查通过，真实游戏冷却/事件和外观待验收。"
+      "pending": "2026-10-12：九职业客户端及公开资料检索，17 组候选按实际同步子集归并；24 组检查通过，圣盾/圣佑与其他职业、服务器差异及外观待真实游戏验收。"
     },
     {
       "addon": "Cryolysis",
