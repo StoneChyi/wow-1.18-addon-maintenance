@@ -38,6 +38,16 @@
 
 暂无发现会妨碍本页摘要的明确缺项。仍欢迎补充未被笔记覆盖的早期修改、实际游戏验收和个人保留需求。
 
+## 2026-10-12：修复团队目标图标入口的错误对号
+
+- 目的：头像右键菜单的“团队目标图标”只作为子菜单入口，不应显示勾选。
+- 原因：旧版 `UnitPopup_ShowMenu` 用 `RAID_TARGET_` 前缀判断标记项，`RAID_TARGET_ICON` 入口也匹配；现有分组排序将自身菜单的入口提前后，目标标记编号可能恰好等于入口的菜单索引，原生构建过程便传入 `checked = 1`。共享下拉框的选中元数据也可能重新设置勾选。依据为[公开 1.12 FrameXML](https://github.com/MOUZU/Blizzard-WoW-Interface/blob/master/1.12.1/FrameXML/UnitPopup.lua)和复现检查。
+- 修改：`Interface/AddOns/PlayerLinkEnhance/PlayerLinkEnhance.lua` 仅对 `RAID_TARGET_ICON` 清除输入勾选并标为不可勾选；布局和 OnShow 时清除该入口按钮的 `checked`、锁定高亮及 Check 贴图。保留右侧箭头，以及星星至骷髅实际标记项目的勾选。
+- 关联范围：原生头像菜单、pfUI 头像右键入口及共享 DropDownList 按钮。未调整菜单尺寸、分组或透明度，也未修改 AutoMarker、SimpleRaidTargetIcons 的标记功能。
+- 检查：新增 `Tools/tests/test_playerlink_menu_checks.py`，先在修复前复现失败，再在修复后通过 10 组 Lua 5.1 行为模拟：自身/玩家/队友菜单、所有标记、选中元数据、二级及 NPC 一级实际标记、共享按钮复用、OnShow 再校正和严格字体前置条件（包含 SetFont 失败）。同时通过归档菜单回归，覆盖观察/邀请、确认操作和共享菜单恢复；归档证据文件保持不变。
+- 编码：主文件保留原始 UTF-8 无 BOM 和 CRLF，仅插入针对性代码。
+- 未确认：尚未在实际 1.12 客户端验收；重载后应检查入口不带对号，展开后当前实际标记仍正常勾选。
+
 ## 依据
 
 - [初始化插件清单（历史快照，未改写其原始证据标记）](../../PluginHistory/addon-catalog.json)

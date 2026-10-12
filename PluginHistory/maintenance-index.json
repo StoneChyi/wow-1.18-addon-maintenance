@@ -1166,7 +1166,7 @@
       "addon": "PlayerLinkEnhance",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/PlayerLinkEnhance.md",
-      "purpose": "让头像/玩家菜单更紧凑并减少互相干扰。",
+      "purpose": "保持头像菜单紧凑分组，修复团队目标图标入口误勾选。",
       "sources": [
         "PluginHistory/Evidence/addons_tmp/unit-menu-backup-20261006/README.md",
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
@@ -1179,7 +1179,7 @@
         "Interface/AddOns/PlayerLinkEnhance/SaferMenu.lua"
       ],
       "tracked_files_at_reference": 5,
-      "pending": ""
+      "pending": "2026-10-12：10 组 Lua 5.1 模拟及归档菜单回归通过；实际 1.12 菜单对号验收待补充。"
     },
     {
       "addon": "QuickHeal",

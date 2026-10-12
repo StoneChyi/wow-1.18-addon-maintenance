@@ -596,6 +596,14 @@ local function LayoutList(list)
         button:SetHitRectInsets(0, 0, 0, 0)
         text:ClearAllPoints()
         text:SetPoint("LEFT", button, "LEFT", row.notCheckable and 10 or 27, 0)
+        -- The 1.12 RAID_TARGET_ prefix test also matches this submenu header.
+        -- Clear its selection only; real RAID_TARGET_1..8 entries keep theirs.
+        if row.value == "RAID_TARGET_ICON" then
+            button.checked = nil
+            button:UnlockHighlight()
+            local check = getglobal(button:GetName() .. "Check")
+            if check then check:Hide() end
+        end
         highlight:SetTexture(.2, .58, .85, .32)
         highlight:SetBlendMode("BLEND")
         highlight:SetVertexColor(1, 1, 1, 1)
@@ -616,6 +624,9 @@ UIDropDownMenu_AddButton = function(info, level)
     local copy = {}
     for key, value in pairs(info) do copy[key] = value end
     copy.textHeight = copy.textHeight or UIDROPDOWNMENU_DEFAULT_TEXT_HEIGHT or 12
+    if copy.value == "RAID_TARGET_ICON" then
+        copy.checked, copy.notCheckable = nil, 1
+    end
     if building.primary and copy.value == "INSPECT" and not copy.isTitle then
         copy.text, copy.textR, copy.textG, copy.textB = "观察装备", .45, .82, 1
     elseif building.primary and copy.value == "INVITE" and not copy.isTitle then

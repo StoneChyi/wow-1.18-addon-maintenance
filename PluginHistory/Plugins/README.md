@@ -75,7 +75,7 @@
 | [PallyPower](PallyPower.md) | 有维护记录 | 增加单人操作与个人祝福，同时修正团队目标判断。 |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [PlayTurtle](PlayTurtle.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [PlayerLinkEnhance](PlayerLinkEnhance.md) | 有维护记录 | 让头像/玩家菜单更紧凑并减少互相干扰。 |
+| [PlayerLinkEnhance](PlayerLinkEnhance.md) | 有维护记录 | 保持头像菜单紧凑分组，修复团队目标图标入口误勾选。 |
 | [QuickHeal](QuickHeal.md) | 有维护记录 | 同步内置 HealComm 预估清理修复，保证库加载顺序兼容。 |
 | [QuickReply](QuickReply.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [RaidCheck](RaidCheck.md) | 有维护记录 | 区分未检测成员，并增加团队分配工具。 |
