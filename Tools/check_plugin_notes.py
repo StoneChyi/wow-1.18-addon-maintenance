@@ -50,6 +50,15 @@ def main():
         ["git", "-C", str(ROOT), "ls-tree", "-r", "--name-only", "-z", reference]
     )
     tracked = set(raw.decode("utf-8").split("\0")) - {""}
+    # Later maintenance can add a module/test to an existing addon. Keep the frozen
+    # reference for historical counts, but validate new entries against scoped Git files.
+    current_tracked = set(subprocess.check_output(
+        ["git", "-C", str(ROOT), "ls-files", "-z"]
+    ).decode("utf-8").split("\0")) - {""}
+
+    def current_path_exists(path):
+        resolved = (ROOT / path).resolve()
+        return path in current_tracked and resolved.is_relative_to(ROOT) and resolved.is_file()
     expected = {
         p.split("/")[2] for p in tracked if p.startswith("Interface/AddOns/")
     }
@@ -82,7 +91,7 @@ def main():
         for source in row["sources"]:
             assert historical_path_exists(source) or (
                 source.startswith("PluginHistory/Research/") and (ROOT / source).is_file()
-            ), (name, source)
+            ) or current_path_exists(source), (name, source)
             evidence_count += 1
         for path in row["maintenance_files"]:
             assert path.startswith("Interface/AddOns/" + name + "/"), path
@@ -90,7 +99,7 @@ def main():
                 resolved = (ROOT / path).resolve()
                 assert resolved.is_relative_to(ROOT / "Interface/AddOns" / name) and resolved.is_file(), path
             else:
-                assert path in tracked, path
+                assert path in tracked or current_path_exists(path), path
 
     links = 0
     for path in files:

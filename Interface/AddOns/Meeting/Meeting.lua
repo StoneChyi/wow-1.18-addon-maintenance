@@ -423,7 +423,7 @@ function Meeting:DeleteActivity(id)
     end
 end
 
-function Meeting:OnCreate(id, code, comment, level, class, members, hc, classnum, targetMembers)
+function Meeting:OnCreate(id, code, comment, level, class, members, hc, classnum, targetMembers, raidChat)
     -- 检查屏蔽词
     if Meeting.CheckBlockWords(id, id) or Meeting.CheckBlockWords(id, comment) then
         return  -- 如果包含屏蔽词，不创建活动
@@ -472,6 +472,7 @@ function Meeting:OnCreate(id, code, comment, level, class, members, hc, classnum
         }
     end
 
+    item.raidChat = raidChat
     for _, member in ipairs(Meeting.members) do
         if member == item.unitname then
             Meeting.joinedActivity = item

@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
-  "updated_on": "2026-10-12",
+  "updated_on": "2026-10-13",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "documented_history": 51,
-    "unconfirmed": 51,
+    "documented_history": 52,
+    "unconfirmed": 50,
     "snapshot_difference": 1,
     "related_skin_only": 2
   },
@@ -1004,13 +1004,29 @@
     },
     {
       "addon": "Meeting",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/Meeting.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
-      "maintenance_files": [],
+      "purpose": "修复团本聊天误收录；补齐 11 团本别名、招募意图判定和独立筛选。",
+      "sources": [
+        "PluginHistory/Research/Meeting团本识别方案-20261013.md",
+        "Tools/tests/test_meeting_raid_chat.py"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/Meeting/RaidChat.lua",
+        "Interface/AddOns/Meeting/Init.lua",
+        "Interface/AddOns/Meeting/Message.lua",
+        "Interface/AddOns/Meeting/Meeting.lua",
+        "Interface/AddOns/Meeting/Browser.lua",
+        "Interface/AddOns/Meeting/Meeting.toc"
+      ],
       "tracked_files_at_reference": 20,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "真实 1.12 频道识别、显示、密语和性能验收待补充；更早的个人修改归属未追认。",
+      "last_maintenance": {
+        "date": "2026-10-13",
+        "report": "PluginHistory/Research/Meeting团本识别方案-20261013.md",
+        "checks": 218,
+        "game_verified": false
+      }
     },
     {
       "addon": "ModernMapMarkers",

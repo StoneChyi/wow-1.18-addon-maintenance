@@ -362,82 +362,60 @@ Meeting.Categories = {
                 key = "MC",
                 name = "熔火之心",
                 minLevel = 60,
-                match = { "mc" },
-				nomatch = {}  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
             {
                 key = "ONY",
                 name = "奥妮克希亚的巢穴",
                 minLevel = 60,
-                match = { "黑龙" },
-				nomatch = {}  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
             {
                 key = "BWL",
                 name = "黑翼之巢",
                 minLevel = 60,
-                match = { "黑翼", "bwl" },
-				nomatch = {}  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
             {
                 key = "AQ40",
                 name = "安其拉神殿",
                 minLevel = 60,
-                match = { "安其拉", "taq" },
-				nomatch = {}  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
             {
                 key = "NAXX",
                 name = "纳克萨玛斯",
                 minLevel = 60,
-                match = { "naxx", "nx" },
-				nomatch = {}  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
             {
                 key = "ZUG",
                 name = "祖尔格拉布",
                 minLevel = 60,
                 members = 20,
-                match = { "祖格", "zug", "zg", "龙虎金" },
-				nomatch = {}  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
             {
                 key = "AQ20",
                 name = "安其拉废墟",
                 minLevel = 60,
                 members = 20,
-                match = { "废墟", "fx" },
-				nomatch = { "风暴废墟" }  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
             {
                 key = "TH",
                 name = "木喉要塞",
                 minLevel = 60,
                 members = 20,
-                match = { "木喉", "要塞", "熊怪" },
-				nomatch = { "风暴要塞" }  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
             {
                 key = "LKH",
                 name = "卡拉赞下层",
                 minLevel = 60,
                 members = 10,
-                match = { "10人卡拉赞", "10人klz", "10klz", "klz10", "klz下层", "下层klz", "下层卡拉赞", "卡拉赞上层", "卡拉赞", "klz", "卡下" },
-				nomatch = {}  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
             {
                 key = "ES",
                 name = "翡翠圣殿",
                 minLevel = 60,
-                match = { "翡翠" },
-				nomatch = {}  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
             },
 			{
 				key = "TOK",              -- 唯一标识符（需唯一）
 				name = "卡拉赞之塔",        -- 显示名称
 				minLevel = 60,              -- 最低等级要求（根据实际设定调整）
-				match = { "40人卡拉赞", "40人klz", "40klz", "klz40", "klz上层", "上层klz", "上层卡拉赞", "卡拉赞上层", "卡拉赞之塔", "k40", "卡上"  },	 -- 匹配关键词（用户搜索时会触发）
-				nomatch = {}  -- 新增排除关键词 by 武藤纯子酱 2025.9.22
 			}		
         }
     },

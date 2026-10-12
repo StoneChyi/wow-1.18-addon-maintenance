@@ -67,7 +67,7 @@ end
 local matchText = {}
 for _, category in ipairs(Meeting.Categories) do
     for _, value in ipairs(category.children) do
-        if value.match then
+        if category.key ~= "RAID" and value.match then
             for _, match in ipairs(value.match) do
                 table.insert(matchText, match)
             end
@@ -88,6 +88,38 @@ end
 distinct = nil
 
 function Message.OnRecvFormChat(channel, playerName, message)
+    if type(message) ~= "string" or type(playerName) ~= "string" or type(channel) ~= "string"
+        or message == "" or playerName == "" or string.len(message) > 4096 then return end
+    local activity = Meeting:FindActivity(playerName)
+    if activity and not activity:IsChat() then return end
+    if CheckBlockWords(playerName, message) then return end
+    local sourceCode = string.upper(channel)
+    -- Identical confirmed advertisements only refresh expiry; no parse/sort/UI churn.
+    if activity and activity.raidChat and not activity.raidChat.partial
+        and activity.comment == message and activity.code == sourceCode then
+        activity.updated = time()
+        return
+    end
+    local raid = Meeting.RaidChat.Parse(message)
+    if raid then
+        if raid.status == "recruit" then
+            Meeting:OnCreate(playerName, sourceCode, message, "0", "0", "0",
+                channel == "hardcore" and "1" or "0", nil, nil, raid)
+        elseif raid.status == "closed" and activity and activity.raidChat
+            and Meeting.RaidChat.Overlaps(raid, activity.raidChat) then
+            -- A partial close cannot discard the other half of a combined raid advert.
+            local remaining = {}
+            for code in pairs(activity.raidChat.codes) do
+                if not Meeting.RaidChat.Overlaps(raid, { codes = { [code] = true } }) then remaining[code] = true end
+            end
+            if not next(remaining) then Meeting:OnClose(playerName)
+            else
+                activity.raidChat = { status = "recruit", codes = remaining, partial = true }
+                Meeting.BrowserFrame:UpdateList()
+            end
+        end
+        return -- A rejected raid message must not re-enter the old keyword-only path.
+    end
     if string.find(message, "|Hquest:") then
         local questStart = string.find(message, "|Hquest:")
         if questStart then
@@ -122,10 +154,8 @@ function Message.OnRecvFormChat(channel, playerName, message)
         end
     end
 
-    local activity = Meeting:FindActivity(playerName)
-    if activity and not activity:IsChat() then
-        return
-    end
+    -- Unrelated chat cannot overwrite an active raid recruitment record.
+    if activity and activity.raidChat then return end
     if string.find(message, "求组") then
         return
     end
@@ -134,7 +164,7 @@ function Message.OnRecvFormChat(channel, playerName, message)
     end
 
     local lowerMessage = string.lower(message)
-    local matchs, nomatchs = SetMathcKeyWords()
+    local matchs, nomatchs = SetMathcKeyWords(true)
 
     local shouldMatchAll = Meeting.searchInfo.category == "" or
         (Meeting.searchInfo.category ~= "" and Meeting.searchInfo.code == "" and not next(Meeting.searchInfo.codes))

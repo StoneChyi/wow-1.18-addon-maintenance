@@ -10,6 +10,7 @@
 Util.lua
 Compat.lua
 Init.lua
+RaidChat.lua
 GUI.lua
 Message.lua
 Meeting.lua

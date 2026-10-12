@@ -82,7 +82,7 @@ Meeting.searchInfo.category = ""
 Meeting.searchInfo.code = ""
 local matchs = {}
 -- 修改 SetMathcKeyWords 函数支持跨类别多选 by 武藤纯子酱 2025.9.22
-function SetMathcKeyWords()
+function SetMathcKeyWords(nonRaidOnly)
     matchs = {}
     local nomatchs = {}  -- 存储排除关键词
     
@@ -100,7 +100,7 @@ function SetMathcKeyWords()
                 -- 在所有类别中查找匹配的活动
                 for _, category in ipairs(Meeting.Categories) do
                     for _, activity in ipairs(category.children) do
-                        if activity.key == activityKey then
+                        if activity.key == activityKey and (not nonRaidOnly or category.key ~= "RAID") then
                             -- 添加匹配关键词
                             if activity.match then
                                 for _, match in ipairs(activity.match) do
@@ -123,6 +123,7 @@ function SetMathcKeyWords()
     elseif Meeting.searchInfo.code ~= "" then
         -- 单个选择的情况
         local info = Meeting.GetActivityInfo(Meeting.searchInfo.code)
+        if nonRaidOnly and Meeting.GetActivityCategory(info.key).key == "RAID" then return matchs, nomatchs end
         if info.match then
             for _, v in ipairs(info.match) do
                 table.insert(matchs, v)
@@ -1261,7 +1262,8 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
 local function ReloadCell(frame, activity)
 	if not frame then return end
     local info = Meeting.GetActivityInfo(activity.code)
-    frame.nameFrame:SetText(info.name)
+    local displayName = activity.raidChat and Meeting.RaidChat.Label(activity.raidChat, true) or info.name
+    frame.nameFrame:SetText(displayName)
     frame.hcFrame:SetText(activity.isHC and "HC" or "")
     frame.leaderFrame:SetText(activity.unitname)
     local classColor = activity.classColor
@@ -1318,7 +1320,7 @@ local function ReloadCell(frame, activity)
 
     frame.activity = activity
     frame.id = activity.unitname
-    frame.name = info.name
+    frame.name = activity.raidChat and Meeting.RaidChat.Label(activity.raidChat) or displayName
     frame.isChat = isChat
     frame.leader = activity.unitname
     frame.level = activity.level
@@ -1399,8 +1401,9 @@ function Meeting.BrowserFrame:UpdateList(force, scroll)
             
             -- 在活动名称中搜索
             local activityInfo = Meeting.GetActivityInfo(activity.code)
-            local activityNameMatch = activityInfo and activityInfo.name and
-                                     string.find(string.lower(activityInfo.name), Meeting.searchInfo.text, 1, true)
+            local activityName = activity.raidChat and Meeting.RaidChat.Label(activity.raidChat) or (activityInfo and activityInfo.name)
+            local activityNameMatch = activityName and
+                                     string.find(string.lower(activityName), Meeting.searchInfo.text, 1, true)
             
             return commentMatch or leaderMatch or activityNameMatch
         end
@@ -1428,7 +1431,12 @@ function Meeting.BrowserFrame:UpdateList(force, scroll)
 
 			if shouldShow then
 				if activity:IsChat() then
-					-- 聊天活动的特殊处理
+                    if activity.raidChat then
+                        if Meeting.RaidChat.MatchesSearch(activity.raidChat, Meeting.searchInfo, activity.code) and textSearch(activity) then
+                            table.insert(activities, activity)
+                        end
+                    else
+					-- 其他类别保留现有聊天筛选逻辑。
 					if next(Meeting.searchInfo.codes) or Meeting.searchInfo.code ~= "" then
 						if matchActivity(activity) and textSearch(activity) then  -- 添加搜索过滤
 							table.insert(activities, activity)
@@ -1438,6 +1446,7 @@ function Meeting.BrowserFrame:UpdateList(force, scroll)
 							table.insert(activities, activity)
 						end
 					end
+                    end
 				else
 					-- 普通活动的处理
 					if search(activity) and textSearch(activity) then  -- 添加搜索过滤
