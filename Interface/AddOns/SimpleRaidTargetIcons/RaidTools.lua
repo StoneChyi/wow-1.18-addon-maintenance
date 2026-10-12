@@ -10,7 +10,13 @@ local sideDefaults = {
     RESET_BUTTON_SIDE = "RIGHT", CLEAR_BUTTON_SIDE = "RIGHT", SETTINGS_BUTTON_SIDE = "RIGHT",
     LOOT_BUTTON_SIDE = "RIGHT",
 }
-local tools, checks, health, sideControls = {}, {}, {}, {}
+local defaultOrder = {"READY_BUTTON", "COUNTDOWN_BUTTON", "LOOT_BUTTON", "SAVE_BUTTON",
+    "CLEAR_BUTTON", "RESET_BUTTON", "SETTINGS_BUTTON"}
+local toolNames = {READY_BUTTON="就位确认", COUNTDOWN_BUTTON="开怪倒数", LOOT_BUTTON="分配方式",
+    SAVE_BUTTON="存 / 还原", CLEAR_BUTTON="清除标记", RESET_BUTTON="重置副本", SETTINGS_BUTTON="设置"}
+local tools, checks, health, sideControls, positionControls = {}, {}, {}, {}, {}
+local lootMenu, orderMenu
+local LootVisible
 local initialized = false
 local lootLayoutVisible
 local countdown = CreateFrame("Frame")
@@ -20,6 +26,55 @@ local function Print(text)
     DEFAULT_CHAT_FRAME:AddMessage("|cffc0ffc0[SRTI]|r " .. text)
 end
 
+local function NormalizeToolOrder(reset)
+    local saved = not reset and BANANA_CONFIG.TOOL_ORDER
+    local order, seen = {}, {}
+    if type(saved) == "table" then
+        for _, id in ipairs(saved) do
+            if toolNames[id] and not seen[id] then table.insert(order, id) seen[id] = true end
+        end
+    end
+    for _, id in ipairs(defaultOrder) do
+        if not seen[id] then table.insert(order, id) end
+    end
+    BANANA_CONFIG.TOOL_ORDER = order
+    return order
+end
+
+local function SideTools(id)
+    local result = {}
+    for _, other in ipairs(BANANA_CONFIG.TOOL_ORDER) do
+        if BANANA_CONFIG[other .. "_SIDE"] == BANANA_CONFIG[id .. "_SIDE"]
+            and BANANA_CONFIG["SHOW_" .. other] == 1
+            and (other ~= "LOOT_BUTTON" or other == id or LootVisible()) then table.insert(result, other) end
+    end
+    return result
+end
+
+local function ToolPosition(id)
+    for position, other in ipairs(SideTools(id)) do
+        if other == id then return position end
+    end
+end
+
+local function MoveTool(id, position)
+    if not toolNames[id] or BANANA_CONFIG["SHOW_" .. id] ~= 1 then return end
+    local siblings = SideTools(id)
+    position = math.max(1, math.min(table.getn(siblings), position))
+    local order = BANANA_CONFIG.TOOL_ORDER
+    for i, other in ipairs(order) do
+        if other == id then table.remove(order, i) break end
+    end
+    siblings = SideTools(id)
+    local anchor = siblings[position] or siblings[table.getn(siblings)]
+    local insertion = table.getn(order) + 1
+    for i, other in ipairs(order) do
+        if other == anchor then insertion = i + (siblings[position] and 0 or 1) break end
+    end
+    table.insert(order, insertion, id)
+    Banana_Layout()
+end
+
 function SRTI_ApplyToolDefaults(reset)
     for key, value in pairs(defaults) do
         if reset or BANANA_CONFIG[key] == nil then BANANA_CONFIG[key] = value end
@@ -27,6 +82,7 @@ function SRTI_ApplyToolDefaults(reset)
     for key, value in pairs(sideDefaults) do
         if reset or BANANA_CONFIG[key] == nil then BANANA_CONFIG[key] = value end
     end
+    NormalizeToolOrder(reset)
 end
 
 local function GroupVisible()
@@ -36,19 +92,25 @@ local function GroupVisible()
     return BANANA_CONFIG.SHOW_OUT_OF_GROUP == 1
 end
 
-local function LootVisible()
+LootVisible = function()
     return GroupVisible() and BANANA_CONFIG.SHOW_LOOT_BUTTON == 1
         and (GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0)
 end
 
 local lootModes = {
-    freeforall = {"自由拾取", "队伍成员均可直接拾取物品。", .4, 1, .5},
-    roundrobin = {"轮流拾取", "队伍成员轮流获得拾取机会。", .4, .8, 1},
-    master = {"队长分配", "达到分配品质的物品由指定的物品分配者分配。", 1, .55, .25},
-    group = {"队伍拾取", "达到分配品质的物品通过需求 / 贪婪掷骰分配。", 1, .85, .3},
-    needbeforegreed = {"需求优先", "达到分配品质的物品优先由能够使用的成员需求。", .8, .6, 1},
+    freeforall = {"自由拾取", "队伍成员均可直接拾取物品。", .4, 1, .5, "自由"},
+    roundrobin = {"轮流拾取", "队伍成员轮流获得拾取机会。", .4, .8, 1, "轮流"},
+    master = {"队长分配", "达到分配品质的物品由指定的物品分配者分配。", 1, .55, .25, "队分"},
+    group = {"队伍拾取", "达到分配品质的物品通过需求 / 贪婪掷骰分配。", 1, .85, .3, "队拾"},
+    needbeforegreed = {"需求优先", "达到分配品质的物品优先由能够使用的成员需求。", .8, .6, 1, "需求"},
 }
-local unknownLoot = {"等待同步", "分配方式暂未同步，请稍候。", .7, .7, .7}
+local unknownLoot = {"等待同步", "分配方式暂未同步，请稍候。", .7, .7, .7, "待定"}
+
+local function CanChangeLoot()
+    if not LootVisible() or not SetLootMethod then return false end
+    if GetNumRaidMembers() > 0 then return IsRaidLeader() end
+    return IsPartyLeader()
+end
 
 local function LootMode()
     -- Vanilla 1.12 GetLootMethod's first return is the method token.
@@ -61,18 +123,91 @@ local function LootTooltip()
     GameTooltip:SetOwner(tools.loot, "ANCHOR_TOP")
     GameTooltip:SetText("当前分配方式：" .. mode[1])
     GameTooltip:AddLine(mode[2], .8, .8, .8, 1)
-    GameTooltip:AddLine("左键：在本地聊天窗口查看分配方式", .7, .7, .7, 1)
+    GameTooltip:AddLine("左键：打开分配菜单", .7, .7, .7, 1)
+    if not CanChangeLoot() then GameTooltip:AddLine("只有队长或团长可以切换分配方式。", 1, .6, .3, 1) end
     GameTooltip:Show()
 end
 
 local function UpdateLootButton()
     local mode = LootMode()
     if tools.loot.mode ~= mode then
-        tools.loot.label:SetText(mode[1])
+        tools.loot.label:SetText(mode[6])
         tools.loot.label:SetTextColor(mode[3], mode[4], mode[5])
         tools.loot.mode = mode
     end
     if tools.loot.hovered then LootTooltip() end
+end
+
+local function CloseMenus()
+    CloseDropDownMenus()
+    -- 1.12 caches the last menu name; invalidate it when rebuilding positions or pages.
+    UIDROPDOWNMENU_OPEN_MENU = nil
+end
+
+local function ShowLootMenu(pickMaster, page)
+    lootMenu.pickMaster, lootMenu.page = pickMaster, page or 1
+    CloseMenus()
+    ToggleDropDownMenu(1, nil, lootMenu, tools.loot, 0, 0)
+end
+
+local function SetLoot(mode, unit, expectedName)
+    -- Recheck at selection time: leadership and membership may have changed with the menu open.
+    if not CanChangeLoot() then Print("只有队长或团长可以切换分配方式。") return end
+    if mode == "master" then
+        if not unit or not UnitExists(unit) or UnitName(unit) ~= expectedName then
+            Print("成员已变化，请重新选择物品分配者。") ShowLootMenu(true, 1) return
+        end
+        SetLootMethod("master", expectedName)
+    else
+        SetLootMethod(mode)
+    end
+    CloseMenus()
+    -- Read the client's actual state; never display a requested method as already confirmed.
+    SRTI_UpdateTools()
+end
+
+local function LootMenuInitialize()
+    if (UIDROPDOWNMENU_MENU_LEVEL or 1) ~= 1 then return end
+    local allowed = CanChangeLoot()
+    if lootMenu.pickMaster then
+        local members = {}
+        local function AddMember(unit)
+            local name = UnitName(unit)
+            if name and UnitExists(unit) then table.insert(members, {unit, name}) end
+        end
+        if GetNumRaidMembers() > 0 then
+            for i = 1, GetNumRaidMembers() do AddMember("raid" .. i) end
+        elseif GetNumPartyMembers() > 0 then
+            AddMember("player")
+            for i = 1, GetNumPartyMembers() do AddMember("party" .. i) end
+        end
+        local pages = math.max(1, math.ceil(table.getn(members) / 10))
+        local page = math.min(lootMenu.page or 1, pages)
+        UIDropDownMenu_AddButton({text="选择物品分配者（" .. page .. "/" .. pages .. "）", isTitle=1, notCheckable=1}, 1)
+        for i = (page-1)*10+1, math.min(page*10, table.getn(members)) do
+            local unit, name = members[i][1], members[i][2]
+            UIDropDownMenu_AddButton({text=name, notCheckable=1, keepShownOnClick=1, disabled=not allowed and 1 or nil,
+                func=function() SetLoot("master", unit, name) end}, 1)
+        end
+        if page > 1 then UIDropDownMenu_AddButton({text="上一页", notCheckable=1, keepShownOnClick=1,
+            func=function() ShowLootMenu(true, page-1) end}, 1) end
+        if page < pages then UIDropDownMenu_AddButton({text="下一页", notCheckable=1, keepShownOnClick=1,
+            func=function() ShowLootMenu(true, page+1) end}, 1) end
+        UIDropDownMenu_AddButton({text="返回分配方式", notCheckable=1, keepShownOnClick=1,
+            func=function() ShowLootMenu(false) end}, 1)
+        return
+    end
+    UIDropDownMenu_AddButton({text=allowed and "选择分配方式" or "仅队长 / 团长可切换", isTitle=1, notCheckable=1}, 1)
+    for _, token in ipairs({"freeforall", "roundrobin", "master", "group", "needbeforegreed"}) do
+        local method = token
+        UIDropDownMenu_AddButton({text=lootModes[method][1], checked=LootMode()==lootModes[method] and 1 or nil,
+            disabled=not allowed and 1 or nil, keepShownOnClick=method=="master" and 1 or nil,
+            func=function()
+                if method == "master" then
+                    if CanChangeLoot() then ShowLootMenu(true, 1) end
+                else SetLoot(method) end
+            end}, 1)
+    end
 end
 
 local function Leader(assistant)
@@ -180,25 +315,43 @@ function SRTI_UpdateToolOptions()
     for key, button in pairs(sideControls) do
         button:SetText(BANANA_CONFIG[key] == "LEFT" and "左侧" or "右侧")
     end
+    for id, button in pairs(positionControls) do
+        local position = ToolPosition(id)
+        button:SetText(position and ("第" .. position .. "位") or "已关闭")
+        if position then button:Enable() else button:Disable() end
+    end
     local width = getglobal("SRTI_HealthWidth")
     if width then width:SetText(tostring(BANANA_CONFIG.HEALTH_BAR_WIDTH or 44)) end
 end
 
+local function OrderMenuInitialize()
+    if not orderMenu.tool or (UIDROPDOWNMENU_MENU_LEVEL or 1) ~= 1 then return end
+    local id = orderMenu.tool
+    local title = id=="LOOT_BUTTON" and not LootVisible() and "分配方式：预设组队后的位置"
+        or (toolNames[id] .. "：从标记向外排列")
+    UIDropDownMenu_AddButton({text=title, isTitle=1, notCheckable=1}, 1)
+    for i = 1, table.getn(SideTools(id)) do
+        local position = i
+        UIDropDownMenu_AddButton({text="第" .. i .. "位" .. (i==1 and "（最靠近标记）" or ""),
+            checked=ToolPosition(id)==i and 1 or nil, func=function() MoveTool(id, position) end}, 1)
+    end
+end
+
 local function CreateOptions()
     -- Include both columns in the draggable frame's bounds for screen clamping.
-    BananaConfigFrame:SetWidth(604)
+    BananaConfigFrame:SetWidth(704)
     BananaConfigFrame:SetHeight(557)
     local header = getglobal("BananaConfigFramePanel1")
     local title = getglobal("BananaConfigFramePanel1LabelTitle")
     local close = getglobal("BananaConfigFrameButtonClose")
-    if header then header:SetWidth(584) end
-    if title then title:SetWidth(552) end
+    if header then header:SetWidth(684) end
+    if title then title:SetWidth(652) end
     if close and header then
         close:ClearAllPoints()
         close:SetPoint("TOPRIGHT", header, "TOPRIGHT", -7, -6)
     end
     local panel = CreateFrame("Frame", "SRTI_ToolOptions", BananaConfigFrame)
-    panel:SetWidth(280)
+    panel:SetWidth(380)
     panel:SetHeight(486)
     panel:SetPoint("TOPLEFT", BananaConfigFrame, "TOPLEFT", 316, -56)
     panel:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",
@@ -208,6 +361,9 @@ local function CreateOptions()
     local heading = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     heading:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, -16)
     heading:SetText("标记血条与团队工具")
+    orderMenu = CreateFrame("Frame", "SRTI_OrderMenu", UIParent, "UIDropDownMenuTemplate")
+    orderMenu:Hide()
+    UIDropDownMenu_Initialize(orderMenu, OrderMenuInitialize, "MENU")
     local options = {
         {"SHOW_HUNTER_BUTTON", "显示猎人印记图标"},
         {"SHOW_SAVE_BUTTON", "存 / 还原", "SAVE_BUTTON_SIDE"},
@@ -240,13 +396,24 @@ local function CreateOptions()
             local side = CreateFrame("Button", "SRTI_Side_" .. sideKey, panel, "UIPanelButtonTemplate")
             side:SetWidth(56)
             side:SetHeight(22)
-            side:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -16, -39 - (i-1)*28)
+            side:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -80, -39 - (i-1)*28)
             side:SetScript("OnClick", function()
                 BANANA_CONFIG[sideKey] = BANANA_CONFIG[sideKey] == "LEFT" and "RIGHT" or "LEFT"
                 SRTI_UpdateToolOptions()
                 Banana_Layout()
             end)
             sideControls[sideKey] = side
+            local id = string.gsub(sideKey, "_SIDE$", "")
+            local position = CreateFrame("Button", "SRTI_Position_" .. id, panel, "UIPanelButtonTemplate")
+            position:SetWidth(56)
+            position:SetHeight(22)
+            position:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -16, -39 - (i-1)*28)
+            position:SetScript("OnClick", function()
+                orderMenu.tool = id
+                CloseMenus()
+                ToggleDropDownMenu(1, nil, orderMenu, this, 0, 0)
+            end)
+            positionControls[id] = position
         end
     end
     local sizeLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -278,10 +445,10 @@ local function CreateOptions()
     end
     local note = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     note:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, -422)
-    note:SetWidth(244)
+    note:SetWidth(344)
     note:SetHeight(54)
     note:SetJustifyH("LEFT")
-    note:SetText("工具位置按屏幕左 / 右侧设置。\n血条黄色区段表示刚损失的生命。\n聊天栏“标”或 /srti 可随时打开设置。")
+    note:SetText("第 1 位最靠近标记；隐藏工具不占位。\n分配按钮仅组队显示，可提前设置组队后的位置。\n黄色血条表示刚损失的生命；/srti 打开设置。")
     SRTI_UpdateToolOptions()
 end
 
@@ -441,28 +608,22 @@ function SRTI_LayoutTools()
     if BANANA_CONFIG.BUTTON_LAYOUT == 4 then start = RaidTargetFrame1Button ending = RaidTargetFrame1Button end
     local before, after = start, ending
     if flipped and BANANA_CONFIG.BUTTON_LAYOUT ~= 4 and BANANA_CONFIG.BUTTON_LAYOUT ~= 5 then before, after = ending, start end
-    local order = {
-        {tools.ready, "SHOW_READY_BUTTON", "READY_BUTTON_SIDE"},
-        {tools.countdown, "SHOW_COUNTDOWN_BUTTON", "COUNTDOWN_BUTTON_SIDE"},
-        {tools.loot, "SHOW_LOOT_BUTTON", "LOOT_BUTTON_SIDE"},
-        {getglobal("SRTI_SaveBtn"), "SHOW_SAVE_BUTTON", "SAVE_BUTTON_SIDE"},
-        {tools.clear, "SHOW_CLEAR_BUTTON", "CLEAR_BUTTON_SIDE"},
-        {tools.reset, "SHOW_RESET_BUTTON", "RESET_BUTTON_SIDE"},
-        {tools.settings, "SHOW_SETTINGS_BUTTON", "SETTINGS_BUTTON_SIDE"},
-    }
-    for _, item in ipairs(order) do
-        local button = item[1]
+    local buttons = {READY_BUTTON=tools.ready, COUNTDOWN_BUTTON=tools.countdown, LOOT_BUTTON=tools.loot,
+        SAVE_BUTTON=getglobal("SRTI_SaveBtn"), CLEAR_BUTTON=tools.clear, RESET_BUTTON=tools.reset, SETTINGS_BUTTON=tools.settings}
+    for _, id in ipairs(NormalizeToolOrder()) do
+        local button = buttons[id]
         if button then
             button:SetScale(BANANA_CONFIG.BUTTON_SCALE / 100)
             button:ClearAllPoints()
-            local isLeft = BANANA_CONFIG[item[3]] == "LEFT"
+            local isLeft = BANANA_CONFIG[id .. "_SIDE"] == "LEFT"
             if isLeft then button:SetPoint("RIGHT", before, "LEFT", -4, 0)
             else button:SetPoint("LEFT", after, "RIGHT", 4, 0) end
-            if BANANA_CONFIG[item[2]] == 1 and (button ~= tools.loot or lootLayoutVisible) then
+            if BANANA_CONFIG["SHOW_" .. id] == 1 and (button ~= tools.loot or lootLayoutVisible) then
                 if isLeft then before = button else after = button end
             end
         end
     end
+    SRTI_UpdateToolOptions()
     SRTI_UpdateTools()
 end
 
@@ -475,6 +636,7 @@ function SRTI_UpdateTools()
         tools.loot:Show()
     else
         tools.loot:Hide()
+        if UIDROPDOWNMENU_OPEN_MENU == lootMenu or UIDROPDOWNMENU_OPEN_MENU == lootMenu:GetName() then CloseMenus() end
         if tools.loot.hovered then GameTooltip:Hide() tools.loot.hovered = nil end
     end
     local visible = GroupVisible()
@@ -506,19 +668,14 @@ function SRTI_InitTools()
     tools.settings = CreateTool("SettingsButton", "设", "标记助手设置", "左键：打开 / 关闭设置面板", {.4, .75, 1},
         function() if arg1 == "LeftButton" then Banana_Toggle() end end)
     tools.loot = CreateTool("LootButton", "", "当前分配方式", "", {1, 1, 1}, function()
-        if arg1 == "LeftButton" and LootVisible() then Print("当前分配方式：" .. LootMode()[1]) end
+        if arg1 == "LeftButton" and LootVisible() then ShowLootMenu(false) end
     end)
-    tools.loot:SetWidth(82)
     tools.loot.label:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
-    tools.loot.label:SetWidth(74)
+    tools.loot.label:SetWidth(34)
     tools.loot.label:SetHeight(17)
-    tools.loot.label:ClearAllPoints()
-    tools.loot.label:SetPoint("BOTTOM", tools.loot, "BOTTOM", 0, 3)
-    local lootTitle = tools.loot:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    lootTitle:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
-    lootTitle:SetPoint("TOP", tools.loot, "TOP", 0, -3)
-    lootTitle:SetText("分配方式")
-    lootTitle:SetTextColor(.8, .8, .8)
+    lootMenu = CreateFrame("Frame", "SRTI_LootMenu", UIParent, "UIDropDownMenuTemplate")
+    lootMenu:Hide()
+    UIDropDownMenu_Initialize(lootMenu, LootMenuInitialize, "MENU")
     tools.loot:SetScript("OnEnter", function()
         if LootVisible() then tools.loot.hovered = true LootTooltip() end
     end)
