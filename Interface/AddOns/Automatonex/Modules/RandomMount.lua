@@ -38,7 +38,7 @@ local RM_ENABLE_DEBUG = 0
 
 -- 坐骑页面的可能名称（用于在多语言环境下识别）
 local mountTabNames = {
-    "坐骑"
+    "坐骑", "坐騎", "Mounts"
 }
 
 -- 职业坐骑列表
@@ -50,6 +50,10 @@ local classMounts = {
     -- 圣骑士职业坐骑
     "召唤战马",
     "召唤军马",
+    "Summon Felsteed",
+    "Summon Dreadsteed",
+    "Summon Warhorse",
+    "Summon Charger",
     "骑乘斑马",
     -- 德鲁伊特殊形态
     "条纹霜刃豹",
@@ -119,27 +123,14 @@ local function GetTableLength(t)
     return count
 end
 
--- 获取玩家法术总数（安全版本）
-local function GetTotalSpellCount()
-    if GetNumSpellCount then
-        return GetNumSpellCount(BOOKTYPE_SPELL)
-    else
-        return 300 -- 后备值，兼容旧版本
-    end
+local function TrimName(name)
+    if type(name) ~= "string" then return "" end
+    return (string.gsub(name, "^%s*(.-)%s*$", "%1"))
 end
 
 -- 安全获取法术名称，如果出错返回nil
 local function SafeGetSpellName(spellIndex, bookType)
     local success, name = pcall(GetSpellName, spellIndex, bookType)
-    if success then
-        return name
-    end
-    return nil
-end
-
--- 安全获取法术信息，如果出错返回nil
-local function SafeGetSpellInfo(spellID)
-    local success, name = pcall(GetSpellInfo, spellID)
     if success then
         return name
     end
@@ -175,7 +166,7 @@ local function IsMountTab(tabName)
     tabName = string.lower(tabName)
     for i = 1, GetTableLength(mountTabNames) do
         local name = string.lower(mountTabNames[i])
-        if string.find(tabName, name) then
+        if string.find(tabName, name, 1, true) then
             return true
         end
     end
@@ -221,150 +212,103 @@ local function IsNonMountSpell(spellName)
     return false
 end
 
--- 根据名称查找坐骑法术ID（严格匹配）
-local function FindMountSpellIDByName(spellName)
-    if not spellName then return nil end
-    
-    local searchName = string.lower(spellName)
-    
-    -- 遍历所有法术书页面
-    local numTabs = GetNumSpellTabs()
-    for tabIndex = 1, numTabs do
-        local tabName, _, tabStart, tabCount = GetSpellTabInfo(tabIndex)
-        for spellOffset = 0, tabCount - 1 do
-            local spellIndex = tabStart + spellOffset
-            local name = SafeGetSpellName(spellIndex, BOOKTYPE_SPELL)
-            if name and string.lower(name) == searchName then
-                -- 判断是否为坐骑（排除生活技能等）
-                if not IsNonMountSpell(name) then
-                    return spellIndex
-                else
-                    return nil -- 是生活技能，不是坐骑
-                end
-            end
-        end
-    end
-    
-    -- 额外扫描职业坐骑和骑乘乌龟（可能不在坐骑页面）
-    local totalSpells = GetTotalSpellCount()
-    for i = 1, totalSpells do
-        local name = SafeGetSpellName(i, BOOKTYPE_SPELL)
-        if name and string.lower(name) == searchName then
-            -- 职业坐骑或骑乘乌龟
-            if IsClassMount(name) or string.find(name, "骑乘乌龟") or string.find(name, "Riding Turtle") then
-                return i
-            end
-        end
-    end
-    
-    return nil
-end
-
--- 获取玩家可用的坐骑（自动扫描 + 自定义，并排除黑名单）
-local function GetPlayerMounts()
-    local bugMountList = {}
-    local normalMountList = {}
-    local foundMountTab = false
-    local autoMountNames = {} -- 用于去重，记录自动扫描到的坐骑名称
-    
-    -- 获取法术书页面的数量
-    local numTabs = GetNumSpellTabs()
-    
-    -- 遍历所有法术书页面
-    for tabIndex = 1, numTabs do
-        local tabName, tabTexture, tabStart, tabCount = GetSpellTabInfo(tabIndex)
-        
-        -- 检查该页面是否是坐骑页面
-        if tabName and IsMountTab(tabName) then
-            foundMountTab = true
-            
-            -- 遍历该页面上的所有法术
-            for spellOffset = 0, tabCount - 1 do
-                local spellIndex = tabStart + spellOffset
-                local spellName = SafeGetSpellName(spellIndex, BOOKTYPE_SPELL)
-                
-                if spellName and spellName ~= "" then
-                    -- 首先检查是否在非坐骑列表中
-                    if IsNonMountSpell(spellName) then
-                        -- 跳过非坐骑法术
-                    -- 特殊处理职业坐骑
-                    elseif IsClassMount(spellName) then
-                        table.insert(normalMountList, {name = spellName, id = spellIndex})
-                        autoMountNames[spellName] = true
-                    -- 特殊处理骑乘乌龟
-                    elseif string.find(spellName, "骑乘乌龟") or string.find(spellName, "Riding Turtle") then
-                        table.insert(normalMountList, {name = spellName, id = spellIndex})
-                        autoMountNames[spellName] = true
-                    -- 根据名称判断是否是虫子坐骑
-                    elseif IsBugMount(spellName) then
-                        table.insert(bugMountList, {name = spellName, id = spellIndex})
-                        autoMountNames[spellName] = true
-                    else
-                        table.insert(normalMountList, {name = spellName, id = spellIndex})
-                        autoMountNames[spellName] = true
+-- Spellbook offsets are zero-based; GetSpellName/CastSpell use offset + 1.
+local function ScanMounts()
+    local mounts, byName, byIndex, seenMount = {}, {}, {}, {}
+    for tabIndex = 1, GetNumSpellTabs() do
+        local tabName, _, offset, count = GetSpellTabInfo(tabIndex)
+        if type(offset) == "number" and type(count) == "number" then
+            for index = offset + 1, offset + count do
+                local name = SafeGetSpellName(index, BOOKTYPE_SPELL)
+                if name and name ~= "" and not IsNonMountSpell(name) then
+                    local isMount = IsMountTab(tabName) or IsClassMount(name)
+                        or string.find(name, "骑乘乌龟", 1, true)
+                        or string.find(name, "Riding Turtle", 1, true)
+                    local key = string.lower(name)
+                    local mount = {name = name, id = index, isMount = isMount}
+                    byIndex[index] = mount
+                    if not byName[key] or (isMount and not byName[key].isMount) then
+                        byName[key] = mount
+                    end
+                    if isMount and not seenMount[key] then
+                        seenMount[key] = true
+                        table.insert(mounts, mount)
                     end
                 end
             end
         end
     end
-    
-    -- 特别检查是否有骑乘乌龟和职业坐骑（兜底，使用实际法术总数）
-    local totalSpells = GetTotalSpellCount()
-    for i = 1, totalSpells do
-        local spellName = SafeGetSpellName(i, BOOKTYPE_SPELL)
-        if spellName and spellName ~= "" and not autoMountNames[spellName] then
-            if string.find(spellName, "骑乘乌龟") or string.find(spellName, "Riding Turtle") then
-                table.insert(normalMountList, {name = spellName, id = i})
-                autoMountNames[spellName] = true
-            elseif IsClassMount(spellName) then
-                table.insert(normalMountList, {name = spellName, id = i})
-                autoMountNames[spellName] = true
+    return mounts, byName, byIndex
+end
+
+-- Persist names, never mutable spellbook positions. Unknown legacy positions
+-- stay in the saved list for review and are never used to cast another spell.
+local function MigrateMountList(list, byIndex)
+    local seen, migrated = {}, false
+    for i = GetTableLength(list), 1, -1 do
+        local entry = list[i]
+        if type(entry) == "number" and byIndex[entry] and byIndex[entry].isMount then
+            entry = byIndex[entry].name
+            list[i] = entry
+            migrated = true
+        end
+        if type(entry) == "string" then
+            local key = string.lower(entry)
+            if seen[key] then
+                table.remove(list, i)
+            else
+                seen[key] = true
             end
         end
     end
-    
-    -- 添加自定义坐骑（如果启用）
-    if Automaton_RandomMount.db and Automaton_RandomMount.db.char.customMountsEnable then
-        local customMounts = Automaton_RandomMount.db.char.customMounts or {}
-        for _, spellID in ipairs(customMounts) do
-            local spellName = SafeGetSpellInfo(spellID) -- 通过法术ID获取名称（安全）
-            if spellName and not autoMountNames[spellName] then
-                if IsBugMount(spellName) then
-                    table.insert(bugMountList, {name = spellName, id = spellID})
-                else
-                    table.insert(normalMountList, {name = spellName, id = spellID})
-                end
-                autoMountNames[spellName] = true
-            end
+    return migrated
+end
+
+local function GetMountData()
+    local mounts, byName, byIndex = ScanMounts()
+    local char = Automaton_RandomMount.db.char
+    char.customMounts = char.customMounts or {}
+    char.excludedMounts = char.excludedMounts or {}
+    -- Wait for the mount book to be available; do not reinterpret unresolved
+    -- legacy positions after later spellbook changes.
+    if mounts[1] and char.mountNamesVersion ~= 1 then
+        local migratedCustom = MigrateMountList(char.customMounts, byIndex)
+        local migratedExcluded = MigrateMountList(char.excludedMounts, byIndex)
+        char.mountNamesVersion = 1
+        if migratedCustom or migratedExcluded then
+            DebugMessage("旧坐骑记录已按当前法术书转为名称保存，请核对自定义和移除列表。", true)
         end
     end
-    
-    -- 过滤掉被排除的坐骑（黑名单）
-    local excluded = Automaton_RandomMount.db.char.excludedMounts or {}
+    return mounts, byName
+end
+
+local function FindMountByName(inputName)
+    local _, byName = GetMountData()
+    return byName[string.lower(TrimName(inputName))]
+end
+
+-- All learned mounts on the mount tab are eligible, including its last entry.
+local function GetPlayerMounts()
+    local mounts, byName = GetMountData()
     local excludedSet = {}
-    for _, id in ipairs(excluded) do
-        excludedSet[id] = true
+    for _, name in ipairs(Automaton_RandomMount.db.char.excludedMounts) do
+        if type(name) == "string" then excludedSet[string.lower(name)] = true end
     end
-    
-    local filteredBugs = {}
-    local filteredNormal = {}
-    
-    for _, mount in ipairs(bugMountList) do
-        if not excludedSet[mount.id] then
-            table.insert(filteredBugs, mount)
+    local result, seen = {bugs = {}, normal = {}}, {}
+    local function AddMount(mount)
+        local key = mount and string.lower(mount.name)
+        if key and not seen[key] and not excludedSet[key] then
+            seen[key] = true
+            table.insert(IsBugMount(mount.name) and result.bugs or result.normal, mount)
         end
     end
-    
-    for _, mount in ipairs(normalMountList) do
-        if not excludedSet[mount.id] then
-            table.insert(filteredNormal, mount)
+    for _, mount in ipairs(mounts) do AddMount(mount) end
+    if Automaton_RandomMount.db.char.customMountsEnable then
+        for _, name in ipairs(Automaton_RandomMount.db.char.customMounts) do
+            if type(name) == "string" then AddMount(byName[string.lower(name)]) end
         end
     end
-    
-    return {
-        bugs = filteredBugs,
-        normal = filteredNormal
-    }
+    return result
 end
 
 -- 随机选择坐骑并释放
@@ -428,7 +372,7 @@ end
 
 -- 处理聊天命令
 local function HandleChatCommand(msg)
-    msg = msg and string.trim(msg) or ""
+    msg = TrimName(msg)
     
     if msg == "list" then
         local mounts = GetPlayerMounts()
@@ -512,50 +456,47 @@ end
 
 -- 添加自定义坐骑（通过名称）
 function Automaton_RandomMount:AddCustomMount(inputName)
-    if not inputName or inputName == "" then
+    inputName = TrimName(inputName)
+    if inputName == "" then
         DebugMessage("请输入坐骑名称！", true)
         return
     end
-    
-    local spellID = FindMountSpellIDByName(inputName)
-    if not spellID then
+    local mount = FindMountByName(inputName)
+    if not mount then
         DebugMessage("未找到名为 \"" .. inputName .. "\" 的坐骑，请确认名称正确且已学会。", true)
         return
     end
-    
-    -- 确保customMounts存在
-    self.db.char.customMounts = self.db.char.customMounts or {}
-    
-    -- 检查是否已存在
-    for _, existingID in ipairs(self.db.char.customMounts) do
-        if existingID == spellID then
-            DebugMessage("坐骑 \"" .. inputName .. "\" 已在自定义列表中！", true)
+    self.db.char.customMountsEnable = true
+    for _, name in ipairs(self.db.char.customMounts) do
+        if type(name) == "string" and string.lower(name) == string.lower(mount.name) then
+            DebugMessage("坐骑 \"" .. mount.name .. "\" 已在自定义列表中！", true)
             return
         end
     end
-    
-    table.insert(self.db.char.customMounts, spellID)
-    DebugMessage("成功添加自定义坐骑：" .. inputName, true)
+    table.insert(self.db.char.customMounts, mount.name)
+    DebugMessage("成功添加自定义坐骑：" .. mount.name, true)
+end
+
+local function ListSavedMounts(list, byName)
+    for i, entry in ipairs(list) do
+        if type(entry) == "string" then
+            local suffix = byName[string.lower(entry)] and "" or "（当前未学会）"
+            DebugMessage("  " .. i .. ". " .. entry .. suffix, true)
+        else
+            DebugMessage("  " .. i .. ". 旧法术书序号 " .. tostring(entry) .. "（无法确认，请重新添加坐骑名称）", true)
+        end
+    end
 end
 
 -- 列出所有自定义坐骑
 function Automaton_RandomMount:ListCustomMounts()
-    self.db.char.customMounts = self.db.char.customMounts or {}
+    local _, byName = GetMountData()
     if GetTableLength(self.db.char.customMounts) == 0 then
         DebugMessage("自定义坐骑列表为空", true)
         return
     end
-    
     DebugMessage("自定义坐骑列表:", true)
-    for i, id in ipairs(self.db.char.customMounts) do
-        -- 使用 SafeGetSpellName 通过索引获取名称（因为存储的是法术书索引）
-        local name = SafeGetSpellName(id, BOOKTYPE_SPELL)
-        if name then
-            DebugMessage("  " .. i .. ". " .. name, true)
-        else
-            DebugMessage("  " .. i .. ". 未知法术 (ID: " .. id .. ")", true)
-        end
-    end
+    ListSavedMounts(self.db.char.customMounts, byName)
 end
 
 -- 清除所有自定义坐骑
@@ -566,80 +507,53 @@ end
 
 -- 黑名单管理：添加坐骑到排除列表
 function Automaton_RandomMount:ExcludeMount(inputName)
-    if not inputName or inputName == "" then
+    inputName = TrimName(inputName)
+    if inputName == "" then
         DebugMessage("请输入坐骑名称！", true)
         return
     end
-    
-    local spellID = FindMountSpellIDByName(inputName)
-    if not spellID then
+    local mount = FindMountByName(inputName)
+    if not mount then
         DebugMessage("未找到名为 \"" .. inputName .. "\" 的坐骑，请确认名称正确且已学会。", true)
         return
     end
-    
-    self.db.char.excludedMounts = self.db.char.excludedMounts or {}
-    
-    -- 检查是否已存在
-    for _, existingID in ipairs(self.db.char.excludedMounts) do
-        if existingID == spellID then
-            DebugMessage("坐骑 \"" .. inputName .. "\" 已在移除列表中！", true)
+    for _, name in ipairs(self.db.char.excludedMounts) do
+        if type(name) == "string" and string.lower(name) == string.lower(mount.name) then
+            DebugMessage("坐骑 \"" .. mount.name .. "\" 已在移除列表中！", true)
             return
         end
     end
-    
-    table.insert(self.db.char.excludedMounts, spellID)
-    DebugMessage("成功将坐骑加入移除列表：" .. inputName, true)
+    table.insert(self.db.char.excludedMounts, mount.name)
+    DebugMessage("成功将坐骑加入移除列表：" .. mount.name, true)
 end
 
--- 从黑名单中移除坐骑
+-- Saved names can be removed even when the mount is no longer learned.
 function Automaton_RandomMount:UnExcludeMount(inputName)
-    if not inputName or inputName == "" then
+    inputName = TrimName(inputName)
+    if inputName == "" then
         DebugMessage("请输入坐骑名称！", true)
         return
     end
-    
-    local spellID = FindMountSpellIDByName(inputName)
-    if not spellID then
-        DebugMessage("未找到名为 \"" .. inputName .. "\" 的坐骑，无法移除。", true)
-        return
-    end
-    
-    self.db.char.excludedMounts = self.db.char.excludedMounts or {}
-    
-    local index = nil
-    for i, existingID in ipairs(self.db.char.excludedMounts) do
-        if existingID == spellID then
-            index = i
-            break
+    GetMountData()
+    for i, name in ipairs(self.db.char.excludedMounts) do
+        if type(name) == "string" and string.lower(name) == string.lower(inputName) then
+            table.remove(self.db.char.excludedMounts, i)
+            DebugMessage("成功将坐骑移出移除列表：" .. name, true)
+            return
         end
     end
-    
-    if index then
-        table.remove(self.db.char.excludedMounts, index)
-        DebugMessage("成功将坐骑移出移除列表：" .. inputName, true)
-    else
-        DebugMessage("移除列表中不存在坐骑 \"" .. inputName .. "\"", true)
-    end
+    DebugMessage("移除列表中不存在坐骑 \"" .. inputName .. "\"", true)
 end
 
 -- 列出黑名单中的所有坐骑
 function Automaton_RandomMount:ListExcludedMounts()
-    self.db.char.excludedMounts = self.db.char.excludedMounts or {}
+    local _, byName = GetMountData()
     if GetTableLength(self.db.char.excludedMounts) == 0 then
         DebugMessage("移除列表为空", true)
         return
     end
-    
     DebugMessage("已移除的坐骑列表:", true)
-    for i, id in ipairs(self.db.char.excludedMounts) do
-        -- 使用 SafeGetSpellName 通过索引获取名称（因为存储的是法术书索引）
-        local name = SafeGetSpellName(id, BOOKTYPE_SPELL)
-        if name then
-            DebugMessage("  " .. i .. ". " .. name, true)
-        else
-            DebugMessage("  " .. i .. ". 未知法术 (ID: " .. id .. ")", true)
-        end
-    end
+    ListSavedMounts(self.db.char.excludedMounts, byName)
 end
 
 -- 清空黑名单
