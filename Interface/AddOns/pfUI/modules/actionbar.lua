@@ -2200,7 +2200,8 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
         button_animations[C.bars.animation]()
       end)
 
-      CreateBackdrop(b, 2)
+      -- Button backdrops supply borders only; monitorbackdrop owns the background fill.
+      CreateBackdrop(b, 2, nil, 0)
       MonitorSetBorder(b)
 
       -- 点击使用（原动作条同款逻辑）；Alt+左键优先：移出监控（锁定时保留 Alt 原有功能）
