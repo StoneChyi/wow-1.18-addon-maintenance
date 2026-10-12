@@ -1983,17 +1983,27 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
       CooldownFrame_SetTimer(b.cd, start, duration, enable)
     end
 
+    -- WoW 1.12 uses a 768-unit canvas; use physical pixels, not HiDPI border units.
+    local function MonitorPixelSize()
+      local _, _, height = string.find(GetCVar("gxResolution") or "", "^%d+x(%d+)$")
+      height = tonumber(height) or 768
+      if height <= 0 then height = 768 end
+      return 768 / height / mon:GetEffectiveScale()
+    end
+
     -- 全量重建（名单 -> 按钮布局 + 内容）
     local function MonitorRefresh()
       if not mon:IsShown() then return end
       if mon.dragButton then mon.dirty = true; return end
 
       local list = MonitorListToTable()
-      local size = tonumber(C.bars.monitorsize) or 36
-      local rowsize = tonumber(C.bars.monitorrowsize) or 8
-      if rowsize < 1 then rowsize = 1 end
-      local spacing = tonumber(C.bars.monitorspacing) or 1
-      if spacing < 0 then spacing = 0 end
+      local pixel = MonitorPixelSize()
+      mon.layoutPixel = pixel
+      local size = math.max(1, math.floor((tonumber(C.bars.monitorsize) or 36) / pixel + .5)) * pixel
+      local rowsize = math.max(1, math.floor(tonumber(C.bars.monitorrowsize) or 8))
+      local spacing = math.max(0, tonumber(C.bars.monitorspacing) or 1)
+      if spacing > 0 then spacing = math.max(1, math.floor(spacing / pixel + .5)) * pixel end
+      local padding = math.max(1, math.floor(2 / pixel + .5)) * pixel
       local count = getn(list)
       if count > pfUI.bars.MONITOR_COUNT then count = pfUI.bars.MONITOR_COUNT end
 
@@ -2015,7 +2025,7 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
           local col = math.mod(n, rowsize)
           local row = math.floor(n / rowsize)
           b:ClearAllPoints()
-          b:SetPoint("TOPLEFT", mon, "TOPLEFT", col * (size + spacing) + 2, -(row * (size + spacing) + 2))
+          b:SetPoint("TOPLEFT", mon, "TOPLEFT", col * (size + spacing) + padding, -(row * (size + spacing) + padding))
           b:SetWidth(size)
           b:SetHeight(size)
           b:Show()
@@ -2030,8 +2040,8 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
       -- 容器几何随内容伸缩（空名单保留一格占位，便于拖动）
       local wcols = count == 0 and 1 or (count < rowsize and count or rowsize)
       local wrows = count == 0 and 1 or math.floor((count + rowsize - 1) / rowsize)
-      mon:SetWidth(wcols * (size + spacing) - spacing + 4)
-      mon:SetHeight(wrows * (size + spacing) - spacing + 4)
+      mon:SetWidth(wcols * (size + spacing) - spacing + 2 * padding)
+      mon:SetHeight(wrows * (size + spacing) - spacing + 2 * padding)
     end
 
     -- 轻刷：仅遍历已显示按钮（倒计时/范围/可用性随时间变化的部分）
@@ -2414,6 +2424,7 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
       local now = GetTime()
       if not this.nextTimer or this.nextTimer <= now then
         this.nextTimer = now + 0.25
+        if mon.layoutPixel ~= MonitorPixelSize() then MonitorRefresh() end
         MonitorTimers()
       end
 
