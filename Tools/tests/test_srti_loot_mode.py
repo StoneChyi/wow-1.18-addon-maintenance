@@ -51,6 +51,15 @@ function tick()
 end
 function GetLootMethod() lootReads=lootReads+1; return lootMethod end
 lootRequests={}
+UIDROPDOWNMENU_MAXLEVELS=2; UIDROPDOWNMENU_MAXBUTTONS=32
+function methods:UnlockHighlight() self.highlighted=false end
+for level=1,2 do
+    for index=1,32 do
+        local name='DropDownList'..level..'Button'..index
+        CreateFrame('Button',name,UIParent)
+        CreateFrame('Texture',name..'Check',UIParent):Hide()
+    end
+end
 function SetLootMethod(...)
     local args={...}
     assert((args[1]=='master' and table.getn(args)==2 and type(args[2])=='string')
@@ -73,6 +82,18 @@ function UIDropDownMenu_AddButton(info, level)
     assert(level==1 and menuRows and table.getn(menuRows)<32, '1.12 dropdown item limit')
     local label=UIParent:CreateFontString(nil,'OVERLAY','GameFontNormal')
     label:SetText(info.text) -- Native menu labels inherit a font too.
+    local index=table.getn(menuRows)+1
+    local button=getglobal('DropDownList1Button'..index)
+    local checked=info.checked
+    local frame=getglobal(UIDROPDOWNMENU_OPEN_MENU)
+    if frame.selectedName then
+        if frame.selectedName==info.text then checked=1 end
+    elseif frame.selectedID==index then checked=1 end
+    button.checked=checked
+    button.keepShownOnClick=info.keepShownOnClick
+    if checked then getglobal(button:GetName()..'Check'):Show()
+    else getglobal(button:GetName()..'Check'):Hide() end
+    info.native=button
     table.insert(menuRows, info)
 end
 function menuItem(text)
@@ -82,9 +103,21 @@ end
 function clickMenu(text)
     local row=menuItem(text)
     if row.disabled or row.isTitle then return false end
-    assert(row.func); row.func()
-    if not row.keepShownOnClick then CloseDropDownMenus() end
+    local oldThis=this; this=row.native
+    assert(row.func); row.func(row.arg1,row.arg2)
+    -- 1.12 runs checkbox work after func(), even if that callback rebuilt the menu.
+    if row.native.keepShownOnClick then
+        row.native.checked=not row.native.checked
+        local check=getglobal(row.native:GetName()..'Check')
+        if row.native.checked then check:Show() else check:Hide() end
+    else CloseDropDownMenus() end
+    this=oldThis
+    -- A queued rebuild runs on the next UI frame, after the native click handler returns.
+    if SRTI_MenuRefresh and SRTI_MenuRefresh:GetScript('OnUpdate') then SRTI_MenuRefresh:Fire('OnUpdate') end
     return true
+end
+function assertNoMenuChecks()
+    for _,row in ipairs(menuRows) do assert(not getglobal(row.native:GetName()..'Check'):IsShown(), 'residual check: '..row.text) end
 end
 function SendChatMessage() error('indicator must never send group messages') end
 lootReads=0; lootMethod='group'
@@ -127,7 +160,7 @@ for group in ('solo', 'party', 'raid'):
             assert(BANANA_CONFIG.SHOW_LOOT_BUTTON==1 and BANANA_CONFIG.LOOT_BUTTON_SIDE=='RIGHT')
             assert(SRTI_LootButton:GetWidth()==36)
             if SRTI_LootButton:IsShown() then
-                assert(SRTI_LootButton.label:GetText()=='队拾')
+                assert(SRTI_LootButton.label:GetText()=='队伍')
                 assert(SRTI_LootButton.label:GetStringWidth()<=34)
             end
             -- Exercise health/name text too, including initialization with failed fonts.
@@ -149,8 +182,8 @@ for group in ('solo', 'party', 'raid'):
 for group in ('party', 'raid'):
     lua = world(group, failed_font=True)
     lua.execute('''
-        local modes={freeforall={'自由拾取','自由'},roundrobin={'轮流拾取','轮流'},master={'队长分配','队分'},
-            group={'队伍拾取','队拾'},needbeforegreed={'需求优先','需求'}}
+        local modes={freeforall={'自由拾取','自由'},roundrobin={'轮流拾取','轮流'},master={'队长分配','队长'},
+            group={'队伍拾取','队伍'},needbeforegreed={'需求优先','需求'}}
         SRTI_LootButton:Fire('OnEnter')
         for token,labels in pairs(modes) do
             lootMethod=token; fireEvent('PARTY_LOOT_METHOD_CHANGED')
@@ -167,7 +200,7 @@ for group in ('party', 'raid'):
         lootMethod=nil; fireEvent('PARTY_LOOT_METHOD_CHANGED')
         assert(SRTI_LootButton.label:GetText()=='待定')
         lootMethod='unexpected'; tick(); assert(SRTI_LootButton.label:GetText()=='待定')
-        lootMethod='master'; tick(); assert(SRTI_LootButton.label:GetText()=='队分')
+        lootMethod='master'; tick(); assert(SRTI_LootButton.label:GetText()=='队长')
         SRTI_LootButton:Fire('OnLeave'); assert(not GameTooltip:IsShown())
         -- Font fallback also works during repeated mode changes and hidden text paths.
         failedFontPaths[STANDARD_TEXT_FONT]=true
@@ -282,12 +315,13 @@ lua.execute('''
     assert(table.getn(lootRequests)==0 and UIDROPDOWNMENU_OPEN_MENU=='SRTI_LootMenu')
     local stale=menuItem('Member1').func
     units.party1={name='Replacement'}; stale()
+    if SRTI_MenuRefresh:GetScript('OnUpdate') then SRTI_MenuRefresh:Fire('OnUpdate') end
     assert(table.getn(lootRequests)==0 and menuItem('Replacement'))
     clickMenu('Member2')
     assert(lootRequests[1][1]=='master' and lootRequests[1][2]=='Member2')
-    assert(not UIDROPDOWNMENU_OPEN_MENU and SRTI_LootButton.label:GetText()=='队拾')
+    assert(not UIDROPDOWNMENU_OPEN_MENU and SRTI_LootButton.label:GetText()=='队伍')
     lootMethod='master'; fireEvent('PARTY_LOOT_METHOD_CHANGED')
-    assert(SRTI_LootButton.label:GetText()=='队分')
+    assert(SRTI_LootButton.label:GetText()=='队长')
     SRTI_LootButton:Fire('OnClick','LeftButton'); clickMenu('队长分配'); clickMenu('Self')
     assert(lootRequests[2][2]=='Self')
 ''')
@@ -300,6 +334,7 @@ lua.execute('''
     SRTI_LootButton:Fire('OnClick','LeftButton'); clickMenu('队长分配')
     for page=1,4 do
         assert(table.getn(menuRows)<=14) -- Below the native 32-row menu limit.
+        assertNoMenuChecks()
         assert(menuItem('Raider'..((page-1)*10+1)))
         assert(menuItem('Raider'..(page*10)))
         if page<4 then clickMenu('下一页') end
@@ -372,5 +407,49 @@ restored = world('party', order=persisted, failed_font=True)
 assert list(restored.globals().BANANA_CONFIG.TOOL_ORDER.values()) == persisted
 groups += 1
 
+lua = world('party', failed_font=True)
+lua.execute('''
+    partyCount=1; units.player={name='Self'}; units.party1={name='Member1'}
+    SRTI_LootButton:Fire('OnClick','LeftButton')
+    assert(getglobal(menuItem('队伍拾取').native:GetName()..'Check'):IsShown())
+    clickMenu('队长分配')
+    assertNoMenuChecks() -- The old master-loot row is reused for the Back row here.
+    clickMenu('返回分配方式')
+    assert(getglobal(menuItem('队伍拾取').native:GetName()..'Check'):IsShown())
+    for _,row in ipairs(menuRows) do
+        if row.text~='队伍拾取' then assert(not getglobal(row.native:GetName()..'Check'):IsShown()) end
+    end
+    SRTI_LootMenu.selectedID=4; SRTI_LootMenu.selectedValue='stale'; SRTI_LootMenu.selectedName='stale'
+    clickMenu('队长分配'); assertNoMenuChecks()
+    assert(not SRTI_LootMenu.selectedID and not SRTI_LootMenu.selectedValue and not SRTI_LootMenu.selectedName)
+    SRTI_Position_CLEAR_BUTTON:Fire('OnClick'); clickMenu('第1位（最靠近标记）')
+    SRTI_Position_RESET_BUTTON:Fire('OnClick')
+    local checks=0
+    for _,row in ipairs(menuRows) do
+        if getglobal(row.native:GetName()..'Check'):IsShown() then checks=checks+1 end
+    end
+    assert(checks==1, 'position menu must only check its own current position')
+''')
+groups += 1
+
+lua = world('party', failed_font=True)
+lua.execute('''
+    local function queuePicker()
+        SRTI_LootButton:Fire('OnClick','LeftButton')
+        menuItem('队长分配').func()
+        assert(SRTI_MenuRefresh:GetScript('OnUpdate'))
+    end
+    queuePicker(); Banana_SetEnabled(false); SRTI_MenuRefresh:Fire('OnUpdate')
+    assert(not UIDROPDOWNMENU_OPEN_MENU and not SRTI_MenuRefresh:GetScript('OnUpdate'))
+    Banana_SetEnabled(true)
+    queuePicker(); partyCount=0; fireEvent('PARTY_MEMBERS_CHANGED'); SRTI_MenuRefresh:Fire('OnUpdate')
+    assert(not UIDROPDOWNMENU_OPEN_MENU and not SRTI_MenuRefresh:GetScript('OnUpdate'))
+    partyCount=2; fireEvent('PARTY_MEMBERS_CHANGED'); queuePicker()
+    SRTI_Position_CLEAR_BUTTON:Fire('OnClick')
+    assert(UIDROPDOWNMENU_OPEN_MENU=='SRTI_OrderMenu' and not SRTI_MenuRefresh:GetScript('OnUpdate'))
+''')
+groups += 1
+
 print(f'PASS: {groups} SRTI behavior groups; compact modes, permission/acknowledgement checks, '
-      '40-member master-loot pagination, per-side ordering across 20 layouts/sides, strict font fallback')
+      '40-member master-loot pagination, native checkbox reuse/queue cancellation, '
+      'per-side ordering across 20 layouts/sides, strict font fallback')

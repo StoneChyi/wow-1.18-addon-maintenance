@@ -16,6 +16,8 @@ local toolNames = {READY_BUTTON="就位确认", COUNTDOWN_BUTTON="开怪倒数",
     SAVE_BUTTON="存 / 还原", CLEAR_BUTTON="清除标记", RESET_BUTTON="重置副本", SETTINGS_BUTTON="设置"}
 local tools, checks, health, sideControls, positionControls = {}, {}, {}, {}, {}
 local lootMenu, orderMenu
+local menuRefresh = CreateFrame("Frame", "SRTI_MenuRefresh")
+local pendingMenu
 local LootVisible
 local initialized = false
 local lootLayoutVisible
@@ -100,8 +102,8 @@ end
 local lootModes = {
     freeforall = {"自由拾取", "队伍成员均可直接拾取物品。", .4, 1, .5, "自由"},
     roundrobin = {"轮流拾取", "队伍成员轮流获得拾取机会。", .4, .8, 1, "轮流"},
-    master = {"队长分配", "达到分配品质的物品由指定的物品分配者分配。", 1, .55, .25, "队分"},
-    group = {"队伍拾取", "达到分配品质的物品通过需求 / 贪婪掷骰分配。", 1, .85, .3, "队拾"},
+    master = {"队长分配", "达到分配品质的物品由指定的物品分配者分配。", 1, .55, .25, "队长"},
+    group = {"队伍拾取", "达到分配品质的物品通过需求 / 贪婪掷骰分配。", 1, .85, .3, "队伍"},
     needbeforegreed = {"需求优先", "达到分配品质的物品优先由能够使用的成员需求。", .8, .6, 1, "需求"},
 }
 local unknownLoot = {"等待同步", "分配方式暂未同步，请稍候。", .7, .7, .7, "待定"}
@@ -139,15 +141,50 @@ local function UpdateLootButton()
 end
 
 local function CloseMenus()
+    pendingMenu = nil
+    menuRefresh:SetScript("OnUpdate", nil)
     CloseDropDownMenus()
     -- 1.12 caches the last menu name; invalidate it when rebuilding positions or pages.
     UIDROPDOWNMENU_OPEN_MENU = nil
 end
 
+local function ResetMenu(frame)
+    frame.selectedID, frame.selectedValue, frame.selectedName = nil, nil, nil
+    -- Native list buttons are shared across menus and can retain check textures.
+    for level = 1, UIDROPDOWNMENU_MAXLEVELS or 2 do
+        for index = 1, UIDROPDOWNMENU_MAXBUTTONS or 32 do
+            local name = "DropDownList" .. level .. "Button" .. index
+            local button, check = getglobal(name), getglobal(name .. "Check")
+            if button then button.checked = false button:UnlockHighlight() end
+            if check then check:Hide() end
+        end
+    end
+end
+
+local function AddMenuButton(info, level)
+    -- Explicitly leave titles, recipients, navigation and unselected rows unchecked.
+    if info.checked == nil then info.checked = false end
+    UIDropDownMenu_AddButton(info, level)
+end
+
 local function ShowLootMenu(pickMaster, page)
     lootMenu.pickMaster, lootMenu.page = pickMaster, page or 1
     CloseMenus()
+    ResetMenu(lootMenu)
     ToggleDropDownMenu(1, nil, lootMenu, tools.loot, 0, 0)
+end
+
+local function QueueLootMenu(pickMaster, page)
+    CloseMenus()
+    pendingMenu = {pickMaster=pickMaster, page=page}
+    -- 1.12 finishes checkbox handling after info.func(). Rebuild on the next UI frame,
+    -- so that work cannot toggle a recipient or navigation row that reused the clicked button.
+    menuRefresh:SetScript("OnUpdate", function()
+        local request = pendingMenu
+        pendingMenu = nil
+        menuRefresh:SetScript("OnUpdate", nil)
+        if request and LootVisible() then ShowLootMenu(request.pickMaster, request.page) end
+    end)
 end
 
 local function SetLoot(mode, unit, expectedName)
@@ -155,7 +192,7 @@ local function SetLoot(mode, unit, expectedName)
     if not CanChangeLoot() then Print("只有队长或团长可以切换分配方式。") return end
     if mode == "master" then
         if not unit or not UnitExists(unit) or UnitName(unit) ~= expectedName then
-            Print("成员已变化，请重新选择物品分配者。") ShowLootMenu(true, 1) return
+            Print("成员已变化，请重新选择物品分配者。") QueueLootMenu(true, 1) return
         end
         SetLootMethod("master", expectedName)
     else
@@ -183,28 +220,28 @@ local function LootMenuInitialize()
         end
         local pages = math.max(1, math.ceil(table.getn(members) / 10))
         local page = math.min(lootMenu.page or 1, pages)
-        UIDropDownMenu_AddButton({text="选择物品分配者（" .. page .. "/" .. pages .. "）", isTitle=1, notCheckable=1}, 1)
+        AddMenuButton({text="选择物品分配者（" .. page .. "/" .. pages .. "）", isTitle=1, notCheckable=1}, 1)
         for i = (page-1)*10+1, math.min(page*10, table.getn(members)) do
             local unit, name = members[i][1], members[i][2]
-            UIDropDownMenu_AddButton({text=name, notCheckable=1, keepShownOnClick=1, disabled=not allowed and 1 or nil,
+            AddMenuButton({text=name, notCheckable=1, keepShownOnClick=1, disabled=not allowed and 1 or nil,
                 func=function() SetLoot("master", unit, name) end}, 1)
         end
-        if page > 1 then UIDropDownMenu_AddButton({text="上一页", notCheckable=1, keepShownOnClick=1,
-            func=function() ShowLootMenu(true, page-1) end}, 1) end
-        if page < pages then UIDropDownMenu_AddButton({text="下一页", notCheckable=1, keepShownOnClick=1,
-            func=function() ShowLootMenu(true, page+1) end}, 1) end
-        UIDropDownMenu_AddButton({text="返回分配方式", notCheckable=1, keepShownOnClick=1,
-            func=function() ShowLootMenu(false) end}, 1)
+        if page > 1 then AddMenuButton({text="上一页", notCheckable=1, keepShownOnClick=1,
+            func=function() QueueLootMenu(true, page-1) end}, 1) end
+        if page < pages then AddMenuButton({text="下一页", notCheckable=1, keepShownOnClick=1,
+            func=function() QueueLootMenu(true, page+1) end}, 1) end
+        AddMenuButton({text="返回分配方式", notCheckable=1, keepShownOnClick=1,
+            func=function() QueueLootMenu(false) end}, 1)
         return
     end
-    UIDropDownMenu_AddButton({text=allowed and "选择分配方式" or "仅队长 / 团长可切换", isTitle=1, notCheckable=1}, 1)
+    AddMenuButton({text=allowed and "选择分配方式" or "仅队长 / 团长可切换", isTitle=1, notCheckable=1}, 1)
     for _, token in ipairs({"freeforall", "roundrobin", "master", "group", "needbeforegreed"}) do
         local method = token
-        UIDropDownMenu_AddButton({text=lootModes[method][1], checked=LootMode()==lootModes[method] and 1 or nil,
+        AddMenuButton({text=lootModes[method][1], checked=LootMode()==lootModes[method] and 1 or nil,
             disabled=not allowed and 1 or nil, keepShownOnClick=method=="master" and 1 or nil,
             func=function()
                 if method == "master" then
-                    if CanChangeLoot() then ShowLootMenu(true, 1) end
+                    if CanChangeLoot() then QueueLootMenu(true, 1) end
                 else SetLoot(method) end
             end}, 1)
     end
@@ -329,10 +366,10 @@ local function OrderMenuInitialize()
     local id = orderMenu.tool
     local title = id=="LOOT_BUTTON" and not LootVisible() and "分配方式：预设组队后的位置"
         or (toolNames[id] .. "：从标记向外排列")
-    UIDropDownMenu_AddButton({text=title, isTitle=1, notCheckable=1}, 1)
+    AddMenuButton({text=title, isTitle=1, notCheckable=1}, 1)
     for i = 1, table.getn(SideTools(id)) do
         local position = i
-        UIDropDownMenu_AddButton({text="第" .. i .. "位" .. (i==1 and "（最靠近标记）" or ""),
+        AddMenuButton({text="第" .. i .. "位" .. (i==1 and "（最靠近标记）" or ""),
             checked=ToolPosition(id)==i and 1 or nil, func=function() MoveTool(id, position) end}, 1)
     end
 end
@@ -411,6 +448,7 @@ local function CreateOptions()
             position:SetScript("OnClick", function()
                 orderMenu.tool = id
                 CloseMenus()
+                ResetMenu(orderMenu)
                 ToggleDropDownMenu(1, nil, orderMenu, this, 0, 0)
             end)
             positionControls[id] = position
