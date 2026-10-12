@@ -3,14 +3,16 @@ local defaults = {
     SHOW_SAVE_BUTTON = 1, SHOW_HEALTH = 1, SHOW_HEALTH_PERCENT = 1,
     SHOW_SHORT_NAME = 0, SHOW_RESET_BUTTON = 1, SHOW_READY_BUTTON = 1,
     SHOW_COUNTDOWN_BUTTON = 1, SHOW_CLEAR_BUTTON = 1, SHOW_SETTINGS_BUTTON = 1,
-    SHOW_HUNTER_BUTTON = 1, HEALTH_BAR_WIDTH = 44,
+    SHOW_HUNTER_BUTTON = 1, HEALTH_BAR_WIDTH = 44, SHOW_LOOT_BUTTON = 1,
 }
 local sideDefaults = {
     SAVE_BUTTON_SIDE = "RIGHT", READY_BUTTON_SIDE = "LEFT", COUNTDOWN_BUTTON_SIDE = "LEFT",
     RESET_BUTTON_SIDE = "RIGHT", CLEAR_BUTTON_SIDE = "RIGHT", SETTINGS_BUTTON_SIDE = "RIGHT",
+    LOOT_BUTTON_SIDE = "RIGHT",
 }
 local tools, checks, health, sideControls = {}, {}, {}, {}
 local initialized = false
+local lootLayoutVisible
 local countdown = CreateFrame("Frame")
 countdown:Hide()
 
@@ -32,6 +34,45 @@ local function GroupVisible()
     if GetNumRaidMembers() > 0 then return BANANA_CONFIG.SHOW_IN_RAID == 1 end
     if GetNumPartyMembers() > 0 then return BANANA_CONFIG.SHOW_IN_PARTY == 1 end
     return BANANA_CONFIG.SHOW_OUT_OF_GROUP == 1
+end
+
+local function LootVisible()
+    return GroupVisible() and BANANA_CONFIG.SHOW_LOOT_BUTTON == 1
+        and (GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0)
+end
+
+local lootModes = {
+    freeforall = {"自由拾取", "队伍成员均可直接拾取物品。", .4, 1, .5},
+    roundrobin = {"轮流拾取", "队伍成员轮流获得拾取机会。", .4, .8, 1},
+    master = {"队长分配", "达到分配品质的物品由指定的物品分配者分配。", 1, .55, .25},
+    group = {"队伍拾取", "达到分配品质的物品通过需求 / 贪婪掷骰分配。", 1, .85, .3},
+    needbeforegreed = {"需求优先", "达到分配品质的物品优先由能够使用的成员需求。", .8, .6, 1},
+}
+local unknownLoot = {"等待同步", "分配方式暂未同步，请稍候。", .7, .7, .7}
+
+local function LootMode()
+    -- Vanilla 1.12 GetLootMethod's first return is the method token.
+    local method = GetLootMethod and GetLootMethod()
+    return lootModes[method] or unknownLoot
+end
+
+local function LootTooltip()
+    local mode = LootMode()
+    GameTooltip:SetOwner(tools.loot, "ANCHOR_TOP")
+    GameTooltip:SetText("当前分配方式：" .. mode[1])
+    GameTooltip:AddLine(mode[2], .8, .8, .8, 1)
+    GameTooltip:AddLine("左键：在本地聊天窗口查看分配方式", .7, .7, .7, 1)
+    GameTooltip:Show()
+end
+
+local function UpdateLootButton()
+    local mode = LootMode()
+    if tools.loot.mode ~= mode then
+        tools.loot.label:SetText(mode[1])
+        tools.loot.label:SetTextColor(mode[3], mode[4], mode[5])
+        tools.loot.mode = mode
+    end
+    if tools.loot.hovered then LootTooltip() end
 end
 
 local function Leader(assistant)
@@ -115,11 +156,12 @@ local function CreateTool(key, label, title, tip, color, onClick)
     button:SetWidth(36)
     button:SetHeight(36)
     button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-    local text = button:CreateFontString(nil, "OVERLAY")
+    local text = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetFont(STANDARD_TEXT_FONT, 20, "OUTLINE")
     text:SetPoint("CENTER", button, "CENTER", 0, 0)
     text:SetText(label)
     text:SetTextColor(unpack(color))
+    button.label = text
     button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
     button:SetScript("OnClick", onClick)
     button:SetScript("OnEnter", function()
@@ -145,7 +187,7 @@ end
 local function CreateOptions()
     -- Include both columns in the draggable frame's bounds for screen clamping.
     BananaConfigFrame:SetWidth(604)
-    BananaConfigFrame:SetHeight(529)
+    BananaConfigFrame:SetHeight(557)
     local header = getglobal("BananaConfigFramePanel1")
     local title = getglobal("BananaConfigFramePanel1LabelTitle")
     local close = getglobal("BananaConfigFrameButtonClose")
@@ -157,7 +199,7 @@ local function CreateOptions()
     end
     local panel = CreateFrame("Frame", "SRTI_ToolOptions", BananaConfigFrame)
     panel:SetWidth(280)
-    panel:SetHeight(458)
+    panel:SetHeight(486)
     panel:SetPoint("TOPLEFT", BananaConfigFrame, "TOPLEFT", 316, -56)
     panel:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",
         edgeFile="Interface\\Tooltips\\UI-Tooltip-Border", tile=true, tileSize=16, edgeSize=16,
@@ -177,6 +219,7 @@ local function CreateOptions()
         {"SHOW_COUNTDOWN_BUTTON", "5 秒开怪倒数", "COUNTDOWN_BUTTON_SIDE"},
         {"SHOW_CLEAR_BUTTON", "清除全部标记", "CLEAR_BUTTON_SIDE"},
         {"SHOW_SETTINGS_BUTTON", "设置", "SETTINGS_BUTTON_SIDE"},
+        {"SHOW_LOOT_BUTTON", "分配方式（组队显示）", "LOOT_BUTTON_SIDE"},
     }
     for i, option in ipairs(options) do
         local key = option[1]
@@ -207,12 +250,12 @@ local function CreateOptions()
         end
     end
     local sizeLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    sizeLabel:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, -334)
+    sizeLabel:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, -362)
     sizeLabel:SetText("血条宽度（点击切换）")
     local width = CreateFrame("Button", "SRTI_HealthWidth", panel, "UIPanelButtonTemplate")
     width:SetWidth(56)
     width:SetHeight(22)
-    width:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -16, -328)
+    width:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -16, -356)
     width:SetScript("OnClick", function()
         local current = BANANA_CONFIG.HEALTH_BAR_WIDTH or 44
         BANANA_CONFIG.HEALTH_BAR_WIDTH = current == 36 and 44 or (current == 44 and 52 or 36)
@@ -225,7 +268,7 @@ local function CreateOptions()
         local all = CreateFrame("Button", "SRTI_AllTools" .. side, panel, "UIPanelButtonTemplate")
         all:SetWidth(116)
         all:SetHeight(22)
-        all:SetPoint("TOPLEFT", panel, "TOPLEFT", 18 + (i-1)*128, -358)
+        all:SetPoint("TOPLEFT", panel, "TOPLEFT", 18 + (i-1)*128, -386)
         all:SetText(side == "LEFT" and "工具全部放左侧" or "工具全部放右侧")
         all:SetScript("OnClick", function()
             for key in pairs(sideDefaults) do BANANA_CONFIG[key] = side end
@@ -234,7 +277,7 @@ local function CreateOptions()
         end)
     end
     local note = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    note:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, -394)
+    note:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, -422)
     note:SetWidth(244)
     note:SetHeight(54)
     note:SetJustifyH("LEFT")
@@ -389,6 +432,7 @@ end
 -- Follow the outside edges of every layout, including reversal and detached hunter mark.
 function SRTI_LayoutTools()
     if not initialized then return end
+    lootLayoutVisible = LootVisible()
     local flipped = BANANA_CONFIG.FLIP == 1
     local start = RaidTargetFrame1Button
     if BANANA_CONFIG.SHOW_HUNTER_BUTTON == 1 and BANANA_CONFIG.DETACH ~= 1 and BANANA_CONFIG.BUTTON_LAYOUT ~= 5 then start = RaidTargetFrame9Button end
@@ -400,6 +444,7 @@ function SRTI_LayoutTools()
     local order = {
         {tools.ready, "SHOW_READY_BUTTON", "READY_BUTTON_SIDE"},
         {tools.countdown, "SHOW_COUNTDOWN_BUTTON", "COUNTDOWN_BUTTON_SIDE"},
+        {tools.loot, "SHOW_LOOT_BUTTON", "LOOT_BUTTON_SIDE"},
         {getglobal("SRTI_SaveBtn"), "SHOW_SAVE_BUTTON", "SAVE_BUTTON_SIDE"},
         {tools.clear, "SHOW_CLEAR_BUTTON", "CLEAR_BUTTON_SIDE"},
         {tools.reset, "SHOW_RESET_BUTTON", "RESET_BUTTON_SIDE"},
@@ -413,7 +458,7 @@ function SRTI_LayoutTools()
             local isLeft = BANANA_CONFIG[item[3]] == "LEFT"
             if isLeft then button:SetPoint("RIGHT", before, "LEFT", -4, 0)
             else button:SetPoint("LEFT", after, "RIGHT", 4, 0) end
-            if BANANA_CONFIG[item[2]] == 1 then
+            if BANANA_CONFIG[item[2]] == 1 and (button ~= tools.loot or lootLayoutVisible) then
                 if isLeft then before = button else after = button end
             end
         end
@@ -423,6 +468,15 @@ end
 
 function SRTI_UpdateTools()
     if not initialized then return end
+    local lootVisible = LootVisible()
+    if lootVisible ~= lootLayoutVisible then SRTI_LayoutTools() return end
+    if lootVisible then
+        UpdateLootButton()
+        tools.loot:Show()
+    else
+        tools.loot:Hide()
+        if tools.loot.hovered then GameTooltip:Hide() tools.loot.hovered = nil end
+    end
     local visible = GroupVisible()
     local options = {ready="SHOW_READY_BUTTON", countdown="SHOW_COUNTDOWN_BUTTON",
         clear="SHOW_CLEAR_BUTTON", reset="SHOW_RESET_BUTTON", settings="SHOW_SETTINGS_BUTTON"}
@@ -451,6 +505,30 @@ function SRTI_InitTools()
         function() if arg1 == "LeftButton" and CanReset() then StaticPopup_Show("SRTI_RESET_INSTANCES") end end)
     tools.settings = CreateTool("SettingsButton", "设", "标记助手设置", "左键：打开 / 关闭设置面板", {.4, .75, 1},
         function() if arg1 == "LeftButton" then Banana_Toggle() end end)
+    tools.loot = CreateTool("LootButton", "", "当前分配方式", "", {1, 1, 1}, function()
+        if arg1 == "LeftButton" and LootVisible() then Print("当前分配方式：" .. LootMode()[1]) end
+    end)
+    tools.loot:SetWidth(82)
+    tools.loot.label:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+    tools.loot.label:SetWidth(74)
+    tools.loot.label:SetHeight(17)
+    tools.loot.label:ClearAllPoints()
+    tools.loot.label:SetPoint("BOTTOM", tools.loot, "BOTTOM", 0, 3)
+    local lootTitle = tools.loot:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    lootTitle:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    lootTitle:SetPoint("TOP", tools.loot, "TOP", 0, -3)
+    lootTitle:SetText("分配方式")
+    lootTitle:SetTextColor(.8, .8, .8)
+    tools.loot:SetScript("OnEnter", function()
+        if LootVisible() then tools.loot.hovered = true LootTooltip() end
+    end)
+    tools.loot:SetScript("OnLeave", function() tools.loot.hovered = nil GameTooltip:Hide() end)
+    local lootEvents = CreateFrame("Frame")
+    lootEvents:RegisterEvent("PARTY_LOOT_METHOD_CHANGED")
+    lootEvents:RegisterEvent("PARTY_MEMBERS_CHANGED")
+    lootEvents:RegisterEvent("RAID_ROSTER_UPDATE")
+    lootEvents:RegisterEvent("PLAYER_ENTERING_WORLD")
+    lootEvents:SetScript("OnEvent", function() SRTI_UpdateTools() end)
     for index = 1, 9 do
         local button = getglobal("RaidTargetFrame" .. index .. "Button")
         local bar = CreateFrame("StatusBar", "SRTI_Health" .. index, button)
@@ -489,13 +567,13 @@ function SRTI_InitTools()
                 border:SetPoint("BOTTOM" .. edge, bar, "BOTTOM" .. edge, 0, 0)
             end
         end
-        bar.text = bar:CreateFontString(nil, "OVERLAY")
+        bar.text = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         bar.text:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
         bar.text:SetHeight(12)
         bar.text:SetPoint("BOTTOM", bar, "TOP", 0, 1)
         bar.text:SetTextColor(1, 1, 1)
         -- Parent the name to the icon so it can stay visible with health disabled.
-        bar.name = button:CreateFontString(nil, "OVERLAY")
+        bar.name = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         bar.name:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
         bar.name:SetHeight(10)
         bar.name:SetJustifyH("CENTER")
