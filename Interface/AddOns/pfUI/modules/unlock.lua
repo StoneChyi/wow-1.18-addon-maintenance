@@ -759,7 +759,10 @@ pfUI:RegisterModule("unlock", "vanilla:tbc", function ()
       -- 几何缺失的帧不重定位：ConvertFrameAnchor 的兜底会返回 (anchor, 0, 0)，
       -- 直接写下去等于把它瞬移到角落并存进存档（位置被写坏），不如跳过、保留原位置。
       if frame:GetLeft() and frame:GetTop() and frame:GetRight() and frame:GetBottom() then
-        local anchor, x, y = ConvertFrameAnchor(frame, bestanchor)
+        -- A manually selected anchor must survive later drags, including group moves.
+        local position = C.position[frame:GetName()]
+        local anchor, x, y = ConvertFrameAnchor(frame,
+          position and position.anchor_manual or bestanchor)
         frame:ClearAllPoints()
         frame:SetPoint(anchor, UIParent, anchor, x, y)
         SavePosition(frame)
@@ -956,6 +959,7 @@ pfUI:RegisterModule("unlock", "vanilla:tbc", function ()
         frame:SetPoint(anchor, UIParent, anchor, x, y)
 
         SavePosition(frame)
+        C.position[frame:GetName()].anchor_manual = anchor
         UpdateDockValues()
       end
 
