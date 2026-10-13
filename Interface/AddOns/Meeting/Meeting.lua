@@ -185,6 +185,10 @@ f:SetScript("OnEvent", function()
 		end
 		Meeting.blockWords = MEETING_DB.blockWords -- 新增读取配置文件中的屏蔽关键词 by 武藤纯子酱 2025.12.30
 		
+        if MEETING_DB.activity and not Meeting.IsSupportedActivity(MEETING_DB.activity.code) then
+            MEETING_DB.activity = nil
+            Meeting.createInfo = {}
+        end
         if MEETING_DB.activity then
             local now = time()
             if now - MEETING_DB.activity.lastTime < 120 then
@@ -224,7 +228,11 @@ f:SetScript("OnEvent", function()
 end)
 
 Meeting.isHover = false
-f:SetScript("OnUpdate", function()
+local hoverElapsed = 0
+local function UpdateHover()
+    hoverElapsed = hoverElapsed + (arg1 or 0)
+    if hoverElapsed < 0.1 then return end
+    hoverElapsed = 0
     if not Meeting.MainFrame:IsShown() or not Meeting.BrowserFrame:IsShown() then
         return
     end
@@ -241,7 +249,7 @@ f:SetScript("OnUpdate", function()
             Meeting.BrowserFrame:UpdateList()
         end
     end
-end)
+end
 
 function Meeting.CheckPlayerHCMode()
     local isHC = false
@@ -273,7 +281,7 @@ end
 local mainFrame = Meeting.GUI.CreateFrame({
     name = "MeetingMainFrame",
     width = 818,
-    height = 424,
+    height = 458,
     movable = true,
     anchor = {
         point = "CENTER",
@@ -282,15 +290,24 @@ local mainFrame = Meeting.GUI.CreateFrame({
     },
 })
 mainFrame:SetFrameStrata("DIALOG")
-Meeting.GUI.SetBackground(mainFrame, Meeting.GUI.Theme.Brown)
+Meeting.GUI.SetBackground(mainFrame, Meeting.GUI.Theme.Brown, Meeting.GUI.Theme.LightBrown, 0.96)
 mainFrame:Hide()
 tinsert(UISpecialFrames, "MeetingMainFrame");
 Meeting.MainFrame = mainFrame
+mainFrame:SetScript("OnShow", function()
+    hoverElapsed = 0.1
+    f:SetScript("OnUpdate", UpdateHover)
+end)
+mainFrame:SetScript("OnHide", function()
+    f:SetScript("OnUpdate", nil)
+    Meeting.isHover = false
+end)
 
 local headerFrame = Meeting.GUI.CreateFrame({
     parent = mainFrame,
     width = 818,
-    height = 34,
+    height = 40,
+    background = Meeting.GUI.Theme.LightBrown,
     anchor = {
         point = "TOP",
         relative = mainFrame,
@@ -300,10 +317,10 @@ local headerFrame = Meeting.GUI.CreateFrame({
 local line = mainFrame:CreateTexture()
 line:SetWidth(818)
 line:SetHeight(0.5)
-line:SetTexture(1, 1, 1, 0.5)
+line:SetTexture(1, 1, 1, 0.12)
 line:SetPoint("TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
 
-local title = "集合石 " .. Meeting.VERSION.MAJOR .. "." .. Meeting.VERSION.MINOR .. "." .. Meeting.VERSION.PATCH
+local title = "集合石 · 团本与世界首领"
 local titleFrame = Meeting.GUI.CreateText({
     parent = headerFrame,
     text = title,
@@ -319,7 +336,7 @@ local titleFrame = Meeting.GUI.CreateText({
 
 Meeting.GUI.CreateText({
     parent = headerFrame,
-    text = "问题和建议前往乌龟服KOOK插件交流频道",
+    text = "招募浏览 / 活动管理",
     fontSize = 10,
     anchor = {
         point = "TOPLEFT",
@@ -332,8 +349,8 @@ Meeting.GUI.CreateText({
 
 Meeting.GUI.CreateButton({
     parent = headerFrame,
-    width = 14,
-    height = 14,
+    width = 24,
+    height = 24,
     text = "X",
     type = Meeting.GUI.BUTTON_TYPE.DANGER,
     anchor = {
@@ -350,14 +367,14 @@ Meeting.GUI.CreateButton({
 
 Meeting.GUI.CreateTabs({
     parent = mainFrame,
-    width = 80,
-    height = 34,
+    width = 112,
+    height = 28,
     anchor = {
-        point = "TOPLEFT",
+        point = "BOTTOMLEFT",
         relative = mainFrame,
         relativePoint = "BOTTOMLEFT",
-        x = 0,
-        y = 0
+        x = 18,
+        y = 6
     },
     list = {
         {
@@ -429,6 +446,8 @@ function Meeting:OnCreate(id, code, comment, level, class, members, hc, classnum
         return  -- 如果包含屏蔽词，不创建活动
     end
 
+    local category = Meeting.GetActivityCategory(code).key
+    if not Meeting.IsSupportedCategory(category) and not (category == "CHAT" and raidChat) then return end
     local item, index = Meeting:FindActivity(id)
     local code = Meeting.GetActivityInfo(code).key
     local class = Meeting.NumberToClass(tonumber(class))

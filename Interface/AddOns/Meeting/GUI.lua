@@ -12,29 +12,29 @@ local GUI = {
             b = 1
         },
         Brown = {
-            r = 24 / 255,
-            g = 20 / 255,
-            b = 18 / 255
+            r = 16 / 255,
+            g = 21 / 255,
+            b = 28 / 255
         },
         LightBrown = {
-            r = 53 / 255,
-            g = 47 / 255,
-            b = 44 / 255
+            r = 29 / 255,
+            g = 37 / 255,
+            b = 48 / 255
         },
         Orange = {
-            r = 245 / 255,
-            g = 127 / 255,
-            b = 26 / 255
+            r = 38 / 255,
+            g = 86 / 255,
+            b = 115 / 255
         },
         Green = {
-            r = 103 / 255,
-            g = 194 / 255,
-            b = 58 / 255
+            r = 39 / 255,
+            g = 90 / 255,
+            b = 69 / 255
         },
         Red = {
-            r = 245 / 255,
-            g = 108 / 255,
-            b = 108 / 255
+            r = 112 / 255,
+            g = 45 / 255,
+            b = 50 / 255
         }
     },
 
@@ -60,7 +60,7 @@ function GUI.EnableMovable(frame)
     end)
 end
 
-function GUI.SetBackground(frame, color, borderColor)
+function GUI.SetBackground(frame, color, borderColor, alpha)
     local bg = {
         bgFile = "Interface\\BUTTONS\\WHITE8X8",
         tile = false,
@@ -81,7 +81,7 @@ function GUI.SetBackground(frame, color, borderColor)
     if not color then
         color = GUI.Theme.Black
     end
-    frame:SetBackdropColor(color.r, color.g, color.b, 0.5) --吊儿啷当 还原标签颜色
+    frame:SetBackdropColor(color.r, color.g, color.b, alpha or color.a or 0.96)
 
     if borderColor then
         frame:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, 1)
@@ -111,10 +111,12 @@ end
 
 function GUI.CreateText(config)
     local parent = config.parent or UIParent
-    local text = parent:CreateFontString(nil)
+    local text = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetWidth(config.width or 0)
     text:SetHeight(config.height or 0)
-    text:SetFont(STANDARD_TEXT_FONT, config.fontSize or 14)
+    if not text:SetFont(STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", config.fontSize or 14) then
+        text:SetFont("Fonts\\FRIZQT__.TTF", config.fontSize or 14) -- template survives even if both paths fail
+    end
     if config.anchor then
         text:SetPoint(config.anchor.point, config.anchor.relative, config.anchor.relativePoint, config.anchor.x or 0,
             config.anchor.y or 0)
@@ -132,10 +134,35 @@ end
 function GUI.CreateButton(config)
     config.frameType = "Button"
     local button = GUI.CreateFrame(config)
+    -- Own label avoids relying on post-1.12 button font convenience methods.
+    local label = GUI.CreateText({ parent = button, text = "", width = math.max(0, (config.width or 0) - 12),
+        height = math.max(0, (config.height or 0) - 4), fontSize = config.fontSize or 14 })
+    label:SetPoint("CENTER", button, "CENTER", 0, 0)
+    label:SetJustifyH("CENTER")
+    label:SetJustifyV("MIDDLE")
+    button.label = label
+    button.SetText = function(self, value) self.label:SetText(value or "") end
+    button.GetText = function(self) return self.label:GetText() end
+    button.SetFont = function(self, path, size, flags) return self.label:SetFont(path, size, flags) end
+    button.SetTextColor = function(self, r, g, b)
+        self.normalTextColor = {r, g, b}
+        if self:IsEnabled() == 1 then self.label:SetTextColor(r, g, b) end
+    end
+    button.SetDisabledTextColor = function(self, r, g, b) self.disabledTextColor = {r, g, b} end
+    local enable, disable = button.Enable, button.Disable
+    button.Enable = function(self)
+        enable(self)
+        local c = self.normalTextColor or {1, 1, 1}
+        self.label:SetTextColor(c[1], c[2], c[3])
+    end
+    button.Disable = function(self)
+        disable(self)
+        local c = self.disabledTextColor or {0.5, 0.55, 0.6}
+        self.label:SetTextColor(c[1], c[2], c[3])
+    end
+    button:SetTextColor(0.94, 0.96, 1)
+    button:SetDisabledTextColor(0.5, 0.55, 0.6)
     button:SetText(config.text or "")
-    button:SetTextColor(1, 1, 1)
-    button:SetDisabledTextColor(0.8, 0.8, 0.8)
-    button:SetFont(STANDARD_TEXT_FONT, config.fontSize or 16)
     button:SetScript("OnClick", function()
         if config.click then
             config.click(arg1)
@@ -163,12 +190,6 @@ function GUI.CreateButton(config)
     return button
 end
 
-local hoverBackgrop = {
-    edgeFile = "Interface\\BUTTONS\\WHITE8X8",
-    edgeSize = 24,
-    insets = { left = -1, right = -1, top = -1, bottom = -1 },
-}
-
 function GUI.CreateListFrame(config)
     config.frameType = "ScrollFrame"
     config.template = "FauxScrollFrameTemplate"
@@ -181,15 +202,17 @@ function GUI.CreateListFrame(config)
             height = config.step,
         })
         cell:SetPoint("TOPLEFT", config.anchor.relative, "BOTTOMLEFT", 0, -config.step * (i - 1))
-        cell:SetBackdrop(hoverBackgrop)
-        cell:SetBackdropBorderColor(1, 1, 1, .04)
+        cell.baseColor = math.mod(i, 2) == 0 and GUI.Theme.LightBrown or GUI.Theme.Brown
+        GUI.SetBackground(cell, cell.baseColor, GUI.Theme.LightBrown, 1)
         cell:EnableMouse(true)
         cell:SetScript("OnEnter", function()
-            this:SetBackdropBorderColor(1, 1, 1, .2)
+            this:SetBackdropColor(0.15, 0.22, 0.29, 1)
+            this:SetBackdropBorderColor(0.28, 0.42, 0.55, 1)
             this:OnHover(true)
         end)
         cell:SetScript("OnLeave", function()
-            this:SetBackdropBorderColor(1, 1, 1, .04)
+            this:SetBackdropColor(this.baseColor.r, this.baseColor.g, this.baseColor.b, 1)
+            this:SetBackdropBorderColor(GUI.Theme.LightBrown.r, GUI.Theme.LightBrown.g, GUI.Theme.LightBrown.b, 1)
             this:OnHover(false)
         end)
         cell:Hide()
@@ -212,6 +235,13 @@ function GUI.CreateListFrame(config)
         FauxScrollFrame_Update(self, num, config.display, config.step, nil, nil, nil, nil, config.width, config
             .height)
         local offset = FauxScrollFrame_GetOffset(self)
+        local maximum = math.max(0, num - config.display)
+        if offset > maximum then
+            offset = maximum
+            FauxScrollFrame_SetOffset(self, offset)
+            local scrollBar = self:GetName() and getglobal(self:GetName().."ScrollBar")
+            if scrollBar then scrollBar:SetValue(offset * config.step) end
+        end
         for i = 1, config.display, 1 do
             local j = i + offset
             if j <= num then

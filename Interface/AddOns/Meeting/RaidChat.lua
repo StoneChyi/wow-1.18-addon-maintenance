@@ -17,33 +17,57 @@ R.catalog = {
     { code = "TOK", name = "卡拉赞之塔", aliases = { "卡拉赞之塔", "卡拉贊之塔", "卡拉赞上层", "卡拉贊上層", "上层卡拉赞", "上層卡拉贊", "tower of karazhan", "upper karazhan halls", "upper karazhan", "upper kara", "40人卡拉赞", "40人klz", "40人kara", "40klz", "40kara", "klz40", "kara40", "klz上层", "上层klz", "卡上", "上卡", "ukh", "tok", "k40" } },
 }
 -- Eleven instanced raids: seven original and four Turtle additions, including Timbermaw.
+-- World-boss names come from the existing Meeting menu; zones are not boss identities.
+R.bossCatalog = {
+    {code="Azuregos",name="艾索雷葛斯",category="BOSS",short="蓝龙",aliases={"艾索雷葛斯","azuregos","蓝龙","藍龍"}},
+    {code="Emeriss",name="艾莫莉丝",category="BOSS",short="艾莫莉丝",aliases={"艾莫莉丝","艾莫莉絲","emeriss"}},
+    {code="Lethon",name="雷索",category="BOSS",short="雷索",aliases={"雷索","lethon"}},
+    {code="Taerar",name="泰拉尔",category="BOSS",short="泰拉尔",aliases={"泰拉尔","泰拉爾","taerar"}},
+    {code="Ysondre",name="伊森德雷",category="BOSS",short="伊森德雷",aliases={"伊森德雷","ysondre"}},
+    {code="Kazzak",name="卡扎克",category="BOSS",short="卡扎克",aliases={"卡扎克","kazzak"}},
+    {code="Nerubian",name="蛛魔监工",category="BOSS",short="蛛魔监工",aliases={"蛛魔监工","蛛魔監工","nerubian overseer"}},
+    {code="DarkReaver",name="卡拉赞黑暗掠夺者",category="BOSS",short="黑暗掠夺者",aliases={"卡拉赞黑暗掠夺者","黑暗掠夺者","黑暗掠奪者","dark reaver of karazhan","dark reaver"}},
+    {code="Ostarius",name="奥兹塔里亚斯",category="BOSS",short="奥兹塔里亚斯",aliases={"奥兹塔里亚斯","奧茲塔里亞斯","ostarius"}},
+    {code="Concavius",name="空卡维斯",category="BOSS",short="空卡维斯",aliases={"空卡维斯","空卡維斯","虚空之子","concavius"}},
+    {code="Cow",name="奶牛王",category="BOSS",short="奶牛王",aliases={"奶牛王","cow king"}},
+    {code="Cla'ckora",name="克拉科拉",category="BOSS",short="克拉科拉",aliases={"克拉科拉","cla'ckora","clackora"}},
+}
+local definitions = {}
+for _, def in ipairs(R.catalog) do table.insert(definitions, def) end
+for _, def in ipairs(R.bossCatalog) do table.insert(definitions, def) end
 -- AQ and Karazhan without a wing are intentionally not assigned a specific raid.
 local ambiguous = {
     { code = "?KARA", name = "卡拉赞·待确认", aliases = { "卡拉赞", "卡拉贊", "karazhan", "kara", "klz", "kz" } },
     { code = "?AQ", name = "安其拉·待确认", aliases = { "安其拉", "ahn'qiraj", "aq" } },
+    { code = "?GREEN", name = "绿龙·待确认", category="BOSS", short="绿龙待定", aliases={"绿龙","綠龍"} },
+    { code = "?WORLD", name = "世界首领·待确认", category="BOSS", short="首领待定", aliases={"世界boss","世界首领","世界首領","world boss"} },
 }
 local blockers = {
     "卡拉赞墓穴", "卡拉贊墓穴", "卡拉赞地穴", "卡拉贊地穴", "karazhan crypt", "klz墓穴", "klz地穴",
     "风暴废墟", "風暴廢墟", "风暴要塞", "風暴要塞", "黑龙鳞片", "黑龍鱗片", "黑龙皮", "黑龙宝宝", "黑龍寶寶",
     "翡翠梦境", "翡翠夢境", "翡翠矿", "翡翠礦", "翡翠宝石", "木喉声望", "木喉聲望", "木喉要塞声望", "木喉要塞聲望", "木喉隧道",
+    "蓝龙鳞片", "藍龍鱗片", "蓝龙宝宝", "藍龍寶寶", "绿龙宝宝", "綠龍寶寶",
 }
 
 local entries = {}
+local categories = {}
+local greenBosses = {Emeriss=true,Lethon=true,Taerar=true,Ysondre=true}
 local function AddEntries(def)
+    categories[def.code] = def.category or "RAID"
     for _, alias in ipairs(def.aliases) do
         table.insert(entries, { alias = alias, code = def.code })
     end
 end
-for _, def in ipairs(R.catalog) do AddEntries(def) end
+for _, def in ipairs(definitions) do AddEntries(def) end
 for _, def in ipairs(ambiguous) do AddEntries(def) end
 for _, alias in ipairs(blockers) do table.insert(entries, { alias = alias, blocked = true }) end
 table.sort(entries, function(a, b) return string.len(a.alias) > string.len(b.alias) end)
 
--- Use the same aliases in the existing menus; non-raid definitions remain untouched.
+-- Keep aliases shared by recognition and the two supported menu categories.
 for _, category in ipairs(Meeting.Categories) do
-    if category.key == "RAID" then
+    if Meeting.IsSupportedCategory(category.key) then
         for _, info in ipairs(category.children) do
-            for _, def in ipairs(R.catalog) do
+            for _, def in ipairs(definitions) do
                 if info.key == def.code then info.match = def.aliases; info.nomatch = {} end
             end
         end
@@ -233,6 +257,10 @@ function R.Parse(message)
     -- If both generic and explicit family names occur, the explicit wing takes priority.
     if accepted.LKH or accepted.TOK then accepted["?KARA"] = nil end
     if accepted.AQ20 or accepted.AQ40 then accepted["?AQ"] = nil end
+    if accepted.Emeriss or accepted.Lethon or accepted.Taerar or accepted.Ysondre then accepted["?GREEN"] = nil end
+    for code in pairs(accepted) do
+        if categories[code] == "BOSS" and code ~= "?WORLD" then accepted["?WORLD"] = nil; break end
+    end
     if next(accepted) then return { status = "recruit", codes = accepted } end
     if next(removed) then return { status = "closed", codes = removed } end
     return { status = "ignore", codes = {} }
@@ -240,12 +268,12 @@ end
 
 function R.Label(result, compact)
     local labels = {}
-    for _, def in ipairs(R.catalog) do if result.codes[def.code] then table.insert(labels, def.name) end end
+    for _, def in ipairs(definitions) do if result.codes[def.code] then table.insert(labels, def.name) end end
     for _, def in ipairs(ambiguous) do if result.codes[def.code] then table.insert(labels, def.name) end end
     if compact and table.getn(labels) > 1 then
         local codes = {}
-        for _, def in ipairs(R.catalog) do if result.codes[def.code] then table.insert(codes, def.code) end end
-        for _, def in ipairs(ambiguous) do if result.codes[def.code] then table.insert(codes, def.code == "?KARA" and "卡拉待定" or "AQ待定") end end
+        for _, def in ipairs(definitions) do if result.codes[def.code] then table.insert(codes, def.short or def.code) end end
+        for _, def in ipairs(ambiguous) do if result.codes[def.code] then table.insert(codes, def.short or (def.code == "?KARA" and "卡拉待定" or "AQ待定")) end end
         if table.getn(codes) > 2 then return codes[1].."/"..codes[2].."等"..table.getn(labels).."本" end
         return table.concat(codes, "/")
     end
@@ -254,11 +282,13 @@ end
 function R.MatchesSearch(result, search, sourceCode)
     if next(search.codes) then
         if search.codes[sourceCode] then return true end
-        for code in pairs(result.codes) do if search.codes[code] then return true end end
+        for code in pairs(result.codes) do if search.codes[code] or search.codes[categories[code]] then return true end end
         return false
     end
     if search.code ~= "" then return search.code == sourceCode or result.codes[search.code] == true end
-    return search.category == "" or search.category == "RAID" or search.category == "CHAT"
+    if search.category == "" or search.category == "CHAT" then return true end
+    for code in pairs(result.codes) do if categories[code] == search.category then return true end end
+    return false
 end
 function R.Overlaps(a, b)
     for code in pairs(a.codes) do
@@ -267,6 +297,10 @@ function R.Overlaps(a, b)
         if code == "?AQ" and (b.codes.AQ20 or b.codes.AQ40) then return true end
         if (code == "LKH" or code == "TOK") and b.codes["?KARA"] then return true end
         if (code == "AQ20" or code == "AQ40") and b.codes["?AQ"] then return true end
+        for other in pairs(b.codes) do
+            if (code == "?WORLD" and categories[other] == "BOSS") or (other == "?WORLD" and categories[code] == "BOSS") then return true end
+            if (code == "?GREEN" and greenBosses[other]) or (other == "?GREEN" and greenBosses[code]) then return true end
+        end
     end
     return false
 end

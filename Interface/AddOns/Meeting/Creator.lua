@@ -3,13 +3,13 @@ local Menu = AceLibrary("Dewdrop-2.0")
 local creatorFrame = Meeting.GUI.CreateFrame({
     parent = Meeting.MainFrame,
     width = 782,
-    height = 390,
+    height = 382,
     anchor = {
         point = "TOPLEFT",
         relative = Meeting.MainFrame,
         relativePoint = "TOPLEFT",
         x = 18,
-        y = -34
+        y = -40
     },
     hide = true
 })
@@ -86,8 +86,8 @@ end
 local selectButton = Meeting.GUI.CreateButton({
     parent = creatorInfoFrame,
     name = "MeetingCreatorSelectButton",
-    text = "选择活动",
-    width = 120,
+    text = "选择团本或首领",
+    width = 150,
     height = 24,
     type = Meeting.GUI.BUTTON_TYPE.PRIMARY,
     anchor = {
@@ -124,22 +124,6 @@ local membersTextFrame = Meeting.GUI.CreateText({
         y = -22
     }
 })
-
--- ★ membersCountText 必须在 membersMinusButton 和 membersPlusButton 之前定义
-local membersCountText = Meeting.GUI.CreateText({
-    parent = creatorInfoFrame,
-    text = "-",
-    fontSize = 16,
-    width = 40,
-    anchor = {
-        point = "TOPLEFT",
-        relative = membersMinusButton,  -- 等一下，这里又引用了 membersMinusButton...
-        relativePoint = "TOPRIGHT",
-        x = 5,
-        y = -4
-    }
-})
-membersCountText:SetJustifyH("CENTER")
 
 -- 声明三个变量（占位）
 local membersMinusButton
@@ -673,7 +657,7 @@ function Meeting.CreatorFrame.UpdateActivity()
         if Meeting.createInfo.code then
             selectButton:SetText(Meeting.GetActivityInfo(Meeting.createInfo.code).name)
         else
-            selectButton:SetText("选择活动")
+            selectButton:SetText("选择团本或首领")
         end
         if not commentFrame:HasFocus() then
             commentFrame:SetText(Meeting.createInfo.comment or "")
@@ -728,7 +712,7 @@ function Meeting.CreatorFrame.UpdateActivity()
         createButton:Hide()
         closeButton:Hide()
     else
-        selectButton:SetText("选择活动")
+        selectButton:SetText("选择团本或首领")
         commentFrame:SetText("")
         selectButton:Disable()
         createButton:Hide()

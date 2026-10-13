@@ -11,66 +11,27 @@ Meeting.searchInfo.isComposing = false  -- 是否正在输入中文
 Meeting.searchInfo.lastSearchText = ""  -- 上次搜索的文本
 Meeting.searchInfo.timer = nil  -- 延迟搜索的计时器
 local Menu = AceLibrary("Dewdrop-2.0")
-local function CreateSyncTip()
-    local tip = Meeting.GUI.CreateFrame({
-        parent = Meeting.BrowserFrame,
-        width = 200,
-        height = 24,
-        anchor = {
-            point = "BOTTOMLEFT",
-            relative = Meeting.BrowserFrame,
-            relativePoint = "BOTTOMLEFT",
-            x = 0,
-            y = 4
-        }
-    })
-    tip.text = Meeting.GUI.CreateText({
-        parent = tip,
-        text = "正在同步数据...",
-        fontSize = 10,
-        width = 200,
-        anchor = {
-            point = "TOPLEFT",
-            relative = tip,
-            relativePoint = "TOPLEFT",
-        }
-    })
-    tip:Show()
-    local i = 0
-    C_Timer.NewTicker(1, function()
-        i = i + 1
-        tip.text:SetText("正在同步数据..." .. (math.mod(i, 2) == 0 and "" or "..."))
-        if i >= 60 then
-            tip:Hide()
-            return
-        end
-    end, 60)
-end
 local browserFrame = Meeting.GUI.CreateFrame({
     parent = Meeting.MainFrame,
     width = 782,
-    height = 390,
+    height = 382,
     anchor = {
         point = "TOPLEFT",
         relative = Meeting.MainFrame,
         relativePoint = "TOPLEFT",
         x = 18,
-        y = -34
+        y = -40
     }
 })
-browserFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-browserFrame:SetScript("OnEvent", function()
-    if event == "PLAYER_ENTERING_WORLD" then
-        CreateSyncTip()
-    end
-end)
 Meeting.BrowserFrame = browserFrame
 browserFrame:EnableMouse(true)
 browserFrame:EnableMouseWheel(true)
 local activityTypeTextFrame = Meeting.GUI.CreateText({
     parent = browserFrame,
-    text = "活动类型：",
-    fontSize = 16,
+    text = "活动：",
+    fontSize = 14,
+    width = 42,
+    height = 24,
     anchor = {
         point = "TOPLEFT",
         relative = browserFrame,
@@ -138,251 +99,54 @@ function SetMathcKeyWords(nonRaidOnly)
     
     return matchs, nomatchs
 end
--- 修改菜单选项创建逻辑，添加全部选项 by 武藤纯子酱 2025.9.22
-local options = {
-    type = 'group',
-    args = {
-        ALL = {
-            order = 1,
-            type = "toggle",
-            name = "全部",
-            desc = "全部",
-            get = function() 
-                return Meeting.searchInfo.category == "" and Meeting.searchInfo.code == "" and not next(Meeting.searchInfo.codes)
-            end,
+-- Filter callbacks share the actual input reference; changing filters preserves search text.
+local searchInput
+local function ApplyFilter()
+    Meeting.searchInfo.code = ""
+    Meeting.searchInfo.category = ""
+    local count, only = 0, nil
+    for code in pairs(Meeting.searchInfo.codes) do count = count + 1; only = code end
+    local label = "全部团本 / 首领"
+    if count == 1 then
+        label = only == "RAID" and "全部团本" or (only == "BOSS" and "全部世界首领" or Meeting.GetActivityInfo(only).name)
+    elseif count > 1 and not (count == 2 and Meeting.searchInfo.codes.RAID and Meeting.searchInfo.codes.BOSS) then
+        label = "已选 "..count.." 项"
+    end
+    MeetingBworserSelectButton:SetText(label)
+    Meeting.BrowserFrame:UpdateList(true)
+end
+local options = { type = "group", args = {
+    ALL = { order = 1, type = "toggle", name = "全部团本和世界首领",
+        get = function() return not next(Meeting.searchInfo.codes) end,
+        set = function() Meeting.searchInfo.codes = {}; ApplyFilter(); Menu:Close() end },
+    DONE = { order = 9, type = "execute", name = "完成", func = function() Menu:Close() end },
+} }
+for index, category in ipairs(Meeting.Categories) do
+    if Meeting.IsSupportedCategory(category.key) then
+        local group = category
+        local children = {}
+        children.ALL = { order = 1, type = "toggle", name = "全部"..group.name,
+            get = function() return Meeting.searchInfo.codes[group.key] or false end,
             set = function()
-                Meeting.searchInfo.category = ""
-                Meeting.searchInfo.code = ""
-                Meeting.searchInfo.codes = {}
-                Meeting.searchInfo.text = ""  -- 清空搜索文本 by 武藤纯子酱 2025.9.24
-                if searchInput then
-                    searchInput:SetText("")  -- 清空搜索框
-                end
-                SetMathcKeyWords()
-                Menu:Close()
-                MeetingBworserSelectButton:SetText("选择活动")
-                Meeting.BrowserFrame:UpdateList(true)
-            end,
-        },
-        -- 添加确认按钮
-        CONFIRM_SELECTION = {
-            order = 8,
-            type = "execute",
-            name = "确认选择",
-            desc = "确认当前选择的副本",
-            func = function()
-                -- 获取选中的数量
-                local count = 0
-                for _ in pairs(Meeting.searchInfo.codes) do
-                    count = count + 1
-                end
-                
-                if count > 0 then
-                    MeetingBworserSelectButton:SetText("已选" .. count .. "个")
-                    SetMathcKeyWords()
-                    Meeting.BrowserFrame:UpdateList(true)
-                    Menu:Close()
-                    Meeting.dropdownState.isOpen = false
-                    
-                    -- 显示确认提示
-                    DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00集合石|r: 已确认选择 " .. count .. " 个副本")
-                else
-                    DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000集合石|r: 请先选择要过滤的副本")
-                end
-            end,
-        },
-        -- 添加清空按钮
-        CLEAR_SELECTION = {
-            order = 9,
-            type = "execute",
-            name = "清空选择",
-            desc = "清空所有已选择的副本",
-            func = function()
-                Meeting.searchInfo.codes = {}
-                Meeting.searchInfo.code = ""
-                Meeting.searchInfo.category = ""
-                Meeting.searchInfo.text = ""
-                
-                if searchInput then
-                    searchInput:SetText("")  -- 清空搜索框
-                end
-                
-                SetMathcKeyWords()
-                MeetingBworserSelectButton:SetText("选择活动")
-                Meeting.BrowserFrame:UpdateList(true)
-                Menu:Close()
-                Meeting.dropdownState.isOpen = false
-                
-                -- 显示清空提示
-                DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00集合石|r: 已清空所有副本选择")
-            end,
-        },
-    },
-}
--- 创建所有活动的扁平化列表，支持跨类别多选
-local allActivities = {}
--- 首先收集所有活动
-for i, category in ipairs(Meeting.Categories) do
-    if not category.hide then
-        -- 创建局部变量保存当前类别的引用，避免闭包问题
-        local currentCategory = category
-        
-        -- 为每个类别添加"全部"选项
-        options.args[category.key] = {
-            order = i + 1,
-            type = 'group',
-            name = category.name,
-            desc = category.name,
-            args = {
-                -- 添加类别级别的"全部"选项
-                ["ALL_" .. category.key] = {
-                    order = 1,
-                    type = "toggle",
-                    name = "全部",
-                    desc = "选择" .. category.name .. "下的所有活动",
-                    get = function()
-                        -- 检查该类别下所有子选项是否都被选中
-                        local allSelected = true
-                        local anySelected = false
-                        
-                        -- 使用局部变量 currentCategory 而不是 category
-                        if not currentCategory or not currentCategory.children then 
-                            return false 
-                        end
-                        
-                        for j, activity in ipairs(currentCategory.children) do
-                            if Meeting.searchInfo.codes[activity.key] then
-                                anySelected = true
-                            else
-                                allSelected = false
-                            end
-                        end
-                        
-                        -- 如果全部选中返回true，如果有选中但不是全部返回nil（显示为混合状态）
-                        if allSelected and anySelected then
-                            return true
-                        elseif not anySelected then
-                            return false
-                        else
-                            return nil  -- 混合状态
-                        end
-                    end,
-					set = function(checked)
-						local shouldSelect = true
-						
-						-- 检查当前是否已经全部选中
-						local allCurrentlySelected = true
-						for j, activity in ipairs(currentCategory.children) do
-							if not Meeting.searchInfo.codes[activity.key] then
-								allCurrentlySelected = false
-								break
-							end
-						end
-						
-						-- 如果已经全部选中，则取消选中所有
-						if allCurrentlySelected then
-							shouldSelect = false
-						end
-						
-						-- 设置该类别下所有活动的选中状态
-						for j, activity in ipairs(currentCategory.children) do
-							if shouldSelect then
-								Meeting.searchInfo.codes[activity.key] = true
-							else
-								Meeting.searchInfo.codes[activity.key] = nil
-							end
-						end
-						
-						-- 更新多选模式状态
-						if next(Meeting.searchInfo.codes) then
-							Meeting.searchInfo.code = "MULTI"
-							Meeting.searchInfo.category = ""
-						else
-							Meeting.searchInfo.code = ""
-							Meeting.searchInfo.category = ""
-						end
-						
-						Meeting.searchInfo.text = ""  -- 清空搜索文本 by 武藤纯子酱 2025.9.24
-						if searchInput then
-							searchInput:SetText("")  -- 清空搜索框
-						end
-						
-						SetMathcKeyWords()
-						Meeting.BrowserFrame:UpdateList(true)
-						
-						-- 更新按钮文本显示选中的数量
-						local count = 0
-						for _ in pairs(Meeting.searchInfo.codes) do
-							count = count + 1
-						end
-						
-						if count > 0 then
-							MeetingBworserSelectButton:SetText("已选" .. count .. "个")
-						else
-							MeetingBworserSelectButton:SetText("选择活动")
-						end
-					end,
-                    isNotRadio = true,  -- 允许混合状态显示
-                }
-            }
-        }
-        
-        -- 添加类别下的具体活动
-        for j, activity in ipairs(category.children) do
-            local activityKey = activity.key
-            local activityName = activity.name
-            
-            options.args[category.key].args[activityKey] = {
-                order = j + 1,  -- 从2开始，1是"全部"选项
-                type = "toggle",
-                name = activityName,
-                desc = activityName,
-                get = function() 
-                    return Meeting.searchInfo.codes[activityKey] or false
-                end,
-				set = function(checked)
-					if checked then
-						Meeting.searchInfo.codes[activityKey] = true
-						Meeting.searchInfo.code = "MULTI"  -- 标记为多选模式
-						Meeting.searchInfo.category = ""   -- 清空类别选择
-					else
-						Meeting.searchInfo.codes[activityKey] = nil
-						-- 如果没有选中任何项目，清空多选
-						if not next(Meeting.searchInfo.codes) then
-							Meeting.searchInfo.code = ""
-							Meeting.searchInfo.category = ""
-						end
-					end
-					
-					Meeting.searchInfo.text = ""  -- 清空搜索文本 by 武藤纯子酱 2025.9.24
-					if searchInput then
-						searchInput:SetText("")  -- 清空搜索框
-					end
-					
-					SetMathcKeyWords()
-					Meeting.BrowserFrame:UpdateList(true)
-					
-					-- 更新按钮文本显示选中的数量
-					local count = 0
-					for _ in pairs(Meeting.searchInfo.codes) do
-						count = count + 1
-					end
-					
-					if count > 0 then
-						MeetingBworserSelectButton:SetText("已选" .. count .. "个")
-					else
-						MeetingBworserSelectButton:SetText("选择活动")
-					end
-				end,
-            }
-            
-            -- 同时添加到扁平化列表
-            allActivities[activityKey] = {
-                category = category.key,
-                name = activityName,
-                order = i * 100 + j
-            }
+                local selected = not Meeting.searchInfo.codes[group.key]
+                for _, child in ipairs(group.children) do Meeting.searchInfo.codes[child.key] = nil end
+                Meeting.searchInfo.codes[group.key] = selected or nil
+                ApplyFilter()
+            end }
+        for childIndex, child in ipairs(group.children) do
+            local code, name = child.key, child.name
+            children[code] = { order = childIndex + 1, type = "toggle", name = name,
+                get = function() return Meeting.searchInfo.codes[group.key] or Meeting.searchInfo.codes[code] or false end,
+                set = function(checked)
+                    if Meeting.searchInfo.codes[group.key] then
+                        Meeting.searchInfo.codes[group.key] = nil
+                        for _, info in ipairs(group.children) do Meeting.searchInfo.codes[info.key] = true end
+                    end
+                    Meeting.searchInfo.codes[code] = checked or nil
+                    ApplyFilter()
+                end }
         end
+        options.args[group.key] = { order = index, type = "group", name = group.name, args = children }
     end
 end
 
@@ -390,9 +154,9 @@ end
 local selectButton = Meeting.GUI.CreateButton({
     name = "MeetingBworserSelectButton",
     parent = browserFrame,
-    text = "选择活动",
+    text = "全部团本 / 首领",
     type = Meeting.GUI.BUTTON_TYPE.PRIMARY,
-    width = 120,
+    width = 164,
     height = 24,
     anchor = {
         point = "TOPLEFT",
@@ -412,15 +176,15 @@ local selectButton = Meeting.GUI.CreateButton({
     end
 })
 -- 添加搜索框 by 武藤纯子酱 2025.9.24
-local searchInput = Meeting.GUI.CreateInput({
+searchInput = Meeting.GUI.CreateInput({
     parent = browserFrame,
-    width = 200,
+    width = 210,
     height = 24,
     anchor = {
         point = "TOPLEFT",
         relative = selectButton,
         relativePoint = "TOPRIGHT",
-        x = 20,
+        x = 14,
         y = 0
     },
     placeholder = "搜索活动说明...",
@@ -560,7 +324,7 @@ local searchButton = Meeting.GUI.CreateButton({
 local clearSearchButton = Meeting.GUI.CreateButton({
     parent = browserFrame,
     text = "清空",
-    width = 60,
+    width = 48,
     height = 24,
     anchor = {
         point = "TOPLEFT",
@@ -588,14 +352,14 @@ local blockButton = Meeting.GUI.CreateButton({
     name = "MeetingBlockButton",
     parent = browserFrame,
     text = "屏蔽词",
-    type = Meeting.GUI.BUTTON_TYPE.DANGER,
-    width = 60,
+    type = Meeting.GUI.BUTTON_TYPE.NORMAL,
+    width = 64,
     height = 24,
     anchor = {
         point = "TOPLEFT",
         relative = clearSearchButton,
         relativePoint = "TOPRIGHT",
-        x = 20,
+        x = 14,
         y = 0
     },
     click = function()
@@ -831,7 +595,8 @@ local refreshButton = Meeting.GUI.CreateButton({
 local activityListHeaderFrame = Meeting.GUI.CreateFrame({
     parent = browserFrame,
     width = 746,
-    height = 44,
+    height = 28,
+    background = Meeting.GUI.Theme.LightBrown,
     anchor = {
         point = "TOPLEFT",
         relative = browserFrame,
@@ -843,9 +608,9 @@ local activityListHeaderFrame = Meeting.GUI.CreateFrame({
 
 local activityTypeText = Meeting.GUI.CreateText({
     parent = activityListHeaderFrame,
-    text = "活动类型",
+    text = "副本 / 首领",
     fontSize = 14,
-    width = 135,
+    width = 148,
     height = 24,
     anchor = {
         point = "TOPLEFT",
@@ -858,7 +623,7 @@ local modeText = Meeting.GUI.CreateText({
     parent = activityListHeaderFrame,
     text = "模式",
     fontSize = 14,
-    width = 40,
+    width = 32,
     height = 24,
     anchor = {
         point = "TOPLEFT",
@@ -869,9 +634,9 @@ local modeText = Meeting.GUI.CreateText({
 
 local membersText = Meeting.GUI.CreateText({
     parent = activityListHeaderFrame,
-    text = "队伍人数",
+    text = "人数",
     fontSize = 14,
-    width = 70,
+    width = 56,
     height = 24,
     anchor = {
         point = "TOPLEFT",
@@ -883,9 +648,9 @@ local membersText = Meeting.GUI.CreateText({
 
 local leaderText = Meeting.GUI.CreateText({
     parent = activityListHeaderFrame,
-    text = "队长",
+    text = "团长",
     fontSize = 14,
-    width = 90,
+    width = 96,
     height = 24,
     anchor = {
         point = "TOPLEFT",
@@ -898,7 +663,7 @@ local commentText = Meeting.GUI.CreateText({
     parent = activityListHeaderFrame,
     text = "说明",
     fontSize = 14,
-    width = 370,
+    width = 352,
     height = 24,
     anchor = {
         point = "TOPLEFT",
@@ -911,7 +676,7 @@ local actionText = Meeting.GUI.CreateText({
     parent = activityListHeaderFrame,
     text = "操作",
     fontSize = 14,
-    width = 150,
+    width = 62,
     height = 24,
     anchor = {
         point = "TOPLEFT",
@@ -956,7 +721,7 @@ local function CreateRequestPrompt(config)
 
             local roleFrame = Meeting.GUI.CreateButton({
                 parent = frame,
-                width = 40,
+                width = 32,
                 height = 40,
                 anchor = anchor,
                 disabled = not enable,
@@ -1078,7 +843,7 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
     name = "MeetingActivityListFrame",
     parent = browserFrame,
     width = 746,
-    height = 240,
+    height = 280,
     anchor = {
         point = "TOPLEFT",
         relative = activityListHeaderFrame,
@@ -1086,7 +851,7 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
         x = 0,
         y = 0
     },
-    step = 24,
+    step = 28,
     display = 10,
     cell = function(f)
         f.OnHover = function(this, isHover)
@@ -1135,7 +900,8 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
             parent = f,
             text = "",
             fontSize = 14,
-            width = 135,
+            height = 20,
+            width = 148,
             anchor = {
                 point = "TOPLEFT",
                 relative = f,
@@ -1149,7 +915,8 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
             parent = f,
             text = "",
             fontSize = 14,
-            width = 40,
+            height = 20,
+            width = 32,
             anchor = {
                 point = "TOPLEFT",
                 relative = f.nameFrame,
@@ -1162,8 +929,9 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
         f.membersFrame = Meeting.GUI.CreateText({
             parent = f,
             text = "",
-            width = 70,
+            width = 56,
             fontSize = 14,
+            height = 20,
             anchor = {
                 point = "TOPLEFT",
                 relative = f.hcFrame,
@@ -1177,7 +945,8 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
             parent = f,
             text = "",
             fontSize = 14,
-            width = 90,
+            height = 20,
+            width = 96,
             anchor = {
                 point = "TOPLEFT",
                 relative = f.membersFrame,
@@ -1191,8 +960,8 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
             parent = f,
             text = "",
             fontSize = 14,
-            width = 370,
-            height = 24,
+            height = 20,
+            width = 352,
             anchor = {
                 point = "TOPLEFT",
                 relative = f.leaderFrame,
@@ -1207,6 +976,7 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
             parent = f,
             text = "",
             fontSize = 14,
+            height = 20,
             color = { r = 0, g = 1, b = 0 },
             anchor = {
                 point = "TOPLEFT",
@@ -1220,15 +990,15 @@ local activityListFrame = Meeting.GUI.CreateListFrame({
         f.requestButton = Meeting.GUI.CreateButton({
             parent = f,
             text = "申请",
-            width = 34,
-            height = 18,
+            width = 54,
+            height = 22,
             type = Meeting.GUI.BUTTON_TYPE.PRIMARY,
             anchor = {
                 point = "TOPLEFT",
                 relative = f.commentFrame,
                 relativePoint = "TOPRIGHT",
-                x = 0,
-                y = 2
+                x = 4,
+                y = 3
             },
             click = function()
                 if f.isChat then
@@ -1327,6 +1097,15 @@ local function ReloadCell(frame, activity)
     frame.comment = activity.comment
 end
 
+local resultText = Meeting.GUI.CreateText({ parent = browserFrame, text = "仅显示团本和世界首领", fontSize = 12,
+    width = 746, height = 18, color = {r=0.65,g=0.72,b=0.8},
+    anchor = {point="BOTTOMLEFT",relative=browserFrame,relativePoint="BOTTOMLEFT",x=18,y=0} })
+local emptyText = Meeting.GUI.CreateText({ parent = browserFrame, text = "暂无符合条件的招募\n可切换活动筛选，或清空搜索", fontSize = 14,
+    width = 500, height = 48, color = {r=0.65,g=0.72,b=0.8},
+    anchor = {point="CENTER",relative=browserFrame,relativePoint="CENTER",x=0,y=-20} })
+emptyText:SetJustifyH("CENTER")
+emptyText:Hide()
+
 local activities = {}
 
 function Meeting.BrowserFrame:UpdateList(force, scroll)
@@ -1347,7 +1126,7 @@ function Meeting.BrowserFrame:UpdateList(force, scroll)
         local function search(activity)
             -- 如果有多选，使用多选逻辑
             if next(Meeting.searchInfo.codes) then
-                return Meeting.searchInfo.codes[activity.code] or false
+                return Meeting.searchInfo.codes[activity.code] or Meeting.searchInfo.codes[activity.category] or false
             -- 如果有单个选择
             elseif Meeting.searchInfo.code ~= "" then
                 return Meeting.searchInfo.code == activity.code
@@ -1358,31 +1137,6 @@ function Meeting.BrowserFrame:UpdateList(force, scroll)
             else
                 return true
             end
-        end
-        
-        -- 修改匹配逻辑，添加排除检查
-        local function match(activity, matchs, nomatchs)
-			if not activity or not activity.comment then return false end
-		
-            local lower = string.lower(activity.comment)
-            
-			if not lower then return false end
-			
-            -- 先检查排除关键词
-            for _, nomatch in ipairs(nomatchs) do
-                if string.find(lower, nomatch) then
-                    return false  -- 如果包含排除关键词，不匹配
-                end
-            end
-            
-            -- 再检查匹配关键词
-            for _, match in ipairs(matchs) do
-                if string.find(lower, match) then
-                    return true
-                end
-            end
-            
-            return false
         end
         
         -- 添加搜索文本过滤函数 by 武藤纯子酱 2025.9.24
@@ -1408,16 +1162,9 @@ function Meeting.BrowserFrame:UpdateList(force, scroll)
             return commentMatch or leaderMatch or activityNameMatch
         end
         
-        -- 获取匹配和排除关键词
-        local matchs, nomatchs = SetMathcKeyWords()
-        
-        local function matchActivity(activity)
-            return match(activity, matchs, nomatchs)
-        end
-        
         for _, activity in ipairs(Meeting.activities) do
 			-- 添加屏蔽词检查
-			local shouldShow = true
+			local shouldShow = activity.raidChat ~= nil or Meeting.IsSupportedActivity(activity.code)
 			
 			-- 检查队长名字中的屏蔽词
 			if Meeting.CheckBlockWords(activity.unitname, activity.unitname) then
@@ -1429,34 +1176,18 @@ function Meeting.BrowserFrame:UpdateList(force, scroll)
 				shouldShow = false
 			end
 
-			if shouldShow then
-				if activity:IsChat() then
-                    if activity.raidChat then
-                        if Meeting.RaidChat.MatchesSearch(activity.raidChat, Meeting.searchInfo, activity.code) and textSearch(activity) then
-                            table.insert(activities, activity)
-                        end
-                    else
-					-- 其他类别保留现有聊天筛选逻辑。
-					if next(Meeting.searchInfo.codes) or Meeting.searchInfo.code ~= "" then
-						if matchActivity(activity) and textSearch(activity) then  -- 添加搜索过滤
-							table.insert(activities, activity)
-						end
-					else
-						if search(activity) and textSearch(activity) then  -- 添加搜索过滤
-							table.insert(activities, activity)
-						end
-					end
-                    end
-				else
-					-- 普通活动的处理
-					if search(activity) and textSearch(activity) then  -- 添加搜索过滤
-						table.insert(activities, activity)
-					end
-				end
-			end
+            if shouldShow and textSearch(activity) then
+                local matches = activity.raidChat
+                    and Meeting.RaidChat.MatchesSearch(activity.raidChat, Meeting.searchInfo, activity.code)
+                    or (not activity.raidChat and search(activity))
+                if matches then table.insert(activities, activity) end
+            end
         end
     end
-    activityListFrame:Reload(table.getn(activities), function(frame, index)
+    local count = table.getn(activities)
+    resultText:SetText("显示 "..count.." 条招募  ·  双击密语，悬停查看完整说明")
+    if count == 0 then emptyText:Show() else emptyText:Hide() end
+    activityListFrame:Reload(count, function(frame, index)
         ReloadCell(frame, activities[index])
     end)
     

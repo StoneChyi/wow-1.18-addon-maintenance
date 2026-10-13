@@ -621,6 +621,14 @@ Meeting.Categories = {
     }
 }
 
+-- Keep protocol lookup data for old peers, but expose only raids and world bosses.
+function Meeting.IsSupportedCategory(key)
+    return key == "RAID" or key == "BOSS"
+end
+for _, category in ipairs(Meeting.Categories) do
+    category.hide = not Meeting.IsSupportedCategory(category.key)
+end
+
 local activityCategoryMap = {}
 
 for _, value in ipairs(Meeting.Categories) do
@@ -632,6 +640,10 @@ end
 function Meeting.GetActivityCategory(code)
     -- 未知 code（旧版客户端/畸形报文）兜底到 OTHER，避免调用方 .key 索引 nil 崩溃
     return activityCategoryMap[code] or activityCategoryMap["OTHER"]
+end
+
+function Meeting.IsSupportedActivity(code)
+    return Meeting.IsSupportedCategory(Meeting.GetActivityCategory(code).key)
 end
 
 function Meeting.GetActivityMaxMembers(code)

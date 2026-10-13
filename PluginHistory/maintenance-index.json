@@ -1006,10 +1006,12 @@
       "addon": "Meeting",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Meeting.md",
-      "purpose": "修复团本聊天误收录；补齐 11 团本别名、招募意图判定和独立筛选。",
+      "purpose": "仅保留团本与世界首领；提高背景可读性、统一列表及精简交互与刷新。",
       "sources": [
         "PluginHistory/Research/Meeting团本识别方案-20261013.md",
-        "Tools/tests/test_meeting_raid_chat.py"
+        "Tools/tests/test_meeting_raid_chat.py",
+        "PluginHistory/Research/Meeting界面与活动精简-20261013.md",
+        "Tools/tests/test_meeting_ui.py"
       ],
       "maintenance_files": [
         "Interface/AddOns/Meeting/RaidChat.lua",
@@ -1017,16 +1019,26 @@
         "Interface/AddOns/Meeting/Message.lua",
         "Interface/AddOns/Meeting/Meeting.lua",
         "Interface/AddOns/Meeting/Browser.lua",
-        "Interface/AddOns/Meeting/Meeting.toc"
+        "Interface/AddOns/Meeting/Meeting.toc",
+        "Interface/AddOns/Meeting/GUI.lua",
+        "Interface/AddOns/Meeting/Creator.lua"
       ],
       "tracked_files_at_reference": 20,
-      "pending": "真实 1.12 频道识别、显示、密语和性能验收待补充；更早的个人修改归属未追认。",
+      "pending": "真实 1.12 字体、缩放、频道识别、点击／滚轮与性能待验收；更早个人修改归属未追认。",
       "last_maintenance": {
         "date": "2026-10-13",
-        "report": "PluginHistory/Research/Meeting团本识别方案-20261013.md",
-        "checks": 218,
+        "report": "PluginHistory/Research/Meeting界面与活动精简-20261013.md",
+        "checks": 268,
         "game_verified": false
-      }
+      },
+      "maintenance_history": [
+        {
+          "date": "2026-10-13",
+          "report": "PluginHistory/Research/Meeting团本识别方案-20261013.md",
+          "checks": 218,
+          "game_verified": false
+        }
+      ]
     },
     {
       "addon": "ModernMapMarkers",

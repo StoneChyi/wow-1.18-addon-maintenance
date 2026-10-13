@@ -39,6 +39,7 @@ function methods:Hide() self.shown=false end
 function methods:Enable() self.enabled=true end
 function methods:Disable() self.enabled=false end
 function methods:SetTextColor() end
+function methods:SetJustifyH() end
 function methods:HasFocus() return true end
 function CreateFrame(kind,name,parent)
     local frame=setmetatable({kind=kind,name=name,parent=parent},methods)
@@ -73,10 +74,11 @@ def world(browser=False):
             UpdateList=function() creatorUpdates=creatorUpdates+1 end}
         Meeting.FloatFrame={Update=function() floatUpdates=floatUpdates+1 end}
         Meeting.GUI={Theme={Green={},Red={}},SetBackground=function() end}
+        Meeting.GUI.CreateText=function(config) local w=textWidget(); w:SetText(config.text or ''); return w end
         string.escapemarkup=function(s) return s end
     ''')
     browser_source = (ADDON / 'Browser.lua').read_text(encoding='utf-8-sig')
-    lua.execute(browser_source[browser_source.index('local matchs = {}'):browser_source.index('-- 修改菜单选项创建逻辑')])
+    lua.execute(browser_source[browser_source.index('local matchs = {}'):browser_source.index('-- Filter callbacks')])
     lua.execute((ADDON / 'Message.lua').read_text(encoding='utf-8-sig'))
     meeting = (ADDON / 'Meeting.lua').read_text(encoding='utf-8-sig')
     # Exclude unrelated main-window construction; run actual event/lifecycle/expiry code.
@@ -90,6 +92,8 @@ def world(browser=False):
             Meeting.BrowserFrame=CreateFrame('Frame')
             local refreshButton={}
             local searchInput=textWidget()
+            local resultText=textWidget()
+            local emptyText=textWidget()
             local activityListFrame={}
             function activityListFrame:Reload(n,callback)
                 rendered={}
@@ -259,7 +263,7 @@ lua.execute('''
     Meeting.blockWords={}
     Meeting.searchInfo={codes={},code='',category=''}
     Meeting.Message.OnRecvFormChat('world','Dungeon','通灵来奶')
-    assert(Meeting:FindActivity('Dungeon') and not Meeting:FindActivity('Dungeon').raidChat)
+    assert(not Meeting:FindActivity('Dungeon'), 'only raids and world bosses are retained')
     Meeting.Message.OnRecvFormChat('hardcore','Hardcore','MC开组')
     assert(Meeting:FindActivity('Hardcore').isHC and Meeting:FindActivity('Hardcore').code=='HARDCORE')
     local tick=C_Timer.tickers[1]; assert(tick.interval==5)

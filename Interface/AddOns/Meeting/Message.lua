@@ -64,29 +64,6 @@ function Message.OnRecv(playerName, data)
     end
 end
 
-local matchText = {}
-for _, category in ipairs(Meeting.Categories) do
-    for _, value in ipairs(category.children) do
-        if category.key ~= "RAID" and value.match then
-            for _, match in ipairs(value.match) do
-                table.insert(matchText, match)
-            end
-        end
-    end
-end
-
-local distinct = {}
-for _, v in ipairs(matchText) do
-    if not distinct[v] then
-        distinct[v] = true
-    end
-end
-matchText = {}
-for k, _ in pairs(distinct) do
-    table.insert(matchText, k)
-end
-distinct = nil
-
 function Message.OnRecvFormChat(channel, playerName, message)
     if type(message) ~= "string" or type(playerName) ~= "string" or type(channel) ~= "string"
         or message == "" or playerName == "" or string.len(message) > 4096 then return end
@@ -120,78 +97,6 @@ function Message.OnRecvFormChat(channel, playerName, message)
         end
         return -- A rejected raid message must not re-enter the old keyword-only path.
     end
-    if string.find(message, "|Hquest:") then
-        local questStart = string.find(message, "|Hquest:")
-        if questStart then
-            local bracketStart = string.find(message, "%[", questStart)
-            if bracketStart then
-                local bracketEnd = string.find(message, "%]", bracketStart)
-                if bracketEnd then
-                    local pipeHStart = string.find(message, "|h", bracketEnd)
-                    if pipeHStart then
-                        local linkPart = string.sub(message, questStart)
-                        local linkEnd = string.find(linkPart, "|h")
-                        if linkEnd then
-                            linkPart = string.sub(linkPart, 1, linkEnd + 1)
-                            local questID, questLevel, questName = string.match(
-                                linkPart,
-                                "|Hquest:(%d+):(%d+)|h%[([^%]]*)%]|h"
-                            )
-                            if questID and questLevel and questName then
-                                Meeting:OnCreate(playerName, "QuestLink",
-                                    questName,
-                                    questLevel,
-                                    "0",
-                                    "0",
-                                    "0"
-                                )
-                                return
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    -- Unrelated chat cannot overwrite an active raid recruitment record.
-    if activity and activity.raidChat then return end
-    if string.find(message, "求组") then
-        return
-    end
-    if CheckBlockWords(playerName, message) then
-        return
-    end
-
-    local lowerMessage = string.lower(message)
-    local matchs, nomatchs = SetMathcKeyWords(true)
-
-    local shouldMatchAll = Meeting.searchInfo.category == "" or
-        (Meeting.searchInfo.category ~= "" and Meeting.searchInfo.code == "" and not next(Meeting.searchInfo.codes))
-
-    for _, nomatch in ipairs(nomatchs) do
-        if string.find(lowerMessage, nomatch) then
-            return
-        end
-    end
-
-    if shouldMatchAll then
-        for _, v in ipairs(matchText) do
-            if string.find(lowerMessage, v) then
-                Meeting:OnCreate(playerName, string.upper(channel), message, "0", "0", "0",
-                    channel == "hardcore" and "1" or "0")
-                return
-            end
-        end
-    else
-        for _, match in ipairs(matchs) do
-            if string.find(lowerMessage, match) then
-                Meeting:OnCreate(playerName, string.upper(channel), message, "0", "0", "0",
-                    channel == "hardcore" and "1" or "0")
-                return
-            end
-        end
-    end
 end
 
 function Message.Send(event, msg)
@@ -220,6 +125,7 @@ local function TruncateUtf8(s, maxBytes)
 end
 
 function Message.CreateActivity(code, comment, targetMembers)
+    if not Meeting.IsSupportedActivity(code) then return end
     local maxMembers = targetMembers or Meeting.GetActivityMaxMembers(code)
     -- 频道消息上限255字节："Meeting:C:"(10) + 7个冒号 + level/class/members(各≤2) + hc(1) + classnum(9) + targetMembers(≤2) ≈ 34 + code长度
     local budget = 255 - 34 - string.len(code)
