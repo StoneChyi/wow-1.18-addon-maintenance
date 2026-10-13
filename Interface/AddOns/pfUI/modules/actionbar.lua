@@ -1924,7 +1924,7 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
       if b.monOutOfRange
         or (oom and C.bars.showoom == "1")
         or (not usable and C.bars.showna == "1") then
-        b.icon:SetVertexColor(.45, .45, .45, 1)
+        b.icon:SetVertexColor(.30, .30, .30, 1)
       else
         b.icon:SetVertexColor(1, 1, 1, 1)
       end
