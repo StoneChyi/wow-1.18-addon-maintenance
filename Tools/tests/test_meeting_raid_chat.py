@@ -151,6 +151,15 @@ for message, codes in [
     ('MCG团装备M', ['MC']), ('BWLxy团来奶', ['BWL']),
     ('MC不缺奶来输出', ['MC']), ('BWL不缺奶，来输出', ['BWL']),
     ('BWL来2N', ['BWL']), ('BWL来1T', ['BWL']),
+    ('NAXX今晚7.20-11点开组来2奶', ['NAXX']),
+    ('NAXX今晚活动时间7.20-11点 开组来2奶', ['NAXX']),
+    ('公会团NAXX现缺1奶', ['NAXX']),
+    ('NAXX固定团活动时间20-23 收人，今晚临时缺1奶', ['NAXX']),
+    ('固定团 NAXX每周收人，NAXX39=1来奶', ['NAXX']),
+    ('公会招募固定成员NAXX，BWL现缺1奶', ['BWL']),
+    ('Guild recruiting NAXX, BWL LF2M healers', ['BWL']),
+    ('周二NAXX开组来奶', ['NAXX']),
+    ('蓝龙现缺治疗', ['Azuregos']),
 ]:
     expect(message, codes)
 
@@ -169,11 +178,39 @@ for message in [
     'MC开团吗', 'BWL开组么', 'MC缺奶不', 'BWL不招人', 'MC不要奶',
     'Is BWL recruiting healers?', 'Any MC need healers?', 'BWL looking for a group',
     'MC满了吗', '昨天MC满了', '如果MC满了', '听说BWL满了',
+    '《某团》 NAXX 双许+4团 收人 需要靠谱法师 术士 牧师 萨满 奶骑 活动时间7.20-11点 开荒包含计暗抗 公平公正 私心太重勿扰',
+    'NAXX双许+4团 收人，需要靠谱法师，活动时间7.20-11点',
+    'NAXX双许+4团 收人。活动时间19:20-23:00',
+    'NAXX公会收人，缺治疗，活动时间20-23',
+    'NAXX固定团招募法师', 'BWL长期招募治疗', 'MC长期缺奶',
+    '卡上固定成员招募 每周活动', 'TAQ每晚活动，需要奶骑',
+    'NAXX每周二四活动，来法师', 'NAXX周二周四收人',
+    'NAXX週二週四收人 固定團', 'Guild recruiting NAXX healers weekly',
+    'NAXX週二週四收人',
+    'NAXX招募公会固定成员', '世界BOSS公会收人 每周活动',
+    '|cffa335ee|Hitem:1:0:0:0|h[现缺1奶39=1]|h|r NAXX固定团每周收人',
 ]:
     expect(message)
 expect('MC满了', ['MC'], 'closed')
 expect('KLZ停止招募', ['?KARA'], 'closed')
 assert parse(None) is None and parse('BWL开组' * 2000) is None
+groups += 1
+
+lua.execute('''
+    local ad='NAXX 双许+4团 收人 需要靠谱法师 术士 牧师 萨满 奶骑 活动时间7.20-11点'
+    local result=Meeting.RaidChat.Parse(ad)
+    assert(result.status=='ignore' and result.reason=='long_term_recruitment')
+    Meeting.Message.OnRecvFormChat('world','LongTermOnly',ad)
+    assert(not Meeting:FindActivity('LongTermOnly'))
+    Meeting.Message.OnRecvFormChat('world','ActivePug','NAXX现缺1奶')
+    local item=Meeting:FindActivity('ActivePug');local updated=item.updated;local redraws=browserUpdates
+    clock=clock+10
+    Meeting.Message.OnRecvFormChat('world','ActivePug',ad)
+    assert(item.comment=='NAXX现缺1奶' and item.updated==updated and browserUpdates==redraws)
+    Meeting.Message.OnRecvFormChat('world','ActivePug','NAXX固定团每周收人，临时缺1奶')
+    assert(item.comment~='NAXX现缺1奶' and item.updated==clock and item.raidChat.codes.NAXX)
+    Meeting:OnClose('ActivePug')
+''')
 groups += 1
 
 lua.execute('''

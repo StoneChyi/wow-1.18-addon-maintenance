@@ -126,7 +126,7 @@ local function FindMentions(text)
 end
 
 local seekers = { "求组", "求組", "求带", "求帶", "找团", "找團", "找个团", "蹲团", "有没有团", "有团吗", "有團嗎", "有没有人开", "有没有开", "有人开", "有人開", "looking for a group" }
-local commerce = { "出售", "收购", "收購", "卖号", "賣號", "代练", "代練", "代打", "公会招人", "公會招人", "公会招募", "公會招募", "工会招人" }
+local commerce = { "出售", "收购", "收購", "卖号", "賣號", "代练", "代練", "代打" }
 local history = { "昨天", "昨日", "上周", "上週", "上次", "刚才", "剛才", "之前", "打完了", "已打完", "灭了", "滅了" }
 local questions = { "怎么", "怎麼", "哪里", "哪裡", "在哪", "为什么", "為什麼", "几点开", "幾點開", "什么时候", "什麼時候", "规则是什么", "規則是什麼", "能打吗", "能打嗎" }
 local closed = { "满了", "滿了", "满员", "滿員", "已满", "已滿", "停止招募", "取消开团", "取消開團", "不开了", "不開了", "不打了", "散团", "散團", "结束了", "結束了" }
@@ -140,6 +140,41 @@ local function Word(text, word)
         first, last = string.find(text, word, last + 1, true)
     end
     return false
+end
+
+local membership = { "收人", "招人", "招募", "招收", "纳新", "納新", "招新", "收成员", "收成員", "固定成员", "固定成員" }
+local organizations = { "公会", "公會", "工会", "固定团", "固定團", "固定队", "固定隊", "长期团", "長期團", "固定队员", "固定隊員", "常驻", "常駐", "稳定团", "穩定團" }
+local schedules = { "活动时间", "活動時間", "开荒时间", "開荒時間", "固定时间", "固定時間" }
+local recurring = { "每周", "每週", "每星期", "每晚", "常年", "长期", "長期" }
+local explicitLongTerm = { "长期招募", "長期招募", "长期收人", "長期收人", "长期招人", "長期招人", "常年招募", "长期缺", "長期缺" }
+local currentFill = { "现缺", "現缺", "现在缺", "現在缺", "当前缺", "當前缺", "临时缺", "臨時缺", "临时补", "臨時補", "临时来", "臨時來", "临时替补", "臨時替補", "补临时", "補臨時" }
+local weekdays = { "一", "二", "三", "四", "五", "六", "日", "天" }
+local function NumberGap(text)
+    for have, need in string.gfind(text, "(%d+)%s*=%s*(%d+)") do
+        have, need = tonumber(have), tonumber(need)
+        if have > 0 and need > 0 and have + need <= 40 then return true end
+    end
+    return false
+end
+local function ImmediateFill(text)
+    if Any(text, currentFill) or NumberGap(text) then return true end
+    for token in string.gfind(text, "lf%d+m") do if Word(text, token) then return true end end
+    return false
+end
+local function LongTermAdvertisement(text)
+    if Any(text, explicitLongTerm) then return true end
+    local members = Any(text, membership) or Word(text, "recruiting") or Word(text, "recruitment")
+    local organization = Any(text, organizations) or Word(text, "guild")
+    if members and (organization or Any(text, schedules)) then return true end
+    local repeats = Any(text, recurring) or Word(text, "weekly")
+    if not repeats then
+        local count = 0
+        for _, day in ipairs(weekdays) do
+            if Contains(text, "周"..day) or Contains(text, "週"..day) then count = count + 1 end
+        end
+        repeats = count > 1
+    end
+    return repeats and (members or Any(text, { "来", "來", "缺", "需要" })) or false
 end
 local function StripNegative(text)
     for _, verb in ipairs({ "不缺", "不招", "不收", "不需要", "不要", "不用来", "不用來", "别来", "別來" }) do
@@ -190,10 +225,7 @@ local function Recruitment(text)
             start = last + 1
         end
     end
-    for have, need in string.gfind(text, "(%d+)%s*=%s*(%d+)") do
-        have, need = tonumber(have), tonumber(need)
-        if have > 0 and need > 0 and have + need <= 40 then return true end
-    end
+    if NumberGap(text) then return true end
     if Word(text, "need") and (string.find(text, "need%s+%d*%s*healer") or string.find(text, "need%s+%d*%s*tank")
         or string.find(text, "need%s+%d*%s*dps")) then return true end
     local distribution = Any(text, { "许愿团", "許願團", "金团", "金團", "g团", "g團", "dkp团", "dkp團", "软保", "軟保", "roll团", "roll團" })
@@ -224,6 +256,11 @@ end
 function R.Parse(message)
     if type(message) ~= "string" or string.len(message) > 4096 then return nil end
     local text = R.Normalize(message)
+    -- Decide message intent before punctuation can separate the schedule from "收人".
+    local longTerm = LongTermAdvertisement(text)
+    if longTerm and not ImmediateFill(text) then
+        return { status = "ignore", codes = {}, reason = "long_term_recruitment" }
+    end
     local parts = {}
     text = string.gsub(text, "[\r\n,;!?]", "\n")
     for _, mark in ipairs({ "，", "；", "。", "！", "？" }) do text = string.gsub(text, mark, "\n") end
@@ -243,12 +280,13 @@ function R.Parse(message)
             for i, group in ipairs(clusters) do
                 local finish = clusters[i + 1] and clusters[i + 1].first - 1 or string.len(part)
                 local context = string.sub(part, i == 1 and 1 or group.first, finish)
-                if table.getn(clusters) == 1 and Bare(part, hits) and parts[index + 1]
+                if table.getn(clusters) == 1 and parts[index + 1]
+                    and (Bare(part, hits) or (longTerm and ImmediateFill(parts[index + 1])))
                     and table.getn(FindMentions(parts[index + 1])) == 0 then context = context.." "..parts[index + 1] end
-                local recruiting = Recruitment(context)
+                local recruiting = (not longTerm or ImmediateFill(context)) and Recruitment(context)
                 for _, hit in ipairs(group.hits) do
                     if recruiting then accepted[hit.code] = true
-                    elseif Closure(context) then removed[hit.code] = true end
+                    elseif not longTerm and Closure(context) then removed[hit.code] = true end
                 end
             end
         end

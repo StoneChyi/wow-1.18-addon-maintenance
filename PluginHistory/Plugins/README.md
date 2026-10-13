@@ -65,7 +65,7 @@
 | [HolyHope](HolyHope.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [Interact](Interact.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [LoseControl](LoseControl.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Meeting](Meeting.md) | 有维护记录 | 仅团本与世界首领，深色清晰列表、精简筛选和招募识别。 |
+| [Meeting](Meeting.md) | 有维护记录 | 团本与世界首领清晰列表、当前招募识别及长期广告过滤。 |
 | [ModernMapMarkers](ModernMapMarkers.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [ModifiedPowerAuras](ModifiedPowerAuras.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
 | [MySlash](MySlash.md) | 有维护记录 | 按新包删除 TT助手 /at 入口。 |

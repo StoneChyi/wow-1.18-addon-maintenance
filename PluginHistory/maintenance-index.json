@@ -1006,12 +1006,13 @@
       "addon": "Meeting",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Meeting.md",
-      "purpose": "仅保留团本与世界首领；提高背景可读性、统一列表及精简交互与刷新。",
+      "purpose": "团本／世界首领清晰列表与当前招募识别；过滤长期固定团广告。",
       "sources": [
         "PluginHistory/Research/Meeting团本识别方案-20261013.md",
         "Tools/tests/test_meeting_raid_chat.py",
         "PluginHistory/Research/Meeting界面与活动精简-20261013.md",
-        "Tools/tests/test_meeting_ui.py"
+        "Tools/tests/test_meeting_ui.py",
+        "PluginHistory/Research/Meeting长期招募误报修复-20261013.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Meeting/RaidChat.lua",
@@ -1024,11 +1025,11 @@
         "Interface/AddOns/Meeting/Creator.lua"
       ],
       "tracked_files_at_reference": 20,
-      "pending": "真实 1.12 字体、缩放、频道识别、点击／滚轮与性能待验收；更早个人修改归属未追认。",
+      "pending": "长期广告／临时招募真实样本和 1.12 字体、缩放、操作、性能待游戏验收；更早个人修改归属未追认。",
       "last_maintenance": {
         "date": "2026-10-13",
-        "report": "PluginHistory/Research/Meeting界面与活动精简-20261013.md",
-        "checks": 268,
+        "report": "PluginHistory/Research/Meeting长期招募误报修复-20261013.md",
+        "checks": 295,
         "game_verified": false
       },
       "maintenance_history": [
@@ -1036,6 +1037,12 @@
           "date": "2026-10-13",
           "report": "PluginHistory/Research/Meeting团本识别方案-20261013.md",
           "checks": 218,
+          "game_verified": false
+        },
+        {
+          "date": "2026-10-13",
+          "report": "PluginHistory/Research/Meeting界面与活动精简-20261013.md",
+          "checks": 268,
           "game_verified": false
         }
       ]
