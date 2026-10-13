@@ -55,3 +55,13 @@ StatScanner.lua 的扫描试改最终恢复到阶段快照，不能把撤销的�
 - [PluginHistory/Evidence/legacy-20261006/Docs/Files/StatCompare](../../PluginHistory/Evidence/legacy-20261006/Docs/Files/StatCompare)
 
 没有完整官方原版、没有依据的改动日期与作者均不作推断；阶段备份只用于审查，不宜整份覆盖新版。
+
+## 2026-10-13：修复观察目标属性面板被头像框架遮挡
+
+- 目的：观察其他角色时，目标属性面板下部被 pfUI 自身头像、生命/法力条等 MEDIUM 层级控件覆盖；自身属性面板此前已有 HIGH 策略，目标属性面板遗漏。
+- 主要文件：`Interface/AddOns/StatCompare/StatCompare.lua`；回归检查：`Tools/tests/test_statcompare_panel_strata.py`。
+- 修改：`SCApplyPanelDisplayPolicy` 和自动布局的 `Attach` 均使用 `SCIsManagedPanel`，让目标与自身属性面板统一保持 HIGH。装备列表仍沿用根窗口层级；保留原有自动/自由布局、锚点、透明度、字体、属性口径及显示流程，不新增 Raise 或重复 Show。
+- 关联功能：StatCompare 目标/自身属性比较，S_ItemTip 观察装备列表，以及 pfUI 单位框架；未修改这些关联插件文件。沿用现有 1.12 Frame 的 `GetFrameStrata` / `SetFrameStrata` 签名，没有新增客户端接口或 FontString。
+- 验证：新增层级测试在修改前复现目标面板仍为 LOW 的断言失败，修改后通过 36 项检查，覆盖自动布局、自由拖动、重新打开、反复布局不重复写入，以及装备/单位框架不受影响。`addons_tmp/test_inspect_layout.py` 的 35 项布局/背景与 14 项 S_ItemTip 生命周期检查通过；`addons_tmp/test_character_open_fix.py` 的开窗、布局反馈及计时器回归通过；Lua 5.1 语法与 XML 解析通过。源文件 UTF-8 BOM 和原有混合换行按字节保留。
+- 检查限制：旧 `addons_tmp/test_enchant_before_show.py` 因模拟 BCS 缺少 `GetDataGeneration` 中断；用 HEAD 中修改前的 StatCompare 文件运行也出现同样失败，未将其记为通过，也未在本次层级修复中修改附魔逻辑。
+- 未确认事项：以上为模拟检查，尚未在实际 1.12 游戏中验收；需重载后观察其他角色，确认目标属性面板下部不再被头像框架覆盖。

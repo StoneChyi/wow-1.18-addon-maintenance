@@ -11,8 +11,8 @@ end
 
 function SCApplyPanelDisplayPolicy(frame)
     if not frame or (not SCIsManagedPanel(frame) and frame ~= S_ItemTip_InspectFrame) then return end
-    -- Keep the right-hand statistics above MEDIUM unit frames without Raise.
-    if frame == StatCompareSelfFrame and frame:GetFrameStrata() ~= "HIGH" then frame:SetFrameStrata("HIGH") end
+    -- Keep both attribute panels above MEDIUM unit frames without Raise.
+    if SCIsManagedPanel(frame) and frame:GetFrameStrata() ~= "HIGH" then frame:SetFrameStrata("HIGH") end
     -- The automatic chain does not need three independently raised windows.
     -- Free placement keeps their original top-level behavior.
     local topLevel = not SCGetPanelLayoutMode or SCGetPanelLayoutMode() == "free"
@@ -207,7 +207,7 @@ function SCRelayoutPanels()
     local function Attach(frame)
         if not Visible(frame) then return end
         SCSetPanelPoint(frame, "TOPLEFT", anchor, "TOPRIGHT", x, y)
-        local strata = frame == StatCompareSelfFrame and "HIGH" or root:GetFrameStrata()
+        local strata = SCIsManagedPanel(frame) and "HIGH" or root:GetFrameStrata()
         if frame:GetFrameStrata() ~= strata then frame:SetFrameStrata(strata) end
         anchor, x, y = frame, 4, 0
     end
