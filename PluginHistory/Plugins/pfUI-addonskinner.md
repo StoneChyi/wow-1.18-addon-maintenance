@@ -60,3 +60,11 @@ TrainerSkills/Tmog 的这些记录属于皮肤层，不直接证明其主插件�
 - [PluginHistory/Evidence/legacy-20261006/Docs/Files/pfUI-addonskinner](../../PluginHistory/Evidence/legacy-20261006/Docs/Files/pfUI-addonskinner)
 
 没有完整官方原版、没有依据的改动日期与作者均不作推断；阶段备份只用于审查，不宜整份覆盖新版。
+
+## 2026-10-14：洗脑装置按钮悬停和按压反馈
+
+- 目的：原皮肤清除了按钮原生背景，但插件悬停逻辑继续修改已移除的背景，导致鼠标移入时无法辨认按钮。
+- 主要文件：`Interface/AddOns/pfUI-addonskinner/skins/BrainwasherPro.lua`；关联 `BrainwasherPro/BrainwasherPro.lua` 的层级和统一深色布局。
+- 修改：使用 pfUI 的 SetHighlight 更新实际子背景边框，并用1.12 Button原生高亮/按下纹理提供金色反馈，关闭按钮使用红色反馈。保留点击回调；重复美化识别关闭按钮、图标和模板按钮，避免清掉编辑器图标或累积文字。关闭符号先通过 GameFontNormalSmall 模板初始化字体，指定字体文件失败时仍可显示。
+- 验证：`Tools/tests/test_brainwasher_ui.py` 运行实际插件创建逻辑、皮肤、pfUI SetHighlight / SkinButton / StripTextures，并使用严格 FontString 契约：未初始化字体的 SetText必须失败，模拟 FRIZQT__.TTF 字体失败；两种旧风格值各209项检查通过。未新增逐帧回调或外部素材依赖。皮肤文件保留原 UTF-8 无BOM/LF。
+- 未确认事项：鼠标实际视觉效果、点击命中和窗口重叠需在游戏内重载后验收；模拟通过不代表游戏已确认。

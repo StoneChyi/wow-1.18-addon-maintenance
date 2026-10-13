@@ -1967,6 +1967,7 @@
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI-addonskinner/skins/Cat.lua",
+        "Interface/AddOns/pfUI-addonskinner/skins/BrainwasherPro.lua",
         "Interface/AddOns/pfUI-addonskinner/skins/PallyPower.lua",
         "Interface/AddOns/pfUI-addonskinner/skins/RaidCheck.lua",
         "Interface/AddOns/pfUI-addonskinner/skins/StatCompare.lua",

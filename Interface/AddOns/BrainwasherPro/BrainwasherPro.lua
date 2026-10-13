@@ -20,10 +20,7 @@ local L = {
     ["SHOW_TALENT_POINTS"] = "显示天赋点",  
     ["HIDE_TALENT_POINTS"] = "隐藏天赋点",
     ["BUY_SLOT_CONFIRM"] = "是否购买第%d个天赋槽位? 这将花费%d金。",
-    ["SWITCH_STYLE"] = "切换风格",
-    ["SWITCH_STYLE_CONFIRM"] = "是否确认切换界面风格? 这将重新加载界面。",
-    ["STYLE_CLASSIC"] = "经典风格",
-    ["STYLE_DARK"] = "暗黑风格"
+    -- One layout; no style selector.
 }
 
 local mainFrame, editFrame, iconFrame
@@ -512,6 +509,8 @@ function BrainwasherPro:CreateMainFrame()
     if mainFrame then return end
     
     mainFrame = CreateFrame("Frame", "BrainwasherProFrame", UIParent)
+    mainFrame:SetFrameStrata("DIALOG")
+    mainFrame:SetFrameLevel(10)
     mainFrame:SetWidth(384)
     mainFrame:SetHeight(512)
     mainFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -551,13 +550,6 @@ function BrainwasherPro:CreateMainFrame()
     title:SetPoint("TOP", mainFrame, "TOP", 0, -5)
     title:SetText(L["TITLE"])
     title:SetTextColor(1, 0.82, 0)
-    
-    local styleButton = CreateFrame("Button", nil, mainFrame, "UIPanelButtonTemplate")
-    styleButton:SetWidth(100)
-    styleButton:SetHeight(22)
-    styleButton:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 15, -10)
-    styleButton:SetText(BrainwasherPro.currentStyle == "classic" and L["STYLE_DARK"] or L["STYLE_CLASSIC"])
-    styleButton:SetScript("OnClick", function() StaticPopup_Show("BRAINWASHERPRO_SWITCH_STYLE") end)
     
     local closeButton = CreateFrame("Button", nil, mainFrame, "UIPanelCloseButton")
     closeButton:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -5, -5)
@@ -818,6 +810,8 @@ function BrainwasherPro:CreateEditFrame()
     if editFrame then return end
     
     editFrame = CreateFrame("Frame", "BrainwasherProEditFrame", UIParent)
+    editFrame:SetFrameStrata("DIALOG")
+    editFrame:SetFrameLevel(20)
     editFrame:SetWidth(350)
     editFrame:SetHeight(500)
     editFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -850,7 +844,6 @@ function BrainwasherPro:CreateEditFrame()
         editFrame:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
     end
     
-    editFrame:SetFrameStrata("DIALOG")
     editFrame:SetMovable(true)
     editFrame:EnableMouse(true)
     editFrame:RegisterForDrag("LeftButton")
@@ -1302,16 +1295,6 @@ StaticPopupDialogs["BRAINWASHERPRO_BUY_SLOT"] = {
     timeout = 0, whileDead = 1, hideOnEscape = 1
 }
 
-StaticPopupDialogs["BRAINWASHERPRO_SWITCH_STYLE"] = {
-    text = L["SWITCH_STYLE_CONFIRM"], button1 = L["YES"], button2 = L["NO"],
-    OnAccept = function()
-        BrainwasherPro.currentStyle = BrainwasherPro.currentStyle == "classic" and "dark" or "classic"
-        BrainwasherProDB.style = BrainwasherPro.currentStyle
-        ReloadUI()
-    end,
-    timeout = 0, whileDead = 1, hideOnEscape = 1
-}
-
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("GOSSIP_SHOW")
@@ -1326,8 +1309,8 @@ eventFrame:SetScript("OnEvent", function()
     if event == "ADDON_LOADED" and arg1 == "BrainwasherPro" then
         if not BrainwasherProDB then BrainwasherProDB = {specs = {}, style = "dark"} end
         if not BrainwasherProDB.specs then BrainwasherProDB.specs = {} end
-        if not BrainwasherProDB.style then BrainwasherProDB.style = "dark" end
-        BrainwasherPro.currentStyle = BrainwasherProDB.style
+        -- The layout is fixed; pfUI supplies the optional skin. Ignore legacy style values.
+        BrainwasherPro.currentStyle = "dark"
         BrainwasherPro:PopulateMacroIcons()
         DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00地精洗脑装置已加载! 与洗脑装置交互以使用.|r")
         

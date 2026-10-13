@@ -48,6 +48,17 @@ local function SkinBrainwasherPro()
   local SkinButton      = api.SkinButton
   local hooksecurefunc  = api.hooksecurefunc or _G.hooksecurefunc
 
+  -- Engine-owned textures give hover/press feedback without update timers.
+  -- SetHighlight changes pfUI's actual child backdrop border.
+  local function ButtonFeedback(b, r, g, blue)
+    r, g, blue = r or 1, g or .82, blue or .2
+    if api.SetHighlight then api.SetHighlight(b, r, g, blue) end
+    b:SetHighlightTexture("Interface\\Buttons\\WHITE8X8", "ADD")
+    b:GetHighlightTexture():SetVertexColor(r, g, blue, .22)
+    b:SetPushedTexture("Interface\\Buttons\\WHITE8X8")
+    b:GetPushedTexture():SetVertexColor(r, g, blue, .35)
+  end
+
   -- 关闭按钮自定义处理：不用 SkinCloseButton，因为它用死全局名 "pfQuestionDialogCloseTex"
   -- 多个按钮同名会冲突，导致 X 不显示。这里直接用 FontString 在按钮上画一个红色 "×"，
   -- 不依赖任何 tga 纹理，保证在本客户端一定能看到。
@@ -66,12 +77,13 @@ local function SkinBrainwasherPro()
 
       -- 红色 "×" 文字，居中，大小适配 15x15
       if not b.xtext then
-        b.xtext = b:CreateFontString(nil, "OVERLAY")
+        b.xtext = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         b.xtext:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
         b.xtext:SetPoint("CENTER", b, "CENTER", 0, 0)
         b.xtext:SetText("×")
         b.xtext:SetTextColor(1, .25, .25, 1)
       end
+      ButtonFeedback(b, 1, .25, .25)
     end)
   end
 
@@ -96,8 +108,9 @@ local function SkinBrainwasherPro()
     if not b or not b.IsObjectType or not b:IsObjectType("Button") then return end
     pcall(function()
       b:SetBackdrop(nil)
-      StripTextures(b, true)
+      if not b.bwpActionSkinned then StripTextures(b, true); b.bwpActionSkinned = true end
       CreateBackdrop(b, nil, nil, alpha or .8)
+      ButtonFeedback(b)
     end)
   end
 
@@ -109,11 +122,14 @@ local function SkinBrainwasherPro()
       b:SetPushedTexture("")
       b:SetDisabledTexture("")
       CreateBackdrop(b, nil, nil, .9)
+      b.bwpIconSkinned = true
+      ButtonFeedback(b)
     end)
   end
 
   -- 关闭按钮识别（UIPanelCloseButton 走 MinimizeButton 纹理）
   local function IsCloseButton(b)
+    if b.xtext then return true end
     local nt = b.GetNormalTexture and b:GetNormalTexture()
     if nt then
       local t = nt:GetTexture() or ""
@@ -124,6 +140,7 @@ local function SkinBrainwasherPro()
 
   -- 空槽纹理识别
   local function IsEmptySlot(b)
+    if b.bwpIconSkinned then return true end
     local nt = b.GetNormalTexture and b:GetNormalTexture()
     if nt then
       local t = nt:GetTexture() or ""
@@ -180,8 +197,10 @@ local function SkinBrainwasherPro()
   local function SkinAction(b)
     local nt = b.GetNormalTexture and b:GetNormalTexture()
     local t = nt and (nt:GetTexture() or "") or ""
-    if string.find(t, "UI%-Panel%-Button") then
-      pcall(SkinButton, b)          -- UIPanelButtonTemplate（风格切换 / 经典样式的底部按钮）
+    if b.bwpTemplateButton or string.find(t, "UI%-Panel%-Button") then
+      b.bwpTemplateButton = true
+      pcall(SkinButton, b)
+      ButtonFeedback(b)
     else
       SkinActionButton(b)           -- 暗色样式的无模板按钮（重置/显示原版/隐藏点数/编辑/保存/确认/取消）
     end
@@ -259,7 +278,7 @@ local function SkinBrainwasherPro()
 
   -- 插件窗口是懒加载（首次与洗脑装置对话时创建），用 hooksecurefunc 钩住创建函数，
   -- 窗口一建好就套皮肤。同时钩 OnGossipShow，每次打开装置都再套一遍，双保险。
-  -- 样式切换（经典 / 暗黑）会 ReloadUI，皮肤会重新注册，无需额外处理。
+  -- 主布局固定为深色；重载后皮肤正常重新注册。
   if BrainwasherPro and hooksecurefunc and _G.FLAG_BWP_HOOK ~= 1 then
     if BrainwasherPro.CreateMainFrame then
       hooksecurefunc(BrainwasherPro, "CreateMainFrame", function() pcall(SkinMain) end)

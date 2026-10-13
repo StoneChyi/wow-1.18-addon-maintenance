@@ -49,3 +49,12 @@
 - [PluginHistory/Evidence/legacy-20261006/Docs/Files/BrainwasherPro](../../PluginHistory/Evidence/legacy-20261006/Docs/Files/BrainwasherPro)
 
 没有完整官方原版、没有依据的改动日期与作者均不作推断；阶段备份只用于审查，不宜整份覆盖新版。
+
+## 2026-10-14：窗口层级、按钮反馈和风格入口
+
+- 目的：解决主窗口下部被动作条覆盖；配合 pfUI 美化恢复按钮反馈，并按用户要求移除无实际差异的经典/暗黑风格选项。
+- 主要文件：`Interface/AddOns/BrainwasherPro/BrainwasherPro.lua`；关联皮肤：`Interface/AddOns/pfUI-addonskinner/skins/BrainwasherPro.lua`。
+- 修改：主窗口使用 DIALOG 层级/级别10，编辑窗口使用 DIALOG/20，保证编辑器及其控件位于主窗口上方。移除顶部风格按钮和切换确认框，启动时统一深色布局，忽略旧保存风格值；没有修改 WTF。原有天赋、装备、动作条与属性预设联动保持。
+- 验证：`Tools/tests/test_brainwasher_ui.py` 在旧风格值 dark/classic 下各通过209项严格 UI 模拟检查，覆盖完整窗口创建、重开、实际 pfUI 悬停钩子、点击事件保留、重复美化、下拉预设和字体文件失败后备。旧天赋联动模拟器缺少新增调用的 SetFrameLevel，临时补齐该方法后66项行为检查通过；它不作为层级/字体检查依据。取消登录装备匹配的11项模拟检查通过。
+- 编码：按字节定点修改，保留现有 UTF-8 无BOM及混合换行；没有新增逐帧动画计时器。
+- 未确认事项：以上均为 Lua 5.1 / 1.12接口模拟检查，尚未进行实际游戏验收；需 `/reload` 后确认窗口不被动作条覆盖、鼠标悬停/按压可见且风格入口消失。
