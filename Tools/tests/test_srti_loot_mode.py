@@ -127,6 +127,7 @@ lootReads=0; lootMethod='group'
 def world(group='solo', enabled=1, option=None, failed_font=False, order=None):
     lua = LuaRuntime(unpack_returned_tuples=True)
     lua.execute(MOCK)
+    lua.execute('function UnitIsPlayer(unit) return units[unit] and units[unit].isPlayer end')
     contract = lua.execute(FONT_CONTRACT)
     lua.execute(STRICT_UI, contract)
     if failed_font:

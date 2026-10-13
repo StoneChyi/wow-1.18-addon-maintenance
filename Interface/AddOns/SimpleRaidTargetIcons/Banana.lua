@@ -245,8 +245,7 @@ function Banana_ButtonOnClick(mouseButton)
 
 		local oldindex = (Banana_GetSymbol("target") or 0)
 		if oldindex == index then
-			Banana_SetSymbol("target", 0)
-			Banana_PlayRemove1()
+			if Banana_SetSymbol("target", 0) ~= false then Banana_PlayRemove1() end
 		else
 			Banana_SetSymbol("target", index)
 		end
@@ -1143,12 +1142,41 @@ function Banana_GetSymbol(unit)
 	return result
 end
 
+-- Native raid markers cannot be assigned to players outside our group.
+-- Check before calling the client: a rejected request may still flash on the caster.
+-- Shared with the radial menu; SuperWoW solo/local markers have no group restriction.
+function SRTI_ValidateRaidTarget(unit, localOnly)
+	local message
+	if not UnitExists(unit) then
+		message = "目标已不存在。"
+	elseif not localOnly and UnitIsPlayer(unit) and not UnitIsUnit(unit, "player") then
+		local member = false
+		for i = 1, GetNumPartyMembers() do
+			if UnitIsUnit(unit, "party"..i) then member = true break end
+		end
+		if not member then
+			for i = 1, GetNumRaidMembers() do
+				if UnitIsUnit(unit, "raid"..i) then member = true break end
+			end
+		end
+		if not member then message = "无法标记不在当前队伍或团队中的玩家。" end
+	end
+	if message then
+		Banana_Error(message)
+		Banana_PlayError()
+		return false
+	end
+	return true
+end
+
 function Banana_SetSymbol(unit, index)
+	local localOnly = superwow and not InGroupOrRaid()
+	if index <= 8 and not SRTI_ValidateRaidTarget(unit, localOnly) then return false end
 	-- A new explicit raid marker supersedes any pending clear-all retries.
 	if index >= 1 and index <= 8 then attempts = 0 end
 	Banana_InvalidateSymbolCache()
 	if index <= 8 then
-		if superwow and not InGroupOrRaid() then
+		if localOnly then
 			SetRaidTarget(unit, index, 1)
 		else
 			SetRaidTarget(unit, index)

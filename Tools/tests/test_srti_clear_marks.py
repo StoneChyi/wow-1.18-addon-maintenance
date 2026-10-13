@@ -19,6 +19,7 @@ ADDON = ROOT / 'Interface/AddOns/SimpleRaidTargetIcons'
 def world(superwow, delayed):
     lua = LuaRuntime(unpack_returned_tuples=True)
     lua.execute(MOCK)
+    lua.execute('function UnitIsPlayer(unit) return units[unit] and units[unit].isPlayer end')
     if superwow:
         lua.execute('SetAutoloot=function() end')
     for filename in ('IconTextures.lua', 'Banana.lua', 'RaidTools.lua', 'Localization.lua'):
@@ -110,6 +111,22 @@ for superwow in (False, True):
         for i=1,12 do tick() end
         assert(table.getn(calls)==count and units.player.mark==8)
         assert(SRTI_Health8:IsShown())
+    ''')
+    groups += 1
+
+# An invalid assignment must leave pending cleanup active and preserve its aliases.
+for superwow in (False, True):
+    lua = world(superwow, True)
+    lua.execute('''
+        Banana_ClearAllSymbols()
+        units.outsider={name='Outsider',guid='outsider',isPlayer=true}
+        local count=table.getn(calls)
+        assert(Banana_SetSymbol('outsider',8)==false)
+        assert(table.getn(calls)==count)
+        assert(Banana_GetSymbol('player')==0)
+        tick()
+        assert(table.getn(calls)==count+1 and calls[count+1][2]==0)
+        assertNoHealth()
     ''')
     groups += 1
 

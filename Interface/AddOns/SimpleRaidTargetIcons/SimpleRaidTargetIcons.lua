@@ -17,11 +17,14 @@ end
 
 -- 1.12 原生 SetRaidTarget 只在队伍/团队里有权限时才落地标记；不在队伍时靠 SuperWoW 的第三参数做本地标记
 local function setRaidTarget(unit, index)
-	if ( SUPERWOW and not inGroup() ) then
+	local localOnly = SUPERWOW and not inGroup();
+	if ( not SRTI_ValidateRaidTarget(unit, localOnly) ) then return false; end
+	if ( localOnly ) then
 		SetRaidTarget(unit, index, 1);
 	else
 		SetRaidTarget(unit, index);
 	end
+	return true;
 end
 
 
@@ -254,18 +257,15 @@ local function buildMenu()
 				if ( arg1 == "RightButton" ) then
 					if ( index and index > 0 ) then
 						this.i = index;
-						PlaySound("igMiniMapZoomOut");
-						setRaidTarget(unit, 0);
+						if ( setRaidTarget(unit, 0) ) then PlaySound("igMiniMapZoomOut"); end
 					else
 						PlaySound("igMainMenuOptionCheckBoxOff");
 					end
 				elseif ( this.i and this.i == index ) then
 					this.i = index;
-					PlaySound("igMiniMapZoomOut");
-					setRaidTarget(unit, 0);
+					if ( setRaidTarget(unit, 0) ) then PlaySound("igMiniMapZoomOut"); end
 				elseif ( this.i ) then
-					PlaySound("igMiniMapZoomIn");
-					setRaidTarget(unit, this.i);
+					if ( setRaidTarget(unit, this.i) ) then PlaySound("igMiniMapZoomIn"); end
 				else
 					PlaySound("igMainMenuOptionCheckBoxOff");
 				end
@@ -380,8 +380,7 @@ local function SRTI_HandleMouseUp()
 			menu.h = GetTime();
 			if ( index and index > 0 ) then
 				menu.i = index;
-				PlaySound("igMiniMapZoomOut");
-				setRaidTarget("target", 0);
+				if ( setRaidTarget("target", 0) ) then PlaySound("igMiniMapZoomOut"); end
 				return;
 			end
 		end
