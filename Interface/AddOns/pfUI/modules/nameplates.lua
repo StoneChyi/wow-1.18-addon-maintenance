@@ -1832,9 +1832,20 @@ end
     local unittype = GetUnitType(red, green, blue) or "ENEMY_NPC"
     local font_size = C.nameplates.use_unitfonts == "1" and C.global.font_unit_size or C.global.font_size
 
-    -- use unit guid as unitstr if possible
-    if not unitstr then
-      unitstr = plate.parent:GetName(1)
+    -- A plate's GUID is authoritative; target/mouseover may still refer to
+    -- another unit during target changes or frame reuse. Validate BEFORE caching.
+    local guid = plate.parent:GetName(1)
+    if type(guid) ~= "string" or not string.find(guid, "^0x%x+$") or guid == "0x0000000000000000" then
+      guid = nil
+    end
+    if guid and UnitExists(guid) and UnitName(guid) == name then
+      unitstr = guid
+    elseif unitstr then
+      if event == "PLAYER_TARGET_CHANGED" or not UnitExists(unitstr) or UnitName(unitstr) ~= name then
+        unitstr = nil
+      elseif guid and (not GetUnitGUID or GetUnitGUID(unitstr) ~= guid) then
+        unitstr = nil
+      end
     end
 
     -- ========== 新增：黑名单提前检查（防止后续debuff显示） ==========
@@ -1867,20 +1878,20 @@ end
     -- ignore players with npc names if plate level is lower than player level
     if ulevel and ulevel > (level == "??" and -1 or level) then player = nil end
 
-    -- cache name and reset unittype on change
-    if plate.cache.name ~= name then
+    -- Same-name units can reuse a plate; keep identity tied to its GUID too.
+    if plate.cache.name ~= name or plate.cache.guid ~= guid then
       plate.cache.name = name
+      plate.cache.guid = guid
       plate.cache.player = nil
       plate.cdCache = nil  -- new unit, reset spell-keyed timer cache
     end
 
-    -- read and cache unittype
-    if plate.cache.player then
-      -- overwrite unittype from cache if existing
+    -- Valid live data must correct stale identity (including PLAYER -> NPC).
+    if unitstr then
+      player = UnitIsPlayer(unitstr) and true or nil
+      plate.cache.player = player and "PLAYER" or "NPC"
+    elseif plate.cache.player then
       player = plate.cache.player == "PLAYER" and true or nil
-    elseif unitstr then
-      -- read unit type while unitstr is set
-      plate.cache.player = UnitIsPlayer(unitstr) and "PLAYER" or "NPC"
     end
 
     if player and unittype == "ENEMY_NPC" then unittype = "ENEMY_PLAYER" end
@@ -1890,13 +1901,6 @@ end
 
     -- skip data updates on invisible frames
     if not visible then return end
-
-    -- target event sometimes fires too quickly, where nameplate identifiers are not
-    -- yet updated. So while being inside this event, we cannot trust the unitstr.
-    if event == "PLAYER_TARGET_CHANGED" then unitstr = nil end
-
-    -- remove unitstr on unit name mismatch
-    if unitstr and UnitName(unitstr) ~= name then unitstr = nil end
 
     -- use mobhealth values if addon is running
     if (MobHealth3 or MobHealthFrame) and target and name == UnitName('target') and MobHealth_GetTargetCurHP() then
@@ -2388,6 +2392,10 @@ end
     -- IsTargetNamePlateVisible 的判定（其 _guid 等于目标 GUID，会覆盖真实目标姓名板）。
     if frame._pfFixedPlate then return end
 
+    -- Revalidate pooled frames even without GUID support (same-name reuse).
+    nameplate.cache.player = nil
+    nameplate.cache.guid = nil
+
     -- 管理可见血条表
     if hiddenPlates[frame] then
       hiddenPlates[frame] = nil
@@ -2453,6 +2461,7 @@ end
       end
       nameplate.cachedGuid = guid
       guidRegistry[guid] = frame
+      nameplate.eventcache = true  -- refresh identity immediately on GUID reuse
     end
     
     -- PERF: Intelligent throttling based on target/castbar status and plate count
