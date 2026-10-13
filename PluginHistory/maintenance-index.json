@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
-  "updated_on": "2026-10-13",
+  "updated_on": "2026-10-14",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
@@ -1514,11 +1514,17 @@
       "addon": "TWThreat",
       "status": "unconfirmed",
       "note": "PluginHistory/Plugins/TWThreat.md",
-      "purpose": "等待确认是否有个人修改",
+      "purpose": "补记 KOOK 最爱插件包来源及移出整合包后自行保留经过；个人修改仍待确认。",
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 29,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "source_confirmation": {
+        "confirmed_on": "2026-10-14",
+        "download_source": "用户确认来自 KOOK 最爱插件包",
+        "retention_history": "整合包后期删除此插件，用户自行保存",
+        "event_dates_verified": false
+      },
+      "pending": "下载及移除日期、移除原因、个人修改归属，以及 10.5.0 的真实安装包、发布来源和同系列关系。"
     },
     {
       "addon": "TankBuddyEnh",
