@@ -17,8 +17,9 @@ end
 
 -- 1.12 原生 SetRaidTarget 只在队伍/团队里有权限时才落地标记；不在队伍时靠 SuperWoW 的第三参数做本地标记
 local function setRaidTarget(unit, index)
-	local localOnly = SUPERWOW and not inGroup();
+	local localOnly = SRTI_UseLocalRaidTarget(unit);
 	if ( not SRTI_ValidateRaidTarget(unit, localOnly) ) then return false; end
+	if ( index > 0 ) then SRTI_CancelPendingClear(); end
 	if ( localOnly ) then
 		SetRaidTarget(unit, index, 1);
 	else
@@ -314,7 +315,6 @@ end
 
 function SRTIRadialMenu_Show()
 	
-	if ( inGroup() and not IsPartyLeader() and not IsRaidLeader() and not IsRaidOfficer() ) then return; end
 			
 	if ( not menu ) then
 		menu = buildMenu();
@@ -329,6 +329,7 @@ function SRTIRadialMenu_Show()
 			SRTI_RadialWarn(ok and ("unit 无效：" .. tostring(u)) or tostring(u));
 		end
 	end
+	if ( inGroup() and not SRTI_UseLocalRaidTarget(menu.unit) and not IsPartyLeader() and not IsRaidLeader() and not IsRaidOfficer() ) then menu:Hide(); return; end
 	menu.s = GetTime();
 	menu.h = nil;
 	menu.i = nil;

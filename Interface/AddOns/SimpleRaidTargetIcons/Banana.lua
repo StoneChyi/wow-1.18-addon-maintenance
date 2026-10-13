@@ -196,6 +196,13 @@ function Banana_SetEnabled(on)
 end
 
 local attempts = 0
+local clearTargets = {}
+local clearUntil = 0
+function SRTI_CancelPendingClear()
+	attempts = 0
+	clearTargets = {}
+	clearUntil = 0
+end
 function Banana_OnUpdate()
 	if not iconsReady then return end
 	if BANANA_CONFIG.ENABLED ~= 1 then return end
@@ -204,10 +211,8 @@ function Banana_OnUpdate()
 	else
 		this.tick = GetTime() + 0.2
 	end
-	-- Clear the temporary player marker before scanning, including the final retry.
-	if attempts > 0 then
-		Banana_SetSymbol("player", 0)
-	end
+	if attempts > 0 and GetTime() > clearUntil then SRTI_CancelPendingClear() end
+	if attempts > 0 then Banana_ProcessClearTargets() end
 	Banana_UpdateStatus()
     Banana_CtRaMainTankUpdate()
 	if attempts > 0 then
@@ -992,14 +997,60 @@ function Banana_CtRaMainTankUpdateByIndex(mtindex)
     f:Hide()
 end
 
-function Banana_ClearAllSymbols()
-    Banana_PlayRemoveAll()
-	for i = 1, 8 do
-    	Banana_SetSymbol("player", i)
+-- Clear only actual marked units. Never move a marker onto the player to remove it.
+function Banana_ProcessClearTargets()
+	for _, target in ipairs(clearTargets) do
+		if UnitExists(target.unit) and GetRaidTargetIndex(target.unit) == target.index then
+			local localOnly = SRTI_UseLocalRaidTarget(target.unit)
+			if SRTI_ValidateRaidTarget(target.unit, localOnly) then
+				if not localOnly then SetRaidTarget(target.unit, 0) end
+				-- Local and server markers may coexist after joining/leaving a group.
+				if superwow and UnitExists(target.unit) then SetRaidTarget(target.unit, 0, 1) end
+			end
+		end
 	end
-	-- The loop borrows each unique marker; never leave the final skull on the player.
-	Banana_SetSymbol("player", 0)
-	attempts = 10
+end
+
+function Banana_ClearAllSymbols()
+	Banana_PlayRemoveAll()
+	SRTI_CancelPendingClear()
+	local function AddTarget(unit)
+		local exists, guid = UnitExists(unit)
+		if not exists then return end
+		local index = GetRaidTargetIndex(unit)
+		if not index or index < 1 or index > 8 then return end
+		if superwow and UnitGUID then guid = UnitGUID(unit) or guid end
+		if superwow and type(guid) == "string" then unit = guid end
+		for _, target in ipairs(clearTargets) do
+			if UnitIsUnit(unit, target.unit) then return end
+		end
+		table.insert(clearTargets, {unit=unit, index=index})
+	end
+	if superwow then
+		for i = 1, 8 do AddTarget("mark"..i) end
+	end
+	for _, unit in ipairs({"player", "target", "mouseover", "pet", "targettarget"}) do AddTarget(unit) end
+	for i = 1, GetNumPartyMembers() do
+		AddTarget("party"..i); AddTarget("party"..i.."target"); AddTarget("partypet"..i)
+	end
+	for i = 1, GetNumRaidMembers() do
+		AddTarget("raid"..i); AddTarget("raid"..i.."target"); AddTarget("raidpet"..i)
+	end
+	Banana_ProcessClearTargets()
+	-- GUIDs keep retries attached to the original units even when target/mark aliases change.
+	if superwow then
+		local pinned = {}
+		for _, target in ipairs(clearTargets) do
+			local _, guid = UnitExists(target.unit)
+			if type(guid) == "string" and target.unit == guid then table.insert(pinned, target) end
+		end
+		clearTargets = pinned
+		if table.getn(clearTargets) > 0 then attempts = 10; clearUntil = GetTime() + 3 end
+	else
+		clearTargets = {}
+		Banana_Error("未检测到 SuperWoW，仅清除当前可识别单位的标记。")
+	end
+	Banana_InvalidateSymbolCache()
 	Banana_UpdateStatus()
 end
 
@@ -1116,11 +1167,6 @@ end
 
 function Banana_GetSymbol(unit)
 	local result = GetRaidTargetIndex(unit)
-	-- Server acknowledgement can lag behind clearing. Ignore only our borrowed marker,
-	-- including aliases such as party/raid units and SuperWoW's mark8.
-	if attempts > 0 and result and result >= 1 and result <= 8 and UnitIsUnit(unit, "player") then
-		return 0
-	end
 	if (not result) or (result == 0) then
 		local now = GetTime()
 		if now > huntersMarkCacheExpire then
@@ -1142,24 +1188,28 @@ function Banana_GetSymbol(unit)
 	return result
 end
 
--- Native raid markers cannot be assigned to players outside our group.
--- Check before calling the client: a rejected request may still flash on the caster.
--- Shared with the radial menu; SuperWoW solo/local markers have no group restriction.
+local function SRTI_IsOutsidePlayer(unit)
+	if not UnitIsPlayer(unit) or UnitIsUnit(unit, "player") then return false end
+	for i = 1, GetNumPartyMembers() do
+		if UnitIsUnit(unit, "party"..i) then return false end
+	end
+	for i = 1, GetNumRaidMembers() do
+		if UnitIsUnit(unit, "raid"..i) then return false end
+	end
+	return true
+end
+
+-- Native requests cannot mark outside players; SuperWoW can show them locally.
+function SRTI_UseLocalRaidTarget(unit)
+	return superwow and (not InGroupOrRaid() or SRTI_IsOutsidePlayer(unit))
+end
+
 function SRTI_ValidateRaidTarget(unit, localOnly)
 	local message
 	if not UnitExists(unit) then
 		message = "目标已不存在。"
-	elseif not localOnly and UnitIsPlayer(unit) and not UnitIsUnit(unit, "player") then
-		local member = false
-		for i = 1, GetNumPartyMembers() do
-			if UnitIsUnit(unit, "party"..i) then member = true break end
-		end
-		if not member then
-			for i = 1, GetNumRaidMembers() do
-				if UnitIsUnit(unit, "raid"..i) then member = true break end
-			end
-		end
-		if not member then message = "无法标记不在当前队伍或团队中的玩家。" end
+	elseif not localOnly and SRTI_IsOutsidePlayer(unit) then
+		message = "队外玩家需 SuperWoW 本地标记（仅自己可见）。"
 	end
 	if message then
 		Banana_Error(message)
@@ -1170,10 +1220,10 @@ function SRTI_ValidateRaidTarget(unit, localOnly)
 end
 
 function Banana_SetSymbol(unit, index)
-	local localOnly = superwow and not InGroupOrRaid()
+	local localOnly = SRTI_UseLocalRaidTarget(unit)
 	if index <= 8 and not SRTI_ValidateRaidTarget(unit, localOnly) then return false end
 	-- A new explicit raid marker supersedes any pending clear-all retries.
-	if index >= 1 and index <= 8 then attempts = 0 end
+	if index >= 1 and index <= 8 then SRTI_CancelPendingClear() end
 	Banana_InvalidateSymbolCache()
 	if index <= 8 then
 		if localOnly then

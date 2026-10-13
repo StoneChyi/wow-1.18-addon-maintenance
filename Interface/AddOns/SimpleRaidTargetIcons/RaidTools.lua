@@ -699,7 +699,7 @@ function SRTI_InitTools()
     tools.ready = CreateTool("ReadyButton", "位", "就位确认", "左键：发起就位确认", {.4, .9, .4},
         function() if arg1 == "LeftButton" then ReadyCheck() end end)
     tools.countdown = CreateTool("CountdownButton", "倒", "开怪倒数", "左键：开始 / 取消 5 秒倒数；右键：取消", {1, .8, .3}, CountdownClick)
-    tools.clear = CreateTool("ClearButton", "清", "清除全部标记", "左键：清除场上全部团队标记；保留已保存的记录", {1, .4, .4},
+    tools.clear = CreateTool("ClearButton", "清", "清除全部标记", "左键：直接清除已标记单位；SuperWoW 可枚举场上标记；保留存档", {1, .4, .4},
         function() if arg1 == "LeftButton" then Banana_ClearAllSymbols() Banana_UpdateStatus() end end)
     tools.reset = CreateTool("ResetButton", "重", "重置副本", "左键：确认后重置副本（需离开副本并拥有队长权限）", {1, .75, .35},
         function() if arg1 == "LeftButton" and CanReset() then StaticPopup_Show("SRTI_RESET_INSTANCES") end end)

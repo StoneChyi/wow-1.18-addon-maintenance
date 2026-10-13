@@ -107,8 +107,20 @@ for superwow in (False, True):
     for group in ('solo', 'party', 'raid'):
         for entry in ('direct', 'right', 'ctrl', 'radial'):
             lua = world(superwow, group, entry)
-            if superwow and group == 'solo':
-                lua.execute("click('outsider',8,false); assert(table.getn(calls)==1 and calls[1][3]==1 and units.outsider.mark==8 and units.player.mark==3)")
+            if superwow:
+                lua.execute('''
+                    for i=1,8 do
+                        units.outsider.mark=nil; calls={}
+                        click('external-guid',i,false)
+                        assert(table.getn(calls)==1 and calls[1][3]==1)
+                        assert(units.outsider.mark==i and units.player.mark==3 and flashes==0)
+                    end
+                    calls={}; click('outsider',8,true)
+                    assert(table.getn(calls)==1 and calls[1][2]==0 and calls[1][3]==1)
+                    assert(not units.outsider.mark and units.player.mark==3 and flashes==0)
+                    units.outsider.hostile=true; click('outsider',1,false)
+                    assert(units.outsider.mark==1 and calls[2][3]==1 and flashes==0)
+                ''')
             else:
                 lua.execute('''
                     for i=1,8 do click('external-guid',i,false); assertSafe() end
@@ -132,7 +144,23 @@ for superwow in (False, True):
 # Outside-circle right click uses a second radial removal path.
 for superwow in (False, True):
     lua = world(superwow, 'party', 'world')
-    lua.execute("units.outsider.mark=8; click('outsider',8,true); assertSafe()")
+    if superwow:
+        lua.execute("units.outsider.mark=8; click('outsider',8,true); assert(table.getn(calls)==1 and calls[1][2]==0 and calls[1][3]==1 and not units.outsider.mark and units.player.mark==3 and flashes==0)")
+    else:
+        lua.execute("units.outsider.mark=8; click('outsider',8,true); assertSafe()")
     groups += 1
 
-print(f'PASS: {groups} marker-target behavior groups; native/SuperWoW, solo/party/raid, bar/radial clicks, outsider/GUID rejection, valid targets and strict fonts')
+# Local marking of outsiders stays available to ordinary party/raid members.
+for group in ('party', 'raid'):
+    lua = world(True, group, 'radial')
+    lua.execute('''
+        partyLeader=false; raidLeader=false; raidOfficer=false
+        click('outsider',8,false)
+        assert(SRTIRadialMenu:IsShown() and calls[1][3]==1 and units.outsider.mark==8)
+        assert(units.player.mark==3 and flashes==0)
+        units.target=units.npc; SRTIRadialMenu_Show()
+        assert(not SRTIRadialMenu:IsShown(),'server-mark permissions bypassed')
+    ''')
+    groups += 1
+
+print(f'PASS: {groups} marker-target behavior groups; native/SuperWoW, solo/party/raid, bar/radial clicks, outsider/GUID local marking or native rejection, valid targets and strict fonts')
