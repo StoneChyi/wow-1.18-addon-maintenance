@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'addons_tmp/bcs-test-runtime'))
 from lupa.lua51 import LuaRuntime
 
-FILES = [ROOT / 'Interface/AddOns/Cooline' / f for f in ['settings.lua', 'Cooline.lua']]
+FILES = [ROOT / 'Interface/AddOns/Cooline' / f for f in ['settings.lua', 'shared_items.lua', 'Cooline.lua']]
 FONT_CONTRACT = ROOT / 'Tools/tests/wow112_fontstring_mock.lua'
 STUB = r'''
 local installFontContract = ...
@@ -925,12 +925,168 @@ def excluded_shared_relationships():
 check('unlinked shots, summons, cross-class categories and own-only timers stay separate; long shared CD enters short range once',excluded_shared_relationships)
 
 
+def item_book(lua, entries, equipped=None):
+    g=lua.globals()
+    g.bags[0]=lua.table_from([
+        {'link':f'|Hitem:{iid}:0:0:0|h[{name}]|h','texture':'item-'+str(iid),
+         'start':g.now,'duration':duration}
+        for iid,name,duration in entries
+    ],recursive=True)
+    if equipped:
+        iid,name,duration=equipped
+        g.inventory[13]=lua.table_from({'link':f'|Hitem:{iid}|h[{name}]|h','texture':'item-'+str(iid),
+                                      'start':g.now,'duration':duration})
+    g.cooline.detect_cooldowns()
+
+
+def shared_item_groups_and_layout():
+    pairs=[(13180,4390),(13446,13444),(14022,14023),(8410,8411),(5232,16896),
+           (7148,18587),(19343,19950),(22754,42235),(5512,8008),
+           (21116,21119),(12662,61675),(42125,42126)]
+    for first,second in pairs:
+        for mode in ('lanes','compact','overlap'):
+            lua=new({'theme':{'layout':mode,'show_countdown':True}},superwow=False)
+            g=lua.globals();cl=g.cooline
+            item_book(lua,[(first,'One',60),(second,'Two',60)])
+            fs=frames(lua);assert len(fs)==1
+            f=fs[0];assert f.width==22 and f.count.text=='' and len(f.members)==1
+            assert set(f.shared_names.values())=={'One','Two'} and not f.is_spell
+            assert f.item_id==min(first,second) and len(f.item_members)==2
+            cl.show_tooltip(f);assert len(g.GameTooltip.lines)==3
+    lua=new();g=lua.globals();cl=g.cooline
+    item_book(lua,[(13180,'斯坦索姆圣水',60),(4390,'铁皮手雷',60),(15993,'瑟银手榴弹',60)])
+    assert len(frames(lua))==1 and len(frames(lua)[0].shared_names)==3
+    assert cl.hyperlink_id(None) is None and cl.hyperlink_id('bad') is None
+    assert cl.hyperlink_id('|Hitem:4390:0:0:0|h[Name]|h')==4390
+    lua.execute("spells={{name='铁皮手雷',texture='spell',start=now,duration=60}}")
+    cl.detect_cooldowns();assert sum(len(f.members) for f in frames(lua))==2
+check('12 item categories and three layouts: ID-based merging, holy water/iron/thorium grenades, tooltip and spell isolation',shared_item_groups_and_layout)
+
+
+def item_cast_selection_and_consumption():
+    lua=new(saved_zmd={'enabled':False});g=lua.globals();cl=g.cooline
+    item_book(lua,[(13180,'Holy Water',0),(4390,'Iron Grenade',0)])
+    for source,state in [('player-guid','START'),('player-guid','FAIL'),('other-guid','CAST')]:
+        g.fire(cl,'UNIT_CASTEVENT',source,None,state,17291)
+    item_book(lua,[(13180,'Holy Water',60),(4390,'Iron Grenade',60)])
+    assert frames(lua)[0].name=='Iron Grenade' and not frames(lua)[0].shared_confirmed
+    g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',17291)
+    cl.detect_cooldowns();f=frames(lua)[0]
+    assert f.name=='Holy Water' and f.shared_confirmed and f.icon.texture=='item-13180'
+    # Consumed last holy water remains the representative, with only one timer.
+    g.bags[0][1]=g.bags[0][2];g.bags[0][2]=None
+    g.now=110;cl.detect_cooldowns()
+    assert len(frames(lua))==1 and frames(lua)[0].name=='Holy Water' and f.end_time==160
+    # A surviving member being reset invalidates the old shared record.
+    g.bags[0][1].duration=0;cl.detect_cooldowns();assert not frames(lua)
+    # CAST can precede the first cooldown scan, after the used slot disappears.
+    lua=new();g=lua.globals();cl=g.cooline
+    item_book(lua,[(13180,'Holy Water',0),(4390,'Iron Grenade',0)])
+    g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',17291)
+    item_book(lua,[(4390,'Iron Grenade',60)])
+    assert len(frames(lua))==1 and frames(lua)[0].name=='Holy Water'
+    assert frames(lua)[0].shared_confirmed and frames(lua)[0].end_time==160
+    # Stale success must not select the next cycle.
+    g.now=170;item_book(lua,[(13180,'Holy Water',60),(4390,'Iron Grenade',60)])
+    assert frames(lua)[0].name=='Iron Grenade' and not frames(lua)[0].shared_confirmed
+check('item player CAST selection, failure/source filtering, consumed last item before/after scan, resets and stale success',item_cast_selection_and_consumption)
+
+
+def item_partial_and_unknown_safety():
+    lua=new();g=lua.globals();cl=g.cooline
+    item_book(lua,[(13180,'Water',60),(4390,'Grenade',60),(10646,'Sapper',300),
+                   (13446,'Potion',60),(99999,'Unknown',60)])
+    assert sum(len(f.members) for f in frames(lua))==4
+    shared=next(f for f in frames(lua) if f.shared_names is not None)
+    assert set(shared.shared_names.values())=={'Water','Grenade'}
+    # Own 5-minute sapper cooldown survives consumption and the 1-minute group expiry.
+    lua.execute('table.remove(bags[0],3);cooline.detect_cooldowns();now=161;cooline.on_update(true)')
+    assert len(frames(lua))==1 and frames(lua)[0].name=='Sapper' and frames(lua)[0].end_time==400
+    # Equal end times, different starts/durations must remain independent.
+    lua=new();g=lua.globals();cl=g.cooline
+    item_book(lua,[(13180,'Water',60),(4390,'Grenade',60)])
+    g.bags[0][2].start=99;g.bags[0][2].duration=61;cl.detect_cooldowns()
+    assert sum(len(f.members) for f in frames(lua))==2
+    # Identical-looking unknown items and different categories are never inferred.
+    lua=new();g=lua.globals();cl=g.cooline
+    item_book(lua,[(90000,'UnknownA',60),(90001,'UnknownB',60),(13446,'Potion',60)])
+    assert sum(len(f.members) for f in frames(lua))==3
+    # Two own trinket CDs and a short mutual lockout retain all distinct timings.
+    lua=new();g=lua.globals();cl=g.cooline
+    item_book(lua,[(19343,'TrinketA',300),(19950,'TrinketB',20)],(18820,'Equipped',90))
+    assert sum(len(f.members) for f in frames(lua))==3
+    assert all(f.shared_names is None for f in frames(lua))
+check('sapper own CD, short lockouts, unknown IDs, separate categories, differing start/end and bag/equipment safety',item_partial_and_unknown_safety)
+
+
+def item_shared_expiry_reuse_and_events():
+    lua=new({'theme':{'show_countdown':True}});g=lua.globals();cl=g.cooline
+    item_book(lua,[(13180,'Water',6),(4390,'Grenade',6)]);f=frames(lua)[0]
+    lua.execute('flashCalls=0;cooline.show_flash=function() flashCalls=flashCalls+1 end;bags[0]={};now=106;cooline.detect_cooldowns();cooline.detect_cooldowns()')
+    assert g.flashCalls==1
+    g.now=107.1;cl.on_update(True);assert not frames(lua)
+    add(lua,'Recycled',5);cl.on_update(True);recycled=frames(lua)[0]
+    assert equal(lua,recycled,f) and recycled.item_id is None and recycled.item_members is None
+    assert recycled.shared_names is None and recycled.timer.text=='5'
+    assert cl.events.BAG_UPDATE and cl.events.UNIT_INVENTORY_CHANGED
+    lua.execute('itemCalls=0;originalItemScan=cooline.detect_item_cooldowns;cooline.detect_item_cooldowns=function() itemCalls=itemCalls+1;originalItemScan() end')
+    g.fire(cl,'UNIT_INVENTORY_CHANGED','target');assert not cl.rescan_timer.shown
+    g.fire(cl,'BAG_UPDATE',0);g.fire(cl,'UNIT_INVENTORY_CHANGED','player')
+    g.now=107.21;g.invoke(cl.rescan_timer,'OnUpdate');assert g.itemCalls==1
+check('shared item single completion and fade/pool cleanup; old-client bag/equipment events batch once',item_shared_expiry_reuse_and_events)
+
+
+def item_ambiguous_and_subsets():
+    # Multiple items use the same heal spell; CAST alone cannot identify which
+    # missing item was consumed, so no extra representative may be invented.
+    lua=new();g=lua.globals();cl=g.cooline
+    item_book(lua,[(858,'Lesser',0),(4596,'Discolored',0),(13444,'Mana',0)])
+    g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',440)
+    item_book(lua,[(13444,'Mana',120)])
+    assert len(frames(lua))==1 and frames(lua)[0].name=='Mana' and frames(lua)[0].shared_names is None
+    # The used full-shared item cannot inherit another item's longer own CD.
+    lua=new();g=lua.globals();cl=g.cooline
+    item_book(lua,[(13180,'Water',0),(10646,'Sapper',0)])
+    g.fire(cl,'UNIT_CASTEVENT','player-guid',None,'CAST',17291)
+    item_book(lua,[(10646,'Sapper',300)])
+    assert len(frames(lua))==1 and frames(lua)[0].name=='Sapper' and frames(lua)[0].shared_names is None
+    # Two synchronized pairs are independent; a ready duplicate stack cannot
+    # cancel a valid item cooldown. Disabled entries never add a member.
+    lua=new();g=lua.globals();cl=g.cooline
+    item_book(lua,[(13180,'Water',60),(4390,'Iron',60),(15993,'Thorium',120),
+                   (18641,'Dense',120),(4390,'Iron',0)])
+    assert len(frames(lua))==2
+    assert {frozenset(f.shared_names.values()) for f in frames(lua)}=={frozenset(['Water','Iron']),frozenset(['Thorium','Dense'])}
+    g.bags[0][1].enabled=0;cl.detect_cooldowns()
+    assert sum(len(f.members) for f in frames(lua))==2
+check('ambiguous use spells and long samples do not fabricate consumed timers; item subsets, duplicate stacks and disabled entries',item_ambiguous_and_subsets)
+
+
+def item_catalog_and_loading():
+    import importlib.util
+    spec=importlib.util.spec_from_file_location('item_inspector',ROOT/'Tools/inspect_cooline_items.py')
+    sys.path.insert(0,str(ROOT/'Tools'))
+    inspector=importlib.util.module_from_spec(spec);spec.loader.exec_module(inspector)
+    lua=new();g=lua.globals()
+    assert len(list(g.cooline_shared_items.items()))==204
+    assert {entry[1] for entry in g.cooline_shared_items.values()}==inspector.CATEGORIES
+    toc=(ROOT/'Interface/AddOns/Cooline/Cooline.toc').read_text(encoding='utf-8')
+    assert toc.index('settings.lua') < toc.index('shared_items.lua') < toc.index('cooline.lua')
+    assert g.cooline_shared_items[13180][1]==g.cooline_shared_items[4390][1]==24
+    assert g.cooline_shared_items[10646][3]==300 and g.cooline_shared_items[10646][4]==60
+check('204 reviewed IDs in 12 categories load before main; own/shared CD data kept distinct',item_catalog_and_loading)
+
+
 def original_bytes():
-    for path in FILES:
+    for path in FILES+[ROOT/'Interface/AddOns/Cooline/Cooline.toc']:
+        if path.name=='shared_items.lua':
+            assert not path.read_bytes().startswith(b'\xef\xbb\xbf') and b'\r\n' not in path.read_bytes()
+            continue
         previous=subprocess.check_output(['git','show','HEAD:'+path.relative_to(ROOT).as_posix()],cwd=ROOT)
         current=path.read_bytes()
+        assert previous.endswith(b'\n')==current.endswith(b'\n')
         assert previous.startswith(b'\xef\xbb\xbf')==current.startswith(b'\xef\xbb\xbf')
         assert (b'\r\n' in previous)==(b'\r\n' in current)
         if b'\r\n' in previous:assert b'\n' not in current.replace(b'\r\n',b'')
 check('source files retain original BOM and newline style',original_bytes)
-print(f'{checks} behavior groups passed; 2 Lua source files executed successfully.')
+print(f'{checks} behavior groups passed; {len(FILES)} Lua source files executed successfully.')

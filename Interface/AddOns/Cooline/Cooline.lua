@@ -37,6 +37,9 @@ local shared_groups = {
     {key = 'mage_instant', names = {'燃烧', '气定神闲', 'Combustion', 'Presence of Mind'}},
 }
 local shared_by_name, shared_casts = {}, {}
+local item_catalog = cooline_shared_items or {}
+local item_known, item_casts, item_use_spells = {}, {}, {}
+for _, data in pairs(item_catalog) do item_use_spells[data[2]] = true end
 local SHARED_EPS = 0.1
 for _, group in ipairs(shared_groups) do
     for _, name in ipairs(group.names) do shared_by_name[name] = group end
@@ -66,6 +69,12 @@ function cooline.hyperlink_name(link)
     return name
 end
 
+function cooline.hyperlink_id(link)
+    if type(link) ~= 'string' then return nil end
+    local _, _, id = string.find(link, '|Hitem:(%d+)')
+    return id and tonumber(id)
+end
+
 local function ignored(name)
     if type(name) ~= 'string' or name == '' then return true end
     for _, value in ipairs(cooline_ignore_list) do
@@ -93,6 +102,7 @@ function cooline.start_cooldown(name, texture, start_time, duration, is_spell, r
     frame.name, frame.is_spell, frame.end_time = name, is_spell, end_time
     frame.scan_name, frame.start_time = record_name or name, start_time
     frame.shared_group, frame.shared_names, frame.shared_confirmed = nil, nil, nil
+    frame.item_id, frame.item_members = nil, nil
     frame.icon:SetTexture(texture or 'Interface\\Icons\\INV_Misc_QuestionMark')
     frame:SetBackdropColor(unpack(is_spell and cooline_theme.spellcolor or cooline_theme.nospellcolor))
     return frame
@@ -105,6 +115,7 @@ function cooline.clear_cooldown(key)
     frame:Hide()
     frame.members = nil
     frame.shared_group, frame.shared_names, frame.shared_confirmed = nil, nil, nil
+    frame.item_id, frame.item_members = nil, nil
     tinsert(frame_pool, frame)
     cooldowns[key] = nil
 end
@@ -119,11 +130,13 @@ local function scan_record(records, seen, name, texture, start, duration, enable
     local old = records[name]
     if not old or start + duration > old.start + old.duration then
         records[name] = {texture = texture, start = start, duration = duration}
+        return records[name]
     end
 end
 
-local function merge_shared_records(records)
-    for _, group in ipairs(shared_groups) do
+local function merge_shared_records(records, groups, is_spell)
+    local prefix = is_spell and 'spell:' or 'item:'
+    for _, group in ipairs(groups) do
         local cohorts = {}
         for _, name in ipairs(group.names) do
             local data = records[name]
@@ -161,14 +174,14 @@ local function merge_shared_records(records)
             merged = merged + 1
             local contains = {}
             for _, name in ipairs(names) do contains[name] = true end
-            local old = cooldowns['spell:' .. key]
+            local old = cooldowns[prefix .. key]
             local current = old and old.shared_group == group.key and
                 math.abs(old.start_time - start) <= SHARED_EPS and math.abs(old.end_time - finish) <= SHARED_EPS
             -- A surviving subset can move to the primary key when another
             -- subset disappears. Preserve this cycle's confirmed cast icon.
             if not current then
                 for _, candidate in pairs(cooldowns) do
-                    if candidate.shared_group == group.key and contains[candidate.name] and
+                    if candidate.is_spell == is_spell and candidate.shared_group == group.key and contains[candidate.name] and
                         math.abs(candidate.start_time - start) <= SHARED_EPS and
                         math.abs(candidate.end_time - finish) <= SHARED_EPS then
                         old, current = candidate, true
@@ -177,6 +190,16 @@ local function merge_shared_records(records)
                 end
             end
             local cast = shared_casts[group.key]
+            if not is_spell then
+                cast = nil
+                for _, name in ipairs(names) do
+                    local meta = item_catalog[records[name].item_id]
+                    local at = meta and item_casts[meta[2]]
+                    if at and math.abs(at - start) <= 0.5 and (not cast or at > cast.at) then
+                        cast = {name = name, at = at}
+                    end
+                end
+            end
             -- A confirmed success must belong to this cooldown, not a previous cast.
             local confirmed = cast and contains[cast.name] and math.abs(cast.at - start) <= 0.5
             local chosen = names[1]
@@ -190,6 +213,16 @@ local function merge_shared_records(records)
             records[key] = {name = chosen, texture = records[chosen].texture, start = start,
                 duration = finish - start, shared_group = group.key, shared_names = names,
                 shared_confirmed = confirmed and true or false}
+            if not is_spell then
+                local members = {}
+                for _, name in ipairs(names) do
+                    local data = records[name]
+                    tinsert(members, {name = name, texture = data.texture, item_id = data.item_id,
+                        start = data.start, duration = data.duration})
+                end
+                records[key].item_members = members
+                records[key].item_id = records[chosen].item_id
+            end
             for _, name in ipairs(names) do records[name] = nil end
           end
         end
@@ -197,13 +230,15 @@ local function merge_shared_records(records)
 end
 
 local function replaced_shared_record(frame, records)
-    local group = shared_by_name[frame.name]
-    if not group then return false end
+    local group = frame.is_spell and shared_by_name[frame.name]
+    local item = not frame.is_spell and item_catalog[frame.item_id]
+    local group_key = group and group.key or item and 'item_category_' .. item[1]
+    if not group_key then return false end
     local previous = {}
     for _, name in ipairs(frame.shared_names or {frame.name}) do previous[name] = true end
     for name, data in pairs(records) do
         if previous[name] then return true end
-        if data.shared_group == group.key then
+        if data.shared_group == group_key then
             for _, member in ipairs(data.shared_names) do
                 if previous[member] then return true end
             end
@@ -212,24 +247,115 @@ local function replaced_shared_record(frame, records)
     return false
 end
 
-local function finish_scan(records, seen, is_spell)
-    if is_spell then merge_shared_records(records) end
+local function finish_scan(records, seen, is_spell, groups)
+    merge_shared_records(records, is_spell and shared_groups or groups or {}, is_spell)
     for name, data in pairs(records) do
         local frame = cooline.start_cooldown(data.name or name, data.texture, data.start, data.duration, is_spell, name)
         if frame then
             frame.shared_group, frame.shared_names, frame.shared_confirmed = data.shared_group, data.shared_names, data.shared_confirmed
+            frame.item_id, frame.item_members = data.item_id, data.item_members
         end
     end
     for key, frame in pairs(cooldowns) do
         if frame.is_spell == is_spell and not records[frame.scan_name] then
             -- Consumed/removed items keep their running timer. Natural expiry
             -- is handled by the animation driver, so completion can still flash.
-            if (is_spell and replaced_shared_record(frame, records)) or
-                ((is_spell or seen[frame.name]) and frame.end_time > GetTime() + 0.05) then
+            local present = seen[frame.name]
+            for _, name in ipairs(frame.shared_names or {}) do present = present or seen[name] end
+            if replaced_shared_record(frame, records) or
+                ((is_spell or present) and frame.end_time > GetTime() + 0.05) then
                 cooline.clear_cooldown(key)
             end
         end
     end
+end
+
+local function scan_item(records, seen, link, texture, start, duration, enabled)
+    local name, id = cooline.hyperlink_name(link), cooline.hyperlink_id(link)
+    if id and item_catalog[id] and not ignored(name) then
+        item_known[id] = {name = name, texture = texture}
+    end
+    local data = scan_record(records, seen, name, texture, start, duration, enabled, 3)
+    if data then data.item_id = id end
+end
+
+local function same_item_time(a, b)
+    return math.abs(a.start - b.start) <= SHARED_EPS and
+        math.abs(a.duration - b.duration) <= SHARED_EPS and
+        math.abs(a.start + a.duration - b.start - b.duration) <= SHARED_EPS
+end
+
+local function item_groups(records, seen)
+    -- Preserve an already observed consumed item's timer. For a shared timer,
+    -- ready/reset surviving members invalidate the old missing-member snapshot.
+    for _, frame in pairs(cooldowns) do
+        if not frame.is_spell and item_catalog[frame.item_id] and frame.end_time > GetTime() then
+            local members = frame.item_members or {{name = frame.name, item_id = frame.item_id,
+                texture = frame.icon:GetTexture(), start = frame.start_time, duration = frame.end_time - frame.start_time}}
+            local present, matching = false, false
+            for _, member in ipairs(members) do
+                present = present or seen[member.name]
+                local data = records[member.name]
+                if data and same_item_time(member, data) then matching = true end
+            end
+            if not frame.item_members or not present or matching then
+                for _, member in ipairs(members) do
+                    if not seen[member.name] and not records[member.name] then records[member.name] = member end
+                end
+            end
+        end
+    end
+    -- An unambiguous player CAST can identify the last consumed item even if
+    -- its slot is empty before the first cooldown scan. Require a live same-
+    -- category timing sample; never invent a duration or treat a use attempt as success.
+    local successful = {}
+    for id, known in pairs(item_known) do
+        local meta = item_catalog[id]
+        local at = item_casts[meta[2]]
+        if at and math.abs(GetTime() - at) <= 1 and meta[3] <= meta[4] then
+            local previous = successful[meta[2]]
+            successful[meta[2]] = previous == nil and id or false
+        end
+    end
+    for spell, id in pairs(successful) do
+        if id then
+            local known, meta = item_known[id], item_catalog[id]
+            if not seen[known.name] and not records[known.name] then
+                local sample
+                for _, data in pairs(records) do
+                    local other = item_catalog[data.item_id]
+                    if other and other[1] == meta[1] and data.duration <= meta[4] + SHARED_EPS and
+                        math.abs(data.start - item_casts[spell]) <= 0.5 then
+                        sample = data
+                        break
+                    end
+                end
+                if sample then
+                    records[known.name] = {name = known.name, texture = known.texture, item_id = id,
+                        start = sample.start, duration = sample.duration}
+                end
+            end
+        end
+    end
+    local by_category, groups = {}, {}
+    for name, data in pairs(records) do
+        local meta = item_catalog[data.item_id]
+        if meta then
+            local group = by_category[meta[1]]
+            if not group then
+                group = {key = 'item_category_' .. meta[1], names = {}}
+                by_category[meta[1]] = group
+                tinsert(groups, group)
+            end
+            tinsert(group.names, name)
+        end
+    end
+    for _, group in ipairs(groups) do
+        table.sort(group.names, function(a, b)
+            return records[a].item_id < records[b].item_id
+        end)
+    end
+    return groups
 end
 
 function cooline.detect_item_cooldowns()
@@ -237,16 +363,16 @@ function cooline.detect_item_cooldowns()
     for bag = 0, 4 do
         for slot = 1, (GetContainerNumSlots(bag) or 0) do
             local start, duration, enabled = GetContainerItemCooldown(bag, slot)
-            scan_record(records, seen, cooline.hyperlink_name(GetContainerItemLink(bag, slot)),
-                GetContainerItemInfo(bag, slot), start, duration, enabled, 3)
+            scan_item(records, seen, GetContainerItemLink(bag, slot),
+                GetContainerItemInfo(bag, slot), start, duration, enabled)
         end
     end
     for slot = 0, 19 do
         local start, duration, enabled = GetInventoryItemCooldown('player', slot)
-        scan_record(records, seen, cooline.hyperlink_name(GetInventoryItemLink('player', slot)),
-            GetInventoryItemTexture('player', slot), start, duration, enabled, 3)
+        scan_item(records, seen, GetInventoryItemLink('player', slot),
+            GetInventoryItemTexture('player', slot), start, duration, enabled)
     end
-    finish_scan(records, seen, false)
+    finish_scan(records, seen, false, item_groups(records, seen))
 end
 
 function cooline.detect_spell_cooldowns()
@@ -302,6 +428,10 @@ function cooline.UNIT_CASTEVENT()
     if arg3 ~= 'CAST' or not arg4 or type(GetSpellNameAndRankForId) ~= 'function' then return end
     local _, player_guid = UnitExists('player')
     if not player_guid or arg1 ~= player_guid then return end
+    if item_use_spells[arg4] then
+        item_casts[arg4] = GetTime()
+        cooline.request_item_rescan()
+    end
     local name = shared_base_name(GetSpellNameAndRankForId(arg4))
     local group = name and shared_by_name[name]
     if not group then return end
@@ -889,6 +1019,8 @@ function cooline.VARIABLES_LOADED()
     if type(GetSpellNameAndRankForId) == 'function' then cooline:RegisterEvent('UNIT_CASTEVENT') end
 	cooline:RegisterEvent('SPELL_UPDATE_COOLDOWN')
 	cooline:RegisterEvent('BAG_UPDATE_COOLDOWN')
+    cooline:RegisterEvent('BAG_UPDATE')
+    cooline:RegisterEvent('UNIT_INVENTORY_CHANGED')
 	cooline:SetFrameStrata("LOW")
 	
 	cooline.detect_cooldowns()
@@ -904,6 +1036,14 @@ end
 
 function cooline.BAG_UPDATE_COOLDOWN()
 	cooline.request_item_rescan()
+end
+
+function cooline.BAG_UPDATE()
+    cooline.request_item_rescan()
+end
+
+function cooline.UNIT_INVENTORY_CHANGED()
+    if arg1 == 'player' then cooline.request_item_rescan() end
 end
 
 function cooline.SPELL_UPDATE_COOLDOWN()

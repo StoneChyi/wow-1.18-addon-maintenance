@@ -5,4 +5,5 @@
 ## SavedVariablesPerCharacter: cooline_settings CoolineZMDDB
 
 settings.lua
+shared_items.lua
 cooline.lua

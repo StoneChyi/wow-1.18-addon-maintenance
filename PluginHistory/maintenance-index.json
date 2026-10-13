@@ -611,17 +611,19 @@
       "addon": "Cooline",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Cooline.md",
-      "purpose": "短冷却优先，支持 30 分钟；17 组共享技能候选按实际计时归并，修复圣盾/圣佑重复，保留居中分行、设置预览、雾蓝灰与字体保护。",
+      "purpose": "短冷却优先，支持 30 分钟；17 组技能及 12 类物品按实际计时归并，修复圣盾/圣佑和圣水/手雷重复，保留独立长冷却、布局、预览与字体保护。",
       "sources": [
         "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-15.md",
         "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-24.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Cooline/Cooline.lua",
-        "Interface/AddOns/Cooline/settings.lua"
+        "Interface/AddOns/Cooline/settings.lua",
+        "Interface/AddOns/Cooline/shared_items.lua",
+        "Interface/AddOns/Cooline/Cooline.toc"
       ],
       "tracked_files_at_reference": 5,
-      "pending": "2026-10-12：九职业客户端及公开资料检索，17 组候选按实际同步子集归并；24 组检查通过，圣盾/圣佑与其他职业、服务器差异及外观待真实游戏验收。"
+      "pending": "2026-10-13：新增 12 类 / 204 个共享物品 ID，圣水与手雷同步归并、保留工兵自身长冷却；30 组检查通过，真实物品/技能计时、消耗及成功事件仍待游戏验收。"
     },
     {
       "addon": "Cryolysis",
