@@ -1910,25 +1910,23 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
         b.monTex = tex
       end
 
-      -- usable / oom / out-of-range 图标着色（与动作条本体同配色）
-      local usable, oom = IsUsableAction(slot)
-      if b.monOutOfRange and C.bars.glowrange == "1" then
-        b.icon:SetVertexColor(1, .1, .1, 1)
-      elseif oom and C.bars.showoom == "1" then
-        b.icon:SetVertexColor(.2, .2, 1, 1)
-      elseif not usable and C.bars.showna == "1" then
-        b.icon:SetVertexColor(.3, .3, .3, 1)
-      else
-        b.icon:SetVertexColor(1, 1, 1, 1)
-      end
-
-      -- 超范围红边（状态变化时才重设，避免和呼吸脉动互相打架）
+      -- 超范围状态先更新，图标亮度与边框在本次刷新中保持一致。
       local outrange = C.bars.glowrange == "1" and HasAction(slot)
         and ActionHasRange(slot) and IsActionInRange(slot) == 0
       outrange = outrange and true or nil
       if outrange ~= b.monOutOfRange then
         b.monOutOfRange = outrange
         MonitorSetBorder(b)
+      end
+
+      -- 保留图标原色，仅降低不可用状态的亮度；沿用原有状态提示开关。
+      local usable, oom = IsUsableAction(slot)
+      if b.monOutOfRange
+        or (oom and C.bars.showoom == "1")
+        or (not usable and C.bars.showna == "1") then
+        b.icon:SetVertexColor(.45, .45, .45, 1)
+      else
+        b.icon:SetVertexColor(1, 1, 1, 1)
       end
 
       -- 激活态边框（与本体一致：当前施法/自动重复类动作亮黄边；statechange 动画模式下播动画）
