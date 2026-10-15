@@ -343,7 +343,6 @@ function YGB_OTAlarm:UpdateGeometry()
     self.threatBar.thresholdLine:ClearAllPoints()
     self.threatBar.thresholdLine:SetPoint("TOPLEFT",self.threatBar,"TOPLEFT",5+self.threshold/100*inside,-3)
     self.threatBar.thresholdLine:SetPoint("BOTTOMLEFT",self.threatBar,"BOTTOMLEFT",5+self.threshold/100*inside,3)
-    self.threatBar.thresholdText:SetText(self.threshold.."%")
     self.threatBar.barTexture:SetWidth(math.min(100,self.displayPercent or 0)/100*inside)
     for i, tick in ipairs(self.distanceBar.scales or {}) do
         local value = ({0,8,30,35,41,45})[i]
@@ -1294,13 +1293,6 @@ local function CreateThreatBar()
     thresholdLine:SetWidth(2) -- 加粗刻度线
     thresholdLine:SetTexture(1, 1, 0, 1) -- 黄色
     
-    -- 阈值文本
-    local thresholdText = threatBarFrame:CreateFontString(nil, "OVERLAY")
-    thresholdText:SetPoint("BOTTOM", thresholdLine, "TOP", 0, 12) -- 上移12像素，显示在仇恨条上方
-    thresholdText:SetFont("Fonts\\ARIALN.TTF", 12, "OUTLINE") -- 增大字体大小
-    thresholdText:SetTextColor(1, 1, 0, 1) -- 黄色文字
-    thresholdText:SetText(threshold .. "%")
-    
     -- 仇恨值文本
     local threatText = threatBarFrame:CreateFontString(nil, "OVERLAY")
     threatText:SetPoint("CENTER", barBackground, "CENTER")
@@ -1314,7 +1306,6 @@ local function CreateThreatBar()
     threatBarFrame.barTexture = threatTexture
     threatBarFrame.barText = threatText
     threatBarFrame.thresholdLine = thresholdLine
-    threatBarFrame.thresholdText = thresholdText
     
     -- 默认隐藏
     threatBarFrame:Hide()
