@@ -1,10 +1,14 @@
-# 插件本地 Git 记录
+# 插件修改记录与 Git 维护
 
 本仓库从 2026-10-08 开始建立。`main` 保存当前个人使用版，完整覆盖现有 105 个插件目录，以及根目录 DLL 与相关加载配置。记录首先保存在本地 Git，也可同步到用户授权的私有 GitHub 仓库。
 
 ## 已有修改如何纳入
 
-逐插件摘要见 [全部插件修改说明](Plugins/README.md)，涵盖 105 个目录；本次检索找到 42 个有维护记录的插件，另有来源待确认的备份差异和仅关联皮肤适配。补充入口为 [待补充清单](待补充清单.md)，当前摘要索引为 [maintenance-index.json](maintenance-index.json)。旧 addon-catalog.json 仍保留初始化时的证据标记，不代表本次扩展检索后的数量。
+查找修改见 [插件修改记录](Plugins/README.md)：每个插件一个文件，每次修改单独记录，最新记录在前；早期无法可靠拆分的内容保留为历史汇总，原始证据继续保留。尚未确认个人修改的插件见 [待确认插件](待确认插件.md)，验收和历史缺项见 [待补充清单](待补充清单.md)。索引包含初始化 105 项及后来新增插件，当前数量以生成索引为准。
+
+[记录规范](记录规范.md) · [条目模板](记录模板.md) · [逐次记录机器索引](change-index.json) · [证据与维护清单](maintenance-index.json) · [本次整理记录](Research/记录方式整理-20261015.md)
+
+旧 addon-catalog.json 保留初始化时的证据标记；maintenance-index.json 的历史参考集合与后续 added_addons 分开，不能用新摘要改写历史证据。
 
 初始化及补全提交保存当前使用版的完整文件，而不是重置插件。完整基线标签：`baseline/current-2026-10-08`。`baseline-files.json` 保存初始化时每个现用插件文件的长度和 SHA-256。没有完整干净原整合包，因此该标签不能称为官方原版。`baseline/bootstrap-2026-10-08` 仅留存最初初始化检查点，尚未补全自带仓库插件的实际文件，恢复时应使用完整基线标签。
 
@@ -21,18 +25,20 @@
 
 ## 后续维护
 
-每项修改完成后更新对应插件说明，按插件或关联功能提交本次负责的代码、资源和说明，写明修改目的和检查结果，并主动同步至已授权的私有 GitHub 仓库；单独补充说明也同样提交和同步，无需逐次询问。同步失败时保留本地提交，报告未同步的提交及原因。`AGENTS.md` 已写入后续自动记录要求。Git 记录需要执行提交，不会自动监视或阻止第三方更新器覆盖文件。
+每项修改完成后，在对应插件文件中新增条目，写明修改目的、内容、涉及文件、关联功能、真实检查和游戏验收范围；更新当前摘要，保留旧记录。运行索引生成与检查，再按插件或关联功能将本次负责的代码、资源和说明一起提交，并主动同步至已授权的私有 GitHub 仓库；单独补充说明也同样提交和同步，无需逐次询问。同步失败时保留本地提交，报告未同步的提交及原因。`AGENTS.md` 已写入后续自动记录要求。Git 记录需要执行提交，不会自动监视或阻止第三方更新器覆盖文件。
 
 可使用 Python 运行维护工具（系统 Python 不可用时使用 Codex 自带 Python）：
 
 ```text
 python Tools/plugin_git.py status
 python Tools/plugin_git.py verify
-python Tools/plugin_git.py checkpoint --addon CatPotion --message "CatPotion：说明修改目的；验证：填写实际结果"
-python Tools/plugin_git.py checkpoint --addon DPSMateX --addon DPSMateXInsights --message "DPSMateX：关联功能调整；验证：填写实际结果"
+python Tools/plugin_history.py build
+python Tools/plugin_history.py check
+python Tools/check_plugin_notes.py
+python Tools/plugin_git.py checkpoint --addon CatPotion --note PluginHistory/Plugins/CatPotion.md --note PluginHistory/Plugins/README.md --note PluginHistory/change-index.json --message "CatPotion：说明修改目的；验证：填写实际结果"
 ```
 
-`verify` 会逐字节检查提交中所有文件，并检查插件目录有无未记录文件；与历史标签比较时会列出正常的后续变更。`checkpoint` 只记录指定插件，暂存区非空时停止，避免混入其他任务的内容。维护文档和工具变更应另行审查并明确提交。
+`verify` 会逐字节检查提交中所有文件，并检查插件目录有无未记录文件；与历史标签比较时会列出正常的后续变更。`checkpoint` 只记录指定插件、运行依赖和 `--note` 明确指定的维护文档，暂存区非空时停止，避免混入其他任务内容。关联插件分别重复 `--addon` 和 `--note`；变化的维护清单、待确认索引或研究报告也应明确加入。工具及其他文件须另行审查并明确暂存，不使用无范围的 `git add .`。
 
 ## 下次更新整合包
 

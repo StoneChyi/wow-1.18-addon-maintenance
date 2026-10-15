@@ -3,7 +3,7 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import subprocess
 import sys
 
@@ -89,7 +89,28 @@ def verify(ref):
     return 1 if failures else 0
 
 
-def checkpoint(addons, runtime, message):
+def note_path(name):
+    """Accept explicit maintenance documents, never archived evidence/settings."""
+    path = PurePosixPath(name)
+    if ("\\" in name or ":" in name or path.is_absolute() or
+            ".." in path.parts or any(p.lower() == ".git" for p in path.parts) or "." in name.split("/") or
+            len(path.parts) < 2 or path.parts[0] != "PluginHistory" or
+            path.suffix not in {".md", ".json"} or
+            (len(path.parts) > 2 and path.parts[1] not in {"Plugins", "Research"}) or
+            (len(path.parts) == 2 and path.suffix == ".json" and
+             path.name not in {"maintenance-index.json", "change-index.json"})):
+        raise RuntimeError("Use an explicit PluginHistory maintenance .md/.json path; archived evidence is excluded.")
+    resolved = (ROOT / name).resolve()
+    if not resolved.is_relative_to((ROOT / "PluginHistory").resolve()):
+        raise RuntimeError("Maintenance note resolves outside PluginHistory.")
+    if len(path.parts) > 2 and not resolved.is_relative_to((ROOT / "PluginHistory" / path.parts[1]).resolve()):
+        raise RuntimeError("Maintenance note resolves outside its document category.")
+    if not resolved.is_file() and not git("ls-files", "-z", "--", ":(literal)" + name):
+        raise RuntimeError("Unknown maintenance note: " + name)
+    return path.as_posix()
+
+
+def checkpoint(addons, runtime, message, notes=()):
     if git("diff", "--cached", "--name-only", "-z"):
         raise RuntimeError("Staging area is not empty; review it before recording this task.")
     scopes = []
@@ -107,8 +128,11 @@ def checkpoint(addons, runtime, message):
         if not (ROOT / name).is_file() and not git("ls-files", "-z", "--", ":(literal)" + name):
             raise RuntimeError("Unknown runtime file: " + name)
         scopes.append(name)
+    # Validate every document before staging anything. This permits a single
+    # atomic implementation + notes commit while retaining the empty-index guard.
+    scopes.extend(note_path(name) for name in notes)
     if not scopes:
-        raise RuntimeError("Specify --addon or --runtime; no unscoped commits.")
+        raise RuntimeError("Specify --addon, --runtime or --note; no unscoped commits.")
     # Explicit file paths flatten embedded repositories without touching their
     # private .git data. Directory-based git add would store only gitlinks.
     paths = set()
@@ -122,7 +146,7 @@ def checkpoint(addons, runtime, message):
             paths.add(scope)
     stage_paths(paths)
     if not git("diff", "--cached", "--name-only", "-z"):
-        print("No changes in the selected plugins.")
+        print("No changes in the selected plugins, runtime files or maintenance notes.")
         return 0
     # Commit messages should include purpose and actual validation results.
     git("-c", "commit.gpgSign=false", "commit", "-m", message)
@@ -139,6 +163,8 @@ def main():
     save = commands.add_parser("checkpoint")
     save.add_argument("--addon", action="append", default=[])
     save.add_argument("--runtime", action="append", default=[])
+    save.add_argument("--note", action="append", default=[],
+                      help="Explicit PluginHistory maintenance document; repeat for reviewed indexes/reports.")
     save.add_argument("--message", required=True)
     args = parser.parse_args()
     if args.command == "status":
@@ -146,7 +172,7 @@ def main():
         return 0
     if args.command == "verify":
         return verify(args.ref)
-    return checkpoint(args.addon, args.runtime, args.message)
+    return checkpoint(args.addon, args.runtime, args.message, args.note)
 
 
 if __name__ == "__main__":

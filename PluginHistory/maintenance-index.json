@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
-  "updated_on": "2026-10-14",
+  "updated_on": "2026-10-15",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
@@ -466,7 +466,7 @@
       "addon": "BrainwasherPro",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/BrainwasherPro.md",
-      "purpose": "切换天赋后可靠地恢复装备、动作条及属性面板。",
+      "purpose": "天赋、装备与动作条联动；窗口分层、深色布局及按钮交互反馈。",
       "sources": [
         "Interface/AddOns/Outfitter/.workbuddy/memory/2026-08-26.md",
         "PluginHistory/Evidence/addons_tmp/talent-panel-actionbar-change-notes.md",
@@ -1283,7 +1283,7 @@
       "addon": "STSMmayor",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/STSMmayor.md",
-      "purpose": "精简盾牌/修理机器人界面并提高交互预判准确性。",
+      "purpose": "两行紧凑盾牌/修理机器人界面，保留距离、视线及交互预判。",
       "sources": [
         "PluginHistory/Evidence/CodexBackups/STSMmayor/force-disk-2.4.7/修改说明.md",
         "PluginHistory/Evidence/CodexBackups/STSMmayor/robot-presence-2.4.8/修改说明.md",
@@ -1330,7 +1330,7 @@
       "addon": "S_ItemTip",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/S_ItemTip.md",
-      "purpose": "统一观察布局、属性扫描及图标显示。",
+      "purpose": "合并评分/链接缓存优化并修复查询刷新，保留个人观察布局和负充能处理。",
       "sources": [
         "Interface/AddOns/S_ItemTip/.workbuddy/memory/2026-09-30.md",
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
@@ -1705,7 +1705,7 @@
       "addon": "YGB_OTAlarm",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/YGB_OTAlarm.md",
-      "purpose": "修正仇恨报警配置、计时与界面。",
+      "purpose": "移除仇恨条阈值数字，保留黄色提示线、阈值设置和报警逻辑。",
       "sources": [
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
@@ -1954,7 +1954,7 @@
       "addon": "pfUI-addonskinner",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI-addonskinner.md",
-      "purpose": "让定制功能及动态窗口沿用 pfUI 外观。",
+      "purpose": "维护定制插件的 pfUI 皮肤，恢复洗脑装置按钮悬停与按压反馈。",
       "sources": [
         "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-27.md",
         "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-28.md",
@@ -2068,5 +2068,14 @@
       "deployed": true,
       "game_verified": false
     }
-  ]
+  ],
+  "record_layout": {
+    "version": 2,
+    "organized_on": "2026-10-15",
+    "per_plugin": "PluginHistory/Plugins/插件名.md",
+    "record_index": "PluginHistory/change-index.json",
+    "pending_index": "PluginHistory/待确认插件.md",
+    "rules": "PluginHistory/记录规范.md",
+    "template": "PluginHistory/记录模板.md"
+  }
 }

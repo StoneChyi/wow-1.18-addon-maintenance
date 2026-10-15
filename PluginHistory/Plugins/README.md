@@ -1,138 +1,90 @@
-# 全部插件修改说明
+# 插件修改记录
 
-本索引按初始化核对基准中的 **105 个插件目录**逐一建档，整理于 2026-10-09。原先已有零散报告的插件也统一归入独立页面。
+每个插件一个文件，每次修改一条记录；点插件名查看完整历史，点最近记录直接跳转。最新记录在前，早期历史及依据保留在文件末尾。
 
-已找到维护记录 **52 个**；可核对备份差异但来源待确认 **1 个**；仅确认关联皮肤适配 **2 个**；尚未确认个人修改 **50 个**。这不是“105 个均已修改”的结论。
+当前覆盖 **106 个插件页面**：有维护记录 **53 个**，仅关联皮肤适配 **2 个**，其余 **51 个**的个人修改归属或内容待确认。已停用插件保留历史。
 
-初始化内容为历史总结；后续实际维护按真实日期记录在各插件页，当前状态统计更新至 2026-10-14。日期/长期笔记存在返工时，优先保留较晚的明确决定，撤回项单列；没有记录的内容等待补充。历史笔记中提到其他客户端路径的，不自动认定也修改了当前安装。
+[待确认插件](../待确认插件.md) · [验收与历史缺项](../待补充清单.md) · [记录规范](../记录规范.md) · [记录模板](../记录模板.md) · [机器索引](../change-index.json)
 
-[集中补充入口](../待补充清单.md) · [维护方法](../README.md) · [机器可读索引](../maintenance-index.json)
+## 有维护记录的插件
 
-本次核对基准：`4feabd85022b2e3afbd8c6aca6d94fe7765cf124`。完整初始化标签 `baseline/current-2026-10-08` 是个人使用版，逐文件阶段备份也不等于官方原版。修改说明和 Git 可以帮助人工迁移、回退，不能保证更新器不覆盖文件。
+“最近记录”包含修改、更新、反馈和方案，记录类型在插件页注明；日期待确认的早期汇总不伪造修改时间。游戏验收只代表最近一条的范围，其他功能请查相应记录。
 
-## 查找插件
+| 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
+| --- | --- | --- | --- |
+| [YGB_OTAlarm](YGB_OTAlarm.md) | 2026-10-15 | [移除仇恨条阈值数字](YGB_OTAlarm.md#change-YGB_OTAlarm-20261015-01) | 待游戏验收 |
+| [pfUI-addonskinner](pfUI-addonskinner.md) | 2026-10-14 | [洗脑装置按钮悬停和按压反馈](pfUI-addonskinner.md#change-pfUI-addonskinner-20261014-01) | 待游戏验收 |
+| [BrainwasherPro](BrainwasherPro.md) | 2026-10-14 | [窗口层级、按钮反馈和风格入口](BrainwasherPro.md#change-BrainwasherPro-20261014-01) | 待游戏验收 |
+| [StatCompare](StatCompare.md) | 2026-10-13 | [修复观察目标属性面板被头像框架遮挡](StatCompare.md#change-StatCompare-20261013-01) | 待游戏验收 |
+| [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | 2026-10-13 | [补充：直接清标与队外玩家本地标记](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261013-02) | 待游戏验收 |
+| [pfUI](pfUI.md) | 2026-10-13 | [姓名板玩家/NPC 身份缓存修复](pfUI.md#change-pfUI-20261013-03) | 待游戏验收 |
+| [Meeting](Meeting.md) | 2026-10-13 | [过滤长期固定团广告](Meeting.md#change-Meeting-20261013-03) | 待游戏验收 |
+| [Cooline](Cooline.md) | 2026-10-13 | [合并圣水、炸药及其他共享物品冷却](Cooline.md#change-Cooline-20261013-01) | 待游戏验收 |
+| [XyTracker](XyTracker.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](XyTracker.md#change-XyTracker-20261012-01) | 待游戏验收 |
+| [TurtleMail](TurtleMail.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](TurtleMail.md#change-TurtleMail-20261012-01) | 待游戏验收 |
+| [ShaguDPS](ShaguDPS.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](ShaguDPS.md#change-ShaguDPS-20261012-01) | 待游戏验收 |
+| [S_ItemTip](S_ItemTip.md) | 2026-10-12 | [合并修复已覆盖现用版](S_ItemTip.md#change-S_ItemTip-20261012-03) | 待游戏验收 |
+| [S_ChatBar](S_ChatBar.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](S_ChatBar.md#change-S_ChatBar-20261012-01) | 待游戏验收 |
+| [RaidCheck](RaidCheck.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](RaidCheck.md#change-RaidCheck-20261012-01) | 待游戏验收 |
+| [PlayerLinkEnhance](PlayerLinkEnhance.md) | 2026-10-12 | [修复团队目标图标入口的错误对号](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261012-01) | 待游戏验收 |
+| [OneBag](OneBag.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](OneBag.md#change-OneBag-20261012-01) | 待游戏验收 |
+| [MySlash](MySlash.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](MySlash.md#change-MySlash-20261012-01) | 待游戏验收 |
+| [GoubayuHeal](GoubayuHeal.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](GoubayuHeal.md#change-GoubayuHeal-20261012-01) | 待游戏验收 |
+| [Flyout](Flyout.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](Flyout.md#change-Flyout-20261012-01) | 待游戏验收 |
+| [BigWigs](BigWigs.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](BigWigs.md#change-BigWigs-20261012-01) | 待游戏验收 |
+| [Automatonex](Automatonex.md) | 2026-10-12 | [随机坐骑避免连续重复](Automatonex.md#change-Automatonex-20261012-02) | 待游戏验收 |
+| [!Libs](!Libs.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](!Libs.md#change-!Libs-20261012-01) | 待游戏验收 |
+| [QianKunBag](QianKunBag.md) | 2026-10-11 | [独立背包首版 0.1.0](QianKunBag.md#change-QianKunBag-20261011-01) | 待游戏验收 |
+| [Cat](Cat.md) | 2026-10-11 | [审判控制面板增加惩戒输出技能按钮](Cat.md#change-Cat-20261011-01) | 待游戏验收 |
+| [Bagshui](Bagshui.md) | 2026-10-11 | [重构转入独立 QianKunBag，原插件保留](Bagshui.md#change-Bagshui-20261011-15) | 不适用（说明或停用记录） |
+| [STSMmayor](STSMmayor.md) | 2026-10-10 | [两行紧凑界面（2.4.11）](STSMmayor.md#change-STSMmayor-20261010-01) | 待游戏验收 |
+| [QuickHeal](QuickHeal.md) | 2026-10-10 | [同步内置 HealComm 预估清理修复](QuickHeal.md#change-QuickHeal-20261010-01) | 待游戏验收 |
+| [NotGrid](NotGrid.md) | 2026-10-10 | [修复治疗祷言预估条残留](NotGrid.md#change-NotGrid-20261010-01) | 待游戏验收 |
+| [HideOutdoorWorldState](HideOutdoorWorldState.md) | 2026-10-10 | [用户确认主动删除并停用](HideOutdoorWorldState.md#change-HideOutdoorWorldState-20261010-01) | 不适用（说明或停用记录） |
+| [WushuangLoot](WushuangLoot.md) | 日期待确认 | 保留个人交互外观，适配 DLL 和可调速度。 | 见早期记录 |
+| [WIM](WIM.md) | 日期待确认 | 保持私聊界面可见，同时避免收到消息抢按键。 | 见早期记录 |
+| [TianYan](TianYan.md) | 日期待确认 | 让怪物数量和战斗平均值更可靠。 | 见早期记录 |
+| [TankBuddyEnh](TankBuddyEnh.md) | 日期待确认 | 完善坦克公告开关、技能识别及设置界面。 | 见早期记录 |
+| [SpecialTalent](SpecialTalent.md) | 日期待确认 | 修复天赋方案翻页、拖动和 ESC 关闭。 | 见早期记录 |
+| [pfUI-CustomMedia](pfUI-CustomMedia.md) | 日期待确认 | 让材质可见、可预览并容易应用。 | 见早期记录 |
+| [PallyPower](PallyPower.md) | 日期待确认 | 增加单人操作与个人祝福，同时修正团队目标判断。 | 见早期记录 |
+| [Outfitter](Outfitter.md) | 日期待确认 | 完善快速换装和天赋切换联动。 | 见早期记录 |
+| [hyx](hyx.md) | 日期待确认 | 保留双列表界面，按实际职业能力驱散并浏览完整名单。 | 见早期记录 |
+| [DPSMateXInsights](DPSMateXInsights.md) | 日期待确认 | 增加独立的战斗洞察和详情模块。 | 见早期记录 |
+| [DPSMateXExtendMore](DPSMateXExtendMore.md) | 日期待确认 | 统一额外统计与汇总详情的口径。 | 见早期记录 |
+| [DPSMateXExtend](DPSMateXExtend.md) | 日期待确认 | 让扩展统计详情参与 Boss/小怪汇总。 | 见早期记录 |
+| [DPSMateXEncounters](DPSMateXEncounters.md) | 日期待确认 | 提供 Boss/小怪战斗分类与可靠汇总。 | 见早期记录 |
+| [DPSMateX](DPSMateX.md) | 日期待确认 | 完善紧凑详情、统计界面及扩展模块入口。 | 见早期记录 |
+| [diminfo](diminfo.md) | 日期待确认 | 支持渐隐，并消除信息条空白处右键误触。 | 见早期记录 |
+| [CatPotion](CatPotion.md) | 日期待确认 | 扩展常用物品，并完善多配置窗口和使用反馈。 | 见早期记录 |
+| [Cat2](Cat2.md) | 日期待确认 | 扩展流程编辑、配置调用和动作条入口。 | 见早期记录 |
+| [Capslock](Capslock.md) | 日期待确认 | 修正拉人名单的职业颜色。 | 见早期记录 |
+| [BuffTool](BuffTool.md) | 日期待确认 | 简化本职业设置，并让移动模式可靠退出。 | 见早期记录 |
+| [BetterCharacterStats](BetterCharacterStats.md) | 日期待确认 | 保持角色属性面板布局稳定，并与观察、换天赋功能协调。 | 见早期记录 |
+| [aux-addon](aux-addon.md) | 日期待确认 | 修正充能物品上架，并减少扫描和重复查询。 | 见早期记录 |
+| [AtlasLoot](AtlasLoot.md) | 日期待确认 | 修正地图掉落映射和愿望清单的本地化错误。 | 见早期记录 |
+| [Atlas](Atlas.md) | 日期待确认 | 让木喉要塞地图编号与首领掉落保持一致。 | 见早期记录 |
+| [ActionBarProfiles](ActionBarProfiles.md) | 日期待确认 | 让天赋切换后动作条完整恢复，减少残留和无效重复加载。 | 见早期记录 |
 
-| 插件 | 证据状态 | 修改目的 / 待确认范围 |
-| --- | --- | --- |
-| [!Libs](!Libs.md) | 有维护记录 | 补记共享词库差异，并修复 HealComm 群体治疗预估清理。 |
-| [Accountant](Accountant.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [ActionBarProfiles](ActionBarProfiles.md) | 有维护记录 | 让天赋切换后动作条完整恢复，减少残留和无效重复加载。 |
-| [AdvancedTradeSkillWindow2](AdvancedTradeSkillWindow2.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [ArchiTotem](ArchiTotem.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Atlas](Atlas.md) | 有维护记录 | 让木喉要塞地图编号与首领掉落保持一致。 |
-| [AtlasLoot](AtlasLoot.md) | 有维护记录 | 修正地图掉落映射和愿望清单的本地化错误。 |
-| [AtlasQuest](AtlasQuest.md) | 有备份差异，来源待确认 | 补记可核对的任务本地化差异。 |
-| [AuldLangSyne](AuldLangSyne.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [AutoBar](AutoBar.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [AutoMarker](AutoMarker.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Automatonex](Automatonex.md) | 有维护记录 | 完善模块配置、物品监控及与其他界面的协作。 |
-| [Bagshui](Bagshui.md) | 有维护记录 | 重构改为独立 QianKunBag，本体及账户目录保持原样；原 v3.2 改善和 B 键未复现记录保留。 |
-| [BetterCharacterStats](BetterCharacterStats.md) | 有维护记录 | 保持角色属性面板布局稳定，并与观察、换天赋功能协调。 |
-| [BigWigs](BigWigs.md) | 有维护记录 | 适配乌龟服首领、中文日志以及竖行计时条。 |
-| [Blizzard_AuctionUI](Blizzard_AuctionUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_BattlefieldMinimap](Blizzard_BattlefieldMinimap.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_BindingUI](Blizzard_BindingUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_CombatText](Blizzard_CombatText.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_CraftUI](Blizzard_CraftUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_GMSurveyUI](Blizzard_GMSurveyUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_InspectUI](Blizzard_InspectUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_MacroUI](Blizzard_MacroUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_RaidUI](Blizzard_RaidUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_TalentUI](Blizzard_TalentUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_TradeSkillUI](Blizzard_TradeSkillUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Blizzard_TrainerUI](Blizzard_TrainerUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [BrainwasherPro](BrainwasherPro.md) | 有维护记录 | 切换天赋后可靠地恢复装备、动作条及属性面板。 |
-| [BuffTool](BuffTool.md) | 有维护记录 | 简化本职业设置，并让移动模式可靠退出。 |
-| [Capslock](Capslock.md) | 有维护记录 | 修正拉人名单的职业颜色。 |
-| [Cat](Cat.md) | 有维护记录 | 完善圣骑士输出/坦克逻辑、配置与界面。 |
-| [Cat2](Cat2.md) | 有维护记录 | 扩展流程编辑、配置调用和动作条入口。 |
-| [CatPotion](CatPotion.md) | 有维护记录 | 扩展常用物品，并完善多配置窗口和使用反馈。 |
-| [Cooline](Cooline.md) | 有维护记录 | 短冷却优先，支持 30 分钟；17 组技能及 12 类物品按实际计时归并，修复圣盾/圣佑和圣水/手雷重复；保留独立长冷却、布局、预览与字体保护。 |
-| [Cryolysis](Cryolysis.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Cursive](Cursive.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [DPSMateX](DPSMateX.md) | 有维护记录 | 完善紧凑详情、统计界面及扩展模块入口。 |
-| [DPSMateXEncounters](DPSMateXEncounters.md) | 有维护记录 | 提供 Boss/小怪战斗分类与可靠汇总。 |
-| [DPSMateXExtend](DPSMateXExtend.md) | 有维护记录 | 让扩展统计详情参与 Boss/小怪汇总。 |
-| [DPSMateXExtendMore](DPSMateXExtendMore.md) | 有维护记录 | 统一额外统计与汇总详情的口径。 |
-| [DPSMateXInsights](DPSMateXInsights.md) | 有维护记录 | 增加独立的战斗洞察和详情模块。 |
-| [EavesDrop](EavesDrop.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [ExtraResourceBars](ExtraResourceBars.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [EzPoison](EzPoison.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [FishingBuddy](FishingBuddy.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Flyout](Flyout.md) | 有维护记录 | 更新左键顺延选用可用条目及 1.12 UseAction 挂接回退。 |
-| [GoubayuHeal](GoubayuHeal.md) | 有维护记录 | 更新瞬发人数限制、动作占用、迅捷治愈换目标及牧师驱病顺序。 |
-| [HideOutdoorWorldState](HideOutdoorWorldState.md) | 有维护记录 | 已移除：2026-10-10 用户确认不再需要并主动删除；保留历史说明。 |
-| [HolyHope](HolyHope.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Interact](Interact.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [LoseControl](LoseControl.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Meeting](Meeting.md) | 有维护记录 | 团本与世界首领清晰列表、当前招募识别及长期广告过滤。 |
-| [ModernMapMarkers](ModernMapMarkers.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [ModifiedPowerAuras](ModifiedPowerAuras.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [MySlash](MySlash.md) | 有维护记录 | 按新包删除 TT助手 /at 入口。 |
-| [NotGrid](NotGrid.md) | 有维护记录 | 修复治疗祷言后预估条持续残留及死亡、满血后的旧显示。 |
-| [OneBag](OneBag.md) | 有维护记录 | 解决整理卡灰、油类次数和拆分回归。 |
-| [Outfitter](Outfitter.md) | 有维护记录 | 完善快速换装和天赋切换联动。 |
-| [PallyPower](PallyPower.md) | 有维护记录 | 增加单人操作与个人祝福，同时修正团队目标判断。 |
-| [PizzaWorldBuffs](PizzaWorldBuffs.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [PlayTurtle](PlayTurtle.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [PlayerLinkEnhance](PlayerLinkEnhance.md) | 有维护记录 | 保持头像菜单紧凑分组，修复团队目标图标入口误勾选。 |
-| [QuickHeal](QuickHeal.md) | 有维护记录 | 同步内置 HealComm 预估清理修复，保证库加载顺序兼容。 |
-| [QuickReply](QuickReply.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [RaidCheck](RaidCheck.md) | 有维护记录 | 区分未检测成员，并增加团队分配工具。 |
-| [Rinse](Rinse.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [STSMmayor](STSMmayor.md) | 有维护记录 | 精简盾牌/修理机器人界面并提高交互预判准确性。 |
-| [S_ChatBar](S_ChatBar.md) | 有维护记录 | 集中进入定制插件并完善 Roll 和常用工具。 |
-| [S_ItemTip](S_ItemTip.md) | 有维护记录 | 统一观察布局、属性扫描及图标显示。 |
-| [S_WorldMap](S_WorldMap.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [ShaguDPS](ShaguDPS.md) | 有维护记录 | 增加标准坦克模式统计视图并给 pfUI 提供多目标仇恨。 |
-| [ShaguScan](ShaguScan.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | 有维护记录 | 完善标记条生命显示、团队工具和透明图标。 |
-| [SpecialTalent](SpecialTalent.md) | 有维护记录 | 修复天赋方案翻页、拖动和 ESC 关闭。 |
-| [SpiritSenseRec](SpiritSenseRec.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [StatCompare](StatCompare.md) | 有维护记录 | 让属性比较面板与角色/观察窗口协调。 |
-| [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [SuperMacro](SuperMacro.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [TWThreat](TWThreat.md) | 尚未确认个人修改 | 2026-10-14 用户确认来自 KOOK 最爱插件包，移出整合包后自行保留；个人修改及 10.5.0 来源仍待确认。 |
-| [TankBuddyEnh](TankBuddyEnh.md) | 有维护记录 | 完善坦克公告开关、技能识别及设置界面。 |
-| [TianYan](TianYan.md) | 有维护记录 | 让怪物数量和战斗平均值更可靠。 |
-| [Tmog](Tmog.md) | 仅确认关联皮肤适配 | 登记相关皮肤适配，等待确认主插件是否另有个人改动。 |
-| [TrainerSkills](TrainerSkills.md) | 仅确认关联皮肤适配 | 登记相关皮肤适配，等待确认主插件是否另有个人改动。 |
-| [TurtleMail](TurtleMail.md) | 有维护记录 | 迁入新包筛选、批量邮件、侧栏和皮肤；另修复正文金额缺省单位换算，增加金铜组合并按文本位置选择第一笔完整金额。 |
-| [Turtle_General](Turtle_General.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [Turtle_GroupUI](Turtle_GroupUI.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [UnitXP_SP3_Addon](UnitXP_SP3_Addon.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [WIM](WIM.md) | 有维护记录 | 保持私聊界面可见，同时避免收到消息抢按键。 |
-| [WushuangLoot](WushuangLoot.md) | 有维护记录 | 保留个人交互外观，适配 DLL 和可调速度。 |
-| [XyTracker](XyTracker.md) | 有维护记录 | 更新许愿权移交菜单、确认、权限判断及团队同步。 |
-| [YGB_OTAlarm](YGB_OTAlarm.md) | 有维护记录 | 修正仇恨报警配置、计时与界面。 |
-| [aux-addon](aux-addon.md) | 有维护记录 | 修正充能物品上架，并减少扫描和重复查询。 |
-| [diminfo](diminfo.md) | 有维护记录 | 支持渐隐，并消除信息条空白处右键误触。 |
-| [hyx](hyx.md) | 有维护记录 | 保留双列表界面，按实际职业能力驱散并浏览完整名单。 |
-| [nampowersettings](nampowersettings.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [perfboostsettings](perfboostsettings.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [pfExtend](pfExtend.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [pfQuest](pfQuest.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [pfQuest-turtle](pfQuest-turtle.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [pfUI](pfUI.md) | 有维护记录 | 整合个人界面、监控和旧客户端兼容修改。 |
-| [pfUI-CustomMedia](pfUI-CustomMedia.md) | 有维护记录 | 让材质可见、可预览并容易应用。 |
-| [pfUI-addonskinner](pfUI-addonskinner.md) | 有维护记录 | 让定制功能及动态窗口沿用 pfUI 外观。 |
-| [pfUI-eliteoverlay](pfUI-eliteoverlay.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
-| [xNet](xNet.md) | 尚未确认个人修改 | 等待确认是否有个人修改 |
+## 仅确认关联皮肤适配
 
-## 初始化之后新增的插件
+| 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
+| --- | --- | --- | --- |
+| [Tmog](Tmog.md) | 日期待确认 | 登记相关皮肤适配，等待确认主插件是否另有个人改动。 | 见早期记录 |
+| [TrainerSkills](TrainerSkills.md) | 日期待确认 | 登记相关皮肤适配，等待确认主插件是否另有个人改动。 | 见早期记录 |
 
-2026-10-11 新增 **1 个**独立插件，单独记在 maintenance-index.json 的 added_addons；上述历史 105 项及其状态统计不改写。
+## 记录与查找
 
-| 插件 | 证据状态 | 当前交付与待确认 |
-| --- | --- | --- |
-| [QianKunBag](QianKunBag.md) | 有维护记录 | 独立背包 0.1.0：基础分类/归类、增量刷新；原乾坤袋不动。受控检查通过，游戏验收待补充。 |
+- 有明确日期的维护逐条记录；同日多次修改分别编号，旧记录保留。
+- 尚不能准确拆分的早期内容保留为历史汇总，附原始依据。
+- 新插件独立加入 added_addons；初始化的 105 项与基线证据保持原义。
+- 修改插件页后运行 `python Tools/plugin_history.py build`，再运行 `python Tools/plugin_history.py check` 与 `python Tools/check_plugin_notes.py`。
+- 对应提交是可点击的 GitHub 提交链接；新记录可使用“随本条记录一并提交（见本页 Git 历史）”，避免为填入自身提交号另造提交。
 
-## 今后如何维护
+<!-- preserved-index-context -->
+## 历史检索与整合包记录
 
-每次修改同时更新对应插件页，记录目的、涉及文件、关联插件、真实验证结果和未完成事项，再与本次负责的文件一起提交。不要把“功能本来就有”改写成“本次新增”；用户确认无个人修改时明确写出确认日期。
-
-新增插件时增加说明页与 maintenance-index.json；状态有变化时同步索引。原 addon-catalog.json、baseline-files.json 和 Evidence 保存初始化与历史证据，不为匹配新摘要而改写。
+以下保留此前的检索和整合包记录，日期与结论仅属于各次记录。
 
 本次检索覆盖：初始化索引、legacy 文件级差异/撤回清单、后续维护报告和备份、24 个插件内的 .workbuddy/memory 笔记、Cat2 开发说明、已有 Git 维护提交，以及 WIM/diminfo/pfUI 相关维护聊天完成报告。未枚举所有聊天，因此“尚未确认”不是无修改证明。
 

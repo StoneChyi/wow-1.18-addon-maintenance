@@ -1,0 +1,1185 @@
+{
+  "date": "2026-10-15",
+  "before_commit": "92e4883cac8b3071cbe8942a9bbc87719077c335",
+  "scope": "Documentation and maintenance tools only; no addon/runtime/settings changes.",
+  "pages": [
+    {
+      "addon": "!Libs",
+      "path": "PluginHistory/Plugins/!Libs.md",
+      "before_sha256": "bfe6d1309b7a78cf88635ecd2b636dc1bdfedf6158e1ceb255f5591e04e3899f",
+      "existing_dated_sections": 3,
+      "dated_records_after": 3,
+      "retained_sections": 9,
+      "moved_records": [
+        {
+          "heading": "2026-10-10 修复 HealComm 群体治疗预估清理",
+          "body_sha256": "271f0423ea6f8bf51852f837b9b27786abf96405e5b62130862a576dfd8eb0e7",
+          "id": "!Libs-20261010-01",
+          "commits": [
+            "fa644efccdb2a2079d63165d35c4b05287c6948a"
+          ]
+        },
+        {
+          "heading": "2026-10-11 两包更新与个人版三方核对（未部署）",
+          "body_sha256": "5db57dc34ce553a4006e28495520439f330f7b4a2b6eceb27d37b62995ac57b6",
+          "id": "!Libs-20261011-01",
+          "commits": [
+            "0b5c8959ca36a914bb144edc25225506adddbf67"
+          ]
+        },
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "95e502e7546db06ef47a4e192a9314cf69b1e2add71d24c1ada918636a8f351e",
+          "id": "!Libs-20261012-01",
+          "commits": [
+            "2cb3d25c95baa5b07a9872bece9ce190e3bee4f3"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "ActionBarProfiles",
+      "path": "PluginHistory/Plugins/ActionBarProfiles.md",
+      "before_sha256": "ef0947cee4377621b6f303adbd7ce3d7aa6cfbbc6ca5252db4313954e648c592",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 7,
+      "moved_records": []
+    },
+    {
+      "addon": "Atlas",
+      "path": "PluginHistory/Plugins/Atlas.md",
+      "before_sha256": "c474a8a18a2b120596ed9b66ad5e76fcb97b5467464d55066ffb24f930ea63ea",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "AtlasLoot",
+      "path": "PluginHistory/Plugins/AtlasLoot.md",
+      "before_sha256": "1377e3943281bad23b746a95d7c3cac8dbea3b939c56a53553ff90fe7881309c",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 7,
+      "moved_records": []
+    },
+    {
+      "addon": "AtlasQuest",
+      "path": "PluginHistory/Plugins/AtlasQuest.md",
+      "before_sha256": "909ce0a9159f79f3f8cb6265cd8a4d8e453d96b2ee3c8cc39e79184cbad43a7e",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 6,
+      "moved_records": []
+    },
+    {
+      "addon": "Automatonex",
+      "path": "PluginHistory/Plugins/Automatonex.md",
+      "before_sha256": "885e54303aaf5d01b3e4216824312fea65952c05da2a58b850ec782a83476f02",
+      "existing_dated_sections": 3,
+      "dated_records_after": 3,
+      "retained_sections": 11,
+      "moved_records": [
+        {
+          "heading": "2026-10-10 自动需求物品增加“不选择”",
+          "body_sha256": "e57160d67136a706b0ad23ac8da8f6f2788a4793a3f5fa75829aac024123eb77",
+          "id": "Automatonex-20261010-01",
+          "commits": [
+            "d74b8b7e088409a86431021eadd86e1c41453c7e"
+          ]
+        },
+        {
+          "heading": "2026-10-12 随机坐骑识别及自定义保存修复",
+          "body_sha256": "394aceb3be45f5e1e3046731a20e9e9cb14602a78ec058409a26fa00277bf6a2",
+          "id": "Automatonex-20261012-01",
+          "commits": [
+            "3d7cc5cae25d6dc0afad54365bf056b83e757664"
+          ]
+        },
+        {
+          "heading": "2026-10-12 随机坐骑避免连续重复",
+          "body_sha256": "4e79168837c585a644de2e1f18654cd88e24ed7ffe7181a32994c6132fecfd85",
+          "id": "Automatonex-20261012-02",
+          "commits": [
+            "2fc70d72a08e712ecb8304d35abbe70bba36175e"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "Bagshui",
+      "path": "PluginHistory/Plugins/Bagshui.md",
+      "before_sha256": "d3c9fce95a4c236283999db263529604b6399a7ce947c723e087861adedf6a50",
+      "existing_dated_sections": 15,
+      "dated_records_after": 15,
+      "retained_sections": 19,
+      "moved_records": [
+        {
+          "heading": "2026-10-11：背包、银行卡顿诊断",
+          "body_sha256": "00ebaead78c20816137e23cf2d98a7a699dc5befed1a39c4a6534ccd8075a062",
+          "id": "Bagshui-20261011-01",
+          "commits": [
+            "a21e73c03ea73dc055ffa0b07f62789e115013b6"
+          ]
+        },
+        {
+          "heading": "2026-10-11：依据用户采样修复重复扫描和布局计算",
+          "body_sha256": "95cd1188097e56bf58f54783c4d807316364dc91be376c26ff96059636e68998",
+          "id": "Bagshui-20261011-02",
+          "commits": [
+            "431fbc4f55774eae4846feddf1782cfd17acdc1a"
+          ]
+        },
+        {
+          "heading": "2026-10-11：用户 v2 客户端复测结果",
+          "body_sha256": "ca45ddf1a0cf7e0fb4fa88b4c28d86b9eb59c3dbfbef2941b4d6378b8d03c62e",
+          "id": "Bagshui-20261011-03",
+          "commits": [
+            "ce3133bc0f01edf209a22a0a9ca644c128e4c516"
+          ]
+        },
+        {
+          "heading": "2026-10-11：继续优化规则运算与按钮布局",
+          "body_sha256": "980c33cfd1c14b4122959c8c48da0fb5b4096a13d20dcb0b128f12a647aecc63",
+          "id": "Bagshui-20261011-04",
+          "commits": [
+            "417ac7b1a93c3fa80c0bcdde09647736f165b01a"
+          ]
+        },
+        {
+          "heading": "2026-10-11：规则与按钮优化后的用户复测",
+          "body_sha256": "8d2a3db45788cd7ccf8ae4e74bc029abe2544d4a1e2c15d04be73c5c26e94cf9",
+          "id": "Bagshui-20261011-05",
+          "commits": [
+            "6117ba02b740bf52900df4a175c7589350a6f30b"
+          ]
+        },
+        {
+          "heading": "2026-10-11：首次窗口处理细分诊断 v3",
+          "body_sha256": "5e74df59b29f44e9482a130b26f8ad48c6716b536058319562e2ee09d3f0c3d2",
+          "id": "Bagshui-20261011-06",
+          "commits": [
+            "120a4ca275e144a8162b5f4ced46793d6b4f18b6"
+          ]
+        },
+        {
+          "heading": "2026-10-11：用户 v3 实测定位及进一步方案",
+          "body_sha256": "5ec60fe8623e07e82f085c8ef40fb09d56670b10a5b900e3ebd75582ed48d55d",
+          "id": "Bagshui-20261011-07",
+          "commits": [
+            "92337acd44891ea9545c56baba8d41b4b9293d8c"
+          ]
+        },
+        {
+          "heading": "2026-10-11：首次边框初始化与新按钮父框架优化",
+          "body_sha256": "a672b2311ba3d780d410b25730feefb38f538a7399b887a0720e4ce4f80c88da",
+          "id": "Bagshui-20261011-08",
+          "commits": [
+            "1e8696242bb9ca85677523340a48eae158935330"
+          ]
+        },
+        {
+          "heading": "2026-10-11：用户 v3.1 实测结果与剩余开销",
+          "body_sha256": "04af86497f372372c357326e759ce0d2bb233c5c7da44d55fe50569d3fcd3b09",
+          "id": "Bagshui-20261011-09",
+          "commits": [
+            "aa6299ee7a506f5dc54d94652c342fd61f5c66fa"
+          ]
+        },
+        {
+          "heading": "2026-10-11：预建按钮隐藏归组与诊断 v3.2",
+          "body_sha256": "b3c9f5d999b05302fb941afa51652bbf0be34135479cc737d44afbf5aba745ae",
+          "id": "Bagshui-20261011-10",
+          "commits": [
+            "c368f54677fd3197e40579bb7fac15908b535dbb"
+          ]
+        },
+        {
+          "heading": "2026-10-11：用户 v3.2 实测，隐藏归组路径改善",
+          "body_sha256": "bd6e27a8fd0515e3073f8b0d9175eb471fdf7c723cb56f2bffe137fd24ac08b1",
+          "id": "Bagshui-20261011-11",
+          "commits": [
+            "2fedb441a7481185e038bd22388b211de1796e45"
+          ]
+        },
+        {
+          "heading": "2026-10-11：登录初期 B 键失效检查与自动入口诊断",
+          "body_sha256": "1cc27d475a64306c7318f815a871e0446c55e9fe82109d71abff3f8b0a99d79a",
+          "id": "Bagshui-20261011-12",
+          "commits": [
+            "3e57df6cfb994c2e92d14d49067b48acb21deabf"
+          ]
+        },
+        {
+          "heading": "2026-10-11：重新登录后未复现 B 键问题，银行与重复打开复测",
+          "body_sha256": "fe114bed470f681f269506b5c9e787d7e2a6c442f775032dcd1b41337918cc93",
+          "id": "Bagshui-20261011-13",
+          "commits": [
+            "8f9dfcc3823c4e3875c531f8334dd82d2ab87e8f"
+          ]
+        },
+        {
+          "heading": "2026-10-11：背包核心重构方案与范围收敛（尚未实施）",
+          "body_sha256": "1c650d36a689b2c79ffd4984ba4c3c95aff2ee9c4292125c3d9c8cf40a737d04",
+          "id": "Bagshui-20261011-14",
+          "commits": [
+            "db2227c0c518de9a7a1d4074bac0211a0a27cfde"
+          ]
+        },
+        {
+          "heading": "2026-10-11：重构转入独立 QianKunBag，原插件保留",
+          "body_sha256": "2823c52c37543f65f87ac786cfc36ec32935e0ebf9f8d33ef59891d9086a7af0",
+          "id": "Bagshui-20261011-15",
+          "commits": [
+            "305764f8fb3013d8801ec34b129c030652150262"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "BetterCharacterStats",
+      "path": "PluginHistory/Plugins/BetterCharacterStats.md",
+      "before_sha256": "60f15f541fb17c5da62cfa48e1455dba2e16a7d06f0e90920ba594575c3a5d5b",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "BigWigs",
+      "path": "PluginHistory/Plugins/BigWigs.md",
+      "before_sha256": "1f488c5eb0476cc7fde0347098421f2e7a4bc7b1470435f95b8b00d4701618fe",
+      "existing_dated_sections": 2,
+      "dated_records_after": 2,
+      "retained_sections": 9,
+      "moved_records": [
+        {
+          "heading": "2026-10-11 两包更新与个人版三方核对（未部署）",
+          "body_sha256": "33d2abdfeb2af16df093f3884ec05fb8600468be2679eeaf88a7871af95c1359",
+          "id": "BigWigs-20261011-01",
+          "commits": [
+            "0b5c8959ca36a914bb144edc25225506adddbf67"
+          ]
+        },
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "48d18243599aa99d7362002ae2c550d77e0943e2609233f88aa044ec8086ba93",
+          "id": "BigWigs-20261012-01",
+          "commits": [
+            "f5eee321230abae57ce1efd914c0e94fc9be17ed"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "BrainwasherPro",
+      "path": "PluginHistory/Plugins/BrainwasherPro.md",
+      "before_sha256": "790b452b050fd78ef8ba6138bf9d35a7251d48ddfd54bbb57b47a95aa81614aa",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 8,
+      "moved_records": [
+        {
+          "heading": "2026-10-14：窗口层级、按钮反馈和风格入口",
+          "body_sha256": "04c59e62ff65c47a436ef2da2643ddfacc54c77aa1bb6af3add788d0f896fabd",
+          "id": "BrainwasherPro-20261014-01",
+          "commits": [
+            "79798974f795a95c9a5feab2ccf846d409198d01"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "BuffTool",
+      "path": "PluginHistory/Plugins/BuffTool.md",
+      "before_sha256": "cdc3853f77f3ee3e6bf74fb5687044207509ec85be3578b50bc67a5505266a65",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 7,
+      "moved_records": []
+    },
+    {
+      "addon": "Capslock",
+      "path": "PluginHistory/Plugins/Capslock.md",
+      "before_sha256": "23026ad52261aff2f49c343350633bcb9f9f8ebfdfc8f6f7a6f20c2d8b7be9fe",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 6,
+      "moved_records": []
+    },
+    {
+      "addon": "Cat",
+      "path": "PluginHistory/Plugins/Cat.md",
+      "before_sha256": "07b62b9c06934ae2b2334ec4b8962961d66cf33f92754e54a3ade5d811667ade",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 9,
+      "moved_records": [
+        {
+          "heading": "2026-10-11：审判控制面板增加惩戒输出技能按钮",
+          "body_sha256": "ecb9e59e6a10033d859748fa25258ec70621a16a3685df0600957ae560967daa",
+          "id": "Cat-20261011-01",
+          "commits": [
+            "0d9871d99b08011d9db4f7afd56d590fcc0aa418"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "Cat2",
+      "path": "PluginHistory/Plugins/Cat2.md",
+      "before_sha256": "82c2f5dc410cbe2f59618f40ab32b15db15da1bed39b982403f442c4029bca43",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 7,
+      "moved_records": []
+    },
+    {
+      "addon": "CatPotion",
+      "path": "PluginHistory/Plugins/CatPotion.md",
+      "before_sha256": "e4607a4ad0aa034c325690e53e776c113716d0a58f2d78d7572ab45bb699ede8",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "Cooline",
+      "path": "PluginHistory/Plugins/Cooline.md",
+      "before_sha256": "4c6c0b8106e5adde25e773b41b0e6358b28a0979928595407b97464d17b8b0b9",
+      "existing_dated_sections": 9,
+      "dated_records_after": 9,
+      "retained_sections": 17,
+      "moved_records": [
+        {
+          "heading": "2026-10-11 短冷却优先时间轴与居中图标布局",
+          "body_sha256": "b3d3d45a33a54736a6438505cd0d3ee1a04e1d3d5bad0096a1f1148e311ce290",
+          "id": "Cooline-20261011-01",
+          "commits": [
+            "30b7cd2f0e5a9f6224a54433f0510654be066ed2"
+          ]
+        },
+        {
+          "heading": "2026-10-11 贴边刻度、短秒倒计时与设置预览",
+          "body_sha256": "725d642095ec77a0c3e5de30190e278928022e53d5ffcd88c93b1f05ce94c25a",
+          "id": "Cooline-20261011-02",
+          "commits": [
+            "d41301409b14b101a4d7c33bbdb1cc1fb2b37c80"
+          ]
+        },
+        {
+          "heading": "2026-10-11 修复 Font not set 并强化旧客户端检查",
+          "body_sha256": "0b9a551d6fab05bdaa82e1eb30b8fbd5e96343703d670bdf39b583ce061b5872",
+          "id": "Cooline-20261011-03",
+          "commits": [
+            "cf568bd923bfdc634c7674e26c86f1414de2d1ee"
+          ]
+        },
+        {
+          "heading": "2026-10-11 将时间分割线移入计时条",
+          "body_sha256": "2affbf8b88a6f9b4117af74458951cf97deee37c17cfbcc79061c331cda7442b",
+          "id": "Cooline-20261011-04",
+          "commits": [
+            "0903123142ec9564ec2d3af7290deb15100593ae"
+          ]
+        },
+        {
+          "heading": "2026-10-11 统一分割线像素宽度并提高黑白对比",
+          "body_sha256": "4f935c19d677e33f73296ea5b5dc26c0258d5c2de45291f46995274697952558",
+          "id": "Cooline-20261011-05",
+          "commits": [
+            "8996a19216b63bbfd8094b3c5e558931301f2e7e"
+          ]
+        },
+        {
+          "heading": "2026-10-11 应用用户选定的雾蓝灰方案",
+          "body_sha256": "3fd86faae13f2441528edb72f75c21fad6f0b3b2bde72cbba86d3ee5c3d761b0",
+          "id": "Cooline-20261011-06",
+          "commits": [
+            "dd0d7c8292a72421c6466843d39c2230097cd22a"
+          ]
+        },
+        {
+          "heading": "2026-10-11 合并十字军打击与神圣打击的共享冷却",
+          "body_sha256": "4ca37167afc4c57965a388a9047f8fa725547ad208818c90043410066a0601b2",
+          "id": "Cooline-20261011-07",
+          "commits": [
+            "3e12633728b4e40def9c247261328202390b6461"
+          ]
+        },
+        {
+          "heading": "2026-10-12 扩展共享冷却并修复圣盾 / 圣佑重复显示",
+          "body_sha256": "76ab9b8ddfea37540e47333113e74230451ffb2c3ed45e066d25d59b54b4bb49",
+          "id": "Cooline-20261012-01",
+          "commits": [
+            "047248f08769a0b5604e5d98d38411e679f4125a"
+          ]
+        },
+        {
+          "heading": "2026-10-13 合并圣水、炸药及其他共享物品冷却",
+          "body_sha256": "6e883d98fa8d585365c93d1dd835f805df2ddfae0cf225ae47fa7fd688107156",
+          "id": "Cooline-20261013-01",
+          "commits": [
+            "014ffb45c93d193bdda4b7a7da5e19cb8848620b"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "DPSMateX",
+      "path": "PluginHistory/Plugins/DPSMateX.md",
+      "before_sha256": "33e7d09b082cb5d8414b4e32bb69e83f6561e52ca8a67699e6d3a9e1e70fb00a",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "DPSMateXEncounters",
+      "path": "PluginHistory/Plugins/DPSMateXEncounters.md",
+      "before_sha256": "3a8307837a3bcfc5722b9ec355a246980589e4cdb376e595f4ecd56721e736e8",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "DPSMateXExtend",
+      "path": "PluginHistory/Plugins/DPSMateXExtend.md",
+      "before_sha256": "40bc840cc83ebedaa99cbee8e57c890208cbfdc14ea69b688854148578b8a52a",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "DPSMateXExtendMore",
+      "path": "PluginHistory/Plugins/DPSMateXExtendMore.md",
+      "before_sha256": "10b1987037ba3669f05cd64fe6fd54162d3d1fa2621e7aea5d128876f91e3965",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 7,
+      "moved_records": []
+    },
+    {
+      "addon": "DPSMateXInsights",
+      "path": "PluginHistory/Plugins/DPSMateXInsights.md",
+      "before_sha256": "b5db04a6af62c6b23be0a1f12cfa3fda1a5c24679a734a2357dbcc45a29772aa",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "Flyout",
+      "path": "PluginHistory/Plugins/Flyout.md",
+      "before_sha256": "89bf4c0f02517ed732988a5ba754486af0a80a7cac708380258bf207e301fbcd",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 5,
+      "moved_records": [
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "0428c6e0b8dffd883fe8e931d81b45828dac736aad55c71ced0c5ea9c4284467",
+          "id": "Flyout-20261012-01",
+          "commits": [
+            "f038f0c0f3db1843c9746d34bf3b7b2c8f04bea5"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "GoubayuHeal",
+      "path": "PluginHistory/Plugins/GoubayuHeal.md",
+      "before_sha256": "8e016cb18cd965c86e1b20167da175507c931a2c4400fc9f506c79c26f3f81a7",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 5,
+      "moved_records": [
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "4fdad64d979d801740516ac472a659347bea60d559c77af3bc77edbad403d8e5",
+          "id": "GoubayuHeal-20261012-01",
+          "commits": [
+            "6c45efeb7d1faf2c4c8125637b5f73528b883b3b"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "HideOutdoorWorldState",
+      "path": "PluginHistory/Plugins/HideOutdoorWorldState.md",
+      "before_sha256": "fdd55a7908598773a73e8fdc56c7b0e2539c3a45f635f6003c4d161dfeebd9ed",
+      "existing_dated_sections": 1,
+      "dated_records_after": 3,
+      "retained_sections": 9,
+      "moved_records": [
+        {
+          "heading": "2026-10-10 用户确认主动删除并停用",
+          "body_sha256": "02a7194843b98119933c6f291d3ed33b25359b21118f4a20b389d3a0f51969ff",
+          "id": "HideOutdoorWorldState-20261010-01",
+          "commits": [
+            "a594f5bc9bc4595df9f44da265d5c6afc474e750"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "Meeting",
+      "path": "PluginHistory/Plugins/Meeting.md",
+      "before_sha256": "62ed637f110ab220e68ceacb467119a4d392470633391e9a5973be26837668e1",
+      "existing_dated_sections": 3,
+      "dated_records_after": 3,
+      "retained_sections": 7,
+      "moved_records": [
+        {
+          "heading": "2026-10-13：团本招募识别优化",
+          "body_sha256": "5fd52094c636d95aa672f1643e87b6474a46094368c6b03167dc7aeac7af6706",
+          "id": "Meeting-20261013-01",
+          "commits": [
+            "f89636a970c103d80e96830a3f1b64e34a43436c"
+          ]
+        },
+        {
+          "heading": "2026-10-13：界面可读性与活动范围精简",
+          "body_sha256": "eabc0bf4851548d2b8b810746eeda1cced2ddb3daaf50b50bcfb50e31ffd8842",
+          "id": "Meeting-20261013-02",
+          "commits": [
+            "19fae5a68cfae24466ff64a38d324d2b004e0d55"
+          ]
+        },
+        {
+          "heading": "2026-10-13：过滤长期固定团广告",
+          "body_sha256": "52eb123cbefc0dbd7591380c82f1991672bc37d6930df9eaf7bd3e4248a904e1",
+          "id": "Meeting-20261013-03",
+          "commits": [
+            "e289b1b00773a5bd3e427e2e088e9bcfe8e08045"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "MySlash",
+      "path": "PluginHistory/Plugins/MySlash.md",
+      "before_sha256": "c0b2be704639d6847aece31bff0b131ee7aeb7ea085e2f273fc43ceaea0bd16e",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 5,
+      "moved_records": [
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "0a8b1f1e810192ef4ad21397d991980fdf9a841fb3e9f7a8772633ecc3e57610",
+          "id": "MySlash-20261012-01",
+          "commits": [
+            "a12559f6141f83708410b58c14fdab9c8e29f93a"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "NotGrid",
+      "path": "PluginHistory/Plugins/NotGrid.md",
+      "before_sha256": "544042f025447999b455d584b3691c73eac88cb4bba0f7c2c9ec1b51640a72ca",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 5,
+      "moved_records": [
+        {
+          "heading": "2026-10-10 修复治疗祷言预估条残留",
+          "body_sha256": "8aa551e252c8a16d9cd015812e7039dde71392cf7b0db495c9632882bee28c9b",
+          "id": "NotGrid-20261010-01",
+          "commits": [
+            "fa644efccdb2a2079d63165d35c4b05287c6948a"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "OneBag",
+      "path": "PluginHistory/Plugins/OneBag.md",
+      "before_sha256": "dd3990a3b5ada6b45d1bffac39e653a1b720af03378620f03d0ca286851a7807",
+      "existing_dated_sections": 2,
+      "dated_records_after": 2,
+      "retained_sections": 10,
+      "moved_records": [
+        {
+          "heading": "2026-10-11 两包更新与个人版三方核对（未部署）",
+          "body_sha256": "6032c6b66ff7ae4927e98dab7630591cc43e9be54db99c56a7e0457a4253e816",
+          "id": "OneBag-20261011-01",
+          "commits": [
+            "0b5c8959ca36a914bb144edc25225506adddbf67"
+          ]
+        },
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "b597d42438b5ec9d18f57fcc5a2bec851122e22e089606651b976592e3f96686",
+          "id": "OneBag-20261012-01",
+          "commits": [
+            "afee1c2c14b3e5b73056cda419fb35b4d2d2f9be"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "Outfitter",
+      "path": "PluginHistory/Plugins/Outfitter.md",
+      "before_sha256": "7dee1293ef4dcafdbf9e566c2b16946b73dd574a11dc1caaabe100ce683ee032",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "PallyPower",
+      "path": "PluginHistory/Plugins/PallyPower.md",
+      "before_sha256": "14e0203edff3ad8f61d625d3abae14a6705b00647dbeef3110c574e563280e9e",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "PlayerLinkEnhance",
+      "path": "PluginHistory/Plugins/PlayerLinkEnhance.md",
+      "before_sha256": "8697869f29e1911ed3df957e233b6cb605542966a28d0b51940da8368f4e58e2",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 8,
+      "moved_records": [
+        {
+          "heading": "2026-10-12：修复团队目标图标入口的错误对号",
+          "body_sha256": "60df834e24d13d8fa38db70dd30226d6eee1cfee8208da9be1cfb99ae4b802f1",
+          "id": "PlayerLinkEnhance-20261012-01",
+          "commits": [
+            "e34029e308efb78e1b68c3417e643f26efc52b1e"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "QuickHeal",
+      "path": "PluginHistory/Plugins/QuickHeal.md",
+      "before_sha256": "7402b314dea07f6e9f936a813f7cf19b81b0b13dcc0a1194849f890af610f5a7",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 5,
+      "moved_records": [
+        {
+          "heading": "2026-10-10 同步内置 HealComm 预估清理修复",
+          "body_sha256": "882e7063a0070c81f09cb820f5fa87818c0b113b66a4d25bd9d834d8e6431773",
+          "id": "QuickHeal-20261010-01",
+          "commits": [
+            "fa644efccdb2a2079d63165d35c4b05287c6948a"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "RaidCheck",
+      "path": "PluginHistory/Plugins/RaidCheck.md",
+      "before_sha256": "13858bd2506d5c19ce74f463b1e359a867d3279f1497b624f3d63add66a4f125",
+      "existing_dated_sections": 2,
+      "dated_records_after": 2,
+      "retained_sections": 10,
+      "moved_records": [
+        {
+          "heading": "2026-10-11 两包更新与个人版三方核对（未部署）",
+          "body_sha256": "0ffc3839ac5413adf93a05a9a589523805e3683009f107c531494c3b2bc60ce1",
+          "id": "RaidCheck-20261011-01",
+          "commits": [
+            "0b5c8959ca36a914bb144edc25225506adddbf67"
+          ]
+        },
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "e729bac14a1b11eea788806be9f9dbfd20878d2cf8740bdf4ed057e7a1431ef2",
+          "id": "RaidCheck-20261012-01",
+          "commits": [
+            "14f4a45cd67cda2afb4becfe145d1344a2d87222"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "STSMmayor",
+      "path": "PluginHistory/Plugins/STSMmayor.md",
+      "before_sha256": "a5f6871e08801488c2709f92c133abece11d0d649f2fc5bedd90d401289ddc2c",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 9,
+      "moved_records": [
+        {
+          "heading": "2026-10-10：两行紧凑界面（2.4.11）",
+          "body_sha256": "5f1149a43cdabf54b15314729f04746c437eb9f3dffd66b40096876e41e580a1",
+          "id": "STSMmayor-20261010-01",
+          "commits": [
+            "2b2aa874f7d15cbd807c5d04bd404c768cc0c36d"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "S_ChatBar",
+      "path": "PluginHistory/Plugins/S_ChatBar.md",
+      "before_sha256": "e1781e37d5db6a0a8e78988a739bdced46788de31705e2ec565bb22ad9481d96",
+      "existing_dated_sections": 2,
+      "dated_records_after": 2,
+      "retained_sections": 10,
+      "moved_records": [
+        {
+          "heading": "2026-10-11 两包更新与个人版三方核对（未部署）",
+          "body_sha256": "d9351b4051cdf1fa8e1a1ce918e1b33c1705afd68734d214745198d9c2595541",
+          "id": "S_ChatBar-20261011-01",
+          "commits": [
+            "0b5c8959ca36a914bb144edc25225506adddbf67"
+          ]
+        },
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "56e3e6181ee3fd56c1e2585997779e5d7f7f0bf2726e05581e405ac5ff58b53e",
+          "id": "S_ChatBar-20261012-01",
+          "commits": [
+            "9a22a483d12da3d25b31e7e7eb7d0ebb81929cbb"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "S_ItemTip",
+      "path": "PluginHistory/Plugins/S_ItemTip.md",
+      "before_sha256": "67b53d3f993449982644c8447d175dca0dac6923cfc889bba889914ca16b29ac",
+      "existing_dated_sections": 4,
+      "dated_records_after": 4,
+      "retained_sections": 12,
+      "moved_records": [
+        {
+          "heading": "2026-10-11 两包更新与个人版三方核对（未部署）",
+          "body_sha256": "38284812f99e853feef5504ec63dcfef82385da0e65169f94b6f28cbee6305e4",
+          "id": "S_ItemTip-20261011-01",
+          "commits": [
+            "0b5c8959ca36a914bb144edc25225506adddbf67"
+          ]
+        },
+        {
+          "heading": "2026-10-12 10 月 10 日更新详细评估（未部署）",
+          "body_sha256": "054dea28e4683a94977d419cc48670337403f26b20c165cb3df1b524bf2175af",
+          "id": "S_ItemTip-20261012-01",
+          "commits": [
+            "86dbfa10f25b7c28ef2392537bc761330899ffe9"
+          ]
+        },
+        {
+          "heading": "2026-10-12 合并与潜在问题修正方案（未实施）",
+          "body_sha256": "60a3f95429f2f66c7ff194a39cd3bc3cbcbe71cee44c1c1324ce439c7228e834",
+          "id": "S_ItemTip-20261012-02",
+          "commits": [
+            "732e20162f431a220f252cc02c87e93c83c976ff"
+          ]
+        },
+        {
+          "heading": "2026-10-12 合并修复已覆盖现用版",
+          "body_sha256": "44f07067e0fa550cc44aa82e634cd20aa0b378d79e30f9caf52e7586936a59e6",
+          "id": "S_ItemTip-20261012-03",
+          "commits": [
+            "b7b4ed96959f985d6c982512ce49e2122cf900de"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "ShaguDPS",
+      "path": "PluginHistory/Plugins/ShaguDPS.md",
+      "before_sha256": "744b21a268c6c6c8b78dd9b82a67518f5b023bacc3662c06198689048f1ceee4",
+      "existing_dated_sections": 2,
+      "dated_records_after": 2,
+      "retained_sections": 10,
+      "moved_records": [
+        {
+          "heading": "2026-10-11 两包更新与个人版三方核对（未部署）",
+          "body_sha256": "06e0acf58ca540f6599a6cb210146ad768525a79225d8379265ddd3606acb946",
+          "id": "ShaguDPS-20261011-01",
+          "commits": [
+            "0b5c8959ca36a914bb144edc25225506adddbf67"
+          ]
+        },
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "dc815d1e66772c39ec06fa6038db7c958d07b5098e6e2f82aca17c79f6bb4080",
+          "id": "ShaguDPS-20261012-01",
+          "commits": [
+            "d59c230bf0620058cc041b1475e4848361fa4166"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "SimpleRaidTargetIcons",
+      "path": "PluginHistory/Plugins/SimpleRaidTargetIcons.md",
+      "before_sha256": "053d0405b66d93fbc5025b22c97be3c7ca22c27d1d812484e23cd09f74de8793",
+      "existing_dated_sections": 6,
+      "dated_records_after": 6,
+      "retained_sections": 14,
+      "moved_records": [
+        {
+          "heading": "2026-10-10：清除全部标记时的骷髅血条修复",
+          "body_sha256": "8acef289a3f4c70680a31d7db39ef78034cfa6719cac0a1f5345f8eaed50d876",
+          "id": "SimpleRaidTargetIcons-20261010-01",
+          "commits": [
+            "1bab3e2c53043abe9eae43a91751376c561daded"
+          ]
+        },
+        {
+          "heading": "2026-10-12：新增组队分配方式按钮",
+          "body_sha256": "8ee0b52fe72c1d0d3621cb2a676df76151f4664abfd49d6e0ac8d911ee1d3d8e",
+          "id": "SimpleRaidTargetIcons-20261012-01",
+          "commits": [
+            "00578573fcf1b4535909a2abee4ead4d2236f0c4"
+          ]
+        },
+        {
+          "heading": "2026-10-12 补充：工具具体位置与紧凑分配切换",
+          "body_sha256": "6d1ed301ccaef8c9e0f2e42c8bfa1019294d1dd83a20f0e70a0061850f308856",
+          "id": "SimpleRaidTargetIcons-20261012-02",
+          "commits": [
+            "054f4f6bfd3bd57d92bcd420ec315dcc8ae4a430"
+          ]
+        },
+        {
+          "heading": "2026-10-12 补充：分配简称与菜单对号残留",
+          "body_sha256": "2b6f31eb568775babcdfdbf5b4e7b90832d151e5fc10613e6b042f05a3f37c58",
+          "id": "SimpleRaidTargetIcons-20261012-03",
+          "commits": [
+            "0d3b76f671c5db91f2997c5fe0d9f166516ae6b5"
+          ]
+        },
+        {
+          "heading": "2026-10-13 补充：队外玩家标记失败时自身闪标",
+          "body_sha256": "18381d786a5a94b9efa417b25d261fefcaba410ab80141fd738d91c60fcd1b76",
+          "id": "SimpleRaidTargetIcons-20261013-01",
+          "commits": [
+            "a32f2730977a28b69278bf47764bf7db31208009"
+          ]
+        },
+        {
+          "heading": "2026-10-13 补充：直接清标与队外玩家本地标记",
+          "body_sha256": "aa2ed8f32257b0cfb67fdefd65f6b3faf808970376af4e48f3f0baa133594fc5",
+          "id": "SimpleRaidTargetIcons-20261013-02",
+          "commits": [
+            "37b498512712f266f6d0bc95c79727e7536c842c"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "SpecialTalent",
+      "path": "PluginHistory/Plugins/SpecialTalent.md",
+      "before_sha256": "3d8cf907ff82e59dc53930cdbeb628931c9562466213ffecee155da2b5f2e8da",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 6,
+      "moved_records": []
+    },
+    {
+      "addon": "StatCompare",
+      "path": "PluginHistory/Plugins/StatCompare.md",
+      "before_sha256": "5f195fafce7bf7f2e8777226a1728a6acf8e32d6ee9dfe75e98a3cc558e347fb",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 9,
+      "moved_records": [
+        {
+          "heading": "2026-10-13：修复观察目标属性面板被头像框架遮挡",
+          "body_sha256": "eafc754d31814cca19e9aa99b2ca6bd257674808ba89716fb7c5e8acb52d6c14",
+          "id": "StatCompare-20261013-01",
+          "commits": [
+            "1524afa558990b2dc403a07bf2ef4fc9be187862"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "TWThreat",
+      "path": "PluginHistory/Plugins/TWThreat.md",
+      "before_sha256": "514eb025e296e49af74878149b68112a53d1b8f8ee5329d99a959893b57f14fe",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 5,
+      "moved_records": [
+        {
+          "heading": "2026-10-14 来源补充（用户确认）",
+          "body_sha256": "6451fcde7b55a9e073a48c1b1813c0a5276f01bbb58c8f1b1d537e27c653cf66",
+          "id": "TWThreat-20261014-01",
+          "commits": [
+            "c8e1aa36f085ab8bc42f63f2c87e5264bf1c41e7"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "TankBuddyEnh",
+      "path": "PluginHistory/Plugins/TankBuddyEnh.md",
+      "before_sha256": "e5580399c50f22bbd0062441eb62b392f9c96da8157d4d093974e06191ad97cf",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 7,
+      "moved_records": []
+    },
+    {
+      "addon": "TianYan",
+      "path": "PluginHistory/Plugins/TianYan.md",
+      "before_sha256": "d857ce8a3d2365191245b3d631d43d6d57f52617214e274d446dd3bb9ca1d046",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 6,
+      "moved_records": []
+    },
+    {
+      "addon": "Tmog",
+      "path": "PluginHistory/Plugins/Tmog.md",
+      "before_sha256": "9cf810f1d68a0a4889f209747a147f6aa3f1a7a1a8883e98da790f5abb8efcb4",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 6,
+      "moved_records": []
+    },
+    {
+      "addon": "TrainerSkills",
+      "path": "PluginHistory/Plugins/TrainerSkills.md",
+      "before_sha256": "6e4e5534e98c4cc1b7963f8a677427ccc9e319ca7ddeb4ba2e3a3b53ea204ecd",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 6,
+      "moved_records": []
+    },
+    {
+      "addon": "TurtleMail",
+      "path": "PluginHistory/Plugins/TurtleMail.md",
+      "before_sha256": "80c9551cc25f073f57777dd73b058e3b2f4530858d960d0aad7444075c22913b",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 5,
+      "moved_records": [
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "73cdc3f11ced8d32791fcefad36fd63ca66bbd266c827735c0703558ace14de9",
+          "id": "TurtleMail-20261012-01",
+          "commits": [
+            "dd1d9c6a315e12fce991f28dcf2e11077545f36b"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "WIM",
+      "path": "PluginHistory/Plugins/WIM.md",
+      "before_sha256": "2dab86ca8cba51536cb71d9bbee1b55563fe64426ec08e398d5197736592a628",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 7,
+      "moved_records": []
+    },
+    {
+      "addon": "WushuangLoot",
+      "path": "PluginHistory/Plugins/WushuangLoot.md",
+      "before_sha256": "e392719b27f4fefbde8c9790d5cafd07738168ba6dff886359b52e90d36acfe5",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "XyTracker",
+      "path": "PluginHistory/Plugins/XyTracker.md",
+      "before_sha256": "8013a4d19a6c37f73765735da814ad8f94352ac533245c2cc32afe9ffaf4b7ce",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 5,
+      "moved_records": [
+        {
+          "heading": "2026-10-12 迁入 10 月 10 日包（已部署）",
+          "body_sha256": "8b2548f4f8d1d7fb3b854724974871909f773df5eddd56a45d60fe67bae970a8",
+          "id": "XyTracker-20261012-01",
+          "commits": [
+            "0b9aee09c34a7d2a878010621c5e849851ca9144"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "YGB_OTAlarm",
+      "path": "PluginHistory/Plugins/YGB_OTAlarm.md",
+      "before_sha256": "161a9fc6005129836bd9bd7903e3404d42897f7b563bd0598cde4833b33ccd73",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 9,
+      "moved_records": [
+        {
+          "heading": "2026-10-15：移除仇恨条阈值数字",
+          "body_sha256": "8666834d2e4d47aa4ea68c532a847943d478484a30bf5fa8a1d84f4135c34e27",
+          "id": "YGB_OTAlarm-20261015-01",
+          "commits": [
+            "92e4883cac8b3071cbe8942a9bbc87719077c335"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "aux-addon",
+      "path": "PluginHistory/Plugins/aux-addon.md",
+      "before_sha256": "0220323849df504d997f8b9b761da86f35763cd3503034bb722134bc83470282",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "diminfo",
+      "path": "PluginHistory/Plugins/diminfo.md",
+      "before_sha256": "2cc300aabc9798a23aa83d7612cbd7a4ef5629382a3539d3aaa2f594a9d7f36a",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 7,
+      "moved_records": []
+    },
+    {
+      "addon": "hyx",
+      "path": "PluginHistory/Plugins/hyx.md",
+      "before_sha256": "a0c310e3595e8516c894a9058dd8bb89e4eb9dbfa78eabf41e36e5adb31602f4",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 7,
+      "moved_records": []
+    },
+    {
+      "addon": "pfUI",
+      "path": "PluginHistory/Plugins/pfUI.md",
+      "before_sha256": "78240fd507716ba8b1a568200ebf1de8522c745cba805d6d8fa6044d6b01b353",
+      "existing_dated_sections": 9,
+      "dated_records_after": 9,
+      "retained_sections": 17,
+      "moved_records": [
+        {
+          "heading": "2026-10-09 技能栏初始化兼容修复（本次确认）",
+          "body_sha256": "284b6b037140898c3fb97512e24bea7c4451b0f9234d2223afef82238ee05649",
+          "id": "pfUI-20261009-01",
+          "commits": [
+            "34c00bba956b1aaad8ee9a43211239398d0dd998"
+          ]
+        },
+        {
+          "heading": "2026-10-09 聊天复制取消单击整条消息选择",
+          "body_sha256": "5e5dfffee989485104c94581a43f09b0f531b95bcd29e027c7609fe6dcfdca03",
+          "id": "pfUI-20261009-02",
+          "commits": [
+            "ceb324121e29de2e2dc7aafdca52b3473be0d2e5"
+          ]
+        },
+        {
+          "heading": "2026-10-09 动作条监控增加仅监控模式",
+          "body_sha256": "f0930a850b562e39185c2afcc4a58a953724bacd3feed9c9df6fe65b81381cc2",
+          "id": "pfUI-20261009-03",
+          "commits": [
+            "c6983d44dbfb3b4da721b2c9f357a1ab9e333a1f"
+          ]
+        },
+        {
+          "heading": "2026-10-12 动作条监控图标间距按屏幕像素统一",
+          "body_sha256": "15a19af4c8d4a722b30097103be2a417d2aa35728d9bebbbc888871f1b3a4677",
+          "id": "pfUI-20261012-01",
+          "commits": [
+            "f7a11565056958ef6fbf3e0ce93cd785b2cde6b0"
+          ]
+        },
+        {
+          "heading": "2026-10-12 动作条监控关闭背景后清除图标独立底色",
+          "body_sha256": "db8d77ff0be58fa8b64356d091bb7a0d1707e9a649408db7f6211ebcf7f0391b",
+          "id": "pfUI-20261012-02",
+          "commits": [
+            "58f8ce592f76eb71d557fcd4a51decaf41d00989"
+          ]
+        },
+        {
+          "heading": "2026-10-12 手动锚点在解锁拖动后保持",
+          "body_sha256": "81acdea816f062d331ca7c2edec33393ed64822613d836c1bec2b3a428ad45c3",
+          "id": "pfUI-20261012-03",
+          "commits": [
+            "c3c811321f0ac218f3393747d10c22deae343876"
+          ]
+        },
+        {
+          "heading": "2026-10-13 动作条监视不可用状态改为降低亮度",
+          "body_sha256": "6ec9bcbfc3c14b71b847d49bacb52fa014e89417f4a95270ce8c4393ab4f6c17",
+          "id": "pfUI-20261013-01",
+          "commits": [
+            "81ce3f9d9c2f473c7beb8ac7455a27fee4ac374f"
+          ]
+        },
+        {
+          "heading": "2026-10-13 动作条监视不可用图标进一步调暗",
+          "body_sha256": "faf8e3eaeeb2e977023ea895d701dca463b4137b0ebaca74447359c109535c56",
+          "id": "pfUI-20261013-02",
+          "commits": [
+            "8fce60b3036db7e996246f38c202ee053fd761cd"
+          ]
+        },
+        {
+          "heading": "2026-10-13 姓名板玩家/NPC 身份缓存修复",
+          "body_sha256": "823afd2eed75e6767e6ac8fc7c99e32f2efc18a93036fb234b0806b68ec5192f",
+          "id": "pfUI-20261013-03",
+          "commits": [
+            "80fba486742530a62d317f8fc6f961f20021dfd8"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "pfUI-CustomMedia",
+      "path": "PluginHistory/Plugins/pfUI-CustomMedia.md",
+      "before_sha256": "03ce4f302ebcd1b07b02bfcf153f67769d3fb3c39d1b41d32492345e31b8245f",
+      "existing_dated_sections": 0,
+      "dated_records_after": 0,
+      "retained_sections": 8,
+      "moved_records": []
+    },
+    {
+      "addon": "pfUI-addonskinner",
+      "path": "PluginHistory/Plugins/pfUI-addonskinner.md",
+      "before_sha256": "e586aebed5dd7e67e09ed4d070fbba0dba65b1d44e856cd135be528997c2c068",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 9,
+      "moved_records": [
+        {
+          "heading": "2026-10-14：洗脑装置按钮悬停和按压反馈",
+          "body_sha256": "35a69c3043d0cfebe4fa7a30ab114c18f2534f6827d91376d00b8ea83a248bb1",
+          "id": "pfUI-addonskinner-20261014-01",
+          "commits": [
+            "79798974f795a95c9a5feab2ccf846d409198d01"
+          ]
+        }
+      ]
+    },
+    {
+      "addon": "QianKunBag",
+      "path": "PluginHistory/Plugins/QianKunBag.md",
+      "before_sha256": "2fbca99498934250fbe833be5e7490e9d1b983ab41d49f94d548fb78e7574c94",
+      "existing_dated_sections": 1,
+      "dated_records_after": 1,
+      "retained_sections": 4,
+      "moved_records": [
+        {
+          "heading": "2026-10-11：独立背包首版 0.1.0",
+          "body_sha256": "ba3ad18a19d11d29720ab1fa642388aa76113c2483d69ea7b7bb5cbafa875037",
+          "id": "QianKunBag-20261011-01",
+          "commits": [
+            "305764f8fb3013d8801ec34b129c030652150262"
+          ]
+        }
+      ]
+    }
+  ],
+  "reorganized_pages": 57,
+  "existing_dated_sections": 79,
+  "dated_records_after": 81
+}

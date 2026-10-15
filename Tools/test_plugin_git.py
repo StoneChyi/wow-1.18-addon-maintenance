@@ -54,6 +54,42 @@ def main():
                 assert maintenance.checkpoint(["Fixture"], [], "must remain a no-op") == 0
             assert maintenance.git("rev-parse", "HEAD") == before
 
+            note = root / "PluginHistory/Plugins/Fixture.md"
+            note.parent.mkdir(parents=True)
+            note.write_bytes(b"\xef\xbb\xbf# Fixture\r\nchange record\n")
+            index_note = root / "PluginHistory/change-index.json"
+            index_note.write_bytes(b'{"fixture": true}\r\n')
+            unrelated_note = root / "PluginHistory/Plugins/Other.md"
+            unrelated_note.write_text("unrelated task", encoding="utf-8")
+            (addon / "code.lua").write_bytes(b"\xef\xbb\xbflocal a = 4\r\nlocal b = 2\n")
+            with contextlib.redirect_stdout(io.StringIO()):
+                assert maintenance.checkpoint(["Fixture"], [], "atomic code and notes", [
+                    "PluginHistory/Plugins/Fixture.md", "PluginHistory/change-index.json"]) == 0
+            assert maintenance.git("show", "HEAD:PluginHistory/Plugins/Fixture.md") == note.read_bytes()
+            changed = maintenance.git("diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD").decode().splitlines()
+            assert set(changed) == {"Interface/AddOns/Fixture/code.lua", "PluginHistory/Plugins/Fixture.md", "PluginHistory/change-index.json"}
+            assert b"Other.md" not in maintenance.git("ls-files", "-z")
+            before = maintenance.git("rev-parse", "HEAD")
+            for invalid in ["../escape.md", "PluginHistory/../escape.md", "PluginHistory",
+                            "PluginHistory/Plugins", "PluginHistory/Evidence/report.md",
+                            "PluginHistory/staging/report.md", "PluginHistory/history-index.json",
+                            "PluginHistory/addon-catalog.json", "PluginHistory/baseline-files.json",
+                            "WTF/account.md", "PluginHistory\\Plugins\\Fixture.md",
+                            "C:/external.md", "PluginHistory/Plugins/.git/config.json"]:
+                try:
+                    maintenance.checkpoint(["Fixture"], [], "must reject invalid note", [invalid])
+                except RuntimeError:
+                    pass
+                else:
+                    raise AssertionError("Accepted invalid maintenance note: " + invalid)
+                assert not maintenance.git("diff", "--cached", "--name-only", "-z")
+                assert maintenance.git("rev-parse", "HEAD") == before
+            note.write_bytes(note.read_bytes() + b"documentation-only follow-up\r\n")
+            with contextlib.redirect_stdout(io.StringIO()):
+                assert maintenance.checkpoint([], [], "documentation only", ["PluginHistory/Plugins/Fixture.md"]) == 0
+            assert maintenance.git("diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD").strip() == b"PluginHistory/Plugins/Fixture.md"
+            before = maintenance.git("rev-parse", "HEAD")
+
             (root / "unrelated.txt").write_text("another task", encoding="utf-8")
             maintenance.git("add", "--", "unrelated.txt")
             try:
@@ -69,7 +105,9 @@ def main():
     print(json.dumps({"ok": True, "checks": ["embedded repository actual files",
           "BOM and mixed line endings", "binary exact bytes", "ignored new file",
           "deleted file", "nested git metadata excluded and preserved",
-          "no-op checkpoint", "unrelated staged changes rejected"]}, indent=2))
+          "no-op checkpoint", "atomic code and explicitly selected notes",
+          "unrelated note excluded", "invalid/archive note paths rejected before staging",
+          "documentation-only checkpoint", "unrelated staged changes rejected"]}, indent=2))
 
 
 if __name__ == "__main__":

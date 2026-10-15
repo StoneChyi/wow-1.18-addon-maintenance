@@ -16,6 +16,7 @@
 - `WTF`、账号/角色设置、登录资料、日志、缓存、游戏数据和截图不纳入此代码仓库。需要时另做本地备份。未经用户另行授权，不创建其他远程仓库或上传到其他目标；本项目已有私有仓库的同步遵循下述持续授权。
 - Git 可以恢复已提交内容，但不会阻止外部更新器覆盖工作目录。执行更新前必须保存提交；不要声称记录等同于更新器防覆盖。
 - 历史依据见 `PluginHistory/README.md`、`PluginHistory/history-index.json`；原有备份保持原位。后续新改动使用真实 Git 提交，不把整份旧文件无条件覆盖回新版。
-- 每项插件维护同时更新 `PluginHistory/Plugins/插件名.md`，写明目的、主要文件、关联功能、真实验证结果和未确认事项；新增插件或证据状态改变时同步 `PluginHistory/Plugins/README.md` 与 `PluginHistory/maintenance-index.json`。用户补充按实际确认日期记录，不伪造旧历史；不因新摘要而改写初始化清单或历史证据。
+- 每项插件维护同时更新 `PluginHistory/Plugins/插件名.md`，按 `PluginHistory/记录规范.md` 和 `PluginHistory/记录模板.md` 在同一文件逐次追加记录，日期及当日编号倒序，写明目的、修改内容、主要文件、关联功能、真实验证结果和未确认事项；更新当前摘要，保留被替代或回退的历史条目。用户补充按实际确认日期新增记录，不伪造旧历史；不因新摘要而改写初始化清单或历史证据。
+- 每次记录后运行 `Tools/plugin_history.py build` 与 `check`，同步审查 `PluginHistory/Plugins/README.md`、`PluginHistory/待确认插件.md` 和 `PluginHistory/change-index.json`；新增插件或证据状态改变时同时维护 `PluginHistory/maintenance-index.json`，新增插件仍用独立 added_addons。运行 `Tools/check_plugin_notes.py` 检查覆盖和链接。用 `checkpoint --note 明确路径` 将本次负责的插件记录及变化的索引、报告与代码一起提交，不自动夹带整个目录；新记录自身提交号用“随本条记录一并提交（见本页 Git 历史）”关联，避免为填自身哈希另造提交。尚未确认个人修改、仅关联皮肤适配和有实际修改的插件在索引中分别列明。
 - 用户已于 2026-10-09 完成 GitHub 登录并授权创建、同步私有仓库 `https://github.com/StoneChyi/wow-1.18-addon-maintenance`。本地 `origin` 指向该仓库，`main` 跟踪 `origin/main`。用户进一步要求：从现在起，每项插件维护完成后，必须将本次负责的插件修改及对应修改说明一起完成本地提交，并自动同步到该私有仓库，无需再次询问是否上传；说明单独补充或修订时也同样提交并同步。同步前确认目标与私有状态，不使用强制推送或镜像推送，不夹带未审查的其他任务内容。网络、登录或远端冲突导致同步失败时，保留本地提交，明确报告未同步的提交及原因，不能将本地提交称为已经上传。上传前运行 `Tools/audit_github_upload.py` 检查所有可达历史中的常见凭据、私钥、排除目录与大文件。该检查不能保证发现所有敏感信息。
 - GitHub 登录凭据由官方 GitHub CLI 管理，不写入仓库、脚本、日志或提交说明。当前本机需通过已有系统代理访问 GitHub；此仓库的 Git 配置可使用同一代理，仅影响本仓库。不要修改系统 hosts 或全局代理。说明见 `PluginHistory/GitHub同步说明.md`。

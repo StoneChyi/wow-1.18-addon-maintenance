@@ -76,6 +76,11 @@ def main():
         notes_root / "README.md",
         ROOT / "PluginHistory/待补充清单.md",
         ROOT / "PluginHistory/README.md",
+        ROOT / "PluginHistory/待确认插件.md",
+        ROOT / "PluginHistory/记录规范.md",
+        ROOT / "PluginHistory/记录模板.md",
+        ROOT / "PluginHistory/GitHub同步说明.md",
+        ROOT / "PluginHistory/Research/记录方式整理-20261015.md",
         ROOT / "README.md",
     ]
     evidence_count = 0
@@ -105,6 +110,9 @@ def main():
     for path in files:
         text = path.read_text(encoding="utf-8-sig")
         assert "\ufffd" not in text, "Replacement character in " + str(path)
+        # Templates contain literal future-page links and placeholder paths;
+        # fenced examples are not navigable Markdown links in this document.
+        text = re.sub(r"^```[^\n]*\n.*?^```[^\n]*$", "", text, flags=re.M | re.S)
         for target in re.findall(r"\[[^\]\n]*\]\(([^)\n]+)\)", text):
             target = target.strip().strip("<>")
             parsed = urlsplit(target)
