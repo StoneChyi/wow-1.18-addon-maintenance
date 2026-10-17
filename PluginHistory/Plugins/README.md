@@ -12,28 +12,33 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
+| [XyTracker](XyTracker.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](XyTracker.md#change-XyTracker-20261018-01) | 不适用（说明或停用记录） |
+| [WushuangLoot](WushuangLoot.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](WushuangLoot.md#change-WushuangLoot-20261018-01) | 不适用（说明或停用记录） |
+| [StatCompare](StatCompare.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](StatCompare.md#change-StatCompare-20261018-01) | 不适用（说明或停用记录） |
+| [ShaguDPS](ShaguDPS.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](ShaguDPS.md#change-ShaguDPS-20261018-01) | 不适用（说明或停用记录） |
+| [S_ItemTip](S_ItemTip.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](S_ItemTip.md#change-S_ItemTip-20261018-01) | 不适用（说明或停用记录） |
+| [pfUI](pfUI.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](pfUI.md#change-pfUI-20261018-01) | 不适用（说明或停用记录） |
+| [Meeting](Meeting.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](Meeting.md#change-Meeting-20261018-01) | 不适用（说明或停用记录） |
+| [GoubayuHeal](GoubayuHeal.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](GoubayuHeal.md#change-GoubayuHeal-20261018-01) | 不适用（说明或停用记录） |
+| [diminfo](diminfo.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](diminfo.md#change-diminfo-20261018-01) | 不适用（说明或停用记录） |
+| [CatPotion](CatPotion.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](CatPotion.md#change-CatPotion-20261018-01) | 不适用（说明或停用记录） |
+| [Cat2](Cat2.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](Cat2.md#change-Cat2-20261018-01) | 不适用（说明或停用记录） |
+| [BigWigs](BigWigs.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](BigWigs.md#change-BigWigs-20261018-01) | 不适用（说明或停用记录） |
+| [BetterCharacterStats](BetterCharacterStats.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](BetterCharacterStats.md#change-BetterCharacterStats-20261018-01) | 不适用（说明或停用记录） |
+| [!Libs](!Libs.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](!Libs.md#change-!Libs-20261018-01) | 不适用（说明或停用记录） |
 | [YGB_OTAlarm](YGB_OTAlarm.md) | 2026-10-15 | [移除仇恨条阈值数字](YGB_OTAlarm.md#change-YGB_OTAlarm-20261015-01) | 待游戏验收 |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | 2026-10-14 | [洗脑装置按钮悬停和按压反馈](pfUI-addonskinner.md#change-pfUI-addonskinner-20261014-01) | 待游戏验收 |
 | [BrainwasherPro](BrainwasherPro.md) | 2026-10-14 | [窗口层级、按钮反馈和风格入口](BrainwasherPro.md#change-BrainwasherPro-20261014-01) | 待游戏验收 |
-| [StatCompare](StatCompare.md) | 2026-10-13 | [修复观察目标属性面板被头像框架遮挡](StatCompare.md#change-StatCompare-20261013-01) | 待游戏验收 |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | 2026-10-13 | [补充：直接清标与队外玩家本地标记](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261013-02) | 待游戏验收 |
-| [pfUI](pfUI.md) | 2026-10-13 | [姓名板玩家/NPC 身份缓存修复](pfUI.md#change-pfUI-20261013-03) | 待游戏验收 |
-| [Meeting](Meeting.md) | 2026-10-13 | [过滤长期固定团广告](Meeting.md#change-Meeting-20261013-03) | 待游戏验收 |
 | [Cooline](Cooline.md) | 2026-10-13 | [合并圣水、炸药及其他共享物品冷却](Cooline.md#change-Cooline-20261013-01) | 待游戏验收 |
-| [XyTracker](XyTracker.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](XyTracker.md#change-XyTracker-20261012-01) | 待游戏验收 |
 | [TurtleMail](TurtleMail.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](TurtleMail.md#change-TurtleMail-20261012-01) | 待游戏验收 |
-| [ShaguDPS](ShaguDPS.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](ShaguDPS.md#change-ShaguDPS-20261012-01) | 待游戏验收 |
-| [S_ItemTip](S_ItemTip.md) | 2026-10-12 | [合并修复已覆盖现用版](S_ItemTip.md#change-S_ItemTip-20261012-03) | 待游戏验收 |
 | [S_ChatBar](S_ChatBar.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](S_ChatBar.md#change-S_ChatBar-20261012-01) | 待游戏验收 |
 | [RaidCheck](RaidCheck.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](RaidCheck.md#change-RaidCheck-20261012-01) | 待游戏验收 |
 | [PlayerLinkEnhance](PlayerLinkEnhance.md) | 2026-10-12 | [修复团队目标图标入口的错误对号](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261012-01) | 待游戏验收 |
 | [OneBag](OneBag.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](OneBag.md#change-OneBag-20261012-01) | 待游戏验收 |
 | [MySlash](MySlash.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](MySlash.md#change-MySlash-20261012-01) | 待游戏验收 |
-| [GoubayuHeal](GoubayuHeal.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](GoubayuHeal.md#change-GoubayuHeal-20261012-01) | 待游戏验收 |
 | [Flyout](Flyout.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](Flyout.md#change-Flyout-20261012-01) | 待游戏验收 |
-| [BigWigs](BigWigs.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](BigWigs.md#change-BigWigs-20261012-01) | 待游戏验收 |
 | [Automatonex](Automatonex.md) | 2026-10-12 | [随机坐骑避免连续重复](Automatonex.md#change-Automatonex-20261012-02) | 待游戏验收 |
-| [!Libs](!Libs.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](!Libs.md#change-!Libs-20261012-01) | 待游戏验收 |
 | [QianKunBag](QianKunBag.md) | 2026-10-11 | [独立背包首版 0.1.0](QianKunBag.md#change-QianKunBag-20261011-01) | 待游戏验收 |
 | [Cat](Cat.md) | 2026-10-11 | [审判控制面板增加惩戒输出技能按钮](Cat.md#change-Cat-20261011-01) | 待游戏验收 |
 | [Bagshui](Bagshui.md) | 2026-10-11 | [重构转入独立 QianKunBag，原插件保留](Bagshui.md#change-Bagshui-20261011-15) | 不适用（说明或停用记录） |
@@ -41,7 +46,6 @@
 | [QuickHeal](QuickHeal.md) | 2026-10-10 | [同步内置 HealComm 预估清理修复](QuickHeal.md#change-QuickHeal-20261010-01) | 待游戏验收 |
 | [NotGrid](NotGrid.md) | 2026-10-10 | [修复治疗祷言预估条残留](NotGrid.md#change-NotGrid-20261010-01) | 待游戏验收 |
 | [HideOutdoorWorldState](HideOutdoorWorldState.md) | 2026-10-10 | [用户确认主动删除并停用](HideOutdoorWorldState.md#change-HideOutdoorWorldState-20261010-01) | 不适用（说明或停用记录） |
-| [WushuangLoot](WushuangLoot.md) | 日期待确认 | 保留个人交互外观，适配 DLL 和可调速度。 | 见早期记录 |
 | [WIM](WIM.md) | 日期待确认 | 保持私聊界面可见，同时避免收到消息抢按键。 | 见早期记录 |
 | [TianYan](TianYan.md) | 日期待确认 | 让怪物数量和战斗平均值更可靠。 | 见早期记录 |
 | [TankBuddyEnh](TankBuddyEnh.md) | 日期待确认 | 完善坦克公告开关、技能识别及设置界面。 | 见早期记录 |
@@ -55,12 +59,8 @@
 | [DPSMateXExtend](DPSMateXExtend.md) | 日期待确认 | 让扩展统计详情参与 Boss/小怪汇总。 | 见早期记录 |
 | [DPSMateXEncounters](DPSMateXEncounters.md) | 日期待确认 | 提供 Boss/小怪战斗分类与可靠汇总。 | 见早期记录 |
 | [DPSMateX](DPSMateX.md) | 日期待确认 | 完善紧凑详情、统计界面及扩展模块入口。 | 见早期记录 |
-| [diminfo](diminfo.md) | 日期待确认 | 支持渐隐，并消除信息条空白处右键误触。 | 见早期记录 |
-| [CatPotion](CatPotion.md) | 日期待确认 | 扩展常用物品，并完善多配置窗口和使用反馈。 | 见早期记录 |
-| [Cat2](Cat2.md) | 日期待确认 | 扩展流程编辑、配置调用和动作条入口。 | 见早期记录 |
 | [Capslock](Capslock.md) | 日期待确认 | 修正拉人名单的职业颜色。 | 见早期记录 |
 | [BuffTool](BuffTool.md) | 日期待确认 | 简化本职业设置，并让移动模式可靠退出。 | 见早期记录 |
-| [BetterCharacterStats](BetterCharacterStats.md) | 日期待确认 | 保持角色属性面板布局稳定，并与观察、换天赋功能协调。 | 见早期记录 |
 | [aux-addon](aux-addon.md) | 日期待确认 | 修正充能物品上架，并减少扫描和重复查询。 | 见早期记录 |
 | [AtlasLoot](AtlasLoot.md) | 日期待确认 | 修正地图掉落映射和愿望清单的本地化错误。 | 见早期记录 |
 | [Atlas](Atlas.md) | 日期待确认 | 让木喉要塞地图编号与首领掉落保持一致。 | 见早期记录 |

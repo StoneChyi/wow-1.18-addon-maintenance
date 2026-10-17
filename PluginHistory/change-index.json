@@ -9,18 +9,27 @@
     "related_skin_only": 2
   },
   "addon_pages": 106,
-  "dated_records": 81,
+  "dated_records": 97,
   "addons": [
     {
       "addon": "!Libs",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/!Libs.md",
       "purpose": "补记共享词库差异，并修复 HealComm 群体治疗预估清理。",
-      "latest_record_date": "2026-10-12",
-      "latest_record_title": "迁入 10 月 10 日包（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 3,
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 4,
       "records": [
+        {
+          "id": "!Libs-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-!Libs-20261018-01"
+        },
         {
           "id": "!Libs-20261012-01",
           "date": "2026-10-12",
@@ -160,11 +169,21 @@
       "status": "unconfirmed",
       "note": "PluginHistory/Plugins/AutoMarker.md",
       "purpose": "等待确认是否有个人修改",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "AutoMarker-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-AutoMarker-20261018-01"
+        }
+      ]
     },
     {
       "addon": "Automatonex",
@@ -393,22 +412,41 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/BetterCharacterStats.md",
       "purpose": "保持角色属性面板布局稳定，并与观察、换天赋功能协调。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "BetterCharacterStats-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-BetterCharacterStats-20261018-01"
+        }
+      ]
     },
     {
       "addon": "BigWigs",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/BigWigs.md",
       "purpose": "适配乌龟服首领、中文日志以及竖行计时条。",
-      "latest_record_date": "2026-10-12",
-      "latest_record_title": "迁入 10 月 10 日包（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 3,
       "records": [
+        {
+          "id": "BigWigs-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-BigWigs-20261018-01"
+        },
         {
           "id": "BigWigs-20261012-01",
           "date": "2026-10-12",
@@ -638,22 +676,42 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Cat2.md",
       "purpose": "扩展流程编辑、配置调用和动作条入口。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "Cat2-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-Cat2-20261018-01"
+        }
+      ]
     },
     {
       "addon": "CatPotion",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/CatPotion.md",
       "purpose": "扩展常用物品，并完善多配置窗口和使用反馈。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "CatPotion-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-CatPotion-20261018-01"
+        }
+      ]
     },
     {
       "addon": "Cooline",
@@ -915,11 +973,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/GoubayuHeal.md",
       "purpose": "更新瞬发人数限制、动作占用、迅捷治愈换目标及牧师驱病顺序。",
-      "latest_record_date": "2026-10-12",
-      "latest_record_title": "迁入 10 月 10 日包（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 1,
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 2,
       "records": [
+        {
+          "id": "GoubayuHeal-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-GoubayuHeal-20261018-01"
+        },
         {
           "id": "GoubayuHeal-20261012-01",
           "date": "2026-10-12",
@@ -1016,11 +1083,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Meeting.md",
       "purpose": "团本／世界首领清晰列表与当前招募识别；过滤长期固定团广告。",
-      "latest_record_date": "2026-10-13",
-      "latest_record_title": "过滤长期固定团广告",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 3,
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 4,
       "records": [
+        {
+          "id": "Meeting-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-Meeting-20261018-01"
+        },
         {
           "id": "Meeting-20261013-03",
           "date": "2026-10-13",
@@ -1366,11 +1442,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/S_ItemTip.md",
       "purpose": "合并评分/链接缓存优化并修复查询刷新，保留个人观察布局和负充能处理。",
-      "latest_record_date": "2026-10-12",
-      "latest_record_title": "合并修复已覆盖现用版",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 4,
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 5,
       "records": [
+        {
+          "id": "S_ItemTip-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-S_ItemTip-20261018-01"
+        },
         {
           "id": "S_ItemTip-20261012-03",
           "date": "2026-10-12",
@@ -1433,11 +1518,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/ShaguDPS.md",
       "purpose": "增加标准坦克模式统计视图并给 pfUI 提供多目标仇恨。",
-      "latest_record_date": "2026-10-12",
-      "latest_record_title": "迁入 10 月 10 日包（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 3,
       "records": [
+        {
+          "id": "ShaguDPS-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-ShaguDPS-20261018-01"
+        },
         {
           "id": "ShaguDPS-20261012-01",
           "date": "2026-10-12",
@@ -1578,11 +1672,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/StatCompare.md",
       "purpose": "让属性比较面板与角色/观察窗口协调。",
-      "latest_record_date": "2026-10-13",
-      "latest_record_title": "修复观察目标属性面板被头像框架遮挡",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 1,
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 2,
       "records": [
+        {
+          "id": "StatCompare-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-StatCompare-20261018-01"
+        },
         {
           "id": "StatCompare-20261013-01",
           "date": "2026-10-13",
@@ -1601,11 +1704,21 @@
       "status": "unconfirmed",
       "note": "PluginHistory/Plugins/SuperCleveRoidMacros.md",
       "purpose": "等待确认是否有个人修改",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "SuperCleveRoidMacros-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-SuperCleveRoidMacros-20261018-01"
+        }
+      ]
     },
     {
       "addon": "SuperMacro",
@@ -1757,22 +1870,41 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/WushuangLoot.md",
       "purpose": "保留个人交互外观，适配 DLL 和可调速度。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "WushuangLoot-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-WushuangLoot-20261018-01"
+        }
+      ]
     },
     {
       "addon": "XyTracker",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/XyTracker.md",
       "purpose": "更新许愿权移交菜单、确认、权限判断及团队同步。",
-      "latest_record_date": "2026-10-12",
-      "latest_record_title": "迁入 10 月 10 日包（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 1,
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 2,
       "records": [
+        {
+          "id": "XyTracker-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-XyTracker-20261018-01"
+        },
         {
           "id": "XyTracker-20261012-01",
           "date": "2026-10-12",
@@ -1825,11 +1957,21 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/diminfo.md",
       "purpose": "支持渐隐，并消除信息条空白处右键误触。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "diminfo-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-diminfo-20261018-01"
+        }
+      ]
     },
     {
       "addon": "hyx",
@@ -1902,11 +2044,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI.md",
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
-      "latest_record_date": "2026-10-13",
-      "latest_record_title": "姓名板玩家/NPC 身份缓存修复",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 9,
+      "latest_record_date": "2026-10-18",
+      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 10,
       "records": [
+        {
+          "id": "pfUI-20261018-01",
+          "date": "2026-10-18",
+          "title": "10 月 16 日包与当前个人版差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-pfUI-20261018-01"
+        },
         {
           "id": "pfUI-20261013-03",
           "date": "2026-10-13",

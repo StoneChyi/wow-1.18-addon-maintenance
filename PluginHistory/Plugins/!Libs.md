@@ -10,11 +10,30 @@
 
 ## 当前维护摘要
 
+2026-10-18 核对：10 月 16 日包有更新，尚未部署；当前实现保持不变，差异与合并注意见最新记录。
+
 补记共享词库差异，并修复 HealComm 群体治疗预估清理。
 
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-!Libs-20261018-01"></a>
+
+### 2026-10-18｜10 月 16 日包与当前个人版差异核对（未部署）
+
+- 记录编号：`!Libs-20261018-01`
+- 记录类型：差异核对
+- 游戏验收：不适用（说明或停用记录）
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户提供 10 月 16 日新包，要求沿用旧包/当前个人版/新包三方逻辑核对。
+- 修改内容：只检查并记录，没有更新插件。原包变化：33 个加载/代码文件变化；模组检测/封装、光环增量、治疗/耗蓝取值、词条；精简非中英文翻译；补回旧 SpellStatus。
+- 当前个人版：HealComm 11733 修复；已同时加载旧 SpellStatus 与 V2。
+- 涉及文件：`!Libs.toc`、`!MyLib/api/luaAPI.lua`、`!MyLib/api/wowAPI.lua`、`!MyLib/libs/LibMobHealthCache-1.0.lua`、`Abacus-2.0/Abacus-2.0.lua`、`Ace2/AceAddon-2.0/AceAddon-2.0.lua`、`Ace2/AceConsole-2.0/AceConsole-2.0.lua`、`Ace2/AceDB-2.0/AceDB-2.0.lua`、`Ace2/AceDebug-2.0/AceDebug-2.0.lua`、`Ace2/AceLocale-2.0/AceLocale-2.0.lua`、`Ace2/AceLocale-2.2/AceLocale-2.2.lua`、`Ace3/AceLocale-3.0/AceLocale-3.0.lua`、`Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua`、`Babble/Babble-Class-2.2/Babble-Class-2.2.lua`、`Babble/Babble-Faction-2.2/Babble-Faction-2.2.lua`、`Babble/Babble-ItemSet-2.2/Babble-ItemSet-2.2.lua`、`Babble/Babble-Spell-2.2/Babble-Spell-2.2.lua`、`Babble/Babble-Zone-2.2/Babble-Zone-2.2.lua`、`Babble/Babble-Zone-2.3/Babble-Zone-2.3.lua`、`CastLib-1.0/CastLib-1.0.lua`、`Dewdrop-2.0/Dewdrop-2.0.lua`、`FiveSecLib-1.0/FiveSecLib-1.0.lua`、`FuBarPlugin-2.0/FuBarPlugin-2.0.lua`、`HealComm-1.0/HealComm-1.0.lua`、`Hewdrop-2.0/Hewdrop-2.0.lua`、`LibSharedMedia-3.0/LibSharedMedia-3.0.lua`、`ParserLib/FixGlobalString.lua`、`ParserLib/ParserLib.lua`、`SE/SpecialEvents-Aura-2.0/SpecialEvents-Aura-2.0.lua`、`SpellStatusV2-2.0/SpellStatusV2-2.0.lua`、`Tablet-2.0/Tablet-2.0.lua`、`Tourist-2.0/Tourist-2.0.lua`、`Waterfall-1.0/Waterfall-1.0.lua`。
+- 关联功能与处理：合并；TOC/HealComm 无文本冲突，但 TOC 试算重复加载旧库，需去重；保留治疗预估修复。
+- 检查结果：本次逐文件字节/指纹及三方关系核对；原包相关 Lua 32 个，其中 32 个通过 Lua 5.1 语法检查。无冲突 TOC 试算产生旧库重复条目，需人工去重。 三份来源完成前再次校验未变；[完整报告](../Research/三版本插件对比-20261010-20261016-20261018.md)及[逐文件结果](../Research/三版本插件对比-20261010-20261016-20261018.json)。
+- 游戏验收与未确认：本次为差异核对，未合并部署，未进行游戏内加载、界面或多人验收；文本无冲突不代表运行兼容。原维护状态和历史作者归属不作改变。
 
 <a id="change-!Libs-20261012-01"></a>
 
