@@ -699,6 +699,10 @@ Cards\Warlock\ConflagrateImmolate.lua
 Cards\Warlock\ConflagrateImmolateAutoTiming.lua
 Cards\Warlock\SpellLock.lua
 
+# 用户自定义卡片；职业归属与排序由各卡片自身定义。
+Cards\Custom\HunterCannon.lua
+Cards\Custom\HunterOrbitalMissile.lua
+
 # 数据恢复和编码必须在全部卡片注册后加载，才能按稳定 ID 重新绑定流程步骤。
 Core\Persistence.lua
 Core\ConfigurationCodec.lua

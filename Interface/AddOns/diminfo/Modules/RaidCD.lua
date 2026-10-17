@@ -27,7 +27,7 @@ local SERVER_CONFIGS = {
         [1] = {name = "熔火之心", resetDays = 7, baseResetTime = 1761537600}, --2025年10月27日中午12点
         [2] = {name = "黑翼之巢", resetDays = 7, baseResetTime = 1761537600},
         [3] = {name = "安其拉神殿", resetDays = 7, baseResetTime = 1761537600},
-        -- [4] = {name = "纳克萨玛斯", resetDays = 7, baseResetTime = 1761537600},
+        [4] = {name = "纳克萨玛斯", resetDays = 7, baseResetTime = 1761537600},
         [5] = {name = "翡翠圣殿", resetDays = 7, baseResetTime = 1761537600},
         -- [6] = {name = "卡拉赞之塔", resetDays = 7, baseResetTime = 1761537600},
 		[11] = {name = "木喉要塞", resetDays = 7, baseResetTime = 1789099200},

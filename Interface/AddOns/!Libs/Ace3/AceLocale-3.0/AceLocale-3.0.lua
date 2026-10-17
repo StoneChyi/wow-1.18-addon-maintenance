@@ -77,7 +77,7 @@ local writedefaultproxy = setmetatable({}, {
 -- game locale.
 -- @paramsig application, locale[, isDefault[, silent]]
 -- @param application Unique name of addon / module
--- @param locale Name of the locale to register, e.g. "enUS", "deDE", etc.
+-- @param locale Name of the locale to register, e.g. "enUS", "zhCN", etc.
 -- @param isDefault If this is the default locale being registered (your addon is written in this language, generally enUS)
 -- @param silent If true, the locale will not issue warnings for missing keys. Must be set on the first locale registered. If set to "raw", nils will be returned for unknown keys (no metatable used).
 -- @usage
@@ -85,10 +85,6 @@ local writedefaultproxy = setmetatable({}, {
 -- local L = LibStub("AceLocale-3.0"):NewLocale("TestLocale", "enUS", true)
 -- L["string1"] = true
 --
--- -- deDE.lua
--- local L = LibStub("AceLocale-3.0"):NewLocale("TestLocale", "deDE")
--- if not L then return end
--- L["string1"] = "Zeichenkette1"
 -- @return Locale Table to add localizations to, or nil if the current locale is not required.
 function AceLocale:NewLocale(application, locale, isDefault, silent)
 

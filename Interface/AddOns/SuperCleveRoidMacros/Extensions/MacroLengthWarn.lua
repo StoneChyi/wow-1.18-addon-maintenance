@@ -207,9 +207,13 @@ function Extension.OnLoad()
                 return edit_orig(unpack(arg))
             end
         end
-        local maxIdx = 0
-        for i = 2, 32 do if results[i] ~= nil then maxIdx = i end end
-        if maxIdx > 1 then return unpack(results, 2, maxIdx) end
+        -- 只透传"宏序号"(数字)：本客户端原生 EditMacro 成功时返回的是布尔而非序号，
+        -- 若把布尔透给调用方，会被赋给 MacroFrame.selectedMacro，引发后续算术 / GetMacroInfo 报错
+        -- （旧版就是"不透传返回值"因而不报错） by 武藤纯子酱 2026.10.3
+        if type(results[2]) ~= "number" then return end
+        local maxIdx = 2
+        for i = 3, 32 do if results[i] ~= nil then maxIdx = i end end
+        return unpack(results, 2, maxIdx)
     end
 
     -- Listen for macro UI loading

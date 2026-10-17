@@ -2921,6 +2921,20 @@ GoubayuHeal.GUIAllowFirstRankIgnoreOverheal = GoubayuHeal_MakeClassCheckBox(
     end,
     GoubayuHeal.UI.AllowFirstRankTip, 690)
 
+-- 预读（跟着方案走）：识别敌方平砍/读条目标，提前对受击队友施放
+-- by 武藤纯子酱 2026.10.13
+GoubayuHeal.GUIPredict = GoubayuHeal_MakeClassCheckBox("GoubayuHeal_GUIPredict",
+    GoubayuHeal.UI.Predict,
+    function()
+        return GoubayuHeal.Config and GoubayuHeal.Config["predict_enabled"] == 1
+    end,
+    function(checked)
+        if GoubayuHeal.Config then
+            GoubayuHeal.Config["predict_enabled"] = checked and 1 or 0
+        end
+    end,
+    GoubayuHeal.UI.PredictTip, 820)
+
 -- 德鲁伊：保持生命之树形态
 GoubayuHeal.GUIDruidKeepTree = GoubayuHeal_MakeClassCheckBox("GoubayuHeal_GUIDruidKeepTree",
     GoubayuHeal.UI.KeepTree,
@@ -5204,6 +5218,19 @@ local function GoubayuHeal_UIDispelTab()
     end)
     UI.SetTooltip(dispelPrioBtn, GoubayuHeal.UI.DispelPrioTipTitle, GoubayuHeal.UI.DispelPrioTipBody)
 
+    -- 驱散移动限制名单按钮（优先级按钮右侧）：打开移动限制名单编辑窗口
+    -- by 武藤纯子酱 2026.10.13
+    local dispelMoveBtn = GoubayuHeal_UI_CreateFlatButton(dispelPanel, nil, 120, 22,
+        GoubayuHeal.DispelUI.ButtonMovement)
+    dispelMoveBtn:SetPoint("LEFT", dispelPrioBtn, "RIGHT", 10, 0)
+    dispelMoveBtn:SetScript("OnClick", function()
+        if GoubayuHeal.Dispel_ToggleMovementWindow then
+            GoubayuHeal.Dispel_ToggleMovementWindow()
+        end
+    end)
+    UI.SetTooltip(dispelMoveBtn, GoubayuHeal.DispelUI.MovementWindowTitle,
+        GoubayuHeal.DispelUI.MovementHint)
+
     local function MakeDispelToggle(key, label, x, y, onChange)
         local cb, cbl = GoubayuHeal_MakeSettingsCheckBox(dispelPanel,
             "GoubayuHeal_GUIDispel" .. key .. "CheckButton",
@@ -5549,7 +5576,8 @@ local function GoubayuHeal_UIDispelTab()
 
     -- 内嵌键值列表（宽度/高度可配：现在三个列表并排放在页面底部）
     -- by 武藤纯子酱 2026.9.21
-    local function MakeEmbeddedList(key, title, x, y, tooltip, classList, width, height)
+    local function MakeEmbeddedList(parent, key, title, x, y, tooltip, classList, width, height)
+        parent = parent or dispelPanel
         local boxW = width or 370
         local boxH = height or 128
         local innerW = boxW - 16
@@ -5560,10 +5588,10 @@ local function GoubayuHeal_UIDispelTab()
         local rowW = scrollW
         local rowTextW = rowW - 34
 
-        local box = CreateFrame("Frame", nil, dispelPanel)
+        local box = CreateFrame("Frame", nil, parent)
         box:SetWidth(boxW)
         box:SetHeight(boxH)
-        box:SetPoint("TOPLEFT", dispelPanel, "TOPLEFT", x, y)
+        box:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
         box:EnableMouse(true)
         UI.ApplyFlatBackdrop(box, 0.05, 0.05, 0.05, 0.9)
 
@@ -5888,12 +5916,69 @@ local function GoubayuHeal_UIDispelTab()
 
     -- 三个列表并排放在页面底部（各 255 宽 × 220 高，横向排列；整体上移 20px）
     -- by 武藤纯子酱 2026.9.21
-    MakeEmbeddedList("dispel_blacklist", GoubayuHeal.UI.Blacklist, 20, -298,
+    MakeEmbeddedList(dispelPanel, "dispel_blacklist", GoubayuHeal.UI.Blacklist, 20, -298,
         GoubayuHeal.UI.BlacklistTip, nil, 255, 220)
-    MakeEmbeddedList("dispel_filter_class", GoubayuHeal.UI.ClassHide, 300, -298,
+    MakeEmbeddedList(dispelPanel, "dispel_filter_class", GoubayuHeal.UI.ClassHide, 300, -298,
         GoubayuHeal.UI.ClassHideTip, GoubayuHeal.DispelClassList, 255, 220)
-    MakeEmbeddedList("dispel_filter_debuffs", GoubayuHeal.UI.HideDebuffs, 580, -298,
+    MakeEmbeddedList(dispelPanel, "dispel_filter_debuffs", GoubayuHeal.UI.HideDebuffs, 580, -298,
         GoubayuHeal.UI.HideDebuffsTip, nil, 255, 220)
+
+    -- 移动限制名单独立窗口（驱散页"驱散名单"按钮打开）；复用 MakeEmbeddedList 渲染
+    -- by 武藤纯子酱 2026.10.13
+    local DispelMovementWin
+    function GoubayuHeal.Dispel_CreateMovementWindow()
+        if DispelMovementWin then
+            return DispelMovementWin
+        end
+        local w = CreateFrame("Frame", "GoubayuHealDispelMovementWindow", UIParent)
+        w:SetWidth(380)
+        w:SetHeight(360)
+        w:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        w:SetFrameStrata("DIALOG")
+        w:EnableMouse(true)
+        w:SetMovable(true)
+        w:RegisterForDrag("LeftButton")
+        w:SetScript("OnDragStart", function() this:StartMoving() end)
+        w:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
+        UI.ApplyFlatBackdrop(w, 0.05, 0.05, 0.05, 0.95)
+        tinsert(UISpecialFrames, "GoubayuHealDispelMovementWindow")
+
+        local title = GoubayuHeal_UI_MakeFontString(w, "OVERLAY", 12, 1, 0.565, 0)
+        title:SetPoint("TOPLEFT", w, "TOPLEFT", 10, -8)
+        title:SetText(GoubayuHeal.DispelUI.MovementWindowTitle)
+
+        local closeBtn = GoubayuHeal_UI_CreateFlatButton(w, nil, 46, 18, GoubayuHeal.UI.Close)
+        closeBtn:SetPoint("TOPRIGHT", w, "TOPRIGHT", -10, -6)
+        closeBtn:SetScript("OnClick", function() w:Hide() end)
+
+        local hint = GoubayuHeal_UI_MakeFontString(w, "OVERLAY", 9, 0.72, 0.72, 0.72)
+        hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -2)
+        hint:SetWidth(360)
+        hint:SetJustifyH("LEFT")
+        hint:SetText(GoubayuHeal.DispelUI.MovementHint)
+
+        MakeEmbeddedList(w, "dispel_movement", GoubayuHeal.DispelUI.ButtonMovement, 10, -46,
+            GoubayuHeal.DispelUI.MovementHint, nil, 360, 300)
+
+        -- 创建后先隐藏：否则新登录首次点击 toggle 时 IsShown 为真，反而把它隐藏（要点两下才开）
+        -- by 武藤纯子酱 2026.10.13
+        w:Hide()
+        DispelMovementWin = w
+        return w
+    end
+
+    function GoubayuHeal.Dispel_ToggleMovementWindow()
+        local w = GoubayuHeal.Dispel_CreateMovementWindow()
+        if w:IsShown() then
+            w:Hide()
+        else
+            w:Show()
+            if GoubayuHeal.Dispel_EmbeddedBoxes and GoubayuHeal.Dispel_RefreshEmbeddedList then
+                GoubayuHeal.Dispel_RefreshEmbeddedList(
+                    GoubayuHeal.Dispel_EmbeddedBoxes["dispel_movement"])
+            end
+        end
+    end
 end
 
 pcall(GoubayuHeal_UIDispelTab)
@@ -5902,6 +5987,7 @@ pcall(GoubayuHeal_UIDispelTab)
 -- 高级标签页
 -- ============================================================
 
+do -- Scope advanced-tab controls; keep callbacks alive without chunk-local exhaustion.
 local advPanel = CreateFrame("Frame", nil, mainWindow)
 advPanel:SetWidth(856)
 advPanel:SetHeight(500)
@@ -6026,6 +6112,8 @@ end
 -- ============================================================
 -- 图腾条
 -- ============================================================
+
+end
 
 GoubayuHeal_TotemFrame = CreateFrame("Frame", "GoubayuHeal_TotemFrame", UIParent)
 local totemFrame = GoubayuHeal_TotemFrame
@@ -6362,6 +6450,7 @@ local function GoubayuHeal_ReflowClassBar()
         GoubayuHeal.GUIPriestKeepInnerFire,
         GoubayuHeal.GUIPriestT8Two,
         GoubayuHeal.GUIAllowFirstRankIgnoreOverheal,
+        GoubayuHeal.GUIPredict,
     }
 
     for _, cb in ipairs(all) do
@@ -6465,6 +6554,7 @@ local function GoubayuHeal_ReflowClassBar()
     end
 
     pushCb(GoubayuHeal.GUIAllowFirstRankIgnoreOverheal, GoubayuHeal.UI.AllowFirstRank)
+    pushCb(GoubayuHeal.GUIPredict, GoubayuHeal.UI.Predict)
 
     -- 两排布局：第一排全部复选框，第二排全部滑块；每排内部超宽仍自动折行
     -- 复选框锚 TOPLEFT、滑块标签锚 LEFT（垂直居中），各自保持原生偏移不混用

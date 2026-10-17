@@ -486,16 +486,23 @@ function HexColors(r, g, b)
 	
 	return format("|cff%02x%02x%02x", r*255, g*255, b*255)
 end
---新增SuperWow载入判定
-function CheckSuperWow()
-	if SUPERWOW_STRING then
-		return true
-	else
-		return false
-	end
+--模组兼容检测（Nampower / SuperWoW / UnitXP_SP3），by 武藤纯子酱 2026.10.12
+--优先级：Nampower > SuperWoW > 默认回退
+local APISupport
+local function detectAPISupport()
+	if APISupport then return APISupport end
+	local s = { nampower = false, superwow = false, unitxp = false }
+	--Nampower：DLL 特征函数 GetNampowerVersion
+	if type(getglobal("GetNampowerVersion")) == "function" then s.nampower = true end
+	--SuperWoW：SetAutoloot 为其特征函数（SUPERWOW_STRING/VERSION 注入晚于插件加载，加载期恒为 nil，不可靠）
+	if type(getglobal("SetAutoloot")) == "function" then s.superwow = true end
+	--UnitXP_SP3
+	local UnitXP = getglobal("UnitXP")
+	if type(UnitXP) == "function" and pcall(UnitXP, "nop", "nop") then s.unitxp = true end
+	APISupport = s
+	return s
 end
---新增UnitXP_SP3载入判定
-function CheckUnitXP_SP3()
-	local UnitXP_SP3 = pcall(UnitXP, "nop", "nop")
-	return UnitXP_SP3
-end
+function CheckSuperWow() return detectAPISupport().superwow end -- by 武藤纯子酱 2026.10.12
+function CheckNampower() return detectAPISupport().nampower end -- by 武藤纯子酱 2026.10.12
+function CheckUnitXP_SP3() return detectAPISupport().unitxp end -- by 武藤纯子酱 2026.10.12
+function GetAPISupport() return detectAPISupport() end -- by 武藤纯子酱 2026.10.12

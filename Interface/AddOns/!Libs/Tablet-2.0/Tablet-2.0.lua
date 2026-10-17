@@ -32,63 +32,7 @@ local COLOR_DESC = "Set the background color."
 local LOCK = "Lock"
 local LOCK_DESC = "Lock the tablet in its current position. Alt+Right-click for menu or Alt+drag to drag it when locked."
 
-if GetLocale() == "deDE" then
-	SCROLL_UP = "Hochscrollen"
-	SCROLL_DOWN = "Runterscrollen"
-	HINT = "Hinweis"
-	DETACH = "L\195\182sen"
-	DETACH_DESC = "L\195\182st den Tooltip aus seiner Verankerung."
-	SIZE = "Gr\195\182\195\159e"
-	SIZE_DESC = "Gr\195\182\195\159e des Tooltips \195\164ndern."
-	CLOSE_MENU = "Menu schlie\195\159en"
-	CLOSE_MENU_DESC = "Schlie\195\159t das Menu."
-	COLOR = "Hintergrundfarbe"
-	COLOR_DESC = "Hintergrundfarbe setzen."
-	LOCK = "Sperren"
-	LOCK_DESC = "Sperrt die aktuelle Position vom Tooltip. Alt+Rechts-klick f\195\188rs Men\195\188 oder Alt+Verschieben f\195\188rs verschieben wenn es gesperrt ist."
-elseif GetLocale() == "esES" then
-	SCROLL_UP = "Desplazarse hacia arriba"
-	SCROLL_DOWN = "Desplazarse hacia abajo"
-	HINT = "Pista"
-	DETACH = "Separar"
-	DETACH_DESC = "Separa la tableta de su fuente."
-	SIZE = "Tamaño"
-	SIZE_DESC = "Escalar la tableta."
-	CLOSE_MENU = "Cerrar menú"
-	CLOSE_MENU_DESC = "Cerra el menú."
-	COLOR = "Color del fondo"
-	COLOR_DESC = "Define el color del fondo."
-	LOCK = "Bloquear"
-	LOCK_DESC = "Bloquea la tableta a su posición actual. Alt+Clic-Derecho para el menú o Alt+Arrastrar para arrastrarlo cuando esté bloqueado."
-elseif  GetLocale() == "ruRU" then
-	SCROLL_UP = "Прокрутка вверх"
-	SCROLL_DOWN = "Прокрутка вниз"
-	HINT = "Совет"
-	DETACH = "Отделить"
-	DETACH_DESC = "Отделить планшет от его источника."
-	SIZE = "Размер"
-	SIZE_DESC = "Масштаб планшета."
-	CLOSE_MENU = "Закрыть меню"
-	CLOSE_MENU_DESC = "Закрыть меню."
-	COLOR = "Цвет фона"
-	COLOR_DESC = "Установить цвет фона."
-	LOCK = "Зафиксировать"
-	LOCK_DESC = "Зафиксировать планшет в его текущем позиции. Alt+ПКМ для меню или Alt+перетаскивание для перетаскивания когда планшет зафиксирован."
-elseif GetLocale() == "koKR" then
-	SCROLL_UP = "위로 스크롤"
-	SCROLL_DOWN = "아래로 스크롤"
-	HINT = "힌트"
-	DETACH = "분리"
-	DETACH_DESC = "테이블을 분리합니다."
-	SIZE = "크기"
-	SIZE_DESC = "테이블의 크기입니다."
-	CLOSE_MENU = "메뉴 닫기"
-	CLOSE_MENU_DESC = "메뉴를 닫습니다."
-	COLOR = "배경 색상"
-	COLOR_DESC = "배경 색상을 설정합니다."
-	LOCK = "고정"
-	LOCK_DESC = "현재 위치에 테이블을 고정합니다. 알트+우클릭 : 메뉴열기, 알트+드래그 : 고정된것을 드래그합니다."
-elseif GetLocale() == "zhCN" then
+if GetLocale() == "zhCN" then
 	SCROLL_UP = "向上翻转"
 	SCROLL_DOWN = "向上翻转"
 	HINT = "提示"
@@ -102,34 +46,6 @@ elseif GetLocale() == "zhCN" then
 	COLOR_DESC = "设置菜单背景颜色."
 	LOCK = "锁定"
 	LOCK_DESC = "锁定菜单当前位置. alt+右键 将显示选项, alt+拖动 可以移动已锁定的菜单."
-elseif GetLocale() == "zhTW" then
-	SCROLL_UP = "向上翻轉"
-	SCROLL_DOWN = "向上翻轉"
-	HINT = "提示"
-	DETACH = "分離"
-	DETACH_DESC = "分離選單為獨立提示。"
-	SIZE = "尺寸"
-	SIZE_DESC = "縮放選單顯示尺寸。"
-	CLOSE_MENU = "關閉選單"
-	CLOSE_MENU_DESC = "關閉選單"
-	COLOR = "背景顏色"
-	COLOR_DESC = "設置選單背景顏色。"
-	LOCK = "鎖定"
-	LOCK_DESC = "鎖定選單目前位置. Alt+右鍵 將顯示選項，Alt+拖動 可以移動已鎖定的選單。"
-elseif GetLocale() == "frFR" then
-	SCROLL_UP = "Parcourir vers le haut"
-	SCROLL_DOWN = "Parcourir vers le bas"
-	HINT = "Astuce"
-	DETACH = "D\195\169tacher"
-	DETACH_DESC = "Permet de d\195\169tacher le tableau de sa source."
-	SIZE = "Taille"
-	SIZE_DESC = "Permet de changer l'\195\169chelle du tableau."
-	CLOSE_MENU = "Fermer le menu"
-	CLOSE_MENU_DESC = "Ferme ce menu."
-	COLOR = "Couleur du fond"
-	COLOR_DESC = "Permet de d\195\169finir la couleur du fond."
-	LOCK = "Bloquer"
-	LOCK_DESC = "Bloque le tableau \195\160 sa position actuelle. Alt+clic-droit pour le menu ou Alt+glisser pour le d\195\169placer quand il est bloqu\195\169."
 end
 
 local start = GetTime()
@@ -204,6 +120,13 @@ local function del(t)
 end
 
 local new
+
+--悬停判定：GetMouseFocus 不稳定，改用 MouseIsOver（支持传入框架名或对象） -- by 武藤纯子酱 2026.10.12
+local function TabletIsMouseOver(p)
+	if type(p) == "string" then p = getglobal(p) end
+	if p and MouseIsOver(p) then return true end
+	return false
+end
 
 local function copy(parent)
 	local t
@@ -2380,7 +2303,7 @@ function Tablet:Open(fakeParent, parent)
 		detachedData.detached = false
 		frame:Detach()
 	end
-	if (not detachedData or not detachedData.detached) and GetMouseFocus() == fakeParent then
+	if (not detachedData or not detachedData.detached) and TabletIsMouseOver(fakeParent) then
 		self.tooltip.enteredFrame = true
 	end
 end
@@ -2458,7 +2381,7 @@ function Tablet:Register(parent, k1, v1, k2, v2, k3, v3, k4, v4, k5, v5, k6, v6,
 		end
 	end
 	self.onceRegistered[parent] = true
-	if GetMouseFocus() == parent then
+	if TabletIsMouseOver(parent) then
 		self:Open(parent)
 	end
 end

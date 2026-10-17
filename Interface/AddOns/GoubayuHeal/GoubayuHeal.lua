@@ -5514,7 +5514,7 @@ function GoubayuHeal.CopyTable(t)
 end
 
 GoubayuHeal.per_scheme_keys = {
-    "allow_first_rank_ignore_overheal", "paladin_holy_strike", "paladin_wisdom_judgment",
+    "allow_first_rank_ignore_overheal", "predict_enabled", "paladin_holy_strike", "paladin_wisdom_judgment",
     "paladin_melee_heal", "paladin_crusader_strike", "druid_keep_tree_of_life",
     "priest_force_greater_heal", "priest_alternate_spells", "priest_keep_inner_fire",
     "shaman_chain_nobounce_wave", "essence_of_elune_bonus", "priest_desperate_prayer_pct",
@@ -5536,13 +5536,14 @@ GoubayuHeal.per_scheme_keys = {
     "dispel_filters", "dispel_pets", "dispel_wyvern_sting", "dispel_mutating_injection",
     "dispel_ignore_abolish", "dispel_shadowform", "dispel_print", "dispel_backdrop",
     "dispel_show_header", "dispel_lock", "dispel_flip", "dispel_scale", "dispel_opacity",
-    "dispel_buttons", "dispel_blacklist", "dispel_filter_class", "dispel_filter_debuffs",
+    "dispel_buttons", "dispel_blacklist", "dispel_movement", "dispel_filter_class", "dispel_filter_debuffs",
     "CastTime_Debuff", "MTCastTime_Debuff",
 }
 
 function GoubayuHeal.SchemeGetDefaults()
     local d = {}
     d["allow_first_rank_ignore_overheal"] = 1
+    d["predict_enabled"] = 0
     d["paladin_holy_strike"] = 0
     d["paladin_wisdom_judgment"] = 0
     d["paladin_melee_heal"] = 0
@@ -5650,6 +5651,8 @@ function GoubayuHeal.SchemeGetDefaults()
             d["dispel_filter_class"][cf] = GoubayuHeal.Dispel_ClassFilterDefaults(cf)
         end
     end
+    d["dispel_movement"] = (GoubayuHeal.Dispel_MovementDefaults
+        and GoubayuHeal.Dispel_MovementDefaults()) or {}
 
     d["CastTime_Debuff"] = 0
     d["MTCastTime_Debuff"] = 0
@@ -6026,6 +6029,8 @@ function GoubayuHeal.SetupSettings()
     GoubayuHeal.Config["block_faster_healers"] = (GoubayuHeal.Config["block_faster_healers"] or 0)
     GoubayuHeal.Config["nampower_queue_timeout"] = (GoubayuHeal.Config["nampower_queue_timeout"]
         or 1.0)
+    -- 预读开关（默认关） by 武藤纯子酱 2026.10.13
+    GoubayuHeal.Config["predict_enabled"] = (GoubayuHeal.Config["predict_enabled"] or 0)
 end
 
 -- ============================================================
@@ -6044,7 +6049,10 @@ function GoubayuHeal.UpdateSettings()
 
     if (string.find(variable, "GoubayuHeal.Config") and this.GetChecked) then
         local checked = this:GetChecked()
-        local configKey = string.match(variable, 'GoubayuHeal%.Config%["([^"]+)"%]')
+        -- 仅处理"单层"键 Config["key"]；带二级键的（Config["a"]["b"]，如 dispel_filters["Magic"]）
+        -- 不能在这里把 a 整个覆盖成 0/1，否则同表的其它键被清空（表现为勾选互相覆盖、重开只剩一个）。
+        -- 二级键由下方按 args 逐层写入。 by 武藤纯子酱 2026.10.10
+        local configKey = string.match(variable, '^GoubayuHeal%.Config%["([^"]+)"%]$')
         if configKey then
             GoubayuHeal.Config[configKey] = (checked and 1) or 0
         end
@@ -7957,10 +7965,20 @@ function GoubayuHeal.ActionHeal(spell, rank, isUserAction)
                 end
             end
         end
+        local res
         if hasAoE then
-            return GoubayuHeal.HealMostWoundedUnified(useProfile)
+            res = GoubayuHeal.HealMostWoundedUnified(useProfile)
+        else
+            res = GoubayuHeal.HealMostWoundedTB(useProfile, rank)
         end
-        return GoubayuHeal.HealMostWoundedTB(useProfile, rank)
+        -- 正常治疗未触发（目标都在最高档阈值之上）→ 预读 by 武藤纯子酱 2026.10.13
+        if not res and GoubayuHeal.Config and GoubayuHeal.Config["predict_enabled"] == 1
+            and GoubayuHeal.Predict_TryPreHeal then
+            if GoubayuHeal.Predict_TryPreHeal(useProfile) then
+                return 1
+            end
+        end
+        return res
     end
 
     if (not spell or not rank or not GoubayuHeal.Spells[spell]
@@ -8786,6 +8804,13 @@ function GoubayuHeal.Command(msg)
 
     elseif (msg == "dispel") then
         GoubayuHeal.Dispel(true)
+
+    elseif (msg == "freedom" or msg == "自由") then
+        -- 自由之手独立通道：不管"驱散移动限制"是否勾选都驱散（复用驱散优先级）
+        -- by 武藤纯子酱 2026.10.13
+        if not (GoubayuHeal.Dispel_Freedom and GoubayuHeal.Dispel_Freedom()) then
+            GoubayuHeal.Print(GoubayuHeal.Msg.FreedomNone)
+        end
 
     elseif (msg == "dispelprio") then
         -- 打开驱散优先级窗口（驱散面板标题被隐藏时也能进入）

@@ -305,7 +305,9 @@ for library in LIBRARIES:
 for first, second in (LIBRARIES, LIBRARIES[::-1]):
     lua = world(first)
     lua.execute(second.read_text(encoding='utf-8-sig'))
-    lua.execute("assert(AceLibrary('HealComm-1.0')==h and not AceLibrary:IsNewVersion('HealComm-1.0',11732))")
+    # Both load orders select the maintained merged revision over embedded 11733.
+    lua.execute("assert(revisions['HealComm-1.0']==11734 and not AceLibrary:IsNewVersion('HealComm-1.0',11733))")
+    lua.execute("h=AceLibrary('HealComm-1.0');assert(h.getHeal and h.startGrpHeal and h.stopGrpHeal)")
     groups += 1
 
 print(f'PASS: {groups} behavior groups; full current libraries/core; English/Chinese; actual AceEvent scheduler')

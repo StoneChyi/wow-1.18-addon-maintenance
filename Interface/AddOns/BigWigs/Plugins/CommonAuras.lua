@@ -860,11 +860,19 @@ function BigWigsCommonAuras:OnEnable()
 		self:RegisterEvent("SpellStatus_SpellCastInstant")
 
 	elseif UnitClass("player") == BC["Mage"] then
+		-- SpellStatusLib 是可选外部依赖（toc OptionalDeps），未安装时 AceLibrary 直接抛错，
+		-- 会把整个 CommonAuras 模块的启用流程打断。用 pcall 防御：拿不到库就不注册相关事件
+		-- （仅法师传送门施法检测降级，不影响模块启用及其余功能）。
 		if not spellStatus then
-			spellStatus = AceLibrary("SpellStatus-1.0")
+			local ok, lib = pcall(AceLibrary, "SpellStatus-1.0")
+			if ok and lib then
+				spellStatus = lib
+			end
 		end
-		self:RegisterEvent("SpellStatus_SpellCastCastingFinish")
-		self:RegisterEvent("SpellStatus_SpellCastFailure")
+		if spellStatus then
+			self:RegisterEvent("SpellStatus_SpellCastCastingFinish")
+			self:RegisterEvent("SpellStatus_SpellCastFailure")
+		end
 	end
 
 	self:RegisterEvent("BigWigs_RecvSync")

@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
-  "updated_on": "2026-10-15",
+  "updated_on": "2026-10-18",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "documented_history": 52,
-    "unconfirmed": 50,
+    "documented_history": 54,
+    "unconfirmed": 48,
     "snapshot_difference": 1,
     "related_skin_only": 2
   },
@@ -45,7 +45,8 @@
       "purpose": "补记共享词库差异，并修复 HealComm 群体治疗预估清理。",
       "sources": [
         "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua.20260918125911.bak",
-        "PluginHistory/Research/插件更新实施-20261012.md"
+        "PluginHistory/Research/插件更新实施-20261012.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua",
@@ -54,10 +55,10 @@
       "tracked_files_at_reference": 93,
       "pending": "真实团队通讯与其他插件验收待补充；原词库差异归属仍待确认。",
       "last_package_update": {
-        "date": "2026-10-12",
-        "report": "PluginHistory/Research/插件更新实施-20261012.md",
-        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
-        "files_changed": 41,
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 33,
         "game_verified": false
       }
     },
@@ -178,13 +179,22 @@
     },
     {
       "addon": "AutoMarker",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/AutoMarker.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
+      "purpose": "更新小地图按钮尺寸、图标和圆环；原有标记逻辑保留。",
+      "sources": [
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+      ],
       "maintenance_files": [],
       "tracked_files_at_reference": 10,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "last_package_update": {
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "Automatonex",
@@ -292,7 +302,8 @@
         "Interface/AddOns/BigWigs/.workbuddy/memory/2026-10-03.md",
         "Interface/AddOns/BigWigs/.workbuddy/memory/MEMORY.md",
         "Interface/AddOns/BigWigs/Raids/BWL/Ezzel.lua.20260918125911.bak",
-        "PluginHistory/Research/插件更新实施-20261012.md"
+        "PluginHistory/Research/插件更新实施-20261012.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/BigWigs/Plugins/Comm.lua",
@@ -335,10 +346,10 @@
       "tracked_files_at_reference": 339,
       "pending": "首领模块数量较多，各场战斗的最终实测情况请按需补充。",
       "last_package_update": {
-        "date": "2026-10-12",
-        "report": "PluginHistory/Research/插件更新实施-20261012.md",
-        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
-        "files_changed": 24,
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 1,
         "game_verified": false
       }
     },
@@ -546,7 +557,8 @@
       "note": "PluginHistory/Plugins/Cat2.md",
       "purpose": "扩展流程编辑、配置调用和动作条入口。",
       "sources": [
-        "Interface/AddOns/Cat2/DEVELOPMENT-NOTES.md"
+        "Interface/AddOns/Cat2/DEVELOPMENT-NOTES.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Cat2/Cards/Logic/CallConfiguration.lua",
@@ -560,7 +572,14 @@
         "Interface/AddOns/Cat2/UI/ProfileMacroIcon.lua"
       ],
       "tracked_files_at_reference": 708,
-      "pending": "第三方动作条兼容及调用配置的完整游戏场景验收待补充。"
+      "pending": "第三方动作条兼容及调用配置的完整游戏场景验收待补充。",
+      "last_package_update": {
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 10,
+        "game_verified": false
+      }
     },
     {
       "addon": "CatPotion",
@@ -596,7 +615,8 @@
         "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/Settings.lua",
         "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/Window.lua",
         "PluginHistory/Evidence/addons_tmp/catpotion_data.py",
-        "Interface/AddOns/CatPotion/README.md"
+        "Interface/AddOns/CatPotion/README.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/CatPotion/Core.lua",
@@ -605,7 +625,14 @@
         "Interface/AddOns/CatPotion/Window.lua"
       ],
       "tracked_files_at_reference": 19,
-      "pending": "部分早期窗口功能缺完整修改前对照；实际新增物品的游戏点击结果待补充。"
+      "pending": "部分早期窗口功能缺完整修改前对照；实际新增物品的游戏点击结果待补充。",
+      "last_package_update": {
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 2,
+        "game_verified": false
+      }
     },
     {
       "addon": "Cooline",
@@ -942,16 +969,17 @@
       "note": "PluginHistory/Plugins/GoubayuHeal.md",
       "purpose": "更新瞬发人数限制、动作占用、迅捷治愈换目标及牧师驱病顺序。",
       "sources": [
-        "PluginHistory/Research/插件更新实施-20261012.md"
+        "PluginHistory/Research/插件更新实施-20261012.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [],
       "tracked_files_at_reference": 12,
       "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
-        "date": "2026-10-12",
-        "report": "PluginHistory/Research/插件更新实施-20261012.md",
-        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
-        "files_changed": 3,
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 7,
         "game_verified": false
       }
     },
@@ -1014,7 +1042,8 @@
         "Tools/tests/test_meeting_raid_chat.py",
         "PluginHistory/Research/Meeting界面与活动精简-20261013.md",
         "Tools/tests/test_meeting_ui.py",
-        "PluginHistory/Research/Meeting长期招募误报修复-20261013.md"
+        "PluginHistory/Research/Meeting长期招募误报修复-20261013.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Meeting/RaidChat.lua",
@@ -1047,7 +1076,14 @@
           "checks": 268,
           "game_verified": false
         }
-      ]
+      ],
+      "last_package_update": {
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "ModernMapMarkers",
@@ -1364,7 +1400,8 @@
       "sources": [
         "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-03.md",
         "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-04.md",
-        "PluginHistory/Research/插件更新实施-20261012.md"
+        "PluginHistory/Research/插件更新实施-20261012.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/ShaguDPS/core.lua",
@@ -1376,10 +1413,10 @@
       "tracked_files_at_reference": 16,
       "pending": "服务器响应、多人战斗及无 SuperWoW 时的兼容结果待补充。",
       "last_package_update": {
-        "date": "2026-10-12",
-        "report": "PluginHistory/Research/插件更新实施-20261012.md",
-        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
-        "files_changed": 5,
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 7,
         "game_verified": false
       }
     },
@@ -1492,13 +1529,22 @@
     },
     {
       "addon": "SuperCleveRoidMacros",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/SuperCleveRoidMacros.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
+      "purpose": "合入宏动作分帧刷新、事件合并、批次重置和宏序号返回保护；其余宏功能原样保留。",
+      "sources": [
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+      ],
       "maintenance_files": [],
       "tracked_files_at_reference": 44,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "last_package_update": {
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 2,
+        "game_verified": false
+      }
     },
     {
       "addon": "SuperMacro",
@@ -1671,7 +1717,8 @@
       "sources": [
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-08-19.md",
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-08-28.md",
-        "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-09-09.md"
+        "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-09-09.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/WushuangLoot/Bindings.xml",
@@ -1680,7 +1727,14 @@
         "Interface/AddOns/WushuangLoot/WushuangLoot.toc"
       ],
       "tracked_files_at_reference": 8,
-      "pending": "请优先补充重启后的探针结果、当前实际加载文件、小地图/中文命令是否恢复以及现有 DLL 版本。"
+      "pending": "请优先补充重启后的探针结果、当前实际加载文件、小地图/中文命令是否恢复以及现有 DLL 版本。",
+      "last_package_update": {
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "XyTracker",
@@ -1688,15 +1742,16 @@
       "note": "PluginHistory/Plugins/XyTracker.md",
       "purpose": "更新许愿权移交菜单、确认、权限判断及团队同步。",
       "sources": [
-        "PluginHistory/Research/插件更新实施-20261012.md"
+        "PluginHistory/Research/插件更新实施-20261012.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [],
       "tracked_files_at_reference": 38,
       "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
-        "date": "2026-10-12",
-        "report": "PluginHistory/Research/插件更新实施-20261012.md",
-        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
         "files_changed": 2,
         "game_verified": false
       }
@@ -1752,13 +1807,21 @@
       "sources": [
         "Interface/AddOns/diminfo/.workbuddy/memory/2026-09-15.md",
         "PluginHistory/Research/维护聊天摘录-20261009.json",
-        "PluginHistory/Evidence/CodexBackups/diminfo-click-through-20261008-162857/panel.lua"
+        "PluginHistory/Evidence/CodexBackups/diminfo-click-through-20261008-162857/panel.lua",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/diminfo/panel.lua"
       ],
       "tracked_files_at_reference": 17,
-      "pending": "请补充实际游戏中的渐隐手感、地图右键和子模块点击验收结果。"
+      "pending": "请补充实际游戏中的渐隐手感、地图右键和子模块点击验收结果。",
+      "last_package_update": {
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "hyx",
@@ -1899,7 +1962,8 @@
         "Interface/AddOns/pfUI/init/modules.xml.20260924_195026.buyemall.bak",
         "Interface/AddOns/pfUI/modules/eqcompare.20261004_093912.selfcompare.bak",
         "Interface/AddOns/pfUI/modules/tooltip.20261002_212528.alwaysperc.bak",
-        "PluginHistory/pfUI-tooltip-fix-20261009.md"
+        "PluginHistory/pfUI-tooltip-fix-20261009.md",
+        "PluginHistory/Research/10月16日包合并实施-20261018.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI/api/api.lua",
@@ -1928,7 +1992,14 @@
         "Interface/AddOns/pfUI/tests/monitor-tooltip-owner.lua"
       ],
       "tracked_files_at_reference": 277,
-      "pending": "修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。"
+      "pending": "修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。",
+      "last_package_update": {
+        "date": "2026-10-18",
+        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "files_changed": 4,
+        "game_verified": false
+      }
     },
     {
       "addon": "pfUI-CustomMedia",
@@ -2063,6 +2134,35 @@
       "before_commit": "732e20162f431a220f252cc02c87e93c83c976ff",
       "before_tag": "before/s-itemtip-merge-20261012",
       "addons": [
+        "S_ItemTip"
+      ],
+      "deployed": true,
+      "game_verified": false
+    },
+    {
+      "date": "2026-10-18",
+      "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
+      "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+      "before_commit": "72270a286efa3091eb47072d34337ae4a94b528b",
+      "before_tag": "before/package-20261016-20261018",
+      "addons": [
+        "!Libs",
+        "AutoMarker",
+        "BigWigs",
+        "Cat2",
+        "CatPotion",
+        "diminfo",
+        "GoubayuHeal",
+        "Meeting",
+        "pfUI",
+        "ShaguDPS",
+        "SuperCleveRoidMacros",
+        "WushuangLoot",
+        "XyTracker"
+      ],
+      "excluded": [
+        "BetterCharacterStats",
+        "StatCompare",
         "S_ItemTip"
       ],
       "deployed": true,

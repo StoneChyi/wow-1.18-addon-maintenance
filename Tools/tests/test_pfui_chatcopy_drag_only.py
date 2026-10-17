@@ -32,10 +32,20 @@ function methods:GetBottom() return self:GetTop() - self:GetHeight() end
 function methods:GetEffectiveScale() return 1 end
 function methods:GetFrameLevel() return self.level or 1 end
 function methods:SetFrameLevel(v) self.level = v end
-function methods:SetFontObject(v) self.font, self.size = 'test-font', 14 end
-function methods:SetFont(font, size, flags) self.font, self.size, self.flags = font, size, flags end
+function methods:SetFontObject(v)
+  if type(v) == 'string' then v = _G[v] end
+  assert(type(v) == 'table' and v.font, 'invalid font object')
+  self.font, self.size = v.font, v.size
+end
+function methods:SetFont(font, size, flags)
+  if rejectConfiguredFonts or type(font) ~= 'string' or type(size) ~= 'number' or size <= 0 then return nil end
+  self.font, self.size, self.flags = font, size, flags; return 1
+end
 function methods:GetFont() return self.font or 'test-font', self.size or 14, self.flags end
-function methods:SetText(v) self.text = v end
+function methods:SetText(v)
+  assert(self.kind ~= 'FontString' or self.font, 'SetText(): Font not set')
+  self.text = v
+end
 function methods:GetText() return self.text or '' end
 function methods:GetStringWidth()
   local text = self:GetText():gsub('|c%x%x%x%x%x%x%x%x', ''):gsub('|r', ''):gsub('||', '|')
@@ -82,12 +92,19 @@ function CreateFrame(kind, name, parent)
   if name then _G[name] = f end
   return f
 end
-function methods:CreateFontString() return CreateFrame('FontString', nil, self) end
+function methods:CreateFontString(name, layer, template)
+  local f = CreateFrame('FontString', name, self)
+  if template then f:SetFontObject(template) end
+  return f
+end
 function methods:CreateTexture() return CreateFrame('Texture', nil, self) end
 CreateScrollFrame = function(name, parent) return CreateFrame('ScrollFrame', name, parent) end
 CreateBackdrop = function(frame) frame.backdrop = CreateFrame('Backdrop', nil, frame) end
 UIParent = CreateFrame('Frame', 'UIParent')
-ChatFontNormal = {}
+ChatFontNormal = {font='test-font', size=14}
+GameFontNormal = ChatFontNormal;GameFontNormalSmall = ChatFontNormal
+assert(not pcall(function() CreateFrame('FontString'):SetText('invalid') end))
+rejectConfiguredFonts=true -- exercise unavailable configured-font paths
 ChatFrame1 = CreateFrame('ChatFrame', 'ChatFrame1', UIParent)
 ChatFrame1.id = 1
 ChatFrame2 = CreateFrame('ChatFrame', 'ChatFrame2', UIParent)
@@ -128,6 +145,12 @@ SlashCmdList.PFCHATCOPY('show')
 local w = pfChatCopyWindow
 assert(w and w.lineCount == 3, tostring(w and w.lineCount))
 assert(w.mirror == true, 'visible mirror must stay active')
+local realRange = w.scroll.GetVerticalScrollRange
+w.scroll.GetVerticalScrollRange = function() return 999 end
+SlashCmdList.PFCHATCOPY('show')
+assert(w.scroll:GetVerticalScroll() == 0, 'opening must not use a stale scroll range')
+w.scroll.GetVerticalScrollRange = realRange
+
 assert(table.concat(w.characters) == '团队指挥YY：123 456，进语音集合\n这是一条中文消息：只复制中间这部分\n'..string.rep('长消息 abc 123 ', 20))
 assert(#w.rows > 3, 'long message must wrap')
 for _, row in ipairs(w.rows) do assert(row.x[#row.x] <= 566) end

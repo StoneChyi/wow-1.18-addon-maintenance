@@ -234,14 +234,16 @@ searchInput:SetScript("OnTextChanged", function()
     end
 end)
 -- 修改输入法开始合成事件
-searchInput:SetScript("OnChar", function(char)
+-- 1.12 脚本不能依赖形参（此客户端会把框体作为第一参数传入，形参收到的是 table），输入的字符在全局 arg1 中
+searchInput:SetScript("OnChar", function()
+    local char = arg1
     -- 检测到中文字符输入开始
-    if char and string.byte(char) > 127 then
+    if type(char) == "string" and string.byte(char) > 127 then
         Meeting.searchInfo.isComposing = true
     else
         -- 英文字符，立即处理
         Meeting.searchInfo.isComposing = false
-        
+
         -- 取消之前的延迟搜索
         if Meeting.searchInfo.timer then
             Meeting.searchInfo.timer:Cancel()

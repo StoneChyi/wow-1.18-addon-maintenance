@@ -708,7 +708,12 @@ function XyTracker_ResetMinimapButtonPosition()
             highlightTex:SetWidth(26)
             highlightTex:SetHeight(26)
         end
-        
+        local borderTex = getglobal("XyTrackerMinimapButtonBorder")
+        if borderTex then
+            borderTex:SetWidth(43)
+            borderTex:SetHeight(43)
+        end
+
         -- 更新数据库中的位置信息
         if XyTrackerOptions then
             XyTrackerOptions.minimapPos = {x = -5, y = -5}
@@ -2309,6 +2314,14 @@ function XyTracker_CreateMinimapButton()
     highlightTex:SetWidth(26)
     highlightTex:SetHeight(26)
     highlightTex:SetPoint("CENTER", 0, 0)
+
+    -- 标准小地图圆环边框（53px 画布锚 TOPLEFT 同款；按 26 按钮等比 43，
+    -- 右键缩放时在四个尺寸变更点同步为 60）
+    local borderTex = button:CreateTexture("XyTrackerMinimapButtonBorder", "OVERLAY")
+    borderTex:SetTexture("Interface/Minimap/MiniMap-TrackingBorder")
+    borderTex:SetWidth(43)
+    borderTex:SetHeight(43)
+    borderTex:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
     
     -- 设置鼠标悬停提示
     button:SetScript("OnEnter", function()
@@ -2473,6 +2486,11 @@ function XyTracker_CreateMinimapButton()
                         highlightTex:SetWidth(36)
                         highlightTex:SetHeight(36)
                     end
+                    local borderTex = getglobal("XyTrackerMinimapButtonBorder")
+                    if borderTex then
+                        borderTex:SetWidth(60)
+                        borderTex:SetHeight(60)
+                    end
                     -- 保存图标大小状态
                     XyTrackerOptions.iconSize = 36
                 else
@@ -2488,6 +2506,11 @@ function XyTracker_CreateMinimapButton()
                     if highlightTex then
                         highlightTex:SetWidth(26)
                         highlightTex:SetHeight(26)
+                    end
+                    local borderTex = getglobal("XyTrackerMinimapButtonBorder")
+                    if borderTex then
+                        borderTex:SetWidth(43)
+                        borderTex:SetHeight(43)
                     end
                     -- 保存图标大小状态
                     XyTrackerOptions.iconSize = 26
@@ -2517,6 +2540,11 @@ function XyTracker_CreateMinimapButton()
                     highlightTex:SetWidth(26)
                     highlightTex:SetHeight(26)
                 end
+                local borderTex = getglobal("XyTrackerMinimapButtonBorder")
+                if borderTex then
+                    borderTex:SetWidth(43)
+                    borderTex:SetHeight(43)
+                end
             end
         end
     end)
@@ -2541,6 +2569,11 @@ function XyTracker_CreateMinimapButton()
         if highlightTex then
             highlightTex:SetWidth(size)
             highlightTex:SetHeight(size)
+        end
+        local borderTex = getglobal("XyTrackerMinimapButtonBorder")
+        if borderTex then
+            borderTex:SetWidth(math.floor(size * 53 / 32 + 0.5))
+            borderTex:SetHeight(math.floor(size * 53 / 32 + 0.5))
         end
     end
     -- 根据最后一次拖动类型加载对应的位置

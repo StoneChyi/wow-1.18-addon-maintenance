@@ -13012,3 +13012,25 @@ end
 
 -- 克隆并赋值给新table
 LibMobHealth_Cache = deepcopy(lib.Health_Cache)
+
+--单位血量优先封装：Nampower 真实值优先，其次按「本地化名:等级」查缓存表 -- by 武藤纯子酱 2026.10.12
+function lib.GetUnitHealth(unit)
+	if GetUnitRealHealth then
+		local v = GetUnitRealHealth(unit)
+		if v and v > 0 then return v end
+	end
+	local name = UnitName(unit)
+	if name then return lib.Health_Cache[name .. ":" .. (UnitLevel(unit) or 0)] end
+	return nil
+end
+
+--单位最大血量优先封装：Nampower 真实值优先，其次查缓存表 -- by 武藤纯子酱 2026.10.12
+function lib.GetUnitMaxHealth(unit)
+	if GetUnitRealHealthMax then
+		local v = GetUnitRealHealthMax(unit)
+		if v and v > 0 then return v end
+	end
+	local name = UnitName(unit)
+	if name then return lib.Health_Cache[name .. ":" .. (UnitLevel(unit) or 0)] end
+	return nil
+end

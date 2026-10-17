@@ -944,11 +944,14 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
       win.edit:SetText("")
     end
 
-    -- 滚到最底（最新的一条）
+    -- 回到最顶（偏移 0，显示最旧的一行；想看最新的往下滑）。
+    -- ⛔ 别改回"滚到最底"（SetVerticalScroll(GetVerticalScrollRange())）：
+    --   本客户端布局未完成时 range 是旧值，等真正算完布局、range 变小时
+    --   这个偏移不会自动回收 ⇒ 整个内容被平移出视口 ⇒ 打开窗口一片空白，
+    --   要手动把滚动条拖回顶部才看得见（2026-10-12 用户实证）。
+    --   偏移 0 不依赖任何 range 测量，永远落在可视区内。
     pcall(function()
-      win.scroll:UpdateScrollChildRect()
-      win.scroll:UpdateScrollState()
-      win.scroll:SetVerticalScroll(win.scroll:GetVerticalScrollRange())
+      win.scroll:SetVerticalScroll(0)
       win.scroll:UpdateScrollState()
     end)
 

@@ -22,3 +22,4 @@ parser-vanilla.lua
 window.lua
 pfui_skin.lua
 settings.lua
+minimap.lua

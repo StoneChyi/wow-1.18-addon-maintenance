@@ -1,0 +1,1292 @@
+{
+  "date": "2026-10-18",
+  "deployed": true,
+  "before_commit": "72270a286efa3091eb47072d34337ae4a94b528b",
+  "before_tag": "before/package-20261016-20261018",
+  "package_root": "D:\\下载\\Interface2026年10月16日\\Interface\\AddOns",
+  "selected_addons": [
+    "!Libs",
+    "AutoMarker",
+    "BigWigs",
+    "Cat2",
+    "CatPotion",
+    "diminfo",
+    "GoubayuHeal",
+    "Meeting",
+    "pfUI",
+    "ShaguDPS",
+    "SuperCleveRoidMacros",
+    "WushuangLoot",
+    "XyTracker"
+  ],
+  "excluded_addons": [
+    "BetterCharacterStats",
+    "StatCompare",
+    "S_ItemTip"
+  ],
+  "changed_files": {
+    "!Libs": [
+      {
+        "path": "!Libs/!Libs.toc",
+        "before": {
+          "bytes": 3799,
+          "sha256": "b0274b25621e7680f9477b2e7ba3bacdc65f51f113074fefe22d261ed1734bd4"
+        },
+        "after": {
+          "bytes": 3750,
+          "sha256": "4b6d77d1a7900b63611821e3ce0adbd67f3540ac5e5536c2ef005006cf4d5f38"
+        }
+      },
+      {
+        "path": "!Libs/!MyLib/api/luaAPI.lua",
+        "before": {
+          "bytes": 11197,
+          "sha256": "205ba3097c217222d28af4b42871fd10ea7185aa9f6cb3ea8c0f0d20de060fa2"
+        },
+        "after": {
+          "bytes": 12133,
+          "sha256": "f1e2ac7b439a4eb12c0de3a552853a36ee0cdfc3b137594f6c9015f3fbd1ac21"
+        }
+      },
+      {
+        "path": "!Libs/!MyLib/api/wowAPI.lua",
+        "before": {
+          "bytes": 17597,
+          "sha256": "8782c2b89fbab34589b3dac91eeff5d175b679d91012b9864224dee6082ba128"
+        },
+        "after": {
+          "bytes": 20538,
+          "sha256": "b142a0d66898c33598dfc40c2b588d957cf8f26084ee4fc2ca24f7d6a28eec67"
+        }
+      },
+      {
+        "path": "!Libs/!MyLib/libs/LibMobHealthCache-1.0.lua",
+        "before": {
+          "bytes": 435524,
+          "sha256": "66af3517d148f4de65426c29c244427bf80576e47ddaa03f9ab18eddd8fa3513"
+        },
+        "after": {
+          "bytes": 436331,
+          "sha256": "28d00859b524191272e9aeaf3ebdb6e19531226dc839f819d92a3b3a14262e38"
+        }
+      },
+      {
+        "path": "!Libs/Abacus-2.0/Abacus-2.0.lua",
+        "before": {
+          "bytes": 18184,
+          "sha256": "3f50df96acee8e29d15a1cfd2d3046a6605d12b7ac5b5566e302614c78a75d5c"
+        },
+        "after": {
+          "bytes": 18107,
+          "sha256": "57ccdcf9f15e8ed7664bee86f86b5a8913fe0add07bbdad256abc0e5c76ee5df"
+        }
+      },
+      {
+        "path": "!Libs/Ace2/AceAddon-2.0/AceAddon-2.0.lua",
+        "before": {
+          "bytes": 34794,
+          "sha256": "d32237d984d25e448de527cc9b15d143ffb4ccdeeb1a13b6e697114d9c216ccc"
+        },
+        "after": {
+          "bytes": 23988,
+          "sha256": "9531a6cc6560d9572f27c5058dc43c1066d3bab1f1c529f1b39e1748b6bf4b4a"
+        }
+      },
+      {
+        "path": "!Libs/Ace2/AceConsole-2.0/AceConsole-2.0.lua",
+        "before": {
+          "bytes": 69036,
+          "sha256": "b7b1bbed56e2d7825d7c45489c7ca0a6ef408820252ef52fbd9bc823b95cd9f3"
+        },
+        "after": {
+          "bytes": 63353,
+          "sha256": "22adcbdbc9924dd62e5bc6f00f54614d2a097738165d82b321fec162839a5d1e"
+        }
+      },
+      {
+        "path": "!Libs/Ace2/AceDB-2.0/AceDB-2.0.lua",
+        "before": {
+          "bytes": 45377,
+          "sha256": "d6ec38c6b41ec61498494528136c7b36c33b549fc554c15bf8d37ae26c60b37e"
+        },
+        "after": {
+          "bytes": 40159,
+          "sha256": "a4937e980e2e51cbf634a06a1ee8e90609bfe34a147a662e67be960bf65704b9"
+        }
+      },
+      {
+        "path": "!Libs/Ace2/AceDebug-2.0/AceDebug-2.0.lua",
+        "before": {
+          "bytes": 8222,
+          "sha256": "fb75e53faa08782ce0c24f6e5c039d0cdc7058b9f27f33982412a9e4f5778674"
+        },
+        "after": {
+          "bytes": 7388,
+          "sha256": "5aa6bed26bb6263c6845ce3808b0ad2562865463e148db2d6be496846f3a640d"
+        }
+      },
+      {
+        "path": "!Libs/Ace2/AceLocale-2.0/AceLocale-2.0.lua",
+        "before": {
+          "bytes": 16071,
+          "sha256": "6418e8016d2877e6730bd31d23185f405068526318ed8eb83320218a2fd1fc45"
+        },
+        "after": {
+          "bytes": 16031,
+          "sha256": "0adbe569263e276cc198b5bbe316dbca44d2c8f6e1fabb3808d3b8937d7c8c55"
+        }
+      },
+      {
+        "path": "!Libs/Ace2/AceLocale-2.2/AceLocale-2.2.lua",
+        "before": {
+          "bytes": 16490,
+          "sha256": "77c651c93ac1c0ca40c59b4afd51a1366613f1676c2e3e3cfd4ab3409541daaf"
+        },
+        "after": {
+          "bytes": 16442,
+          "sha256": "096d3407d1e8b63a465c7c8fd0a9a2ca3e5d5b242773870be8af8ffe49967381"
+        }
+      },
+      {
+        "path": "!Libs/Ace3/AceLocale-3.0/AceLocale-3.0.lua",
+        "before": {
+          "bytes": 5641,
+          "sha256": "d458bbbcbcdd55930c750f0784a4bdcd838b0ef792710c60507e367885f60f48"
+        },
+        "after": {
+          "bytes": 5494,
+          "sha256": "3d047b706a24baa79c0452fdc5aaf0d3143af7b2765a335fb661ddcd8a9d352c"
+        }
+      },
+      {
+        "path": "!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua",
+        "before": {
+          "bytes": 112736,
+          "sha256": "df59015245cf18b7864aad8c67d0121207e9953833312002e172d184e492933c"
+        },
+        "after": {
+          "bytes": 42088,
+          "sha256": "bf9c70d685a869877a867ceffcb5e529d564c6d1ecb005141f2a58d48c93d822"
+        }
+      },
+      {
+        "path": "!Libs/Babble/Babble-Class-2.2/Babble-Class-2.2.lua",
+        "before": {
+          "bytes": 4902,
+          "sha256": "256b39eb9326231726ce072820b29d87d50260d3c2dc78a7f51d80c3a52f8da0"
+        },
+        "after": {
+          "bytes": 2920,
+          "sha256": "c073cb35d8e97d78d7206a571b1e003127d2d9c0c22ea456807c73d187ebffbe"
+        }
+      },
+      {
+        "path": "!Libs/Babble/Babble-Faction-2.2/Babble-Faction-2.2.lua",
+        "before": {
+          "bytes": 8241,
+          "sha256": "c15e5af2b6f2733321a8c3236515a85c356514c71e2ec66fd01cce7f99a1bff7"
+        },
+        "after": {
+          "bytes": 4114,
+          "sha256": "8892df59676ee5d46b21323f41683e3df516f5b39df15f6b9c5e31dddc4ae5c8"
+        }
+      },
+      {
+        "path": "!Libs/Babble/Babble-ItemSet-2.2/Babble-ItemSet-2.2.lua",
+        "before": {
+          "bytes": 39895,
+          "sha256": "d48b52ecb838ff638649897b8cff2ea26ad600af592f8c40b3aa47e0a9395b26"
+        },
+        "after": {
+          "bytes": 17257,
+          "sha256": "aaa890a4d36673c4205a27929b756a6a12e312545b3d0d52ae712694332dbf31"
+        }
+      },
+      {
+        "path": "!Libs/Babble/Babble-Spell-2.2/Babble-Spell-2.2.lua",
+        "before": {
+          "bytes": 545829,
+          "sha256": "5188c05f2e1ad8967cedbc5f03ad5ef1a68029094e8bf4924d314d5146017bde"
+        },
+        "after": {
+          "bytes": 177620,
+          "sha256": "d70772f592d3e1fdc6613814338963f069ba81a10a5d5c3bd9426181a3cde360"
+        }
+      },
+      {
+        "path": "!Libs/Babble/Babble-Zone-2.2/Babble-Zone-2.2.lua",
+        "before": {
+          "bytes": 157473,
+          "sha256": "799b5654346e3b688948c2ae4478eb8203771eb66aa765b541a3e582947f3ecd"
+        },
+        "after": {
+          "bytes": 119094,
+          "sha256": "e6db019ae9df906ce70a10786b6cd6360b77164ba55a050aabeb341570d9616a"
+        }
+      },
+      {
+        "path": "!Libs/Babble/Babble-Zone-2.3/Babble-Zone-2.3.lua",
+        "before": {
+          "bytes": 149362,
+          "sha256": "e8d3498ade632a43df3974351e256c4426e6062fd4eb973549f76b1d13675f85"
+        },
+        "after": {
+          "bytes": 110971,
+          "sha256": "0d6510379ba1ba79980b2ac6fac7451825af3feb8ca178e46d71b0bf31db3ed1"
+        }
+      },
+      {
+        "path": "!Libs/CastLib-1.0/CastLib-1.0.lua",
+        "before": {
+          "bytes": 11745,
+          "sha256": "cddd4a504243da59646410afada1d7ebf1fe1f49c93ee9938a89aef0b0fcd0ed"
+        },
+        "after": {
+          "bytes": 11695,
+          "sha256": "4edee58366818d49291a10dced75300c93e0b445080f270ffd3dfd63c9cb8aa3"
+        }
+      },
+      {
+        "path": "!Libs/Dewdrop-2.0/Dewdrop-2.0.lua",
+        "before": {
+          "bytes": 88536,
+          "sha256": "7496ed3e339a5d5d171d7986d2a12ffa5223800594056d127a942c201d2ac105"
+        },
+        "after": {
+          "bytes": 88454,
+          "sha256": "8f8df29792ad7b8e748676e19c29be62436c75cb0be7f080aecfcfd0834acc4f"
+        }
+      },
+      {
+        "path": "!Libs/FiveSecLib-1.0/FiveSecLib-1.0.lua",
+        "before": {
+          "bytes": 5164,
+          "sha256": "e510a4cdec177eecc09e55667dd6aedf285a3d5fa967c176a7a386d1a510e7c8"
+        },
+        "after": {
+          "bytes": 5309,
+          "sha256": "b84490d12a1327e46dac5a76eedd03f43ee2120b1475587585dfe8d527ed2fe0"
+        }
+      },
+      {
+        "path": "!Libs/FuBarPlugin-2.0/FuBarPlugin-2.0.lua",
+        "before": {
+          "bytes": 48524,
+          "sha256": "2a5da387f24c6d4e40db0fb8d93c533efe828407b9109235b1bcfa5e94fe3535"
+        },
+        "after": {
+          "bytes": 42024,
+          "sha256": "88b22908dcbf27512577362faa401d3df526fb866aeacafabc2dd5b63874cdac"
+        }
+      },
+      {
+        "path": "!Libs/HealComm-1.0/HealComm-1.0.lua",
+        "before": {
+          "bytes": 67620,
+          "sha256": "0b5d85a5a6c07d4cdc6d8d54c206996ac797055a328b1b285921b7955cdd78ca"
+        },
+        "after": {
+          "bytes": 57213,
+          "sha256": "9e9856e79a8200e509a165197b3f599c5c711a633940cc68222eaa236f04d94d"
+        }
+      },
+      {
+        "path": "!Libs/Hewdrop-2.0/Hewdrop-2.0.lua",
+        "before": {
+          "bytes": 88439,
+          "sha256": "26ba402dc4c5d16ff0da08e109a4ac660aa37329bb0ca178266a4a3ba75c3469"
+        },
+        "after": {
+          "bytes": 88357,
+          "sha256": "12b2d80443000097872e66c92a5f3b3ecf11be2a252b57652a24837dad607a35"
+        }
+      },
+      {
+        "path": "!Libs/LibSharedMedia-3.0/LibSharedMedia-3.0.lua",
+        "before": {
+          "bytes": 7244,
+          "sha256": "2f5556c976c16484105f12745e074943819f1efda3ce822f75748673916de5dc"
+        },
+        "after": {
+          "bytes": 6033,
+          "sha256": "f81f2f456c30449931354b75bc466a6c4e77e490f600c41cc3907ca2250c9436"
+        }
+      },
+      {
+        "path": "!Libs/ParserLib/FixGlobalString.lua",
+        "before": {
+          "bytes": 1213,
+          "sha256": "fd3b3edece2d5aba4fcaf156b9d6bfdb5e31302ccb8a802fc7712bf3bb0755f2"
+        },
+        "after": {
+          "bytes": 141,
+          "sha256": "337bebf33d2aa5256102fe5da9200eca9b23b7d3ba337e9704dbd2f1a5709268"
+        }
+      },
+      {
+        "path": "!Libs/ParserLib/ParserLib.lua",
+        "before": {
+          "bytes": 91797,
+          "sha256": "c4fe2245efdde34473f79d1d1e39aff5bf05243e3ab5114c2705463ae217b02a"
+        },
+        "after": {
+          "bytes": 91257,
+          "sha256": "9405669abd11ccfbe8c36d85b2ec079bd2a02f19d479e1cd9fe049af1e6cbd93"
+        }
+      },
+      {
+        "path": "!Libs/SE/SpecialEvents-Aura-2.0/SpecialEvents-Aura-2.0.lua",
+        "before": {
+          "bytes": 14451,
+          "sha256": "a5d78027972df17de9995d3eff4c44da826fdbd56ed8735126ef2d9b165ad909"
+        },
+        "after": {
+          "bytes": 18318,
+          "sha256": "bc6eb5ba936a68d05ae2a0ad7c02260bd830ee7c604fac818ed1affe105ca986"
+        }
+      },
+      {
+        "path": "!Libs/SpellStatusV2-2.0/SpellStatusV2-2.0.lua",
+        "before": {
+          "bytes": 29378,
+          "sha256": "17b51ebfb5fd989125fb4d6c2746139f6bbaba580448d6964b85d9045c330a6c"
+        },
+        "after": {
+          "bytes": 29663,
+          "sha256": "21a3ba1f57979ab58a76550bb68b2408532cfcda7e8b2a58480224c5bd8e3b6f"
+        }
+      },
+      {
+        "path": "!Libs/Tablet-2.0/Tablet-2.0.lua",
+        "before": {
+          "bytes": 90124,
+          "sha256": "e46651131e7e1b297024b58ec385e564bf11920f8c1a47d0152ec950b7f323fe"
+        },
+        "after": {
+          "bytes": 86655,
+          "sha256": "3106ba5aeb403d6d08346f036375ec08518dcee7cdb103b235c80e38e30e29b6"
+        }
+      },
+      {
+        "path": "!Libs/Tourist-2.0/Tourist-2.0.lua",
+        "before": {
+          "bytes": 56326,
+          "sha256": "bbb716fa7f38c413a76500957ebf3a453f019db55e555d2d5f0845ee4e190930"
+        },
+        "after": {
+          "bytes": 56251,
+          "sha256": "5aabfe8019271cea545c457c9d673845751870d6e7e76734e7dc99600b21f3fc"
+        }
+      },
+      {
+        "path": "!Libs/Waterfall-1.0/Waterfall-1.0.lua",
+        "before": {
+          "bytes": 140228,
+          "sha256": "6e956416dab83e6db6475201566327bb5468fee5878957b1dc95fafaa50e4dda"
+        },
+        "after": {
+          "bytes": 139852,
+          "sha256": "b966c874dc93a657922ffde91b3646eedbd160325badf79a0f2d6d560182e777"
+        }
+      }
+    ],
+    "AutoMarker": [
+      {
+        "path": "AutoMarker/AutoMarkerUI.lua",
+        "before": {
+          "bytes": 5908,
+          "sha256": "00f0f1fd242fd4a184c7564bda072d2d0aa6d29eb6c495c8f2257d3e89b9753c"
+        },
+        "after": {
+          "bytes": 6583,
+          "sha256": "7aa1d011fcdae7d610f560ff56b61939ee854bb2be316bca9cd3787b0c588811"
+        }
+      }
+    ],
+    "BigWigs": [
+      {
+        "path": "BigWigs/Plugins/CommonAuras.lua",
+        "before": {
+          "bytes": 66939,
+          "sha256": "d343402043ce8369a3e3e8eba4e63f07086401f46085b9e3616a85a3f02167d9"
+        },
+        "after": {
+          "bytes": 67349,
+          "sha256": "5c7870b67930ba47cea7fdc7d57aa3af7cdf2ce039e07952b7a3dbc4f6ca0455"
+        }
+      }
+    ],
+    "Cat2": [
+      {
+        "path": "Cat2/Cards/Custom/HunterCannon.lua",
+        "before": null,
+        "after": {
+          "bytes": 3367,
+          "sha256": "7b2ff163c9e493c9ac060b67743fe1a96e86d5b36a51f9264a1ff8d8c8f4d0f5"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Custom/HunterOrbitalMissile.lua",
+        "before": null,
+        "after": {
+          "bytes": 5649,
+          "sha256": "5b064ac1c5d035efa58b92d1b0b920a6ae2ed05e175771a0ec6a2885fab293d9"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/FerociousBite5_50.lua",
+        "before": {
+          "bytes": 2188,
+          "sha256": "44d06f86a328f88f6976d60a7f92f2ff9f882cd634db11e908fb0f142e80dbe0"
+        },
+        "after": {
+          "bytes": 2458,
+          "sha256": "181dc66490e4b8050a4c7b74ba48d5d8b26b8d69394f9f2d2aa28143cb3ba053"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/FerociousBiteEmergencyRefill.lua",
+        "before": {
+          "bytes": 1815,
+          "sha256": "aca997044aadd0172faeab23c551853c54968889a15976007603077c02b8e148"
+        },
+        "after": {
+          "bytes": 1740,
+          "sha256": "3c91def7fab66a46b0e891e9a01693b6a3ebcbe37ce3295011f50de6dd2439c0"
+        }
+      },
+      {
+        "path": "Cat2/Cat2.lua",
+        "before": {
+          "bytes": 3678,
+          "sha256": "559973e5362c4c109bda1e558461ddd984f5e3bec237f69b51090e5753bbddec"
+        },
+        "after": {
+          "bytes": 3678,
+          "sha256": "cee6b92ff29f7b38ba3d8cd0dc12457ae1f5f804a01022c5a00c7d45fb223aee"
+        }
+      },
+      {
+        "path": "Cat2/Cat2.toc",
+        "before": {
+          "bytes": 23776,
+          "sha256": "3ab087dfcbc5305f51d9812733115bb6ca536e0388230004a6a58525a0b55479"
+        },
+        "after": {
+          "bytes": 23924,
+          "sha256": "89756098f39b749a1fd0ef4b84512b7c43f7cf6261ececa6818ab9f177170584"
+        }
+      },
+      {
+        "path": "Cat2/Core/CatEvent-Druid.lua",
+        "before": {
+          "bytes": 16902,
+          "sha256": "1e1eac65c07ff9997b168c1483281cfa33bb864b91f87534b8b32ceb17b2dde0"
+        },
+        "after": {
+          "bytes": 17230,
+          "sha256": "3e02f6f6d9fa6c195729a421dd74861d80ad1deabed6693579f630d0139b52c6"
+        }
+      },
+      {
+        "path": "Cat2/UI/FlowEditorCards.lua",
+        "before": {
+          "bytes": 41761,
+          "sha256": "43ab4fa7b5d8e550e935aa6352bf24029a30c27d0b22b710f0b818136b1b3677"
+        },
+        "after": {
+          "bytes": 43988,
+          "sha256": "1991a7e7a78b854b8405ad75d8b41c2fabc6b49a85f8d2bd241787c9d9c03d20"
+        }
+      },
+      {
+        "path": "Cat2/UI/FlowEditorLists.lua",
+        "before": {
+          "bytes": 13154,
+          "sha256": "71f8c4efec4e4de22137822ad33d0ea398fb70ba0552056ccd946ae954d7dc7b"
+        },
+        "after": {
+          "bytes": 13709,
+          "sha256": "1f00633b2d69f4c43a9261306d67b6b2a8982cf406f00a29feebb8e4a708390f"
+        }
+      },
+      {
+        "path": "Cat2/UI/FlowEditorWindow.lua",
+        "before": {
+          "bytes": 39019,
+          "sha256": "e8dd33fa278835566afcd8ec76e1588c2f5a54ddf7bbf04c80241a87914bb312"
+        },
+        "after": {
+          "bytes": 39426,
+          "sha256": "ee52195e12de3327a6d6c8f1f6a7deac30df909434ee397e743ea2a4164cb0bd"
+        }
+      }
+    ],
+    "CatPotion": [
+      {
+        "path": "CatPotion/Core.lua",
+        "before": {
+          "bytes": 96061,
+          "sha256": "7f6afcdb2ec52cfd6e3d0b950cd1315aedd943c2ac33784d02fd987e170e8d5f"
+        },
+        "after": {
+          "bytes": 96398,
+          "sha256": "9430d37985033f1cfae304f246c4ec2cd1b89a65697e8ca33b2ef6562ec2afc7"
+        }
+      },
+      {
+        "path": "CatPotion/Window.lua",
+        "before": {
+          "bytes": 59690,
+          "sha256": "5f0f601ea8b32effba3e0bba8bb91e72553086d552327f5948e98248e50cc693"
+        },
+        "after": {
+          "bytes": 59743,
+          "sha256": "52bb9a32cc635db78217197e2fc9f8069f47ff2ab886d5f4e3702b91c8a9cb1e"
+        }
+      }
+    ],
+    "diminfo": [
+      {
+        "path": "diminfo/Modules/RaidCD.lua",
+        "before": {
+          "bytes": 24818,
+          "sha256": "8af447603ab5654476c959f68c3aed1fc486ccfc1cd61d47c20f1524b3edbf83"
+        },
+        "after": {
+          "bytes": 24815,
+          "sha256": "8f72aac34fb92717799942eb978dececd9eee725f56488c7e1204e253a6964c6"
+        }
+      }
+    ],
+    "GoubayuHeal": [
+      {
+        "path": "GoubayuHeal/GoubayuHeal.lua",
+        "before": {
+          "bytes": 357583,
+          "sha256": "c49ff5c7eb354cd0646a6785d5e75b393a5a49ab95a224da936b5d76496881fc"
+        },
+        "after": {
+          "bytes": 359080,
+          "sha256": "79bb3c49293dbe3c165ddea9969defdaa4758b3bbaa810ca2737e85faacd878b"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal.toc",
+        "before": {
+          "bytes": 2496,
+          "sha256": "dd3958866c918ff08dcb3dcdd524cbf64aa74b47a07051f1b687a53ada9eb9b8"
+        },
+        "after": {
+          "bytes": 2520,
+          "sha256": "f21352eb35cfe5e0912d060fa85536c045ed8fbd0fb3940fc923cbb3d2ac81e6"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Dispel.lua",
+        "before": {
+          "bytes": 82074,
+          "sha256": "7c8047a1843b50093dffa48e62c317c655a22416478ec33f1f5fde021e7dc3ef"
+        },
+        "after": {
+          "bytes": 87917,
+          "sha256": "9218431b6e078d902a4b2022117aacb5b67eb224100c470772cfff5fccbf2bd1"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Locale.lua",
+        "before": {
+          "bytes": 129195,
+          "sha256": "57d75c48acd26aab8b4a1c52e16f097a6a1ee97f461a3e3a834fe5d909bf0149"
+        },
+        "after": {
+          "bytes": 134331,
+          "sha256": "2f300225be510663837ae505852bf91e8d68a7dbbd2cadf0948766df5293461c"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Predict.lua",
+        "before": null,
+        "after": {
+          "bytes": 26221,
+          "sha256": "0637041b5d9471c92f96a95bd8f948476132da7c407c683f599b9bc3cd97bc32"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Totem.lua",
+        "before": {
+          "bytes": 142194,
+          "sha256": "2cc8c7d373a07abbd2eb2e2d32771cf27da3b04346773c6a7108222d4c5b97f9"
+        },
+        "after": {
+          "bytes": 143937,
+          "sha256": "9ff943b3e8f693f6709cc5bdfc41deca73863a2cd3116135ac943919da971b9e"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_UI.lua",
+        "before": {
+          "bytes": 249368,
+          "sha256": "1f6e89ea79d69b1c9363905a8c43099f7a33147f16cefc9c44a1a5460bf72269"
+        },
+        "after": {
+          "bytes": 253337,
+          "sha256": "2673725ff640d856c6692eafe77f277f7c0b2e4412098b9813e066cb214cb0ad"
+        }
+      }
+    ],
+    "Meeting": [
+      {
+        "path": "Meeting/Browser.lua",
+        "before": {
+          "bytes": 44731,
+          "sha256": "df84fe0029bf9a4fd16db39ebe161fc5b91448f7e3f4fd53538a5a430a73b11e"
+        },
+        "after": {
+          "bytes": 44909,
+          "sha256": "63505e27e09633a40f4c96d2d40c3832112343a64b5672d1eb5f76e3c0b615c5"
+        }
+      }
+    ],
+    "pfUI": [
+      {
+        "path": "pfUI/modules/chatcopy.lua",
+        "before": {
+          "bytes": 58017,
+          "sha256": "3e695f5286b7354ec10445d0c1c2e512da8332b7a6bc1f3e2ce3196f9222bdb3"
+        },
+        "after": {
+          "bytes": 58408,
+          "sha256": "7ed6061b3ebebede97158677cd08b9c4239501e2189ef897d31be50fe69b2908"
+        }
+      },
+      {
+        "path": "pfUI/modules/nameplates.lua",
+        "before": {
+          "bytes": 137841,
+          "sha256": "048324c1de7f3700fec510ec85e39388f146e708ec5ab9539a2bbb3fc1f810c4"
+        },
+        "after": {
+          "bytes": 140565,
+          "sha256": "94057c1eba07e34e2cad1caa30f4c36189507bc88b375cd58f6dfccd9771f33a"
+        }
+      },
+      {
+        "path": "pfUI/pfUI-tbc.toc",
+        "before": {
+          "bytes": 530,
+          "sha256": "64137ca53d7cee73f7a2c822a151afbd46687a9171572f8f73907702aa4df040"
+        },
+        "after": {
+          "bytes": 530,
+          "sha256": "e58ec46b83db8a9c5b67d176ebe8e8d8ad2bb89bafadae5a8a4b1d9216b3dea9"
+        }
+      },
+      {
+        "path": "pfUI/pfUI.toc",
+        "before": {
+          "bytes": 510,
+          "sha256": "4c83492bc9febea486f6537fcd4deaedb8e3f3572ca719657322d0c1f4d50e95"
+        },
+        "after": {
+          "bytes": 510,
+          "sha256": "e97891385dde74b7c2628e9ca12baa7f6d445494a9f4e94d4ed9d716b3c786dc"
+        }
+      }
+    ],
+    "ShaguDPS": [
+      {
+        "path": "ShaguDPS/ShaguDPS.toc",
+        "before": {
+          "bytes": 671,
+          "sha256": "e7a2040ec07cf9e50c6b61652de73634e9ec8682be3396d9d25a8b9fbdd8a625"
+        },
+        "after": {
+          "bytes": 683,
+          "sha256": "5234afd426c48c1089d3948add2016fb761a137497ede4995a0290b59dc4e276"
+        }
+      },
+      {
+        "path": "ShaguDPS/core.lua",
+        "before": {
+          "bytes": 43191,
+          "sha256": "a83c7d5635831af4c00c49f62033c97bd28971a04ee768fb6f7c669cfca4f573"
+        },
+        "after": {
+          "bytes": 43766,
+          "sha256": "5ee25d419b941c971253c4ae82e744452d67f598f91126e231b98fad5ef47296"
+        }
+      },
+      {
+        "path": "ShaguDPS/img/battlenet-portrait.blp",
+        "before": null,
+        "after": {
+          "bytes": 5268,
+          "sha256": "392a0982ab85d39fc10442ef5902be9d378d9ca07ac90760f18e22df9d75825f"
+        }
+      },
+      {
+        "path": "ShaguDPS/minimap.lua",
+        "before": null,
+        "after": {
+          "bytes": 2458,
+          "sha256": "1123ba640381ca7f5c8e4323eb347ac4b64addab6c626d85af5d3556ee6f51de"
+        }
+      },
+      {
+        "path": "ShaguDPS/parser.lua",
+        "before": {
+          "bytes": 213520,
+          "sha256": "cdc1929b74acc8cebaf4554624b9b2b1f286648b7f09cbad9edac7c661983c28"
+        },
+        "after": {
+          "bytes": 218445,
+          "sha256": "8bac5a190d9132df2e5b4ae9a44985c5266fc6942929ecadca966ff805f325de"
+        }
+      },
+      {
+        "path": "ShaguDPS/settings.lua",
+        "before": {
+          "bytes": 33339,
+          "sha256": "25d5485e6f3b105b67f5e918ab5064157aaa9432e2eb5d31b04ec376dae20a20"
+        },
+        "after": {
+          "bytes": 33736,
+          "sha256": "e5727987d8f3823e069191f3f261c20187e1e7c47f9e5bd41e3ad9d898c06f1a"
+        }
+      },
+      {
+        "path": "ShaguDPS/window.lua",
+        "before": {
+          "bytes": 309287,
+          "sha256": "056833231d973401d63a9739f41aa27f9b0aabd10c4a3911da3b704bf622925f"
+        },
+        "after": {
+          "bytes": 312850,
+          "sha256": "3ebc0ef89c699b8a80c897d45a54d4f793c11ba858333c7b297b00f3d3f8da55"
+        }
+      }
+    ],
+    "SuperCleveRoidMacros": [
+      {
+        "path": "SuperCleveRoidMacros/Core.lua",
+        "before": {
+          "bytes": 430008,
+          "sha256": "c2cb201dab3a75df07f3426e567b6e57b8ff0d89643ea02f593ae4b19d3c8384"
+        },
+        "after": {
+          "bytes": 432648,
+          "sha256": "f57abbdf15e4a64853a48f5450403a30ec4c25baf86293d8cf4f024d145e49b4"
+        }
+      },
+      {
+        "path": "SuperCleveRoidMacros/Extensions/MacroLengthWarn.lua",
+        "before": {
+          "bytes": 9275,
+          "sha256": "09b88aeb6aa2736d4a0aa56d7ecb1b641a47eaa9b35f6ba9bb7ff3d544f180b8"
+        },
+        "after": {
+          "bytes": 9638,
+          "sha256": "02b46921d2881c147ee5a73ad7afb0974429e5c5e470edf89c60d296634712b2"
+        }
+      }
+    ],
+    "WushuangLoot": [
+      {
+        "path": "WushuangLoot/WushuangLoot.lua",
+        "before": {
+          "bytes": 19407,
+          "sha256": "13b53f3952d201007e7d78064485a2bdcee5d662743dc04adee33c666a4f50c0"
+        },
+        "after": {
+          "bytes": 19806,
+          "sha256": "73b41b42d9d46e2b4588c519a42e8f18ba4c89902b93deba56225c3773e41351"
+        }
+      }
+    ],
+    "XyTracker": [
+      {
+        "path": "XyTracker/XyTracker.lua",
+        "before": {
+          "bytes": 270505,
+          "sha256": "4a886c314b7e5a6db007ebb9198e1155de61524c2627da121f3a02fbde4a44eb"
+        },
+        "after": {
+          "bytes": 272029,
+          "sha256": "ef40e9b89c17abbd732ee31a232f76e2ad7419b38b0d2ad3266fe54a06894031"
+        }
+      },
+      {
+        "path": "XyTracker/xy_auction.lua",
+        "before": {
+          "bytes": 162929,
+          "sha256": "f087c09b1aa41e00cc29919b83dfc32f860438318a4628ec1bfd6350f257173f"
+        },
+        "after": {
+          "bytes": 163287,
+          "sha256": "381a6a8e9d5ea96f3303c8ead28c83b2166d7a976924f1fe0cf93cfe166a0898"
+        }
+      }
+    ]
+  },
+  "unchanged_addons": [
+    "Accountant",
+    "ActionBarProfiles",
+    "AdvancedTradeSkillWindow2",
+    "ArchiTotem",
+    "Atlas",
+    "AtlasLoot",
+    "AtlasQuest",
+    "AuldLangSyne",
+    "AutoBar",
+    "Automatonex",
+    "aux-addon",
+    "Bagshui",
+    "BetterCharacterStats",
+    "Blizzard_AuctionUI",
+    "Blizzard_BattlefieldMinimap",
+    "Blizzard_BindingUI",
+    "Blizzard_CombatText",
+    "Blizzard_CraftUI",
+    "Blizzard_GMSurveyUI",
+    "Blizzard_InspectUI",
+    "Blizzard_MacroUI",
+    "Blizzard_RaidUI",
+    "Blizzard_TalentUI",
+    "Blizzard_TradeSkillUI",
+    "Blizzard_TrainerUI",
+    "BrainwasherPro",
+    "BuffTool",
+    "Capslock",
+    "Cat",
+    "Cooline",
+    "Cryolysis",
+    "Cursive",
+    "DPSMateX",
+    "DPSMateXEncounters",
+    "DPSMateXExtend",
+    "DPSMateXExtendMore",
+    "DPSMateXInsights",
+    "EavesDrop",
+    "ExtraResourceBars",
+    "EzPoison",
+    "FishingBuddy",
+    "Flyout",
+    "HolyHope",
+    "hyx",
+    "Interact",
+    "LoseControl",
+    "ModernMapMarkers",
+    "ModifiedPowerAuras",
+    "MySlash",
+    "nampowersettings",
+    "NotGrid",
+    "OneBag",
+    "Outfitter",
+    "PallyPower",
+    "perfboostsettings",
+    "pfExtend",
+    "pfQuest",
+    "pfQuest-turtle",
+    "pfUI-addonskinner",
+    "pfUI-CustomMedia",
+    "pfUI-eliteoverlay",
+    "pfUI_ExtendedMerchant",
+    "PizzaWorldBuffs",
+    "PlayerLinkEnhance",
+    "PlayTurtle",
+    "QianKunBag",
+    "QuickHeal",
+    "QuickReply",
+    "RaidCheck",
+    "Rinse",
+    "S_ChatBar",
+    "S_ItemTip",
+    "S_WorldMap",
+    "ShaguScan",
+    "SimpleRaidTargetIcons",
+    "SpecialTalent",
+    "SpiritSenseRec",
+    "StatCompare",
+    "STSMmayor",
+    "SuperMacro",
+    "TankBuddyEnh",
+    "TianYan",
+    "Tmog",
+    "TrainerSkills",
+    "Turtle_General",
+    "Turtle_GroupUI",
+    "TurtleMail",
+    "TWThreat",
+    "UnitXP_SP3_Addon",
+    "WIM",
+    "xNet",
+    "YGB_OTAlarm"
+  ],
+  "unchanged_addon_count": 92,
+  "runtime_hashes_unchanged": {
+    "corebridge.dll": "61381c8f6f6e63ce1c16c1cc6af024e0cabe8107db1c0db549502bc704c296c3",
+    "d3d9.dll": "3d6b529dc4f7f55639aad580e81b2939ab1489cdbb9f1550dce74e41656bbf5b",
+    "dbghelp.dll": "72877fb0af03745e2a78414ddaa05f1871703ad4c0d16d43d4ae62971ff52f0b",
+    "DivxDecoder.dll": "ed34d37b575c91a56704218eb9f6abbefda8b7de0e2ed44c96191abd0f9915a5",
+    "dlls.txt": "f6f2e55563908406dce843a6847e5d3718219f2d674ca8f13509d5abc9c2ed88",
+    "dxvk.conf": "8fda9365b1fde5536e367b9064ae19065dbb8cd1229a61d4dea67a0f12f7c508",
+    "fmod.dll": "1e08da161cf78746304a834973971ee47a24817ee4e28df74e3f37dbbb383b22",
+    "ijl15.dll": "334aa12f7dee453d1c6cb1b661a3bb3494d3e4cc9c2ff3f9002064c78404e43a",
+    "Interact.dll": "28eafe20e59c2589eb5806361e713ff2d14909de9e4ace08e9edccd3719f1ddd",
+    "nampower.dll": "1fe36ff8a421393116e6b58d801fa4dced35db59f1457136a79fce247142d4ec",
+    "no1600x1200.dll": "0df2274116278e8330dd7069902b642f1a83f33fefd909807a22eda197d88652",
+    "perf_boost.dll": "7019e2f31c4f56caa616f1b4b2587c56ff276f2c27c9f35535e2578eafbd4dbe",
+    "Scan.dll": "a32d76f4b3dc730258da3351d962fa76800ab9d082e1e1ce4dd066af4f0f21b0",
+    "SDL.dll": "15537c9176d7e6d5c28c607c4b147c8c2a7c45102b1b8e836b38d2f9449fc8ce",
+    "SuperWoWhook.dll": "bd214b32c878649e94ce654835946bd05e0ce7710e8f01bae10d8ab50a89351d",
+    "transmogfix.dll": "ab83eef058fb5bde0869423d6b976bbb0eeeb0b60df2cb51a741965d3767514b",
+    "twloader.dll": "fc4adbde2d4e1aaf74f9403a59f8663dcf00b45fed22cd858d12258a17c42bea",
+    "unicows.dll": "22f23cc65698741184ec34f46e6f69717644e0b5aabf5d5bd015101f2d72e56e",
+    "UnitXP_SP3.dll": "db035489a986631e8c2aacb3d26f8312912fcd577d8bd7d19ace02e2ea83a67d",
+    "VanillaHelpers.dll": "1e74ddf6484c23482550d5f9e5f9d291085c4ac538d3b3ed9d87155521841196",
+    "VfPatcher.dll": "f283b6b5ad8042e7995eff9768c150042dd47de6e5f00ffe530d2e67743df81d",
+    "weirdperformance.dll": "191d192710990886edcb6e2aa9d10ac69592f2a66b10fa9d53228b443ed7fd15",
+    "wsloot.dll": "6a36596430299171dafacbb031089717fc223e98285754d68e15a890bf217fe0"
+  },
+  "merge_decisions": [
+    "All files start from current; only non-auxiliary package deltas considered",
+    "Clean merges retain current HealComm, Meeting and chatcopy changes",
+    "pfUI nameplate conflict combined: identity cache clearing and new target/spawn handling",
+    "TOC keeps single legacy SpellStatus with personal ordering",
+    "CatPotion retains complete personal implementation, header and Settings; only timed sacred-oil patterns and timer/cooldown brightness transplanted",
+    "GoubayuHeal: advanced-tab controls scoped after proving no later local references; no globals or controls removed",
+    "GoubayuHeal: Predict loaded after core/modules and before UI; pending heal cancelled on disabled feature or profile switch",
+    "Shared casting libraries: resolve 1.12 CastSpell book slot through SpellCache before GetSpellRec; retain original hook arguments and add missing Nampower-API fallbacks",
+    "HealComm merged copy uses local revision 11734 so embedded QuickHeal 11733 cannot mask new code; original personal cleanup remains; no upstream version claim"
+  ],
+  "validation": {
+    "syntax": [
+      {
+        "path": "!Libs/!MyLib/api/luaAPI.lua",
+        "max_upvalues": 9
+      },
+      {
+        "path": "!Libs/!MyLib/api/wowAPI.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "!Libs/!MyLib/libs/LibMobHealthCache-1.0.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "!Libs/Abacus-2.0/Abacus-2.0.lua",
+        "max_upvalues": 10
+      },
+      {
+        "path": "!Libs/Ace2/AceAddon-2.0/AceAddon-2.0.lua",
+        "max_upvalues": 10
+      },
+      {
+        "path": "!Libs/Ace2/AceConsole-2.0/AceConsole-2.0.lua",
+        "max_upvalues": 18
+      },
+      {
+        "path": "!Libs/Ace2/AceDB-2.0/AceDB-2.0.lua",
+        "max_upvalues": 21
+      },
+      {
+        "path": "!Libs/Ace2/AceDebug-2.0/AceDebug-2.0.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "!Libs/Ace2/AceLocale-2.0/AceLocale-2.0.lua",
+        "max_upvalues": 10
+      },
+      {
+        "path": "!Libs/Ace2/AceLocale-2.2/AceLocale-2.2.lua",
+        "max_upvalues": 15
+      },
+      {
+        "path": "!Libs/Ace3/AceLocale-3.0/AceLocale-3.0.lua",
+        "max_upvalues": 9
+      },
+      {
+        "path": "!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "!Libs/Babble/Babble-Class-2.2/Babble-Class-2.2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "!Libs/Babble/Babble-Faction-2.2/Babble-Faction-2.2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "!Libs/Babble/Babble-ItemSet-2.2/Babble-ItemSet-2.2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "!Libs/Babble/Babble-Spell-2.2/Babble-Spell-2.2.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "!Libs/Babble/Babble-Zone-2.2/Babble-Zone-2.2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "!Libs/Babble/Babble-Zone-2.3/Babble-Zone-2.3.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "!Libs/CastLib-1.0/CastLib-1.0.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "!Libs/Dewdrop-2.0/Dewdrop-2.0.lua",
+        "max_upvalues": 12
+      },
+      {
+        "path": "!Libs/FiveSecLib-1.0/FiveSecLib-1.0.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "!Libs/FuBarPlugin-2.0/FuBarPlugin-2.0.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "!Libs/HealComm-1.0/HealComm-1.0.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "!Libs/Hewdrop-2.0/Hewdrop-2.0.lua",
+        "max_upvalues": 12
+      },
+      {
+        "path": "!Libs/LibSharedMedia-3.0/LibSharedMedia-3.0.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "!Libs/ParserLib/FixGlobalString.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "!Libs/ParserLib/ParserLib.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "!Libs/SE/SpecialEvents-Aura-2.0/SpecialEvents-Aura-2.0.lua",
+        "max_upvalues": 6
+      },
+      {
+        "path": "!Libs/SpellStatusV2-2.0/SpellStatusV2-2.0.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "!Libs/Tablet-2.0/Tablet-2.0.lua",
+        "max_upvalues": 19
+      },
+      {
+        "path": "!Libs/Tourist-2.0/Tourist-2.0.lua",
+        "max_upvalues": 21
+      },
+      {
+        "path": "!Libs/Waterfall-1.0/Waterfall-1.0.lua",
+        "max_upvalues": 10
+      },
+      {
+        "path": "AutoMarker/AutoMarkerUI.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "BigWigs/Plugins/CommonAuras.lua",
+        "max_upvalues": 9
+      },
+      {
+        "path": "Cat2/Cards/Custom/HunterCannon.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "Cat2/Cards/Custom/HunterOrbitalMissile.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "Cat2/Cards/Druid/FerociousBite5_50.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Druid/FerociousBiteEmergencyRefill.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cat2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Core/CatEvent-Druid.lua",
+        "max_upvalues": 20
+      },
+      {
+        "path": "Cat2/UI/FlowEditorCards.lua",
+        "max_upvalues": 19
+      },
+      {
+        "path": "Cat2/UI/FlowEditorLists.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "Cat2/UI/FlowEditorWindow.lua",
+        "max_upvalues": 8
+      },
+      {
+        "path": "CatPotion/Core.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "CatPotion/Window.lua",
+        "max_upvalues": 17
+      },
+      {
+        "path": "diminfo/Modules/RaidCD.lua",
+        "max_upvalues": 14
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Dispel.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Locale.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Predict.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Totem.lua",
+        "max_upvalues": 9
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_UI.lua",
+        "max_upvalues": 13
+      },
+      {
+        "path": "Meeting/Browser.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "pfUI/modules/chatcopy.lua",
+        "max_upvalues": 16
+      },
+      {
+        "path": "pfUI/modules/nameplates.lua",
+        "max_upvalues": 32
+      },
+      {
+        "path": "ShaguDPS/core.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "ShaguDPS/minimap.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "ShaguDPS/parser.lua",
+        "max_upvalues": 28
+      },
+      {
+        "path": "ShaguDPS/settings.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "ShaguDPS/window.lua",
+        "max_upvalues": 24
+      },
+      {
+        "path": "SuperCleveRoidMacros/Core.lua",
+        "max_upvalues": 16
+      },
+      {
+        "path": "SuperCleveRoidMacros/Extensions/MacroLengthWarn.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "WushuangLoot/WushuangLoot.lua",
+        "max_upvalues": 6
+      },
+      {
+        "path": "XyTracker/XyTracker.lua",
+        "max_upvalues": 6
+      },
+      {
+        "path": "XyTracker/xy_auction.lua",
+        "max_upvalues": 29
+      }
+    ],
+    "upvalue_violations": [],
+    "preserved_personal_only_files": true,
+    "load_files_visited": 1287,
+    "preexisting_missing_references": [
+      "!Libs/ChatThrottleLib/ChatThrottleStats.lua",
+      "AutoMarker/Locale/Localization_deDE.lua",
+      "AutoMarker/Locale/Localization_esES.lua",
+      "AutoMarker/Locale/Localization_frFR.lua",
+      "AutoMarker/Locale/Localization_koKR.lua",
+      "AutoMarker/Locale/Localization_ruRU.lua",
+      "AutoMarker/Locale/Localization_zhTW.lua",
+      "BigWigs/Raids/AQ40/BugFamily.lua",
+      "pfUI/skins/blizzard/arena_score.lua",
+      "pfUI/skins/blizzard/custom_merchant.lua"
+    ],
+    "introduced_missing_references": [],
+    "prediction_reachable": true,
+    "personal_only_function_files_preserved": [
+      "CatPotion/helper_version.ini",
+      "CatPotion/tests/consumable-cooldowns.lua",
+      "CatPotion/tests/drag-preview.lua",
+      "CatPotion/tests/engineering-wormholes.lua",
+      "CatPotion/tests/header-layout.lua",
+      "CatPotion/tests/multiple-windows.lua",
+      "CatPotion/tests/profile-menu-edges.lua",
+      "CatPotion/tests/shortcut-picker.lua",
+      "CatPotion/tests/window-order.lua",
+      "diminfo/panel.lua",
+      "Meeting/Creator.lua",
+      "Meeting/GUI.lua",
+      "Meeting/Init.lua",
+      "Meeting/Meeting.lua",
+      "Meeting/Meeting.toc",
+      "Meeting/Message.lua",
+      "Meeting/RaidChat.lua",
+      "pfUI/api/config.lua",
+      "pfUI/env/translations_zhCN.lua",
+      "pfUI/modules/actionbar.lua",
+      "pfUI/modules/gui.lua",
+      "pfUI/modules/unitxp.lua",
+      "pfUI/modules/unlock.lua",
+      "pfUI/tests/monitor-background.lua",
+      "pfUI/tests/monitor-display-only.lua",
+      "pfUI/tests/monitor-tooltip-owner.lua"
+    ],
+    "excluded_addons_unmodified": [
+      "BetterCharacterStats",
+      "StatCompare",
+      "S_ItemTip"
+    ]
+  },
+  "existing_regressions": {
+    "HealComm_NotGrid": 106,
+    "Meeting_full_UI": 50,
+    "Meeting_recruitment": 245,
+    "pfUI_identity": 52,
+    "pfUI_manual_anchors": 45,
+    "pfUI_monitor_layout": 2592,
+    "CatPotion_personal_suites": 11,
+    "chatcopy": "UTF-8 drag/YY/clipboard, strict fonts including failed SetFont, and stale scroll range passed",
+    "previous_package": "shared libraries, linked buff reminder, TurtleMail 18 amount cases passed"
+  },
+  "game_acceptance": "not performed; runtime mocks are not real game acceptance",
+  "preservation_scope": "All 92 unrelated addon directories and all personal-only files in selected addons byte-identical; intersecting deltas merged and behavior checked; repeated layout/settings uses current personal implementation",
+  "post_deploy_behavior_check": "Tools/tests/test_package_merge_20261018.py passed against actual installed files",
+  "healcomm_local_revision": 11734
+}

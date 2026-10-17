@@ -18,22 +18,10 @@ if not AceLibrary:HasInstance("AceHook-2.1") then error(MAJOR_VERSION .. " requi
 local CastLib = {}
 
 local L = {}
-if( GetLocale() == "deDE" ) then
-	L["(%d+) Mana"] = "(%d+) Mana"
-	L["Aimed Shot"] = "Gezielter Schuss"
-	L["Multi-Shot"] = "Mehrfachschuss"
-elseif ( GetLocale() == "frFR" ) then
-	L["(%d+) Mana"] = "(%d+) Mana"
-	L["Aimed Shot"] = "Vis\195\169e"
-	L["Multi-Shot"] = "Fl\195\168ches multiples"
-elseif GetLocale() == "zhCN" then
+if GetLocale() == "zhCN" then
 	L["(%d+) Mana"] = "(%d+) 法力"
 	L["Aimed Shot"] = "瞄准射击"
 	L["Multi-Shot"] = "多重射击"
-elseif GetLocale() == "ruRU" then
-	L["(%d+) Mana"] = "(%d+) Мана"
-	L["Aimed Shot"] = "Прицельный выстрел"
-	L["Multi-Shot"] = "Залп"
 else
 	L["(%d+) Mana"] = "(%d+) Mana"
 	L["Aimed Shot"] = "Aimed Shot"
@@ -123,12 +111,18 @@ function CastLib:SPELLCAST_START()
 		self.isCasting = true
 --		ChatFrame1:AddMessage("Casting "..arg1)
 --		self:TriggerEvent("CASTLIB_STARTCAST", arg1)
-		local _,_,manaVal = string.find(CastLibTipTextLeft2:GetText() or "",L["(%d+) Mana"])
-		if manaVal then
-			self.Mana = tonumber(manaVal)
-		else
-			self.Mana = 0
+		local manaVal
+		if CheckNampower and CheckNampower()
+			and type(GetCurrentCastingInfo) == "function" and type(GetSpellRec) == "function" then -- Nampower：由当前施法 spellId 直接取法力消耗 -- by 武藤纯子酱 2026.10.12
+			local castId = GetCurrentCastingInfo()
+			local rec = castId and castId > 0 and GetSpellRec(castId)
+			if rec and rec.manaCost then manaVal = rec.manaCost end
 		end
+		if not manaVal then
+			local _,_,mv = string.find(CastLibTipTextLeft2:GetText() or "",L["(%d+) Mana"])
+			manaVal = mv and tonumber(mv)
+		end
+		self.Mana = manaVal or 0
 		self:TriggerEvent("CASTLIB_MANAUSAGE", self.Mana)
 	end
 	CastLibTip:ClearLines()

@@ -1365,58 +1365,96 @@ local _actionsToSlotsBuffer = CleveRoids._actionsToSlotsBuffer
 local _slotsBuffer = CleveRoids._slotsBuffer
 local _actionsListBuffer = CleveRoids._actionsListBuffer
 
+-- 本帧"全量重算"的进度（未跑完则保留，后续帧继续；把长耗时按帧分摊，避免卡顿）
+-- by 武藤纯子酱 2026.10.14
+local _tfaPending = nil
+
+-- 宏/动作条发生变化时重置未完成批次并清空静态缓冲，避免续跑引用陈旧数据
+function CleveRoids.ResetActionUpdateBatch()
+    _tfaPending = nil
+    for k in pairs(_actionsToSlotsBuffer) do _actionsToSlotsBuffer[k] = nil end
+    for k in pairs(_actionsListBuffer) do _actionsListBuffer[k] = nil end
+    for k in pairs(_slotsBuffer) do _slotsBuffer[k] = nil end
+end
+
 function CleveRoids.TestForAllActiveActions()
+    local CR = CleveRoids
+    -- 每帧时间预算（秒）：超出就停，剩余下帧继续（ACTION_UPDATE_BUDGET 可调）
+    local budget = CR.ACTION_UPDATE_BUDGET or 0.003
+
     -- PERFORMANCE: Reuse static buffers instead of creating new tables each call
     -- Group slots by their actions object to handle shared macro references
     local actionsToSlots = _actionsToSlotsBuffer
     local actionsList = _actionsListBuffer
-    local actionsCount = 0
+    local pending = _tfaPending
 
-    -- PERFORMANCE: Use next() directly instead of pairs() to avoid iterator allocation
-    local Actions = CleveRoids.Actions
-    local slot, actions = next(Actions)
-    while slot do
-        if not actionsToSlots[actions] then
-            -- Reuse or create slots array from pool
-            local slots = _slotsBuffer[actions]
-            if not slots then
-                slots = {}
-                _slotsBuffer[actions] = slots
+    -- 仅在"没有未完成批次"时重建"宏→槽位"分组（续跑期间必须沿用同一批，不能重建）
+    if not pending then
+        local actionsCount = 0
+
+        -- PERFORMANCE: Use next() directly instead of pairs() to avoid iterator allocation
+        local Actions = CR.Actions
+        local slot, actions = next(Actions)
+        while slot do
+            if not actionsToSlots[actions] then
+                -- Reuse or create slots array from pool
+                local slots = _slotsBuffer[actions]
+                if not slots then
+                    slots = {}
+                    _slotsBuffer[actions] = slots
+                end
+                slots[1] = slot
+                slots._count = 1
+                actionsToSlots[actions] = slots
+                actionsCount = actionsCount + 1
+                actionsList[actionsCount] = actions
+            else
+                local slots = actionsToSlots[actions]
+                local count = slots._count + 1
+                slots[count] = slot
+                slots._count = count
             end
-            slots[1] = slot
-            slots._count = 1
-            actionsToSlots[actions] = slots
-            actionsCount = actionsCount + 1
-            actionsList[actionsCount] = actions
-        else
-            local slots = actionsToSlots[actions]
-            local count = slots._count + 1
-            slots[count] = slot
-            slots._count = count
+            slot, actions = next(Actions, slot)
         end
-        slot, actions = next(Actions, slot)
+        pending = { count = actionsCount, index = 1 }
+        _tfaPending = pending
     end
 
     -- Test each unique actions object once and send events to ALL slots that share it
-    for i = 1, actionsCount do
+    -- 逐宏处理；超过本帧预算就停在断点，下一帧继续
+    local deadline = GetTime() + budget
+    local i = pending.index
+    local count = pending.count
+    while i <= count do
         local actions = actionsList[i]
-        local slots = actionsToSlots[actions]
-        local stateChanged = CleveRoids.TestForActiveAction(actions)
-        if stateChanged then
-            -- Send event to ALL slots that use this macro
-            local count = slots._count
-            for j = 1, count do
-                CleveRoids.SendEventForAction(slots[j], "ACTIONBAR_SLOT_CHANGED", slots[j])
+        local slots = actions and actionsToSlots[actions]
+        if actions then
+            if CR.TestForActiveAction(actions) and slots and slots._count then
+                -- Send event to ALL slots that use this macro
+                for j = 1, slots._count do
+                    CR.SendEventForAction(slots[j], "ACTIONBAR_SLOT_CHANGED", slots[j])
+                end
             end
+            -- Clear for reuse (reset count and clear buffer reference)
+            if slots then
+                for j = 1, slots._count do
+                    slots[j] = nil
+                end
+                slots._count = 0
+                actionsToSlots[actions] = nil
+            end
+            actionsList[i] = nil  -- Clear actionsList entry for reuse
         end
-        -- Clear for reuse (reset count and clear buffer reference)
-        for j = 1, slots._count do
-            slots[j] = nil
-        end
-        slots._count = 0
-        actionsToSlots[actions] = nil
-        actionsList[i] = nil  -- Clear actionsList entry for reuse
+        i = i + 1
+        if GetTime() >= deadline then break end
     end
+
+    pending.index = i
+    if i > count then
+        _tfaPending = nil
+        return true   -- 本批已完成
+    end
+    return false      -- 未完成：调用方不要清除 isActionUpdateQueued，下一帧继续
 end
 
 function CleveRoids.ClearAction(slot)
@@ -5496,8 +5534,17 @@ function CleveRoids.OnUpdate(self)
 
     -- PERFORMANCE: Throttle check FIRST - skip most work on non-throttled frames
     local lastUpdate = CR.lastUpdate or 0
+    local sinceLast = time - lastUpdate
     local bypassThrottle = CR.isActionUpdateQueued and CRM.realtime == 0
-    local shouldUpdate = bypassThrottle or (time - lastUpdate) >= refreshRate
+    -- 合并间隔（秒）：即便是事件入队（bypassThrottle），也至少间隔该值才做一次全量重算——
+    -- 死亡/血量归零等事件连发时，不再"每帧同步重算所有宏"，而是合并成一次（图标延迟 ≤0.1s 可接受）。
+    -- 未跑完的分摊批次不受此限制，必须继续跑完 by 武藤纯子酱 2026.10.14
+    local interval = refreshRate
+    local minInterval = CR.ACTION_UPDATE_MIN_INTERVAL or 0.1
+    if bypassThrottle and minInterval > interval then
+        interval = minInterval
+    end
+    local shouldUpdate = (_tfaPending ~= nil) or (sinceLast >= interval)
 
     if not shouldUpdate then
         return  -- Early exit for non-throttled frames
@@ -5581,9 +5628,11 @@ function CleveRoids.OnUpdate(self)
         CR.TestForAllActiveActions()
     else
         -- Event-Driven Mode (Default): Only update if a relevant game event has queued it.
-        if CR.isActionUpdateQueued then
-            CR.TestForAllActiveActions()
-            CR.isActionUpdateQueued = false
+        -- 分摊批次未跑完时不清除队列标志，下一帧继续 by 武藤纯子酱 2026.10.14
+        if CR.isActionUpdateQueued or _tfaPending ~= nil then
+            if CR.TestForAllActiveActions() then
+                CR.isActionUpdateQueued = false
+            end
         end
     end
 
@@ -7534,6 +7583,9 @@ function CleveRoids.Frame:UPDATE_MACROS()
 
     CleveRoids.Sequences = nil;
     CleveRoids.Sequences = {}
+
+    -- 动作条/宏已重建：丢弃未完成的重算批次与静态缓冲，避免续跑引用陈旧数据 by 武藤纯子酱 2026.10.14
+    if CleveRoids.ResetActionUpdateBatch then CleveRoids.ResetActionUpdateBatch() end
 
     CleveRoids.IndexSpells()
     CleveRoids.IndexTalents()

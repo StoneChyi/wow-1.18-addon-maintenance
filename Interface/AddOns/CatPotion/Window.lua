@@ -724,6 +724,7 @@ local function CreateProfileWindow(profileId)
         RefreshRowBackground(row)
         local count = row.itemCount or 0
         local buffTime = GetItemEffectTime(item, row.weaponSlot)
+        row:SetAlpha((buffTime > 0 or count > 0) and 1 or 0.62)
         local minimized = addon.ToBoolean(profile.minimized)
         row.countText:Show()
         local charges
@@ -755,6 +756,7 @@ local function CreateProfileWindow(profileId)
         end
         local cooldown, cooldownKind, unavailable = addon.GetCooldownInfo(item.item)
         if cooldown > 0 then
+            row:SetAlpha(1)
             row.statusText:SetTextColor(1, 0.55, 0.2)
             local prefix = cooldownKind == "gcd" and "公CD " or (cooldownKind == "shared" and "共享 " or "冷却 ")
             SetTimerText(row, (minimized and "" or prefix) .. addon.SecondsToText(cooldown, minimized), minimized)
@@ -790,7 +792,6 @@ local function CreateProfileWindow(profileId)
             row.icon:SetTexture(FALLBACK_ITEM_TEXTURE)
             row.icon:SetDesaturated(true)
         end
-        row:SetAlpha(bag and 1 or 0.62)
         if row.itemCount > 0 then
             row.countText:SetText(row.itemCount)
         else

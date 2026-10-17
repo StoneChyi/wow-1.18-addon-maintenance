@@ -61,14 +61,14 @@ local backdrop_border = {
 -- 3. 创建数值选择器（左右箭头控件）
 -- ============================================================================
 
-local function CreateSelector(self, values)
+local function CreateSelector(self, values, yOffset)
     local input = CreateFrame("Frame", nil, self)
     input.values = values
 
     input:Hide()
     input:SetHeight(18)
     input:SetWidth(values and 112 or 54)
-    input:SetPoint("TOPRIGHT", self, "TOPRIGHT", -8, -self.entries*18 - 4)
+    input:SetPoint("TOPRIGHT", self, "TOPRIGHT", -8, -self.entries*18 - 4 - (yOffset or 0))
     input:SetBackdrop(backdrop)
     input:SetBackdropColor(.2,.2,.2,1)
     input:SetBackdropBorderColor(.4,.4,.4,1)
@@ -180,8 +180,9 @@ end
 
 local function CreateConfig(self, caption, entry, check, options)
     self.entries = self.entries and self.entries + 1 or 1
+    local yOff = (options and tonumber(options.yOffset)) or 0
     local text = self:CreateFontString(nil, "OVERLAY", "GameFontWhite")
-    text:SetPoint("TOPLEFT", self, "TOPLEFT", 10, -self.entries*18 - 4)
+    text:SetPoint("TOPLEFT", self, "TOPLEFT", 10, -self.entries*18 - 4 - yOff)
     text:SetWidth(170)
     text:SetHeight(18)
     text:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
@@ -190,7 +191,7 @@ local function CreateConfig(self, caption, entry, check, options)
 
     -- 标题项（不可交互，仅用作分组标题）
     if check == "header" then
-        text:SetPoint("TOPLEFT", self, "TOPLEFT", 8, -self.entries*18 - 8)
+        text:SetPoint("TOPLEFT", self, "TOPLEFT", 8, -self.entries*18 - 8 - yOff)
         text:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
         text:SetTextColor(1, .8, 0)
     end
@@ -215,7 +216,7 @@ local function CreateConfig(self, caption, entry, check, options)
 
     -- 整数数值选择器（带上下限）
     if check == "number" then
-        local input = self:CreateSelector()
+        local input = self:CreateSelector(nil, yOff)
         input.entry = entry
         if options then
             input.min = options.min
@@ -226,14 +227,14 @@ local function CreateConfig(self, caption, entry, check, options)
     elseif type(check) == "table" then
         -- 离散值选择器（如材质列表）
         local values = check
-        local input = self:CreateSelector(values)
+        local input = self:CreateSelector(values, yOff)
         input.entry = entry
         input:Show()
     end
 
     -- 浮点数滑块（缩放）
     if check == "slider" then
-        local input = self:CreateSelector()
+        local input = self:CreateSelector(nil, yOff)
         input.entry = entry
         input.step = 0.1
         input.min = 0.5
@@ -243,7 +244,7 @@ local function CreateConfig(self, caption, entry, check, options)
 
     -- 范围选择器（报告行数）
     if check == "range" then
-        local input = self:CreateSelector()
+        local input = self:CreateSelector(nil, yOff)
         input.entry = entry
         input.step = 1
         input.min = 1
@@ -464,6 +465,8 @@ if ShaguDPS.hasNampower then
     leftPanel:CreateConfig("非战斗/非队伍时隐藏仇恨窗口", "hide_nondefault_threat_out_of_combat", "boolean")
     leftPanel:CreateConfig("仇恨仅显示坦克和自己", "show_only_tank_and_self_in_threat", "boolean")
     leftPanel:CreateConfig("分开统计主副手伤害", "separate_mh_oh_damage", "boolean")
+    -- 低效目标阈值：平均死亡时间低于此值的目标显示时打"低效"标签；0=不设置  by 武藤纯子酱 2026.10.14
+    leftPanel:CreateConfig("低效目标阈值（秒）", "ineff_threshold", "number", {min=0, max=10, step=1, yOffset=5})
 end
 
 -- 坦克模式：TMTv1 多目标数据现为无条件请求（见 parser.lua threatRequestFrame），

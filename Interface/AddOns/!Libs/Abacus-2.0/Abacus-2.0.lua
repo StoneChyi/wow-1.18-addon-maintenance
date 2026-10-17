@@ -45,9 +45,7 @@ local L_SECOND_ONELETTER_ABBR = string.gsub(SECOND_ONELETTER_ABBR, "%s*%%d%s*", 
 
 local L_UNDETERMINED = "Undetermined"
 
-if ( GetLocale() =="koKR" ) then
-	L_UNDETERMINED = "측정불가"
-elseif ( GetLocale() =="zhCN" ) then
+if GetLocale() == "zhCN" then
 	L_UNDETERMINED = "待定"
 end
 

@@ -57,13 +57,25 @@ local function CreateMinimapButton()
     -- 创建按钮框架
     local button = CreateFrame("Button", "AutoMarkerMinimapButton", Minimap)
     button:SetFrameStrata("HIGH")
-    button:SetWidth(24)
-    button:SetHeight(24)
+    button:SetWidth(31)
+    button:SetHeight(31)
     
-    -- 设置按钮外观
-    button:SetNormalTexture("Interface\\Icons\\Ability_Hunter_SniperShot")
-    button:SetPushedTexture("Interface\\Icons\\Ability_Hunter_SniperShot")
+    -- 图标（显式子纹理，ShaguDPS/LibDBIcon 同款几何）
+    local iconTex = button:CreateTexture("AutoMarkerMinimapButtonIcon", "BACKGROUND")
+    iconTex:SetTexture("Interface\\Icons\\Ability_Hunter_SniperShot")
+    iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    iconTex:SetWidth(20)
+    iconTex:SetHeight(20)
+    iconTex:SetPoint("CENTER", button, "CENTER", 0, 0)
     button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+
+    -- 标准小地图圆环边框（53px 画布锚 TOPLEFT，与 ShaguDPS/LibDBIcon 同款：
+    -- TrackingBorder 的环画在画布左上 32px 区域，53-on-31 恰好环贴按钮）
+    local borderTex = button:CreateTexture("AutoMarkerMinimapButtonBorder", "OVERLAY")
+    borderTex:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    borderTex:SetWidth(53)
+    borderTex:SetHeight(53)
+    borderTex:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
     
     -- 设置初始位置
     local radius = 80

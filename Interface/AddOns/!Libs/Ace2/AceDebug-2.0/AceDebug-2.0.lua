@@ -21,28 +21,7 @@ if not AceLibrary:HasInstance("AceOO-2.0") then error(MAJOR_VERSION .. " require
 
 local DEBUGGING, TOGGLE_DEBUGGING
 
-if GetLocale() == "frFR" then
-	DEBUGGING = "D\195\169boguage"
-	TOGGLE_DEBUGGING = "Activer/d\195\169sactiver le d\195\169boguage"
-elseif GetLocale() == "esES" then
-	DEBUGGING = "Depurar"
-	TOGGLE_DEBUGGING = "Activar/desactivar depurar"
-elseif GetLocale() == "deDE" then
-	DEBUGGING = "Debuggen"
-	TOGGLE_DEBUGGING = "Aktiviert/Deaktiviert Debugging"
-elseif GetLocale() == "koKR" then
-	DEBUGGING = "디버깅"
-	TOGGLE_DEBUGGING = "디버깅 기능 사용함/사용안함"
-elseif GetLocale() == "zhTW" then
-	DEBUGGING = "除錯"
-	TOGGLE_DEBUGGING = "啟用/停用除錯功能"
-elseif GetLocale() == "zhCN" then
-    DEBUGGING = "调试"
-    TOGGLE_DEBUGGING = "启用/禁用调试"
-elseif GetLocale() == "ruRU" then
-	DEBUGGING = "Отладка"
-	TOGGLE_DEBUGGING = "Вкл./Выкл. отладку для этого аддона."
-else -- enUS
+if GetLocale() == "zhCN" then
     DEBUGGING = "调试"
     TOGGLE_DEBUGGING = "启用/禁用调试"
 end

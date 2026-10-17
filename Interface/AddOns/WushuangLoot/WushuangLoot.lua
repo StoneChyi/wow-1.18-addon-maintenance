@@ -363,8 +363,8 @@ SlashCmdList["WSLootSettings"] = HandleSettings
 -- ==================== 小地图图标 ====================
 local WSLootMinimapButton = CreateFrame("Button", "WSLootMinimapButton", Minimap)
 WSLootMinimapButton:SetFrameStrata("MEDIUM")
-WSLootMinimapButton:SetWidth(33)
-WSLootMinimapButton:SetHeight(33)
+WSLootMinimapButton:SetWidth(31)
+WSLootMinimapButton:SetHeight(31)
 WSLootMinimapButton:SetFrameLevel(8)
 WSLootMinimapButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 WSLootMinimapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -372,9 +372,16 @@ WSLootMinimapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 local mmIcon = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonIcon", "BACKGROUND")
 mmIcon:SetTexture("Interface\\AddOns\\WushuangLoot\\tga\\tubiao")
 mmIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-mmIcon:SetWidth(21)
-mmIcon:SetHeight(21)
-mmIcon:SetPoint("CENTER", 0, 0)
+mmIcon:SetWidth(20)
+mmIcon:SetHeight(20)
+mmIcon:SetPoint("CENTER", WSLootMinimapButton, "CENTER", 0, 0)
+
+-- 标准小地图圆环边框（53px 画布锚 TOPLEFT，与 ShaguDPS/LibDBIcon 同款）
+local mmBorder = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonBorder", "OVERLAY")
+mmBorder:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+mmBorder:SetWidth(53)
+mmBorder:SetHeight(53)
+mmBorder:SetPoint("TOPLEFT", WSLootMinimapButton, "TOPLEFT", 0, 0)
 
 WSLootMinimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 0, 0)
 local mmAngle = 225

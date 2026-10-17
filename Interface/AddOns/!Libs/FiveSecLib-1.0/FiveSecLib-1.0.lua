@@ -18,18 +18,9 @@ if not AceLibrary:HasInstance("AceHook-2.1") then error(MAJOR_VERSION .. " requi
 local FiveSecLib = {}
 
 local L = {}
-if( GetLocale() == "deDE" ) then
-	L["(%d+) Mana"] = "(%d+) Mana"
-	L["Raptor Strike"] = "Raptorstoß"
-elseif ( GetLocale() == "frFR" ) then
-	L["(%d+) Mana"] = "(%d+) Mana"
-	L["Raptor Strike"] = "Attaque du raptor"
-elseif GetLocale() == "zhCN" then
+if GetLocale() == "zhCN" then
 	L["(%d+) Mana"] = "(%d+)法力值"
 	L["Raptor Strike"] = "猛禽一击"
-elseif GetLocale() == "ruRU" then
-	L["(%d+) Mana"] = "(%d+) Мана"
-	L["Raptor Strike"] = "Удар ящера"
 else
 	L["(%d+) Mana"] = "(%d+) Mana"
 	L["Raptor Strike"] = "Raptor Strike"
@@ -111,6 +102,17 @@ function FiveSecLib:CastSpell(spellId, spellbookTabNum)
 	-- Call the original function so there's no delay while we process
 	self.hooks.CastSpell(spellId, spellbookTabNum)
 	if self.Spell then return end
+	-- Resolve the 1.12 spellbook slot before using the Nampower spell-ID API.
+	if spellbookTabNum == BOOKTYPE_SPELL and CheckNampower and CheckNampower()
+		and type(GetSpellRec) == "function" and AceLibrary:HasInstance("SpellCache-1.0") then
+		local _, _, resolvedId = AceLibrary("SpellCache-1.0"):GetSpellData(spellId)
+		local rec = resolvedId and GetSpellRec(resolvedId)
+		if rec and rec.name then
+			self.Spell = rec.name
+			self.Mana = rec.manaCost or 0
+			return
+		end
+	end
 	FiveSecLibTip:ClearLines()
 	FiveSecLibTip:SetSpell(spellId, spellbookTabNum)
 	local mana = FiveSecLibTipTextLeft2:GetText()

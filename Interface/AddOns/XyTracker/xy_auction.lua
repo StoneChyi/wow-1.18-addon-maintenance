@@ -3477,6 +3477,13 @@ local function CreatePaiMinimapButton()
     hlTex:SetHeight(26)
     hlTex:SetPoint("CENTER", 0, 0)
 
+    -- 标准小地图圆环边框（53px 画布锚 TOPLEFT 同款，26 按钮等比 43）
+    local borderTex = btn:CreateTexture("XyPaiMinimapButtonBorder", "OVERLAY")
+    borderTex:SetTexture("Interface/Minimap/MiniMap-TrackingBorder")
+    borderTex:SetWidth(43)
+    borderTex:SetHeight(43)
+    borderTex:SetPoint("TOPLEFT", btn, "TOPLEFT", 0, 0)
+
     -- Tooltip
     btn:SetScript("OnEnter", function()
         GameTooltip:SetOwner(this, "ANCHOR_LEFT")

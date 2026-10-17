@@ -77,6 +77,80 @@ end
 
 
 ----------------------------
+--  Nampower 光环分支（分支式重写）-- by 武藤纯子酱 2026.10.12
+--  有 Nampower 时：玩家(buff/debuff)增/失由 Nampower 事件增量维护，跳过原全量扫描
+--  无 Nampower 时：完全走原逻辑
+----------------------------
+local NP_available = (CheckNampower ~= nil) and CheckNampower() or false
+
+--由 spellId 解析光环名：优先 Nampower GetSpellRec.name，其次 SuperWoW SpellInfo，最后 nil（回退原逻辑不会走到这里）
+local function NP_spellName(spellId)
+	if GetSpellRec then
+		local rec = GetSpellRec(spellId)
+		if rec and rec.name and rec.name ~= "" then return rec.name end
+	end
+	local si = getglobal("SpellInfo")
+	if si then local n = select(1, si(spellId)); if n then return n end end
+	return nil
+end
+
+local function NP_HandleAura(self, isDebuff, added, guid, luaSlot, spellId, stacks, auraLevel, auraSlot, state)
+	if state == 2 then return end -- 仅处理新增/移除，栈变化不触发 gained/lost
+	local t = "player"
+	local nm = NP_spellName(spellId)
+	if not nm then return end
+	if not isDebuff then
+		local b = self.vars.buffs[t]
+		if not b then b = {}; self.vars.buffs[t] = b end
+		if added then
+			if not b[nm] then
+				b[nm] = luaSlot
+				self:TriggerEvent("SpecialEvents_UnitBuffGained", t, nm)
+				self:TriggerEvent("SpecialEvents_PlayerBuffGained", nm, luaSlot)
+			end
+		else
+			if b[nm] then
+				b[nm] = nil
+				self:TriggerEvent("SpecialEvents_UnitBuffLost", t, nm)
+				self:TriggerEvent("SpecialEvents_PlayerBuffLost", nm)
+			end
+		end
+	else
+		local d = self.vars.debuffs[t]
+		if not d then d = acquire(); self.vars.debuffs[t] = d end
+		local texture, apps, dbtype = UnitDebuff(t, luaSlot)
+		local key = nm .. (texture or "")
+		if added then
+			if not d[key] then
+				d[key] = acquire(luaSlot, nm, apps or stacks, dbtype, texture)
+				self:TriggerEvent("SpecialEvents_UnitDebuffGained", t, nm, apps or stacks, dbtype, texture)
+				self:TriggerEvent("SpecialEvents_PlayerDebuffGained", nm, apps or stacks, dbtype, texture)
+			end
+		else
+			local v = d[key]
+			if v then
+				d[key] = nil
+				self:TriggerEvent("SpecialEvents_UnitDebuffLost", t, v[2], v[3], v[4], v[5])
+				self:TriggerEvent("SpecialEvents_PlayerDebuffLost", v[2], v[3], v[4], v[5])
+				reclaim(v)
+			end
+		end
+	end
+end
+
+local NPFrame = CreateFrame("Frame")
+NPFrame:SetScript("OnEvent", function()
+	local self = NPFrame.activeLib -- AceLibrary 会 copyTable 并 destroyTable 原 lib，必须用激活实例 -- by 武藤纯子酱 2026.10.12
+	if not self then return end
+	local ev = event
+	if ev == "BUFF_ADDED_SELF" then NP_HandleAura(self, false, true, arg1,arg2,arg3,arg4,arg5,arg6,arg7)
+	elseif ev == "BUFF_REMOVED_SELF" then NP_HandleAura(self, false, false, arg1,arg2,arg3,arg4,arg5,arg6,arg7)
+	elseif ev == "DEBUFF_ADDED_SELF" then NP_HandleAura(self, true, true, arg1,arg2,arg3,arg4,arg5,arg6,arg7)
+	elseif ev == "DEBUFF_REMOVED_SELF" then NP_HandleAura(self, true, false, arg1,arg2,arg3,arg4,arg5,arg6,arg7) end
+end)
+
+
+----------------------------
 --     Initialization     --
 ----------------------------
 
@@ -95,6 +169,13 @@ local function registerevents(self)
 	else
 		self:RegisterEvent("PARTY_MEMBERS_CHANGED",1)
 		self:RegisterEvent("RAID_ROSTER_UPDATE",1)
+	end
+	if NP_available then -- Nampower：注册玩家光环增/失事件 -- by 武藤纯子酱 2026.10.12
+		NPFrame.activeLib = self
+		NPFrame:RegisterEvent("BUFF_ADDED_SELF")
+		NPFrame:RegisterEvent("BUFF_REMOVED_SELF")
+		NPFrame:RegisterEvent("DEBUFF_ADDED_SELF")
+		NPFrame:RegisterEvent("DEBUFF_REMOVED_SELF")
 	end
 end
 
@@ -117,6 +198,7 @@ end
 
 
 function lib:PLAYER_ENTERING_WORLD()
+	self.npPlayerSeeded = false -- by 武藤纯子酱 2026.10.12
 	self:ScanAllAuras()
 	registerevents(self)
 end
@@ -125,6 +207,8 @@ end
 function lib:PLAYER_LEAVING_WORLD()
 	self:UnregisterAllEvents()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
+	self.npPlayerSeeded = false -- by 武藤纯子酱 2026.10.12
+	if NP_available then NPFrame:UnregisterAllEvents() end -- by 武藤纯子酱 2026.10.12
 	if RL then
 		RL:Disable()
 	end
@@ -214,6 +298,7 @@ end
 
 function lib:AuraScan(targ)
 	local maxbuffs, maxdebuffs, t = 32, 16, targ or arg1
+	if t == "player" and NP_available and self.npPlayerSeeded then return end -- Nampower 增量维护，跳过全量扫描 -- by 武藤纯子酱 2026.10.12
 	local oldd, oldb = self.vars.debuffs[t], self.vars.buffs[t]
 	local newd, newb = acquire(), acquire()
 	
@@ -324,6 +409,7 @@ function lib:AuraScan(targ)
 	
 	reclaim(oldb)
 	reclaim(oldd, 1)
+	if t == "player" and NP_available then self.npPlayerSeeded = true end -- by 武藤纯子酱 2026.10.12
 end
 
 

@@ -19,9 +19,6 @@ local Dewdrop = {}
 
 local VALIDATION_ERROR = "Validation error"
 local RESET_KEYBINDING_DESC = "Hit escape to clear the keybinding."
-if GetLocale() == "deDE" then
---	VALIDATION_ERROR = "some message here..."
-end
 
 local lua51 = loadstring("return function(...) return ... end") and true or false
 

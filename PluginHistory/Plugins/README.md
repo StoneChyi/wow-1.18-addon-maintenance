@@ -2,7 +2,7 @@
 
 每个插件一个文件，每次修改一条记录；点插件名查看完整历史，点最近记录直接跳转。最新记录在前，早期历史及依据保留在文件末尾。
 
-当前覆盖 **106 个插件页面**：有维护记录 **53 个**，仅关联皮肤适配 **2 个**，其余 **51 个**的个人修改归属或内容待确认。已停用插件保留历史。
+当前覆盖 **106 个插件页面**：有维护记录 **55 个**，仅关联皮肤适配 **2 个**，其余 **49 个**的个人修改归属或内容待确认。已停用插件保留历史。
 
 [待确认插件](../待确认插件.md) · [验收与历史缺项](../待补充清单.md) · [记录规范](../记录规范.md) · [记录模板](../记录模板.md) · [机器索引](../change-index.json)
 
@@ -12,20 +12,22 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
-| [XyTracker](XyTracker.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](XyTracker.md#change-XyTracker-20261018-01) | 不适用（说明或停用记录） |
-| [WushuangLoot](WushuangLoot.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](WushuangLoot.md#change-WushuangLoot-20261018-01) | 不适用（说明或停用记录） |
+| [XyTracker](XyTracker.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](XyTracker.md#change-XyTracker-20261018-02) | 待游戏验收 |
+| [WushuangLoot](WushuangLoot.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](WushuangLoot.md#change-WushuangLoot-20261018-02) | 待游戏验收 |
+| [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261018-02) | 待游戏验收 |
 | [StatCompare](StatCompare.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](StatCompare.md#change-StatCompare-20261018-01) | 不适用（说明或停用记录） |
-| [ShaguDPS](ShaguDPS.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](ShaguDPS.md#change-ShaguDPS-20261018-01) | 不适用（说明或停用记录） |
+| [ShaguDPS](ShaguDPS.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](ShaguDPS.md#change-ShaguDPS-20261018-02) | 待游戏验收 |
 | [S_ItemTip](S_ItemTip.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](S_ItemTip.md#change-S_ItemTip-20261018-01) | 不适用（说明或停用记录） |
-| [pfUI](pfUI.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](pfUI.md#change-pfUI-20261018-01) | 不适用（说明或停用记录） |
-| [Meeting](Meeting.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](Meeting.md#change-Meeting-20261018-01) | 不适用（说明或停用记录） |
-| [GoubayuHeal](GoubayuHeal.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](GoubayuHeal.md#change-GoubayuHeal-20261018-01) | 不适用（说明或停用记录） |
-| [diminfo](diminfo.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](diminfo.md#change-diminfo-20261018-01) | 不适用（说明或停用记录） |
-| [CatPotion](CatPotion.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](CatPotion.md#change-CatPotion-20261018-01) | 不适用（说明或停用记录） |
-| [Cat2](Cat2.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](Cat2.md#change-Cat2-20261018-01) | 不适用（说明或停用记录） |
-| [BigWigs](BigWigs.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](BigWigs.md#change-BigWigs-20261018-01) | 不适用（说明或停用记录） |
+| [pfUI](pfUI.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](pfUI.md#change-pfUI-20261018-02) | 待游戏验收 |
+| [Meeting](Meeting.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](Meeting.md#change-Meeting-20261018-02) | 待游戏验收 |
+| [GoubayuHeal](GoubayuHeal.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](GoubayuHeal.md#change-GoubayuHeal-20261018-02) | 待游戏验收 |
+| [diminfo](diminfo.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](diminfo.md#change-diminfo-20261018-02) | 待游戏验收 |
+| [CatPotion](CatPotion.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](CatPotion.md#change-CatPotion-20261018-02) | 待游戏验收 |
+| [Cat2](Cat2.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](Cat2.md#change-Cat2-20261018-02) | 待游戏验收 |
+| [BigWigs](BigWigs.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](BigWigs.md#change-BigWigs-20261018-02) | 待游戏验收 |
 | [BetterCharacterStats](BetterCharacterStats.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](BetterCharacterStats.md#change-BetterCharacterStats-20261018-01) | 不适用（说明或停用记录） |
-| [!Libs](!Libs.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](!Libs.md#change-!Libs-20261018-01) | 不适用（说明或停用记录） |
+| [AutoMarker](AutoMarker.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](AutoMarker.md#change-AutoMarker-20261018-02) | 待游戏验收 |
+| [!Libs](!Libs.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](!Libs.md#change-!Libs-20261018-02) | 待游戏验收 |
 | [YGB_OTAlarm](YGB_OTAlarm.md) | 2026-10-15 | [移除仇恨条阈值数字](YGB_OTAlarm.md#change-YGB_OTAlarm-20261015-01) | 待游戏验收 |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | 2026-10-14 | [洗脑装置按钮悬停和按压反馈](pfUI-addonskinner.md#change-pfUI-addonskinner-20261014-01) | 待游戏验收 |
 | [BrainwasherPro](BrainwasherPro.md) | 2026-10-14 | [窗口层级、按钮反馈和风格入口](BrainwasherPro.md#change-BrainwasherPro-20261014-01) | 待游戏验收 |

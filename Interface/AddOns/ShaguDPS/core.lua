@@ -221,6 +221,7 @@ local config = {
     pastel = 0,
     lock = 0,
     exclude_critters = 0,
+    ineff_threshold = 5,        -- 低效目标阈值（秒），平均死亡时间低于此值即打"低效"标签；0=不设置
     hide_friendly_damage = 0,
     clamp_damage_to_health = 0,
     heal_only_in_combat = 1,
@@ -243,6 +244,7 @@ local config = {
     hide_out_of_party = 0,
     export_to_imports = 0,
     perCharConfig = 0,
+    minimap_angle = 180,
     enabled_stats = {
         [1]=1, [2]=1, [3]=1, [4]=1, [5]=1, [6]=1, [7]=1, [8]=1,
         [9]=1, [10]=1, [11]=1, [13]=1, [14]=1, [16]=1, [17]=1,
@@ -265,6 +267,7 @@ local internals = {
     ["_fail"] = true,
     ["_wrong"] = true,
     ["_wrong_targets"] = true,
+    ["_good_targets"] = true,
     ["_offensive"] = true,
     ["_defensive"] = true,
     ["_overkill"] = true,
@@ -567,6 +570,7 @@ function ShaguDPS.BuildCacheSnapshot(target)
     target.last_fight_duration = data.last_fight_duration
     target.small_fight = data.small_fight
     target.small_fight_total_time = ShaguDPS.small_fight_total_time or 0
+    target.targetLifetime = ShaguDPS.targetLifetime   -- 低效目标：各目标平均死亡时间累计  by 武藤纯子酱 2026.10.14
 end
 
 -- 将当前全部统计数据写入 ShaguDPS_Cache（WTF SavedVariables），供下次登录恢复。
@@ -608,6 +612,7 @@ function ShaguDPS.LoadDataFromCache()
     if ShaguDPS_Cache.buff_coverage0 then data.buff_coverage[0] = ShaguDPS_Cache.buff_coverage0 end
     if ShaguDPS_Cache.weakness_coverage0 then data.weakness_coverage[0] = ShaguDPS_Cache.weakness_coverage0 end
     if ShaguDPS_Cache.interrupt0 then data.interrupt[0] = ShaguDPS_Cache.interrupt0 end
+    if ShaguDPS_Cache.targetLifetime then ShaguDPS.targetLifetime = ShaguDPS_Cache.targetLifetime end
 
     -- 恢复当前战斗缓存（作为"上一场战斗"快照显示）。
     -- 恢复时统一把 data[key][1] 置空，确保新登录后的第一场战斗从空当前段开始，
@@ -865,6 +870,7 @@ function ShaguDPS.ClearCache()
     }
     ShaguDPS.small_fight_total_time = 0
     ShaguDPS.hostile_targets = {}
+    ShaguDPS.targetLifetime = {}   -- 低效目标：各目标平均死亡时间累计（随统计数据一并保存）  by 武藤纯子酱 2026.10.14
     data.tank_mode = {}
     data.enemy_max_health = {}
 end

@@ -107,7 +107,7 @@ BabbleFaction:RegisterTranslations("zhCN", function()
 	["Orgrimmar"]  = "奥格瑞玛",
 	["Ratchet"]  = "棘齿城",
 	["Ravenholdt"]  = "拉文霍德",
-	["Silverwing Sentinels"]  = "银翼哨兵",
+	["Silverwing Sentinels"]  = "银翼要塞",
 	["Shen'dralar"]  = "辛德拉",
 	["Stormpike Guard"]  = "雷矛卫队",
 	["Stormwind"]  = "暴风城",
@@ -116,7 +116,7 @@ BabbleFaction:RegisterTranslations("zhCN", function()
 	["Thunder Bluff"]  = "雷霆崖",
 	["Timbermaw Hold"]  = "木喉要塞",
 	["Undercity"]  = "幽暗城",
-	["Warsong Outriders"]  = "战歌侦察骑兵",
+	["Warsong Outriders"]  = "战歌氏族",
 	["Wildhammer Clan"]  = "蛮锤部族",
 	["Wintersaber Trainers"]  = "冬刃豹训练师",
 	["Zandalar Tribe"]  = "赞达拉部族",
@@ -128,108 +128,6 @@ BabbleFaction:RegisterTranslations("zhCN", function()
 	["Revered"]  = "崇敬",
 	["Exalted"]  = "崇拜",
         
-	}
-end)
-
-BabbleFaction:RegisterTranslations("ruRU", function()
-	return {
-	--Player Factions
-	["Alliance"] = "Альянс",
-	["Horde"] = "Орда",
-
-	-- Classic Factions
-	["Argent Dawn"] = "Серебряный Рассвет",
-	["Bloodsail Buccaneers"] = "Пираты Кровавого Паруса",
-	["Booty Bay"] = "Пиратская бухта",
-	["Brood of Nozdormu"] = "Род Ноздорму",
-	["Cenarion Circle"] = "Круг Кенария",
-	["Darkmoon Faire"] = "Ярмарка Новолуния",
-	["Darkspear Trolls"] = "Тролли Черного Копья",
-	["Darnassus"] = "Дарнасс",
-	["The Defilers"] = "Осквернители",
-	["Everlook"] = "Круговзор",
-	["Frostwolf Clan"] = "Клан Северного Волка",
-	["Gadgetzan"] = "Прибамбасск",
-	["Gelkis Clan Centaur"] = "Кентавры из племени Гелкис",
-	["Gnomeregan Exiles"] = "Изгнанники Гномрегана",
-	["Hydraxian Waterlords"] = "Гидраксианские Повелители Вод",
-	["Ironforge"] = "Стальгорн",
-	["The League of Arathor"] = "Лига Аратора",
-	["Magram Clan Centaur"] = "Кентавры племени Маграм",
-	["Orgrimmar"] = "Оргриммар",
-	["Ratchet"] = "Кабестан",
-	["Ravenholdt"] = "Черный Ворон",
-	["Silverwing Sentinels"] = "Среброкрылые Часовые",
-	["Shen'dralar"] = "Шен'дралар",
-	["Stormpike Guard"] = "Стража Грозовой Вершины",
-	["Stormwind"] = "Штормград",
-	["Syndicate"] = "Синдикат",
-	["Thorium Brotherhood"] = "Братство Тория",
-	["Thunder Bluff"] = "Громовой Утес",
-	["Timbermaw Hold"] = "Древобрюхи",
-	["Undercity"] = "Подгород",
-	["Warsong Outriders"] = "Всадники Песни Войны",
-	["Wildhammer Clan"] = "Неистовый Молот",
-	["Wintersaber Trainers"] = "Укротители ледопардов",
-	["Zandalar Tribe"] = "Племя Зандалар",
-
-	--Rep Levels
-	["Neutral"] = "Равнодушие",
-	["Friendly"] = "Дружелюбие",
-	["Honored"] = "Уважение",
-	["Revered"] = "Почтение",
-	["Exalted"] = "Превознесение",
-	}
-end)
-
-BabbleFaction:RegisterTranslations("esES", function()
-	return {
-	--Player Factions
-	["Alliance"] = "Alianza",
-	["Horde"] = "Horda",
-
-	-- Classic Factions
-	["Argent Dawn"] = "Alba Argenta",
-	["Bloodsail Buccaneers"] = "Bucaneros Velasangre",
-	["Booty Bay"] = "Bahía del Botín",
-	["Brood of Nozdormu"] = "Linaje de Nozdormu",
-	["Cenarion Circle"] = "Círculo Cenarion",
-	["Darkmoon Faire"] = "Feria de la Luna Negra",
-	["Darkspear Trolls"] = "Trols de Lanza Negra",
-	["Darnassus"] = "Darnassus",
-	["The Defilers"] = "Los Rapiñadores",
-	["Everlook"] = "Vista Eterna",
-	["Frostwolf Clan"] = "Clan Lobo Gélido",
-	["Gadgetzan"] = "Gadgetzan",
-	["Gelkis Clan Centaur"] = "Centauro del clan Gelkis",
-	["Gnomeregan Exiles"] = "Exiliado de Gnomeregan",
-	["Hydraxian Waterlords"] = "Señores del Agua de Hydraxis",
-	["Ironforge"] = "Forjaz",
-	["The League of Arathor"] = "Liga de Arathor",
-	["Magram Clan Centaur"] = "Centauro del clan Magram",
-	["Orgrimmar"] = "Orgrimmar",
-	["Ratchet"] = "Trinquete",
-	["Ravenholdt"] = "Ravenholdt",
-	["Silverwing Sentinels"] = "Centinelas Ala de Plata",
-	["Shen'dralar"] = "Shen'dralar",
-	["Stormpike Guard"] = "Guardia de Pico Tormenta",
-	["Stormwind"] = "Ventormenta",
-	["Syndicate"] = "Sindicato",
-	["Thorium Brotherhood"] = "Hermandad del torio",
-	["Thunder Bluff"] = "Cima del Trueno",
-	["Timbermaw Hold"] = "Bastión de los Fauces de Madera",
-	["Undercity"] = "Entrañas",
-	["Warsong Outriders"] = "Escolta Grito de Guerra",
-	["Wildhammer Clan"] = "Clan Martillo Salvaje",
-	["Wintersaber Trainers"] = "Instructoras de sableinvernales",
-	["Zandalar Tribe"] = "Tribu Zandalar",
-
-	--Rep Levels
-	["Neutral"] = "Neutral",
-	["Friendly"] = "Amistoso",
-	["Honored"] = "Honrado",
-	["Revered"] = "Reverenciado",
-	["Exalted"] = "Exaltado",
 	}
 end)
 BabbleFaction:Debug()

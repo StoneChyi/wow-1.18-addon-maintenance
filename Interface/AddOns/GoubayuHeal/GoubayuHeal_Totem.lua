@@ -821,18 +821,29 @@ function GoubayuHeal.Totem_TryRecallAfterCombat()
         and GoubayuHeal.Spell and GoubayuHeal.Spell.TotemRecall) then
         return false
     end
-    -- 仍在战斗中不回收
-    if UnitAffectingCombat and UnitAffectingCombat("player") then
+    -- 自己/小队(团队)任一成员(含宠物)仍在战斗 → 不回收：
+    -- 避免"队友进战、自己刚脱战"时误回收再重插，浪费 GCD 和蓝  by 武藤纯子酱 2026.10.12
+    if GoubayuHeal.Totem_GroupInCombat and GoubayuHeal.Totem_GroupInCombat() then
         return false
     end
     -- 按记录的图腾 GUID 判断：还有自己的图腾存活才召回
     if not (GoubayuHeal.Totem_AnyOwnTotemAlive and GoubayuHeal.Totem_AnyOwnTotemAlive()) then
         return false
     end
-
-    if GoubayuHeal.casting_spell and SpellStopCasting then
-        SpellStopCasting()
+    -- 施法中/GCD 中不回收：此时施放会"法术还没有准备好"失败，反复失败会把治疗键卡死；
+    -- 直接返回 false 让本次按键继续走治疗  by 武藤纯子酱 2026.10.12
+    if GoubayuHeal.casting_spell
+        or (GoubayuHeal.GetLeftGCD and GoubayuHeal.GetLeftGCD() > 0) then
+        return false
     end
+    -- 节流：脱战后每 3 秒最多尝试一次回收（图腾消失检测会清理清单），
+    -- 避免每次按键都重复召回、把治疗挡在门外  by 武藤纯子酱 2026.10.12
+    local now = GetTime()
+    if GoubayuHeal.Totem_RecallAfterCombatAt and (now - GoubayuHeal.Totem_RecallAfterCombatAt) < 3 then
+        return false
+    end
+    GoubayuHeal.Totem_RecallAfterCombatAt = now
+
     -- 召回静默失效时会误清计时；这里只施放，计时/登记交给"消失检测"在确认图腾真的没了之后清理
     -- （避免"回收后立刻重插"时把新图腾的计时误清）
     -- by 武藤纯子酱 2026.9.24
@@ -2270,8 +2281,26 @@ function GoubayuHeal.Totem_FineAirAutoSwitch()
 
     local numRaid = GetNumRaidMembers()
     if numRaid > 0 then
+        -- 风系图腾增益只作用于自己的小队：团队时按小队号过滤，只统计本小队成员，且跳过自己
+        -- （原先扫全团：别的队有战士就会误判成"有战士"→风怒，忽略本小队的猎/盗；
+        -- 且 raidN 含自己会把 shamanCount 多算一次，单人萨满也被当成"多萨满"）
+        -- by 武藤纯子酱 2026.10.10
+        local mySubgroup = nil
         for i = 1, numRaid do
-            check("raid" .. i)
+            if UnitIsUnit("raid" .. i, "player") then
+                local _, _, sub = GetRaidRosterInfo(i)
+                mySubgroup = sub
+                break
+            end
+        end
+        for i = 1, numRaid do
+            local u = "raid" .. i
+            if not UnitIsUnit(u, "player") then
+                local _, _, sub = GetRaidRosterInfo(i)
+                if mySubgroup and sub == mySubgroup then
+                    check(u)
+                end
+            end
         end
     else
         for i = 1, GetNumPartyMembers() do

@@ -506,6 +506,7 @@ if zhCN then
     GoubayuHeal.GUI_always_tank_target = "强制满级法术"
     GoubayuHeal.GUI_scale_spells = "自动法术等级"
     GoubayuHeal.GUI_scale_hots = "自动恢复类法术等级"
+    GoubayuHeal.GUI_predict = "预读"
     GoubayuHeal.GUI_hot_cancel = "HoT门槛"
     GoubayuHeal.GUI_allow_regrowth_overwrite = "允许覆盖愈合"
     GoubayuHeal.GUI_hot_value = "HoT放大"
@@ -528,6 +529,7 @@ else
     GoubayuHeal.GUI_always_tank_target = "\"Heal Max\" targets"
     GoubayuHeal.GUI_scale_spells = "Scale spells"
     GoubayuHeal.GUI_scale_hots = "Scale HOTs"
+    GoubayuHeal.GUI_predict = "Pre-heal"
     GoubayuHeal.GUI_hot_cancel = "HoT health threshold"
     GoubayuHeal.GUI_allow_regrowth_overwrite = "Allow Regrowth to overwrite"
     GoubayuHeal.GUI_hot_value = "+HoT value"
@@ -579,6 +581,7 @@ if zhCN then
         ["不允许别人比我更快"] = "当检测到其他治疗者正在治疗同一目标且会比我先完成时，自动取消我的施法。适合需要精确协调的团队。",
         ["自动恢复类法术等级"] = "开启后，持续治疗法术（恢复、回春术）也会按目标缺口和HoT放大倍率进行智能缩放等级。关闭则固定使用方案中设定的等级。",
         ["自动法术等级"] = "开启后，蓝量不足以施放所选技能等级时，自动降到当前蓝量能施放的最高等级以节省法力；蓝量充足则正常施放。关闭则蓝量不足时直接不施放。技能等级本身的智能缩放由「治疗力度/HoT放大」和方案内每个技能的「缩放」开关控制，与此选项相互独立。",
+        ["预读"] = "开启后：当所有目标血量都高于方案最高档（正常流程不触发治疗）时，识别正在被敌方平砍/读条攻击的队友，提前对其施放 HOT/盾（瞬发）或方案最高档的读条治疗（并让读条结束对齐在敌方伤害落地之后，抢到有效治疗）。依赖 Nampower（AUTO_ATTACK/SPELL_START 事件）。",
         ["过量取消治疗"] = "开启后，正在读条的治疗法术如果预估过量超过最大过量阈值，将被自动取消。一级法术仅在目标满血时取消。",
         ["强制满级法术"] = "强制使用法术最高等级，忽略自动等级缩放。适合坦克血量危急需要快速抬血的场景。",
         ["变形小D当作贼/战士"] = "熊/猎豹形态的德鲁伊按战士/盗贼的优先级处理（独立能量条，主要需要物理治疗）。关闭则按德鲁伊正常优先级。",
@@ -627,6 +630,7 @@ else
         ["Scale HOTs"] = "Smart rank scaling for HoTs (Renew, Rejuvenation) based on multiplier and target deficit. Disabled = use profile rank.",
         ["Scale spells"] = "When enabled, if mana is insufficient for the chosen spell rank, auto step down to the highest affordable rank to save mana; if mana is sufficient, cast normally. Disabled = no cast if mana is insufficient. (Smart rank scaling by HP deficit is controlled separately by Heal power / HoT value and the per-entry Scale toggle.)",
         ["Safe cancel"] = "Auto-cancel healing spells when predicted overheal exceeds Max Overheal. First-rank spells only cancel at full health.",
+        ["Pre-heal"] = "When every target is above the profile's highest threshold (so normal healing does not trigger), detect allies currently being auto-attacked / cast on by enemies and pre-cast a HOT/shield (instant) or the profile's highest-threshold cast-time heal, timed so the cast finishes after the incoming damage lands (to secure effective healing). Requires Nampower (AUTO_ATTACK / SPELL_START events).",
         ["\"Heal Max\" targets"] = "Force highest spell rank, ignoring auto scaling. Useful for burst healing or tank emergencies.",
         ["Treat shapeshifted druids as rogues/warriors"] = "Bear/Cat form Druids are prioritized like Rogues/Warriors (independent energy/rage bar; they mainly need physical healing). Disabled = normal Druid priority.",
         ["Periodic raid health cache"] = "While in combat and not casting, caches the whole raid/party health every 0.2s. When you trigger /gbyh within 0.2s of the last cache, the cached data is used as the decision basis instead of re-scanning the raid; older than 0.2s falls back to an on-demand scan. Disabled = always scan on demand.",
@@ -690,10 +694,11 @@ if zhCN then
         "4. 将方案绑定到动作条/宏/按键，或用下方命令触发治疗。",
         "",
         "【常用命令】",
+        "（说明：下面命令里的\"名称\"\"方案名\"等是占位符，输入时替换成你自己的档案名/方案名，不要照抄这几个字）",
         "/gbyh 或 /gbyheal       打开/关闭设置界面",
-        "/gbyh save <名称>        将当前设置保存为档案",
-        "/gbyh load <名称>        加载档案",
-        "/gbyh delete <名称>      删除档案",
+        "/gbyh save 名称          将当前设置保存为档案",
+        "/gbyh load 名称          加载档案",
+        "/gbyh delete 名称        删除档案",
         "/gbyh list               列出所有档案",
         "/gbyh opt                打开/关闭选项面板",
         "/gbyh mm                 显示/隐藏小地图按钮",
@@ -708,8 +713,9 @@ if zhCN then
         "/gbyh rez                一键复活",
         "/gbyh dispel             一键驱散",
         "/gbyh dispelprio         打开/关闭驱散优先级设置窗口",
+        "/gbyh freedom（或 自由） 一键驱散移动限制（圣骑自由之手；独立于\"驱散移动限制\"开关，按驱散优先级）",
         "/gbyh help               显示帮助",
-        "/gbyh <方案名>           对指定方案执行一键治疗（始终走团刷；方案中含祷言/新星自动团刷/单体切换，坦克MT→8T在团刷中优先级递减）",
+        "/gbyh 方案名             对指定方案执行一键治疗（始终走团刷；方案中含祷言/新星自动团刷/单体切换，坦克MT→8T在团刷中优先级递减）",
         "",
         "【API 调用】（用于 /script 或宏）",
         "GoubayuHeal.HealMostWounded(\"standard\")  按方案治疗最伤的队员（牧师方案含神圣新星/治疗祷言时自动切换团刷/单体）",
@@ -768,10 +774,11 @@ else
         "4. Bind profiles to action bars / macros / keys, or use the commands below.",
         "",
         "[Commands]",
+        "(Note: \"name\"/\"profile\" below are placeholders - replace them with your own value; do not type them literally.)",
         "/gbyh or /gbyheal        Open/close the settings window",
-        "/gbyh save <name>         Save current settings as a profile",
-        "/gbyh load <name>         Load a profile",
-        "/gbyh delete <name>       Delete a profile",
+        "/gbyh save name           Save current settings as a profile",
+        "/gbyh load name           Load a profile",
+        "/gbyh delete name         Delete a profile",
         "/gbyh list                List all profiles",
         "/gbyh opt                 Toggle the options panel",
         "/gbyh mm                  Show/hide the minimap button",
@@ -786,8 +793,9 @@ else
         "/gbyh rez                 One-click resurrection",
         "/gbyh dispel              One-click dispel",
         "/gbyh dispelprio          Open/close the dispel priority window",
+        "/gbyh freedom             One-click dispel movement restriction (Paladin Hand of Freedom; independent of the toggle, by dispel priority)",
         "/gbyh help                Show help",
-        "/gbyh <profile>           One-click heal for a profile (always raid-heals; auto AoE/single with Nova/Prayer; tanks MT->8T get decreasing priority)",
+        "/gbyh profile             One-click heal for a profile (always raid-heals; auto AoE/single with Nova/Prayer; tanks MT->8T get decreasing priority)",
         "",
         "[API] (for /script or macros)",
         "GoubayuHeal.HealMostWounded(\"standard\")  Heal the most wounded unit by profile (Priest profiles with Nova/Prayer auto-switch AoE/single)",
@@ -830,6 +838,7 @@ if zhCN then
         RezInCombat = "战斗中无法救人（德鲁伊的战斗复活除外）",
         DispelTotemCast = "[GoubayuHeal] 插图腾驱散 %s - %s",
         DispelCast = "[GoubayuHeal] 驱散 %s - %s",
+        FreedomNone = "[GoubayuHeal] 无可驱散的移动限制目标",
         CurseAwayRaid = "警告: -- %s -- 中了%s，请远离人群！",
         CurseAwayWhisper = "你中了%s，请快速远离人群！",
         TankNotInGroup = "%s 不在队伍/团队中。坦克模式已关闭。",
@@ -864,10 +873,10 @@ if zhCN then
         TankUnset = "将不再只治疗 %s",
         -- help
         HelpUsage = "用法",
-        HelpSave = "/gbyh save <档案>|cffffffff   - 将当前设置保存到<档案>",
-        HelpLoad = "/gbyh load <档案>|cffffffff   - 从档案加载设置",
+        HelpSave = "/gbyh save 档案|cffffffff      - 将当前设置保存为该档案（\"档案\"换成你要的名字）",
+        HelpLoad = "/gbyh load 档案|cffffffff      - 从档案加载设置",
         HelpList = "/gbyh list|cffffffff             - 列出所有已保存的档案",
-        HelpDelete = "/gbyh delete <档案>|cffffffff - 删除<档案>",
+        HelpDelete = "/gbyh delete 档案|cffffffff    - 删除该档案",
         HelpGui = "/gbyh gui|cffffffff              - 隐藏/显示界面元素",
         HelpMm = "/gbyh mm|cffffffff               - 隐藏/显示小地图按",
         HelpOpt = "/gbyh opt|cffffffff              - 隐藏/显示选项面板",
@@ -963,6 +972,23 @@ if zhCN then
     GoubayuHeal.DispelNearbyCurseTargets = {
         "大领主印记", "麦迪文的腐化", "恶液烂芽",
     }
+    -- 移动限制（减速/定身）判定：默认名单（名字 或 spell ID，ID 最精确）
+    -- 用于 Dispel_IsMovementDebuff：②名单 → ①DBC泛化 → ③描述关键词兜底
+    -- by 武藤纯子酱 2026.10.13
+    GoubayuHeal.DispelMovementNames = {
+        "断筋", "致残毒药", "摔绊", "冰霜震击", "冰锥术", "寒冰箭", "霜寒", "冰霜新星",
+        "冰霜陷阱", "冰霜陷阱效果", "缠绕", "纠缠根须", "冰冻", "蛛网", "减速术",
+        "疲劳诅咒", "刺耳怒吼", "冰霜之刺", "冰霜之油",
+    }
+    GoubayuHeal.DispelMovementIds = {
+        116, 122, 120, 6136, 8056, 1715, 3409, 2974, 339, 745, 246, 18223, 12323, 13810, 12494, 10230,
+    }
+    -- 描述/光环描述关键词（DBC 泛化判不出时的兜底；中英都放，兼容两种客户端文本）
+    GoubayuHeal.DispelMovementKeywords = {
+        "移动速度降低", "移动速度", "减速", "无法移动", "定身", "被定身",
+        "被冻结", "冻结在原地", "被缠绕", "缠绕",
+        "movement speed", "slowed", "immobilized", "rooted", "frozen in place", "entangled",
+    }
     -- 驱散技能（按职业）
     GoubayuHeal.DispelSpells = {
         ["PALADIN"] = {
@@ -1005,6 +1031,9 @@ if zhCN then
         PrioHint = "右键点击成员名可移除；0=忽略 4=默认 8=优先",
         ClassFilterLabel = "职业开关：",
         ClassFilterTip = "开启：该职业成员正常参与驱散。\n关闭：无论上方优先级如何设置，该职业都不会被驱散。\n默认全部开启，点击切换。",
+        ButtonMovement = "驱散移动限制",
+        MovementWindowTitle = "移动限制名单（名字或技能ID）",
+        MovementHint = "每行一个：填减益名字或技能 spell ID（ID 最精确）。用于判定\"驱散移动限制\"（圣骑自由之手等）。",
     }
     -- 萨满图腾
     GoubayuHeal.Totem = {
@@ -1273,6 +1302,8 @@ if zhCN then
         Dp2Tip = "自身血量低于该百分比时，最高优先级断条施放圣佑术（仅对自己；需不在CD、蓝量够、且无自律debuff）。0% = 关闭。",
         AllowFirstRank = "一级无视过量",
         AllowFirstRankTip = "开启后，一级法术将无视过量治疗，持续治疗直到达到治疗门槛。",
+        Predict = "预读",
+        PredictTip = "开启后：当所有目标血量都高于方案最高档（正常流程不触发治疗）时，识别正在被敌方平砍/读条攻击的队友，提前对其施放 HOT/盾（瞬发）或方案最高档的读条治疗，并让读条结束对齐在敌方伤害落地之后（抢到有效治疗）。依赖 Nampower 的 AUTO_ATTACK/SPELL_START 事件。",
         KeepTree = "保持生命之树形态",
         KeepTreeTip = "开启后，当处于施法者形态时自动切换为生命之树形态（治疗加成）。已在树/熊/猫等形态时不干扰。",
         EssenceLabel = "艾森娜:",
@@ -1384,6 +1415,7 @@ else
         RezInCombat = "Cannot resurrect in combat (except Druid combat rez)",
         DispelTotemCast = "[GoubayuHeal] Totem dispel %s - %s",
         DispelCast = "[GoubayuHeal] Dispel %s - %s",
+        FreedomNone = "[GoubayuHeal] No movement-restriction target to dispel",
         CurseAwayRaid = "Warning: -- %s -- has %s, move away from group!",
         CurseAwayWhisper = "You have %s, move away from group quickly!",
         TankNotInGroup = "%s is not in party/raid. Tank mode disabled.",
@@ -1415,10 +1447,10 @@ else
         NoTank = "No dedicated tank",
         TankUnset = "Will no longer only heal %s",
         HelpUsage = "Usage",
-        HelpSave = "/gbyh save <profile>|cffffffff   - Save current settings as <profile>",
-        HelpLoad = "/gbyh load <profile>|cffffffff   - Load a profile",
+        HelpSave = "/gbyh save profile|cffffffff      - Save current settings as that profile (\"profile\" = your own name)",
+        HelpLoad = "/gbyh load profile|cffffffff      - Load a profile",
         HelpList = "/gbyh list|cffffffff             - List all saved profiles",
-        HelpDelete = "/gbyh delete <profile>|cffffffff - Delete <profile>",
+        HelpDelete = "/gbyh delete profile|cffffffff    - Delete that profile",
         HelpGui = "/gbyh gui|cffffffff              - Hide/show UI elements",
         HelpMm = "/gbyh mm|cffffffff               - Hide/show minimap button",
         HelpOpt = "/gbyh opt|cffffffff              - Hide/show options panel",
@@ -1503,6 +1535,22 @@ else
     GoubayuHeal.DispelNearbyCurseTargets = {
         "Greater Mark of the Dawn", "Medivh's Corruption", "Euyonalia",
     }
+    -- Movement-impairing (slow/root) detection: default list (names or spell IDs, IDs most precise)
+    -- by 武藤纯子酱 2026.10.13
+    GoubayuHeal.DispelMovementNames = {
+        "Hamstring", "Crippling Poison", "Wing Clip", "Frost Shock", "Cone of Cold",
+        "Frostbolt", "Chilled", "Frost Nova", "Frost Trap", "Frost Trap Aura",
+        "Entangling Roots", "Frozen", "Web", "Slow", "Curse of Exhaustion",
+        "Piercing Howl", "Ice Spike", "Frost Oil",
+    }
+    GoubayuHeal.DispelMovementIds = {
+        116, 122, 120, 6136, 8056, 1715, 3409, 2974, 339, 745, 246, 18223, 12323, 13810, 12494, 10230,
+    }
+    GoubayuHeal.DispelMovementKeywords = {
+        "移动速度降低", "移动速度", "减速", "无法移动", "定身", "被定身",
+        "被冻结", "冻结在原地", "被缠绕", "缠绕",
+        "movement speed", "slowed", "immobilized", "rooted", "frozen in place", "entangled",
+    }
     GoubayuHeal.DispelSpells = {
         ["PALADIN"] = {
             Magic = { "Cleanse" },
@@ -1541,6 +1589,9 @@ else
         PrioHint = "Right-click a member name to remove; 0=ignore 4=default 8=prioritize",
         ClassFilterLabel = "Classes:",
         ClassFilterTip = "ON: members of this class are dispelled normally.\nOFF: this class is never dispelled, regardless of the priority settings above.\nAll classes are ON by default. Click to toggle.",
+        ButtonMovement = "Dispel movement",
+        MovementWindowTitle = "Movement-restriction list (name or spell ID)",
+        MovementHint = "One per line: a debuff name or spell ID (ID is most precise). Used to detect \"Dispel Movement\" (Paladin Hand of Freedom etc.).",
     }
     GoubayuHeal.Totem = {
         TotemPoison = "Poison Cleansing Totem",
@@ -1796,6 +1847,8 @@ else
         Dp2Tip = "When your health falls below this percentage, cast Divine Protection at top priority interrupting casts (self only; requires off cooldown, enough mana and no Forbearance debuff). 0% = off.",
         AllowFirstRank = "Rank 1 ignores overheal",
         AllowFirstRankTip = "When enabled, rank 1 spells ignore overheal and keep healing until the heal threshold is reached.",
+        Predict = "Pre-heal",
+        PredictTip = "When enabled: if all targets are above the profile's highest threshold (no normal heal), detect allies being auto-attacked / cast on by enemies and pre-cast a HOT/shield (instant) or the profile's highest-threshold cast-time heal, timed so the cast lands after the incoming damage (to secure effective healing). Requires Nampower (AUTO_ATTACK / SPELL_START events).",
         KeepTree = "Keep Tree of Life Form",
         KeepTreeTip = "When enabled, automatically switches to Tree of Life Form while in caster form (healing bonus). Does not interfere when already in tree/bear/cat forms.",
         EssenceLabel = "Essence:",
@@ -1886,9 +1939,9 @@ else
         HotEnabledTip = "When enabled, automatically re-applies each member's HOT and rank (won't stack when the target's buff bar is full or a similar HOT is already active).",
         HotClearTip = "Clears all members' HOT settings (everything becomes None).",
         DispelEnabledTip = "Shows the always-on dispel window; dispel via the window button or /gbyh dispel.",
-        DispelQueueTip = "When checked, /gbyh <scheme> dispels first when the dispel priority threshold is met; unchecked, only /gbyh dispel dispels.",
+        DispelQueueTip = "When checked, /gbyh scheme dispels first when the dispel priority threshold is met; unchecked, only /gbyh dispel dispels.",
         DispelInterruptTip = "When checked, dispelling interrupts your current cast; unchecked, no dispel while casting.",
-        DispelHiddenTip = "Hides the always-on dispel window; only /gbyh dispel works, or /gbyh <scheme> after checking \"Add dispel to heal queue\".",
+        DispelHiddenTip = "Hides the always-on dispel window; only /gbyh dispel works, or /gbyh scheme after checking \"Add dispel to heal queue\".",
         -- Advanced page
         ProfileLabel = "Profile:",
         DeletedProfileFmt = "[GoubayuHeal] Deleted profile %s",

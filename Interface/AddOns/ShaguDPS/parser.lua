@@ -295,6 +295,7 @@ function ShaguDPS.AddHostileTarget(guid)
     end
     ShaguDPS.hostile_targets[guid] = {
         time = GetTime(),
+        firstSeen = GetTime(),   -- 首次命中时间（用于"低效目标"存活时长统计）  by 武藤纯子酱 2026.10.14
         dead = UnitIsDead(guid) == 1,
     }
 end
@@ -1749,6 +1750,14 @@ end
 
 local function RecordWrongDispel(casterName, targetName, debuffName, spellName)
     if not casterName or not targetName or not debuffName or not spellName then return end
+    -- 去重：SPELL_GO 与 DISPEL 两条路径会对同一次驱散各触发一次，按(施法者|目标|debuff) 0.5s 内只记一次
+    -- 注意：这里只记"错误驱散"（_total/_offensive/_defensive 由 onDispel 统计），避免重复计数
+    -- by 武藤纯子酱 2026.10.15
+    parser.wrongDispelTimes = parser.wrongDispelTimes or {}
+    local key = casterName .. "|" .. targetName .. "|" .. debuffName
+    local now = GetTime()
+    if parser.wrongDispelTimes[key] and (now - parser.wrongDispelTimes[key]) < 0.5 then return end
+    parser.wrongDispelTimes[key] = now
     ShaguDPS.wrongDispels = ShaguDPS.wrongDispels or {}
     if not ShaguDPS.wrongDispels[casterName] then
         ShaguDPS.wrongDispels[casterName] = {}
@@ -1765,7 +1774,6 @@ local function RecordWrongDispel(casterName, targetName, debuffName, spellName)
             entry[casterName] = { _total = 0, _offensive = 0, _defensive = 0 }
         end
         local p = entry[casterName]
-        p._total = (p._total or 0) + 1
         if not p["错误驱散"] then p["错误驱散"] = {} end
         if not p["错误驱散"][targetName] then p["错误驱散"][targetName] = {} end
         p["错误驱散"][targetName][debuffName] =
@@ -2689,7 +2697,25 @@ local function onUnitDied(guid)
         parser.badDispelClearTimes[guid] = GetTime() + 1.0
     end
 
-    if ShaguDPS.hostile_targets then
+    -- 目标存活时长统计（首次命中→死亡），按目标名累计，供"低效目标"判定  by 武藤纯子酱 2026.10.14
+    if ShaguDPS.hostile_targets and ShaguDPS.hostile_targets[guid] then
+        local info = ShaguDPS.hostile_targets[guid]
+        local fs = info.firstSeen
+        -- 保险：仅当该目标近期仍在被统计（近期有命中）才记录，避免"只记录过首次命中、之后长期
+        -- 未参与（灭团重置/召唤物消失）"的陈旧数据污染平均死亡时间  by 武藤纯子酱 2026.10.14
+        if fs and info.time and (GetTime() - info.time) <= 12 then
+            local lname = SafeUnitName(guid)
+            if lname and not isUnknownName(lname) then
+                local life = GetTime() - fs
+                if life > 0 then
+                    ShaguDPS.targetLifetime = ShaguDPS.targetLifetime or {}
+                    local rec = ShaguDPS.targetLifetime[lname]
+                    if not rec then rec = { sum = 0, count = 0 }; ShaguDPS.targetLifetime[lname] = rec end
+                    rec.sum = rec.sum + life
+                    rec.count = rec.count + 1
+                end
+            end
+        end
         ShaguDPS.hostile_targets[guid] = nil
     end
 
@@ -3136,6 +3162,19 @@ local function sdAccumulate(casterName, field, delta)
     end
 end
 
+-- 每个目标的"本应有效"破甲数（叠层/有效，与阈值无关地记录）：显示时按当前阈值把低效目标的这部分
+-- 从四段扣除、并入红字前缀，从而做到实时随阈值变化  by 武藤纯子酱 2026.10.14
+local function sdAccumulateGoodTarget(casterName, targetName)
+    if not casterName or not targetName then return end
+    for segment = 0, 1 do
+        local entry = data.sunder[segment]
+        local e = entry[casterName]
+        if not e then e = { _total = 0 }; entry[casterName] = e end
+        if not e._good_targets then e._good_targets = {} end
+        e._good_targets[targetName] = (e._good_targets[targetName] or 0) + 1
+    end
+end
+
 -- 记录"错误目标"（无效伤害名单内的目标）的破甲：单独计数 + 按目标名记录，不计入四段
 -- by 武藤纯子酱 2026.10.8
 local function sdAccumulateWrong(casterName, targetName)
@@ -3150,6 +3189,23 @@ local function sdAccumulateWrong(casterName, targetName)
             e._wrong_targets[targetName] = (e._wrong_targets[targetName] or 0) + 1
         end
     end
+end
+
+-- 目标平均死亡时间（秒）；无数据返回 nil  by 武藤纯子酱 2026.10.14
+function ShaguDPS.GetTargetAvgLifetime(name)
+    if not name then return nil end
+    local rec = ShaguDPS.targetLifetime and ShaguDPS.targetLifetime[name]
+    if not rec or rec.count <= 0 then return nil end
+    return rec.sum / rec.count
+end
+
+-- 是否"低效目标"：平均存活时间 < config.ineff_threshold（0/空=关闭）  by 武藤纯子酱 2026.10.14
+function ShaguDPS.IsInefficientTarget(name)
+    local th = tonumber(config.ineff_threshold) or 5
+    if th <= 0 then return false end
+    local avg = ShaguDPS.GetTargetAvgLifetime(name)
+    if not avg then return false end
+    return avg < th
 end
 
 -- 破甲暂定队列（每目标）：记录最近若干次 AURA_CAST（含施法者），供 DEBUFF_ADDED 按
@@ -3193,6 +3249,11 @@ parser.sunderHooks = {
             sdAccumulateWrong(casterName, tgtName)   -- 无效伤害名单目标 → 错误目标
             return
         end
+        -- 小动物破甲一律算作无效破甲（并入"错误目标"）  by 武藤纯子酱 2026.10.14
+        if IsCritter(targetGuid) then
+            sdAccumulateWrong(casterName, tgtName)
+            return
+        end
         local t = sdTarget(targetGuid)
         if not t then return end
         local now = GetTime()
@@ -3212,6 +3273,9 @@ parser.sunderHooks = {
             end
         end
         sdAccumulate(casterName, field)
+        if field == "_effective" then
+            sdAccumulateGoodTarget(casterName, tgtName)   -- 该目标的"本应有效"另记，显示时按阈值并入前缀
+        end
         sdPushPending(t, casterName, field, spellId, noMove, now)
         if isWarrior then t.sunderUntil = now + SUNDER_DURATION else t.exposeUntil = now + SUNDER_DURATION end
     end,
@@ -3226,6 +3290,11 @@ parser.sunderHooks = {
         local p = t.pending[idx]
         table.remove(t.pending, idx)
         if p.noMove then return end
+        -- 改判为叠层：若原暂定是"无效"，该次现在算"本应有效"，补记入目标 good 计数；
+        -- 原暂定为"有效"时已在 onAuraCast 记过，不重复  by 武藤纯子酱 2026.10.14
+        if p.field == "_invalid" then
+            sdAccumulateGoodTarget(p.caster, SafeUnitName(targetGuid))
+        end
         sdAccumulate(p.caster, p.field, -1)
         sdAccumulate(p.caster, state == 0 and "_stack_new" or "_stack_add")
     end,
@@ -3238,6 +3307,11 @@ parser.sunderHooks = {
         local tgtName = SafeUnitName(targetGuid)
         if isNameIgnored(tgtName) then
             sdAccumulateWrong(casterName, tgtName)   -- 无效伤害名单目标 → 错误目标
+            return
+        end
+        -- 小动物破甲一律算作无效破甲（并入"错误目标"）  by 武藤纯子酱 2026.10.14
+        if IsCritter(targetGuid) then
+            sdAccumulateWrong(casterName, tgtName)
             return
         end
         sdAccumulate(casterName, "_fail")
@@ -4236,6 +4310,12 @@ if ShaguDPS.hasNampower then
         end
 
         local dispelledSpellName = getSpellName(spellId)
+        -- DISPEL 事件参数3即"被驱散的 debuff"：若属于"错误驱散名单"，直接记为错误驱散
+        -- （SPELL_GO 路径对某些未致死驱散识别不到，这里补上；重复由 RecordWrongDispel 去重）
+        -- by 武藤纯子酱 2026.10.15
+        if ShaguDPS.badDispelDebuffs[dispelledSpellName] then
+            RecordWrongDispel(finalName, targetName, dispelledSpellName, dispelledSpellName)
+        end
         local isFriendly = IsFriendly(targetGuid)
         local dispelType = isFriendly and "defensive" or "offensive"
 
@@ -4527,11 +4607,14 @@ if ShaguDPS.hasNampower then
             local sunderCaster = finalName
             local targetNameSunder = SafeUnitName(targetGuid)
             if targetNameSunder and not isUnknownName(targetNameSunder) and not isNameIgnored(targetNameSunder) then
-                for segment = 0, 1 do
-                    local entry = data.sunder[segment]
-                    if not entry[sunderCaster] then entry[sunderCaster] = { ["_total"] = 0 } end
-                    entry[sunderCaster]["_total"] = (entry[sunderCaster]["_total"] or 0) + 1
-                    entry[sunderCaster][targetNameSunder] = (entry[sunderCaster][targetNameSunder] or 0) + 1
+                -- 小动物破甲一律不计入总数（并入"错误目标"）  by 武藤纯子酱 2026.10.14
+                if not IsCritter(targetGuid) then
+                    for segment = 0, 1 do
+                        local entry = data.sunder[segment]
+                        if not entry[sunderCaster] then entry[sunderCaster] = { ["_total"] = 0 } end
+                        entry[sunderCaster]["_total"] = (entry[sunderCaster]["_total"] or 0) + 1
+                        entry[sunderCaster][targetNameSunder] = (entry[sunderCaster][targetNameSunder] or 0) + 1
+                    end
                 end
             end
         end

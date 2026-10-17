@@ -1141,7 +1141,6 @@ function lib:LoadPatternList(eventName)
 		--------------- Spell Buffs ----------------	
 	elseif eventName == "CHAT_MSG_SPELL_SELF_BUFF" then
 		if not self.eventTable["CHAT_MSG_SPELL_SELF_BUFF"] then
-			if GetLocale() ~= "deDE" then
 				self.eventTable["CHAT_MSG_SPELL_SELF_BUFF"] = self:LoadPatternCategoryTree(
 					{
 						"HealSelf",
@@ -1163,28 +1162,6 @@ function lib:LoadPatternList(eventName)
 						}
 					}
 				)
-			else
-				self.eventTable["CHAT_MSG_SPELL_SELF_BUFF"] = self:LoadPatternCategoryTree(
-					{
-						"HealSelf",
-						"CastSelf",
-						"PerformSelf",
-						"DispelFailSelf",
-						"SPELLCASTSELFSTART",
-						"SPELLPERFORMSELFSTART",
-						{
-							"DrainSelf",
-							"PowerGainSelf",
-							"ExtraAttackSelf",
-						},
-						"SPELLSPLITDAMAGESELFOTHER",
-						{
-							"ProcResistSelf",
-							"SpellMissSelf",
-						}
-					}
-				)
-			end
 		end
 
 		list = self.eventTable["CHAT_MSG_SPELL_SELF_BUFF"]
@@ -1196,7 +1173,6 @@ function lib:LoadPatternList(eventName)
 		or eventName == "CHAT_MSG_SPELL_PARTY_BUFF"
 		or eventName == "CHAT_MSG_SPELL_PET_BUFF" then
 		if not self.eventTable["CHAT_MSG_SPELL_HOSTILEPLAYER_BUFF"] then
-			if GetLocale() ~= "deDE" then
 				self.eventTable["CHAT_MSG_SPELL_HOSTILEPLAYER_BUFF"] = self:LoadPatternCategoryTree(
 					{
 						{
@@ -1239,7 +1215,6 @@ function lib:LoadPatternList(eventName)
 						"DispelFailOther",
 					}
 				)
-			end
 		end
 
 		list = self.eventTable["CHAT_MSG_SPELL_HOSTILEPLAYER_BUFF"]

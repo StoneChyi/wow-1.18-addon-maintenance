@@ -6,7 +6,7 @@
 ## X-Repple: 核心
 ## Author: Various，VE，凡人，Sunelegy，Wind，Crazydru
 ## Version: 2.28
-# SE\SpecialEvents-Mail-2: bigfix in ruRU (1.0.1); Babble-Item-2.0 added (1.0.2) by CFM; Babble-Spell-2.2 added more neutral and bosses spells (1.0.3)
+# Babble-Item-2.0 added (1.0.2) by CFM; Babble-Spell-2.2 added more neutral and bosses spells (1.0.3)
 ## OptionalDeps: Warmup, BugGrabber
 ## X-Category: Library
 ## X-Credits: Maus & Co. (Updating, localizing libraries)

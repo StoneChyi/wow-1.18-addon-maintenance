@@ -1483,6 +1483,9 @@ end
     nameplate.cachedVerify = ""
     nameplate.cachedTargetGUID = nil
     nameplate.cachedTargetClass = nil
+    -- 出生时间：客户端给新板压"非目标"透明度(0.6)之前，原始帧 alpha 是默认的
+    -- 1.0，这段时间内不能拿 alpha>=0.99 当目标判据（见 OnUpdate 的 alphaEligible）
+    nameplate.spawnT = GetTime()
 
     -- create shortcuts for all known elements and disable them
     nameplate.original.healthbar, nameplate.original.castbar = parent:GetChildren()
@@ -1825,6 +1828,16 @@ end
       levelFromDB = true
     end
     
+    -- ⛔ 客户端复用 NamePlate frame：上一任单位是目标时 istarget 残留为 true，
+    --    换了单位后的第一次重绘会把旧目标态（高亮/发光）画给新单位，下一拍又被
+    --    OnUpdate 纠正 = "新板顶着目标样式出现又瞬间变回普通"（2026-10-12）。
+    --    名字变了就先清目标态；同名不同单位的情况由 OnShow 的 GUID 对比兜底。
+    --    ⚠️ 必须放在读取 plate.istarget 之前，否则本次重绘仍用旧值。
+    if plate.cache.name and plate.cache.name ~= name then
+      plate.istarget = nil
+      plate.cache.target = nil
+    end
+
     local target = plate.istarget
     local mouseover = UnitExists("mouseover") and plate.original.glow:IsShown() or nil
     local unitstr = target and "target" or mouseover and "mouseover" or nil
@@ -2396,6 +2409,27 @@ end
     nameplate.cache.player = nil
     nameplate.cache.guid = nil
 
+    -- ⛔ 客户端会复用同一块 NamePlate frame 显示不同单位。上一任单位是目标时
+    --    （istarget=true、目标高亮/发光已画上），板隐藏后重新分配给别的单位，
+    --    OnShow 里紧接着的 OnDataChanged 就会把旧目标态画给新单位，下一拍才被
+    --    OnUpdate 纠正 —— 远距离目标刚进视野、板重新洗牌时最明显：新板顶着
+    --    "目标样式"出现又瞬间变回普通（2026-10-12 用户实证）。
+    --    GUID 变了就先清干净目标态再走 OnDataChanged；真目标板会由 OnUpdate
+    --    的 GUID 等值路径在一两帧内重新标回目标，不会丢目标样式。
+    local shownGuid = frame:GetName(1)
+    if shownGuid and nameplate.cachedGuid and nameplate.cachedGuid ~= shownGuid then
+      nameplate.istarget = nil
+      nameplate.cache.target = nil
+      if nameplate.glow then nameplate.glow:Hide() end
+      if nameplate.health then
+        nameplate.health.zoomed = nil
+        nameplate.health.zoomTransition = nil
+      end
+    end
+    -- 新板/重新显示的板：客户端还没把非目标板的透明度压下去（原始帧 alpha=1.0），
+    -- 给 alpha 目标判据一个出生年龄门槛（见 OnUpdate 的 alphaEligible）
+    nameplate.spawnT = GetTime()
+
     -- 管理可见血条表
     if hiddenPlates[frame] then
       hiddenPlates[frame] = nil
@@ -2466,8 +2500,13 @@ end
     
     -- PERF: Intelligent throttling based on target/castbar status and plate count
     local targetGuid = state and state.targetGuid
+    -- ⛔ alpha 兜底判据有出生年龄门槛：新建的板客户端还没把非目标透明度(0.6)
+    --    压下去，原始帧 alpha 默认 1.0，头几帧会把刚出现的非目标板误判成目标板
+    --    （目标样式闪一下又变回普通，远距离目标进视野、一批板同时新建时最明显）。
+    --    真目标板走上面的 GUID 等值路径，不受此门槛影响。
+    local alphaEligible = (now - (nameplate.spawnT or 0)) > 0.4
     local target = (targetGuid and nameplate.cachedGuid and targetGuid == nameplate.cachedGuid) or
-                   (state and state.hasTarget and frame:GetAlpha() >= 0.99) or nil
+                   (state and state.hasTarget and alphaEligible and frame:GetAlpha() >= 0.99) or nil
     -- Target plate castbar runs on its own dedicated frame (nameplates.castbarFrame).
     local isCastingNonTarget = not target and nameplate.castbar and nameplate.castbar:IsShown()
     if not isCastingNonTarget and not target and cfg.showcastbar and nameplate.cachedGuid then

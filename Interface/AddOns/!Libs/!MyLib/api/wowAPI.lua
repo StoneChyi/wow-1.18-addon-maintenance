@@ -568,3 +568,89 @@ function SetSize(f, w, h)
 	f:SetWidth(w)
 	f:SetHeight(h)
 end
+
+--模组 API 优先封装：Nampower > SuperWoW > 默认回退；无对应模组时返回 nil，调用方据此回退原生实现 -- by 武藤纯子酱 2026.10.12
+
+--单位真实血量（仅 Nampower 提供真实值） -- by 武藤纯子酱 2026.10.12
+function GetUnitRealHealth(unit)
+	if CheckNampower() then
+		local GetUnitField = getglobal("GetUnitField")
+		if GetUnitField then return GetUnitField(unit, "health") end
+	end
+	return nil
+end
+
+--单位真实最大血量 -- by 武藤纯子酱 2026.10.12
+function GetUnitRealHealthMax(unit)
+	if CheckNampower() then
+		local GetUnitField = getglobal("GetUnitField")
+		if GetUnitField then return GetUnitField(unit, "maxHealth") end
+	end
+	return nil
+end
+
+--单位光环 spellId（SuperWoW 的 UnitBuff/UnitDebuff 追加返回；Nampower 的 aura 为原始槽位数组不便于按 index 取，不采用） -- by 武藤纯子酱 2026.10.12
+function GetUnitAuraSpellID(unit, index, isDebuff)
+	if CheckSuperWow() then
+		local id
+		if isDebuff then _, _, _, id = UnitDebuff(unit, index)
+		else _, _, id = UnitBuff(unit, index) end
+		if id and id ~= 0 then return id end
+	end
+	return nil
+end
+
+--玩家是否移动（Nampower PlayerIsMoving 返回 1/0） -- by 武藤纯子酱 2026.10.12
+function IsPlayerMovingEx()
+	if CheckNampower() then
+		local PlayerIsMoving = getglobal("PlayerIsMoving")
+		if type(PlayerIsMoving) == "function" then
+			local m = PlayerIsMoving()
+			if m ~= nil then return m == 1 end
+		end
+	end
+	return nil
+end
+
+--玩家是否在室内（UnitXP isOutdoors 1=室内；其次 SuperWoW isIndoors） -- by 武藤纯子酱 2026.10.12
+function IsPlayerIndoorsEx()
+	if CheckUnitXP_SP3() then
+		local UnitXP = getglobal("UnitXP")
+		if type(UnitXP) == "function" then
+			local ok, v = pcall(UnitXP, "isOutdoors")
+			if ok and v ~= nil then return v == 1 end
+		end
+	end
+	local isIndoors = getglobal("isIndoors")
+	if type(isIndoors) == "function" then
+		local v = isIndoors()
+		if v ~= nil then return v == true or v == 1 end
+	end
+	return nil
+end
+
+--玩家是否骑乘（SuperWoW IsMounted） -- by 武藤纯子酱 2026.10.12
+function IsPlayerMountedEx()
+	local IsMounted = getglobal("IsMounted")
+	if type(IsMounted) == "function" then
+		local v = IsMounted()
+		if v ~= nil then return v == true or v == 1 end
+	end
+	return nil
+end
+
+--两单位间距（码）：优先 UnitXP distanceBetween，其次对 player 用 screenPos 距离；无则 nil -- by 武藤纯子酱 2026.10.12
+function GetUnitDistance(u1, u2)
+	if CheckUnitXP_SP3() then
+		local UnitXP = getglobal("UnitXP")
+		if type(UnitXP) == "function" then
+			local ok, d = pcall(UnitXP, "distanceBetween", u1, u2)
+			if ok and type(d) == "number" then return d end
+			if u1 == "player" then
+				local ok2, x, y, dist = pcall(UnitXP, "screenPos", u2, 40)
+				if ok2 and type(dist) == "number" then return dist end
+			end
+		end
+	end
+	return nil
+end

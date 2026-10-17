@@ -490,8 +490,16 @@ function SpellStatusV2:CastSpell(spellId, spellbookType)
 	self:LevelDebug(2, ">>>> CastSpell", spellId, spellbookType)
 
 	local sId, sName, sRank, sFullName
-	if (spellbookType == BOOKTYPE_SPELL) then
+	-- CastSpell receives a spellbook slot, not a spell ID. Resolve it first.
+	if spellbookType == BOOKTYPE_SPELL then
 		sName, sRank, sId, sFullName = spellcache:GetSpellData(spellId)
+		if sId and CheckNampower and CheckNampower() and type(GetSpellRec) == "function" then
+			local rec = GetSpellRec(sId)
+			if rec and rec.name then
+				sName = rec.name
+				sRank = sRank or rec.rank
+			end
+		end
 	end
 
 	CastOriginal(self, "CastSpell", spellId, spellbookType, nil, sId, sName, sRank, sFullName)

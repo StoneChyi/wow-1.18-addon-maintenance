@@ -62,6 +62,19 @@ function GoubayuHeal.Dispel_DefaultList()
     return t
 end
 
+-- 移动限制名单默认集（名字 + spell ID 合并为一个集合；ID 以字符串作键，判定时按数字比较）
+-- by 武藤纯子酱 2026.10.13
+function GoubayuHeal.Dispel_MovementDefaults()
+    local t = {}
+    for _, n in ipairs(GoubayuHeal.DispelMovementNames or {}) do
+        t[n] = true
+    end
+    for _, id in ipairs(GoubayuHeal.DispelMovementIds or {}) do
+        t[tostring(id)] = true
+    end
+    return t
+end
+
 -- ============================================================
 -- 隐藏减益默认
 -- ============================================================
@@ -140,6 +153,8 @@ end
 function GoubayuHeal.Dispel_DefaultFor(key, selectedClass)
     if key == "dispel_blacklist" then
         return GoubayuHeal.Dispel_DefaultList()
+    elseif key == "dispel_movement" then
+        return GoubayuHeal.Dispel_MovementDefaults()
     elseif key == "dispel_filter_debuffs" then
         return GoubayuHeal.Dispel_FilterDebuffDefaults()
     elseif key == "dispel_filter_class" then
@@ -367,6 +382,7 @@ function GoubayuHeal.Dispel_SetupDefaults()
     C["dispel_wyvern_sting"] = C["dispel_wyvern_sting"] or 0
     C["dispel_mutating_injection"] = C["dispel_mutating_injection"] or 0
     C["dispel_blacklist"] = C["dispel_blacklist"] or {}
+    C["dispel_movement"] = C["dispel_movement"] or GoubayuHeal.Dispel_MovementDefaults()
     C["dispel_filter_debuffs"] = C["dispel_filter_debuffs"] or {}
     C["dispel_filter_class"] = C["dispel_filter_class"] or {}
 
@@ -462,7 +478,7 @@ function GoubayuHeal.Dispel_CanBeCleansed(unit)
     return false
 end
 
-function GoubayuHeal.Dispel_CanCast(unit)
+function GoubayuHeal.Dispel_CanCast(unit, dtype)
     if not unit or not UnitExists(unit) then
         return false
     end
@@ -471,6 +487,36 @@ function GoubayuHeal.Dispel_CanCast(unit)
         return true
     end
 
+    -- 视野判定（范围判定通过后复用）
+    local function hasSight()
+        if DispelHasUnitXP then
+            local ok, inSight = pcall(UnitXP, "inSight", "player", unit)
+            if ok and inSight == false then
+                return false
+            end
+            return true
+        end
+        return UnitIsVisible(unit)
+    end
+
+    -- 优先 Nampower IsSpellInRange(spellName, unit)：反映含天赋/装备修正的实际射程，
+    -- 与治疗通道 CanCastAtUnit 口径一致（否则驱散会被固定 30 码截断，吃不到"增加驱散距离"天赋）
+    -- by 武藤纯子酱 2026.10.13
+    if GetNampowerVersion and IsSpellInRange and dtype then
+        local sp = DispelUsable and DispelUsable[dtype]
+        local sname = sp and sp.name
+        if sname then
+            local ok, r = pcall(IsSpellInRange, sname, unit)
+            if ok and (r == 0 or r == 1) then
+                if r == 0 then
+                    return false
+                end
+                return hasSight()
+            end
+        end
+    end
+
+    -- 回退：固定范围（无 Nampower / 无名 / 非单目标法术时）
     local inRange
 
     if UnitIsFriend("player", unit) and not UnitCanAttack("player", unit) then
@@ -497,15 +543,7 @@ function GoubayuHeal.Dispel_CanCast(unit)
     end
 
     if inRange then
-        if DispelHasUnitXP then
-            local ok, inSight = pcall(UnitXP, "inSight", "player", unit)
-            if ok and inSight == false then
-                return false
-            end
-            return true
-        else
-            return UnitIsVisible(unit)
-        end
+        return hasSight()
     end
 
     return false
@@ -520,6 +558,77 @@ local DispelScanTooltip = CreateFrame("GameTooltip", "GoubayuHealDispelScanToolt
 DispelScanTooltip:SetOwner(DispelScanTooltip, "ANCHOR_NONE")
 -- 离屏扫描框全程透明（alpha=0）：它只用来读取减益数据，任何可见状态都是渲染残留空框
 DispelScanTooltip:SetAlpha(0)
+
+-- 移动限制（减速/定身）判定：②名单(名字/ID) → ①DBC泛化 → ③描述关键词(API→tooltip正文)
+-- 仅当职业有 Snare 驱散技能（如圣骑自由之手）时才需要调用；命中返回 true。
+-- by 武藤纯子酱 2026.10.13
+function GoubayuHeal.Dispel_IsMovementDebuff(unit, i, spellId, debuffName)
+    if not DispelUsable.Snare then
+        return false
+    end
+
+    -- ② 名单（最优先）：spellId（以字符串作键）或 debuff 名
+    local list = GoubayuHeal.Config and GoubayuHeal.Config["dispel_movement"]
+    if list then
+        if spellId and list[tostring(spellId)] then
+            return true
+        end
+        if debuffName and debuffName ~= "" and list[debuffName] then
+            return true
+        end
+    end
+
+    if not (GetNampowerVersion and GetSpellRecField and spellId) then
+        return false
+    end
+
+    -- ① DBC 泛化：effectApplyAuraName 含 33(减速)/26(定身)
+    local okA, auraNames = pcall(GetSpellRecField, spellId, "effectApplyAuraName")
+    if okA and auraNames then
+        if type(auraNames) == "table" then
+            for _, a in pairs(auraNames) do
+                if a == 33 or a == 26 then
+                    return true
+                end
+            end
+        elseif auraNames == 33 or auraNames == 26 then
+            return true
+        end
+    end
+
+    -- ③ 描述关键词：优先 DBC description/tooltip，读不到再扫 debuff tooltip 正文
+    local function matchKw(s)
+        if not s or s == "" then
+            return false
+        end
+        for _, kw in ipairs(GoubayuHeal.DispelMovementKeywords or {}) do
+            if string.find(s, kw, 1, true) then
+                return true
+            end
+        end
+        return false
+    end
+
+    local okD, desc = pcall(GetSpellRecField, spellId, "description")
+    if okD and matchKw(desc) then
+        return true
+    end
+    local okT, tip = pcall(GetSpellRecField, spellId, "tooltip")
+    if okT and matchKw(tip) then
+        return true
+    end
+
+    DispelScanTooltip:ClearLines()
+    pcall(function() DispelScanTooltip:SetUnitDebuff(unit, i) end)
+    for k = 1, 6 do
+        local fs = getglobal("GoubayuHealDispelScanTooltipTextLeft" .. k)
+        if fs and matchKw(fs:GetText()) then
+            return true
+        end
+    end
+
+    return false
+end
 
 function GoubayuHeal.Dispel_GetDebuffInfo(unit, i)
     -- 类型识别统一用原版 UnitDebuff：其 debuffType 只有可驱散类型（魔法/中毒/疾病/诅咒）才有值，
@@ -553,6 +662,12 @@ function GoubayuHeal.Dispel_GetDebuffInfo(unit, i)
     end
 
     local key = typeKeyMap[debuffType]
+    -- 标准类型判不出时，尝试移动限制判定（仅圣骑等有 Snare 技能的职业；其余职业 DispelUsable.Snare 为空直接跳过）
+    -- by 武藤纯子酱 2026.10.13
+    if not key and GoubayuHeal.Dispel_IsMovementDebuff
+        and GoubayuHeal.Dispel_IsMovementDebuff(unit, i, spellId, name) then
+        key = "Snare"
+    end
     -- 第5返回值 spellId：供驱散按钮 OnEnter 走 SetSpellByID（槽位在扫描间隙可能被顶掉，
     -- 按槽位显示会错位） by 武藤纯子酱 2026.9.4
     return name, key, texture, applications, spellId
@@ -1129,7 +1244,7 @@ function GoubayuHeal.Dispel_Cleanse(entry, manual)
         end
     end
 
-    if not GoubayuHeal.Dispel_CanCast(entry.unit) then
+    if not GoubayuHeal.Dispel_CanCast(entry.unit, entry.dtype) then
         return false
     end
 
@@ -1232,6 +1347,44 @@ function GoubayuHeal.Dispel_Priority()
     return false
 end
 
+-- 自由之手独立通道（/gbyh freedom 或 /gbyh 自由）：
+-- 不管"驱散移动限制"复选框是否勾选，都对"驱散优先级"里最高优先级、且带移动限制的目标施放。
+-- 目标选择复用 DispelPrio（dispel_prio 权重）。 by 武藤纯子酱 2026.10.13
+function GoubayuHeal.Dispel_Freedom()
+    local spell = DispelUsable.Snare
+    if not (spell and spell.name) then
+        return false
+    end
+
+    GoubayuHeal.Dispel_BuildPrio()
+
+    for _, unit in ipairs(DispelPrio) do
+        if UnitExists(unit) and UnitIsVisible(unit)
+            and GoubayuHeal.Dispel_CanBeCleansed(unit)
+            and GoubayuHeal.Dispel_CanCast(unit, "Snare") then
+            local _, class = UnitClass(unit)
+            local i = 1
+            while i <= 32 do
+                local nm, dtype, tex, apps, sid = GoubayuHeal.Dispel_GetDebuffInfo(unit, i)
+                if not tex then
+                    break
+                end
+                -- 与自动驱散一致：黑名单/隐藏减益/职业隐藏命中的移动限制也不驱散
+                -- （黑名单里的某技能可能就是"限制移动但不能驱散"的） by 武藤纯子酱 2026.10.13
+                if dtype == "Snare"
+                    and not GoubayuHeal.Dispel_IsHidden(unit, nm, dtype, class) then
+                    local guid = GoubayuHeal.GetUnitGUID and GoubayuHeal.GetUnitGUID(unit)
+                    GoubayuHeal.Dispel_CastSpell(unit, spell.name, guid)
+                    return true
+                end
+                i = i + 1
+            end
+        end
+    end
+
+    return false
+end
+
 -- ============================================================
 -- 更新窗口显示
 -- ============================================================
@@ -1291,7 +1444,7 @@ function GoubayuHeal.Dispel_UpdateWindow()
                 end
             end
 
-            if GoubayuHeal.Dispel_CanCast(entry.unit) then
+            if GoubayuHeal.Dispel_CanCast(entry.unit, entry.dtype) then
                 btn:SetAlpha(1)
             else
                 btn:SetAlpha(0.5)

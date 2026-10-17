@@ -10,13 +10,33 @@
 
 ## 当前维护摘要
 
-2026-10-18 核对：10 月 16 日包有更新，尚未部署；当前实现保持不变，差异与合并注意见最新记录。
+本次合并后的本地 HealComm revision 提升为 11734，继续保留原 11733 预估清理修复，并确保加载优先于 QuickHeal 内置 11733；QuickHeal 文件原样保留，上游 Revision 仍为 11732，不声明新官方版本。
+
+2026-10-18 已合并部署：合入新共享库增量，保留个人 HealComm 11733 与旧施法库加载顺序；重复旧库条目只保留一次。另修正新分支的技能书槽位/法术 ID 混用，补 Nampower 接口缺失回退。 真实游戏验收待补充。
 
 补记共享词库差异，并修复 HealComm 群体治疗预估清理。
 
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-!Libs-20261018-02"></a>
+
+### 2026-10-18｜合入 10 月 16 日包并保留个人功能（已部署）
+
+- 记录编号：`!Libs-20261018-02`
+- 记录类型：更新合并
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户授权除三个指定插件外更新新包，并要求个人功能完整保留、重复功能优先个人实现。
+- 修改内容：合入新共享库增量，保留个人 HealComm 11733 与旧施法库加载顺序；重复旧库条目只保留一次。另修正新分支的技能书槽位/法术 ID 混用，补 Nampower 接口缺失回退。
+- 涉及文件：`!Libs.toc`、`!MyLib/api/luaAPI.lua`、`!MyLib/api/wowAPI.lua`、`!MyLib/libs/LibMobHealthCache-1.0.lua`、`Abacus-2.0/Abacus-2.0.lua`、`Ace2/AceAddon-2.0/AceAddon-2.0.lua`、`Ace2/AceConsole-2.0/AceConsole-2.0.lua`、`Ace2/AceDB-2.0/AceDB-2.0.lua`、`Ace2/AceDebug-2.0/AceDebug-2.0.lua`、`Ace2/AceLocale-2.0/AceLocale-2.0.lua`、`Ace2/AceLocale-2.2/AceLocale-2.2.lua`、`Ace3/AceLocale-3.0/AceLocale-3.0.lua`、`Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua`、`Babble/Babble-Class-2.2/Babble-Class-2.2.lua`、`Babble/Babble-Faction-2.2/Babble-Faction-2.2.lua`、`Babble/Babble-ItemSet-2.2/Babble-ItemSet-2.2.lua`、`Babble/Babble-Spell-2.2/Babble-Spell-2.2.lua`、`Babble/Babble-Zone-2.2/Babble-Zone-2.2.lua`、`Babble/Babble-Zone-2.3/Babble-Zone-2.3.lua`、`CastLib-1.0/CastLib-1.0.lua`、`Dewdrop-2.0/Dewdrop-2.0.lua`、`FiveSecLib-1.0/FiveSecLib-1.0.lua`、`FuBarPlugin-2.0/FuBarPlugin-2.0.lua`、`HealComm-1.0/HealComm-1.0.lua`、`Hewdrop-2.0/Hewdrop-2.0.lua`、`LibSharedMedia-3.0/LibSharedMedia-3.0.lua`、`ParserLib/FixGlobalString.lua`、`ParserLib/ParserLib.lua`、`SE/SpecialEvents-Aura-2.0/SpecialEvents-Aura-2.0.lua`、`SpellStatusV2-2.0/SpellStatusV2-2.0.lua`、`Tablet-2.0/Tablet-2.0.lua`、`Tourist-2.0/Tourist-2.0.lua`、`Waterfall-1.0/Waterfall-1.0.lua`。
+- 版本与加载：本次合并后的本地 HealComm revision 提升为 11734，继续保留原 11733 预估清理修复，并确保加载优先于 QuickHeal 内置 11733；QuickHeal 文件原样保留，上游 Revision 仍为 11732，不声明新官方版本。
+- 关联功能：详见[整批实施记录](../Research/10月16日包合并实施-20261018.md)；关联个人扩展、皮肤和其他未更新文件保留。
+- 检查结果：HealComm/NotGrid 106 组、旧/新施法库及 API 分支、65 Lua 语法/闭包检查通过。 现用目录与审查后的候选逐字节一致；[逐文件清单](../Research/10月16日包合并实施-20261018.json)保存校验和、保留范围与限制。
+- 游戏验收与未确认：本次尚未游戏实测，语法与受控测试不等同于真实客户端验收；更新前可用标签 `before/package-20261016-20261018` 回退。
+- 替代关系：本条在前一条差异核对之后实施，只更新当前摘要，不改写当时“未部署”的核对记录。此前个人修改作者与最早日期不作追认。
 
 <a id="change-!Libs-20261018-01"></a>
 

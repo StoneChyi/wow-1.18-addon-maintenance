@@ -53,62 +53,6 @@ BabbleClass:RegisterTranslations("enUS", function()
 	}
 end)
 
-BabbleClass:RegisterTranslations("ruRU", function()
-	return {
-		["Warlock"] = "Чернокнижник",
-		["Warrior"] = "Воин",
-		["Hunter"] = "Охотник",
-		["Mage"] = "Маг",
-		["Priest"] = "Жрец",
-		["Druid"] = "Друид",
-		["Paladin"] = "Паладин",
-		["Shaman"] = "Шаман",
-		["Rogue"] = "Разбойник",
-	}
-end)
-
-BabbleClass:RegisterTranslations("esES", function()
-	return {
-		["Warlock"] = "Brujo",
-		["Warrior"] = "Guerrero",
-		["Hunter"] = "Cazador",
-		["Mage"] = "Mago",
-		["Priest"] = "Sacerdote",
-		["Druid"] = "Druida",
-		["Paladin"] = "Paladín",
-		["Shaman"] = "Chamán",
-		["Rogue"] = "Pícaro",
-	}
-end)
-
-BabbleClass:RegisterTranslations("deDE", function()
-	return {
-		["Warlock"] = "Hexenmeister",
-		["Warrior"] = "Krieger",
-		["Hunter"] = "Jäger",
-		["Mage"] = "Magier",
-		["Priest"] = "Priester",
-		["Druid"] = "Druide",
-		["Paladin"] = "Paladin",
-		["Shaman"] = "Schamane",
-		["Rogue"] = "Schurke",
-	}
-end)
-
-BabbleClass:RegisterTranslations("frFR", function()
-	return {
-		["Warlock"] = "D\195\169moniste",
-		["Warrior"] = "Guerrier",
-		["Hunter"] = "Chasseur",
-		["Mage"] = "Mage",
-		["Priest"] = "Pr\195\170tre",
-		["Druid"] = "Druide",
-		["Paladin"] = "Paladin",
-		["Shaman"] = "Chaman",
-		["Rogue"] = "Voleur",
-	}
-end)
-
 BabbleClass:RegisterTranslations("zhCN", function()
 	return {
 		["Warlock"] = "术士",
@@ -129,34 +73,6 @@ BabbleClass:RegisterTranslations("zhCN", function()
 		["PALADIN"] = "圣骑士",
 		["SHAMAN"] = "萨满祭司",
 		["ROGUE"] = "盗贼",
-	}
-end)
-
-BabbleClass:RegisterTranslations("zhTW", function()
-	return {
-		["Warlock"] = "術士",
-		["Warrior"] = "戰士",
-		["Hunter"] = "獵人",
-		["Mage"] = "法師",
-		["Priest"] = "牧師",
-		["Druid"] = "德魯伊",
-		["Paladin"] = "聖騎士",
-		["Shaman"] = "薩滿",
-		["Rogue"] = "盜賊",
-	}
-end)
-
-BabbleClass:RegisterTranslations("koKR", function()
-	return {
-		["Warlock"] = "흑마법사",
-		["Warrior"] = "전사",
-		["Hunter"] = "사냥꾼",
-		["Mage"] = "마법사",
-		["Priest"] = "사제",
-		["Druid"] = "드루이드",
-		["Paladin"] = "성기사",
-		["Shaman"] = "주술사",
-		["Rogue"] = "도적",
 	}
 end)
 

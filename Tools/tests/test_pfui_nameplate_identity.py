@@ -79,6 +79,7 @@ def check_upvalues(text):
 
 STUB = r'''
 nameplates = {}
+function GetTime() return clock or 100 end
 C = {nameplates = {use_unitfonts='0', enemyclassc='1', friendclassc='1'},
      global = {font_size=12}}
 cfg = {barcombatstate=true, ccombatthreat=true, ccombatnothreat=true,

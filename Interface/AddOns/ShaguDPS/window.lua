@@ -20,6 +20,14 @@ local parser = ShaguDPS.parser
 local data = ShaguDPS.data
 local config = ShaguDPS.config
 local internals = ShaguDPS.internals
+
+-- 低效目标标记（含平均死亡时间，与 tooltip 内同色）；非低效返回 ""  by 武藤纯子酱 2026.10.14
+local function IneffMark(name)
+    if not (ShaguDPS.IsInefficientTarget and ShaguDPS.IsInefficientTarget(name)) then return "" end
+    local avg = ShaguDPS.GetTargetAvgLifetime and ShaguDPS.GetTargetAvgLifetime(name)
+    if avg then return string.format("|cffffcc66(低效 %.1fs)|r", avg) end
+    return "|cffffcc66(低效)|r"
+end
 local textures = ShaguDPS.textures
 local round = ShaguDPS.round
 
@@ -1340,6 +1348,10 @@ local function barTooltipShow()
         TooltipAddDoubleLine("|cffffffff总战斗时间", string.format("|cffffffff%.1f秒", details.totalTime))
         TooltipAddDoubleLine("|cffffffff易伤数量", "|cffffffff" .. details.totalCount)
         TooltipAddDoubleLine("|cffffffff平均覆盖率", "|cffffff00" .. string.format("%.1f%%", details.avgCov))
+        local avgLife = ShaguDPS.GetTargetAvgLifetime and ShaguDPS.GetTargetAvgLifetime(this.unit)
+        if avgLife then
+            TooltipAddDoubleLine("|cffffffff平均存活时间", string.format("|cffffffff%.1f秒", avgLife))
+        end
         TooltipAddLine(" ")
         if details.totalCount > 0 then
             TooltipAddLine("|cff88ccff易伤覆盖率详情|r")
@@ -1463,6 +1475,10 @@ local function barTooltipShow()
         TooltipAddLine(this.title .. ":")
         TooltipAddDoubleLine("|cffffffff总有效承伤", "|cffffffff" .. (unitData._sum or 0))
         TooltipAddDoubleLine("|cffcc8888溢出伤害", "|cffffffff" .. (unitData._overkill or 0))
+        local avgLife = ShaguDPS.GetTargetAvgLifetime and ShaguDPS.GetTargetAvgLifetime(this.unit)
+        if avgLife then
+            TooltipAddDoubleLine("|cffffffff平均存活时间", string.format("|cffffffff%.1f秒", avgLife))
+        end
         TooltipAddLine(" ")
         TooltipAddLine("伤害来源（按有效伤害排序）:")
         local sources = {}
@@ -1605,7 +1621,7 @@ local function barTooltipShow()
         -- 误伤
         local isFriendlyFire = false
         for k, v in pairs(unitData) do
-            if k ~= "_total" and type(v) == "table" then
+            if not internals[k] and type(v) == "table" then
                 isFriendlyFire = true
                 break
             end
@@ -1616,7 +1632,7 @@ local function barTooltipShow()
             TooltipAddLine(" ")
             TooltipAddLine("详情:")
             for targetName, spells in pairs(unitData) do
-                if targetName ~= "_total" and type(spells) == "table" then
+                if not internals[targetName] and type(spells) == "table" then
                     local targetTotal = 0
                     for _, dmg in pairs(spells) do targetTotal = targetTotal + dmg end
                     TooltipAddDoubleLine("|cffffffff" .. targetName, "|cffffffff" .. targetTotal)
@@ -1680,12 +1696,21 @@ local function barTooltipShow()
         if this.parent.isSunderView then
             TooltipAddLine(this.title .. ":")
             TooltipAddDoubleLine("|cffffffff总数", "|cffffffff" .. (unitData._total or 0))
+            local iGood = 0
+            if unitData._good_targets and ShaguDPS.IsInefficientTarget then
+                for nm, gc in pairs(unitData._good_targets) do
+                    if ShaguDPS.IsInefficientTarget(nm) then iGood = iGood + gc end
+                end
+            end
             local stackNew = unitData._stack_new or 0
             local stackAdd = unitData._stack_add or 0
             TooltipAddDoubleLine("|cff88ccff叠层", string.format("|cffffffff%d (新%d/叠%d)", stackNew + stackAdd, stackNew, stackAdd))
             TooltipAddDoubleLine("|cff88ccff有效", "|cffffffff" .. (unitData._effective or 0))
             TooltipAddDoubleLine("|cff88ccff无效", "|cffffffff" .. (unitData._invalid or 0))
             TooltipAddDoubleLine("|cff88ccff失败", "|cffffffff" .. (unitData._fail or 0))
+            if iGood > 0 then
+                TooltipAddDoubleLine("|cffffcc66低效(并入前缀)", "|cffffcc66" .. iGood)
+            end
             if (unitData._wrong or 0) > 0 then
                 TooltipAddDoubleLine("|cffff8888错误目标", "|cffff8888" .. (unitData._wrong or 0))
                 local wt = unitData._wrong_targets
@@ -1703,7 +1728,7 @@ local function barTooltipShow()
             end
             table.sort(targets, function(a, b) return a.count > b.count end)
             for _, tg in ipairs(targets) do
-                TooltipAddDoubleLine("|cffffffff" .. tg.name, "|cffffffff" .. tg.count)
+                TooltipAddDoubleLine("|cffffffff" .. tg.name .. IneffMark(tg.name), "|cffffffff" .. tg.count)
             end
             GameTooltip:Show()
             return
@@ -2160,6 +2185,10 @@ local function GetBarDetailLines(bar)
         table.insert(lines, "|cffffffff总战斗时间: |cffffffff" .. string.format("%.1f秒", details.totalTime))
         table.insert(lines, "|cffffffff易伤数量: |cffffffff" .. details.totalCount)
         table.insert(lines, "|cffffffff平均覆盖率: |cffffff00" .. string.format("%.1f%%", details.avgCov))
+        local avgLife = ShaguDPS.GetTargetAvgLifetime and ShaguDPS.GetTargetAvgLifetime(bar.unit)
+        if avgLife then
+            table.insert(lines, "|cffffffff平均存活时间: |cffffffff" .. string.format("%.1f秒", avgLife))
+        end
         table.insert(lines, " ")
         if details.totalCount > 0 then
             table.insert(lines, "|cff88ccff易伤覆盖率详情|r")
@@ -2278,6 +2307,10 @@ local function GetBarDetailLines(bar)
         table.insert(lines, bar.title .. ":")
         table.insert(lines, "|cffffffff总有效承伤: |cffffffff" .. (unitData._sum or 0))
         table.insert(lines, "|cffcc8888溢出伤害: |cffffffff" .. (unitData._overkill or 0))
+        local avgLife = ShaguDPS.GetTargetAvgLifetime and ShaguDPS.GetTargetAvgLifetime(bar.unit)
+        if avgLife then
+            table.insert(lines, "|cffffffff平均存活时间: |cffffffff" .. string.format("%.1f秒", avgLife))
+        end
         table.insert(lines, " ")
         table.insert(lines, "伤害来源（按有效伤害排序）:")
         local sources = {}
@@ -2408,7 +2441,7 @@ local function GetBarDetailLines(bar)
         -- 误伤
         local isFriendlyFire = false
         for k, v in pairs(unitData) do
-            if k ~= "_total" and type(v) == "table" then
+            if not internals[k] and type(v) == "table" then
                 isFriendlyFire = true
                 break
             end
@@ -2419,7 +2452,7 @@ local function GetBarDetailLines(bar)
             table.insert(lines, " ")
             table.insert(lines, "详情:")
             for targetName, spells in pairs(unitData) do
-                if targetName ~= "_total" and type(spells) == "table" then
+                if not internals[targetName] and type(spells) == "table" then
                     local targetTotal = 0
                     for _, dmg in pairs(spells) do targetTotal = targetTotal + dmg end
                     table.insert(lines, "|cffffffff" .. targetName .. "  总计: " .. targetTotal)
@@ -2481,12 +2514,21 @@ local function GetBarDetailLines(bar)
         if bar.parent.isSunderView then
             table.insert(lines, bar.title .. ":")
             table.insert(lines, "|cffffffff总数: |cffffffff" .. (unitData._total or 0))
+            local iGood = 0
+            if unitData._good_targets and ShaguDPS.IsInefficientTarget then
+                for nm, gc in pairs(unitData._good_targets) do
+                    if ShaguDPS.IsInefficientTarget(nm) then iGood = iGood + gc end
+                end
+            end
             local stackNew = unitData._stack_new or 0
             local stackAdd = unitData._stack_add or 0
             table.insert(lines, string.format("|cff88ccff叠层: |cffffffff%d (新%d/叠%d)", stackNew + stackAdd, stackNew, stackAdd))
             table.insert(lines, "|cff88ccff有效: |cffffffff" .. (unitData._effective or 0))
             table.insert(lines, "|cff88ccff无效: |cffffffff" .. (unitData._invalid or 0))
             table.insert(lines, "|cff88ccff失败: |cffffffff" .. (unitData._fail or 0))
+            if iGood > 0 then
+                table.insert(lines, "|cffffcc66低效(并入前缀): " .. iGood)
+            end
             if (unitData._wrong or 0) > 0 then
                 table.insert(lines, "|cffff8888错误目标: " .. (unitData._wrong or 0))
                 local wt = unitData._wrong_targets
@@ -2504,7 +2546,7 @@ local function GetBarDetailLines(bar)
             end
             table.sort(targets, function(a, b) return a.count > b.count end)
             for _, tg in ipairs(targets) do
-                table.insert(lines, "|cffffffff" .. tg.name .. ": |cffffffff" .. tg.count)
+                table.insert(lines, "|cffffffff" .. tg.name .. IneffMark(tg.name) .. ": |cffffffff" .. tg.count)
             end
             return lines
         end
@@ -2977,6 +3019,7 @@ local function ResetData()
 
     ShaguDPS.small_fight_total_time = 0
     ShaguDPS.hostile_targets = {}
+    ShaguDPS.targetLifetime = {}
     ShaguDPS.current_boss_index = nil
     data.threat = {}
     data.tank_mode = {}
@@ -3297,7 +3340,12 @@ local function CreateDetailWindow(title, lines, barData)
             table.insert(reportLines, "ShaguDPS - 详情")
         end
         for _, entry in ipairs(entries) do
-            local cleanLine = stripColorCodes(entry.text)
+            -- 详情通报保留行内职业色码（详情行生成时已按职业着色），仅标题剥色
+            -- by 武藤纯子酱 2026.10.15
+            local cleanLine = entry.text
+            if type(cleanLine) ~= "string" then
+                cleanLine = tostring(cleanLine)
+            end
             if string.find(cleanLine, "%S") then
                 if showLineNumbers then
                     table.insert(reportLines, string.format("%02d. ", entry.num) .. cleanLine)
@@ -4691,8 +4739,14 @@ local function GetData(unitdata, values, isHealTaken, view, isBuffCoverage, segm
                 values.friendly_fire_total = unitdata._total
                 values.value = unitdata._total
             elseif view == 13 then
-                values.sunder_value = (unitdata._stack_new or 0) + (unitdata._stack_add or 0) + (unitdata._effective or 0)
-                values.sunder_wrong = (unitdata._wrong or 0) + (unitdata._invalid or 0) + (unitdata._fail or 0)
+                local ineffGood = 0
+                if unitdata._good_targets and ShaguDPS.IsInefficientTarget then
+                    for nm, gc in pairs(unitdata._good_targets) do
+                        if ShaguDPS.IsInefficientTarget(nm) then ineffGood = ineffGood + gc end
+                    end
+                end
+                values.sunder_value = (unitdata._stack_new or 0) + (unitdata._stack_add or 0) + (unitdata._effective or 0) - ineffGood
+                values.sunder_wrong = (unitdata._wrong or 0) + (unitdata._invalid or 0) + (unitdata._fail or 0) + ineffGood
                 values.value = values.sunder_value
             elseif view == 19 then
                 values.revive_value = unitdata._total
@@ -5711,7 +5765,10 @@ local function Refresh(self, force, report)
             if self.bars[bar].lowerBar:IsShown() then
                 self.bars[bar].lowerBar:SetStatusBarColor(self.values.color.r, self.values.color.g, self.values.color.b, 0.7)
             end
-            self.bars[bar].textLeft:SetText(i .. ". " .. self.values.name)
+            -- 易伤覆盖视图：名字后直接加"(低效 x.xs)"，一眼可见  by 武藤纯子酱 2026.10.14
+            local nameText = self.values.name
+            if self.isVulnCoverageView then nameText = nameText .. IneffMark(nameText) end
+            self.bars[bar].textLeft:SetText(i .. ". " .. nameText)
 
             local a = template.bar_string_params
             local bar_string = template.bar_string
@@ -5830,7 +5887,11 @@ local function Refresh(self, force, report)
             if report and i <= config.report_lines then
                 local chat = string.format(template.chat_string,
                     self.values[a[1]], self.values[a[2]], self.values[a[3]], self.values[a[4]], self.values[a[5]])
-                table.insert(reportData, i .. ". " .. self.values.name .. " " .. chat)
+                -- 通报到聊天时名字带职业色（宠物沿用主人职业，无职业记录保持原样）  by 武藤纯子酱 2026.10.15
+                local reportName = self.values.name
+                local reportCls = resolveClassToken(reportName)
+                if reportCls then reportName = classColorString(reportCls, reportName) end
+                table.insert(reportData, i .. ". " .. reportName .. " " .. chat)
             end
         end
         i = i + 1
