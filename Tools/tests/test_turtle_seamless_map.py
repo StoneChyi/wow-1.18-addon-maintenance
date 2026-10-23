@@ -138,7 +138,8 @@ def runtime(with_plugins=True, saved=None, screen=None):
     lua.execute(MOCK)
     if screen:
         lua.execute(f'UIParent.width={screen[0]};UIParent.height={screen[1]}')
-    for name in ['MapData.lua','FocusData.lua','Geometry.lua','Core.lua','Compat.lua']:
+    entries=(ADDON/'TurtleSeamlessMap.toc').read_text(encoding='utf-8').splitlines()
+    for name in [line.strip() for line in entries if line.strip().endswith('.lua')]:
         lua.execute((ADDON/name).read_text(encoding='utf-8'), name=name)
     if not with_plugins:
         lua.execute('ModernMapMarkersCore=nil;pfMap=nil;pfQuest=nil')
@@ -214,6 +215,7 @@ class SeamlessMapTests(unittest.TestCase):
             assert(t.point[4]+t.width<=M.canvas.width+.001)
             assert(-t.point[5]+t.height<=M.canvas.height+.001)
           end
+          M.Cursor=function() return -10,-10 end
           for _,map in ipairs(M.maps) do
             M:FocusMap(map.id,true);M:Render();assert(M.tileUsed>0,map.file)
             assert(M.scene==nil)
@@ -301,8 +303,9 @@ class SeamlessMapTests(unittest.TestCase):
                     for _,tile in m.sea.items():
                         expected.add(tile[1]+'.blp')
         actual={p.name for p in (ADDON/'Art').glob('*.blp')}
+        expected.add('SeaPaper.blp')
         self.assertEqual(expected,actual)
-        self.assertEqual(len(actual),792)
+        self.assertEqual(len(actual),865)
         for name in actual:
             im=decode_blp((ADDON/'Art'/name).read_bytes())
             self.assertEqual(im.size,(256,256))
@@ -461,9 +464,10 @@ class SeamlessMapTests(unittest.TestCase):
           ToggleWorldMap();assert(M.selected==4)
           x,y=M:MapToWorld(4,.25,.75)
           assert(math.abs(M.view.x-x)<1e-8 and math.abs(M.view.y-y)<1e-8)
-          ToggleWorldMap();currentFile='NoOutdoorPosition';ToggleWorldMap();assert(M:IsWorldView())
+          ToggleWorldMap();currentFile='NoOutdoorPosition';GetRealZoneText=function() return 'UnknownDungeon' end
+          ToggleWorldMap();assert(M:IsWorldView())
           ToggleWorldMap();SlashCmdList.TURTLESEAMLESSMAP('world');assert(M:IsWorldView())
-          ToggleWorldMap();currentFile='Elwynn'
+          ToggleWorldMap();currentFile='Elwynn';GetRealZoneText=function() return '艾尔文森林' end
           GetPlayerMapPosition=function() return 0,0 end
           ToggleWorldMap();assert(M.selected==30)
           for i=1,M.pinUsed do assert(M.pins[i].key~='player') end
@@ -589,6 +593,73 @@ class SeamlessMapTests(unittest.TestCase):
         reversed_order=compose_preview(lua,reverse=True)
         self.assertEqual(normal.tobytes(),reversed_order.tobytes())
 
+    def test_native_first_open_rejects_stale_tanaris_and_retries_bounded(self):
+        lua=runtime(saved='{layoutVersion=2,notes={},view={x=300,y=530,scale=5,selected=161}}')
+        lua.execute('''
+          local ready=false;local reads=0
+          SetMapToCurrentZone=function() mapSets=mapSets+1;mapFile=ready and 'Elwynn' or 'Tanaris' end
+          GetPlayerMapPosition=function() reads=reads+1;return .33,.66 end
+          mapFile='Tanaris';WorldMapFrame:Show()
+          assert(M.frame:IsShown() and M.selected==30 and M.pendingLocation)
+          assert(reads==0,'Coordinates from a stale selected page must not be used')
+          local x,y=M:MapToWorld(30,.5,.5)
+          assert(math.abs(M.view.x-x)<1e-7 and math.abs(M.view.y-y)<1e-7)
+          ready=true;now=now+.11;invoke(M.frame,'OnUpdate')
+          x,y=M:MapToWorld(30,.33,.66)
+          assert(M.selected==30 and not M.pendingLocation and mapSets==2)
+          assert(math.abs(M.view.x-x)<1e-7 and math.abs(M.view.y-y)<1e-7)
+          local calls=mapSets;for i=1,20 do now=now+.1;invoke(M.frame,'OnUpdate') end
+          assert(mapSets==calls)
+          M.frame:Hide();ready=false;M:Toggle();assert(M.pendingLocation)
+          now=now+.11;invoke(M.frame,'OnUpdate');assert(M.pendingLocation)
+          now=now+.11;invoke(M.frame,'OnUpdate');assert(not M.pendingLocation)
+          calls=mapSets;now=now+1;invoke(M.frame,'OnUpdate');assert(mapSets==calls)
+          M.frame:Hide();M:Toggle();assert(M.pendingLocation)
+          M:Zoom(1.1);assert(not M.pendingLocation)
+          calls=mapSets;now=now+1;invoke(M.frame,'OnUpdate');assert(mapSets==calls)
+          M.ignoreMapEvent=true;mapFile='Tanaris';WorldMapFrame:Show();M.ignoreMapEvent=false
+          assert(M.selected==161,'Explicit third-party navigation must keep its destination')
+        ''')
+
+    def test_city_cutouts_preserve_coordinates_and_remove_page_corners(self):
+        lua=runtime()
+        lua.execute('''
+          for _,map in ipairs(M.maps) do
+            if map.city then
+              assert(#map.tiles==24 and map.artWidth==1504 and map.artHeight==1004)
+              local x,y=M:MapToWorld(map.id,0,0)
+              local ax,ay=G.Project(map.artRect,251/1504,168/1004)
+              assert(math.abs(ax-x)<1e-7 and math.abs(ay-y)<1e-7)
+              x,y=M:MapToWorld(map.id,1,1)
+              ax,ay=G.Project(map.artRect,1253/1504,836/1004)
+              assert(math.abs(ax-x)<1e-7 and math.abs(ay-y)<1e-7)
+            end
+          end
+          local map=M.byID[301]
+          local x,y=M:MapToWorld(301,.15,.35);assert(G.Hit(map,x,y),'Port label remains part of the city')
+          x,y=M:MapToWorld(301,.94,.90);assert(not G.Hit(map,x,y),'Corner compass is not city territory')
+          x,y=M:MapToWorld(301,.50,.075);assert(not G.Hit(map,x,y),'Title ribbon is not city territory')
+        ''')
+        report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.2.2资源-20261024.json').read_text(encoding='utf-8'))
+        self.assertEqual(report['city_tiles'],168)
+        self.assertEqual(report['total_art_files'],865)
+        for entry in report['written']:
+            self.assertEqual(hashlib.sha256((ADDON/'Art'/entry['file']).read_bytes()).hexdigest(),entry['sha256'])
+
+    def test_ocean_keeps_paper_and_wave_detail_across_zoom(self):
+        lua=runtime()
+        lua.execute('''
+          M.frame:Show();M.view.x=501;M.view.y=334;M.view.scale=8;M:Render()
+          assert(M.canvas.backdrop.tile and M.canvas.backdrop.tileSize==128)
+          assert(string.find(M.canvas.backdrop.bgFile,'SeaPaper',1,true))
+        ''')
+        first=compose_preview(lua)
+        lua.execute('M.view.scale=32;M:Render()')
+        closer=compose_preview(lua)
+        self.assertEqual(first.tobytes(),closer.tobytes())
+        extrema=first.convert('RGB').getextrema()
+        self.assertGreater(max(high-low for low,high in extrema),10)
+
     def test_old_notes_views_and_unmapped_records_migrate_once(self):
         lua=runtime(saved='''{notes={{x=42000,y=10000},{x=501,y=334,scene=301},
           {x=501,y=334,scene=514},{x=1e8,y=1e8}},view={x=42000,y=10000,scale=.2,selected=30}}''')
@@ -609,7 +680,10 @@ class SeamlessMapTests(unittest.TestCase):
 
 def compose_preview(lua, reverse=False):
     m=lua.globals().M
-    canvas=decode_blp((ADDON/'Art/v2_sea_694_1.blp').read_bytes()).convert('RGBA').resize((int(m.canvas.width),int(m.canvas.height)))
+    canvas=Image.new('RGBA',(int(m.canvas.width),int(m.canvas.height)))
+    tile=decode_blp((ADDON/'Art/SeaPaper.blp').read_bytes()).convert('RGBA').resize((128,128))
+    for y in range(0,canvas.height,128):
+        for x in range(0,canvas.width,128):canvas.paste(tile,(x,y))
     # Emulate client frame/layer depth, not the order of draw commands. Reverse
     # same-layer regions to expose accidental dependence on texture ordering.
     entries=[(i,m.tiles[i]) for i in range(1,int(m.tileUsed)+1)]

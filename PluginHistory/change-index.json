@@ -9,7 +9,7 @@
     "related_skin_only": 2
   },
   "addon_pages": 107,
-  "dated_records": 117,
+  "dated_records": 119,
   "addons": [
     {
       "addon": "!Libs",
@@ -2370,12 +2370,30 @@
       "addon": "TurtleSeamlessMap",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立无缝世界地图0.2.1；固定铺满总览、M当前位置、鼠标单区细图及分层/刷新优化；待游戏验收。",
+      "purpose": "独立无缝世界地图0.2.2；修复首次入口定位，主城轮廓/地形过渡与纸纹海面，保留鼠标单区和固定总览；待游戏验收。",
       "latest_record_date": "2026-10-24",
-      "latest_record_title": "固定总览并优化当前位置与鼠标区域细图刷新",
+      "latest_record_title": "修复首次定位并融合主城轮廓与纸纹海面",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 7,
+      "record_count": 9,
       "records": [
+        {
+          "id": "TurtleSeamlessMap-20261024-09",
+          "date": "2026-10-24",
+          "title": "修复首次定位并融合主城轮廓与纸纹海面",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-09"
+        },
+        {
+          "id": "TurtleSeamlessMap-20261024-08",
+          "date": "2026-10-24",
+          "title": "记录首次跳塔纳利斯、主城方框与灰色海面反馈",
+          "kind": "实测反馈",
+          "game_acceptance": "用户实测（限本条范围）",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-08"
+        },
         {
           "id": "TurtleSeamlessMap-20261024-07",
           "date": "2026-10-24",

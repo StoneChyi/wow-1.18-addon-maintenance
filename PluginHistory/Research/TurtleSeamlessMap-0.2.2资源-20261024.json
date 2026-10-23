@@ -1,0 +1,692 @@
+{
+  "version": "0.2.2",
+  "city_pages": 7,
+  "city_tiles": 168,
+  "sea_tiles": 1,
+  "city_extent": [
+    -251,
+    -168,
+    1504,
+    1004
+  ],
+  "written": [
+    {
+      "file": "SeaPaper.blp",
+      "sha256": "b5c2d19897f2dbf328cd06fc9fdfda0b438fa031c6cf33390609f4a0bc3366d9"
+    },
+    {
+      "file": "v3_city_301_1.blp",
+      "sha256": "dee31af82715aa1c3a6b1c5492a14f87de36462a670c0451724fd4a7458bdf7e"
+    },
+    {
+      "file": "v3_city_301_2.blp",
+      "sha256": "bcea9187028b86bbce842f961f7e2aaa0ae3ac61551376a05d972308347d9f3c"
+    },
+    {
+      "file": "v3_city_301_3.blp",
+      "sha256": "efcf46df15fc3c8c14ba2a770ed57634abd027ab2386fbb616595011827bfe95"
+    },
+    {
+      "file": "v3_city_301_4.blp",
+      "sha256": "d9a304b1ce130df166d939521ee05e9b9ed1bd2b81e0aaa6c24caeef4c1d91b0"
+    },
+    {
+      "file": "v3_city_301_5.blp",
+      "sha256": "91552fa6d56608d50ae335617edb6a520005f1c34fa395be4232a1d824d91f47"
+    },
+    {
+      "file": "v3_city_301_6.blp",
+      "sha256": "127677c5d4ae4fd1c4febc370db00092146e472b7fe88b7fd31c3113b397cbba"
+    },
+    {
+      "file": "v3_city_301_7.blp",
+      "sha256": "01e7448bc2c7ce12b03c2a54fb857dd3efc410c33c7d664d35311901912bf840"
+    },
+    {
+      "file": "v3_city_301_8.blp",
+      "sha256": "c8e8c67f48708cded5f5a454f07e686f52c234d551fc4e00edacce21f85b5196"
+    },
+    {
+      "file": "v3_city_301_9.blp",
+      "sha256": "045a442635c1ae98a62592c549c6fb2cbac917ca4e417e361af66320a2383d84"
+    },
+    {
+      "file": "v3_city_301_10.blp",
+      "sha256": "09381447042b0637a81f0eecbf2baccab75e2260ab2c6b60a170fdef30bb1217"
+    },
+    {
+      "file": "v3_city_301_11.blp",
+      "sha256": "07299c0dd482ed068286232c5a3ece88745a0ab11f78064c59e5aa1bd20de4a5"
+    },
+    {
+      "file": "v3_city_301_12.blp",
+      "sha256": "a541af89aa9353903dbf310566cee1eca4f7dd758be9cf0977288b7c9641a562"
+    },
+    {
+      "file": "v3_city_301_13.blp",
+      "sha256": "dee31af82715aa1c3a6b1c5492a14f87de36462a670c0451724fd4a7458bdf7e"
+    },
+    {
+      "file": "v3_city_301_14.blp",
+      "sha256": "3a089e069453020f92786bb52f1e5f98c1f4b7bc551a2d3f6831408eb8e03c80"
+    },
+    {
+      "file": "v3_city_301_15.blp",
+      "sha256": "372bfe68013183b864f24efdca566766c136fdf8871c894279d37570b4420dc5"
+    },
+    {
+      "file": "v3_city_301_16.blp",
+      "sha256": "760757ec5db69fc01faec05adae111ac76b57a11c33a8975b297bb832d73a074"
+    },
+    {
+      "file": "v3_city_301_17.blp",
+      "sha256": "c50bc5d07da92ce699a4ddafa31ba5cdf6b71390ea1c2db4cb8eb4db079887ac"
+    },
+    {
+      "file": "v3_city_301_18.blp",
+      "sha256": "ce5b5bd7e1cc0faac5e79bb4a1d2109f8a84209f1a0ffd756b2fbcd0ea0804c6"
+    },
+    {
+      "file": "v3_city_301_19.blp",
+      "sha256": "dee31af82715aa1c3a6b1c5492a14f87de36462a670c0451724fd4a7458bdf7e"
+    },
+    {
+      "file": "v3_city_301_20.blp",
+      "sha256": "dee31af82715aa1c3a6b1c5492a14f87de36462a670c0451724fd4a7458bdf7e"
+    },
+    {
+      "file": "v3_city_301_21.blp",
+      "sha256": "93054a212fd2dc38a279069c9878d3fa2c11630d37293a96fd18426bbf2ebada"
+    },
+    {
+      "file": "v3_city_301_22.blp",
+      "sha256": "3e42bec714e953bf1e409b90a33ef5b9878dc043fd3be4328087796383c3a566"
+    },
+    {
+      "file": "v3_city_301_23.blp",
+      "sha256": "f519f2252365cd365233632a2f79f7a371ec99e7e2798a571cf8ecbbe015abe6"
+    },
+    {
+      "file": "v3_city_301_24.blp",
+      "sha256": "cdc4dd1a945d3e6215924057d3741c31f5939c5dd34b7f8fd780951f0082ce91"
+    },
+    {
+      "file": "v3_city_321_1.blp",
+      "sha256": "b3b526d45b3103f3d7c9c9cc89e634edc4a1b75763e894c5e3956a020fc7e6a8"
+    },
+    {
+      "file": "v3_city_321_2.blp",
+      "sha256": "de15cd7d1af85e1cbf99746b51c865c09642d1c82cc33887330eb3520b9d5129"
+    },
+    {
+      "file": "v3_city_321_3.blp",
+      "sha256": "dd92e2b9b602f55626fd93ff9d60232328b86567bf1e3c62018552baf3c059a3"
+    },
+    {
+      "file": "v3_city_321_4.blp",
+      "sha256": "78389444d580cabfb16bc2b31c6c2466eafde0884a60f2e8ef195633ff831b8f"
+    },
+    {
+      "file": "v3_city_321_5.blp",
+      "sha256": "5a8c42a4c175c0ba7077c7ed19392db30b8732de0bd0e0af33d508025e650927"
+    },
+    {
+      "file": "v3_city_321_6.blp",
+      "sha256": "30b779cef5272a8a48c3b64f3fd182400d597022d91d8929c254e1e3a9d4cb4b"
+    },
+    {
+      "file": "v3_city_321_7.blp",
+      "sha256": "5f221e870859451188c6886da8c59e5f6e48b7c421400b57cec4b70aa2537887"
+    },
+    {
+      "file": "v3_city_321_8.blp",
+      "sha256": "14ec03824d3caf8ea9c60108af691c19f756cb7ae69368df7de690f49dec678d"
+    },
+    {
+      "file": "v3_city_321_9.blp",
+      "sha256": "69137a34fa6c443adf3de50be7e8a6d592b2824f2bd8d893e07e61889491bb22"
+    },
+    {
+      "file": "v3_city_321_10.blp",
+      "sha256": "8efd8c4b0ffe1062a6fae346fa78ebb55c0981a8d07f98c99c54d4414b9d43d4"
+    },
+    {
+      "file": "v3_city_321_11.blp",
+      "sha256": "0d01060d0cc65d2b80b152ef35798f32fec858d26d52d7f1e64bdb7f66f1f64d"
+    },
+    {
+      "file": "v3_city_321_12.blp",
+      "sha256": "4b3a696d5c8c580a0afda85b677e5894b5ab6240a1dbf7c9bbf6bc2059290195"
+    },
+    {
+      "file": "v3_city_321_13.blp",
+      "sha256": "b14416a42cf08e7271e371dc9a00cb63a343c00eb3c5f8bdd5a863b7803f29ce"
+    },
+    {
+      "file": "v3_city_321_14.blp",
+      "sha256": "1ce87bfd2adf1f5d1e6808aad93dcef015b080f65e989e10aa24125911b4369d"
+    },
+    {
+      "file": "v3_city_321_15.blp",
+      "sha256": "4b294fce66c72be5370fc7eaf8914c1ff8aa13eefd169bd88bd6024ad41c4599"
+    },
+    {
+      "file": "v3_city_321_16.blp",
+      "sha256": "196ae67f40e8f65b8c06a3eed1816c7dcd4d550df71d4028dd5c66825a81cd91"
+    },
+    {
+      "file": "v3_city_321_17.blp",
+      "sha256": "e12a6f74cf7c4d322a57f992be69a804c04bbe40ffa3da5024544102692e942f"
+    },
+    {
+      "file": "v3_city_321_18.blp",
+      "sha256": "ca090534d5b1b87c6b55f1ec5e81093112cc2f737e7f4398b22766d57d13441d"
+    },
+    {
+      "file": "v3_city_321_19.blp",
+      "sha256": "4aeac2bcfa33e746990f3c9f6fd5be4033f44b0d62ef97c5588edd15618817a8"
+    },
+    {
+      "file": "v3_city_321_20.blp",
+      "sha256": "9fb8f53dfbe80157c9fff2e71cc360b3fc7481fc936331e2950d7681a7afd49a"
+    },
+    {
+      "file": "v3_city_321_21.blp",
+      "sha256": "a73fe65dab341d91d5c7aa604eeb7048c073efcbbff6c4ed28819e2343c56fbb"
+    },
+    {
+      "file": "v3_city_321_22.blp",
+      "sha256": "171575aedc4feadbed1581823c530d8fd42a8195f84b0fb2b5707523ff830d35"
+    },
+    {
+      "file": "v3_city_321_23.blp",
+      "sha256": "dc999f90364275bf078d1ef7530f83c1c012c8ceda57ea007915bbf7662b904a"
+    },
+    {
+      "file": "v3_city_321_24.blp",
+      "sha256": "7c04dff408ef591eef86ca44a3cfa949bb2efc8c6f7775bdc65dfa92ea663b6b"
+    },
+    {
+      "file": "v3_city_341_1.blp",
+      "sha256": "dee31af82715aa1c3a6b1c5492a14f87de36462a670c0451724fd4a7458bdf7e"
+    },
+    {
+      "file": "v3_city_341_2.blp",
+      "sha256": "ad6b6528796a8fceba79240e5f7cb92d82d4fc73d158dcd85e5a9583d64449ee"
+    },
+    {
+      "file": "v3_city_341_3.blp",
+      "sha256": "9f3e0a121811a6aaeeeee3e7787661d3b3f0a423fc2668797121b3fad2d9a10c"
+    },
+    {
+      "file": "v3_city_341_4.blp",
+      "sha256": "07824796a2955b4a3b24fd1587e385deb211588bd13ccc530503342ccfeb7024"
+    },
+    {
+      "file": "v3_city_341_5.blp",
+      "sha256": "e0612f7098cff75d4ec52ff0e075fa94931c90c86a91cb9bafc50c15a1776789"
+    },
+    {
+      "file": "v3_city_341_6.blp",
+      "sha256": "ffcb32a97d5fa273088c39cb8a9935ba8bbb158b5afe526df919281a4cac6f81"
+    },
+    {
+      "file": "v3_city_341_7.blp",
+      "sha256": "d729a50a4f54100b886ae0534bac1a857437b3531fdb77cbd8cc5afbdceee84f"
+    },
+    {
+      "file": "v3_city_341_8.blp",
+      "sha256": "5217adf79973ce114ee8f1918213028e8f4f962af6764a334df6b8316bdfadc6"
+    },
+    {
+      "file": "v3_city_341_9.blp",
+      "sha256": "1055b70c9e76ecd26ce40e2a519b8849b2546e88f0fe6c5649d54e04fe672608"
+    },
+    {
+      "file": "v3_city_341_10.blp",
+      "sha256": "269b7d6eb6caa2fbf2ab19197a6764fe375a25a7ca56d1608eddeda356288f53"
+    },
+    {
+      "file": "v3_city_341_11.blp",
+      "sha256": "f46372643450480dfa0dccba2d987c14749368cd277afefc310ce91d3c83b9f2"
+    },
+    {
+      "file": "v3_city_341_12.blp",
+      "sha256": "ca4172411a9d7d577ae11bd6d6a0f571f321b7be9182e3d0ed4ceae48e26ecab"
+    },
+    {
+      "file": "v3_city_341_13.blp",
+      "sha256": "5f661794504583cef528852beadd01254f5201e0f7cce45f77ea670745a58fe8"
+    },
+    {
+      "file": "v3_city_341_14.blp",
+      "sha256": "a3825c5fa3c9ca429884311e745eed359df4cfbd7e0cd75a831c126cf84e4740"
+    },
+    {
+      "file": "v3_city_341_15.blp",
+      "sha256": "9ab407a61e9076e6e3a15367d0d8ff2cbfdf1300660d6b7216d3cbec88576377"
+    },
+    {
+      "file": "v3_city_341_16.blp",
+      "sha256": "bc8c11165debede1f3922b700dfef42b1810bfa2888e886475b15b946d71737d"
+    },
+    {
+      "file": "v3_city_341_17.blp",
+      "sha256": "bc69cb0e0704139a05d263c672425e0444cf8b0a55ef728bf5575c2f4978b60a"
+    },
+    {
+      "file": "v3_city_341_18.blp",
+      "sha256": "0f356d12fe931b931e76306cb8117c2fb544885560fd786edf5e231550db18fd"
+    },
+    {
+      "file": "v3_city_341_19.blp",
+      "sha256": "72eec9ab823b4589d34915a70dbecd96b74a68356e4cb04c7cc4a79aa5f49e46"
+    },
+    {
+      "file": "v3_city_341_20.blp",
+      "sha256": "4773961be6de29ee91cc3e9c5a949c0850a0466337fe733092520025b90b204d"
+    },
+    {
+      "file": "v3_city_341_21.blp",
+      "sha256": "976198528da633a53f53ee5a4870a05fbc89b172cddb2f97fcc43b339b02cfae"
+    },
+    {
+      "file": "v3_city_341_22.blp",
+      "sha256": "03a05aa8befda16d958b97125a7543b8fd59b1f11ecc2524619c65619825ae28"
+    },
+    {
+      "file": "v3_city_341_23.blp",
+      "sha256": "a739e8cc4d4666aa9d4cf499298e5d51707f3abf798304659b73d3fb2c36def5"
+    },
+    {
+      "file": "v3_city_341_24.blp",
+      "sha256": "73a6bbb00edcec017982c914f6a6a1d8a88c1b625089ccb78369b603601b314b"
+    },
+    {
+      "file": "v3_city_362_1.blp",
+      "sha256": "808fcc092176eab6d133ec2560f51bc6ee3f191f62a801bea1397114c181bf3a"
+    },
+    {
+      "file": "v3_city_362_2.blp",
+      "sha256": "5f63a47641ac625ed5349a62b110412cd292d9be925a27d1aadd24622590f36d"
+    },
+    {
+      "file": "v3_city_362_3.blp",
+      "sha256": "c072253e35bac1b39a9c3f79a45a51f64da27f0ca7e78e4a2924ca478c075638"
+    },
+    {
+      "file": "v3_city_362_4.blp",
+      "sha256": "241015bf8a0a56a08085f10a648733e03057362114ec86b6d4ef8b65462eb2a9"
+    },
+    {
+      "file": "v3_city_362_5.blp",
+      "sha256": "6b52dc311f11aca96d8eedccf51da15a3e3938df3773e19d41646f027ca680d3"
+    },
+    {
+      "file": "v3_city_362_6.blp",
+      "sha256": "add64d3f5bed23fcf905d39c641c5e34f7f62e882f988c75176efb13a6bc3bfa"
+    },
+    {
+      "file": "v3_city_362_7.blp",
+      "sha256": "d6622793cb6de7cae8a9b16b7d98f2916b55224a8ce4942ffe8f543d38265674"
+    },
+    {
+      "file": "v3_city_362_8.blp",
+      "sha256": "99374cb166037c966032ec4a3f8d16e8bab7b1d7d6f00a95f68a003a30a439fd"
+    },
+    {
+      "file": "v3_city_362_9.blp",
+      "sha256": "4edc2bef61bb5bd044bef7e7be5882ba83de04a72fe7de08956dd911dfe03d2d"
+    },
+    {
+      "file": "v3_city_362_10.blp",
+      "sha256": "7e5a0448cf2df4ea1f8508dac104fb04af6c9d3cf75268b3599a313480f0c9f2"
+    },
+    {
+      "file": "v3_city_362_11.blp",
+      "sha256": "3254101d300ba079967884f7d139176f31a89122f63f74aa229b4e71bf1d197a"
+    },
+    {
+      "file": "v3_city_362_12.blp",
+      "sha256": "0c29a477dfe9ef346fed77b0ac6151fa04f506f221e81f39d9507ffc7e38d6dc"
+    },
+    {
+      "file": "v3_city_362_13.blp",
+      "sha256": "e27b97ef6afb5170ea600241475e7b22d4792c062568863f66932ee38bba69a9"
+    },
+    {
+      "file": "v3_city_362_14.blp",
+      "sha256": "5280492b0e7180971db4278436f101c043491d10cc44228fb9204d33aadbc16c"
+    },
+    {
+      "file": "v3_city_362_15.blp",
+      "sha256": "d59dc750cb3b8bc1a633f97e7248a72c9eab4262909e140598cc107a64955774"
+    },
+    {
+      "file": "v3_city_362_16.blp",
+      "sha256": "20b7007e699d4f0816e1367e56397c0ca46e03100b672fe6899b8055da177190"
+    },
+    {
+      "file": "v3_city_362_17.blp",
+      "sha256": "7ed54a3f2fc79689fcf17b04114ff1251bd811eddc8b1fee00084572b638ffec"
+    },
+    {
+      "file": "v3_city_362_18.blp",
+      "sha256": "5cb6f4c437f600f9a6c247d0b7116612f9201cd48c308d4c80db13d855611993"
+    },
+    {
+      "file": "v3_city_362_19.blp",
+      "sha256": "3bf3c28234c4dcf5eaa4a3da00978fd88fe83d101ad9f448e91ea24d9a0f86e4"
+    },
+    {
+      "file": "v3_city_362_20.blp",
+      "sha256": "e6b0435d7b6b69845e510b594743b2e2a89e02cdb89ca902026037b73e4d0247"
+    },
+    {
+      "file": "v3_city_362_21.blp",
+      "sha256": "ca7360da27847f5c1403efacc0f40456c86871af851ad5c0b48b9c276e86609e"
+    },
+    {
+      "file": "v3_city_362_22.blp",
+      "sha256": "e757239801eeb25e8a43195723d3c06bcd6dc5ef5cd9c1783684c332e97f8639"
+    },
+    {
+      "file": "v3_city_362_23.blp",
+      "sha256": "8ebd4434b820a144a3795cc22ec6eb2c590e9b1372f35ab6510d75b1d9090ff8"
+    },
+    {
+      "file": "v3_city_362_24.blp",
+      "sha256": "90444470776ef197a0e09333ff38c041530ceeae6f87740f3672b1d4a831c565"
+    },
+    {
+      "file": "v3_city_381_1.blp",
+      "sha256": "93894a537c0a698b1eb42e767c14e86b7a0daad9523e5a327c7ad2b01f1d444d"
+    },
+    {
+      "file": "v3_city_381_2.blp",
+      "sha256": "23033c12a6ee6432ca2aff03385c8633616b7c328c876635f091025781a35eff"
+    },
+    {
+      "file": "v3_city_381_3.blp",
+      "sha256": "993272dbcf16e3605566938765b1476dd429aa0cf193185512a2cf0dbb2328bf"
+    },
+    {
+      "file": "v3_city_381_4.blp",
+      "sha256": "d28acf5f1b6fb06df9e86c764eff1ab1b3d3d73117aea44464816829bf3b1037"
+    },
+    {
+      "file": "v3_city_381_5.blp",
+      "sha256": "03858537947b26ed396ec4865c6101a35f04c08434421a0278e8c4f5670e0837"
+    },
+    {
+      "file": "v3_city_381_6.blp",
+      "sha256": "0d93e0cc811fb2b106d21c92275129b2066e86b5893c8eb50400f0916438a095"
+    },
+    {
+      "file": "v3_city_381_7.blp",
+      "sha256": "c11268a02eec13000fa7932101035e3f0ed2dc3b8cd5c30848e63d83e636b511"
+    },
+    {
+      "file": "v3_city_381_8.blp",
+      "sha256": "a25cdb14c1134727e85d14a70030bede6e7891cad44c219d854f39966816331e"
+    },
+    {
+      "file": "v3_city_381_9.blp",
+      "sha256": "66c4738f1ce689b5a81ec4027a60377678596087f314f3cea1a1e4be109ebd3a"
+    },
+    {
+      "file": "v3_city_381_10.blp",
+      "sha256": "ab52b14cd5a4a8d57de1bc72664c121258d43d620c85b6efaf1217e394977c53"
+    },
+    {
+      "file": "v3_city_381_11.blp",
+      "sha256": "6d0aff2d0d0c68430bea7114f25d8312a8e0717c6a49e68937b9154e00d3bd0f"
+    },
+    {
+      "file": "v3_city_381_12.blp",
+      "sha256": "0974498a23becc5f8a0889bf17ad8761ee7b6fcaaf444aca0a8ce12679fd6fe3"
+    },
+    {
+      "file": "v3_city_381_13.blp",
+      "sha256": "5fe0dc0ddec5f9f4c9666b30b0d140682770a54dc3a75914856a023f5e2688e0"
+    },
+    {
+      "file": "v3_city_381_14.blp",
+      "sha256": "744ff9fdeff51a686fa6a0c5f852a72d0db54d5f8644f7ca5d773bb339bc1d22"
+    },
+    {
+      "file": "v3_city_381_15.blp",
+      "sha256": "84efc7bfaf83459cea79cacf951ff686cb3537b8233c372bfbe3fdf5d1067460"
+    },
+    {
+      "file": "v3_city_381_16.blp",
+      "sha256": "e22a12886586531cb08bacd8e6d05516c36c4e598493639328367ea9dc8179b5"
+    },
+    {
+      "file": "v3_city_381_17.blp",
+      "sha256": "efcd88ad375364d2942d475e6e33d1e464ed4a5e5c66663d015e7af880897366"
+    },
+    {
+      "file": "v3_city_381_18.blp",
+      "sha256": "0637bec4edc9bcdcca6dda73482ed80ed58029aac47b3fb0358eef383cda6161"
+    },
+    {
+      "file": "v3_city_381_19.blp",
+      "sha256": "65ccb8e3a18b2150b6127f0d7013ff31bbafadcf285cd0c76c1015b64a2ec6a0"
+    },
+    {
+      "file": "v3_city_381_20.blp",
+      "sha256": "82164af77e140f86526d2b08ce83b74b72cc8576ab94570853fa3b0d3b43b7fd"
+    },
+    {
+      "file": "v3_city_381_21.blp",
+      "sha256": "21918c802f97b03d6c20d48434267be54da5a8cab2c497a85dd7a1d2afa3eb9d"
+    },
+    {
+      "file": "v3_city_381_22.blp",
+      "sha256": "250b27e0670e3346517d8f3669a98310bf355e9f1bcc7f67b235464dfb69cae9"
+    },
+    {
+      "file": "v3_city_381_23.blp",
+      "sha256": "dac0cb95e4da6d07de6a492c99078f12f46838d86c74d0272e31ace1797ebce4"
+    },
+    {
+      "file": "v3_city_381_24.blp",
+      "sha256": "e15305af0c92b6d988ca013ef387b5c977282bd57d91e5bb6c48fa2a59e2a7ea"
+    },
+    {
+      "file": "v3_city_382_1.blp",
+      "sha256": "8e26fb566c29d849c5b9109aa5106966d1857ae936e5e33397fb4603451ddd93"
+    },
+    {
+      "file": "v3_city_382_2.blp",
+      "sha256": "056568848260edba44bcd3a84d853e06e2bfb496088ec2bf6f735c8587169ed7"
+    },
+    {
+      "file": "v3_city_382_3.blp",
+      "sha256": "7b051fc6dc9ddb43e3783c19f13a4fa93dfdee01385b9631930a06b3c6771752"
+    },
+    {
+      "file": "v3_city_382_4.blp",
+      "sha256": "395f248a1b6b6244536b40e8be18a3a633db725b28b9b02d81d07736205836a8"
+    },
+    {
+      "file": "v3_city_382_5.blp",
+      "sha256": "9fa4ee5f1235a35559e1ca2f850f5bde71625483b6cc51ead6fc70b0f57d25a9"
+    },
+    {
+      "file": "v3_city_382_6.blp",
+      "sha256": "d85981a709fba74b85f87aa979d37d62e1be72da47b67961604c75ba0e398749"
+    },
+    {
+      "file": "v3_city_382_7.blp",
+      "sha256": "eca7abe310dd57bdceb0a3f13568b46a71f15a4b1761e7c751397563c9e4f270"
+    },
+    {
+      "file": "v3_city_382_8.blp",
+      "sha256": "498a1c1ded869f2ce2686895600253b333e169a2a5b6ef68598fbae94b43087d"
+    },
+    {
+      "file": "v3_city_382_9.blp",
+      "sha256": "46087f2cf8768238ce9a9aa3ed5da127e8b82001f9222c2acab50cb74bf550c8"
+    },
+    {
+      "file": "v3_city_382_10.blp",
+      "sha256": "3b06ec58905b4474e51bb817f9ef7aeb318dec71859b5818851bcb0850e80edc"
+    },
+    {
+      "file": "v3_city_382_11.blp",
+      "sha256": "df42ffd9cb43f18829d07a901cab6d67329517908100ecbef00dcb5038615400"
+    },
+    {
+      "file": "v3_city_382_12.blp",
+      "sha256": "db7cfcf4a51e88b5ebf1b816777a85211c0aa657f1f02a028818d22c18cb85ea"
+    },
+    {
+      "file": "v3_city_382_13.blp",
+      "sha256": "46b3764a308b2077e41effdadcac9d48b4d8e63708d4fb469c766b4b34e751fc"
+    },
+    {
+      "file": "v3_city_382_14.blp",
+      "sha256": "84789f0e60a5f1c5b1f1cc49f9ecea1bc86312affb6b29fc04ce438e75a05d2b"
+    },
+    {
+      "file": "v3_city_382_15.blp",
+      "sha256": "04820b46c1f6ceed4538234cbce02738c4fa0b7acc0833a0740f073af7bfa6a6"
+    },
+    {
+      "file": "v3_city_382_16.blp",
+      "sha256": "808f0b4754390e31857ae1f372670acd0040dff872ce13e1c57dacc17d2316c7"
+    },
+    {
+      "file": "v3_city_382_17.blp",
+      "sha256": "a707c5c9d0fb036d2b859380d4758c225aead781c9072d21d41f64e96260169c"
+    },
+    {
+      "file": "v3_city_382_18.blp",
+      "sha256": "6f223a716b7272579685c0eb8f52110fcc03bc2116ab5478d1495d5c966b5704"
+    },
+    {
+      "file": "v3_city_382_19.blp",
+      "sha256": "fb4d7a07529be9f543acc1fdd5e5634e96bf8bb6b91c52f0c43c16009c9b59ad"
+    },
+    {
+      "file": "v3_city_382_20.blp",
+      "sha256": "1734d52998b250f5f07fc06ae70d5c919380020dc70a5677d10517925328e96a"
+    },
+    {
+      "file": "v3_city_382_21.blp",
+      "sha256": "56a85e56353ec0a65601b1e6b450ff2bfeab9eae41fe6fa300ee193600c76653"
+    },
+    {
+      "file": "v3_city_382_22.blp",
+      "sha256": "8f7779aad9525b1164e9a790cf90f74980180e7d7d6a51e5b5c6b03f4768fa2a"
+    },
+    {
+      "file": "v3_city_382_23.blp",
+      "sha256": "95dac4d491128aa17b2e9e949570e1d00b70504f999e5f779bce1f37fc4e1f7b"
+    },
+    {
+      "file": "v3_city_382_24.blp",
+      "sha256": "68228644d9f82c8807a377f276b25e9fd7663b534bbaa58060fd45ec0bc57172"
+    },
+    {
+      "file": "v3_city_509_1.blp",
+      "sha256": "dee31af82715aa1c3a6b1c5492a14f87de36462a670c0451724fd4a7458bdf7e"
+    },
+    {
+      "file": "v3_city_509_2.blp",
+      "sha256": "dee31af82715aa1c3a6b1c5492a14f87de36462a670c0451724fd4a7458bdf7e"
+    },
+    {
+      "file": "v3_city_509_3.blp",
+      "sha256": "7d1cf13a7e3f0ba288a4df530562871475aaa209b584bf939df392e324f6b655"
+    },
+    {
+      "file": "v3_city_509_4.blp",
+      "sha256": "d11fe63001b3c8b20b53ac8a459a430b63dcbed01bc9498115c1b85e574edd42"
+    },
+    {
+      "file": "v3_city_509_5.blp",
+      "sha256": "dee31af82715aa1c3a6b1c5492a14f87de36462a670c0451724fd4a7458bdf7e"
+    },
+    {
+      "file": "v3_city_509_6.blp",
+      "sha256": "dee31af82715aa1c3a6b1c5492a14f87de36462a670c0451724fd4a7458bdf7e"
+    },
+    {
+      "file": "v3_city_509_7.blp",
+      "sha256": "c12a8e2829de22e8f5b50b8ae536b23069c2d7578723b47130ad9c9bbc34614c"
+    },
+    {
+      "file": "v3_city_509_8.blp",
+      "sha256": "d9d94b8b7e8db587736cbf313b1d21a2e24871c36722dde77b0a067ace523e0e"
+    },
+    {
+      "file": "v3_city_509_9.blp",
+      "sha256": "d8933d50993b4c7b6bd1dbc9888c3332adee470965621452a8a5bec37b529c24"
+    },
+    {
+      "file": "v3_city_509_10.blp",
+      "sha256": "7451727a882f5426e98bda0111a6fdb6f6f3b3df2ad30f19e29ffa32ff556876"
+    },
+    {
+      "file": "v3_city_509_11.blp",
+      "sha256": "452b317f535b4c4b54fb16ff8ccf390351748685e1e0367316e14a47839e75a8"
+    },
+    {
+      "file": "v3_city_509_12.blp",
+      "sha256": "637045005eeca8619d37e5fdbbae02f6be13027dd01dc3c37579d29249d769fa"
+    },
+    {
+      "file": "v3_city_509_13.blp",
+      "sha256": "d45052e0b1e83713c44a231a8800716386120a9dc224b8ee6a32c6c821f1ec50"
+    },
+    {
+      "file": "v3_city_509_14.blp",
+      "sha256": "1f9bde5bcaa3a3b4c8e1fc9d3744ab9c65eb3a04ae68b3d3eda1aaa8168ed43a"
+    },
+    {
+      "file": "v3_city_509_15.blp",
+      "sha256": "6c5815e48d930f6b9eaf8bc42362b29b149a502f62db639e73b668fe1079ec6e"
+    },
+    {
+      "file": "v3_city_509_16.blp",
+      "sha256": "ae7b520fdf61105b35fa1e7da85f971230723f59ed2f5b7ec9424c380b572b77"
+    },
+    {
+      "file": "v3_city_509_17.blp",
+      "sha256": "391dcb77f0e408a24701743b31c3f5b5e9f6ff3039bf0af300d966181e7d0702"
+    },
+    {
+      "file": "v3_city_509_18.blp",
+      "sha256": "eb18009f4ad0351173ead79ab657e6ebf292867b460f6a718e8654afcae49381"
+    },
+    {
+      "file": "v3_city_509_19.blp",
+      "sha256": "ef5dd615aa0dd41c2f21f3858a16e91c8397ca1966747d0c8be428b2f9af1f38"
+    },
+    {
+      "file": "v3_city_509_20.blp",
+      "sha256": "58760862f9c0b418b038e2b02707dbca805d955800aaa5abfeddaf742d074645"
+    },
+    {
+      "file": "v3_city_509_21.blp",
+      "sha256": "e8744e49e59ba60e2444f47f47253a7fbefad1293a0e6cdb8c89b2f9e965cb2c"
+    },
+    {
+      "file": "v3_city_509_22.blp",
+      "sha256": "5e7ac5a366c660a9e043745ecc76f188ae1a5d507feef660deb17f048e8110db"
+    },
+    {
+      "file": "v3_city_509_23.blp",
+      "sha256": "59b6d55e84baeffec35afab59569b0c5dad714b46510680b315718d177456576"
+    },
+    {
+      "file": "v3_city_509_24.blp",
+      "sha256": "d526116fa96a8d6addaa6dd3bd815229a623c760e75a6149b07acca4d6ab23c9"
+    }
+  ],
+  "total_art_files": 865,
+  "total_art_bytes": 56816660
+}

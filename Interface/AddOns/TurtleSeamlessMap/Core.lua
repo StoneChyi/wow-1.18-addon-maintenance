@@ -44,6 +44,7 @@ function M:ConstrainView()
 end
 
 function M:WorldView()
+    self.pendingLocation=nil
     self.scene,self.selected = nil,nil
     self.zoomFocus = nil
     self.hoveredID = false
@@ -58,6 +59,7 @@ end
 function M:FocusMap(id)
     local map = self.byID[id]
     if not map then return end
+    self.pendingLocation=nil
     self.selected = id
     self.hoveredID = id
     self.scene = nil
@@ -76,6 +78,7 @@ function M:Cursor()
 end
 
 function M:Zoom(factor)
+    self.pendingLocation=nil
     local x,y = self:Cursor()
     x,y=G.Clamp(x,0,self.canvas:GetWidth()),G.Clamp(y,0,self.canvas:GetHeight())
     local wx,wy=G.World(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),x,y)
@@ -117,13 +120,14 @@ end
 
 function M:DrawMap(map)
     if not map.visible then return end
-    local r=map.rect
+    local r=map.artRect or map.rect
+    local artW,artH=map.artWidth or 1002,map.artHeight or 668
     local alpha=map.alpha
     if alpha<=0 then return end
     local function draw(tiles,a,layer)
         if a<=0 then return end
         for _,tile in ipairs(tiles) do
-            self:Tile(ART..tile[1],r[1]+tile[2]/1002*r[3],r[2]+tile[3]/668*r[4],tile[4]/1002*r[3],tile[5]/668*r[4],tile[4]/256,tile[5]/256,a,layer)
+            self:Tile(ART..tile[1],r[1]+tile[2]/artW*r[3],r[2]+tile[3]/artH*r[4],tile[4]/artW*r[3],tile[5]/artH*r[4],tile[4]/256,tile[5]/256,a,layer)
         end
     end
     if map.kind=="continent" then
@@ -132,7 +136,6 @@ function M:DrawMap(map)
         draw(map.backing,self.overviewBlend)
         -- World art already contains the native continent overview and labels.
     elseif map.kind=="world" then
-        draw(map.sea,1,"BACKGROUND")
         draw(map.tiles,1-self.overviewBlend)
     else
         draw(map.tiles,alpha)
@@ -263,20 +266,32 @@ function M:DrawPlayer()
     self:AddPin("player",x,y,"Interface\\Minimap\\MinimapArrow",22)
 end
 
-function M:FindPlayer()
+function M:FindPlayer(retry)
     -- Once when opening with M or requesting location, never during pan/zoom.
     local previousIgnore=self.ignoreMapEvent
     self.ignoreMapEvent=true
     SetMapToCurrentZone()
     self.ignoreMapEvent=previousIgnore
+    self.pendingLocation=nil
     local file=GetMapInfo()
     local map=file and self.byFile[string.lower(file)]
+    local real=GetRealZoneText and GetRealZoneText()
+    local actual=real and self.byName[real]
+    local synced=not actual or (map and map.id==actual.id)
+    -- GetMapInfo is the selected browsing page, not proof of the player's
+    -- zone. On first open it may still be a cached page (e.g. Tanaris).
+    if actual then map=actual
+    elseif real and real~="" and (not map or map.name~=real) then return false end
     if not map then return false end
     self:FocusMap(map.id)
-    local x,y=GetPlayerMapPosition("player")
-    if x and y and not (x==0 and y==0) then
+    local x,y
+    if synced then x,y=GetPlayerMapPosition("player") end
+    if G.Finite(x) and G.Finite(y) and x>=0 and x<=1 and y>=0 and y<=1 and not (x==0 and y==0) then
         local wx,wy=self:MapToWorld(map.id,x,y)
         if wx then self.view.x,self.view.y=wx,wy end
+    else
+        local remaining=retry and retry.remaining-1 or 2
+        if remaining>0 then self.pendingLocation={next=GetTime()+0.1,remaining=remaining} end
     end
     self:ConstrainView()
     if self.frame:IsShown() then self:RenderArt();self:LayoutPins() end
@@ -352,8 +367,9 @@ function M:BuildUI()
     self.canvas=canvas
     canvas:SetWidth(w-28);canvas:SetHeight(h-112)
     canvas:SetPoint("TOPLEFT",f,"TOPLEFT",14,-70)
-    local bg=canvas:CreateTexture(nil,"BACKGROUND")
-    bg:SetAllPoints(canvas);bg:SetTexture(ART.."v2_sea_694_1")
+    -- Old-client native backdrop tiling keeps parchment grain and wave strokes
+    -- readable at every zoom instead of magnifying a flat world-sized sea.
+    canvas:SetBackdrop({bgFile=ART..TurtleSeamlessMap_Presentation.sea,tile=true,tileSize=TurtleSeamlessMap_Presentation.seaTile})
     canvas:EnableMouse(true);canvas:EnableMouseWheel(true)
     canvas:SetScript("OnMouseWheel",function() M:Zoom(arg1>0 and 1.18 or 1/1.18) end)
     canvas:SetScript("OnMouseDown",function()
@@ -362,7 +378,7 @@ function M:BuildUI()
             if IsControlKeyDown() then
                 local wx,wy=G.World(M.view,canvas:GetWidth(),canvas:GetHeight(),x,y)
                 table.insert(M.settings.notes,{x=wx,y=wy});M.dirty=true
-            elseif not M:IsWorldView() then M.zoomFocus=nil;M.drag={x=x,y=y,cx=M.view.x,cy=M.view.y} end
+            elseif not M:IsWorldView() then M.pendingLocation=nil;M.zoomFocus=nil;M.drag={x=x,y=y,cx=M.view.x,cy=M.view.y} end
         elseif arg1=="RightButton" then M:Zoom(0.5) end
     end)
     canvas:SetScript("OnMouseUp",function() M.drag=nil end)
@@ -421,12 +437,14 @@ function M:BuildUI()
         if UpdateMicroButtons then UpdateMicroButtons() end
     end)
     f:SetScript("OnHide",function()
+        M.pendingLocation=nil
         M.drag=nil;M.list:Hide();search:ClearFocus();GameTooltip:Hide()
         if M.markerMenu then M.markerMenu:Hide() end
         M.settings.view={x=M.view.x,y=M.view.y,scale=M.view.scale,selected=M.selected}
         if UpdateMicroButtons then UpdateMicroButtons() end
     end)
     f:SetScript("OnUpdate",function()
+        if M.pendingLocation and GetTime()>=M.pendingLocation.next then M:FindPlayer(M.pendingLocation) end
         if M.drag then
             if IsMouseButtonDown and not IsMouseButtonDown("LeftButton") then M.drag=nil
             else
@@ -474,10 +492,14 @@ function M:Install()
     local originalShow=WorldMapFrame:GetScript("OnShow")
     WorldMapFrame:SetScript("OnShow",function()
         if M.nativeRequested then if originalShow then originalShow() end;return end
-        local file=GetMapInfo()
+        local explicit=M.ignoreMapEvent
+        local file=explicit and GetMapInfo()
         local map=file and M.byFile[string.lower(file)]
-        if map then M:FocusMap(map.id) end
-        WorldMapFrame:Hide();M.frame:Show()
+        M.ignoreMapEvent=true;WorldMapFrame:Hide();M.ignoreMapEvent=explicit
+        if explicit then
+            if map then M:FocusMap(map.id) end
+        elseif not M:FindPlayer() then M:WorldView() end
+        M.frame:Show()
     end)
     self:InstallCompat()
 end

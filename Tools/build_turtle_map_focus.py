@@ -6,6 +6,7 @@ keep pointer selection out of transparent ocean and overlapping map margins.
 import json
 from PIL import Image
 from build_turtle_seamless_map import ROOT, ADDON, decode_blp, lua, write
+from build_turtle_map_presentation import CITY_OUTLINES, city_mask
 
 
 def build():
@@ -14,10 +15,13 @@ def build():
     for m in manifest['maps']:
         if m['kind']!='surface':
             continue
-        canvas = Image.new('L',(1002,668))
-        for index in range(12):
-            image = decode_blp((ADDON/'Art'/f"v2_{m['id']}_{index+1}.blp").read_bytes()).convert('RGBA')
-            canvas.paste(image.getchannel('A'),((index%4)*256,(index//4)*256))
+        if m['id'] in CITY_OUTLINES:
+            canvas=city_mask(m['id'])
+        else:
+            canvas = Image.new('L',(1002,668))
+            for index in range(12):
+                image = decode_blp((ADDON/'Art'/f"v2_{m['id']}_{index+1}.blp").read_bytes()).convert('RGBA')
+                canvas.paste(image.getchannel('A'),((index%4)*256,(index//4)*256))
         small = canvas.resize((48,32),Image.Resampling.BOX)
         digits = []
         for y in range(32):

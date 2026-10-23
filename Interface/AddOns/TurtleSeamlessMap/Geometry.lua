@@ -1,5 +1,5 @@
 -- Pure geometry: no global client map selection is changed by these functions.
-TurtleSeamlessMap = { version = "0.2.1", providers = {}, dirty = true }
+TurtleSeamlessMap = { version = "0.2.2", providers = {}, dirty = true }
 local M = TurtleSeamlessMap
 local G = {}
 M.Geometry = G
@@ -90,6 +90,12 @@ function M:IndexMaps()
             self.byArea[map.area] = map
         end
         map.rect = {G.Rect(map)}
+        local art=TurtleSeamlessMap_Presentation.cities[map.id]
+        if art then
+            map.tiles=art.tiles;map.artWidth=art.width;map.artHeight=art.height
+            local r=map.rect
+            map.artRect={r[1]+art.x/1002*r[3],r[2]+art.y/668*r[4],art.width/1002*r[3],art.height/668*r[4]}
+        elseif map.kind=="world" then map.sea={} end
     end
     self.world = {0,0,1002,668}
     self.detailAreas = {}
