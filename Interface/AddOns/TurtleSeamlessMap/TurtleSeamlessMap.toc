@@ -1,0 +1,13 @@
+## Interface: 11200
+## Title: Turtle Seamless Map
+## Title-zhCN: 乌龟服无缝世界地图
+## Notes: Independent continuous world map. Mouse wheel zoom; drag to pan; /tsm.
+## Author: Personal maintenance project
+## Version: 0.1.0
+## OptionalDeps: ModernMapMarkers, pfQuest, pfQuest-turtle, S_WorldMap, pfUI, pfUI-addonskinner
+## SavedVariables: TurtleSeamlessMapDB
+
+MapData.lua
+Geometry.lua
+Core.lua
+Compat.lua

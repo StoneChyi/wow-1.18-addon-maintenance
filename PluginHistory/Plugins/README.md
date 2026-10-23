@@ -2,7 +2,7 @@
 
 每个插件一个文件，每次修改一条记录；点插件名查看完整历史，点最近记录直接跳转。最新记录在前，早期历史及依据保留在文件末尾。
 
-当前覆盖 **106 个插件页面**：有维护记录 **55 个**，仅关联皮肤适配 **2 个**，其余 **49 个**的个人修改归属或内容待确认。已停用插件保留历史。
+当前覆盖 **107 个插件页面**：有维护记录 **56 个**，仅关联皮肤适配 **2 个**，其余 **49 个**的个人修改归属或内容待确认。已停用插件保留历史。
 
 [待确认插件](../待确认插件.md) · [验收与历史缺项](../待补充清单.md) · [记录规范](../记录规范.md) · [记录模板](../记录模板.md) · [机器索引](../change-index.json)
 
@@ -12,6 +12,7 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
+| [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-24 | [新增独立连续地图与完整区域素材提取](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261024-01) | 待游戏验收 |
 | [XyTracker](XyTracker.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](XyTracker.md#change-XyTracker-20261018-02) | 待游戏验收 |
 | [WushuangLoot](WushuangLoot.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](WushuangLoot.md#change-WushuangLoot-20261018-02) | 待游戏验收 |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261018-02) | 待游戏验收 |

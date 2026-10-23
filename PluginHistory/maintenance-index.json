@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
-  "updated_on": "2026-10-18",
+  "updated_on": "2026-10-24",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
@@ -11,7 +11,7 @@
     "related_skin_only": 2
   },
   "added_counts": {
-    "documented_history": 1
+    "documented_history": 2
   },
   "added_addons": [
     {
@@ -35,6 +35,29 @@
       ],
       "tracked_files_at_reference": 0,
       "pending": "首版受控检查通过，实际 1.12 加载/显示/原生操作/第三方钩子及性能资源验收待补充；复杂规则、徽标与后续功能分步推进。"
+    },
+    {
+      "addon": "TurtleSeamlessMap",
+      "status": "documented_history",
+      "added_on": "2026-10-24",
+      "creation_base_commit": "0e567516764ddee12f9703b50b8987779f3fe145",
+      "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
+      "purpose": "独立无缝世界地图首版；完整提取173图页；连续缩放、完整图页、ModernMapMarkers与pfQuest基础适配；待游戏验收。",
+      "sources": [
+        "PluginHistory/Research/TurtleSeamlessMap-首版实现-20261024.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/TurtleSeamlessMap/TurtleSeamlessMap.toc",
+        "Interface/AddOns/TurtleSeamlessMap/MapData.lua",
+        "Interface/AddOns/TurtleSeamlessMap/Geometry.lua",
+        "Interface/AddOns/TurtleSeamlessMap/Core.lua",
+        "Interface/AddOns/TurtleSeamlessMap/Compat.lua",
+        "Interface/AddOns/TurtleSeamlessMap/README.md",
+        "Interface/AddOns/TurtleSeamlessMap/LICENSE-OpenMap.txt",
+        "Interface/AddOns/TurtleSeamlessMap/Art/4_1.blp"
+      ],
+      "tracked_files_at_reference": 0,
+      "pending": "实际客户端加载、各区接缝与内存帧率；更多图层适配；远端当前公开，本次未同步。"
     }
   ],
   "addons": [
