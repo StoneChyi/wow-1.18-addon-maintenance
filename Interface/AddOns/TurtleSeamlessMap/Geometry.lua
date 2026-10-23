@@ -1,5 +1,5 @@
 -- Pure geometry: no global client map selection is changed by these functions.
-TurtleSeamlessMap = { version = "0.2.0", providers = {}, dirty = true }
+TurtleSeamlessMap = { version = "0.2.1", providers = {}, dirty = true }
 local M = TurtleSeamlessMap
 local G = {}
 M.Geometry = G
@@ -31,6 +31,17 @@ function G.Inverse(rect, x, y)
     return (x-rect[1])/rect[3], (y-rect[2])/rect[4]
 end
 
+function G.Hit(map,x,y)
+    local u,v=G.Inverse(map.rect,x,y)
+    if not u or u<0 or u>=1 or v<0 or v>=1 then return false end
+    local mask=TurtleSeamlessMap_Focus[map.id]
+    if not mask then return true end
+    local col,row=math.floor(u*mask[1]),math.floor(v*mask[2])
+    local digit=math.floor(col/4)+row*(mask[1]/4)+1
+    local value=tonumber(string.sub(mask[3],digit,digit),16) or 0
+    return math.mod(math.floor(value/(2^math.mod(col,4))),2)==1
+end
+
 function G.Screen(view, width, height, x, y)
     return width/2 + (x-view.x)*view.scale, height/2 + (y-view.y)*view.scale
 end
@@ -44,6 +55,16 @@ function G.Zoom(view, width, height, x, y, factor, low, high)
     view.scale = G.Clamp(view.scale*factor,low,high)
     view.x = wx-(x-width/2)/view.scale
     view.y = wy-(y-height/2)/view.scale
+end
+
+-- Constrain the camera, not the map artwork: the full world remains complete
+-- and keeps its original aspect ratio, with no empty margin to drag into view.
+function G.Constrain(view, width, height, rect)
+    local halfW,halfH = width/view.scale/2,height/view.scale/2
+    if halfW*2>=rect[3] then view.x=rect[1]+rect[3]/2
+    else view.x=G.Clamp(view.x,rect[1]+halfW,rect[1]+rect[3]-halfW) end
+    if halfH*2>=rect[4] then view.y=rect[2]+rect[4]/2
+    else view.y=G.Clamp(view.y,rect[2]+halfH,rect[2]+rect[4]-halfH) end
 end
 
 -- Clip both geometry and texture coordinates. 1.12 has no modern clipping API;
@@ -100,18 +121,48 @@ function M:IndexMaps()
         if a.city ~= b.city then return not a.city end
         return a.rect[3]*a.rect[4] > b.rect[3]*b.rect[4]
     end)
+    for order,map in ipairs(self.drawOrder) do map.drawLevel=91+order end
 end
 
 function M:MapAt(x,y)
     local best
     for _,map in ipairs(self.drawOrder) do
         local r = map.rect
-        if map.kind == "surface" and (not map.city or map.cityActive) and x>=r[1] and x<=r[1]+r[3] and y>=r[2] and y<=r[2]+r[4] then
-            -- This is a bounding-box lookup, not a terrain ownership claim.
+        if map.kind == "surface" and (not map.city or map.cityActive) and G.Hit(map,x,y) then
+            -- The coarse art mask is not a precise terrain ownership claim.
             if not best or r[3]*r[4] < best.rect[3]*best.rect[4] then best=map end
         end
     end
     return best
+end
+
+-- Exactly one detail map follows the cursor. Transparent margins are not a
+-- territory hit. Toolbar/menu use retains the last focus until map re-entry.
+function M:ChooseDetailMap()
+    if self:IsWorldView() then return end
+    local x,y=self:Cursor()
+    local w,h=self.canvas:GetWidth(),self.canvas:GetHeight()
+    if x<0 or x>w or y<0 or y>h or (self.list and self.list:IsShown()) or (self.markerMenu and self.markerMenu:IsShown()) then
+        local id=self.hoveredID
+        if id==nil then id=self.selected end
+        local map=self.byID[id]
+        if map and map.city then
+            local coverage=min(map.rect[3]*self.view.scale/w,map.rect[4]*self.view.scale/h)
+            if coverage<(map.cityActive and 0.58 or 0.72) then return self.byID[map.parent] end
+        end
+        return map and map.kind=="surface" and map or nil
+    end
+    local wx,wy=G.World(self.view,w,h,x,y)
+    local best,city
+    for _,map in ipairs(self.maps) do
+        if map.kind=="surface" and G.Hit(map,wx,wy) then
+            if map.city then
+                local coverage=min(map.rect[3]*self.view.scale/w,map.rect[4]*self.view.scale/h)
+                if coverage>=(map.cityActive and 0.58 or 0.72) then city=map end
+            elseif not best or map.rect[3]*map.rect[4]<best.rect[3]*best.rect[4] then best=map end
+        end
+    end
+    return city or best
 end
 
 function M:RegisterProvider(name, callback)
@@ -129,6 +180,9 @@ end
 
 function M:UpdateVisibility()
     self.detailAreas = {}
+    local target=self:ChooseDetailMap()
+    self.detailTarget=target
+    self.hoveredID=target and target.id or false
     local w,h = self.canvas:GetWidth(),self.canvas:GetHeight()
     for _,map in ipairs(self.drawOrder) do
         local r = map.rect
@@ -137,18 +191,10 @@ function M:UpdateVisibility()
         if map.kind == "world" or map.kind == "continent" then
             map.alpha = 1
         elseif map.city then
-            local margin = map.cityActive and 0.25 or 0.05
-            local near = self.view.x>=r[1]-r[3]*margin and self.view.x<=r[1]+r[3]*(1+margin)
-                and self.view.y>=r[2]-r[4]*margin and self.view.y<=r[2]+r[4]*(1+margin)
-            local focus = self.zoomFocus
-            if not near and focus and focus.x>=r[1] and focus.x<=r[1]+r[3] and focus.y>=r[2] and focus.y<=r[2]+r[4] then
-                local sx,sy = G.Screen(self.view,w,h,focus.x,focus.y)
-                near = sx>=0 and sx<=w and sy>=0 and sy<=h
-            end
-            map.cityActive = map.visible and near and coverage >= (map.cityActive and 0.58 or 0.72)
+            map.cityActive = map==target and map.visible and coverage >= (map.cityActive and 0.58 or 0.72)
             map.alpha = map.cityActive and G.Clamp((coverage-0.58)/0.38,0,1) or 0
         else
-            map.alpha = G.Clamp((coverage-0.10)/0.24,0,1)
+            map.alpha = map==target and G.Clamp((coverage-0.10)/0.24,0,1) or 0
         end
         if map.kind == "surface" then
             map.detail = map.visible and map.alpha>=0.95 and coverage >= (map.detail and 0.34 or 0.40)

@@ -25,27 +25,48 @@ function M:Fit(rect)
     local w,h = self.canvas:GetWidth(),self.canvas:GetHeight()
     self.view.x,self.view.y = rect[1]+rect[3]/2,rect[2]+rect[4]/2
     self.view.scale = min(w/rect[3],h/rect[4])*0.92
-    self.minScale = min(w/self.world[3],h/self.world[4])*0.75
+    self.minScale = self:WorldScale()
+    self.view.scale=max(self.minScale,min(64,self.view.scale))
+    self:ConstrainView()
     self.dirty = true
+end
+
+function M:WorldScale()
+    return min(self.canvas:GetWidth()/self.world[3],self.canvas:GetHeight()/self.world[4])
+end
+
+function M:IsWorldView()
+    return self.view.scale and self.view.scale<=self:WorldScale()*1.000001
+end
+
+function M:ConstrainView()
+    G.Constrain(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),self.world)
 end
 
 function M:WorldView()
     self.scene,self.selected = nil,nil
     self.zoomFocus = nil
-    self:Fit(self.world)
+    self.hoveredID = false
+    self.view.x,self.view.y=501,334
+    self.minScale=self:WorldScale()
+    self.view.scale=self.minScale
+    self.drag=nil;self.dirty=true
     if self.title then self.title:SetText("乌龟服无缝世界地图") end
+    if self.frame:IsShown() then self:RenderArt();self:LayoutPins() end
 end
 
 function M:FocusMap(id)
     local map = self.byID[id]
     if not map then return end
     self.selected = id
+    self.hoveredID = id
     self.scene = nil
     self.zoomFocus = nil
     self:Fit(map.focusRect or map.rect)
     if map.city then self.view.scale=min(64,self.view.scale*1.35) end
     self.title:SetText(map.name .. " · 连续地图")
     self.dirty = true
+    if self.frame:IsShown() then self:RenderArt();self:LayoutPins() end
 end
 
 function M:Cursor()
@@ -60,22 +81,38 @@ function M:Zoom(factor)
     local wx,wy=G.World(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),x,y)
     self.zoomFocus={x=wx,y=wy}
     G.Zoom(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),x,y,factor,self.minScale or 0.001,64)
+    self:ConstrainView()
+    if self:IsWorldView() then self.drag=nil;self.zoomFocus=nil end
     self.dirty=true
+    self.lastInteraction=GetTime()
+    -- The map is ready before returning from the input handler. Node scans
+    -- run separately; they must not hold up the new map geometry.
+    if self:ViewChanged() then self:RenderArt();self:LayoutPins() end
 end
 
-function M:Tile(path,x,y,w,h,u,v,alpha)
+function M:Tile(path,x,y,w,h,u,v,alpha,layer)
     local a,b,c,d,e,f,g,i = G.Clip(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),x,y,w,h,u or 1,v or 1)
     if not a then return end
     self.tileUsed=self.tileUsed+1
-    local t = self.tiles[self.tileUsed]
-    if not t then
-        t=self.art:CreateTexture(nil,"ARTWORK")
-        self.tiles[self.tileUsed]=t
+    local map=self.activeMap
+    if not map.artFrame then
+        map.artFrame=CreateFrame("Frame",nil,self.art)
+        map.artFrame:SetAllPoints(self.canvas);map.artFrame:SetFrameLevel(map.drawLevel)
+        map.texturePool={};map.textures={}
     end
-    if t.path~=path then t:SetTexture(path);t.path=path end
+    -- A texture always belongs to one map and one asset. Never recycle a
+    -- continent region as a zone region in the same unordered ARTWORK layer.
+    local t = map.texturePool[path]
+    if not t then
+        t=map.artFrame:CreateTexture(nil,layer or "ARTWORK")
+        t:SetTexture(path);t.path=path
+        map.texturePool[path]=t;table.insert(map.textures,t)
+    end
+    self.tiles[self.tileUsed]=t;t.paintPass=self.paintPass
     t:ClearAllPoints();t:SetPoint("TOPLEFT",self.canvas,"TOPLEFT",a,-b)
     t:SetWidth(c);t:SetHeight(d);t:SetTexCoord(e,f,g,i)
-    t:SetAlpha(alpha or 1);t:Show()
+    t:SetAlpha(alpha or 1)
+    if not t.active then t:Show();t.active=true end
 end
 
 function M:DrawMap(map)
@@ -83,10 +120,10 @@ function M:DrawMap(map)
     local r=map.rect
     local alpha=map.alpha
     if alpha<=0 then return end
-    local function draw(tiles,a)
+    local function draw(tiles,a,layer)
         if a<=0 then return end
         for _,tile in ipairs(tiles) do
-            self:Tile(ART..tile[1],r[1]+tile[2]/1002*r[3],r[2]+tile[3]/668*r[4],tile[4]/1002*r[3],tile[5]/668*r[4],tile[4]/256,tile[5]/256,a)
+            self:Tile(ART..tile[1],r[1]+tile[2]/1002*r[3],r[2]+tile[3]/668*r[4],tile[4]/1002*r[3],tile[5]/668*r[4],tile[4]/256,tile[5]/256,a,layer)
         end
     end
     if map.kind=="continent" then
@@ -95,7 +132,7 @@ function M:DrawMap(map)
         draw(map.backing,self.overviewBlend)
         -- World art already contains the native continent overview and labels.
     elseif map.kind=="world" then
-        draw(map.sea,1)
+        draw(map.sea,1,"BACKGROUND")
         draw(map.tiles,1-self.overviewBlend)
     else
         draw(map.tiles,alpha)
@@ -104,7 +141,7 @@ end
 
 -- Providers supply world coordinates and their original behavior via callbacks.
 -- Pin keys are stable; panning reuses frames and never rebuilds quest databases.
-function M:AddPin(key,x,y,texture,size,enter,leave,click,data)
+function M:AddPin(key,x,y,texture,size,enter,leave,click,data,mapID)
     if not x or not y then return end
     local sx,sy=G.Screen(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),x,y)
     local half=(size or 18)/2
@@ -124,20 +161,73 @@ function M:AddPin(key,x,y,texture,size,enter,leave,click,data)
         self.pins[self.pinUsed]=p
     end
     p.key,p.enter,p.leave,p.click,p.data=key,enter,leave,click,data
+    p.worldX,p.worldY,p.mapID=x,y,mapID
     p:SetWidth(size or 18);p:SetHeight(size or 18)
     p:ClearAllPoints();p:SetPoint("CENTER",self.canvas,"TOPLEFT",sx,-sy)
-    p.tex:SetTexture(texture);p.tex:SetVertexColor(1,1,1,1)
+    if p.tex.path~=texture then p.tex:SetTexture(texture);p.tex.path=texture end
+    p.tex:SetVertexColor(1,1,1,1)
     p:Show()
     return p
 end
 
-function M:Render()
-    self.tileUsed,self.pinUsed,self.pinOverflow=0,0,false
-    local overviewScale=min(self.canvas:GetWidth()/1002,self.canvas:GetHeight()/668)*0.92
+function M:CameraChanged()
+    local v=self.paintedView
+    return not v or v.x~=self.view.x or v.y~=self.view.y or v.scale~=self.view.scale
+        or v.w~=self.canvas:GetWidth() or v.h~=self.canvas:GetHeight()
+end
+
+function M:ViewChanged()
+    if self:CameraChanged() then return true end
+    local focus=self:ChooseDetailMap()
+    return self.paintedView.focus~=(focus and focus.id)
+end
+
+function M:RenderArt()
+    local moved=self:CameraChanged()
+    self.tileUsed=0
+    for i=table.getn(self.tiles),1,-1 do self.tiles[i]=nil end
+    self.paintPass=(self.paintPass or 0)+1
+    local overviewScale=self:WorldScale()
     self.overviewBlend=G.Clamp((self.view.scale/overviewScale-1)/0.20,0,1)
     self:UpdateVisibility()
-    for _,map in ipairs(self.drawOrder) do self:DrawMap(map) end
-    for i=self.tileUsed+1,table.getn(self.tiles) do self.tiles[i]:Hide() end
+    local focused=self.detailTarget and self.detailTarget.id
+    if self.paintedView and self.paintedView.focus~=focused then self.lastInteraction=GetTime() end
+    for _,map in ipairs(self.drawOrder) do
+        if not moved and map.kind~="surface" then
+            -- Cursor-only region switching does not touch world/continent
+            -- texture geometry or rebind their assets.
+            for _,texture in ipairs(map.textures or {}) do
+                if texture.active then
+                    texture.paintPass=self.paintPass
+                    self.tileUsed=self.tileUsed+1;self.tiles[self.tileUsed]=texture
+                end
+            end
+        else self.activeMap=map;self:DrawMap(map) end
+        for _,texture in ipairs(map.textures or {}) do
+            if texture.paintPass~=self.paintPass and texture.active then texture:Hide();texture.active=false end
+        end
+    end
+    self.activeMap=nil
+    self.paintedView={x=self.view.x,y=self.view.y,scale=self.view.scale,w=self.canvas:GetWidth(),h=self.canvas:GetHeight(),focus=focused}
+    self.artRenders=(self.artRenders or 0)+1
+end
+
+function M:LayoutPins()
+    local w,h=self.canvas:GetWidth(),self.canvas:GetHeight()
+    for i=1,self.pinUsed or 0 do
+        local p=self.pins[i]
+        local sx,sy=G.Screen(self.view,w,h,p.worldX,p.worldY)
+        local half=p:GetWidth()/2
+        if sx<half or sy<half or sx>w-half or sy>h-half or (p.mapID and not self:CanShowMapPins(self.byID[p.mapID])) then
+            p:Hide()
+        else
+            p:ClearAllPoints();p:SetPoint("CENTER",self.canvas,"TOPLEFT",sx,-sy);p:Show()
+        end
+    end
+end
+
+function M:RenderPins()
+    self.pinUsed,self.pinOverflow=0,false
     for name,provider in pairs(self.providers) do
         local ok,err=pcall(provider,self)
         if not ok and not self.providerErrors[name] then
@@ -149,6 +239,12 @@ function M:Render()
     self:DrawNotes()
     for i=self.pinUsed+1,table.getn(self.pins) do self.pins[i]:Hide() end
     self.dirty=false
+    self.lastProviderRefresh=GetTime()
+end
+
+function M:Render()
+    if self:ViewChanged() then self:RenderArt() end
+    self:RenderPins()
 end
 
 function M:DrawPlayer()
@@ -168,19 +264,23 @@ function M:DrawPlayer()
 end
 
 function M:FindPlayer()
-    -- Once on explicit user request, never during map panning/rendering.
+    -- Once when opening with M or requesting location, never during pan/zoom.
+    local previousIgnore=self.ignoreMapEvent
     self.ignoreMapEvent=true
     SetMapToCurrentZone()
-    self.ignoreMapEvent=false
+    self.ignoreMapEvent=previousIgnore
     local file=GetMapInfo()
     local map=file and self.byFile[string.lower(file)]
-    if not map then return end
+    if not map then return false end
     self:FocusMap(map.id)
     local x,y=GetPlayerMapPosition("player")
     if x and y and not (x==0 and y==0) then
         local wx,wy=self:MapToWorld(map.id,x,y)
         if wx then self.view.x,self.view.y=wx,wy end
     end
+    self:ConstrainView()
+    if self.frame:IsShown() then self:RenderArt();self:LayoutPins() end
+    return true
 end
 
 function M:DrawNotes()
@@ -196,7 +296,11 @@ end
 
 function M:Toggle()
     if WorldMapFrame and WorldMapFrame:IsShown() then WorldMapFrame:Hide();return end
-    if self.frame:IsShown() then self.frame:Hide() else self.frame:Show() end
+    if self.frame:IsShown() then self.frame:Hide()
+    else
+        if not self.ignoreMapEvent and not self:FindPlayer() then self:WorldView() end
+        self.frame:Show()
+    end
 end
 
 function M:ShowNative()
@@ -226,8 +330,10 @@ function M:BuildUI()
     local f=CreateFrame("Frame","TurtleSeamlessMapFrame",UIParent)
     self.frame=f
     f:SetFrameStrata("DIALOG");f:SetFrameLevel(90)
-    local w=min(1180,UIParent:GetWidth()-50)
-    local h=min(790,UIParent:GetHeight()-60)
+    -- Match the native world aspect rather than letterboxing, stretching or
+    -- cropping geography to fill a differently shaped canvas.
+    local w=min(1180,UIParent:GetWidth()-50,(UIParent:GetHeight()-172)*1.5+28)
+    local h=(w-28)/1.5+112
     f:SetWidth(w);f:SetHeight(h);f:SetPoint("CENTER",UIParent,"CENTER",0,0)
     f:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=16,insets={left=4,right=4,top=4,bottom=4}})
     f:SetBackdropColor(0.06,0.07,0.08,0.98)
@@ -256,12 +362,12 @@ function M:BuildUI()
             if IsControlKeyDown() then
                 local wx,wy=G.World(M.view,canvas:GetWidth(),canvas:GetHeight(),x,y)
                 table.insert(M.settings.notes,{x=wx,y=wy});M.dirty=true
-            else M.zoomFocus=nil;M.drag={x=x,y=y,cx=M.view.x,cy=M.view.y} end
+            elseif not M:IsWorldView() then M.zoomFocus=nil;M.drag={x=x,y=y,cx=M.view.x,cy=M.view.y} end
         elseif arg1=="RightButton" then M:Zoom(0.5) end
     end)
     canvas:SetScript("OnMouseUp",function() M.drag=nil end)
     self.art=CreateFrame("Frame",nil,canvas);self.art:SetAllPoints(canvas);self.art:SetFrameLevel(91)
-    self.pinLayer=CreateFrame("Frame",nil,canvas);self.pinLayer:SetAllPoints(canvas);self.pinLayer:SetFrameLevel(125)
+    self.pinLayer=CreateFrame("Frame",nil,canvas);self.pinLayer:SetAllPoints(canvas);self.pinLayer:SetFrameLevel(94+table.getn(self.drawOrder))
     local buttons={
         {"世界",54,function() M:WorldView() end},
         {"卡利姆多",78,function() M:FocusMap(13) end},
@@ -311,6 +417,7 @@ function M:BuildUI()
         if WorldMapFrame:IsShown() then WorldMapFrame:Hide() end
         M.dirty=true;M.lastProviderRefresh=0
         if not M.view.scale then M:WorldView() end
+        M:Render()
         if UpdateMicroButtons then UpdateMicroButtons() end
     end)
     f:SetScript("OnHide",function()
@@ -326,19 +433,24 @@ function M:BuildUI()
                 local x,y=M:Cursor()
                 M.view.x=M.drag.cx-(x-M.drag.x)/M.view.scale
                 M.view.y=M.drag.cy-(y-M.drag.y)/M.view.scale
+                M:ConstrainView();M.lastInteraction=GetTime()
                 M.dirty=true
             end
         end
         local now=GetTime()
-        if now-(M.lastProviderRefresh or 0)>0.35 then M.lastProviderRefresh=now;M.dirty=true end
-        if now-(M.lastRender or 0)<0.03 then return end
-        M.lastRender=now
-        if M.dirty then M:Render() end
+        if M:ViewChanged() then M:RenderArt();M:LayoutPins();M.dirty=true end
+        -- Reuse and reposition existing pins during input. Let detail artwork
+        -- update every frame, coalescing expensive provider work during bursts.
+        local sincePins=now-(M.lastProviderRefresh or 0)
+        local quiet=now-(M.lastInteraction or -1)>0.08
+        if (M.dirty and quiet) or sincePins>0.35 then M:RenderPins() end
+        if now-(M.lastStatus or 0)<0.08 then return end
+        M.lastStatus=now
         local x,y=M:Cursor()
         local wx,wy=G.World(M.view,canvas:GetWidth(),canvas:GetHeight(),x,y)
         local map=M:MapAt(wx,wy)
         local where=map and map.name or "世界"
-        M.status:SetText(where.."   滚轮缩放 · 左键拖动 · 右键缩小 · Ctrl+左键标记"..(M.pinOverflow and "   标记过密，请放大查看" or ""))
+        M.status:SetText(where..(M:IsWorldView() and "   滚轮放大 · Ctrl+左键标记" or "   指向区域查看细图 · 滚轮缩放 · 左键拖动 · 右键缩小 · Ctrl+左键标记")..(M.pinOverflow and "   标记过密，请放大查看" or ""))
     end)
 end
 
@@ -355,6 +467,7 @@ function M:Install()
     if saved and G.Finite(saved.x) and G.Finite(saved.y) and G.Finite(saved.scale) and saved.scale>0 and saved.scale<=64 then
         self.selected=saved.selected
         self.view={x=saved.x,y=saved.y,scale=max(self.minScale,saved.scale)}
+        self:ConstrainView()
     end
     if self.settings.focusAfterMigration then self:FocusMap(self.settings.focusAfterMigration);self.settings.focusAfterMigration=nil end
     ToggleWorldMap=function() M:Toggle() end
@@ -363,8 +476,8 @@ function M:Install()
         if M.nativeRequested then if originalShow then originalShow() end;return end
         local file=GetMapInfo()
         local map=file and M.byFile[string.lower(file)]
-        WorldMapFrame:Hide();M.frame:Show()
         if map then M:FocusMap(map.id) end
+        WorldMapFrame:Hide();M.frame:Show()
     end)
     self:InstallCompat()
 end

@@ -48,7 +48,7 @@ local function DrawModern(self)
             local x,y
             if self:CanShowMapPins(map) then x,y=self:MapToWorld(map.id,data.x,data.y) end
             local texture=textures[data.type]
-            if texture then self:AddPin("mmm"..data.id,x,y,"Interface\\AddOns\\ModernMapMarkers\\Textures\\"..texture,24,ModernEnter,HideTooltip,ModernClick,data) end
+            if texture then self:AddPin("mmm"..data.id,x,y,"Interface\\AddOns\\ModernMapMarkers\\Textures\\"..texture,24,ModernEnter,HideTooltip,ModernClick,data,map and map.id) end
         end
     end
 end
@@ -148,7 +148,7 @@ local function DrawQuests(self)
                             not (chosen.cluster and IsControlKeyDown()) then
                             local wx,wy=self:MapToWorld(map.id,x/100,y/100)
                             local texture=chosen.texture or chosen.icon or (pfQuest and pfQuest.icons and pfQuest.icons[chosenTitle]) or "Interface\\AddOns\\pfQuest\\img\\node"
-                            local p=self:AddPin("pf:"..addon..":"..area..":"..coords,wx,wy,texture,chosen.cluster and 18 or 14,QuestEnter,HideTooltip,QuestClick,{meta=chosen,node=node})
+                            local p=self:AddPin("pf:"..addon..":"..area..":"..coords,wx,wy,texture,chosen.cluster and 18 or 14,QuestEnter,HideTooltip,QuestClick,{meta=chosen,node=node},map.id)
                             if p then
                                 for _,key in ipairs(questFields) do p[key]=chosen[key] end
                                 p.title=chosenTitle;p.node=node;p.layer=QuestLayer(chosen)

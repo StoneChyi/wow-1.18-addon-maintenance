@@ -27,14 +27,14 @@ mapSets=0;nativeUpdates=0;trackerResets=0;questClicks=0;atlasClicks=0;messages={
 UISpecialFrames={};SlashCmdList={};STANDARD_TEXT_FONT='missing-user-font.ttf'
 local methods={}
 function newObject(kind,name,parent,template)
- local o=setmetatable({kind=kind,name=name,parent=parent,template=template,width=0,height=0,shown=true,scale=1,alpha=1,level=1,scripts={},points={}}, {__index=methods})
+ local o=setmetatable({kind=kind,name=name,parent=parent,template=template,width=0,height=0,shown=true,scale=1,alpha=1,level=parent and parent.level+1 or 1,scripts={},points={}}, {__index=methods})
  table.insert(objects,o);if name then _G[name]=o end;return o
 end
 function methods:SetWidth(v) assert(v>0 and v==v);self.width=v end
 function methods:SetHeight(v) assert(v>0 and v==v);self.height=v end
 function methods:GetWidth() return self.width end
 function methods:GetHeight() return self.height end
-function methods:SetPoint(...) self.point={...};table.insert(self.points,self.point) end
+function methods:SetPoint(...) self.point={...};table.insert(self.points,self.point);self.pointSets=(self.pointSets or 0)+1 end
 function methods:ClearAllPoints() self.point=nil;self.points={} end
 function methods:SetAllPoints(p) self.allpoints=p end
 function methods:GetParent() return self.parent end
@@ -87,7 +87,7 @@ function methods:Show() local was=self.shown;self.shown=true;if not was then inv
 function methods:Hide() local was=self.shown;self.shown=false;if was then invoke(self,'OnHide') end end
 function methods:SetAlpha(v) assert(v>=0 and v<=1);self.alpha=v end
 function methods:CreateTexture(name,layer) local t=newObject('Texture',name,self);t.layer=layer;return t end
-function methods:SetTexture(...) self.texture=(...);return 1 end
+function methods:SetTexture(...) self.texture=(...);self.textureSets=(self.textureSets or 0)+1;return 1 end
 function methods:SetTexCoord(l,r,t,b) assert(l>=-1e-8 and r<=1+1e-8 and t>=-1e-8 and b<=1+1e-8 and l<r and t<b);self.uv={l,r,t,b} end
 function methods:SetVertexColor(...) self.color={...} end
 function methods:SetAutoFocus(v) self.autofocus=v end
@@ -113,7 +113,7 @@ function GetMapInfo() return mapFile end
 function GetRealZoneText() return '艾尔文森林' end
 function GetPlayerMapPosition(unit) return .5,.5 end
 function SetMapZoom(continent,zone) mapSets=mapSets+1;mapFile=zone==1 and 'Westfall' or 'Elwynn' end
-function SetMapToCurrentZone() mapSets=mapSets+1;mapFile='Elwynn' end
+function SetMapToCurrentZone() mapSets=mapSets+1;mapFile=currentFile or 'Elwynn' end
 function UpdateMicroButtons() end
 function ToggleWorldMap() WorldMapFrame:Show() end
 ModernMapMarkersCore={Data={},filters={DUNGEON=true,RAID=true,WORLDBOSS=true,BOAT=true,ZEPPELIN=true,TRAM=true,FACTION='ALL'}}
@@ -132,11 +132,13 @@ pfMap={nodes={},ShowMapID=function(self,id)ToggleWorldMap()end,
 '''
 
 
-def runtime(with_plugins=True, saved=None):
+def runtime(with_plugins=True, saved=None, screen=None):
     lua = LuaRuntime(unpack_returned_tuples=True)
     lua.globals().FONT_CONTRACT = (ROOT/'Tools/tests/wow112_fontstring_mock.lua').read_text(encoding='utf-8')
     lua.execute(MOCK)
-    for name in ['MapData.lua','Geometry.lua','Core.lua','Compat.lua']:
+    if screen:
+        lua.execute(f'UIParent.width={screen[0]};UIParent.height={screen[1]}')
+    for name in ['MapData.lua','FocusData.lua','Geometry.lua','Core.lua','Compat.lua']:
         lua.execute((ADDON/name).read_text(encoding='utf-8'), name=name)
     if not with_plugins:
         lua.execute('ModernMapMarkersCore=nil;pfMap=nil;pfQuest=nil')
@@ -283,7 +285,7 @@ class SeamlessMapTests(unittest.TestCase):
           M:ShowNative();assert(WorldMapFrame:IsShown() and not M.frame:IsShown() and nativeUpdates==1)
           ToggleWorldMap();assert(not WorldMapFrame:IsShown())
           M.frame:Show();M:FocusMap(30);M.frame:Hide();assert(TurtleSeamlessMapDB.view.selected==30)
-          M.frame:Show();pfMap:ShowMapID(40);assert(M.selected==39 and M.frame:IsShown())
+          local calls=mapSets;pfMap:ShowMapID(40);assert(M.selected==39 and M.frame:IsShown() and mapSets==calls)
         ''')
 
     def test_all_runtime_art_present_valid_and_bounded(self):
@@ -415,12 +417,177 @@ class SeamlessMapTests(unittest.TestCase):
           -- A user can zoom at a city near the canvas edge without first
           -- centering the camera. The visible cursor anchor also counts.
           M.view.scale=.8*M.canvas:GetWidth()/c.rect[3]
+          M.Cursor=function() return M.canvas.width/2,M.canvas.height/2 end
           M.view.x=c.rect[1]+c.rect[3]*1.1;M:Render();assert(not c.cityActive)
           local x,y=G.Screen(M.view,M.canvas.width,M.canvas.height,c.rect[1]+c.rect[3]/2,c.rect[2]+c.rect[4]/2)
           M.Cursor=function() return x,y end
           M:Zoom(1.01);M:Render();assert(c.cityActive)
           invoke(M.canvas,'OnMouseDown','LeftButton');assert(M.zoomFocus==nil)
         ''')
+
+    def test_world_fills_canvas_and_camera_stays_inside(self):
+        for screen in [(1440,1000),(1024,768),(2560,1440),(800,600)]:
+            lua=runtime(screen=screen)
+            lua.execute('''
+              M.frame:Show();M:WorldView();M:Render()
+              assert(M.frame.width<=UIParent.width-50+.001 and M.frame.height<=UIParent.height-60+.001)
+              local w,h=M.canvas.width,M.canvas.height
+              assert(math.abs(w/h-1.5)<1e-9 and M:IsWorldView())
+              local x,y=G.Screen(M.view,w,h,0,0);local r,b=G.Screen(M.view,w,h,1002,668)
+              assert(math.abs(x)<1e-7 and math.abs(y)<1e-7 and math.abs(r-w)<1e-7 and math.abs(b-h)<1e-7)
+              invoke(M.canvas,'OnMouseDown','LeftButton');assert(not M.drag)
+              for i=1,12 do M:Zoom(.5) end
+              assert(M.view.x==501 and M.view.y==334 and M.view.scale==M:WorldScale())
+              assert(not next(M.detailAreas))
+              M:Zoom(3);invoke(M.canvas,'OnMouseDown','LeftButton');assert(M.drag)
+              M.view.x=-1e6;M.view.y=1e6;M:ConstrainView()
+              local left,top=G.World(M.view,w,h,0,0);local right,bottom=G.World(M.view,w,h,w,h)
+              assert(left>=-1e-7 and top>=-1e-7 and right<=1002+1e-7 and bottom<=668+1e-7)
+              M:Zoom(.001);assert(not M.drag and M:IsWorldView())
+              local renders=M.artRenders;M:Zoom(.5);assert(M.artRenders==renders)
+            ''')
+
+    def test_m_opens_current_location_every_time(self):
+        lua=runtime()
+        lua.execute('''
+          M:WorldView();mapFile='Westfall';local before=mapSets
+          ToggleWorldMap();assert(M.selected==30 and mapSets==before+1)
+          local x,y=M:MapToWorld(30,.5,.5)
+          assert(math.abs(M.view.x-x)<1e-8 and math.abs(M.view.y-y)<1e-8)
+          M:FocusMap(4);ToggleWorldMap();ToggleWorldMap();assert(M.selected==30)
+          ToggleWorldMap();currentFile='Durotar'
+          GetRealZoneText=function() return '杜隆塔尔' end
+          GetPlayerMapPosition=function() return .25,.75 end
+          ToggleWorldMap();assert(M.selected==4)
+          x,y=M:MapToWorld(4,.25,.75)
+          assert(math.abs(M.view.x-x)<1e-8 and math.abs(M.view.y-y)<1e-8)
+          ToggleWorldMap();currentFile='NoOutdoorPosition';ToggleWorldMap();assert(M:IsWorldView())
+          ToggleWorldMap();SlashCmdList.TURTLESEAMLESSMAP('world');assert(M:IsWorldView())
+          ToggleWorldMap();currentFile='Elwynn'
+          GetPlayerMapPosition=function() return 0,0 end
+          ToggleWorldMap();assert(M.selected==30)
+          for i=1,M.pinUsed do assert(M.pins[i].key~='player') end
+        ''')
+
+    def test_map_frames_have_stable_depth_and_asset_ownership(self):
+        lua=runtime()
+        lua.execute('''
+          M.frame:Show()
+          for _,id in ipairs({30,301,39,4,13,14,301,30}) do M:FocusMap(id);M:Render() end
+          local last=0
+          for _,map in ipairs(M.drawOrder) do
+            assert(map.drawLevel>last);last=map.drawLevel
+            if map.artFrame then
+              assert(map.artFrame.level==map.drawLevel and map.artFrame.level<M.pinLayer.level)
+              for path,texture in pairs(map.texturePool) do
+                assert(texture.parent==map.artFrame and texture.path==path and texture.textureSets==1)
+                if string.find(path,'v2_sea_',1,true) then assert(texture.layer=='BACKGROUND')
+                else assert(texture.layer=='ARTWORK') end
+                assert(texture.paintPass==M.paintPass or not texture:IsShown())
+              end
+            end
+          end
+          local frames=#objects
+          for i=1,50 do M:RenderArt() end
+          assert(#objects==frames)
+          for _,map in ipairs(M.maps) do
+            for _,texture in ipairs(map.textures or {}) do assert(texture.textureSets==1) end
+          end
+        ''')
+
+    def test_zoom_updates_art_immediately_without_scanning_nodes(self):
+        lua=runtime()
+        lua.execute('''
+          M.frame:Show();M:FocusMap(30);M:Render()
+          local calls=0
+          M:RegisterProvider('slowNodes',function() calls=calls+1 end)
+          local art=M.artRenders;local before=mapSets
+          for i=1,40 do
+            invoke(M.canvas,'OnMouseWheel',i%2==0 and 1 or -1)
+            assert(M.paintedView.scale==M.view.scale and M.artRenders==art+i)
+            invoke(M.frame,'OnUpdate')
+          end
+          assert(calls==0 and mapSets==before)
+          now=now+.09;invoke(M.frame,'OnUpdate');assert(calls==1)
+          art=M.artRenders
+          for i=1,10 do now=now+.36;invoke(M.frame,'OnUpdate') end
+          assert(calls==11 and M.artRenders==art)
+          M:WorldView()
+          for i=1,M.pinUsed do
+            local p=M.pins[i];if p.mapID then assert(not p:IsShown()) end
+          end
+        ''')
+
+    def test_only_cursor_zone_draws_detail_and_visits_nodes(self):
+        lua=runtime()
+        lua.execute('''
+          M.frame:Show();M:FocusMap(30)
+          local focusX,focusY
+          M.Cursor=function() return focusX,focusY end
+          local function point(map,u,v)
+            local x,y=M:MapToWorld(map,u,v)
+            focusX,focusY=G.Screen(M.view,M.canvas.width,M.canvas.height,x,y)
+          end
+          -- Wide view contains both Elwynn and Westfall; only the pointed
+          -- region may expose detail art or enumerate its nodes.
+          M.view.scale=6.5;M.view.x=700;M.view.y=435
+          local nodesA={['50|50']={A={title='A',texture='test'}}}
+          local nodesB={['50|50']={B={title='B',texture='test'}}}
+          pfMap.nodes={PFQUEST={[12]=nodesA,[40]=nodesB}}
+          local origPairs=pairs;local forbidden=nodesB
+          pairs=function(t) assert(t~=forbidden,'nonfocused zone enumerated');return origPairs(t) end
+          point(30,.5,.5);M:Render();assert(M.detailTarget.id==30 and M.detailAreas[12] and M.questNodesVisited==1 and not next(M.providerErrors))
+          local backdrop={}
+          for _,map in ipairs(M.maps) do
+            if map.kind~='surface' then for _,texture in ipairs(map.textures or {}) do backdrop[texture]=texture.pointSets end end
+          end
+          for _,map in ipairs(M.maps) do if map.kind=='surface' and map.id~=30 then assert(map.alpha==0) end end
+          forbidden=nodesA;point(39,.5,.5);M:Render()
+          assert(M.detailTarget.id==39 and M.detailAreas[40] and M.questNodesVisited==1 and not next(M.providerErrors))
+          for texture,count in pairs(backdrop) do assert(texture.pointSets==count) end
+          for _,map in ipairs(M.maps) do if map.kind=='surface' and map.id~=39 then assert(map.alpha==0) end end
+          -- Pointer crossing alone updates art next frame; no zoom is needed.
+          forbidden=nil;point(30,.5,.5);invoke(M.frame,'OnUpdate')
+          assert(M.paintedView.focus==30 and M.byID[39].alpha==0)
+          local cached=M.artRenders;focusX=focusX+1;invoke(M.frame,'OnUpdate');assert(M.artRenders==cached)
+          local map=M.byID[30];local x,y=G.Project(map.rect,.001,.001)
+          assert(not G.Hit(map,x,y))
+          pairs=origPairs
+        ''')
+
+    def test_all_sixty_regions_have_selectable_painted_territory(self):
+        lua=runtime()
+        lua.execute('''
+          M.frame:Show();local px,py=0,0;M.Cursor=function() return px,py end
+          local total=0
+          for _,map in ipairs(M.maps) do
+            if map.kind=='surface' then
+              local mask=TurtleSeamlessMap_Focus[map.id]
+              assert(mask and #mask[3]==mask[1]*mask[2]/4)
+              M:FocusMap(map.id);local found=false
+              for row=1,31 do
+                for col=1,47 do
+                  if not found then
+                    local x,y=G.Project(map.rect,col/48,row/32)
+                    local sx,sy=G.Screen(M.view,M.canvas.width,M.canvas.height,x,y)
+                    if sx>=0 and sx<M.canvas.width and sy>=0 and sy<M.canvas.height then
+                      px,py=sx,sy;if M:ChooseDetailMap()==map then found=true end
+                    end
+                  end
+                end
+              end
+              assert(found,map.file..' has no selectable territory');total=total+1
+            end
+          end
+          assert(total==60)
+        ''')
+
+    def test_composite_ignores_same_layer_texture_order(self):
+        lua=runtime()
+        lua.execute('M:FocusMap(301);M.frame:Show();M:FocusMap(30);M:Render()')
+        normal=compose_preview(lua)
+        reversed_order=compose_preview(lua,reverse=True)
+        self.assertEqual(normal.tobytes(),reversed_order.tobytes())
 
     def test_old_notes_views_and_unmapped_records_migrate_once(self):
         lua=runtime(saved='''{notes={{x=42000,y=10000},{x=501,y=334,scene=301},
@@ -440,13 +607,14 @@ class SeamlessMapTests(unittest.TestCase):
         lua.execute('assert(M.view.x==700 and M.view.scale==12 and M.settings.notes[1].x==750 and not M.settings.layoutV1Backup)')
 
 
-def render_preview(map_id=30, name='continuous-elwynn-preview.jpg', zoom=.8):
-    lua=runtime()
-    lua.execute('M.frame:Show();'+('M:WorldView();' if map_id is None else f'M:FocusMap({map_id});')+f'M.view.scale=M.view.scale*{zoom};M:Render()')
+def compose_preview(lua, reverse=False):
     m=lua.globals().M
     canvas=decode_blp((ADDON/'Art/v2_sea_694_1.blp').read_bytes()).convert('RGBA').resize((int(m.canvas.width),int(m.canvas.height)))
-    for i in range(1,int(m.tileUsed)+1):
-        t=m.tiles[i]
+    # Emulate client frame/layer depth, not the order of draw commands. Reverse
+    # same-layer regions to expose accidental dependence on texture ordering.
+    entries=[(i,m.tiles[i]) for i in range(1,int(m.tileUsed)+1)]
+    entries.sort(key=lambda pair:(pair[1].parent.level,0 if pair[1].layer=='BACKGROUND' else 1,-pair[0] if reverse else pair[0]))
+    for _,t in entries:
         path=t.texture
         if path.startswith('Interface\\AddOns\\TurtleSeamlessMap\\Art\\'):
             filename=path.split('\\')[-1]+'.blp'
@@ -461,7 +629,13 @@ def render_preview(map_id=30, name='continuous-elwynn-preview.jpg', zoom=.8):
         if t.alpha!=1:
             im.putalpha(im.getchannel('A').point(lambda a:round(a*t.alpha)))
         canvas.alpha_composite(im,(x,y))
-    canvas.convert('RGB').save(STAGE/name)
+    return canvas
+
+
+def render_preview(map_id=30, name='continuous-elwynn-preview.jpg', zoom=.8):
+    lua=runtime()
+    lua.execute('M.frame:Show();'+('M:WorldView();' if map_id is None else f'M:FocusMap({map_id});')+f'M.view.scale=M.view.scale*{zoom};M:Render()')
+    compose_preview(lua).convert('RGB').save(STAGE/name)
 
 
 if __name__=='__main__':

@@ -42,12 +42,13 @@
       "added_on": "2026-10-24",
       "creation_base_commit": "0e567516764ddee12f9703b50b8987779f3fe145",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立无缝世界地图0.2.0；统一世界、室外/城市范围、区域图标门槛与海陆补底；待游戏验收。",
+      "purpose": "独立无缝世界地图0.2.1；固定铺满总览、M当前位置、鼠标单区细图及分层/刷新优化；待游戏验收。",
       "sources": [
         "PluginHistory/Research/TurtleSeamlessMap-首版实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.0优化方案-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.0实现-20261024.md",
-        "PluginHistory/Research/TurtleSeamlessMap-0.2.0资源-20261024.json"
+        "PluginHistory/Research/TurtleSeamlessMap-0.2.0资源-20261024.json",
+        "PluginHistory/Research/TurtleSeamlessMap-0.2.1实现-20261024.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/TurtleSeamlessMap/TurtleSeamlessMap.toc",
@@ -57,10 +58,11 @@
         "Interface/AddOns/TurtleSeamlessMap/Compat.lua",
         "Interface/AddOns/TurtleSeamlessMap/README.md",
         "Interface/AddOns/TurtleSeamlessMap/LICENSE-OpenMap.txt",
-        "Interface/AddOns/TurtleSeamlessMap/Art/v2_4_1.blp"
+        "Interface/AddOns/TurtleSeamlessMap/Art/v2_4_1.blp",
+        "Interface/AddOns/TurtleSeamlessMap/FocusData.lua"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "0.2.0已实现并通过18组模拟/离线检查；实际游戏加载、逐区美术/新区域与主城尺度、迁移位置和性能待验收；集中性能优化后置。"
+      "pending": "0.2.1通过25组模拟/资源检查；用户反馈粗图现象已记录，修复的实际快速缩放/拖动、鼠标命中、GPU载入及帧率待游戏验收；不提供实测性能结论。"
     }
   ],
   "addons": [
