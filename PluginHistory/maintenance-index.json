@@ -57,7 +57,7 @@
         "Interface/AddOns/TurtleSeamlessMap/Art/4_1.blp"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "实际客户端加载、各区接缝与内存帧率；更多图层适配；远端当前公开，本次未同步。"
+      "pending": "实际客户端加载、各区接缝与内存帧率；更多图层适配。2026-10-24 用户已授权长期公开同步。"
     }
   ],
   "addons": [
