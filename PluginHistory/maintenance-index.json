@@ -44,7 +44,8 @@
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
       "purpose": "独立无缝世界地图首版；完整提取173图页；连续缩放、完整图页、ModernMapMarkers与pfQuest基础适配；待游戏验收。",
       "sources": [
-        "PluginHistory/Research/TurtleSeamlessMap-首版实现-20261024.md"
+        "PluginHistory/Research/TurtleSeamlessMap-首版实现-20261024.md",
+        "PluginHistory/Research/TurtleSeamlessMap-0.2.0优化方案-20261024.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/TurtleSeamlessMap/TurtleSeamlessMap.toc",
@@ -57,7 +58,7 @@
         "Interface/AddOns/TurtleSeamlessMap/Art/4_1.blp"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "实际客户端加载、各区接缝与内存帧率；更多图层适配。2026-10-24 用户已授权长期公开同步。"
+      "pending": "用户反馈卡顿、世界布局割裂、远景图标过密、区域空白和主城过早显示；0.2.0方案已记录，尚未实施，优先功能完整性。"
     }
   ],
   "addons": [
