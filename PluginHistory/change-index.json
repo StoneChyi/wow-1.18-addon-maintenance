@@ -9,7 +9,7 @@
     "related_skin_only": 2
   },
   "addon_pages": 107,
-  "dated_records": 114,
+  "dated_records": 115,
   "addons": [
     {
       "addon": "!Libs",
@@ -2370,12 +2370,21 @@
       "addon": "TurtleSeamlessMap",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立无缝世界地图首版；完整提取173图页；连续缩放、完整图页、ModernMapMarkers与pfQuest基础适配；待游戏验收。",
+      "purpose": "独立无缝世界地图0.2.0；统一世界、室外/城市范围、区域图标门槛与海陆补底；待游戏验收。",
       "latest_record_date": "2026-10-24",
-      "latest_record_title": "制定完整世界布局与分层显示优化方案",
-      "latest_game_acceptance": "不适用（说明或停用记录）",
-      "record_count": 4,
+      "latest_record_title": "实现统一世界、区域图标门槛与主城详细层",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 5,
       "records": [
+        {
+          "id": "TurtleSeamlessMap-20261024-05",
+          "date": "2026-10-24",
+          "title": "实现统一世界、区域图标门槛与主城详细层",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-05"
+        },
         {
           "id": "TurtleSeamlessMap-20261024-04",
           "date": "2026-10-24",

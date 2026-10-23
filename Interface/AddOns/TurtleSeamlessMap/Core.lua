@@ -26,28 +26,25 @@ function M:Fit(rect)
     self.view.x,self.view.y = rect[1]+rect[3]/2,rect[2]+rect[4]/2
     self.view.scale = min(w/rect[3],h/rect[4])*0.92
     self.minScale = min(w/self.world[3],h/self.world[4])*0.75
-    if self.scene then self.minScale=min(w/1002,h/668)*0.5 end
     self.dirty = true
 end
 
 function M:WorldView()
     self.scene,self.selected = nil,nil
+    self.zoomFocus = nil
     self:Fit(self.world)
     if self.title then self.title:SetText("乌龟服无缝世界地图") end
 end
 
-function M:FocusMap(id, full)
+function M:FocusMap(id)
     local map = self.byID[id]
     if not map then return end
     self.selected = id
-    if full or not map.rect then
-        self.scene = id
-        self:Fit({0,0,1002,668})
-    else
-        self.scene = nil
-        self:Fit(map.rect)
-    end
-    self.title:SetText(map.name .. (self.scene and " · 完整区域" or " · 连续地图"))
+    self.scene = nil
+    self.zoomFocus = nil
+    self:Fit(map.focusRect or map.rect)
+    if map.city then self.view.scale=min(64,self.view.scale*1.35) end
+    self.title:SetText(map.name .. " · 连续地图")
     self.dirty = true
 end
 
@@ -60,7 +57,9 @@ end
 function M:Zoom(factor)
     local x,y = self:Cursor()
     x,y=G.Clamp(x,0,self.canvas:GetWidth()),G.Clamp(y,0,self.canvas:GetHeight())
-    G.Zoom(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),x,y,factor,self.minScale or 0.001,self.scene and 8 or 3)
+    local wx,wy=G.World(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),x,y)
+    self.zoomFocus={x=wx,y=wy}
+    G.Zoom(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),x,y,factor,self.minScale or 0.001,64)
     self.dirty=true
 end
 
@@ -80,34 +79,26 @@ function M:Tile(path,x,y,w,h,u,v,alpha)
 end
 
 function M:DrawMap(map)
-    if self.scene then
-        for _,tile in ipairs(map.tiles) do
-            local index=math.floor(tile[3]/256)*4+math.floor(tile[2]/256)+1
-            local path="Interface\\WorldMap\\"..map.file.."\\"..map.file..index
-            self:Tile(path,tile[2],tile[3],tile[4],tile[5],tile[4]/256,tile[5]/256,1)
-        end
-        for _,o in ipairs(map.overlays) do
-            local cols=math.ceil(o.width/256)
-            for i,path in ipairs(o.paths) do
-                local col,row=math.mod(i-1,cols),math.floor((i-1)/cols)
-                local w,h=min(256,o.width-col*256),min(256,o.height-row*256)
-                local fw,fh=16,16
-                while fw<w do fw=fw*2 end
-                while fh<h do fh=fh*2 end
-                self:Tile(path,o.x+col*256,o.y+row*256,w,h,w/fw,h/fh,1)
-            end
-        end
-        return
-    end
+    if not map.visible then return end
     local r=map.rect
-    local pixels=r[3]*self.view.scale
-    local alpha
-    if map.kind=="continent" then alpha=1-G.Clamp((pixels-2000)/2000,0,1)
-    elseif map.city then alpha=G.Clamp((pixels-420)/380,0,1)
-    else alpha=G.Clamp((pixels-130)/220,0,1) end
+    local alpha=map.alpha
     if alpha<=0 then return end
-    for _,tile in ipairs(map.tiles) do
-        self:Tile(ART..tile[1],r[1]+tile[2]/1002*r[3],r[2]+tile[3]/668*r[4],tile[4]/1002*r[3],tile[5]/668*r[4],tile[4]/256,tile[5]/256,alpha)
+    local function draw(tiles,a)
+        if a<=0 then return end
+        for _,tile in ipairs(tiles) do
+            self:Tile(ART..tile[1],r[1]+tile[2]/1002*r[3],r[2]+tile[3]/668*r[4],tile[4]/1002*r[3],tile[5]/668*r[4],tile[4]/256,tile[5]/256,a)
+        end
+    end
+    if map.kind=="continent" then
+        -- Keep ocean/world art continuous. At closer scales only the land
+        -- backing remains, so continent parchment frames do not become cards.
+        draw(map.backing,self.overviewBlend)
+        -- World art already contains the native continent overview and labels.
+    elseif map.kind=="world" then
+        draw(map.sea,1)
+        draw(map.tiles,1-self.overviewBlend)
+    else
+        draw(map.tiles,alpha)
     end
 end
 
@@ -142,12 +133,10 @@ end
 
 function M:Render()
     self.tileUsed,self.pinUsed,self.pinOverflow=0,0,false
-    if self.scene then
-        local map=self.byID[self.scene]
-        if map then self:DrawMap(map) end
-    else
-        for _,map in ipairs(self.drawOrder) do self:DrawMap(map) end
-    end
+    local overviewScale=min(self.canvas:GetWidth()/1002,self.canvas:GetHeight()/668)*0.92
+    self.overviewBlend=G.Clamp((self.view.scale/overviewScale-1)/0.20,0,1)
+    self:UpdateVisibility()
+    for _,map in ipairs(self.drawOrder) do self:DrawMap(map) end
     for i=self.tileUsed+1,table.getn(self.tiles) do self.tiles[i]:Hide() end
     for name,provider in pairs(self.providers) do
         local ok,err=pcall(provider,self)
@@ -196,7 +185,7 @@ end
 
 function M:DrawNotes()
     for i,n in ipairs(self.settings.notes) do
-        if (n.scene or 0)==(self.scene or 0) then
+        if G.Finite(n.x) and G.Finite(n.y) then
             self:AddPin("note"..i,n.x,n.y,"Interface\\WorldStateFrame\\AllianceFlag",22,
                 function(p) GameTooltip:SetOwner(p,"ANCHOR_RIGHT");GameTooltip:SetText("自定义标记 · 右键删除");GameTooltip:Show() end,
                 function() GameTooltip:Hide() end,
@@ -221,7 +210,7 @@ function M:UpdateList()
     local query=string.lower(self.search:GetText() or "")
     self.listMaps={}
     for _,map in ipairs(self.maps) do
-        if query=="" or string.find(string.lower(map.name),query,1,true) or string.find(string.lower(map.file),query,1,true) then
+        if map.kind=="surface" and (query=="" or string.find(string.lower(map.name),query,1,true) or string.find(string.lower(map.file),query,1,true)) then
             table.insert(self.listMaps,map)
         end
     end
@@ -258,7 +247,7 @@ function M:BuildUI()
     canvas:SetWidth(w-28);canvas:SetHeight(h-112)
     canvas:SetPoint("TOPLEFT",f,"TOPLEFT",14,-70)
     local bg=canvas:CreateTexture(nil,"BACKGROUND")
-    bg:SetAllPoints(canvas);bg:SetTexture(0.43,0.39,0.27,1)
+    bg:SetAllPoints(canvas);bg:SetTexture(ART.."v2_sea_694_1")
     canvas:EnableMouse(true);canvas:EnableMouseWheel(true)
     canvas:SetScript("OnMouseWheel",function() M:Zoom(arg1>0 and 1.18 or 1/1.18) end)
     canvas:SetScript("OnMouseDown",function()
@@ -266,8 +255,8 @@ function M:BuildUI()
             local x,y=M:Cursor()
             if IsControlKeyDown() then
                 local wx,wy=G.World(M.view,canvas:GetWidth(),canvas:GetHeight(),x,y)
-                table.insert(M.settings.notes,{x=wx,y=wy,scene=M.scene});M.dirty=true
-            else M.drag={x=x,y=y,cx=M.view.x,cy=M.view.y} end
+                table.insert(M.settings.notes,{x=wx,y=wy});M.dirty=true
+            else M.zoomFocus=nil;M.drag={x=x,y=y,cx=M.view.x,cy=M.view.y} end
         elseif arg1=="RightButton" then M:Zoom(0.5) end
     end)
     canvas:SetScript("OnMouseUp",function() M.drag=nil end)
@@ -279,9 +268,9 @@ function M:BuildUI()
         {"东部王国",78,function() M:FocusMap(14) end},
         {"我的位置",78,function() M:FindPlayer() end},
         {"区域列表",78,function() if M.list:IsShown() then M.list:Hide() else M:UpdateList();M.list:Show() end end},
-        {"完整区域",78,function()
-            local map=M.scene and M.byID[M.scene] or M:MapAt(M.view.x,M.view.y) or (M.selected and M.byID[M.selected])
-            if map then M:FocusMap(map.id,not M.scene) end
+        {"区域定位",78,function()
+            local map=M:MapAt(M.view.x,M.view.y) or (M.selected and M.byID[M.selected])
+            if map then M:FocusMap(map.id) end
         end},
         {"标记筛选",78,function() M:ToggleMarkerMenu() end},
         {"任务开关",78,function() M.settings.quests=not M.settings.quests;M.dirty=true end},
@@ -327,7 +316,7 @@ function M:BuildUI()
     f:SetScript("OnHide",function()
         M.drag=nil;M.list:Hide();search:ClearFocus();GameTooltip:Hide()
         if M.markerMenu then M.markerMenu:Hide() end
-        M.settings.view={x=M.view.x,y=M.view.y,scale=M.view.scale,scene=M.scene,selected=M.selected}
+        M.settings.view={x=M.view.x,y=M.view.y,scale=M.view.scale,selected=M.selected}
         if UpdateMicroButtons then UpdateMicroButtons() end
     end)
     f:SetScript("OnUpdate",function()
@@ -347,7 +336,7 @@ function M:BuildUI()
         if M.dirty then M:Render() end
         local x,y=M:Cursor()
         local wx,wy=G.World(M.view,canvas:GetWidth(),canvas:GetHeight(),x,y)
-        local map=M.scene and M.byID[M.scene] or M:MapAt(wx,wy)
+        local map=M:MapAt(wx,wy)
         local where=map and map.name or "世界"
         M.status:SetText(where.."   滚轮缩放 · 左键拖动 · 右键缩小 · Ctrl+左键标记"..(M.pinOverflow and "   标记过密，请放大查看" or ""))
     end)
@@ -361,13 +350,13 @@ function M:Install()
     self.settings.notes=self.settings.notes or {}
     if self.settings.quests==nil then self.settings.quests=true end
     self.tiles,self.pins,self.providerErrors,self.view={},{},{},{}
-    self:IndexMaps();self:BuildUI();self:WorldView()
+    self:IndexMaps();self:MigrateSettings();self:BuildUI();self:WorldView()
     local saved=self.settings.view
-    if saved and G.Finite(saved.x) and G.Finite(saved.y) and G.Finite(saved.scale) and saved.scale>0 and saved.scale<=8 and (not saved.scene or self.byID[saved.scene]) then
-        self.scene,self.selected=saved.scene,saved.selected
-        self.view={x=saved.x,y=saved.y,scale=saved.scale}
-        self.minScale=self.scene and min(self.canvas:GetWidth()/1002,self.canvas:GetHeight()/668)*0.5 or self.minScale
+    if saved and G.Finite(saved.x) and G.Finite(saved.y) and G.Finite(saved.scale) and saved.scale>0 and saved.scale<=64 then
+        self.selected=saved.selected
+        self.view={x=saved.x,y=saved.y,scale=max(self.minScale,saved.scale)}
     end
+    if self.settings.focusAfterMigration then self:FocusMap(self.settings.focusAfterMigration);self.settings.focusAfterMigration=nil end
     ToggleWorldMap=function() M:Toggle() end
     local originalShow=WorldMapFrame:GetScript("OnShow")
     WorldMapFrame:SetScript("OnShow",function()

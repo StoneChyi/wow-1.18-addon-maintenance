@@ -12,7 +12,7 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
-| [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-24 | [制定完整世界布局与分层显示优化方案](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261024-04) | 不适用（说明或停用记录） |
+| [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-24 | [实现统一世界、区域图标门槛与主城详细层](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261024-05) | 待游戏验收 |
 | [XyTracker](XyTracker.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](XyTracker.md#change-XyTracker-20261018-02) | 待游戏验收 |
 | [WushuangLoot](WushuangLoot.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](WushuangLoot.md#change-WushuangLoot-20261018-02) | 待游戏验收 |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261018-02) | 待游戏验收 |

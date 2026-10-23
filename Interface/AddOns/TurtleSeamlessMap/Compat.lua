@@ -46,7 +46,7 @@ local function DrawModern(self)
         if on then
             local map=ModernMap(data)
             local x,y
-            if map then x,y=self:MapToWorld(map.id,data.x,data.y) end
+            if self:CanShowMapPins(map) then x,y=self:MapToWorld(map.id,data.x,data.y) end
             local texture=textures[data.type]
             if texture then self:AddPin("mmm"..data.id,x,y,"Interface\\AddOns\\ModernMapMarkers\\Textures\\"..texture,24,ModernEnter,HideTooltip,ModernClick,data) end
         end
@@ -125,17 +125,18 @@ local function QuestLayer(meta)
 end
 
 local function DrawQuests(self)
+    self.questNodesVisited=0
     if not self.settings.quests or not pfMap or not pfMap.nodes then return end
     local config=pfQuest_config or {}
     for addon,areas in pairs(pfMap.nodes) do
         for area,nodes in pairs(areas) do
             local map=self.byArea[tonumber(area)]
-            if self.scene and self.byID[self.scene].area==tonumber(area) then map=self.byID[self.scene] end
-            if map and (not self.scene and map.rect or self.scene==map.id) then
+            if self:CanShowMapPins(map) then
                 -- Cull a zone before walking its potentially large node table.
-                local visible=self.scene or G.Clip(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),map.rect[1],map.rect[2],map.rect[3],map.rect[4],1,1)
+                local visible=map.visible
                 if visible then
                     for coords,node in pairs(nodes) do
+                        self.questNodesVisited=self.questNodesVisited+1
                         local _,_,xs,ys=string.find(coords,"^([^|]+)|([^|]+)$")
                         local x,y=tonumber(xs),tonumber(ys)
                         local chosen,chosenTitle
