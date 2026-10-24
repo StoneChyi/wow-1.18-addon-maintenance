@@ -9,7 +9,7 @@
     "related_skin_only": 2
   },
   "addon_pages": 107,
-  "dated_records": 119,
+  "dated_records": 121,
   "addons": [
     {
       "addon": "!Libs",
@@ -2370,12 +2370,30 @@
       "addon": "TurtleSeamlessMap",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立无缝世界地图0.2.2；修复首次入口定位，主城轮廓/地形过渡与纸纹海面，保留鼠标单区和固定总览；待游戏验收。",
+      "purpose": "独立无缝世界地图0.2.2；首次定位、主城过渡及鼠标单区；新增轮廓缺失反馈和连续大陆图集/原风格背景方案，尚未实施。",
       "latest_record_date": "2026-10-24",
-      "latest_record_title": "修复首次定位并融合主城轮廓与纸纹海面",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 9,
+      "latest_record_title": "分析连续大陆图集、同源缩放和原风格背景方案",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 11,
       "records": [
+        {
+          "id": "TurtleSeamlessMap-20261024-11",
+          "date": "2026-10-24",
+          "title": "分析连续大陆图集、同源缩放和原风格背景方案",
+          "kind": "方案",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-11"
+        },
+        {
+          "id": "TurtleSeamlessMap-20261024-10",
+          "date": "2026-10-24",
+          "title": "记录轮廓缺失、提尔之手方框与原背景保留需求",
+          "kind": "实测反馈",
+          "game_acceptance": "用户实测（限本条范围）",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-10"
+        },
         {
           "id": "TurtleSeamlessMap-20261024-09",
           "date": "2026-10-24",

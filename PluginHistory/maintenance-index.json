@@ -42,7 +42,7 @@
       "added_on": "2026-10-24",
       "creation_base_commit": "0e567516764ddee12f9703b50b8987779f3fe145",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立无缝世界地图0.2.2；修复首次入口定位，主城轮廓/地形过渡与纸纹海面，保留鼠标单区和固定总览；待游戏验收。",
+      "purpose": "独立无缝世界地图0.2.2；首次定位、主城过渡及鼠标单区；新增轮廓缺失反馈和连续大陆图集/原风格背景方案，尚未实施。",
       "sources": [
         "PluginHistory/Research/TurtleSeamlessMap-首版实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.0优化方案-20261024.md",
@@ -50,7 +50,8 @@
         "PluginHistory/Research/TurtleSeamlessMap-0.2.0资源-20261024.json",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.1实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.2实现-20261024.md",
-        "PluginHistory/Research/TurtleSeamlessMap-0.2.2资源-20261024.json"
+        "PluginHistory/Research/TurtleSeamlessMap-0.2.2资源-20261024.json",
+        "PluginHistory/Research/TurtleSeamlessMap-连续大陆图集可行性-20261024.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/TurtleSeamlessMap/TurtleSeamlessMap.toc",
@@ -65,7 +66,7 @@
         "Interface/AddOns/TurtleSeamlessMap/PresentationData.lua"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "0.2.2通过28组模拟/资源检查，旧版首次原入口误跳路径已复现；用户真实入口/延迟同步、七城轮廓与标注、海岸海面、显存/帧率待游戏验收，不声称完美融合。"
+      "pending": "0.2.2曾通过28组模拟/资源检查；用户后续确认轮廓错位/缺边、提尔之手方形、露出粗底图及背景风格问题。统一大陆图集方案未实施；全量源覆盖、控制点、试验片区、地下城市、真实资源/性能与首次定位仍待核查或游戏验收。"
     }
   ],
   "addons": [
