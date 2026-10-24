@@ -60,7 +60,7 @@ function M:DrawAtlas(map,data,background)
                         local texture=map.atlasPool[used]
                         if not texture then
                             texture=map.artFrame:CreateTexture(nil,"ARTWORK")
-                            map.atlasPool[used]=texture;table.insert(map.textures,texture)
+                            texture.atlasSlot=true;map.atlasPool[used]=texture;table.insert(map.textures,texture)
                         end
                         local path=ART..prefix.."_"..col.."_"..row
                         if texture.path~=path then
@@ -71,7 +71,7 @@ function M:DrawAtlas(map,data,background)
                             texture:ClearAllPoints();texture:SetPoint("TOPLEFT",self.canvas,"TOPLEFT",a,-c)
                             texture:SetWidth(d);texture:SetHeight(e)
                             texture:SetTexCoord((1+u*254)/256,(1+v*254)/256,(1+s*254)/256,(1+z*254)/256)
-                            texture:SetAlpha(1);texture:Show();texture.active=true
+                            texture:SetAlpha(map.city and map.alpha or 1);texture:Show();texture.active=true
                             texture.paintPass=self.paintPass
                             self.tileUsed=self.tileUsed+1;self.tiles[self.tileUsed]=texture
                         end

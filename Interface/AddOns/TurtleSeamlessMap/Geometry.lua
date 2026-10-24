@@ -177,7 +177,7 @@ function M:ChooseDetailMap()
     end
     local wx,wy=G.World(self.view,w,h,x,y)
     if self.settings.detailStyle=="terrain" then
-        -- Cities retain their explicit near-zoom schematic; outdoor ownership
+        -- Cities retain explicit near-zoom ownership; outdoor ownership
         -- comes from actual ADT AreaIDs, never the paper/exploration silhouette.
         for _,map in ipairs(self.maps) do
             if map.city and G.Hit(map,wx,wy) then

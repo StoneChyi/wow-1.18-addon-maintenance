@@ -135,11 +135,12 @@ class Archive:
 
 
 class Client:
-    def __init__(self, root, include_terrain=False):
+    def __init__(self, root, include_terrain=False, include_wmo=False):
         self.root = Path(root)
         data = self.root / 'Data'
         base = ['base.MPQ', 'dbc.MPQ', 'texture.MPQ', 'interface.MPQ']
         if include_terrain:base.insert(0,'terrain.MPQ')
+        if include_wmo:base.insert(0,'wmo.MPQ')
         paths = [data / name for name in base if (data / name).exists()]
         patches = sorted([p for p in data.iterdir() if p.name.lower() == 'patch.mpq' or p.name.lower().startswith('patch-') and p.suffix.lower() == '.mpq'], key=lambda p: p.name.upper())
         # patch.MPQ precedes patch-2 ... patch-Z in the client's patch chain.

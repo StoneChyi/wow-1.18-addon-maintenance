@@ -297,7 +297,9 @@ class SeamlessMapTests(unittest.TestCase):
     def test_all_runtime_art_present_valid_and_bounded(self):
         report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
         terrain=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.4.0地形资源-20261024.json').read_text(encoding='utf-8'))
-        report['files']+=terrain['files'];report['total_files']+=terrain['total_files']
+        classic=[r for r in terrain['files'] if r['file'].startswith('v5_classic_')]
+        refined=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.5.0*.json')).read_text(encoding='utf8'))
+        report['files']+=classic+refined['files'];report['total_files']+=len(classic)+refined['total_files']
         expected={r['file'] for r in report['files']}
         for _,m in self.lua.globals().M.maps.items():
             if m.rect:
@@ -790,7 +792,7 @@ class SeamlessMapTests(unittest.TestCase):
           assert(not next(M.detailAreas))
           M:FocusMap(11);M:Render()
           local terrain=false
-          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v5_t1_',1,true) then terrain=true end end
+          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v6_t1_',1,true) then terrain=true end end
           assert(terrain)
           M:UpdateStyleMenu();M.styleMenu:Show()
           invoke(M.styleButtons[1],'OnClick');assert(M.settings.detailStyle=='paper')
@@ -987,6 +989,153 @@ class SeamlessMapTests(unittest.TestCase):
               M.frame:Show();M:UpdateStyleMenu();M.styleMenu:Show();M:Render()
               assert(M.canvas.width/M.canvas.height>1.499 and M.canvas.width/M.canvas.height<1.501)
             ''')
+
+    def test_terrain_cities_use_surface_and_registered_native_interiors(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();M.Cursor=function() return -10,-10 end
+          for _,id in ipairs({301,321,341,362,381,382,509}) do
+            local city=M.byID[id]
+            assert(city and city.city)
+            if city.city then
+              M:FocusMap(id);M.view.scale=64;M:RenderArt()
+              assert(city.cityActive)
+              local indoor=false
+              for i=1,M.tileUsed do
+                local path=M.tiles[i].path
+                assert(not string.find(path,'v4_city',1,true))
+                if string.find(path,'v6_city',1,true) then indoor=true end
+              end
+              assert(indoor==(id==341 or id==382))
+              local x,y=M:MapToWorld(id,.31,.62)
+              local a,b=G.Project(city.rect,.31,.62)
+              assert(x==a and y==b)
+            end
+          end
+          M:FocusMap(341);M.settings.cityMaps=false;M:RefreshAppearance()
+          for i=1,M.tileUsed do assert(not string.find(M.tiles[i].path,'v6_city',1,true)) end
+          M.settings.cityMaps=true
+          for _,style in ipairs({'terrain','paper','terrain'}) do
+            M.settings.detailStyle=style;M:RefreshAppearance()
+            M:FocusMap(341);M:FocusMap(382);M:FocusMap(30)
+            for _,map in ipairs(M.maps) do for _,t in ipairs(map.atlasPool or {}) do
+              if not t.active then assert(not t.path and not t.texture) end
+            end end
+          end
+        ''')
+
+    def test_terrain_water_never_reveals_parchment_and_classic_is_preserved(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();M.Cursor=function() return -10,-10 end
+          for _,scale in ipairs({2,8,32,64}) do
+            M.view.x=501;M.view.y=334;M.view.scale=scale;M:RenderArt()
+            local sea=false
+            for i=1,M.tileUsed do
+              local path=M.tiles[i].path
+              assert(not string.find(path,'v4_paper',1,true))
+              if string.find(path,'v6_sea_',1,true) then sea=true end
+            end
+            assert(sea)
+          end
+          M:WorldView()
+          for i=1,M.tileUsed do assert(string.find(M.tiles[i].path,'v5_classic_',1,true)) end
+          M.settings.overviewStyle='continuous';M:RefreshAppearance()
+          for i=1,M.tileUsed do assert(not string.find(M.tiles[i].path,'v4_',1,true)) end
+          M.settings.detailStyle='paper';M:RefreshAppearance()
+          local paper=false;for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v4_paper_',1,true) then paper=true end end
+          assert(paper)
+        ''')
+
+    def test_region_names_only_one_near_focus_and_font_failure_fallback(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();M.Cursor=function() return -10,-10 end
+          local function visible()
+            local n=0
+            for _,label in ipairs(M.regionLabels or {}) do
+              assert(label.font)
+              if label:IsShown() then n=n+1;assert(label.mapID==M.detailTarget.id) end
+            end
+            assert(n<=1);return n
+          end
+          for _,id in ipairs({11,182,201,30}) do
+            M:FocusMap(id);local map=M.byID[id]
+            local position=TurtleSeamlessMap_Terrain.labels[id]
+            M.view.x=position[1];M.view.y=position[2]
+            local unit=math.max(M.canvas.width/map.rect[3],M.canvas.height/map.rect[4])
+            M.view.scale=unit*.5;M:RenderArt();assert(visible()==0)
+            M.view.scale=unit*.85;M:RenderArt();assert(visible()==1)
+            M.view.scale=unit*.65;M:RenderArt();assert(visible()==0)
+          end
+          M:WorldView();assert(visible()==0)
+          M:FocusMap(11);M.settings.detailStyle='paper';M:RefreshAppearance();assert(visible()==0)
+        ''')
+
+    def test_full_terrain_audit_and_ungoro_repair_keeps_detailed_core(self):
+        report=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.5.0*.json')).read_text(encoding='utf8'))
+        self.assertEqual(report['counts']['adt_tiles_audited'],1794)
+        self.assertEqual(report['counts']['terrain_chunks_audited'],1794*256)
+        self.assertEqual(report['counts']['native_tiles_audited'],1703)
+        self.assertFalse(report['unresolved'])
+        self.assertGreater(report['counts']['repaired_chunks'],5000)
+        self.assertTrue(any(r['continent']=='Kalimdor' and r['x']==32 and r['y']==47 and r['flat_chunks']>150 for r in report['repairs']))
+        for check in report['checks']:
+            self.assertEqual(check['outside_repair_max_delta'],0)
+            self.assertEqual(check['unresolved_context_pixels'],0)
+        # Quantization noise must not hide the user's broad flat source defect.
+        from refine_turtle_map_terrain import flat_cells
+        noisy=Image.new('RGB',(256,256))
+        pixels=noisy.load()
+        for y in range(256):
+            for x in range(256):pixels[x,y]=(82 if (x+y)%2 else 74,73,24)
+        self.assertEqual(int(flat_cells(noisy).sum()),256)
+        # Real textured ground cannot be mistaken for a uniform source block.
+        for y in range(256):
+            for x in range(256):pixels[x,y]=(60+(x%16)*8,80+(y%16)*8,24)
+        self.assertEqual(int(flat_cells(noisy).sum()),0)
+
+    def test_native_city_model_registration_matches_archive_placement(self):
+        from turtle_map_archive import Client
+        from refine_turtle_map_terrain import city_placements
+        client=Client(ROOT,include_terrain=True,include_wmo=True)
+        try:
+            placements=city_placements(client)
+            report=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.5.0*.json')).read_text(encoding='utf8'))
+            for city in report['cities']:
+                self.assertEqual(list(placements[city['id']]['placement']),city['placement'])
+                raw,_=client.read(city['model'])
+                self.assertEqual(hashlib.sha256(raw).hexdigest(),city['root_sha256'])
+                self.assertLess(city['placement_error_yards'],.01)
+                self.assertGreater(len(city['groups']),50)
+                self.assertGreater(len(city['sources']),80)
+                self.assertGreater(city['occluded_rock_pixels'],10000)
+                # Native indoor textures retain alpha around actual rooms.
+                path=next((ADDON/'Art').glob(f'v6_city{city["id"]}_64_*.blp'))
+                self.assertGreater(decode_blp(path.read_bytes()).getchannel('A').getextrema()[1],0)
+            self.assertEqual({c['id'] for c in report['cities']},{341,382})
+        finally:
+            for archive in client.archives:archive.close()
+
+    def test_underground_voids_hide_surface_without_rectangular_backing(self):
+        from refine_turtle_map_terrain import indoor_voids
+        from PIL import ImageDraw
+        source=Image.new('RGBA',(256,256))
+        draw=ImageDraw.Draw(source)
+        draw.ellipse((40,40,216,216),fill=(80,75,65,255))
+        draw.ellipse((70,70,186,186),fill=(0,0,0,0))
+        draw.rectangle((127,35,129,80),fill=(0,0,0,0))
+        result,count=indoor_voids(source)
+        self.assertGreater(count,5000)
+        self.assertEqual(result.getpixel((128,128))[3],255)
+        self.assertEqual(result.getpixel((0,0))[3],0)
+        self.assertEqual(result.getpixel((50,128)),source.getpixel((50,128)))
+        # A corridor reaching both canvas edges must not enclose the exterior
+        # on the opposite side merely because flood fill began at one corner.
+        divided=Image.new('RGBA',(256,256));ImageDraw.Draw(divided).rectangle((120,0,135,255),fill=(80,75,65,255))
+        result,_=indoor_voids(divided)
+        self.assertEqual(result.getpixel((240,128))[3],0)
+        self.assertEqual(result.getpixel((15,128))[3],0)
 
 
 def compose_preview(lua, reverse=False):

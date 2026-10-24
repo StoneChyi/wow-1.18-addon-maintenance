@@ -121,6 +121,9 @@ end
 function M:DrawMap(map)
     local classic=self:IsWorldView() and self.settings.overviewStyle=="classic"
     if map.kind=="world" and classic then self:DrawAtlas(map,TurtleSeamlessMap_Terrain.classic,true);return end
+    if map.kind=="world" and self.settings.detailStyle=="terrain" then
+        self:DrawAtlas(map,TurtleSeamlessMap_Terrain.ocean,true);return
+    end
     if map.kind=="continent" and classic then return end
     if map.kind=="continent" and self.settings.detailStyle=="terrain" then
         for _,continent in ipairs(TurtleSeamlessMap_Terrain.continents) do
@@ -130,7 +133,14 @@ function M:DrawMap(map)
     if map.atlas then self:DrawAtlas(map,map.atlas,map.kind=="world");return end
     if not map.city then return end
     if not self.settings.cityMaps then return end
-    if not map.visible then return end
+    if not map.visible or map.alpha<=0 then return end
+    if self.settings.detailStyle=="terrain" then
+        -- Surface cities already belong to the continuous native terrain. Only
+        -- underground rooms need a separate, coordinate-registered real layer.
+        local city=TurtleSeamlessMap_Terrain.cities[map.id]
+        if city then self:DrawAtlas(map,city,false) end
+        return
+    end
     local r=map.artRect or map.rect
     local artW,artH=map.artWidth or 1002,map.artHeight or 668
     local alpha=map.alpha
@@ -212,7 +222,7 @@ function M:RenderArt()
                 if texture.active then texture:Hide();texture.active=false end
                 -- Reusable atlas slots must not retain every visited asset.
                 -- This bounds live references, not the driver's internal cache.
-                if map.atlas and texture.path then texture:SetTexture(nil);texture.path=nil end
+                if texture.atlasSlot and texture.path then texture:SetTexture(nil);texture.path=nil end
             end
         end
     end
@@ -310,15 +320,22 @@ end
 function M:DrawRegionLabels()
     self.regionLabels=self.regionLabels or {}
     local used=0
-    if self.settings.detailStyle=="terrain" and not self:IsWorldView() then
+    local map=self.detailTarget
+    if self.settings.detailStyle=="terrain" and not self:IsWorldView() and map then
         local w,h=self.canvas:GetWidth(),self.canvas:GetHeight()
-        for id,position in pairs(TurtleSeamlessMap_Terrain.labels) do
-            local map=self.byID[id]
+        local coverage=min(map.rect[3]*self.view.scale/w,map.rect[4]*self.view.scale/h)
+        -- One focused region, only when its extent occupies a near view. Broad
+        -- views never show a random subset of labels for small regions.
+        local position=TurtleSeamlessMap_Terrain.labels[map.id]
+        local city=TurtleSeamlessMap_Terrain.cities[map.id]
+        if city then position={city.rect[1]+city.rect[3]/2,city.rect[2]+city.rect[4]/2} end
+        if position and coverage>=0.72 then
             local sx,sy=G.Screen(self.view,w,h,position[1],position[2])
-            if map and not map.city and map.rect[3]*self.view.scale/w>.12 and map.rect[3]*self.view.scale/w<1.5 and sx>70 and sx<w-70 and sy>15 and sy<h-15 and used<24 then
-                used=used+1
-                local label=self.regionLabels[used]
-                if not label then label=Text(self.labelLayer,"",13);self.regionLabels[used]=label end
+            if sx>70 and sx<w-70 and sy>15 and sy<h-15 then
+                used=1
+                local label=self.regionLabels[1]
+                if not label then label=Text(self.labelLayer,"",13);self.regionLabels[1]=label end
+                label.mapID=map.id
                 label:SetText(map.name);label:ClearAllPoints();label:SetPoint("CENTER",self.canvas,"TOPLEFT",sx,-sy);label:Show()
             end
         end
@@ -590,7 +607,7 @@ end)
 function M:UpdateStyleMenu()
     self.styleButtons[1]:SetText("详情："..(self.settings.detailStyle=="terrain" and "真实地形" or "手绘地图"))
     self.styleButtons[2]:SetText("总览："..(self.settings.overviewStyle=="classic" and "原版世界" or "连续地图"))
-    self.styleButtons[3]:SetText("城市图："..(self.settings.cityMaps and "开启" or "关闭"))
+    self.styleButtons[3]:SetText((self.settings.detailStyle=="terrain" and "室内图：" or "城市图：")..(self.settings.cityMaps and "开启" or "关闭"))
 end
 
 SLASH_TURTLESEAMLESSMAP1="/tsm"
