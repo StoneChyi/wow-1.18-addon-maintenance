@@ -1,5 +1,5 @@
 -- Pure geometry: no global client map selection is changed by these functions.
-TurtleSeamlessMap = { version = "0.3.0", providers = {}, dirty = true }
+TurtleSeamlessMap = { version = "0.4.0", providers = {}, dirty = true }
 local M = TurtleSeamlessMap
 local G = {}
 M.Geometry = G
@@ -106,6 +106,9 @@ function M:IndexMaps()
             map.artRect={r[1]+art.x/1002*r[3],r[2]+art.y/668*r[4],art.width/1002*r[3],art.height/668*r[4]}
         end
     end
+    for name,id in pairs(TurtleSeamlessMap_Terrain.aliases or {}) do
+        if self.byID[id] then self.byName[name]=self.byID[id] end
+    end
     self.world = {0,0,1002,668}
     self.detailAreas = {}
     -- Continent source pages have wide decorative ocean margins. Navigation
@@ -140,6 +143,11 @@ function M:IndexMaps()
 end
 
 function M:MapAt(x,y)
+    if self.settings.detailStyle=="terrain" then
+        local map=self:TerrainMapAt(x,y)
+        if map and map.city and not map.cityActive then return self.byID[map.parent] end
+        return map
+    end
     local best
     for _,map in ipairs(self.drawOrder) do
         local r = map.rect
@@ -157,7 +165,7 @@ function M:ChooseDetailMap()
     if self:IsWorldView() then return end
     local x,y=self:Cursor()
     local w,h=self.canvas:GetWidth(),self.canvas:GetHeight()
-    if x<0 or x>w or y<0 or y>h or (self.list and self.list:IsShown()) or (self.markerMenu and self.markerMenu:IsShown()) then
+    if x<0 or x>w or y<0 or y>h or (self.list and self.list:IsShown()) or (self.markerMenu and self.markerMenu:IsShown()) or (self.styleMenu and self.styleMenu:IsShown()) then
         local id=self.hoveredID
         if id==nil then id=self.selected end
         local map=self.byID[id]
@@ -168,6 +176,22 @@ function M:ChooseDetailMap()
         return map and map.kind=="surface" and map or nil
     end
     local wx,wy=G.World(self.view,w,h,x,y)
+    if self.settings.detailStyle=="terrain" then
+        -- Cities retain their explicit near-zoom schematic; outdoor ownership
+        -- comes from actual ADT AreaIDs, never the paper/exploration silhouette.
+        for _,map in ipairs(self.maps) do
+            if map.city and G.Hit(map,wx,wy) then
+                local coverage=min(map.rect[3]*self.view.scale/w,map.rect[4]*self.view.scale/h)
+                if coverage>=(map.cityActive and 0.58 or 0.72) then return map end
+            end
+        end
+        local map=self:TerrainMapAt(wx,wy)
+        if map and map.city then
+            local coverage=min(map.rect[3]*self.view.scale/w,map.rect[4]*self.view.scale/h)
+            if coverage<(map.cityActive and 0.58 or 0.72) then return self.byID[map.parent] end
+        end
+        return map
+    end
     local best,city
     for _,map in ipairs(self.maps) do
         if map.kind=="surface" and G.Hit(map,wx,wy) then
@@ -178,6 +202,26 @@ function M:ChooseDetailMap()
         end
     end
     return city or best
+end
+
+function M:TerrainMapAt(x,y)
+    for _,continent in ipairs(TurtleSeamlessMap_Terrain.continents) do
+        local r=continent.rect
+        if x>=r[1] and x<r[1]+r[3] and y>=r[2] and y<r[2]+r[4] then
+            local grid=TurtleSeamlessMap_Terrain.territory[continent.id]
+            local px,py=(x-grid.x)/grid.step+32,(y-grid.y)/grid.step+32
+            local col,row=math.floor(px),math.floor(py)
+            local code=grid.tiles[row*64+col+1]
+            if code then
+                local index=math.floor((py-row)*16)*16+math.floor((px-col)*16)+1
+                for i=1,string.len(code),6 do
+                    if index<=tonumber(string.sub(code,i,i+2),16) then
+                        return self.byID[tonumber(string.sub(code,i+3,i+5),16)]
+                    end
+                end
+            end
+        end
+    end
 end
 
 function M:RegisterProvider(name, callback)

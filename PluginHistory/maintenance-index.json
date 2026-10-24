@@ -42,7 +42,7 @@
       "added_on": "2026-10-24",
       "creation_base_commit": "0e567516764ddee12f9703b50b8987779f3fe145",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "现用连续地图0.3.0；新增两区缺图、定位复发反馈及真实地形/双总览方案，已复现两条误跳路径，方案未实施。",
+      "purpose": "独立地图0.4.0；默认真实地形和原版总览，手绘/连续可切，修复空区名旧页及后台选图导航；待游戏验收。",
       "sources": [
         "PluginHistory/Research/TurtleSeamlessMap-首版实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.0优化方案-20261024.md",
@@ -54,7 +54,9 @@
         "PluginHistory/Research/TurtleSeamlessMap-连续大陆图集可行性-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.3.0实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json",
-        "PluginHistory/Research/TurtleSeamlessMap-真实地形与双总览方案-20261024.md"
+        "PluginHistory/Research/TurtleSeamlessMap-真实地形与双总览方案-20261024.md",
+        "PluginHistory/Research/TurtleSeamlessMap-0.4.0实现-20261024.md",
+        "PluginHistory/Research/TurtleSeamlessMap-0.4.0地形资源-20261024.json"
       ],
       "maintenance_files": [
         "Interface/AddOns/TurtleSeamlessMap/TurtleSeamlessMap.toc",
@@ -68,10 +70,12 @@
         "Interface/AddOns/TurtleSeamlessMap/FocusData.lua",
         "Interface/AddOns/TurtleSeamlessMap/PresentationData.lua",
         "Interface/AddOns/TurtleSeamlessMap/Atlas.lua",
-        "Interface/AddOns/TurtleSeamlessMap/AtlasData.lua"
+        "Interface/AddOns/TurtleSeamlessMap/AtlasData.lua",
+        "Interface/AddOns/TurtleSeamlessMap/TerrainData.lua",
+        "Interface/AddOns/TurtleSeamlessMap/Art/v5_classic_0_0.blp"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "用户反馈贫瘠之地/费伍德细图缺失、开图误跳复发，并需原版世界总览选择。当前版空区名信旧页和后台 SetMapZoom 移相机路径已模拟复现，修复未实施；真实地形全域资源/区域归属、地下层、双总览与性能待实现核查和游戏验收。旧33组结果不覆盖本轮新方案。"
+      "pending": "0.4.0通过45组模拟/资源检查；实际首次开图/钩子时序、全部地形边缘/标签/地下城市、帧率和显存待游戏验收。两格材质/高度补图未含建筑树木模型，源贴片色差和屋顶遮挡可能保留；手绘模式原限制仍在，不声称逐像素全场景渲染。"
     }
   ],
   "addons": [

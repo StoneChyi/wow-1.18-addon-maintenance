@@ -73,7 +73,7 @@ function methods:RegisterForDrag(...) self.dragButtons={...} end
 function methods:RegisterForClicks(...) self.clickButtons={...} end
 function methods:SetScript(event,fn) self.scripts[event]=fn end
 function methods:GetScript(event) return self.scripts[event] end
-function methods:RegisterEvent(event) end
+function methods:RegisterEvent(event) self.events=self.events or {};self.events[event]=true end
 function methods:StartMoving() self.moving=true end
 function methods:StopMovingOrSizing() self.moving=false end
 function methods:IsShown() return self.shown end
@@ -132,7 +132,7 @@ pfMap={nodes={},ShowMapID=function(self,id)ToggleWorldMap()end,
 '''
 
 
-def runtime(with_plugins=True, saved=None, screen=None):
+def runtime(with_plugins=True, saved=None, screen=None, defaults=False):
     lua = LuaRuntime(unpack_returned_tuples=True)
     lua.globals().FONT_CONTRACT = (ROOT/'Tools/tests/wow112_fontstring_mock.lua').read_text(encoding='utf-8')
     lua.execute(MOCK)
@@ -145,6 +145,10 @@ def runtime(with_plugins=True, saved=None, screen=None):
         lua.execute('ModernMapMarkersCore=nil;pfMap=nil;pfQuest=nil')
     if saved:
         lua.execute('TurtleSeamlessMapDB='+saved)
+    if not defaults:
+        # Run the original compatibility regressions in the retained paper /
+        # continuous mode. New tests below exercise the new shipped defaults.
+        lua.execute('TurtleSeamlessMapDB=TurtleSeamlessMapDB or {};TurtleSeamlessMapDB.detailStyle="paper";TurtleSeamlessMapDB.overviewStyle="continuous"')
     lua.execute('TurtleSeamlessMap:Install();M=TurtleSeamlessMap;G=M.Geometry')
     return lua
 
@@ -292,6 +296,8 @@ class SeamlessMapTests(unittest.TestCase):
 
     def test_all_runtime_art_present_valid_and_bounded(self):
         report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
+        terrain=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.4.0地形资源-20261024.json').read_text(encoding='utf-8'))
+        report['files']+=terrain['files'];report['total_files']+=terrain['total_files']
         expected={r['file'] for r in report['files']}
         for _,m in self.lua.globals().M.maps.items():
             if m.rect:
@@ -619,7 +625,8 @@ class SeamlessMapTests(unittest.TestCase):
           assert(mapSets==calls)
           M.frame:Hide();ready=false;M:Toggle();assert(M.pendingLocation)
           now=now+.11;invoke(M.frame,'OnUpdate');assert(M.pendingLocation)
-          now=now+.11;invoke(M.frame,'OnUpdate');assert(not M.pendingLocation)
+          for i=1,10 do now=now+.3;invoke(M.frame,'OnUpdate') end
+          assert(not M.pendingLocation)
           calls=mapSets;now=now+1;invoke(M.frame,'OnUpdate');assert(mapSets==calls)
           M.frame:Hide();M:Toggle();assert(M.pendingLocation)
           M:Zoom(1.1);assert(not M.pendingLocation)
@@ -773,6 +780,213 @@ class SeamlessMapTests(unittest.TestCase):
             high=reconstruct(8).getchannel('A').resize((c['rect'][2],c['rect'][3]),Image.Resampling.LANCZOS)
             low=reconstruct(1).getchannel('A')
             self.assertLess(ImageStat.Stat(ImageChops.difference(high,low)).mean[0],3)
+
+    def test_new_defaults_classic_overview_and_terrain_detail(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          assert(M.settings.detailStyle=='terrain' and M.settings.overviewStyle=='classic')
+          M.frame:Show();M:WorldView();M:Render()
+          for i=1,M.tileUsed do assert(string.find(M.tiles[i].path,'v5_classic_',1,true)) end
+          assert(not next(M.detailAreas))
+          M:FocusMap(11);M:Render()
+          local terrain=false
+          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v5_t1_',1,true) then terrain=true end end
+          assert(terrain)
+          M:UpdateStyleMenu();M.styleMenu:Show()
+          invoke(M.styleButtons[1],'OnClick');assert(M.settings.detailStyle=='paper')
+          invoke(M.styleButtons[2],'OnClick');assert(M.settings.overviewStyle=='continuous')
+          invoke(M.styleButtons[3],'OnClick');assert(not M.settings.cityMaps)
+          M.frame:Hide();assert(not M.styleMenu:IsShown())
+        ''')
+
+    def test_empty_current_zone_never_accepts_stale_tanaris(self):
+        for real in ('nil','""'):
+            lua=runtime(defaults=True,saved='{layoutVersion=2,notes={},view={x=300,y=500,scale=10,selected=161}}')
+            lua.execute('''
+              local reads=0
+              GetRealZoneText=function() return '''+real+''' end
+              SetMapToCurrentZone=function() mapSets=mapSets+1 end
+              mapFile='Tanaris';GetPlayerMapPosition=function() reads=reads+1;return .33,.66 end
+              WorldMapFrame:Show()
+              assert(M:IsWorldView() and M.selected==nil and M.pendingLocation and reads==0)
+              GetRealZoneText=function() return '艾尔文森林' end
+              SetMapToCurrentZone=function() mapSets=mapSets+1;mapFile='Elwynn' end
+              now=now+.11;invoke(M.frame,'OnUpdate')
+              assert(M.selected==30 and not M.pendingLocation and reads>0)
+              GetRealZoneText=function() return nil end
+              M.frame:Hide();M:Toggle();assert(M.pendingLocation)
+              for i=1,20 do now=now+.3;invoke(M.frame,'OnUpdate') end
+              assert(not M.pendingLocation and M.selected==nil)
+            ''')
+
+    def test_background_map_selection_does_not_navigate(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();M:FocusMap(30);local x,y=M.view.x,M.view.y
+          SetMapZoom(2,1)
+          assert(M.selected==30 and M.view.x==x and M.view.y==y)
+          pfMap:ShowMapID(40);assert(M.selected==39)
+          M.ignoreMapEvent=true;pfMap:ShowMapID(12);assert(M.ignoreMapEvent==true)
+          M.ignoreMapEvent=false
+        ''')
+
+    def test_scoped_navigation_restores_state_after_error(self):
+        # The wrapped original can fail after a nested call. Its caller's
+        # guard must be restored even when the error escapes to that caller.
+        lua=runtime(defaults=True)
+        lua.execute('''
+          local original=pfMap.ShowMapID
+          M.ignoreMapEvent=true;original(pfMap,12);assert(M.ignoreMapEvent)
+          M.ignoreMapEvent=false
+          mapSets=nil
+          local ok=pcall(ModernMapMarkers_FindMarker,1)
+          assert(not ok and not M.ignoreMapEvent)
+          mapSets=0
+          SetMapToCurrentZone=function() error('temporary map API failure') end
+          M:FindPlayer();assert(not M.ignoreMapEvent and not M.locating and M.pendingLocation and M.locationError)
+          M:Zoom(1.1);assert(not M.pendingLocation)
+        ''')
+
+    def test_terrain_area_lookup_agrees_with_adt_at_problem_regions(self):
+        from build_turtle_map_terrain import parse_adt
+        from turtle_map_archive import Client,dbc
+        client=Client(ROOT,include_terrain=True)
+        rows,_,_=dbc(client.read('DBFilesClient\\AreaTable.dbc')[0]);parents={r[0]:r[2] for r in rows}
+        lua=runtime(defaults=True);m=lua.globals().M;checked={11:0,182:0}
+        try:
+            for tx,ty in ((36,34),(34,21)):
+                cells,_=parse_adt(client.read(f'World\\Maps\\Kalimdor\\Kalimdor_{tx}_{ty}.adt')[0])
+                grid=lua.globals().TurtleSeamlessMap_Terrain.territory[1]
+                for (cx,cy),cell in cells.items():
+                    area=cell['area'];seen=set();expected=None
+                    while area and area not in seen:
+                        seen.add(area)
+                        if m.byArea[area] is not None:expected=m.byArea[area].id;break
+                        area=parents.get(area,0)
+                    x=grid.x+(tx-32+(cx+.5)/16)*grid.step;y=grid.y+(ty-32+(cy+.5)/16)*grid.step
+                    actual=m.TerrainMapAt(m,x,y)
+                    self.assertEqual(actual.id if actual else None,expected)
+                    if expected in checked:checked[expected]+=1
+            self.assertTrue(all(n>100 for n in checked.values()))
+        finally:
+            for archive in client.archives:archive.close()
+
+    def test_terrain_single_zone_nodes_and_label_fonts(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();local px,py=0,0;M.Cursor=function() return px,py end
+          local grid=TurtleSeamlessMap_Terrain.territory[1]
+          local barrens={['50|50']={A={title='A',texture='test'}}}
+          local felwood={['50|50']={B={title='B',texture='test'}}}
+          pfMap.nodes={PFQUEST={[17]=barrens,[361]=felwood}}
+          local originalPairs=pairs;local forbidden
+          pairs=function(t) assert(t~=forbidden,'Nonfocused terrain nodes enumerated');return originalPairs(t) end
+          for _,tile in ipairs({{36,34,11},{34,21,182}}) do
+            forbidden=tile[3]==11 and felwood or barrens
+            local found=false
+            for cy=0,15 do for cx=0,15 do
+              if not found then
+                local x=grid.x+(tile[1]-32+(cx+.5)/16)*grid.step
+                local y=grid.y+(tile[2]-32+(cy+.5)/16)*grid.step
+                local map=M:TerrainMapAt(x,y)
+                if map and map.id==tile[3] then
+                  M.view.x=x;M.view.y=y;M.view.scale=8;px=M.canvas.width/2;py=M.canvas.height/2
+                  M:Render();assert(M.detailTarget.id==tile[3] and M.questNodesVisited==1 and not next(M.providerErrors));found=true
+                  local count=0;for _ in pairs(M.detailAreas) do count=count+1 end;assert(count==1)
+                end
+              end
+            end end
+            assert(found)
+          end
+          for _,label in ipairs(M.regionLabels) do assert(label.font) end
+          M:WorldView();for _,label in ipairs(M.regionLabels) do assert(not label:IsShown()) end
+          pairs=originalPairs
+        ''')
+
+    def test_terrain_resources_complete_and_classic_matches_original(self):
+        report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.4.0地形资源-20261024.json').read_text(encoding='utf-8'))
+        self.assertFalse(report['unresolved'])
+        self.assertGreater(report['counts']['minimap'],1500)
+        self.assertGreater(report['counts']['verified-water'],50)
+        # Reconstruct original overview at its native resolution, with gutters.
+        classic=Image.new('RGBA',(1002,668))
+        for p in (ADDON/'Art').glob('v5_classic_*.blp'):
+            col,row=map(int,p.stem.split('_')[-2:]);classic.paste(decode_blp(p.read_bytes()).convert('RGBA').crop((1,1,255,255)),(col*254,row*254))
+        original=Image.open(STAGE/'previews/World.png').convert('RGBA')
+        self.assertLess(max(ImageStat.Stat(ImageChops.difference(original.convert('RGB'),classic.convert('RGB'))).mean),8)
+
+    def test_zone_change_invalidates_only_session_location(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M:FindPlayer();assert(M.lastPlayer)
+          M:FocusMap(161);local selected=M.selected
+          for _,object in ipairs(objects) do
+            if object.events and object.events.ZONE_CHANGED_NEW_AREA then
+              event='ZONE_CHANGED_NEW_AREA';invoke(object,'OnEvent');event=nil
+            end
+          end
+          assert(not M.lastPlayer and M.selected==selected)
+        ''')
+
+    def test_legacy_terrain_padding_water_and_base_archive(self):
+        from turtle_map_archive import Client
+        from build_turtle_map_terrain import parse_adt
+        client=Client(ROOT,include_terrain=True)
+        try:
+            water,_=parse_adt(client.read('World\\Maps\\Kalimdor\\Kalimdor_19_12.adt')[0])
+            self.assertEqual(len(water),256)
+            self.assertTrue(all(c['water'] and c['maximum']<=c['water_level'] for c in water.values()))
+            # This modified source has oversized unused MCAL metadata; AreaID
+            # extraction must not depend on an unused material parser.
+            modified,_=parse_adt(client.read('World\\Maps\\Kalimdor\\Kalimdor_44_40.adt')[0])
+            self.assertEqual(len(modified),256)
+            base,source=client.read('World\\Maps\\Kalimdor\\Kalimdor_33_48.adt')
+            self.assertEqual(source,'Data/terrain.MPQ')
+            self.assertEqual(len(parse_adt(base)[0]),256)
+        finally:
+            for a in client.archives:a.close()
+
+    def test_location_uses_client_locale_aliases_and_style_preferences_persist(self):
+        lua=runtime(defaults=True,saved='{layoutVersion=2,notes={{x=700,y=400}},detailStyle="paper",overviewStyle="continuous",cityMaps=false}')
+        lua.execute('''
+          assert(M.settings.detailStyle=='paper' and M.settings.overviewStyle=='continuous' and not M.settings.cityMaps)
+          assert(#M.settings.notes==1)
+          GetRealZoneText=function() return 'The Barrens' end
+          currentFile='Barrens';M:FindPlayer();assert(M.selected==11 and not M.pendingLocation)
+        ''')
+
+    def test_terrain_pool_remains_bounded_across_styles_and_regions(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show()
+          for _,style in ipairs({'terrain','paper','terrain'}) do
+            M.settings.detailStyle=style;M:RefreshAppearance()
+            for _,id in ipairs({11,182,30,301,502,507}) do
+              M:FocusMap(id)
+              for _,scale in ipairs({4,8,16,32}) do
+                M.view.scale=scale;M:RenderArt()
+                for _,map in ipairs(M.maps) do
+                  if map.atlasPool then assert(#map.atlasPool<=256) end
+                end
+              end
+            end
+          end
+          M.settings.overviewStyle='classic';M:WorldView()
+          for i=1,M.tileUsed do assert(string.find(M.tiles[i].path,'v5_classic_',1,true)) end
+        ''')
+
+    def test_style_toolbar_fits_small_and_large_windows(self):
+        for screen in ((800,600),(1024,768),(1440,1000)):
+            lua=runtime(defaults=True,screen=screen)
+            lua.execute('''
+              local f=M.frame
+              for _,b in ipairs(M.toolbarButtons) do
+                assert(b:GetLeft()>=f:GetLeft()+10 and b:GetLeft()+b:GetWidth()<=f:GetLeft()+f:GetWidth()-10)
+                assert(b:GetTop()-b:GetHeight()>M.canvas:GetTop())
+              end
+              M.frame:Show();M:UpdateStyleMenu();M.styleMenu:Show();M:Render()
+              assert(M.canvas.width/M.canvas.height>1.499 and M.canvas.width/M.canvas.height<1.501)
+            ''')
 
 
 def compose_preview(lua, reverse=False):

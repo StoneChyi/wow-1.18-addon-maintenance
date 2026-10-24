@@ -9,7 +9,7 @@
     "related_skin_only": 2
   },
   "addon_pages": 107,
-  "dated_records": 124,
+  "dated_records": 125,
   "addons": [
     {
       "addon": "!Libs",
@@ -2370,12 +2370,21 @@
       "addon": "TurtleSeamlessMap",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "现用连续地图0.3.0；新增两区缺图、定位复发反馈及真实地形/双总览方案，已复现两条误跳路径，方案未实施。",
+      "purpose": "独立地图0.4.0；默认真实地形和原版总览，手绘/连续可切，修复空区名旧页及后台选图导航；待游戏验收。",
       "latest_record_date": "2026-10-24",
-      "latest_record_title": "规划真实地形、可靠定位与原版和连续双总览",
-      "latest_game_acceptance": "不适用（说明或停用记录）",
-      "record_count": 14,
+      "latest_record_title": "修复误跳并加入真实地形和原版双样式总览",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 15,
       "records": [
+        {
+          "id": "TurtleSeamlessMap-20261024-15",
+          "date": "2026-10-24",
+          "title": "修复误跳并加入真实地形和原版双样式总览",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-15"
+        },
         {
           "id": "TurtleSeamlessMap-20261024-14",
           "date": "2026-10-24",

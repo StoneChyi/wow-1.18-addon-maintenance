@@ -17,7 +17,7 @@ local function Button(parent,label,width,callback)
     local b = CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
     b:SetWidth(width or 70); b:SetHeight(24)
     b:SetText(label)
-    b:SetScript("OnClick",callback)
+    b:SetScript("OnClick",function() M.pendingLocation=nil;callback() end)
     return b
 end
 
@@ -119,8 +119,17 @@ function M:Tile(path,x,y,w,h,u,v,alpha,layer)
 end
 
 function M:DrawMap(map)
+    local classic=self:IsWorldView() and self.settings.overviewStyle=="classic"
+    if map.kind=="world" and classic then self:DrawAtlas(map,TurtleSeamlessMap_Terrain.classic,true);return end
+    if map.kind=="continent" and classic then return end
+    if map.kind=="continent" and self.settings.detailStyle=="terrain" then
+        for _,continent in ipairs(TurtleSeamlessMap_Terrain.continents) do
+            if continent.id==map.map then self:DrawAtlas(map,continent,false);return end
+        end
+    end
     if map.atlas then self:DrawAtlas(map,map.atlas,map.kind=="world");return end
     if not map.city then return end
+    if not self.settings.cityMaps then return end
     if not map.visible then return end
     local r=map.artRect or map.rect
     local artW,artH=map.artWidth or 1002,map.artHeight or 668
@@ -170,6 +179,7 @@ function M:CameraChanged()
     local v=self.paintedView
     return not v or v.x~=self.view.x or v.y~=self.view.y or v.scale~=self.view.scale
         or v.w~=self.canvas:GetWidth() or v.h~=self.canvas:GetHeight()
+        or v.style~=self.settings.detailStyle or v.overview~=self.settings.overviewStyle or v.cityMaps~=self.settings.cityMaps
 end
 
 function M:ViewChanged()
@@ -207,7 +217,8 @@ function M:RenderArt()
         end
     end
     self.activeMap=nil
-    self.paintedView={x=self.view.x,y=self.view.y,scale=self.view.scale,w=self.canvas:GetWidth(),h=self.canvas:GetHeight(),focus=focused}
+    self.paintedView={x=self.view.x,y=self.view.y,scale=self.view.scale,w=self.canvas:GetWidth(),h=self.canvas:GetHeight(),focus=focused,style=self.settings.detailStyle,overview=self.settings.overviewStyle,cityMaps=self.settings.cityMaps}
+    self:DrawRegionLabels()
     self.artRenders=(self.artRenders or 0)+1
 end
 
@@ -246,52 +257,78 @@ function M:Render()
     self:RenderPins()
 end
 
-function M:DrawPlayer()
-    if not GetMapInfo or not GetPlayerMapPosition then return end
-    local file=GetMapInfo()
-    local map=file and self.byFile[string.lower(file)]
-    if not map then return end
-    -- GetPlayerMapPosition uses global map selection. A remote selected map
-    -- must not manufacture a player position on a different continent.
+function M:PlayerArea()
     local real=GetRealZoneText and GetRealZoneText()
-    if real and map.name~=real and not self.byName[real] then return end
-    if real and self.byName[real] and self.byName[real].id~=map.id then return end
+    if real and real~="" and self.byName[real] then return self.byName[real] end
+    local zone=GetZoneText and GetZoneText()
+    return zone and zone~="" and self.byName[zone] or nil
+end
+
+function M:PlayerCoordinates(map)
+    local file=GetMapInfo()
+    local selected=file and self.byFile[string.lower(file)]
+    if not map or selected~=map then return end
     local x,y=GetPlayerMapPosition("player")
-    if not x or (x==0 and y==0) then return end
-    x,y=self:MapToWorld(map.id,x,y)
-    self:AddPin("player",x,y,"Interface\\Minimap\\MinimapArrow",22)
+    if G.Finite(x) and G.Finite(y) and x>=0 and x<=1 and y>=0 and y<=1 and not (x==0 and y==0) then
+        return self:MapToWorld(map.id,x,y)
+    end
+end
+
+function M:DrawPlayer()
+    local map=self:PlayerArea()
+    if not map then return end
+    local x,y=self:PlayerCoordinates(map)
+    if x then self.lastPlayer={id=map.id,x=x,y=y} end
+    local last=self.lastPlayer
+    if last and last.id==map.id then self:AddPin("player",last.x,last.y,"Interface\\Minimap\\MinimapArrow",22) end
 end
 
 function M:FindPlayer(retry)
+    if self.locating then return true end
     -- Once when opening with M or requesting location, never during pan/zoom.
     local previousIgnore=self.ignoreMapEvent
-    self.ignoreMapEvent=true
-    SetMapToCurrentZone()
-    self.ignoreMapEvent=previousIgnore
+    self.ignoreMapEvent=true;self.locating=true
+    local ok,err=pcall(SetMapToCurrentZone)
+    self.ignoreMapEvent=previousIgnore;self.locating=nil
     self.pendingLocation=nil
-    local file=GetMapInfo()
-    local map=file and self.byFile[string.lower(file)]
-    local real=GetRealZoneText and GetRealZoneText()
-    local actual=real and self.byName[real]
-    local synced=not actual or (map and map.id==actual.id)
-    -- GetMapInfo is the selected browsing page, not proof of the player's
-    -- zone. On first open it may still be a cached page (e.g. Tanaris).
-    if actual then map=actual
-    elseif real and real~="" and (not map or map.name~=real) then return false end
-    if not map then return false end
-    self:FocusMap(map.id)
+    local map=self:PlayerArea()
+    if map then self:FocusMap(map.id) else self:WorldView();self.lastPlayer=nil end
     local x,y
-    if synced then x,y=GetPlayerMapPosition("player") end
-    if G.Finite(x) and G.Finite(y) and x>=0 and x<=1 and y>=0 and y<=1 and not (x==0 and y==0) then
-        local wx,wy=self:MapToWorld(map.id,x,y)
-        if wx then self.view.x,self.view.y=wx,wy end
+    if ok then x,y=self:PlayerCoordinates(map) end
+    if x then
+        self.view.x,self.view.y=x,y;self.lastPlayer={id=map.id,x=x,y=y}
     else
-        local remaining=retry and retry.remaining-1 or 2
-        if remaining>0 then self.pendingLocation={next=GetTime()+0.1,remaining=remaining} end
+        local remaining=retry and retry.remaining-1 or 7
+        if remaining>0 then self.pendingLocation={next=GetTime()+0.1+(7-remaining)*.025,remaining=remaining} end
     end
+    self.locationError=not ok and tostring(err) or nil
     self:ConstrainView()
     if self.frame:IsShown() then self:RenderArt();self:LayoutPins() end
     return true
+end
+
+function M:DrawRegionLabels()
+    self.regionLabels=self.regionLabels or {}
+    local used=0
+    if self.settings.detailStyle=="terrain" and not self:IsWorldView() then
+        local w,h=self.canvas:GetWidth(),self.canvas:GetHeight()
+        for id,position in pairs(TurtleSeamlessMap_Terrain.labels) do
+            local map=self.byID[id]
+            local sx,sy=G.Screen(self.view,w,h,position[1],position[2])
+            if map and not map.city and map.rect[3]*self.view.scale/w>.12 and map.rect[3]*self.view.scale/w<1.5 and sx>70 and sx<w-70 and sy>15 and sy<h-15 and used<24 then
+                used=used+1
+                local label=self.regionLabels[used]
+                if not label then label=Text(self.labelLayer,"",13);self.regionLabels[used]=label end
+                label:SetText(map.name);label:ClearAllPoints();label:SetPoint("CENTER",self.canvas,"TOPLEFT",sx,-sy);label:Show()
+            end
+        end
+    end
+    for i=used+1,table.getn(self.regionLabels) do self.regionLabels[i]:Hide() end
+end
+
+function M:RefreshAppearance()
+    self.pendingLocation=nil;self.paintedView=nil;self.dirty=true
+    if self.frame:IsShown() then self:RenderArt();self:LayoutPins() end
 end
 
 function M:DrawNotes()
@@ -344,7 +381,9 @@ function M:BuildUI()
     -- Match the native world aspect rather than letterboxing, stretching or
     -- cropping geography to fill a differently shaped canvas.
     local w=min(1180,UIParent:GetWidth()-50,(UIParent:GetHeight()-172)*1.5+28)
-    local h=(w-28)/1.5+112
+    local toolbarExtra=w<830 and 30 or 0
+    if toolbarExtra>0 then w=min(w,(UIParent:GetHeight()-202)*1.5+28) end
+    local h=(w-28)/1.5+112+toolbarExtra
     f:SetWidth(w);f:SetHeight(h);f:SetPoint("CENTER",UIParent,"CENTER",0,0)
     f:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=16,insets={left=4,right=4,top=4,bottom=4}})
     f:SetBackdropColor(0.06,0.07,0.08,0.98)
@@ -361,13 +400,14 @@ function M:BuildUI()
     close:SetPoint("TOPRIGHT",f,"TOPRIGHT",-12,-8)
     local canvas=CreateFrame("Frame",nil,f)
     self.canvas=canvas
-    canvas:SetWidth(w-28);canvas:SetHeight(h-112)
-    canvas:SetPoint("TOPLEFT",f,"TOPLEFT",14,-70)
+    canvas:SetWidth(w-28);canvas:SetHeight(h-112-toolbarExtra)
+    canvas:SetPoint("TOPLEFT",f,"TOPLEFT",14,-70-toolbarExtra)
     -- The original world's paper, sea and ornaments are geographic artwork in
     -- the atlas background. No repeating sea texture replaces them on zoom.
     canvas:EnableMouse(true);canvas:EnableMouseWheel(true)
     canvas:SetScript("OnMouseWheel",function() M:Zoom(arg1>0 and 1.18 or 1/1.18) end)
     canvas:SetScript("OnMouseDown",function()
+        M.pendingLocation=nil
         if arg1=="LeftButton" then
             local x,y=M:Cursor()
             if IsControlKeyDown() then
@@ -379,6 +419,7 @@ function M:BuildUI()
     canvas:SetScript("OnMouseUp",function() M.drag=nil end)
     self.art=CreateFrame("Frame",nil,canvas);self.art:SetAllPoints(canvas);self.art:SetFrameLevel(91)
     self.pinLayer=CreateFrame("Frame",nil,canvas);self.pinLayer:SetAllPoints(canvas);self.pinLayer:SetFrameLevel(94+table.getn(self.drawOrder))
+    self.labelLayer=CreateFrame("Frame",nil,canvas);self.labelLayer:SetAllPoints(canvas);self.labelLayer:SetFrameLevel(self.pinLayer:GetFrameLevel()-1)
     local buttons={
         {"世界",54,function() M:WorldView() end},
         {"卡利姆多",78,function() M:FocusMap(13) end},
@@ -391,16 +432,36 @@ function M:BuildUI()
         end},
         {"标记筛选",78,function() M:ToggleMarkerMenu() end},
         {"任务开关",78,function() M.settings.quests=not M.settings.quests;M.dirty=true end},
+        {"地图样式",78,function() if M.styleMenu:IsShown() then M.styleMenu:Hide() else M:UpdateStyleMenu();M.styleMenu:Show() end end},
         {"原地图",66,function() M:ShowNative() end},
     }
-    local previous
-    for _,spec in ipairs(buttons) do
+    local previous;self.toolbarButtons={}
+    for index,spec in ipairs(buttons) do
         local b=Button(f,spec[1],spec[2],spec[3])
-        if previous then b:SetPoint("LEFT",previous,"RIGHT",4,0) else b:SetPoint("TOPLEFT",f,"TOPLEFT",14,-38) end
+        if toolbarExtra>0 and index==6 then b:SetPoint("TOPLEFT",f,"TOPLEFT",14,-68)
+        elseif previous then b:SetPoint("LEFT",previous,"RIGHT",4,0) else b:SetPoint("TOPLEFT",f,"TOPLEFT",14,-38) end
+        table.insert(self.toolbarButtons,b)
         previous=b
     end
     self.status=Text(f,"",11)
     self.status:SetPoint("BOTTOMLEFT",f,"BOTTOMLEFT",16,14)
+    local style=CreateFrame("Frame",nil,f);self.styleMenu=style
+    style:SetWidth(246);style:SetHeight(140);style:SetFrameLevel(185)
+    style:SetPoint("TOPRIGHT",canvas,"TOPRIGHT",-6,-6)
+    style:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=16,insets={left=4,right=4,top=4,bottom=4}})
+    style:SetBackdropColor(.05,.05,.05,1);style:EnableMouse(true);style:Hide()
+    local heading=Text(style,"地图样式",13);heading:SetPoint("TOPLEFT",style,"TOPLEFT",14,-12)
+    self.styleButtons={}
+    local callbacks={
+        function() M.settings.detailStyle=M.settings.detailStyle=="terrain" and "paper" or "terrain" end,
+        function() M.settings.overviewStyle=M.settings.overviewStyle=="classic" and "continuous" or "classic" end,
+        function() M.settings.cityMaps=not M.settings.cityMaps end,
+    }
+    for i,callback in ipairs(callbacks) do
+        local action=callback
+        local button=Button(style,"",218,function() action();M:UpdateStyleMenu();M:RefreshAppearance() end)
+        button:SetPoint("TOPLEFT",style,"TOPLEFT",14,-32-(i-1)*31);self.styleButtons[i]=button
+    end
     local list=CreateFrame("Frame",nil,f);self.list=list
     list:SetWidth(270);list:SetHeight(476);list:SetFrameLevel(180)
     list:SetPoint("TOPRIGHT",canvas,"TOPRIGHT",-6,-6)
@@ -433,7 +494,7 @@ function M:BuildUI()
     end)
     f:SetScript("OnHide",function()
         M.pendingLocation=nil
-        M.drag=nil;M.list:Hide();search:ClearFocus();GameTooltip:Hide()
+        M.drag=nil;M.list:Hide();M.styleMenu:Hide();search:ClearFocus();GameTooltip:Hide()
         if M.markerMenu then M.markerMenu:Hide() end
         M.settings.view={x=M.view.x,y=M.view.y,scale=M.view.scale,selected=M.selected}
         if UpdateMicroButtons then UpdateMicroButtons() end
@@ -463,7 +524,7 @@ function M:BuildUI()
         local wx,wy=G.World(M.view,canvas:GetWidth(),canvas:GetHeight(),x,y)
         local map=M:MapAt(wx,wy)
         local where=map and map.name or "世界"
-        M.status:SetText(where..(M:IsWorldView() and "   滚轮放大 · Ctrl+左键标记" or "   指向区域查看细图 · 滚轮缩放 · 左键拖动 · 右键缩小 · Ctrl+左键标记")..(M.pinOverflow and "   标记过密，请放大查看" or ""))
+        M.status:SetText(where..(M:IsWorldView() and "   滚轮放大 · Ctrl+左键标记" or "   指向区域查看标记 · 滚轮缩放 · 左键拖动 · 右键缩小 · Ctrl+左键标记")..(M.pinOverflow and "   标记过密，请放大查看" or ""))
     end)
 end
 
@@ -474,6 +535,9 @@ function M:Install()
     self.settings=TurtleSeamlessMapDB
     self.settings.notes=self.settings.notes or {}
     if self.settings.quests==nil then self.settings.quests=true end
+    if self.settings.detailStyle~="paper" and self.settings.detailStyle~="terrain" then self.settings.detailStyle="terrain" end
+    if self.settings.overviewStyle~="continuous" and self.settings.overviewStyle~="classic" then self.settings.overviewStyle="classic" end
+    if self.settings.cityMaps==nil then self.settings.cityMaps=true end
     self.tiles,self.pins,self.providerErrors,self.view={},{},{},{}
     self:IndexMaps();self:MigrateSettings();self:BuildUI();self:WorldView()
     local saved=self.settings.view
@@ -487,10 +551,12 @@ function M:Install()
     local originalShow=WorldMapFrame:GetScript("OnShow")
     WorldMapFrame:SetScript("OnShow",function()
         if M.nativeRequested then if originalShow then originalShow() end;return end
-        local explicit=M.ignoreMapEvent
+        local explicit=M.ignoreMapEvent and not M.locating
         local file=explicit and GetMapInfo()
         local map=file and M.byFile[string.lower(file)]
-        M.ignoreMapEvent=true;WorldMapFrame:Hide();M.ignoreMapEvent=explicit
+        local previousIgnore=M.ignoreMapEvent
+        M.ignoreMapEvent=true;WorldMapFrame:Hide();M.ignoreMapEvent=previousIgnore
+        if M.locating then return end
         if explicit then
             if map then M:FocusMap(map.id) end
         elseif not M:FindPlayer() then M:WorldView() end
@@ -503,18 +569,29 @@ local loader=CreateFrame("Frame")
 loader:RegisterEvent("PLAYER_ENTERING_WORLD")
 loader:RegisterEvent("WORLD_MAP_UPDATE")
 loader:RegisterEvent("CLOSE_WORLD_MAP")
+loader:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+loader:RegisterEvent("ZONE_CHANGED")
+loader:RegisterEvent("ZONE_CHANGED_INDOORS")
 loader:SetScript("OnEvent",function()
     if event=="PLAYER_ENTERING_WORLD" and not M.installed then
         this:SetScript("OnUpdate",function()
             this.elapsed=(this.elapsed or 0)+arg1
             if this.elapsed>0.5 then this:SetScript("OnUpdate",nil);M:Install() end
         end)
+    elseif M.installed and (event=="ZONE_CHANGED_NEW_AREA" or event=="ZONE_CHANGED" or event=="ZONE_CHANGED_INDOORS" or event=="PLAYER_ENTERING_WORLD") then
+        M.lastPlayer=nil;M.dirty=true
     elseif event=="CLOSE_WORLD_MAP" and M.installed then
         M.frame:Hide()
     elseif event=="WORLD_MAP_UPDATE" and M.installed and M.frame:IsShown() and not M.ignoreMapEvent then
         M.dirty=true
     end
 end)
+
+function M:UpdateStyleMenu()
+    self.styleButtons[1]:SetText("详情："..(self.settings.detailStyle=="terrain" and "真实地形" or "手绘地图"))
+    self.styleButtons[2]:SetText("总览："..(self.settings.overviewStyle=="classic" and "原版世界" or "连续地图"))
+    self.styleButtons[3]:SetText("城市图："..(self.settings.cityMaps and "开启" or "关闭"))
+end
 
 SLASH_TURTLESEAMLESSMAP1="/tsm"
 SlashCmdList["TURTLESEAMLESSMAP"]=function(msg)

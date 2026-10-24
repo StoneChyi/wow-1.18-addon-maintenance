@@ -164,13 +164,20 @@ local function DrawQuests(self)
 end
 
 function M:InstallCompat()
+    local function ScopedCall(fn,a,b)
+        local previous=M.ignoreMapEvent;M.ignoreMapEvent=true
+        local ok,result=pcall(fn,a,b)
+        M.ignoreMapEvent=previous
+        if not ok then error(result) end
+        return result
+    end
     if ModernMapMarkersCore then
         ModernMapMarkersCore:BuildData()
         self:RegisterProvider("ModernMapMarkers",DrawModern)
         local original=ModernMapMarkers_FindMarker
         if original then
             ModernMapMarkers_FindMarker=function(index)
-                M.ignoreMapEvent=true;original(index);M.ignoreMapEvent=false
+                ScopedCall(original,index)
                 local data=ModernMapMarkersCore.Data[index]
                 local map=data and ModernMap(data)
                 if map then M:FocusMap(map.id);M.frame:Show() end
@@ -182,23 +189,18 @@ function M:InstallCompat()
         local original=pfMap.ShowMapID
         if original then
             pfMap.ShowMapID=function(self,id)
-                M.ignoreMapEvent=true;original(self,id);M.ignoreMapEvent=false
+                ScopedCall(original,self,id)
                 local map=M.byArea[tonumber(id)]
                 if map then M:FocusMap(map.id);M.frame:Show() end
             end
         end
     end
     -- Frame method calls from other addons are redirected by Core's OnShow.
-    -- Explicit browsing through SetMapZoom updates this map once, then leaves
-    -- all later pan/zoom calculations independent from global map selection.
+    -- SetMapZoom is also used by background data readers. It is not proof of
+    -- a user navigation. Known explicit clicks above call FocusMap themselves.
     local originalSetMapZoom=SetMapZoom
     SetMapZoom=function(continent,zone)
-        local browse=M.frame:IsShown() and not M.ignoreMapEvent
         if zone==nil then originalSetMapZoom(continent) else originalSetMapZoom(continent,zone) end
-        if browse then
-            local file=GetMapInfo()
-            local map=file and M.byFile[string.lower(file)]
-            if map then M:FocusMap(map.id) end
-        end
+        if M.frame:IsShown() then M.dirty=true end
     end
 end

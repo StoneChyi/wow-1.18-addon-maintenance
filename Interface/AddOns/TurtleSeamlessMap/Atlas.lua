@@ -41,7 +41,7 @@ function M:DrawAtlas(map,data,background)
     -- Physical asset completeness is checked offline before deployment.
     while choice>=1 do
         local level=levels[choice]
-        local prefix=background and "v4_paper" or "v4_c"..data.id.."_"..level.density
+        local prefix=level.prefix or (background and "v4_paper" or "v4_c"..data.id.."_"..level.density)
         local l,t,r,b,cell=Window(self.view,w,h,rect,level.density,level.cols,level.rows)
         local used,failed=0,false
         local start=self.tileUsed
