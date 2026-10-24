@@ -607,7 +607,7 @@ end)
 function M:UpdateStyleMenu()
     self.styleButtons[1]:SetText("详情："..(self.settings.detailStyle=="terrain" and "真实地形" or "手绘地图"))
     self.styleButtons[2]:SetText("总览："..(self.settings.overviewStyle=="classic" and "原版世界" or "连续地图"))
-    self.styleButtons[3]:SetText((self.settings.detailStyle=="terrain" and "室内图：" or "城市图：")..(self.settings.cityMaps and "开启" or "关闭"))
+    self.styleButtons[3]:SetText((self.settings.detailStyle=="terrain" and "城市细节：" or "城市图：")..(self.settings.cityMaps and "开启" or "关闭"))
 end
 
 SLASH_TURTLESEAMLESSMAP1="/tsm"

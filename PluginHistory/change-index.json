@@ -9,7 +9,7 @@
     "related_skin_only": 2
   },
   "addon_pages": 107,
-  "dated_records": 127,
+  "dated_records": 129,
   "addons": [
     {
       "addon": "!Libs",
@@ -2370,12 +2370,30 @@
       "addon": "TurtleSeamlessMap",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立地图0.5.0；统一城市实景和海面、全域边界检查与纯色补图、近景单名称，原版总览及手绘可选。",
+      "purpose": "独立地图0.6.0；世界精度翻倍、五城静态重绘和地下主城高密度，修补希利苏斯衔接及低清边界；旧总览和标记功能保留。",
       "latest_record_date": "2026-10-24",
-      "latest_record_title": "统一主城和海洋实景、修补纯色边界并限制近景名称",
+      "latest_record_title": "提高世界精度、重绘主城近景并修补希利苏斯衔接",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 17,
+      "record_count": 19,
       "records": [
+        {
+          "id": "TurtleSeamlessMap-20261024-19",
+          "date": "2026-10-24",
+          "title": "提高世界精度、重绘主城近景并修补希利苏斯衔接",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-19"
+        },
+        {
+          "id": "TurtleSeamlessMap-20261024-18",
+          "date": "2026-10-24",
+          "title": "反馈低清边界、希利苏斯断层及主城和世界清晰度",
+          "kind": "实测反馈",
+          "game_acceptance": "用户实测（限本条范围）",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-18"
+        },
         {
           "id": "TurtleSeamlessMap-20261024-17",
           "date": "2026-10-24",

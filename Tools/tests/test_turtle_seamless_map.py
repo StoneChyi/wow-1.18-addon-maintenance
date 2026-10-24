@@ -298,8 +298,10 @@ class SeamlessMapTests(unittest.TestCase):
         report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
         terrain=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.4.0地形资源-20261024.json').read_text(encoding='utf-8'))
         classic=[r for r in terrain['files'] if r['file'].startswith('v5_classic_')]
-        refined=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.5.0*.json')).read_text(encoding='utf8'))
-        report['files']+=classic+refined['files'];report['total_files']+=len(classic)+refined['total_files']
+        refined=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.6.0*.json')).read_text(encoding='utf8'))
+        previous=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.5.0*.json')).read_text(encoding='utf8'))
+        ocean=[r for r in previous['files'] if r['file'].startswith('v6_sea_')]
+        report['files']+=classic+ocean+refined['files'];report['total_files']+=len(classic)+len(ocean)+refined['total_files']
         expected={r['file'] for r in report['files']}
         for _,m in self.lua.globals().M.maps.items():
             if m.rect:
@@ -755,19 +757,23 @@ class SeamlessMapTests(unittest.TestCase):
         self.assertTrue(all(not c['failures'] for c in audit.values()))
 
     def test_atlas_gutters_match_neighbours(self):
-        paths=sorted((ADDON/'Art').glob('v4_c1_16_*.blp'))
-        count=0
-        for path in paths:
-            parts=path.stem.split('_');col,row=int(parts[-2]),int(parts[-1])
-            other=path.with_name(f'v4_c1_16_{col+1}_{row}.blp')
-            if not other.is_file():continue
-            left=decode_blp(path.read_bytes()).convert('RGBA').crop((255,0,256,256))
-            right=decode_blp(other.read_bytes()).convert('RGBA').crop((1,0,2,256))
-            self.assertEqual(ImageChops.difference(left.getchannel('A'),right.getchannel('A')).getextrema()[1],0)
-            self.assertLess(max(ImageStat.Stat(ImageChops.difference(left.convert('RGB'),right.convert('RGB'))).mean),18)
-            count+=1
-            if count>=30:break
-        self.assertEqual(count,30)
+        for prefix in ('v4_c1_16','v7_t1_32','v7_city301_64','v7_city341_96'):
+            paths=sorted((ADDON/'Art').glob(prefix+'_*.blp'));count=0
+            for path in paths:
+                col,row=map(int,path.stem.split('_')[-2:])
+                for dc,dr in ((1,0),(0,1)):
+                    other=path.with_name(f'{prefix}_{col+dc}_{row+dr}.blp')
+                    if not other.is_file():continue
+                    a=(255,0,256,256) if dc else (0,255,256,256)
+                    b=(1,0,2,256) if dc else (0,1,256,2)
+                    left=decode_blp(path.read_bytes()).convert('RGBA').crop(a)
+                    right=decode_blp(other.read_bytes()).convert('RGBA').crop(b)
+                    self.assertEqual(ImageChops.difference(left.getchannel('A'),right.getchannel('A')).getextrema()[1],0,prefix)
+                    self.assertLess(max(ImageStat.Stat(ImageChops.difference(left.convert('RGB'),right.convert('RGB'))).mean),18,prefix)
+                    count+=1
+                    if count>=30:break
+                if count>=30:break
+            self.assertEqual(count,30,prefix)
 
     def test_same_source_lod_keeps_land_silhouette(self):
         report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
@@ -792,7 +798,7 @@ class SeamlessMapTests(unittest.TestCase):
           assert(not next(M.detailAreas))
           M:FocusMap(11);M:Render()
           local terrain=false
-          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v6_t1_',1,true) then terrain=true end end
+          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v7_t1_',1,true) then terrain=true end end
           assert(terrain)
           M:UpdateStyleMenu();M.styleMenu:Show()
           invoke(M.styleButtons[1],'OnClick');assert(M.settings.detailStyle=='paper')
@@ -990,7 +996,7 @@ class SeamlessMapTests(unittest.TestCase):
               assert(M.canvas.width/M.canvas.height>1.499 and M.canvas.width/M.canvas.height<1.501)
             ''')
 
-    def test_terrain_cities_use_surface_and_registered_native_interiors(self):
+    def test_all_cities_use_hd_scenery_and_registered_native_interiors(self):
         lua=runtime(defaults=True)
         lua.execute('''
           M.frame:Show();M.Cursor=function() return -10,-10 end
@@ -1004,16 +1010,16 @@ class SeamlessMapTests(unittest.TestCase):
               for i=1,M.tileUsed do
                 local path=M.tiles[i].path
                 assert(not string.find(path,'v4_city',1,true))
-                if string.find(path,'v6_city',1,true) then indoor=true end
+                if string.find(path,'v7_city',1,true) then indoor=true end
               end
-              assert(indoor==(id==341 or id==382))
+              assert(indoor)
               local x,y=M:MapToWorld(id,.31,.62)
               local a,b=G.Project(city.rect,.31,.62)
               assert(x==a and y==b)
             end
           end
           M:FocusMap(341);M.settings.cityMaps=false;M:RefreshAppearance()
-          for i=1,M.tileUsed do assert(not string.find(M.tiles[i].path,'v6_city',1,true)) end
+          for i=1,M.tileUsed do assert(not string.find(M.tiles[i].path,'v7_city',1,true)) end
           M.settings.cityMaps=true
           for _,style in ipairs({'terrain','paper','terrain'}) do
             M.settings.detailStyle=style;M:RefreshAppearance()
@@ -1111,7 +1117,7 @@ class SeamlessMapTests(unittest.TestCase):
                 self.assertGreater(len(city['sources']),80)
                 self.assertGreater(city['occluded_rock_pixels'],10000)
                 # Native indoor textures retain alpha around actual rooms.
-                path=next((ADDON/'Art').glob(f'v6_city{city["id"]}_64_*.blp'))
+                path=next((ADDON/'Art').glob(f'v7_city{city["id"]}_96_*.blp'))
                 self.assertGreater(decode_blp(path.read_bytes()).getchannel('A').getextrema()[1],0)
             self.assertEqual({c['id'] for c in report['cities']},{341,382})
         finally:
@@ -1136,6 +1142,171 @@ class SeamlessMapTests(unittest.TestCase):
         result,_=indoor_voids(divided)
         self.assertEqual(result.getpixel((240,128))[3],0)
         self.assertEqual(result.getpixel((15,128))[3],0)
+
+    def test_hd_manifest_covers_world_and_all_seven_city_densities(self):
+        report=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.6.0*.json')).read_text(encoding='utf8'))
+        self.assertEqual(report['counts']['adt_tiles_audited'],1794)
+        self.assertEqual(report['counts']['native_tiles'],1703)
+        self.assertEqual(report['counts']['verified_water_tiles'],89)
+        self.assertEqual(report['counts']['material_fallback_tiles'],2)
+        self.assertFalse(report['unresolved'])
+        for scene in report['continents']:
+            self.assertEqual([l['density'] for l in scene['levels']],[1,2,4,8,16,32])
+        lua=runtime(defaults=True);terrain=lua.globals().TurtleSeamlessMap_Terrain
+        self.assertEqual({k for k,_ in terrain.cities.items()},{301,321,341,362,381,382,509})
+        for mid,city in terrain.cities.items():
+            density=max(v.density for _,v in city.levels.items())
+            self.assertEqual(density,96 if mid in (341,382) else 64)
+        join=next(c for c in report['cities'] if c['id']=='silithus-aq-join')
+        self.assertEqual(join['rect'],[150,495,45,30])
+        self.assertTrue(any(k.endswith('outergateenterance.wmo') for k in join['sources']))
+        self.assertTrue(any(k.endswith('innergateenterance.wmo') for k in join['sources']))
+
+    def test_hd_world_lod_and_city_pools_are_selected_without_global_navigation(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();M.Cursor=function() return -10,-10 end
+          local selections=mapSets
+          M:FocusMap(201);M.view.scale=24;M:RenderArt()
+          local high=false
+          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v7_t1_32_',1,true) then high=true end end
+          assert(high)
+          for _,id in ipairs({301,321,341,362,381,382,509}) do
+            M:FocusMap(id);M.view.scale=64;M:RenderArt()
+            local high=false
+            for i=1,M.tileUsed do
+              local path=M.tiles[i].path
+              if string.find(path,'v7_city'..id..'_',1,true) then high=true end
+            end
+            assert(high)
+            for _,map in ipairs(M.maps) do if map.atlasPool then assert(#map.atlasPool<=256) end end
+          end
+          assert(mapSets==selections)
+        ''')
+
+    def test_hd_ground_uses_real_material_detail_beyond_a_resized_minimap(self):
+        from build_turtle_map_hd import Ground
+        from turtle_map_archive import Client
+        client=Client(ROOT,include_terrain=True)
+        try:
+            ground=Ground(client)
+            data,_=client.read('World\\Maps\\Kalimdor\\Kalimdor_34_21.adt')
+            high,depth=ground.tile(data,512,None,True)
+            self.assertEqual(high.size,(512,512));self.assertEqual(depth.shape,(512,512))
+            low=high.resize((256,256),Image.Resampling.LANCZOS).resize(high.size,Image.Resampling.LANCZOS)
+            delta=ImageChops.difference(high.convert('RGB'),low.convert('RGB'))
+            self.assertGreater(max(ImageStat.Stat(delta).mean),1)
+            self.assertGreater(len(ground.sources),1)
+            self.assertTrue(all(len(s['sha256'])==64 for s in ground.sources.values()))
+        finally:
+            for archive in client.archives:archive.close()
+
+    def test_vanilla_m2_extra_header_array_and_two_level_indices(self):
+        from turtle_map_archive import Client
+        from turtle_map_scenery import Scenery
+        client=Client(ROOT,include_terrain=True,include_wmo=True,include_model=True)
+        try:
+            scenery=Scenery(client)
+            path='world\\kalimdor\\silithus\\passivedoodads\\ahnqirajstones\\ahn_qirajbrick01.m2'
+            meshes=scenery.model('m2',path)
+            self.assertFalse(scenery.errors)
+            self.assertEqual(len(meshes),2)
+            self.assertTrue(all(len(m[0])==42 for m in meshes))
+            self.assertTrue(all(len(m[3])%3==0 and max(m[3])<42 for m in meshes))
+            self.assertEqual(sum(len(m[3]) for m in meshes),114)
+        finally:
+            for archive in client.archives:archive.close()
+
+    def test_wmo_export_footer_does_not_hide_stormwind_required_geometry(self):
+        import struct
+        from turtle_map_archive import Client
+        from turtle_map_scenery import wmo_chunks
+        client=Client(ROOT,include_wmo=True)
+        try:
+            raw,_=client.read('world\\wmo\\azeroth\\buildings\\stormwind\\stormwind.wmo')
+            root=wmo_chunks(raw)
+            self.assertIn(b'TMOM',root);self.assertIn(b'IGOM',root)
+            self.assertEqual(len(root[b'TMOM'])%64,0)
+            with self.assertRaises(ValueError):wmo_chunks(b'TVOM'+struct.pack('<I',100)+b'x')
+        finally:
+            for archive in client.archives:archive.close()
+
+    def test_hd_placement_rotation_matches_real_city_bounding_box(self):
+        import numpy as np
+        import struct
+        from turtle_map_archive import Client
+        from build_turtle_map_terrain import chunks
+        from refine_turtle_map_terrain import city_placements
+        from turtle_map_scenery import placement_matrix
+        client=Client(ROOT,include_terrain=True,include_wmo=True)
+        try:
+            for mid,p in city_placements(client).items():
+                groups=list(struct.iter_unpack('<I6fi',dict(chunks(client.read(p['path'])[0]))[b'IGOM']))
+                lo=[min(row[i] for row in groups) for i in (1,2,3)];hi=[max(row[i] for row in groups) for i in (4,5,6)]
+                v=p['placement'];xyz=np.array([[x,y,z] for x in (lo[0],hi[0]) for y in (lo[1],hi[1]) for z in (lo[2],hi[2])])
+                world=xyz@placement_matrix(v[5:8]).T+np.array([v[2],v[4],v[3]])
+                expected=np.array([v[8],v[10],v[9],v[11],v[13],v[12]])
+                self.assertLess(float(abs(np.concatenate((world.min(axis=0),world.max(axis=0)))-expected).max()),.01)
+        finally:
+            for archive in client.archives:archive.close()
+
+    def test_actual_offline_rasterizer_depth_alpha_and_canvas_clipping(self):
+        import numpy as np
+        import struct
+        from turtle_map_scenery import Scenery,rasterize
+        stage=STAGE/'hd-raster-test';stage.mkdir(exist_ok=True)
+        def texture(name,color):
+            p=stage/(name+'.tex');p.write_bytes(struct.pack('<II',2,2)+bytes(color)*4);return str(p)
+        red=texture('red',(255,0,0,255));green=texture('green',(0,255,0,255))
+        xyz=np.array([[2,2,1],[30,2,1],[2,30,1]],dtype='f4');normal=np.array([[0,0,1]]*3);uv=np.array([[0,0],[1,0],[0,1]])
+        s=Scenery(None);s.models[('m2','low')]=[(xyz,normal,uv,np.array([0,1,2]),red)]
+        high=xyz.copy();high[:,2]=2;s.models[('m2','high')]=[(high,normal,uv,np.array([0,1,2]),green)]
+        obj=lambda name,uid:dict(kind='m2',uid=uid,path=name,position=[0,0,0],rotation=[0,0,0],scale=1)
+        base=Image.new('RGBA',(64,64),(0,0,255,255));depth=np.full((64,64),-1000)
+        outputs=[];jobs=[]
+        for i,objects in enumerate(([obj('low',1),obj('high',2)],[obj('high',2),obj('low',1)])):
+            job=stage/f'{i}.job';outputs.append(s.job(job,base,depth,objects,[0,0,64,64]));jobs.append(job)
+        rasterize(jobs)
+        images=[Image.frombytes('RGBA',base.size,p.read_bytes()) for p in outputs]
+        self.assertEqual(images[0].tobytes(),images[1].tobytes())
+        self.assertGreater(images[0].getpixel((6,6))[1],200)
+        self.assertEqual((images[0].getpixel((6,6))[0],images[0].getpixel((6,6))[2]),(0,0))
+        self.assertEqual(images[0].getpixel((60,60)),(0,0,255,255))
+        coverage=outputs[0].with_suffix('.coverage').read_bytes()
+        self.assertEqual(coverage[6*64+6],255);self.assertEqual(coverage[60*64+60],0)
+
+    def test_opaque_model_material_does_not_misread_diffuse_alpha_as_a_hole(self):
+        from turtle_map_scenery import Scenery
+        from build_turtle_seamless_map import encode_blp
+        class Source:
+            def read(self,name):return encode_blp(Image.new('RGBA',(4,4),(100,150,200,0))),'generated-fixture'
+        s=Scenery(Source());opaque=Path(s.texture('fixture.blp',True)).read_bytes();cutout=Path(s.texture('fixture.blp',False)).read_bytes()
+        self.assertEqual(set(opaque[8:][3::4]),{255})
+        self.assertEqual(set(cutout[8:][3::4]),{0})
+
+    def test_spectral_classifier_finds_shaded_placeholder_but_keeps_texture(self):
+        import numpy as np
+        from build_turtle_map_hd import spectral_margin
+        x=np.arange(256,dtype=float);a=np.empty((256,256,3),dtype='uint8')
+        for channel,base in enumerate((55,65,30)):a[:,:,channel]=base+np.floor(x/4)[None,:]
+        self.assertGreater(int(spectral_margin(Image.fromarray(a)).sum()),200)
+        rng=np.random.default_rng(112);a=rng.integers(30,180,(256,256,3),dtype='uint8')
+        self.assertLess(int(spectral_margin(Image.fromarray(a)).sum()),10)
+
+    def test_targeted_aq_fill_preserves_courtyard_and_records_real_material(self):
+        from turtle_map_archive import Client
+        report=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.6.0*.json')).read_text(encoding='utf8'))
+        audit=report['quality_audit'];self.assertEqual(audit['courtyard_before_sha256'],audit['courtyard_after_sha256'])
+        self.assertEqual(audit['files_checked'],report['total_files'])
+        self.assertEqual(audit['map_data_sha256'],hashlib.sha256((ADDON/'MapData.lua').read_bytes()).hexdigest())
+        self.assertEqual(len(report['aq_boundary_retouch']['guides']),5)
+        self.assertGreater(sum(g['filled_pixels'] for g in report['aq_boundary_retouch']['guides']),100000)
+        client=Client(ROOT)
+        try:
+            material=report['aq_boundary_retouch'];data,_=client.read(material['material'])
+            self.assertEqual(hashlib.sha256(data).hexdigest(),material['sha256'])
+        finally:
+            for archive in client.archives:archive.close()
 
 
 def compose_preview(lua, reverse=False):
