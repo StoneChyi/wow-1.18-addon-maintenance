@@ -38,6 +38,9 @@ def read_terrain(path):
 def write_terrain(terrain):
     def arrays(v):
         if isinstance(v,dict):
+            # JSON object keys become strings. Lua atlas/territory keys must
+            # remain numbers even after a manifest round trip.
+            v={int(k) if isinstance(k,str) and re.fullmatch(r"0|[1-9][0-9]*",k) else k:x for k,x in v.items()}
             keys=set(v)
             if keys and keys==set(range(1,len(keys)+1)):return [arrays(v[k]) for k in range(1,len(keys)+1)]
             return {k:arrays(x) for k,x in v.items()}

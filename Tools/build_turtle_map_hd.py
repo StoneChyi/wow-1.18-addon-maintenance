@@ -50,6 +50,7 @@ class Ground:
         if issues:self.counts['unused_alpha_tails']+=len(issues)
         size=resolution//16;image=Image.new('RGB',(resolution,resolution));depth=np.empty((resolution,resolution),dtype='<f4')
         for (x,y),cell in cells.items():
+            self.cell=(x,y)
             layers=list(struct.iter_unpack('<4I',cell['children'].get(b'YLCM',b'')));color=None
             for i,(tid,flags,offset,_) in enumerate(layers):
                 if tid>=len(textures):raise ValueError('Invalid HD terrain texture index')

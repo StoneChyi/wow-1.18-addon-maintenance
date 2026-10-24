@@ -38,6 +38,7 @@ function methods:SetPoint(...) self.point={...};table.insert(self.points,self.po
 function methods:ClearAllPoints() self.point=nil;self.points={} end
 function methods:SetAllPoints(p) self.allpoints=p end
 function methods:GetParent() return self.parent end
+function methods:GetFrameType() return self.kind end
 function methods:GetEffectiveScale() return self.scale*(self.parent and self.parent:GetEffectiveScale() or 1) end
 function methods:GetLeft()
  if self==UIParent then return 0 end
@@ -116,6 +117,12 @@ function SetMapZoom(continent,zone) mapSets=mapSets+1;mapFile=zone==1 and 'Westf
 function SetMapToCurrentZone() mapSets=mapSets+1;mapFile=currentFile or 'Elwynn' end
 function UpdateMicroButtons() end
 function ToggleWorldMap() WorldMapFrame:Show() end
+function userOpenNative()
+ local previousThis,previousArg=this,arg1
+ this=newObject('Button',nil,UIParent);arg1='LeftButton'
+ WorldMapFrame:Show()
+ this,arg1=previousThis,previousArg
+end
 ModernMapMarkersCore={Data={},filters={DUNGEON=true,RAID=true,WORLDBOSS=true,BOAT=true,ZEPPELIN=true,TRAM=true,FACTION='ALL'}}
 function ModernMapMarkersCore:BuildData() end
 function ModernMapMarkersCore:OnMarkerClick(p) atlasClicks=atlasClicks+1;AtlasFrame:Show() end
@@ -132,7 +139,7 @@ pfMap={nodes={},ShowMapID=function(self,id)ToggleWorldMap()end,
 '''
 
 
-def runtime(with_plugins=True, saved=None, screen=None, defaults=False):
+def runtime(with_plugins=True, saved=None, screen=None, defaults=False, before_install=None):
     lua = LuaRuntime(unpack_returned_tuples=True)
     lua.globals().FONT_CONTRACT = (ROOT/'Tools/tests/wow112_fontstring_mock.lua').read_text(encoding='utf-8')
     lua.execute(MOCK)
@@ -149,6 +156,7 @@ def runtime(with_plugins=True, saved=None, screen=None, defaults=False):
         # Run the original compatibility regressions in the retained paper /
         # continuous mode. New tests below exercise the new shipped defaults.
         lua.execute('TurtleSeamlessMapDB=TurtleSeamlessMapDB or {};TurtleSeamlessMapDB.detailStyle="paper";TurtleSeamlessMapDB.overviewStyle="continuous"')
+    if before_install:lua.execute(before_install)
     lua.execute('TurtleSeamlessMap:Install();M=TurtleSeamlessMap;G=M.Geometry')
     return lua
 
@@ -287,7 +295,7 @@ class SeamlessMapTests(unittest.TestCase):
         lua.execute('''
           ToggleWorldMap();assert(M.frame:IsShown() and not WorldMapFrame:IsShown())
           ToggleWorldMap();assert(not M.frame:IsShown())
-          WorldMapFrame:Show();assert(M.frame:IsShown() and not WorldMapFrame:IsShown())
+          userOpenNative();assert(M.frame:IsShown() and not WorldMapFrame:IsShown())
           M:ShowNative();assert(WorldMapFrame:IsShown() and not M.frame:IsShown() and nativeUpdates==1)
           ToggleWorldMap();assert(not WorldMapFrame:IsShown())
           M.frame:Show();M:FocusMap(30);M.frame:Hide();assert(TurtleSeamlessMapDB.view.selected==30)
@@ -298,7 +306,7 @@ class SeamlessMapTests(unittest.TestCase):
         report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
         terrain=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.4.0地形资源-20261024.json').read_text(encoding='utf-8'))
         classic=[r for r in terrain['files'] if r['file'].startswith('v5_classic_')]
-        refined=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.6.0*.json')).read_text(encoding='utf8'))
+        refined=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.7.0*.json')).read_text(encoding='utf8'))
         previous=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.5.0*.json')).read_text(encoding='utf8'))
         ocean=[r for r in previous['files'] if r['file'].startswith('v6_sea_')]
         report['files']+=classic+ocean+refined['files'];report['total_files']+=len(classic)+len(ocean)+refined['total_files']
@@ -616,7 +624,7 @@ class SeamlessMapTests(unittest.TestCase):
           local ready=false;local reads=0
           SetMapToCurrentZone=function() mapSets=mapSets+1;mapFile=ready and 'Elwynn' or 'Tanaris' end
           GetPlayerMapPosition=function() reads=reads+1;return .33,.66 end
-          mapFile='Tanaris';WorldMapFrame:Show()
+          mapFile='Tanaris';userOpenNative()
           assert(M.frame:IsShown() and M.selected==30 and M.pendingLocation)
           assert(reads==0,'Coordinates from a stale selected page must not be used')
           local x,y=M:MapToWorld(30,.5,.5)
@@ -635,8 +643,8 @@ class SeamlessMapTests(unittest.TestCase):
           M.frame:Hide();M:Toggle();assert(M.pendingLocation)
           M:Zoom(1.1);assert(not M.pendingLocation)
           calls=mapSets;now=now+1;invoke(M.frame,'OnUpdate');assert(mapSets==calls)
-          M.ignoreMapEvent=true;mapFile='Tanaris';WorldMapFrame:Show();M.ignoreMapEvent=false
-          assert(M.selected==161,'Explicit third-party navigation must keep its destination')
+          M.ignoreMapEvent=true;mapFile='Tanaris';userOpenNative();M.ignoreMapEvent=false
+          assert(M.selected~=161,'Scoped background queries must not navigate; explicit adapters open themselves')
         ''')
 
     def test_city_cutouts_preserve_coordinates_and_remove_page_corners(self):
@@ -757,7 +765,7 @@ class SeamlessMapTests(unittest.TestCase):
         self.assertTrue(all(not c['failures'] for c in audit.values()))
 
     def test_atlas_gutters_match_neighbours(self):
-        for prefix in ('v4_c1_16','v7_t1_32','v7_city301_64','v7_city341_96'):
+        for prefix in ('v4_c1_16','v8_t1_32','v8_city301_64','v7_city341_96'):
             paths=sorted((ADDON/'Art').glob(prefix+'_*.blp'));count=0
             for path in paths:
                 col,row=map(int,path.stem.split('_')[-2:])
@@ -798,7 +806,7 @@ class SeamlessMapTests(unittest.TestCase):
           assert(not next(M.detailAreas))
           M:FocusMap(11);M:Render()
           local terrain=false
-          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v7_t1_',1,true) then terrain=true end end
+          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v8_t1_',1,true) then terrain=true end end
           assert(terrain)
           M:UpdateStyleMenu();M.styleMenu:Show()
           invoke(M.styleButtons[1],'OnClick');assert(M.settings.detailStyle=='paper')
@@ -815,7 +823,7 @@ class SeamlessMapTests(unittest.TestCase):
               GetRealZoneText=function() return '''+real+''' end
               SetMapToCurrentZone=function() mapSets=mapSets+1 end
               mapFile='Tanaris';GetPlayerMapPosition=function() reads=reads+1;return .33,.66 end
-              WorldMapFrame:Show()
+              userOpenNative()
               assert(M:IsWorldView() and M.selected==nil and M.pendingLocation and reads==0)
               GetRealZoneText=function() return '艾尔文森林' end
               SetMapToCurrentZone=function() mapSets=mapSets+1;mapFile='Elwynn' end
@@ -879,7 +887,7 @@ class SeamlessMapTests(unittest.TestCase):
         finally:
             for archive in client.archives:archive.close()
 
-    def test_terrain_single_zone_nodes_and_label_fonts(self):
+    def test_terrain_visible_zone_nodes_and_label_fonts(self):
         lua=runtime(defaults=True)
         lua.execute('''
           M.frame:Show();local px,py=0,0;M.Cursor=function() return px,py end
@@ -888,7 +896,7 @@ class SeamlessMapTests(unittest.TestCase):
           local felwood={['50|50']={B={title='B',texture='test'}}}
           pfMap.nodes={PFQUEST={[17]=barrens,[361]=felwood}}
           local originalPairs=pairs;local forbidden
-          pairs=function(t) assert(t~=forbidden,'Nonfocused terrain nodes enumerated');return originalPairs(t) end
+          pairs=function(t) assert(t~=forbidden,'Offscreen terrain nodes enumerated');return originalPairs(t) end
           for _,tile in ipairs({{36,34,11},{34,21,182}}) do
             forbidden=tile[3]==11 and felwood or barrens
             local found=false
@@ -900,7 +908,8 @@ class SeamlessMapTests(unittest.TestCase):
                 if map and map.id==tile[3] then
                   M.view.x=x;M.view.y=y;M.view.scale=8;px=M.canvas.width/2;py=M.canvas.height/2
                   M:Render();assert(M.detailTarget.id==tile[3] and M.questNodesVisited==1 and not next(M.providerErrors));found=true
-                  local count=0;for _ in pairs(M.detailAreas) do count=count+1 end;assert(count==1)
+                  assert(M:CanShowMapPins(map))
+                  for area in pairs(M.detailAreas) do local visible=M.byArea[area];assert(visible and visible.visible) end
                 end
               end
             end end
@@ -1010,7 +1019,7 @@ class SeamlessMapTests(unittest.TestCase):
               for i=1,M.tileUsed do
                 local path=M.tiles[i].path
                 assert(not string.find(path,'v4_city',1,true))
-                if string.find(path,'v7_city',1,true) then indoor=true end
+                if string.find(path,'v7_city',1,true) or string.find(path,'v8_city',1,true) then indoor=true end
               end
               assert(indoor)
               local x,y=M:MapToWorld(id,.31,.62)
@@ -1019,7 +1028,7 @@ class SeamlessMapTests(unittest.TestCase):
             end
           end
           M:FocusMap(341);M.settings.cityMaps=false;M:RefreshAppearance()
-          for i=1,M.tileUsed do assert(not string.find(M.tiles[i].path,'v7_city',1,true)) end
+          for i=1,M.tileUsed do assert(not string.find(M.tiles[i].path,'v7_city',1,true) and not string.find(M.tiles[i].path,'v8_city',1,true)) end
           M.settings.cityMaps=true
           for _,style in ipairs({'terrain','paper','terrain'}) do
             M.settings.detailStyle=style;M:RefreshAppearance()
@@ -1169,14 +1178,14 @@ class SeamlessMapTests(unittest.TestCase):
           local selections=mapSets
           M:FocusMap(201);M.view.scale=24;M:RenderArt()
           local high=false
-          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v7_t1_32_',1,true) then high=true end end
+          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v8_t1_32_',1,true) then high=true end end
           assert(high)
           for _,id in ipairs({301,321,341,362,381,382,509}) do
             M:FocusMap(id);M.view.scale=64;M:RenderArt()
             local high=false
             for i=1,M.tileUsed do
               local path=M.tiles[i].path
-              if string.find(path,'v7_city'..id..'_',1,true) then high=true end
+              if string.find(path,(id==301 and 'v8_city' or 'v7_city')..id..'_',1,true) then high=true end
             end
             assert(high)
             for _,map in ipairs(M.maps) do if map.atlasPool then assert(#map.atlasPool<=256) end end
@@ -1292,6 +1301,175 @@ class SeamlessMapTests(unittest.TestCase):
         self.assertGreater(int(spectral_margin(Image.fromarray(a)).sum()),200)
         rng=np.random.default_rng(112);a=rng.integers(30,180,(256,256,3),dtype='uint8')
         self.assertLess(int(spectral_margin(Image.fromarray(a)).sum()),10)
+
+    def test_login_background_opens_cannot_reveal_saved_tanaris(self):
+        lua=runtime(defaults=True,saved='{layoutVersion=2,notes={},view={x=300,y=530,scale=5,selected=161}}',before_install='''
+          WorldMapFrame:Show()
+          ModernMapMarkersCore.BuildData=function() WorldMapFrame:Show();ToggleWorldMap() end
+        ''')
+        lua.execute('''
+          assert(not M.frame:IsShown() and not WorldMapFrame:IsShown())
+          local x,y,id=M.view.x,M.view.y,M.selected
+          mapFile='Tanaris';WorldMapFrame:Show()
+          local control=newObject('Button',nil,UIParent)
+          this=control;arg1=.1;WorldMapFrame:Show();this=nil;arg1=nil
+          assert(not M.frame:IsShown() and M.view.x==x and M.view.y==y and M.selected==id)
+          M.ignoreMapEvent=true;userOpenNative();M.ignoreMapEvent=nil
+          assert(not M.frame:IsShown())
+          M:Toggle();assert(M.frame:IsShown() and M.selected==30)
+          local x,y=M.view.x,M.view.y
+          WorldMapFrame:Show();assert(M.frame:IsShown() and M.view.x==x and M.view.y==y)
+          M.frame:Hide();userOpenNative();assert(M.frame:IsShown() and M.selected==30)
+          M.frame:Hide();pfMap:ShowMapID(40);assert(M.frame:IsShown() and M.selected==39)
+          M.frame:Hide();GetRealZoneText=function() return '' end
+          GetZoneText=function() return '塔纳利斯' end
+          mapFile='Tanaris';SetMapToCurrentZone=function() end
+          M:Toggle();assert(M:IsWorldView() and M.selected==nil and M.pendingLocation)
+        ''')
+
+    def test_written_atlas_keys_numeric_and_both_continents_draw_at_every_lod(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();M.Cursor=function() return -1,-1 end
+          for _,scene in ipairs(TurtleSeamlessMap_Terrain.continents) do
+            for _,level in ipairs(scene.levels) do
+              for index in pairs(level.tiles) do assert(type(index)=='number' and index>=1 and index<=level.cols*level.rows) end
+            end
+            local map=M.byID[scene.id==1 and 13 or 14]
+            M.view.x=scene.rect[1]+scene.rect[3]/2;M.view.y=scene.rect[2]+scene.rect[4]/2
+            for _,scale in ipairs({2,4,8,16,32}) do
+              M.view.scale=scale;M:RenderArt()
+              local n=0;for _,tile in ipairs(map.atlasPool or {}) do if tile.active then
+                assert(string.find(tile.path,'v8_t'..scene.id..'_',1,true));n=n+1
+              end end
+              assert(n>0,'Empty continent '..scene.id..' at '..scale)
+            end
+          end
+        ''')
+        import refine_turtle_map_terrain as legacy
+        previous=legacy.OUT;legacy.OUT=STAGE/'typed-lua-test';legacy.OUT.mkdir(exist_ok=True)
+        try:
+            legacy.write_terrain({'continents':{'1':{'id':0,'levels':{'1':{'tiles':{'1':True,'7':True}}}}}})
+            data=legacy.read_terrain(legacy.OUT/'TerrainData.lua')
+            self.assertEqual(set(data['continents'][1]['levels'][1]['tiles']),{1,7})
+        finally:legacy.OUT=previous
+
+    def test_terrain_city_art_and_visible_pins_are_independent_of_hover(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();local px,py=-10,-10;M.Cursor=function() return px,py end
+          for _,id in ipairs({321,362,301}) do
+            M:FocusMap(id);M.view.scale=48;M:RenderArt()
+            local city=M.byID[id];assert(city.cityActive and city.alpha>.95)
+            local textures={};for _,t in ipairs(city.atlasPool) do if t.active then textures[t.path]=t.alpha end end
+            assert(next(textures));local before=M.view.x
+            for _,p in ipairs({{M.canvas.width/2,M.canvas.height/2},{1,1},{-1,-1}}) do
+              px,py=p[1],p[2];M:RenderArt()
+              assert(city.cityActive and city.alpha>.95 and M.view.x==before)
+              for _,t in ipairs(city.atlasPool) do if t.active then assert(textures[t.path]==t.alpha) end end
+            end
+            assert(M:CanShowMapPins(city))
+          end
+          M:WorldView();assert(not next(M.detailAreas))
+        ''')
+
+    def test_continuous_material_uvs_cross_adt_border_without_phase_reset(self):
+        import numpy as np
+        from build_turtle_map_continuity import ContinuousGround
+        ground=ContinuousGround(None)
+        x=np.arange(256)/256*2*math.pi
+        a=np.broadcast_to(128+60*np.sin(x)[None,:,None],(256,256,3)).astype('float32')
+        ground.cache['test']=a;ground.adt=(1,2);ground.cell=(15,5)
+        left=ground.texture('test',128)
+        ground.adt=(2,2);ground.cell=(0,5);right=ground.texture('test',128)
+        delta=np.abs(np.asarray(left)[:,-1,:].astype(float)-np.asarray(right)[:,0,:])
+        self.assertLess(float(delta.max()),3)
+        self.assertGreater(float(np.asarray(left).std()),5)
+
+    def test_legacy_liquid_grid_and_actual_bridge_depth(self):
+        import numpy as np
+        import struct
+        from turtle_map_scenery import liquid_mesh,Scenery,rasterize,wmo_chunks
+        from turtle_map_archive import Client
+        raw=struct.pack('<4I3fH',2,2,1,1,0,0,-123,116)+b''.join(struct.pack('<If',0,2) for _ in range(4))+b'\x44'
+        xyz,norm,uv,indices,material=liquid_mesh(raw)
+        self.assertTrue(np.all(xyz[:,2]==2));self.assertEqual(material,116)
+        self.assertEqual(len(indices),6)
+        self.assertEqual(len(liquid_mesh(raw[:-1]+b'\x4f')[3]),0)
+        with self.assertRaises(ValueError):liquid_mesh(raw[:-2])
+        stage=STAGE/'liquid-bridge-test';stage.mkdir(exist_ok=True)
+        def tex(name,color):
+            path=stage/(name+'.tex');path.write_bytes(struct.pack('<II',2,2)+bytes(color)*4);return str(path)
+        blue=tex('water',(25,85,140,255));green=tex('bridge',(25,220,25,255))
+        bridge=np.array([[1.5,1.5,3],[2.5,1.5,3],[1.5,2.5,3],[2.5,2.5,3]])
+        scenery=Scenery(None);scenery.models[('wmo','water')]=[(xyz,norm,uv,indices,blue)]
+        scenery.models[('wmo','bridge')]=[(bridge,norm,uv,indices,green)]
+        objects=[dict(kind='wmo',uid=i,path=p,position=[0,0,0],rotation=[0,0,0],scale=1) for i,p in enumerate(('water','bridge'))]
+        job=stage/'water.job';output=scenery.job(job,Image.new('RGBA',(64,64),(160,40,20,255)),np.zeros((64,64)),objects,[0,0,5,5])
+        rasterize([job]);result=Image.frombytes('RGBA',(64,64),output.read_bytes())
+        self.assertGreater(result.getpixel((10,10))[2],100)
+        self.assertGreater(result.getpixel((25,25))[1],180)
+        self.assertEqual(result.getpixel((63,63)),(160,40,20,255))
+        client=Client(ROOT,include_wmo=True)
+        try:
+            path='world\\wmo\\azeroth\\buildings\\stormwind\\stormwind_092.wmo'
+            parts=wmo_chunks(wmo_chunks(client.read(path)[0])[b'PGOM'],68)
+            self.assertGreater(len(liquid_mesh(parts[b'QILM'])[3]),100)
+        finally:
+            for archive in client.archives:archive.close()
+
+    def test_continuity_manifest_matches_typed_lua_and_protected_geometry(self):
+        from build_turtle_map_continuity import OUT,OLD,box_for
+        from refine_turtle_map_terrain import read_terrain
+        report=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.7.0*.json')).read_text(encoding='utf8'))
+        self.assertEqual(report['numeric_lua_tiles_checked'],report['total_files'])
+        self.assertEqual(report['map_data_sha256'],hashlib.sha256((ADDON/'MapData.lua').read_bytes()).hexdigest())
+        self.assertEqual(report['stormwind']['model_counts']['stormwind_liquid_groups'],22)
+        self.assertEqual(report['stormwind']['model_counts']['stormwind_liquid_triangles'],5784)
+        self.assertEqual({r['name'] for r in report['landscape']['guides']},{'south-ungoro','west-silithus','diremaul-feralas','feralas-needles','ashenvale-hyjal','winter-moonglade'})
+        self.assertGreater(sum(r['changed_pixels'] for r in report['landscape']['guides']),5000000)
+        self.assertTrue(any('kl_diremaul.wmo' in path for path in report['landscape']['diremaul']['models']))
+        self.assertEqual({c['id'] for c in report['boundaries']['continents']},{0,1})
+        terrain=read_terrain(ADDON/'TerrainData.lua')
+        self.assertEqual(terrain['revision'],8)
+        for scene in report['continents']:
+            name='Kalimdor' if scene['id']==1 else 'Azeroth'
+            old=Image.open(OLD/f'{name}-terrain.png')
+            new=Image.open(OUT/f'{name}-terrain.png')
+            self.assertEqual(hashlib.sha256(old.getchannel('A').tobytes()).hexdigest(),hashlib.sha256(new.getchannel('A').tobytes()).hexdigest())
+            if scene['id']==1:
+                final=Image.open(OUT/'Kalimdor-packed.png')
+                for rect in ([144,520,43,43],[150,495,45,30]):
+                    b=box_for(rect,scene['rect'],32)
+                    self.assertEqual(old.crop(b).tobytes(),final.crop(b).tobytes())
+
+    def test_terrain_quilting_is_reproducible_and_periodic_without_mirroring(self):
+        import numpy as np
+        from build_turtle_map_continuity import quilt_rock
+        source=np.random.default_rng(112).integers(40,180,(96,96,3),dtype='uint8')
+        a=quilt_rock(Image.fromarray(source),size=192)
+        b=quilt_rock(Image.fromarray(source),size=192)
+        self.assertEqual(a.tobytes(),b.tobytes())
+        pixels=np.asarray(a).astype('int16')
+        self.assertLessEqual(int(np.abs(pixels[:,0]-pixels[:,-1]).max()),1)
+        self.assertLessEqual(int(np.abs(pixels[0]-pixels[-1]).max()),1)
+        self.assertGreater(float(np.abs(pixels-np.flip(pixels,axis=1)).mean()),10)
+
+    def test_terrain_nodes_in_visible_zones_and_offscreen_metadata_are_culled(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();M.Cursor=function() return -1,-1 end
+          local a,b=M.byID[30],M.byID[39]
+          M.view.x=(a.rect[1]+b.rect[1]+b.rect[3])/2
+          M.view.y=math.max(a.rect[2],b.rect[2])+5;M.view.scale=16;M:RenderArt()
+          assert(M:CanShowMapPins(a) and M:CanShowMapPins(b))
+          local bad={};local original=pairs
+          pairs=function(t) assert(t~=bad,'Offscreen metadata was walked');return original(t) end
+          pfMap.nodes={PFQUEST={[12]={['100|100']=bad}}}
+          M:Render();assert(not next(M.providerErrors))
+          pairs=original
+          M:WorldView();M:Render();assert(M.questNodesVisited==0 and not next(M.detailAreas))
+        ''')
 
     def test_targeted_aq_fill_preserves_courtyard_and_records_real_material(self):
         from turtle_map_archive import Client

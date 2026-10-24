@@ -136,24 +136,30 @@ local function DrawQuests(self)
                 local visible=map.visible
                 if visible then
                     for coords,node in pairs(nodes) do
+                        if self.pinUsed>=900 then self.pinOverflow=true;return end
                         self.questNodesVisited=self.questNodesVisited+1
                         local _,_,xs,ys=string.find(coords,"^([^|]+)|([^|]+)$")
                         local x,y=tonumber(xs),tonumber(ys)
+                        local wx,wy
+                        if x and y then wx,wy=self:MapToWorld(map.id,x/100,y/100) end
+                        local sx,sy
+                        if wx then sx,sy=G.Screen(self.view,self.canvas:GetWidth(),self.canvas:GetHeight(),wx,wy) end
                         local chosen,chosenTitle
-                        for title,meta in pairs(node) do
-                            if not chosen or QuestLayer(meta)>QuestLayer(chosen) then chosen,chosenTitle=meta,title end
-                        end
-                        if chosen and x and y and not (config.showcluster=="0" and chosen.cluster) and
-                            not (config.showspawn=="0" and addon=="PFQUEST" and not chosen.texture) and
-                            not (chosen.cluster and IsControlKeyDown()) then
-                            local wx,wy=self:MapToWorld(map.id,x/100,y/100)
-                            local texture=chosen.texture or chosen.icon or (pfQuest and pfQuest.icons and pfQuest.icons[chosenTitle]) or "Interface\\AddOns\\pfQuest\\img\\node"
-                            local p=self:AddPin("pf:"..addon..":"..area..":"..coords,wx,wy,texture,chosen.cluster and 18 or 14,QuestEnter,HideTooltip,QuestClick,{meta=chosen,node=node},map.id)
-                            if p then
-                                for _,key in ipairs(questFields) do p[key]=chosen[key] end
-                                p.title=chosenTitle;p.node=node;p.layer=QuestLayer(chosen)
-                                p.color=config.spawncolors=="1" and (chosen.spawn or chosenTitle) or chosenTitle
-                                if chosen.vertex then p.tex:SetVertexColor(unpack(chosen.vertex)) end
+                        if sx and sx>=7 and sy>=7 and sx<=self.canvas:GetWidth()-7 and sy<=self.canvas:GetHeight()-7 then
+                            for title,meta in pairs(node) do
+                                if not chosen or QuestLayer(meta)>QuestLayer(chosen) then chosen,chosenTitle=meta,title end
+                            end
+                            if chosen and x and y and not (config.showcluster=="0" and chosen.cluster) and
+                                not (config.showspawn=="0" and addon=="PFQUEST" and not chosen.texture) and
+                                not (chosen.cluster and IsControlKeyDown()) then
+                                local texture=chosen.texture or chosen.icon or (pfQuest and pfQuest.icons and pfQuest.icons[chosenTitle]) or "Interface\\AddOns\\pfQuest\\img\\node"
+                                local p=self:AddPin("pf:"..addon..":"..area..":"..coords,wx,wy,texture,chosen.cluster and 18 or 14,QuestEnter,HideTooltip,QuestClick,{meta=chosen,node=node},map.id)
+                                if p then
+                                    for _,key in ipairs(questFields) do p[key]=chosen[key] end
+                                    p.title=chosenTitle;p.node=node;p.layer=QuestLayer(chosen)
+                                    p.color=config.spawncolors=="1" and (chosen.spawn or chosenTitle) or chosenTitle
+                                    if chosen.vertex then p.tex:SetVertexColor(unpack(chosen.vertex)) end
+                                end
                             end
                         end
                     end
@@ -195,7 +201,7 @@ function M:InstallCompat()
             end
         end
     end
-    -- Frame method calls from other addons are redirected by Core's OnShow.
+    -- User-initiated frame opens are redirected by Core; scoped queries stay hidden.
     -- SetMapZoom is also used by background data readers. It is not proof of
     -- a user navigation. Known explicit clicks above call FocusMap themselves.
     local originalSetMapZoom=SetMapZoom

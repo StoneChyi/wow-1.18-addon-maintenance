@@ -9,7 +9,7 @@
     "related_skin_only": 2
   },
   "addon_pages": 107,
-  "dated_records": 129,
+  "dated_records": 131,
   "addons": [
     {
       "addon": "!Libs",
@@ -2370,12 +2370,30 @@
       "addon": "TurtleSeamlessMap",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立地图0.6.0；世界精度翻倍、五城静态重绘和地下主城高密度，修补希利苏斯衔接及低清边界；旧总览和标记功能保留。",
+      "purpose": "独立地图0.7.0；修复登录误开图、定位及东部索引，稳定城市，扩展视口节点，改进重点边界、厄运外景和暴风城水面；原总览与坐标保留。",
       "latest_record_date": "2026-10-24",
-      "latest_record_title": "提高世界精度、重绘主城近景并修补希利苏斯衔接",
+      "latest_record_title": "修复登录与东部显示，稳定城市并细化地形过渡和水面",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 19,
+      "record_count": 21,
       "records": [
+        {
+          "id": "TurtleSeamlessMap-20261024-21",
+          "date": "2026-10-24",
+          "title": "修复登录与东部显示，稳定城市并细化地形过渡和水面",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-21"
+        },
+        {
+          "id": "TurtleSeamlessMap-20261024-20",
+          "date": "2026-10-24",
+          "title": "反馈登录误开图、东部缺失、主城切换及八项画面问题",
+          "kind": "实测反馈",
+          "game_acceptance": "用户实测（限本条范围）",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-20"
+        },
         {
           "id": "TurtleSeamlessMap-20261024-19",
           "date": "2026-10-24",

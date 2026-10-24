@@ -1,5 +1,5 @@
 -- Pure geometry: no global client map selection is changed by these functions.
-TurtleSeamlessMap = { version = "0.4.0", providers = {}, dirty = true }
+TurtleSeamlessMap = { version = "0.7.0", providers = {}, dirty = true }
 local M = TurtleSeamlessMap
 local G = {}
 M.Geometry = G
@@ -159,8 +159,8 @@ function M:MapAt(x,y)
     return best
 end
 
--- Exactly one detail map follows the cursor. Transparent margins are not a
--- territory hit. Toolbar/menu use retains the last focus until map re-entry.
+-- Cursor focus selects a label/inspection target. Terrain art and visible-zone
+-- node eligibility depend on the camera, never on entering/leaving a city.
 function M:ChooseDetailMap()
     if self:IsWorldView() then return end
     local x,y=self:Cursor()
@@ -250,10 +250,10 @@ function M:UpdateVisibility()
         if map.kind == "world" or map.kind == "continent" then
             map.alpha = 1
         elseif map.city then
-            map.cityActive = map==target and map.visible and coverage >= (map.cityActive and 0.58 or 0.72)
+            map.cityActive = (self.settings.detailStyle=="terrain" or map==target) and not self:IsWorldView() and map.visible and coverage >= (map.cityActive and 0.58 or 0.72)
             map.alpha = map.cityActive and G.Clamp((coverage-0.58)/0.38,0,1) or 0
         else
-            map.alpha = map==target and G.Clamp((coverage-0.10)/0.24,0,1) or 0
+            map.alpha = (self.settings.detailStyle=="terrain" or map==target) and not self:IsWorldView() and G.Clamp((coverage-0.10)/0.24,0,1) or 0
         end
         if map.kind == "surface" then
             map.detail = map.visible and map.alpha>=0.95 and coverage >= (map.detail and 0.34 or 0.40)

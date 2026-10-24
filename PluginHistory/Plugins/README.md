@@ -12,7 +12,7 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
-| [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-24 | [提高世界精度、重绘主城近景并修补希利苏斯衔接](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261024-19) | 待游戏验收 |
+| [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-24 | [修复登录与东部显示，稳定城市并细化地形过渡和水面](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261024-21) | 待游戏验收 |
 | [XyTracker](XyTracker.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](XyTracker.md#change-XyTracker-20261018-02) | 待游戏验收 |
 | [WushuangLoot](WushuangLoot.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](WushuangLoot.md#change-WushuangLoot-20261018-02) | 待游戏验收 |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261018-02) | 待游戏验收 |

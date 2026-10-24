@@ -51,6 +51,28 @@ def wmo_chunks(data,start=0):
     return result
 
 
+def liquid_mesh(raw):
+    """Validated legacy MLIQ grid; low-nibble 15 is a disabled liquid cell.
+
+    Heights are absolute local Z, not offsets from the header's corner Z.
+    Shared grid vertices let the depth buffer retain bridges above the water.
+    """
+    if len(raw)<30:raise ValueError('Truncated WMO liquid header')
+    nx,ny,tx,ty,px,py,pz,material=struct.unpack_from('<4I3fH',raw)
+    if nx!=tx+1 or ny!=ty+1 or nx<2 or ny<2 or nx*ny>1000000:raise ValueError('Invalid WMO liquid grid')
+    end=30+nx*ny*8
+    if len(raw)!=end+tx*ty:raise ValueError('Truncated WMO liquid arrays')
+    heights=np.frombuffer(raw[30:end],dtype=np.dtype([('flow','<u4'),('height','<f4')]))['height']
+    if not np.isfinite(heights).all():raise ValueError('Nonfinite WMO liquid height')
+    x,y=np.meshgrid(np.arange(nx),np.arange(ny));spacing=STEP/128
+    xyz=np.column_stack((px+x.ravel()*spacing,py+y.ravel()*spacing,heights)).astype('<f4')
+    normal=np.tile([0,0,1],(nx*ny,1));uv=xyz[:,:2]/(spacing*8);indices=[]
+    flags=np.frombuffer(raw[end:],dtype='u1').reshape(ty,tx)
+    for y,x in zip(*np.nonzero((flags&15)!=15)):
+        a=y*nx+x;indices.extend((a,a+1,a+nx,a+1,a+nx+1,a+nx))
+    return xyz,normal,uv,np.asarray(indices,dtype='<u4'),material
+
+
 def placement_matrix(rotation):
     a,b,c=np.radians(rotation)
     rx=np.array([[1,0,0],[0,np.cos(c),-np.sin(c)],[0,np.sin(c),np.cos(c)]])
@@ -116,6 +138,22 @@ class Scenery:
             raw=self.read(path[:-4]+f'_{index:03d}.wmo')
             if not raw:continue
             payload=wmo_chunks(raw)[b'PGOM'];parts=wmo_chunks(payload,68)
+            # Stormwind canals are WMO liquids. Their bottom floor is not a
+            # road. Keep the real grid height so bridges occlude the liquid.
+            if b'QILM' in parts and path.lower().endswith('stormwind\\stormwind.wmo'):
+                xyz,norm,water_uv,water_indices,_=liquid_mesh(parts[b'QILM'])
+                if len(water_indices):
+                    source=r'XTextures\river\lake_a.1.blp'
+                    water=decode_blp(self.read(source)).convert('RGBA')
+                    # The client applies a liquid shader; a static map uses the
+                    # source wave alpha in a restrained river colour instead.
+                    wave=np.asarray(water.getchannel('A'),dtype=float)/255
+                    rgb=np.clip((.86+.24*wave[:,:,None])*np.array([38,91,99]),0,255).astype('uint8')
+                    image=Image.fromarray(rgb).convert('RGBA');target=CACHE/('stormwind-water-'+hashlib.sha256(image.tobytes()).hexdigest()+'.tex')
+                    if not target.exists():target.write_bytes(struct.pack('<II',*image.size)+image.tobytes())
+                    meshes.append((xyz,norm,water_uv,water_indices,str(target)))
+                    self.counts['stormwind_liquid_groups']+=1
+                    self.counts['stormwind_liquid_triangles']+=len(water_indices)//3
             if not parts.get(b'TVOM') or not parts.get(b'IVOM'):continue
             positions=np.frombuffer(parts[b'TVOM'],dtype='<f4').reshape(-1,3)
             uv=np.frombuffer(parts[b'VTOM'],dtype='<f4').reshape(-1,2)

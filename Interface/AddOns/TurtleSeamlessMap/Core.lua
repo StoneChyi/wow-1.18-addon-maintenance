@@ -207,9 +207,9 @@ function M:RenderArt()
     local focused=self.detailTarget and self.detailTarget.id
     if self.paintedView and self.paintedView.focus~=focused then self.lastInteraction=GetTime() end
     for _,map in ipairs(self.drawOrder) do
-        if not moved and map.kind~="surface" then
-            -- Cursor-only region switching does not touch world/continent
-            -- texture geometry or rebind their assets.
+        if not moved and (map.kind~="surface" or self.settings.detailStyle=="terrain") then
+            -- Terrain cursor focus only changes the inspected name. Reuse
+            -- every scene, including cities, until the camera/style changes.
             for _,texture in ipairs(map.textures or {}) do
                 if texture.active then
                     texture.paintPass=self.paintPass
@@ -270,6 +270,9 @@ end
 function M:PlayerArea()
     local real=GetRealZoneText and GetRealZoneText()
     if real and real~="" and self.byName[real] then return self.byName[real] end
+    -- A present-but-empty real zone means the login/transfer is not ready.
+    -- The selected page and a cached display/subzone string are not evidence.
+    if GetRealZoneText then return end
     local zone=GetZoneText and GetZoneText()
     return zone and zone~="" and self.byName[zone] or nil
 end
@@ -360,6 +363,7 @@ function M:DrawNotes()
 end
 
 function M:Toggle()
+    if self.installing or self.ignoreMapEvent or self.locating then return end
     if WorldMapFrame and WorldMapFrame:IsShown() then WorldMapFrame:Hide();return end
     if self.frame:IsShown() then self.frame:Hide()
     else
@@ -547,7 +551,7 @@ end
 
 function M:Install()
     if self.installed then return end
-    self.installed=true
+    self.installed=true;self.installing=true
     TurtleSeamlessMapDB=TurtleSeamlessMapDB or {}
     self.settings=TurtleSeamlessMapDB
     self.settings.notes=self.settings.notes or {}
@@ -566,20 +570,33 @@ function M:Install()
     if self.settings.focusAfterMigration then self:FocusMap(self.settings.focusAfterMigration);self.settings.focusAfterMigration=nil end
     ToggleWorldMap=function() M:Toggle() end
     local originalShow=WorldMapFrame:GetScript("OnShow")
+    local nativeShow=WorldMapFrame.Show
+    WorldMapFrame.Show=function(frame)
+        -- Capture the initiating control before OnShow replaces global `this`.
+        -- Background initializers/query frames are not a request to open a UI.
+        local previous=M.nativeUserOpen
+        M.nativeUserOpen=this and this~=frame and (arg1=="LeftButton" or arg1=="RightButton")
+        local ok,err=pcall(nativeShow,frame)
+        M.nativeUserOpen=previous
+        if not ok then error(err) end
+    end
     WorldMapFrame:SetScript("OnShow",function()
         if M.nativeRequested then if originalShow then originalShow() end;return end
-        local explicit=M.ignoreMapEvent and not M.locating
-        local file=explicit and GetMapInfo()
-        local map=file and M.byFile[string.lower(file)]
+        local blocked=M.installing or M.ignoreMapEvent or M.locating
         local previousIgnore=M.ignoreMapEvent
         M.ignoreMapEvent=true;WorldMapFrame:Hide();M.ignoreMapEvent=previousIgnore
-        if M.locating then return end
-        if explicit then
-            if map then M:FocusMap(map.id) end
-        elseif not M:FindPlayer() then M:WorldView() end
+        if blocked or not M.nativeUserOpen then return end
+        M:FindPlayer()
         M.frame:Show()
     end)
-    self:InstallCompat()
+    -- An earlier addon may have shown the native frame before installation.
+    -- Close that startup residue without turning it into a navigation.
+    local previousIgnore=self.ignoreMapEvent
+    self.ignoreMapEvent=true;WorldMapFrame:Hide();self.ignoreMapEvent=previousIgnore
+    local ok,err=pcall(self.InstallCompat,self)
+    self.installing=nil
+    if not ok then error(err) end
+
 end
 
 local loader=CreateFrame("Frame")
@@ -597,7 +614,7 @@ loader:SetScript("OnEvent",function()
         end)
     elseif M.installed and (event=="ZONE_CHANGED_NEW_AREA" or event=="ZONE_CHANGED" or event=="ZONE_CHANGED_INDOORS" or event=="PLAYER_ENTERING_WORLD") then
         M.lastPlayer=nil;M.dirty=true
-    elseif event=="CLOSE_WORLD_MAP" and M.installed then
+    elseif event=="CLOSE_WORLD_MAP" and M.installed and not M.ignoreMapEvent then
         M.frame:Hide()
     elseif event=="WORLD_MAP_UPDATE" and M.installed and M.frame:IsShown() and not M.ignoreMapEvent then
         M.dirty=true

@@ -42,7 +42,7 @@
       "added_on": "2026-10-24",
       "creation_base_commit": "0e567516764ddee12f9703b50b8987779f3fe145",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立地图0.6.0；世界精度翻倍、五城静态重绘和地下主城高密度，修补希利苏斯衔接及低清边界；旧总览和标记功能保留。",
+      "purpose": "独立地图0.7.0；修复登录误开图、定位及东部索引，稳定城市，扩展视口节点，改进重点边界、厄运外景和暴风城水面；原总览与坐标保留。",
       "sources": [
         "PluginHistory/Research/TurtleSeamlessMap-首版实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.0优化方案-20261024.md",
@@ -60,7 +60,9 @@
         "PluginHistory/Research/TurtleSeamlessMap-0.5.0实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.5.0地形资源-20261024.json",
         "PluginHistory/Research/TurtleSeamlessMap-0.6.0实现-20261024.md",
-        "PluginHistory/Research/TurtleSeamlessMap-0.6.0地形资源-20261024.json"
+        "PluginHistory/Research/TurtleSeamlessMap-0.6.0地形资源-20261024.json",
+        "PluginHistory/Research/TurtleSeamlessMap-0.7.0实现-20261024.md",
+        "PluginHistory/Research/TurtleSeamlessMap-0.7.0地形资源-20261024.json"
       ],
       "maintenance_files": [
         "Interface/AddOns/TurtleSeamlessMap/TurtleSeamlessMap.toc",
@@ -78,10 +80,10 @@
         "Interface/AddOns/TurtleSeamlessMap/TerrainData.lua",
         "Interface/AddOns/TurtleSeamlessMap/Art/v5_classic_0_0.blp",
         "Interface/AddOns/TurtleSeamlessMap/Art/v6_sea_1_0_0.blp",
-        "Interface/AddOns/TurtleSeamlessMap/Art/v7_city301_64_0_0.blp"
+        "Interface/AddOns/TurtleSeamlessMap/Art/v8_city301_64_0_0.blp"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "0.6.0通过61组模拟／资源／实际静态绘制器检查；全部街区、入口、模型位置、边界、快速缩放和显存帧率待游戏验收。缺源处为装饰性岩土延展；个别模型／材质用原图后备，未重现完整动画、透明效果和光照，普通室外小物件仍有源分辨率上限。"
+      "pending": "0.7.0通过69组模拟／资源／实际静态绘制器检查；登录／传送入口、各街区桥梁、全部接缝、快速缩放与帧率显存待游戏验收。缺源地貌为装饰延展，普通室外物件仍有源精度上限；动画、完整光照及既有模型／材质后备限制保留。"
     }
   ],
   "addons": [
