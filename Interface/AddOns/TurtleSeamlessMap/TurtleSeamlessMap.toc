@@ -3,13 +3,15 @@
 ## Title-zhCN: 乌龟服无缝世界地图
 ## Notes: Independent continuous world map. Mouse wheel zoom; drag to pan; /tsm.
 ## Author: Personal maintenance project
-## Version: 0.2.2
+## Version: 0.3.0
 ## OptionalDeps: ModernMapMarkers, pfQuest, pfQuest-turtle, S_WorldMap, pfUI, pfUI-addonskinner
 ## SavedVariables: TurtleSeamlessMapDB
 
 MapData.lua
 PresentationData.lua
+AtlasData.lua
 FocusData.lua
 Geometry.lua
+Atlas.lua
 Core.lua
 Compat.lua

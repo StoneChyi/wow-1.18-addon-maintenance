@@ -12,7 +12,7 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
-| [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-24 | [分析连续大陆图集、同源缩放和原风格背景方案](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261024-11) | 不适用（说明或停用记录） |
+| [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-24 | [重构连续大陆图集并按视口加载同源分级贴片](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261024-12) | 待游戏验收 |
 | [XyTracker](XyTracker.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](XyTracker.md#change-XyTracker-20261018-02) | 待游戏验收 |
 | [WushuangLoot](WushuangLoot.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](WushuangLoot.md#change-WushuangLoot-20261018-02) | 待游戏验收 |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261018-02) | 待游戏验收 |

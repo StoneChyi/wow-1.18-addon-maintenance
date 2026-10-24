@@ -1,5 +1,5 @@
 -- Pure geometry: no global client map selection is changed by these functions.
-TurtleSeamlessMap = { version = "0.2.2", providers = {}, dirty = true }
+TurtleSeamlessMap = { version = "0.3.0", providers = {}, dirty = true }
 local M = TurtleSeamlessMap
 local G = {}
 M.Geometry = G
@@ -90,12 +90,21 @@ function M:IndexMaps()
             self.byArea[map.area] = map
         end
         map.rect = {G.Rect(map)}
+        -- Source page rectangles remain geographic data. The baked atlas owns
+        -- outdoor artwork; no coarse source page is drawn underneath its coast.
+        map.tiles={};map.backing={};map.sea={}
+        if map.kind=="world" then map.atlas=TurtleSeamlessMap_Atlas.background
+        elseif map.kind=="continent" then
+            for _,continent in ipairs(TurtleSeamlessMap_Atlas.continents) do
+                if continent.id==map.map then map.atlas=continent end
+            end
+        end
         local art=TurtleSeamlessMap_Presentation.cities[map.id]
         if art then
             map.tiles=art.tiles;map.artWidth=art.width;map.artHeight=art.height
             local r=map.rect
             map.artRect={r[1]+art.x/1002*r[3],r[2]+art.y/668*r[4],art.width/1002*r[3],art.height/668*r[4]}
-        elseif map.kind=="world" then map.sea={} end
+        end
     end
     self.world = {0,0,1002,668}
     self.detailAreas = {}

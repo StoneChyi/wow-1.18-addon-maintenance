@@ -16,13 +16,13 @@ sys.path.insert(0, str(ROOT / 'addons_tmp/bcs-test-runtime'))
 sys.path.insert(0, str(ROOT / 'Tools'))
 from lupa.lua51 import LuaRuntime
 from build_turtle_seamless_map import decode_blp
-from PIL import Image
+from PIL import Image, ImageChops, ImageStat
 
 ADDON = ROOT / 'Interface/AddOns/TurtleSeamlessMap'
 STAGE = ROOT / 'PluginHistory/staging/turtle-seamless-map'
 
 MOCK = r'''
-objects={};now=10;mouseX=600;mouseY=400;ctrl=false;shift=false;mapFile='Elwynn'
+objects={};failedTextures={};now=10;mouseX=600;mouseY=400;ctrl=false;shift=false;mapFile='Elwynn'
 mapSets=0;nativeUpdates=0;trackerResets=0;questClicks=0;atlasClicks=0;messages={}
 UISpecialFrames={};SlashCmdList={};STANDARD_TEXT_FONT='missing-user-font.ttf'
 local methods={}
@@ -87,7 +87,7 @@ function methods:Show() local was=self.shown;self.shown=true;if not was then inv
 function methods:Hide() local was=self.shown;self.shown=false;if was then invoke(self,'OnHide') end end
 function methods:SetAlpha(v) assert(v>=0 and v<=1);self.alpha=v end
 function methods:CreateTexture(name,layer) local t=newObject('Texture',name,self);t.layer=layer;return t end
-function methods:SetTexture(...) self.texture=(...);self.textureSets=(self.textureSets or 0)+1;return 1 end
+function methods:SetTexture(...) local path=(...);self.textureSets=(self.textureSets or 0)+1;if path and failedTextures[path] then self.texture=nil;return nil end;self.texture=path;return 1 end
 function methods:SetTexCoord(l,r,t,b) assert(l>=-1e-8 and r<=1+1e-8 and t>=-1e-8 and b<=1+1e-8 and l<r and t<b);self.uv={l,r,t,b} end
 function methods:SetVertexColor(...) self.color={...} end
 function methods:SetAutoFocus(v) self.autofocus=v end
@@ -291,21 +291,17 @@ class SeamlessMapTests(unittest.TestCase):
         ''')
 
     def test_all_runtime_art_present_valid_and_bounded(self):
-        expected=set()
+        report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
+        expected={r['file'] for r in report['files']}
         for _,m in self.lua.globals().M.maps.items():
             if m.rect:
                 for _,tile in m.tiles.items():
-                    expected.add(tile[1]+'.blp')
-                if m.backing:
-                    for _,tile in m.backing.items():
-                        expected.add(tile[1]+'.blp')
-                if m.sea:
-                    for _,tile in m.sea.items():
-                        expected.add(tile[1]+'.blp')
+                    self.assertIn(tile[1]+'.blp',expected)
         actual={p.name for p in (ADDON/'Art').glob('*.blp')}
-        expected.add('SeaPaper.blp')
         self.assertEqual(expected,actual)
-        self.assertEqual(len(actual),865)
+        self.assertEqual(len(actual),report['total_files'])
+        for entry in report['files']:
+            self.assertEqual(hashlib.sha256((ADDON/'Art'/entry['file']).read_bytes()).hexdigest(),entry['sha256'])
         for name in actual:
             im=decode_blp((ADDON/'Art'/name).read_bytes())
             self.assertEqual(im.size,(256,256))
@@ -368,7 +364,12 @@ class SeamlessMapTests(unittest.TestCase):
           M:WorldView();M:Render()
           local seen={}
           for i=1,M.tileUsed do seen[M.tiles[i].path]=true end
-          assert(seen['Interface\\\\AddOns\\\\TurtleSeamlessMap\\\\Art\\\\v2_694_1'])
+          local paper=false;local land=false
+          for path in pairs(seen) do
+            if string.find(path,'v4_paper',1,true) then paper=true end
+            if string.find(path,'v4_c',1,true) then land=true end
+          end
+          assert(paper and land)
           local dx,dy=M:MapToWorld(4,.5,.5);local ex,ey=M:MapToWorld(30,.5,.5)
           assert(dx<ex and dx>0 and ex<1002 and dy>0 and ey<668)
           M:FocusMap(13);local canvas=M.canvas;M:FocusMap(14)
@@ -485,9 +486,15 @@ class SeamlessMapTests(unittest.TestCase):
               assert(map.artFrame.level==map.drawLevel and map.artFrame.level<M.pinLayer.level)
               for path,texture in pairs(map.texturePool) do
                 assert(texture.parent==map.artFrame and texture.path==path and texture.textureSets==1)
-                if string.find(path,'v2_sea_',1,true) then assert(texture.layer=='BACKGROUND')
-                else assert(texture.layer=='ARTWORK') end
+                assert(texture.layer=='ARTWORK')
                 assert(texture.paintPass==M.paintPass or not texture:IsShown())
+              end
+              if map.atlas then
+                assert(#map.atlasPool<=256)
+                for _,texture in ipairs(map.atlasPool) do
+                  assert(texture.parent==map.artFrame and texture.layer=='ARTWORK')
+                  assert(texture.paintPass==M.paintPass or not texture:IsShown())
+                end
               end
             end
           end
@@ -495,7 +502,7 @@ class SeamlessMapTests(unittest.TestCase):
           for i=1,50 do M:RenderArt() end
           assert(#objects==frames)
           for _,map in ipairs(M.maps) do
-            for _,texture in ipairs(map.textures or {}) do assert(texture.textureSets==1) end
+            if not map.atlas then for _,texture in ipairs(map.textures or {}) do assert(texture.textureSets==1) end end
           end
         ''')
 
@@ -522,7 +529,7 @@ class SeamlessMapTests(unittest.TestCase):
           end
         ''')
 
-    def test_only_cursor_zone_draws_detail_and_visits_nodes(self):
+    def test_only_cursor_zone_visits_nodes_while_atlas_stays_continuous(self):
         lua=runtime()
         lua.execute('''
           M.frame:Show();M:FocusMap(30)
@@ -532,8 +539,8 @@ class SeamlessMapTests(unittest.TestCase):
             local x,y=M:MapToWorld(map,u,v)
             focusX,focusY=G.Screen(M.view,M.canvas.width,M.canvas.height,x,y)
           end
-          -- Wide view contains both Elwynn and Westfall; only the pointed
-          -- region may expose detail art or enumerate its nodes.
+          -- Wide view contains both Elwynn and Westfall; artwork stays complete
+          -- but only the pointed region may enumerate its nodes.
           M.view.scale=6.5;M.view.x=700;M.view.y=435
           local nodesA={['50|50']={A={title='A',texture='test'}}}
           local nodesB={['50|50']={B={title='B',texture='test'}}}
@@ -626,12 +633,12 @@ class SeamlessMapTests(unittest.TestCase):
         lua.execute('''
           for _,map in ipairs(M.maps) do
             if map.city then
-              assert(#map.tiles==24 and map.artWidth==1504 and map.artHeight==1004)
+              assert(#map.tiles==12 and map.artWidth==1002 and map.artHeight==668)
               local x,y=M:MapToWorld(map.id,0,0)
-              local ax,ay=G.Project(map.artRect,251/1504,168/1004)
+              local ax,ay=G.Project(map.artRect,0,0)
               assert(math.abs(ax-x)<1e-7 and math.abs(ay-y)<1e-7)
               x,y=M:MapToWorld(map.id,1,1)
-              ax,ay=G.Project(map.artRect,1253/1504,836/1004)
+              ax,ay=G.Project(map.artRect,1,1)
               assert(math.abs(ax-x)<1e-7 and math.abs(ay-y)<1e-7)
             end
           end
@@ -640,23 +647,23 @@ class SeamlessMapTests(unittest.TestCase):
           x,y=M:MapToWorld(301,.94,.90);assert(not G.Hit(map,x,y),'Corner compass is not city territory')
           x,y=M:MapToWorld(301,.50,.075);assert(not G.Hit(map,x,y),'Title ribbon is not city territory')
         ''')
-        report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.2.2资源-20261024.json').read_text(encoding='utf-8'))
-        self.assertEqual(report['city_tiles'],168)
-        self.assertEqual(report['total_art_files'],865)
-        for entry in report['written']:
-            self.assertEqual(hashlib.sha256((ADDON/'Art'/entry['file']).read_bytes()).hexdigest(),entry['sha256'])
+        report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
+        self.assertEqual(sum(r['file'].startswith('v4_city') for r in report['files']),84)
 
-    def test_ocean_keeps_paper_and_wave_detail_across_zoom(self):
+    def test_ocean_retains_original_world_composition_across_zoom(self):
         lua=runtime()
         lua.execute('''
           M.frame:Show();M.view.x=501;M.view.y=334;M.view.scale=8;M:Render()
-          assert(M.canvas.backdrop.tile and M.canvas.backdrop.tileSize==128)
-          assert(string.find(M.canvas.backdrop.bgFile,'SeaPaper',1,true))
+          assert(not M.canvas.backdrop)
+          assert(M.byID[694].atlas and M.byID[694].atlasLevel==2)
+          for i=1,M.tileUsed do assert(not string.find(M.tiles[i].path,'SeaPaper',1,true)) end
         ''')
         first=compose_preview(lua)
         lua.execute('M.view.scale=32;M:Render()')
         closer=compose_preview(lua)
-        self.assertEqual(first.tobytes(),closer.tobytes())
+        # The whirlpool is geographically anchored original art, not a
+        # screen-fixed repeating texture: it must change apparent size on zoom.
+        self.assertNotEqual(first.tobytes(),closer.tobytes())
         extrema=first.convert('RGB').getextrema()
         self.assertGreater(max(high-low for low,high in extrema),10)
 
@@ -677,13 +684,100 @@ class SeamlessMapTests(unittest.TestCase):
         lua=runtime(saved='''{layoutVersion=2,notes={{x=750,y=440}},view={x=700,y=450,scale=12,selected=30}}''')
         lua.execute('assert(M.view.x==700 and M.view.scale==12 and M.settings.notes[1].x==750 and not M.settings.layoutV1Backup)')
 
+    def test_atlas_viewport_pools_are_bounded_and_release_inactive_assets(self):
+        lua=runtime(screen=(3840,2160))
+        lua.execute('''
+          M.frame:Show();M.Cursor=function() return -1,-1 end
+          for _,scale in ipairs({2,4,8,16,32,64,3,7,12}) do
+            for _,id in ipairs({30,39,201,261,161,40,502,4,699,507}) do
+              local r=M.byID[id].rect
+              M.view.x=r[1]+r[3]/2;M.view.y=r[2]+r[4]/2;M.view.scale=scale
+              M:RenderArt()
+              for _,map in ipairs(M.maps) do
+                if map.atlasPool then
+                  assert(#map.atlasPool<=256 and map.atlasVisits<=256)
+                  for _,t in ipairs(map.atlasPool) do
+                    if t.active then assert(t.path and t.texture==t.path)
+                    else assert(not t.texture and not t.path) end
+                  end
+                end
+              end
+            end
+          end
+        ''')
+
+    def test_atlas_failed_texture_uses_complete_lower_resolution(self):
+        lua=runtime()
+        lua.execute('''
+          local atlas=M.byID[14];local level=atlas.atlas.levels[5]
+          for key in pairs(level.tiles) do
+            local row=math.floor((key-1)/level.cols);local col=math.mod(key-1,level.cols)
+            failedTextures['Interface\\\\AddOns\\\\TurtleSeamlessMap\\\\Art\\\\v4_c0_16_'..col..'_'..row]=true
+          end
+          M.frame:Show();M:FocusMap(30);M.view.scale=12
+          M.paintedView=nil;M:RenderArt()
+          assert(atlas.atlasLevel==8 and M.tileUsed>0)
+          for _,t in ipairs(atlas.atlasPool) do
+            if t.active then assert(string.find(t.path,'v4_c0_8_',1,true)) end
+          end
+          failedTextures={};M.paintedView=nil;M:RenderArt();assert(atlas.atlasLevel==16)
+        ''')
+
+    def test_atlas_preserves_all_region_centres_and_native_coordinates(self):
+        report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
+        self.assertEqual(len(report['regions']),53)
+        self.assertEqual(report['density_levels'],[1,2,4,8,16])
+        continents={c['id']:c for c in report['continents']}
+        for r in report['regions']:
+            m=self.lua.globals().M.byID[r['id']]
+            # Historical Lua data uses 10 significant digits; offline DBC JSON
+            # retains full doubles. This bound is < .000016 atlas pixels.
+            for i,value in enumerate(r['rect'],1):self.assertAlmostEqual(m.rect[i],value,delta=1e-6)
+            c=continents[m.map];x=r['rect'][0]+r['rect'][2]/2;y=r['rect'][1]+r['rect'][3]/2
+            for density in (2,8,16):
+                px=(x-c['rect'][0])*density;py=(y-c['rect'][1])*density
+                col,row=int(px//254),int(py//254)
+                path=ADDON/'Art'/f'v4_c{m.map}_{density}_{col}_{row}.blp'
+                self.assertTrue(path.is_file(),r['file'])
+                im=decode_blp(path.read_bytes()).convert('RGBA')
+                self.assertGreater(im.getpixel((int(px%254)+1,int(py%254)+1))[3],200,r['file'])
+        audit=report['minimap_audit']
+        self.assertEqual(sum(c['decoded'] for c in audit.values()),1755)
+        self.assertTrue(all(not c['failures'] for c in audit.values()))
+
+    def test_atlas_gutters_match_neighbours(self):
+        paths=sorted((ADDON/'Art').glob('v4_c1_16_*.blp'))
+        count=0
+        for path in paths:
+            parts=path.stem.split('_');col,row=int(parts[-2]),int(parts[-1])
+            other=path.with_name(f'v4_c1_16_{col+1}_{row}.blp')
+            if not other.is_file():continue
+            left=decode_blp(path.read_bytes()).convert('RGBA').crop((255,0,256,256))
+            right=decode_blp(other.read_bytes()).convert('RGBA').crop((1,0,2,256))
+            self.assertEqual(ImageChops.difference(left.getchannel('A'),right.getchannel('A')).getextrema()[1],0)
+            self.assertLess(max(ImageStat.Stat(ImageChops.difference(left.convert('RGB'),right.convert('RGB'))).mean),18)
+            count+=1
+            if count>=30:break
+        self.assertEqual(count,30)
+
+    def test_same_source_lod_keeps_land_silhouette(self):
+        report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
+        for c in report['continents']:
+            def reconstruct(density):
+                size=(c['rect'][2]*density,c['rect'][3]*density)
+                image=Image.new('RGBA',size)
+                for path in (ADDON/'Art').glob(f'v4_c{c["id"]}_{density}_*.blp'):
+                    col,row=map(int,path.stem.split('_')[-2:])
+                    image.paste(decode_blp(path.read_bytes()).convert('RGBA').crop((1,1,255,255)),(col*254,row*254))
+                return image
+            high=reconstruct(8).getchannel('A').resize((c['rect'][2],c['rect'][3]),Image.Resampling.LANCZOS)
+            low=reconstruct(1).getchannel('A')
+            self.assertLess(ImageStat.Stat(ImageChops.difference(high,low)).mean[0],3)
+
 
 def compose_preview(lua, reverse=False):
     m=lua.globals().M
     canvas=Image.new('RGBA',(int(m.canvas.width),int(m.canvas.height)))
-    tile=decode_blp((ADDON/'Art/SeaPaper.blp').read_bytes()).convert('RGBA').resize((128,128))
-    for y in range(0,canvas.height,128):
-        for x in range(0,canvas.width,128):canvas.paste(tile,(x,y))
     # Emulate client frame/layer depth, not the order of draw commands. Reverse
     # same-layer regions to expose accidental dependence on texture ordering.
     entries=[(i,m.tiles[i]) for i in range(1,int(m.tileUsed)+1)]

@@ -9,7 +9,7 @@
     "related_skin_only": 2
   },
   "addon_pages": 107,
-  "dated_records": 121,
+  "dated_records": 122,
   "addons": [
     {
       "addon": "!Libs",
@@ -2370,12 +2370,21 @@
       "addon": "TurtleSeamlessMap",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立无缝世界地图0.2.2；首次定位、主城过渡及鼠标单区；新增轮廓缺失反馈和连续大陆图集/原风格背景方案，尚未实施。",
+      "purpose": "独立无缝世界地图0.3.0；两大陆连续图集与同源分级视口加载，提尔之手轮廓和原风格背景，节点仍单鼠标区；待游戏验收。",
       "latest_record_date": "2026-10-24",
-      "latest_record_title": "分析连续大陆图集、同源缩放和原风格背景方案",
-      "latest_game_acceptance": "不适用（说明或停用记录）",
-      "record_count": 11,
+      "latest_record_title": "重构连续大陆图集并按视口加载同源分级贴片",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 12,
       "records": [
+        {
+          "id": "TurtleSeamlessMap-20261024-12",
+          "date": "2026-10-24",
+          "title": "重构连续大陆图集并按视口加载同源分级贴片",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-TurtleSeamlessMap-20261024-12"
+        },
         {
           "id": "TurtleSeamlessMap-20261024-11",
           "date": "2026-10-24",

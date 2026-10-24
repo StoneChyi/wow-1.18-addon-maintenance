@@ -119,6 +119,8 @@ function M:Tile(path,x,y,w,h,u,v,alpha,layer)
 end
 
 function M:DrawMap(map)
+    if map.atlas then self:DrawAtlas(map,map.atlas,map.kind=="world");return end
+    if not map.city then return end
     if not map.visible then return end
     local r=map.artRect or map.rect
     local artW,artH=map.artWidth or 1002,map.artHeight or 668
@@ -130,16 +132,7 @@ function M:DrawMap(map)
             self:Tile(ART..tile[1],r[1]+tile[2]/artW*r[3],r[2]+tile[3]/artH*r[4],tile[4]/artW*r[3],tile[5]/artH*r[4],tile[4]/256,tile[5]/256,a,layer)
         end
     end
-    if map.kind=="continent" then
-        -- Keep ocean/world art continuous. At closer scales only the land
-        -- backing remains, so continent parchment frames do not become cards.
-        draw(map.backing,self.overviewBlend)
-        -- World art already contains the native continent overview and labels.
-    elseif map.kind=="world" then
-        draw(map.tiles,1-self.overviewBlend)
-    else
-        draw(map.tiles,alpha)
-    end
+    draw(map.tiles,alpha)
 end
 
 -- Providers supply world coordinates and their original behavior via callbacks.
@@ -190,8 +183,6 @@ function M:RenderArt()
     self.tileUsed=0
     for i=table.getn(self.tiles),1,-1 do self.tiles[i]=nil end
     self.paintPass=(self.paintPass or 0)+1
-    local overviewScale=self:WorldScale()
-    self.overviewBlend=G.Clamp((self.view.scale/overviewScale-1)/0.20,0,1)
     self:UpdateVisibility()
     local focused=self.detailTarget and self.detailTarget.id
     if self.paintedView and self.paintedView.focus~=focused then self.lastInteraction=GetTime() end
@@ -207,7 +198,12 @@ function M:RenderArt()
             end
         else self.activeMap=map;self:DrawMap(map) end
         for _,texture in ipairs(map.textures or {}) do
-            if texture.paintPass~=self.paintPass and texture.active then texture:Hide();texture.active=false end
+            if texture.paintPass~=self.paintPass then
+                if texture.active then texture:Hide();texture.active=false end
+                -- Reusable atlas slots must not retain every visited asset.
+                -- This bounds live references, not the driver's internal cache.
+                if map.atlas and texture.path then texture:SetTexture(nil);texture.path=nil end
+            end
         end
     end
     self.activeMap=nil
@@ -367,9 +363,8 @@ function M:BuildUI()
     self.canvas=canvas
     canvas:SetWidth(w-28);canvas:SetHeight(h-112)
     canvas:SetPoint("TOPLEFT",f,"TOPLEFT",14,-70)
-    -- Old-client native backdrop tiling keeps parchment grain and wave strokes
-    -- readable at every zoom instead of magnifying a flat world-sized sea.
-    canvas:SetBackdrop({bgFile=ART..TurtleSeamlessMap_Presentation.sea,tile=true,tileSize=TurtleSeamlessMap_Presentation.seaTile})
+    -- The original world's paper, sea and ornaments are geographic artwork in
+    -- the atlas background. No repeating sea texture replaces them on zoom.
     canvas:EnableMouse(true);canvas:EnableMouseWheel(true)
     canvas:SetScript("OnMouseWheel",function() M:Zoom(arg1>0 and 1.18 or 1/1.18) end)
     canvas:SetScript("OnMouseDown",function()

@@ -42,7 +42,7 @@
       "added_on": "2026-10-24",
       "creation_base_commit": "0e567516764ddee12f9703b50b8987779f3fe145",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立无缝世界地图0.2.2；首次定位、主城过渡及鼠标单区；新增轮廓缺失反馈和连续大陆图集/原风格背景方案，尚未实施。",
+      "purpose": "独立无缝世界地图0.3.0；两大陆连续图集与同源分级视口加载，提尔之手轮廓和原风格背景，节点仍单鼠标区；待游戏验收。",
       "sources": [
         "PluginHistory/Research/TurtleSeamlessMap-首版实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.0优化方案-20261024.md",
@@ -51,7 +51,9 @@
         "PluginHistory/Research/TurtleSeamlessMap-0.2.1实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.2实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.2资源-20261024.json",
-        "PluginHistory/Research/TurtleSeamlessMap-连续大陆图集可行性-20261024.md"
+        "PluginHistory/Research/TurtleSeamlessMap-连续大陆图集可行性-20261024.md",
+        "PluginHistory/Research/TurtleSeamlessMap-0.3.0实现-20261024.md",
+        "PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json"
       ],
       "maintenance_files": [
         "Interface/AddOns/TurtleSeamlessMap/TurtleSeamlessMap.toc",
@@ -61,12 +63,14 @@
         "Interface/AddOns/TurtleSeamlessMap/Compat.lua",
         "Interface/AddOns/TurtleSeamlessMap/README.md",
         "Interface/AddOns/TurtleSeamlessMap/LICENSE-OpenMap.txt",
-        "Interface/AddOns/TurtleSeamlessMap/Art/v2_4_1.blp",
+        "Interface/AddOns/TurtleSeamlessMap/Art/v4_paper_0_0.blp",
         "Interface/AddOns/TurtleSeamlessMap/FocusData.lua",
-        "Interface/AddOns/TurtleSeamlessMap/PresentationData.lua"
+        "Interface/AddOns/TurtleSeamlessMap/PresentationData.lua",
+        "Interface/AddOns/TurtleSeamlessMap/Atlas.lua",
+        "Interface/AddOns/TurtleSeamlessMap/AtlasData.lua"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "0.2.2曾通过28组模拟/资源检查；用户后续确认轮廓错位/缺边、提尔之手方形、露出粗底图及背景风格问题。统一大陆图集方案未实施；全量源覆盖、控制点、试验片区、地下城市、真实资源/性能与首次定位仍待核查或游戏验收。"
+      "pending": "0.3.0通过33组模拟/资源检查；首次定位、全部海岸/文字/地下城市和真实显存/帧率待游戏验收。统一图集为首轮全域拼接，部分色差、未绘制山带与近似海陆仍需逐区修整，不声称逐像素手工重绘或完美融合；WDT无索引格子另列。"
     }
   ],
   "addons": [
