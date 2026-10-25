@@ -3015,7 +3015,7 @@
       ]
     }
   ],
-  "runtime_dated_records": 3,
+  "runtime_dated_records": 4,
   "runtime_components": [
     {
       "addon": "VanillaHelpers",
@@ -3043,12 +3043,21 @@
       "addon": "nampower",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/nampower.md",
-      "purpose": "PSS 当前进程线程枚举与启动计时源码候选已构建；保留原检查及失败回退，现用 DLL 未替换，待游戏验收。",
+      "purpose": "已按用户明确要求部署 PSS 线程枚举计时候选，旧版与日志已备份；替换后摘要核对通过，由用户手动启动对照，待游戏验收。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "实现 PSS 线程枚举候选并保留启动计时与回退",
+      "latest_record_title": "按用户要求替换候选 DLL 供手动启动对照",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 1,
+      "record_count": 2,
       "records": [
+        {
+          "id": "nampower-20261025-02",
+          "date": "2026-10-25",
+          "title": "按用户要求替换候选 DLL 供手动启动对照",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-nampower-20261025-02"
+        },
         {
           "id": "nampower-20261025-01",
           "date": "2026-10-25",
