@@ -2579,6 +2579,19 @@
       "maintenance_files": [
         "VanillaHelpers.dll"
       ]
+    },
+    {
+      "addon": "nampower",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/nampower.md",
+      "purpose": "PSS 当前进程线程枚举与启动计时源码候选已构建；保留原检查及失败回退，现用 DLL 未替换，待游戏验收。",
+      "sources": [
+        "PluginHistory/Research/nampower-候选实现-20261025.md",
+        "PluginHistory/Research/nampower-候选检查-20261025.json"
+      ],
+      "maintenance_files": [
+        "nampower.dll"
+      ]
     }
   ]
 }

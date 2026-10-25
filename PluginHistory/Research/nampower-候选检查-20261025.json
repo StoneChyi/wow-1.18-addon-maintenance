@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-25",
+  "status": "candidate_built_not_deployed",
+  "game_tested": false,
+  "source_commit": "2c7f51cd436e9b0ce88271e84ce5a77c19f2c23b",
+  "build_inputs_sha256": "767c745ad91cb2bfe7f93b9915b85da64d4fd33148ca55e1b0c549075725a405",
+  "build_inputs_files": 18930,
+  "installed_sha256": "1fe36ff8a421393116e6b58d801fa4dced35db59f1457136a79fce247142d4ec",
+  "original_path_build_sha256": "10e17a614464dee6a7c9361d715cd4db8e9e53e5116f62cc06ef9daf5ae21640",
+  "candidate_sha256": "f226779fe49db61d1e87f16ad34a27188c06e5abf0ecc5f6df994c986c812bd7",
+  "candidate_bytes": 1034240,
+  "native_unit_groups": 13,
+  "native_unit_failures": 0,
+  "metrics_enabled_test": true,
+  "metrics_disabled_test": true,
+  "live_workers": 72,
+  "live_lifecycle_rounds": 20,
+  "live_resource_rounds": 5000,
+  "handles_before": 280,
+  "handles_after": 280,
+  "enumeration_batches": {
+    "iterations_per_batch": 59,
+    "original_ms": [2251.8277, 3078.0246, 3686.1347, 3449.6979, 3451.3012],
+    "pss_ms": [19.6386, 19.8343, 29.4025, 28.0101, 28.8261],
+    "scope": "own test process; no game patching"
+  },
+  "verification_integration": {
+    "verify_calls_each": 59,
+    "thread_checks_each": 4248,
+    "original_ms": [2354.3007, 2356.2125, 2334.6193],
+    "pss_ms": [62.8552, 63.7109, 62.4791],
+    "pss_calls_each": 59,
+    "fallback_calls_each": 0,
+    "original_separate_enumeration_timing": null,
+    "scope": "actual prepared hadesmem verifier; observes own waiting threads, never installs hooks"
+  },
+  "static_checks": {
+    "pe32_x86_dll": true,
+    "exports": ["Load"],
+    "imports": ["KERNEL32.dll", "USER32.dll", "CRYPT32.dll"],
+    "static_pss_imports": false,
+    "new_vc_runtime_dll_dependency": false,
+    "hook_count": 59,
+    "hook_order_and_addresses_unchanged": true,
+    "other_nampower_gameplay_sources_byte_unchanged": true
+  },
+  "limits": [
+    "not game startup or gameplay acceptance",
+    "old Windows export absence is fault-injected, not tested on an old OS",
+    "existing concurrent patching and rollback limitations remain",
+    "public mirror build is not a bit-identical reconstruction of installed DLL",
+    "partial ZIP extraction verifies TLS and member CRC, not the entire package SHA256"
+  ]
+}

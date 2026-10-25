@@ -1,0 +1,70 @@
+{
+  "msvc": [
+    {
+      "package": "Microsoft.VC.14.43.17.13.CRT.Headers.base",
+      "version": "14.43.34810",
+      "file": "Microsoft.VC.14.43.17.13.CRT.Headers.base.vsix",
+      "bytes": 2120522,
+      "sha256": "7024677a750afaffd782ac02019b4411e3dcbada380ed2b9f1af011788c024d8",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/a83e9581-0ba5-47ea-8868-dcbf39b074c5/7024677a750afaffd782ac02019b4411e3dcbada380ed2b9f1af011788c024d8/Microsoft.VC.14.43.17.13.CRT.Headers.base.vsix"
+    },
+    {
+      "package": "Microsoft.VC.14.43.17.13.Tools.HostX64.TargetX86.base",
+      "version": "14.43.34810",
+      "file": "Microsoft.VC.14.43.17.13.Tools.HostX64.TargetX86.base.vsix",
+      "bytes": 22884983,
+      "sha256": "2ea583d78020232793ee5aece46ccf0fca2eebf251d4926166e060522550040f",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/6bc1a084-a9f2-40bc-b544-ba6edf825c1a/2ea583d78020232793ee5aece46ccf0fca2eebf251d4926166e060522550040f/Microsoft.VC.14.43.17.13.Tools.HostX64.TargetX86.base.vsix"
+    },
+    {
+      "package": "Microsoft.VC.14.43.17.13.Tools.HostX64.TargetX86.Res.base",
+      "version": "14.43.34810",
+      "file": "Microsoft.VC.14.43.17.13.Tools.HostX64.TargetX86.Res.base.enu.vsix",
+      "bytes": 224542,
+      "sha256": "ac1a8407f37d877486ab741be2dd292c28e6c4e4422e43ccf125b91adcf55bbf",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/6bc1a084-a9f2-40bc-b544-ba6edf825c1a/ac1a8407f37d877486ab741be2dd292c28e6c4e4422e43ccf125b91adcf55bbf/Microsoft.VC.14.43.17.13.Tools.HostX64.TargetX86.Res.base.enu.vsix"
+    },
+    {
+      "package": "Microsoft.VC.14.43.17.13.CRT.x86.Desktop.base",
+      "version": "14.43.34810",
+      "file": "Microsoft.VC.14.43.17.13.CRT.x86.Desktop.base.vsix",
+      "bytes": 89022072,
+      "sha256": "2f22a1520056ad1b05833485daa1d8f6c5d508b23b5271f22090ab343d65571a",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/a83e9581-0ba5-47ea-8868-dcbf39b074c5/2f22a1520056ad1b05833485daa1d8f6c5d508b23b5271f22090ab343d65571a/Microsoft.VC.14.43.17.13.CRT.x86.Desktop.base.vsix"
+    },
+    {
+      "package": "Microsoft.VC.14.43.17.13.CRT.x86.Store.base",
+      "version": "14.43.34810",
+      "file": "Microsoft.VC.14.43.17.13.CRT.x86.Store.base.vsix",
+      "bytes": 27251094,
+      "sha256": "b590766fcee42c09fd4e38247346a2b19f94be9f31c7072f6486d3d59861afe1",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/a83e9581-0ba5-47ea-8868-dcbf39b074c5/b590766fcee42c09fd4e38247346a2b19f94be9f31c7072f6486d3d59861afe1/Microsoft.VC.14.43.17.13.CRT.x86.Store.base.vsix"
+    },
+    {
+      "package": "Microsoft.VC.14.43.17.13.Premium.Tools.HostX64.TargetX86.base",
+      "version": "14.43.34810",
+      "file": "Microsoft.VC.14.43.17.13.Premium.Tools.HostX64.TargetX86.base.vsix",
+      "bytes": 120146,
+      "sha256": "cfac7d8fabf857a65b93f0e8eb37819fdf3f959a399a243afd0b817870871521",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/a83e9581-0ba5-47ea-8868-dcbf39b074c5/cfac7d8fabf857a65b93f0e8eb37819fdf3f959a399a243afd0b817870871521/Microsoft.VC.14.43.17.13.Premium.Tools.HostX64.TargetX86.base.vsix"
+    }
+  ],
+  "sdk": [
+    {
+      "id": "microsoft.windows.sdk.cpp",
+      "version": "10.0.22621.3233",
+      "bytes": 153719502,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.windows.sdk.cpp/10.0.22621.3233/microsoft.windows.sdk.cpp.10.0.22621.3233.nupkg"
+    },
+    {
+      "id": "microsoft.windows.sdk.cpp.x86",
+      "version": "10.0.22621.3233",
+      "bytes": 49774826,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.windows.sdk.cpp.x86/10.0.22621.3233/microsoft.windows.sdk.cpp.x86.10.0.22621.3233.nupkg"
+    }
+  ],
+  "source_commit": "2c7f51cd436e9b0ce88271e84ce5a77c19f2c23b",
+  "source_archive_sha256": "64ff24035fb4ac7f6b0a3a9d0365f33e13993e1a4d740ea3697e0d1285f7d42f",
+  "hadesmem_archive_sha256": "9abe86dde0ab59f6b5feecb0444848b280d61980523d7fed9700755162ba7728",
+  "msvc_license": "https://go.microsoft.com/fwlink/?LinkId=2179911"
+}
