@@ -2584,11 +2584,12 @@
       "addon": "nampower",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/nampower.md",
-      "purpose": "已按用户明确要求部署 PSS 线程枚举计时候选，旧版与日志已备份；替换后摘要核对通过，由用户手动启动对照，待游戏验收。",
+      "purpose": "PSS 候选实际启动触发 ERROR #132，已撤回并恢复旧 DLL；确认 GetThreadContext 错误31，原始卡顿与关联 DLL/配置继续排查。",
       "sources": [
         "PluginHistory/Research/nampower-候选实现-20261025.md",
         "PluginHistory/Research/nampower-候选检查-20261025.json",
-        "PluginHistory/Research/nampower-候选部署-20261025.md"
+        "PluginHistory/Research/nampower-候选部署-20261025.md",
+        "PluginHistory/Research/nampower-启动失败与撤回-20261025.md"
       ],
       "maintenance_files": [
         "nampower.dll"

@@ -93,7 +93,7 @@
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
 | [VanillaHelpers](VanillaHelpers.md) | 2026-10-25 | [按用户要求回退到仓库旧版](VanillaHelpers.md#change-VanillaHelpers-20261025-01) | 待游戏验收 |
-| [nampower](nampower.md) | 2026-10-25 | [按用户要求替换候选 DLL 供手动启动对照](nampower.md#change-nampower-20261025-02) | 待游戏验收 |
+| [nampower](nampower.md) | 2026-10-25 | [实际启动触发致命异常，撤回候选并恢复旧版](nampower.md#change-nampower-20261025-03) | 用户实测（限本条范围） |
 | [DXVK](DXVK.md) | 2026-10-25 | [按用户要求回退到仓库旧版](DXVK.md#change-DXVK-20261025-01) | 待游戏验收 |
 
 <!-- preserved-index-context -->
