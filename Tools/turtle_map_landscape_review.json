@@ -1,0 +1,962 @@
+{
+  "baseline": "2b32b11814dc611bca97c0c125be773fd50fa71f",
+  "date": "2026-10-25",
+  "findings": [
+    {
+      "id": "K01",
+      "continent": 1,
+      "severity": "A",
+      "place": "冬泉谷东／东北缘—月语海岸西侧",
+      "world_rect": [
+        283,
+        125,
+        50,
+        100
+      ],
+      "related_maps": [
+        699,
+        281
+      ],
+      "description": "雪地与蓝色林地之间存在长直边、整齐台阶和宽暗色底带，远景也能辨认出拼块轮廓。"
+    },
+    {
+      "id": "K02",
+      "continent": 1,
+      "severity": "A",
+      "place": "月光林地—费伍德北段—冬泉谷交汇",
+      "world_rect": [
+        220,
+        155,
+        65,
+        48
+      ],
+      "related_maps": [
+        241,
+        182,
+        281
+      ],
+      "description": "山体／土色区有直角缺口，绿、棕、白三类地表之间夹着成段深色平台。"
+    },
+    {
+      "id": "K03",
+      "continent": 1,
+      "severity": "A",
+      "place": "海加尔北缘与东缘",
+      "world_rect": [
+        250,
+        189,
+        64,
+        57
+      ],
+      "related_maps": [
+        501,
+        281
+      ],
+      "description": "森林和雪地、暗色山地之间残留宽棕黑条带，东侧有明显近竖直的断口。"
+    },
+    {
+      "id": "K04",
+      "continent": 1,
+      "severity": "B",
+      "place": "海加尔西南—费伍德南段—灰谷北侧",
+      "world_rect": [
+        199,
+        223,
+        85,
+        40
+      ],
+      "related_maps": [
+        501,
+        182,
+        43
+      ],
+      "description": "延展岩石颗粒大小和密度过于统一，形成碎石毯；与原山体起伏和森林底色衔接生硬。"
+    },
+    {
+      "id": "K05",
+      "continent": 1,
+      "severity": "A",
+      "place": "灰谷—石爪山脉北界",
+      "world_rect": [
+        150,
+        258,
+        78,
+        46
+      ],
+      "related_maps": [
+        43,
+        81
+      ],
+      "description": "橙色石爪地形以水平边和竖直折角切入绿色森林，是最明显的大矩形边界之一。"
+    },
+    {
+      "id": "K06",
+      "continent": 1,
+      "severity": "A",
+      "place": "灰谷—贫瘠之地西北接口",
+      "world_rect": [
+        205,
+        285,
+        55,
+        28
+      ],
+      "related_maps": [
+        43,
+        11,
+        81
+      ],
+      "description": "森林、橙岩和浅色草地呈阶梯拼块连接，存在暗色方格／三角缺细节带。"
+    },
+    {
+      "id": "K07",
+      "continent": 1,
+      "severity": "A",
+      "place": "石爪南缘—凄凉北缘",
+      "world_rect": [
+        140,
+        319,
+        73,
+        31
+      ],
+      "related_maps": [
+        81,
+        101
+      ],
+      "description": "橙红山体与灰白地形之间有长水平切线和规则直角，局部灰底像贴上的方形图页。"
+    },
+    {
+      "id": "K08",
+      "continent": 1,
+      "severity": "A",
+      "place": "凄凉东缘—莫高雷西缘",
+      "world_rect": [
+        180,
+        346,
+        49,
+        55
+      ],
+      "related_maps": [
+        101,
+        9
+      ],
+      "description": "灰白岩地、棕色填充和绿草地在阶梯轮廓处直接截断，明暗与纹理尺度同时变化。"
+    },
+    {
+      "id": "K09",
+      "continent": 1,
+      "severity": "A",
+      "place": "菲拉斯北缘—凄凉／莫高雷南侧",
+      "world_rect": [
+        130,
+        372,
+        100,
+        35
+      ],
+      "related_maps": [
+        121,
+        101,
+        9
+      ],
+      "description": "林地北沿仍有规则横边，周围棕色、灰色底块与绿色山地缺少自然过渡。"
+    },
+    {
+      "id": "K10",
+      "continent": 1,
+      "severity": "B",
+      "place": "厄运之槌外部—菲拉斯林地",
+      "world_rect": [
+        164,
+        396,
+        45,
+        41
+      ],
+      "related_maps": [
+        121
+      ],
+      "description": "新绘浅灰建筑比周围地形锐利、平直，局部像铺在草地上的平面构件；外围岩石填充与原森林仍有材质接界。建筑自身的直线不判为错误。"
+    },
+    {
+      "id": "K11",
+      "continent": 1,
+      "severity": "A",
+      "place": "菲拉斯东缘—千针石林西北",
+      "world_rect": [
+        209,
+        410,
+        43,
+        48
+      ],
+      "related_maps": [
+        121,
+        61,
+        11
+      ],
+      "description": "填充区虽加了岩石，底部仍显水平／直角边；森林、红色石林与棕色空白带不连续。"
+    },
+    {
+      "id": "K12",
+      "continent": 1,
+      "severity": "A",
+      "place": "尘泥南缘—千针／闪光平原北侧",
+      "world_rect": [
+        269,
+        429,
+        48,
+        33
+      ],
+      "related_maps": [
+        141,
+        61
+      ],
+      "description": "深色沼泽以阶梯和直边收尾，紧贴浅色盐地／红土，局部有近纯色空白片。"
+    },
+    {
+      "id": "K13",
+      "continent": 1,
+      "severity": "B",
+      "place": "菲拉斯南缘—希利苏斯北缘",
+      "world_rect": [
+        143,
+        450,
+        58,
+        30
+      ],
+      "related_maps": [
+        121,
+        261
+      ],
+      "description": "树冠和绿岩直接接到灰白沙岩，横向材质边界与统一碎石填充仍清楚可见。"
+    },
+    {
+      "id": "K14",
+      "continent": 1,
+      "severity": "A",
+      "place": "希利苏斯西侧—安其拉西侧条带",
+      "world_rect": [
+        133,
+        475,
+        27,
+        75
+      ],
+      "related_maps": [
+        261
+      ],
+      "description": "岩石延展旁仍夹有笔直棕色长槽／方形底块，新增岩纹反而强化了保留条带的边缘。"
+    },
+    {
+      "id": "K15",
+      "continent": 1,
+      "severity": "A",
+      "place": "希利苏斯—安其拉外围与南端",
+      "world_rect": [
+        145,
+        489,
+        57,
+        76
+      ],
+      "related_maps": [
+        261
+      ],
+      "description": "外部模型、旧庭院预渲染图和补纹理区的清晰度／底色不同；西侧、底部可见保留矩形边与直线暗带。"
+    },
+    {
+      "id": "K16",
+      "continent": 1,
+      "severity": "B",
+      "place": "安戈洛南侧／西南缺细节地带",
+      "world_rect": [
+        189,
+        503,
+        70,
+        48
+      ],
+      "related_maps": [
+        201,
+        261,
+        161
+      ],
+      "description": "大片均匀岩石纹理像地毯，未延续环形山的坡度层次；与原有山脚、海岸及沙漠的风格差别大。"
+    },
+    {
+      "id": "K17",
+      "continent": 1,
+      "severity": "A",
+      "place": "塔纳利斯西北—祖尔法拉克外围",
+      "world_rect": [
+        249,
+        458,
+        33,
+        37
+      ],
+      "related_maps": [
+        161,
+        61
+      ],
+      "description": "橙色山地外围有深色直角帽边，盐地／沙地／山体之间仍能看出方块轮廓。非副本地图页问题。"
+    },
+    {
+      "id": "K18",
+      "continent": 1,
+      "severity": "B",
+      "place": "塔纳利斯东南海岸与南部小岛浅海",
+      "world_rect": [
+        285,
+        495,
+        56,
+        80
+      ],
+      "related_maps": [
+        161
+      ],
+      "description": "浅海里有方形色块、直线水深带和台阶状蓝色边缘，和外海底色接合不够自然。"
+    },
+    {
+      "id": "K19",
+      "continent": 1,
+      "severity": "B",
+      "place": "艾萨拉—杜隆塔尔近海",
+      "world_rect": [
+        294,
+        242,
+        63,
+        123
+      ],
+      "related_maps": [
+        181,
+        4
+      ],
+      "description": "紫灰／青灰浅海接深蓝外海时出现低清方块；陆地近海轮廓部分呈网格台阶。"
+    },
+    {
+      "id": "K20",
+      "continent": 1,
+      "severity": "B",
+      "place": "黑海岸、凄凉和菲拉斯西岸浅水（代表窗口：凄凉西岸）",
+      "world_rect": [
+        122,
+        329,
+        28,
+        48
+      ],
+      "related_maps": [
+        42,
+        101,
+        121
+      ],
+      "description": "多处浅水岸边可见小矩形色块或窄直条；不把自然直立海崖本身算作异常。"
+    },
+    {
+      "id": "E01",
+      "continent": 0,
+      "severity": "A",
+      "place": "萨拉斯高地东南—东瘟疫北部山地",
+      "world_rect": [
+        795,
+        122,
+        82,
+        43
+      ],
+      "related_maps": [
+        513,
+        23
+      ],
+      "description": "大片深棕／黑绿色低细节区域呈块状台地，和已绘林地、红色瘟疫地形分界陡直。"
+    },
+    {
+      "id": "E02",
+      "continent": 0,
+      "severity": "A",
+      "place": "东瘟疫北缘／南缘",
+      "world_rect": [
+        783,
+        140,
+        72,
+        58
+      ],
+      "related_maps": [
+        23,
+        22,
+        26
+      ],
+      "description": "红褐地表以明显的阶梯矩形轮廓结束，外围夹有宽暗色条带。"
+    },
+    {
+      "id": "E03",
+      "continent": 0,
+      "severity": "A",
+      "place": "东瘟疫—提尔之手—血色领地",
+      "world_rect": [
+        823,
+        165,
+        58,
+        43
+      ],
+      "related_maps": [
+        23,
+        502
+      ],
+      "description": "红褐岩地、绿色城镇和东侧山地的边界存在长直段和方形底块，区域外围仍有图页拼接感。"
+    },
+    {
+      "id": "E04",
+      "continent": 0,
+      "severity": "B",
+      "place": "西瘟疫北段—提瑞斯法东北",
+      "world_rect": [
+        738,
+        154,
+        40,
+        42
+      ],
+      "related_maps": [
+        22,
+        20
+      ],
+      "description": "土灰色与森林地表之间有局部直角色片和粗细不一的岩地；需以近景进一步统一，不是地图缺失。"
+    },
+    {
+      "id": "E05",
+      "continent": 0,
+      "severity": "A",
+      "place": "辛特兰北缘与东缘",
+      "world_rect": [
+        789,
+        190,
+        51,
+        58
+      ],
+      "related_maps": [
+        26,
+        23
+      ],
+      "description": "北部红地与绿岩交界有规则台阶，东侧山地旁夹着狭长低细节深色地带。"
+    },
+    {
+      "id": "E06",
+      "continent": 0,
+      "severity": "A",
+      "place": "阿拉希东缘／东南缘",
+      "world_rect": [
+        789,
+        240,
+        41,
+        40
+      ],
+      "related_maps": [
+        16,
+        40
+      ],
+      "description": "丘陵之外有宽棕色弧形带，局部断成规则直边；南侧与湿地山地的细节尺度不一致。"
+    },
+    {
+      "id": "E07",
+      "continent": 0,
+      "severity": "A",
+      "place": "湿地北部／东北部山地",
+      "world_rect": [
+        775,
+        269,
+        53,
+        47
+      ],
+      "related_maps": [
+        40,
+        16,
+        684
+      ],
+      "description": "大片几乎只有底色的区域被灰岩／绿地包围，包含长竖边和阶梯矩形底片。"
+    },
+    {
+      "id": "E08",
+      "continent": 0,
+      "severity": "A",
+      "place": "丹莫罗西北／北部雪线—湿地南缘",
+      "world_rect": [
+        688,
+        309,
+        103,
+        29
+      ],
+      "related_maps": [
+        40,
+        27
+      ],
+      "description": "白雪的顶边有明显横切和直角台阶；邻近山地、灰色平台的过渡失去连续起伏。"
+    },
+    {
+      "id": "E09",
+      "continent": 0,
+      "severity": "A",
+      "place": "丹莫罗—洛克莫丹及南部雪线",
+      "world_rect": [
+        764,
+        321,
+        28,
+        47
+      ],
+      "related_maps": [
+        27,
+        35,
+        28
+      ],
+      "description": "雪山在东缘按规则阶梯终止，绿色地形、灰底和下方橙色岩地出现多层方块边。"
+    },
+    {
+      "id": "E10",
+      "continent": 0,
+      "severity": "A",
+      "place": "荒芜之地北／东／南边框",
+      "world_rect": [
+        772,
+        349,
+        67,
+        48
+      ],
+      "related_maps": [
+        17,
+        35,
+        28,
+        29
+      ],
+      "description": "大块橙色地形外轮廓近矩形，北边、东边、南边均有强烈直线和直角；外围底色没有地貌延续。"
+    },
+    {
+      "id": "E11",
+      "continent": 0,
+      "severity": "A",
+      "place": "燃烧平原东南—赤脊山北侧灰色平台",
+      "world_rect": [
+        762,
+        380,
+        69,
+        48
+      ],
+      "related_maps": [
+        29,
+        36,
+        30
+      ],
+      "description": "存在巨大的浅灰色方形地貌／低细节山体，东边与底边成直线，旁边残留深棕色空带。"
+    },
+    {
+      "id": "E12",
+      "continent": 0,
+      "severity": "A",
+      "place": "冷酷海岸西缘至以南的未细化带",
+      "world_rect": [
+        814,
+        285,
+        40,
+        129
+      ],
+      "related_maps": [
+        684,
+        40,
+        35,
+        17,
+        36
+      ],
+      "description": "沿东部海岸内侧出现连续深色长带，夹着多层灰色／棕色方片；局部不像完整山脉。"
+    },
+    {
+      "id": "E13",
+      "continent": 0,
+      "severity": "A",
+      "place": "暮色森林东缘—逆风小径",
+      "world_rect": [
+        750,
+        443,
+        34,
+        40
+      ],
+      "related_maps": [
+        34,
+        32
+      ],
+      "description": "灰蓝山地和绿灰森林之间存在笔直边及直角底部，局部材质像独立长方块。"
+    },
+    {
+      "id": "E14",
+      "continent": 0,
+      "severity": "A",
+      "place": "赤脊—悲伤沼泽北侧／西侧",
+      "world_rect": [
+        776,
+        439,
+        45,
+        30
+      ],
+      "related_maps": [
+        36,
+        38,
+        32
+      ],
+      "description": "红土、黄绿沼泽和灰色山地之间残留暗色帽边、方形凹口及硬切，色彩缺乏缓冲。"
+    },
+    {
+      "id": "E15",
+      "continent": 0,
+      "severity": "A",
+      "place": "诅咒之地外围",
+      "world_rect": [
+        775,
+        462,
+        46,
+        45
+      ],
+      "related_maps": [
+        19,
+        38,
+        32
+      ],
+      "description": "红橙区域的外缘有明显近矩形阶梯轮廓，与灰地／深色山带分离；不是单纯自然火山口形状。"
+    },
+    {
+      "id": "E16",
+      "continent": 0,
+      "severity": "A",
+      "place": "荆棘谷东北—祖尔格拉布外围",
+      "world_rect": [
+        743,
+        476,
+        42,
+        47
+      ],
+      "related_maps": [
+        37,
+        34,
+        32
+      ],
+      "description": "绿色密林区域呈直角图块，北边／东边接不同色底片和深棕空地，周围有台阶边。"
+    },
+    {
+      "id": "E17",
+      "continent": 0,
+      "severity": "A",
+      "place": "荆棘谷东侧／东南海岸内侧",
+      "world_rect": [
+        748,
+        508,
+        47,
+        33
+      ],
+      "related_maps": [
+        37
+      ],
+      "description": "丛林之外有宽深棕缺细节带和规则方片，山脚与海岸未形成连续地形。"
+    },
+    {
+      "id": "E18",
+      "continent": 0,
+      "severity": "B",
+      "place": "西部荒野南侧—荆棘谷西岸浅海",
+      "world_rect": [
+        675,
+        472,
+        30,
+        43
+      ],
+      "related_maps": [
+        39,
+        37
+      ],
+      "description": "浅海里可见低分辨率格块和突兀色带；西部荒野与暮色之间沿河的自然地貌差异不计为错误。"
+    },
+    {
+      "id": "E19",
+      "continent": 0,
+      "severity": "B",
+      "place": "东部主陆近海（代表：阿拉希东岸）",
+      "world_rect": [
+        816,
+        253,
+        26,
+        29
+      ],
+      "related_maps": [
+        16,
+        26,
+        40,
+        24,
+        21,
+        20
+      ],
+      "description": "浅水与深海之间多处出现方形像素地块和台阶边；范围包括北岸、东岸及部分南岸。"
+    },
+    {
+      "id": "E20",
+      "continent": 0,
+      "severity": "A",
+      "place": "赤脊山东侧—悲伤沼泽东北缺细节带",
+      "world_rect": [
+        797,
+        418,
+        35,
+        28
+      ],
+      "related_maps": [
+        36,
+        38
+      ],
+      "description": "橙色山地旁有大块深绿棕色低细节底面，边界出现长竖段与直角，和东侧山体及南面沼泽连接不足。"
+    },
+    {
+      "id": "C01",
+      "continent": 0,
+      "severity": "B",
+      "place": "暴风城外围",
+      "world_rect": [
+        686,
+        397,
+        45,
+        32
+      ],
+      "related_maps": [
+        301,
+        30
+      ],
+      "description": "模型街区比周围山地／林地清晰，城外灰岩、城内地面与背景之间仍有材质和亮度差。当前运河能辨认为水面，本轮未重新出现“水面当道路”。"
+    },
+    {
+      "id": "C02",
+      "continent": 1,
+      "severity": "A",
+      "place": "奥格瑞玛北侧与外围",
+      "world_rect": [
+        280,
+        273,
+        41,
+        31
+      ],
+      "related_maps": [
+        321,
+        181,
+        4
+      ],
+      "description": "主城北侧有非常明显的黑棕色 L 形／矩形底带，岩墙之外存在平板色块；近景和大陆基础图集均保留。"
+    },
+    {
+      "id": "C03",
+      "continent": 0,
+      "severity": "B",
+      "place": "铁炉堡室内层—雪山背景",
+      "world_rect": [
+        739,
+        321,
+        28,
+        22
+      ],
+      "related_maps": [
+        341,
+        27
+      ],
+      "description": "室内平面切面与室外雪山硬接，黑色内部空隙和雪地的层级关系不自然。属于地下地图表现问题，不把圆环／建筑直线判作地貌错误。"
+    },
+    {
+      "id": "C04",
+      "continent": 1,
+      "severity": "B",
+      "place": "达纳苏斯—泰达希尔背景",
+      "world_rect": [
+        134,
+        100,
+        34,
+        24
+      ],
+      "related_maps": [
+        381,
+        41
+      ],
+      "description": "城市石地／树冠与外围紫色树干、灰绿山体的清晰度和色调不同；局部显平面叠图感。泰达希尔的树体外形本身不判错。"
+    },
+    {
+      "id": "C05",
+      "continent": 1,
+      "severity": "V",
+      "place": "雷霆崖外围草地",
+      "world_rect": [
+        188,
+        343,
+        32,
+        27
+      ],
+      "related_maps": [
+        362,
+        9
+      ],
+      "description": "本轮未见奥格瑞玛式明显城市矩形外框；主要是近景建筑／台地与外围较糊草地的清晰度差，是否需要重绘列为较低优先级。"
+    },
+    {
+      "id": "C06",
+      "continent": 0,
+      "severity": "B",
+      "place": "幽暗城室内层—地表道路／水系",
+      "world_rect": [
+        703,
+        177,
+        31,
+        25
+      ],
+      "related_maps": [
+        382,
+        20
+      ],
+      "description": "地下房间直接叠在地表道路、河道和草地上，外围和部分接界的层级感不协调。绿色液体和圆环地标不自动判为贴图错误。"
+    },
+    {
+      "id": "C07",
+      "continent": 0,
+      "severity": "A",
+      "place": "阿尔萨拉斯南侧／东南侧",
+      "world_rect": [
+        772,
+        111,
+        42,
+        38
+      ],
+      "related_maps": [
+        509,
+        513
+      ],
+      "description": "精细城镇与南侧深色地表之间可见直线沟缘及棕黑平台，城外轮廓与高地连接不足。"
+    },
+    {
+      "id": "V01",
+      "continent": 1,
+      "severity": "V",
+      "place": "杜隆塔尔—贫瘠沿怒水河交界",
+      "world_rect": [
+        279,
+        302,
+        26,
+        62
+      ],
+      "related_maps": [
+        4,
+        11
+      ],
+      "description": "两侧地色突变且部分近竖直；这里有真实河道和生境分界，不能仅凭直线就认定坐标／地形错误，需与游戏地貌核对。"
+    },
+    {
+      "id": "V02",
+      "continent": 0,
+      "severity": "V",
+      "place": "北风领—灼热峡谷西缘",
+      "world_rect": [
+        734,
+        363,
+        32,
+        54
+      ],
+      "related_maps": [
+        686,
+        28
+      ],
+      "description": "灰黑山体与棕绿地表的变化较急，但这里也有真实陡崖／隧道；列为需要地理核对的风格接缝。"
+    },
+    {
+      "id": "V03",
+      "continent": 1,
+      "severity": "V",
+      "place": "费伍德中部道路／池岸附近直线候选",
+      "world_rect": [
+        211,
+        207,
+        19,
+        23
+      ],
+      "related_maps": [
+        182
+      ],
+      "description": "自动检查发现约五个内部坐标单位长的近竖直边；近景涉及真实道路、毒水池和山谷边缘，可能由正常道路／池岸产生；需核对后才能决定是否处理，暂不认定为拼接错误。"
+    },
+    {
+      "id": "T01",
+      "continent": 1,
+      "severity": "V",
+      "place": "安戈洛中部单处图集边缘",
+      "world_rect": [
+        229.625,
+        482.1875,
+        7.9375,
+        4
+      ],
+      "related_maps": [
+        201
+      ],
+      "description": "最高细节贴片的一组下邻边 RGB 平均差偏高，alpha 连续。是否在游戏纹理采样下形成可见细线尚需放大实测，不能用它解释大陆级大方块。"
+    }
+  ],
+  "appearance_exclusions": [
+    {
+      "id": "K04-gap",
+      "continent": 1,
+      "polygon": [
+        [
+          234,
+          246
+        ],
+        [
+          274,
+          245
+        ],
+        [
+          284,
+          250
+        ],
+        [
+          281,
+          263
+        ],
+        [
+          230,
+          262
+        ],
+        [
+          227,
+          253
+        ]
+      ],
+      "reason": "Reviewed unsupported dark/banded appearance south of Hyjal; editorial scenery continuation only."
+    },
+    {
+      "id": "K16-gap",
+      "continent": 1,
+      "polygon": [
+        [
+          199,
+          511
+        ],
+        [
+          249,
+          511
+        ],
+        [
+          253,
+          519
+        ],
+        [
+          250,
+          536
+        ],
+        [
+          231,
+          541
+        ],
+        [
+          202,
+          540
+        ],
+        [
+          193,
+          531
+        ],
+        [
+          195,
+          518
+        ]
+      ],
+      "reason": "Reviewed unsupported appearance south of UnGoro; native roads, enabled liquid and placed models remain independently protected."
+    }
+  ]
+}

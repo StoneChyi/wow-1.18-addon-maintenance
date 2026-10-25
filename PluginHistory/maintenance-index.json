@@ -42,7 +42,7 @@
       "added_on": "2026-10-24",
       "creation_base_commit": "0e567516764ddee12f9703b50b8987779f3fe145",
       "note": "PluginHistory/Plugins/TurtleSeamlessMap.md",
-      "purpose": "独立地图0.7.0；修复登录误开图、定位及东部索引，稳定城市，扩展视口节点，改进重点边界、厄运外景和暴风城水面；原总览与坐标保留。",
+      "purpose": "独立地图0.8.0；连续材质与原生细节、城市轮廓／地下切面、实水面、压缩块对齐边缘；原版总览、原坐标与视口节点兼容保留。",
       "sources": [
         "PluginHistory/Research/TurtleSeamlessMap-首版实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.2.0优化方案-20261024.md",
@@ -62,7 +62,11 @@
         "PluginHistory/Research/TurtleSeamlessMap-0.6.0实现-20261024.md",
         "PluginHistory/Research/TurtleSeamlessMap-0.6.0地形资源-20261024.json",
         "PluginHistory/Research/TurtleSeamlessMap-0.7.0实现-20261024.md",
-        "PluginHistory/Research/TurtleSeamlessMap-0.7.0地形资源-20261024.json"
+        "PluginHistory/Research/TurtleSeamlessMap-0.7.0地形资源-20261024.json",
+        "PluginHistory/Research/TurtleSeamlessMap-0.8.0实现-20261025.md",
+        "PluginHistory/Research/TurtleSeamlessMap-0.8.0地形资源-20261025.json",
+        "PluginHistory/Research/TurtleSeamlessMap-地貌全图检查与分类修复-20261025.md",
+        "PluginHistory/Research/TurtleSeamlessMap-地貌修复逐项复核-20261025.json"
       ],
       "maintenance_files": [
         "Interface/AddOns/TurtleSeamlessMap/TurtleSeamlessMap.toc",
@@ -80,10 +84,10 @@
         "Interface/AddOns/TurtleSeamlessMap/TerrainData.lua",
         "Interface/AddOns/TurtleSeamlessMap/Art/v5_classic_0_0.blp",
         "Interface/AddOns/TurtleSeamlessMap/Art/v6_sea_1_0_0.blp",
-        "Interface/AddOns/TurtleSeamlessMap/Art/v8_city301_64_0_0.blp"
+        "Interface/AddOns/TurtleSeamlessMap/Art/v9_city301_64_0_0.blp"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "0.7.0通过69组模拟／资源／实际静态绘制器检查；登录／传送入口、各街区桥梁、全部接缝、快速缩放与帧率显存待游戏验收。缺源地貌为装饰延展，普通室外物件仍有源精度上限；动画、完整光照及既有模型／材质后备限制保留。"
+      "pending": "0.8.0通过81组离线检查；51条记录、60区域／城市、98地理窗口已复核。实际登录／传送、接缝、街区桥梁、缩放及性能待游戏验收；四处未证实地理候选、原生角形地貌、源精度与静态光照保留限制，不声称全部视觉问题已最终解决。"
     }
   ],
   "addons": [

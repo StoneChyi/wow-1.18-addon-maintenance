@@ -251,7 +251,10 @@ function M:UpdateVisibility()
             map.alpha = 1
         elseif map.city then
             map.cityActive = (self.settings.detailStyle=="terrain" or map==target) and not self:IsWorldView() and map.visible and coverage >= (map.cityActive and 0.58 or 0.72)
-            map.alpha = map.cityActive and G.Clamp((coverage-0.58)/0.38,0,1) or 0
+            local scene=self.settings.detailStyle=="terrain" and TurtleSeamlessMap_Terrain.cities[map.id]
+            -- An underground cutaway is an opaque floor/rock layer. Fading its
+            -- rooms lets surface grass and rivers shine through the interior.
+            map.alpha = map.cityActive and (scene and scene.indoor and 1 or G.Clamp((coverage-0.58)/0.38,0,1)) or 0
         else
             map.alpha = (self.settings.detailStyle=="terrain" or map==target) and not self:IsWorldView() and G.Clamp((coverage-0.10)/0.24,0,1) or 0
         end

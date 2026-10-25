@@ -1,13 +1,13 @@
 -- Baked geographic artwork is independent from the cursor's node territory.
--- Only visible 254-pixel cells are visited; each has a one-pixel texture gutter.
+-- Visit visible cells only; each scene declares its interior and gutter size.
 local M = TurtleSeamlessMap
 local G = M.Geometry
 local ART = "Interface\\AddOns\\TurtleSeamlessMap\\Art\\"
 local floor,ceil,min,max = math.floor,math.ceil,math.min,math.max
 local LIMIT = 256
 
-local function Window(view,w,h,rect,density,cols,rows)
-    local cell=TurtleSeamlessMap_Atlas.inner/density
+local function Window(view,w,h,rect,density,cols,rows,inner)
+    local cell=inner/density
     local l=max(0,floor((view.x-w/view.scale/2-rect[1])/cell))
     local t=max(0,floor((view.y-h/view.scale/2-rect[2])/cell))
     local r=min(cols-1,ceil((view.x+w/view.scale/2-rect[1])/cell)-1)
@@ -17,6 +17,8 @@ end
 
 function M:DrawAtlas(map,data,background)
     local w,h=self.canvas:GetWidth(),self.canvas:GetHeight()
+    local inner=data.inner or TurtleSeamlessMap_Atlas.inner
+    local gutter=data.gutter or 1
     local levels=background and {data.level} or data.levels
     local choice=table.getn(levels)
     for i,level in ipairs(levels) do
@@ -25,7 +27,7 @@ function M:DrawAtlas(map,data,background)
     local rect=data.rect
     while choice>1 do
         local q=levels[choice]
-        local l,t,r,b=Window(self.view,w,h,rect,q.density,q.cols,q.rows)
+        local l,t,r,b=Window(self.view,w,h,rect,q.density,q.cols,q.rows,inner)
         if (r-l+1)*(b-t+1)<=LIMIT then break end
         choice=choice-1
     end
@@ -42,7 +44,7 @@ function M:DrawAtlas(map,data,background)
     while choice>=1 do
         local level=levels[choice]
         local prefix=level.prefix or (background and "v4_paper" or "v4_c"..data.id.."_"..level.density)
-        local l,t,r,b,cell=Window(self.view,w,h,rect,level.density,level.cols,level.rows)
+        local l,t,r,b,cell=Window(self.view,w,h,rect,level.density,level.cols,level.rows,inner)
         local used,failed=0,false
         local start=self.tileUsed
         for row=t,b do
@@ -70,7 +72,7 @@ function M:DrawAtlas(map,data,background)
                         if texture.path then
                             texture:ClearAllPoints();texture:SetPoint("TOPLEFT",self.canvas,"TOPLEFT",a,-c)
                             texture:SetWidth(d);texture:SetHeight(e)
-                            texture:SetTexCoord((1+u*254)/256,(1+v*254)/256,(1+s*254)/256,(1+z*254)/256)
+                            texture:SetTexCoord((gutter+u*inner)/256,(gutter+v*inner)/256,(gutter+s*inner)/256,(gutter+z*inner)/256)
                             texture:SetAlpha(map.city and map.alpha or 1);texture:Show();texture.active=true
                             texture.paintPass=self.paintPass
                             self.tileUsed=self.tileUsed+1;self.tiles[self.tileUsed]=texture

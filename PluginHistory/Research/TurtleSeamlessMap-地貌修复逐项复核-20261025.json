@@ -1,0 +1,728 @@
+{
+  "version": "0.8.0",
+  "date": "2026-10-25",
+  "baseline": "2b32b11814dc611bca97c0c125be773fd50fa71f",
+  "scope": {
+    "findings": 51,
+    "regions": 60,
+    "geographic_windows": 98
+  },
+  "game_verified": false,
+  "limitations": "分类修复与离线复核不代表全部美术缺陷已最终解决；源折角、暗带、清晰度和静态模型光照限制仍保留。",
+  "findings": [
+    {
+      "id": "K01",
+      "place": "冬泉谷东／东北缘—月语海岸西侧",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        283,
+        125,
+        50,
+        100
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K02",
+      "place": "月光林地—费伍德北段—冬泉谷交汇",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        220,
+        155,
+        65,
+        48
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K03",
+      "place": "海加尔北缘与东缘",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        250,
+        189,
+        64,
+        57
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K04",
+      "place": "海加尔西南—费伍德南段—灰谷北侧",
+      "continent": 1,
+      "severity": "B",
+      "world_rect": [
+        199,
+        223,
+        85,
+        40
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "取消共用岩纹，重建连续实际材质及明确缺源外观区；仍有源阴影暗带，不能称全部暗带已消除。"
+    },
+    {
+      "id": "K05",
+      "place": "灰谷—石爪山脉北界",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        150,
+        258,
+        78,
+        46
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K06",
+      "place": "灰谷—贫瘠之地西北接口",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        205,
+        285,
+        55,
+        28
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K07",
+      "place": "石爪南缘—凄凉北缘",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        140,
+        319,
+        73,
+        31
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K08",
+      "place": "凄凉东缘—莫高雷西缘",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        180,
+        346,
+        49,
+        55
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K09",
+      "place": "菲拉斯北缘—凄凉／莫高雷南侧",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        130,
+        372,
+        100,
+        35
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K10",
+      "place": "厄运之槌外部—菲拉斯林地",
+      "continent": 1,
+      "severity": "B",
+      "world_rect": [
+        164,
+        396,
+        45,
+        41
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K11",
+      "place": "菲拉斯东缘—千针石林西北",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        209,
+        410,
+        43,
+        48
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K12",
+      "place": "尘泥南缘—千针／闪光平原北侧",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        269,
+        429,
+        48,
+        33
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K13",
+      "place": "菲拉斯南缘—希利苏斯北缘",
+      "continent": 1,
+      "severity": "B",
+      "world_rect": [
+        143,
+        450,
+        58,
+        30
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K14",
+      "place": "希利苏斯西侧—安其拉西侧条带",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        133,
+        475,
+        27,
+        75
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K15",
+      "place": "希利苏斯—安其拉外围与南端",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        145,
+        489,
+        57,
+        76
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K16",
+      "place": "安戈洛南侧／西南缺细节地带",
+      "continent": 1,
+      "severity": "B",
+      "world_rect": [
+        189,
+        503,
+        70,
+        48
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "去掉统一碎石毯与占位底色，参考周围实际草土／砂石纹理及边界高度过渡；大面积缺源段为装饰填充，不宣称真实新地貌。"
+    },
+    {
+      "id": "K17",
+      "place": "塔纳利斯西北—祖尔法拉克外围",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        249,
+        458,
+        33,
+        37
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "K18",
+      "place": "塔纳利斯东南海岸与南部小岛浅海",
+      "continent": 1,
+      "severity": "B",
+      "world_rect": [
+        285,
+        495,
+        56,
+        80
+      ],
+      "status": "ocean_style_rebuilt",
+      "resolution": "按启用液面与高度统一外海浅深水过渡；保留原海岸关系，源采样精度及少量角形岸线待近景验收。"
+    },
+    {
+      "id": "K19",
+      "place": "艾萨拉—杜隆塔尔近海",
+      "continent": 1,
+      "severity": "B",
+      "world_rect": [
+        294,
+        242,
+        63,
+        123
+      ],
+      "status": "ocean_style_rebuilt",
+      "resolution": "按启用液面与高度统一外海浅深水过渡；保留原海岸关系，源采样精度及少量角形岸线待近景验收。"
+    },
+    {
+      "id": "K20",
+      "place": "黑海岸、凄凉和菲拉斯西岸浅水（代表窗口：凄凉西岸）",
+      "continent": 1,
+      "severity": "B",
+      "world_rect": [
+        122,
+        329,
+        28,
+        48
+      ],
+      "status": "ocean_style_rebuilt",
+      "resolution": "按启用液面与高度统一外海浅深水过渡；保留原海岸关系，源采样精度及少量角形岸线待近景验收。"
+    },
+    {
+      "id": "E01",
+      "place": "萨拉斯高地东南—东瘟疫北部山地",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        795,
+        122,
+        82,
+        43
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E02",
+      "place": "东瘟疫北缘／南缘",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        783,
+        140,
+        72,
+        58
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E03",
+      "place": "东瘟疫—提尔之手—血色领地",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        823,
+        165,
+        58,
+        43
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E04",
+      "place": "西瘟疫北段—提瑞斯法东北",
+      "continent": 0,
+      "severity": "B",
+      "world_rect": [
+        738,
+        154,
+        40,
+        42
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E05",
+      "place": "辛特兰北缘与东缘",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        789,
+        190,
+        51,
+        58
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E06",
+      "place": "阿拉希东缘／东南缘",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        789,
+        240,
+        41,
+        40
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E07",
+      "place": "湿地北部／东北部山地",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        775,
+        269,
+        53,
+        47
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E08",
+      "place": "丹莫罗西北／北部雪线—湿地南缘",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        688,
+        309,
+        103,
+        29
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E09",
+      "place": "丹莫罗—洛克莫丹及南部雪线",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        764,
+        321,
+        28,
+        47
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E10",
+      "place": "荒芜之地北／东／南边框",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        772,
+        349,
+        67,
+        48
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E11",
+      "place": "燃烧平原东南—赤脊山北侧灰色平台",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        762,
+        380,
+        69,
+        48
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E12",
+      "place": "冷酷海岸西缘至以南的未细化带",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        814,
+        285,
+        40,
+        129
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E13",
+      "place": "暮色森林东缘—逆风小径",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        750,
+        443,
+        34,
+        40
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E14",
+      "place": "赤脊—悲伤沼泽北侧／西侧",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        776,
+        439,
+        45,
+        30
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E15",
+      "place": "诅咒之地外围",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        775,
+        462,
+        46,
+        45
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E16",
+      "place": "荆棘谷东北—祖尔格拉布外围",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        743,
+        476,
+        42,
+        47
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E17",
+      "place": "荆棘谷东侧／东南海岸内侧",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        748,
+        508,
+        47,
+        33
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "E18",
+      "place": "西部荒野南侧—荆棘谷西岸浅海",
+      "continent": 0,
+      "severity": "B",
+      "world_rect": [
+        675,
+        472,
+        30,
+        43
+      ],
+      "status": "ocean_style_rebuilt",
+      "resolution": "按启用液面与高度统一外海浅深水过渡；保留原海岸关系，源采样精度及少量角形岸线待近景验收。"
+    },
+    {
+      "id": "E19",
+      "place": "东部主陆近海（代表：阿拉希东岸）",
+      "continent": 0,
+      "severity": "B",
+      "world_rect": [
+        816,
+        253,
+        26,
+        29
+      ],
+      "status": "ocean_style_rebuilt",
+      "resolution": "按启用液面与高度统一外海浅深水过渡；保留原海岸关系，源采样精度及少量角形岸线待近景验收。"
+    },
+    {
+      "id": "E20",
+      "place": "赤脊山东侧—悲伤沼泽东北缺细节带",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        797,
+        418,
+        35,
+        28
+      ],
+      "status": "terrain_transition_improved",
+      "resolution": "已应用连续实际材质、色彩与有效原生细节过渡；保留可辨认的山脊、道路和地标，部分源轮廓折角／暗带仍需精修。"
+    },
+    {
+      "id": "C01",
+      "place": "暴风城外围",
+      "continent": 0,
+      "severity": "B",
+      "world_rect": [
+        686,
+        397,
+        45,
+        32
+      ],
+      "status": "surface_model_integration",
+      "resolution": "仅真实模型覆盖融入共用大陆背景，取消旧整页背景并增加接地边；源精度与静态光照差仍有精修空间。"
+    },
+    {
+      "id": "C02",
+      "place": "奥格瑞玛北侧与外围",
+      "continent": 1,
+      "severity": "A",
+      "world_rect": [
+        280,
+        273,
+        41,
+        31
+      ],
+      "status": "surface_model_integration",
+      "resolution": "仅真实模型覆盖融入共用大陆背景，取消旧整页背景并增加接地边；源精度与静态光照差仍有精修空间。"
+    },
+    {
+      "id": "C03",
+      "place": "铁炉堡室内层—雪山背景",
+      "continent": 0,
+      "severity": "B",
+      "world_rect": [
+        739,
+        321,
+        28,
+        22
+      ],
+      "status": "cutaway_layer_repaired",
+      "resolution": "闭合岩壁切面，启用即不透明，源房间／入口保留；原生室内精度与无楼层选择限制保留。"
+    },
+    {
+      "id": "C04",
+      "place": "达纳苏斯—泰达希尔背景",
+      "continent": 1,
+      "severity": "B",
+      "world_rect": [
+        134,
+        100,
+        34,
+        24
+      ],
+      "status": "surface_model_integration",
+      "resolution": "仅真实模型覆盖融入共用大陆背景，取消旧整页背景并增加接地边；源精度与静态光照差仍有精修空间。"
+    },
+    {
+      "id": "C05",
+      "place": "雷霆崖外围草地",
+      "continent": 1,
+      "severity": "V",
+      "world_rect": [
+        188,
+        343,
+        32,
+        27
+      ],
+      "status": "geographic_candidate_retained",
+      "resolution": "未将未证实的道路／河岸／崖壁或低清差异当作错误强行重绘；原地理关系保留，待游戏核对。"
+    },
+    {
+      "id": "C06",
+      "place": "幽暗城室内层—地表道路／水系",
+      "continent": 0,
+      "severity": "B",
+      "world_rect": [
+        703,
+        177,
+        31,
+        25
+      ],
+      "status": "cutaway_layer_repaired",
+      "resolution": "闭合岩壁切面，启用即不透明，源房间／入口保留；原生室内精度与无楼层选择限制保留。"
+    },
+    {
+      "id": "C07",
+      "place": "阿尔萨拉斯南侧／东南侧",
+      "continent": 0,
+      "severity": "A",
+      "world_rect": [
+        772,
+        111,
+        42,
+        38
+      ],
+      "status": "surface_model_integration",
+      "resolution": "仅真实模型覆盖融入共用大陆背景，取消旧整页背景并增加接地边；源精度与静态光照差仍有精修空间。"
+    },
+    {
+      "id": "V01",
+      "place": "杜隆塔尔—贫瘠沿怒水河交界",
+      "continent": 1,
+      "severity": "V",
+      "world_rect": [
+        279,
+        302,
+        26,
+        62
+      ],
+      "status": "geographic_candidate_retained",
+      "resolution": "未将未证实的道路／河岸／崖壁或低清差异当作错误强行重绘；原地理关系保留，待游戏核对。"
+    },
+    {
+      "id": "V02",
+      "place": "北风领—灼热峡谷西缘",
+      "continent": 0,
+      "severity": "V",
+      "world_rect": [
+        734,
+        363,
+        32,
+        54
+      ],
+      "status": "geographic_candidate_retained",
+      "resolution": "未将未证实的道路／河岸／崖壁或低清差异当作错误强行重绘；原地理关系保留，待游戏核对。"
+    },
+    {
+      "id": "V03",
+      "place": "费伍德中部道路／池岸附近直线候选",
+      "continent": 1,
+      "severity": "V",
+      "world_rect": [
+        211,
+        207,
+        19,
+        23
+      ],
+      "status": "geographic_candidate_retained",
+      "resolution": "未将未证实的道路／河岸／崖壁或低清差异当作错误强行重绘；原地理关系保留，待游戏核对。"
+    },
+    {
+      "id": "T01",
+      "place": "安戈洛中部单处图集边缘",
+      "continent": 1,
+      "severity": "V",
+      "world_rect": [
+        229.625,
+        482.1875,
+        7.9375,
+        4
+      ],
+      "status": "technical_edge_repaired",
+      "resolution": "新图集共享压缩块全量核对为零差；未改原地理，实际细线仍待游戏确认。"
+    }
+  ]
+}

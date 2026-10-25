@@ -306,7 +306,7 @@ class SeamlessMapTests(unittest.TestCase):
         report=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.3.0资源-20261024.json').read_text(encoding='utf-8'))
         terrain=json.loads((ROOT/'PluginHistory/Research/TurtleSeamlessMap-0.4.0地形资源-20261024.json').read_text(encoding='utf-8'))
         classic=[r for r in terrain['files'] if r['file'].startswith('v5_classic_')]
-        refined=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.7.0*.json')).read_text(encoding='utf8'))
+        refined=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.8.0*.json')).read_text(encoding='utf8'))
         previous=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.5.0*.json')).read_text(encoding='utf8'))
         ocean=[r for r in previous['files'] if r['file'].startswith('v6_sea_')]
         report['files']+=classic+ocean+refined['files'];report['total_files']+=len(classic)+len(ocean)+refined['total_files']
@@ -765,19 +765,21 @@ class SeamlessMapTests(unittest.TestCase):
         self.assertTrue(all(not c['failures'] for c in audit.values()))
 
     def test_atlas_gutters_match_neighbours(self):
-        for prefix in ('v4_c1_16','v8_t1_32','v8_city301_64','v7_city341_96'):
+        for prefix in ('v4_c1_16','v9_t1_32','v9_city301_64','v9_city341_96'):
             paths=sorted((ADDON/'Art').glob(prefix+'_*.blp'));count=0
             for path in paths:
                 col,row=map(int,path.stem.split('_')[-2:])
                 for dc,dr in ((1,0),(0,1)):
                     other=path.with_name(f'{prefix}_{col+dc}_{row+dr}.blp')
                     if not other.is_file():continue
-                    a=(255,0,256,256) if dc else (0,255,256,256)
-                    b=(1,0,2,256) if dc else (0,1,256,2)
+                    aligned=prefix.startswith('v9_')
+                    a=((252,0,256,256) if dc else (0,252,256,256)) if aligned else ((255,0,256,256) if dc else (0,255,256,256))
+                    b=((4,0,8,256) if dc else (0,4,256,8)) if aligned else ((1,0,2,256) if dc else (0,1,256,2))
                     left=decode_blp(path.read_bytes()).convert('RGBA').crop(a)
                     right=decode_blp(other.read_bytes()).convert('RGBA').crop(b)
                     self.assertEqual(ImageChops.difference(left.getchannel('A'),right.getchannel('A')).getextrema()[1],0,prefix)
-                    self.assertLess(max(ImageStat.Stat(ImageChops.difference(left.convert('RGB'),right.convert('RGB'))).mean),18,prefix)
+                    if aligned:self.assertEqual(left.tobytes(),right.tobytes(),prefix)
+                    else:self.assertLess(max(ImageStat.Stat(ImageChops.difference(left.convert('RGB'),right.convert('RGB'))).mean),18,prefix)
                     count+=1
                     if count>=30:break
                 if count>=30:break
@@ -806,7 +808,7 @@ class SeamlessMapTests(unittest.TestCase):
           assert(not next(M.detailAreas))
           M:FocusMap(11);M:Render()
           local terrain=false
-          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v8_t1_',1,true) then terrain=true end end
+          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v9_t1_',1,true) then terrain=true end end
           assert(terrain)
           M:UpdateStyleMenu();M.styleMenu:Show()
           invoke(M.styleButtons[1],'OnClick');assert(M.settings.detailStyle=='paper')
@@ -1019,7 +1021,7 @@ class SeamlessMapTests(unittest.TestCase):
               for i=1,M.tileUsed do
                 local path=M.tiles[i].path
                 assert(not string.find(path,'v4_city',1,true))
-                if string.find(path,'v7_city',1,true) or string.find(path,'v8_city',1,true) then indoor=true end
+                if string.find(path,'v9_city',1,true) then indoor=true end
               end
               assert(indoor)
               local x,y=M:MapToWorld(id,.31,.62)
@@ -1028,7 +1030,7 @@ class SeamlessMapTests(unittest.TestCase):
             end
           end
           M:FocusMap(341);M.settings.cityMaps=false;M:RefreshAppearance()
-          for i=1,M.tileUsed do assert(not string.find(M.tiles[i].path,'v7_city',1,true) and not string.find(M.tiles[i].path,'v8_city',1,true)) end
+          for i=1,M.tileUsed do assert(not string.find(M.tiles[i].path,'v9_city',1,true)) end
           M.settings.cityMaps=true
           for _,style in ipairs({'terrain','paper','terrain'}) do
             M.settings.detailStyle=style;M:RefreshAppearance()
@@ -1126,7 +1128,7 @@ class SeamlessMapTests(unittest.TestCase):
                 self.assertGreater(len(city['sources']),80)
                 self.assertGreater(city['occluded_rock_pixels'],10000)
                 # Native indoor textures retain alpha around actual rooms.
-                path=next((ADDON/'Art').glob(f'v7_city{city["id"]}_96_*.blp'))
+                path=next((ADDON/'Art').glob(f'v9_city{city["id"]}_96_*.blp'))
                 self.assertGreater(decode_blp(path.read_bytes()).getchannel('A').getextrema()[1],0)
             self.assertEqual({c['id'] for c in report['cities']},{341,382})
         finally:
@@ -1178,14 +1180,14 @@ class SeamlessMapTests(unittest.TestCase):
           local selections=mapSets
           M:FocusMap(201);M.view.scale=24;M:RenderArt()
           local high=false
-          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v8_t1_32_',1,true) then high=true end end
+          for i=1,M.tileUsed do if string.find(M.tiles[i].path,'v9_t1_32_',1,true) then high=true end end
           assert(high)
           for _,id in ipairs({301,321,341,362,381,382,509}) do
             M:FocusMap(id);M.view.scale=64;M:RenderArt()
             local high=false
             for i=1,M.tileUsed do
               local path=M.tiles[i].path
-              if string.find(path,(id==301 and 'v8_city' or 'v7_city')..id..'_',1,true) then high=true end
+              if string.find(path,'v9_city'..id..'_',1,true) then high=true end
             end
             assert(high)
             for _,map in ipairs(M.maps) do if map.atlasPool then assert(#map.atlasPool<=256) end end
@@ -1340,7 +1342,7 @@ class SeamlessMapTests(unittest.TestCase):
             for _,scale in ipairs({2,4,8,16,32}) do
               M.view.scale=scale;M:RenderArt()
               local n=0;for _,tile in ipairs(map.atlasPool or {}) do if tile.active then
-                assert(string.find(tile.path,'v8_t'..scene.id..'_',1,true));n=n+1
+                assert(string.find(tile.path,'v9_t'..scene.id..'_',1,true));n=n+1
               end end
               assert(n>0,'Empty continent '..scene.id..' at '..scale)
             end
@@ -1430,7 +1432,9 @@ class SeamlessMapTests(unittest.TestCase):
         self.assertGreater(sum(r['changed_pixels'] for r in report['landscape']['guides']),5000000)
         self.assertTrue(any('kl_diremaul.wmo' in path for path in report['landscape']['diremaul']['models']))
         self.assertEqual({c['id'] for c in report['boundaries']['continents']},{0,1})
-        terrain=read_terrain(ADDON/'TerrainData.lua')
+        # Historical v0.7 protection is evidence of the superseded pipeline;
+        # the active v0.8 deliberately replaces those whole-rectangle locks.
+        terrain=read_terrain(OUT/'TerrainData.lua')
         self.assertEqual(terrain['revision'],8)
         for scene in report['continents']:
             name='Kalimdor' if scene['id']==1 else 'Azeroth'
@@ -1470,6 +1474,42 @@ class SeamlessMapTests(unittest.TestCase):
           pairs=original
           M:WorldView();M:Render();assert(M.questNodesVisited==0 and not next(M.detailAreas))
         ''')
+
+    def test_underground_cutaway_rooms_are_opaque_as_soon_as_active(self):
+        lua=runtime(defaults=True)
+        lua.execute('''
+          M.frame:Show();local px,py=-1,-1;M.Cursor=function() return px,py end
+          for _,id in ipairs({341,382}) do
+            M:FocusMap(id);local city=M.byID[id]
+            M.view.scale=math.max(M.canvas:GetWidth()/city.rect[3],M.canvas:GetHeight()/city.rect[4])*.74
+            M:RenderArt();assert(city.cityActive and city.alpha==1)
+            assert(TurtleSeamlessMap_Terrain.cities[id].indoor)
+            for _,p in ipairs({{1,1},{M.canvas.width/2,M.canvas.height/2},{-1,-1}}) do
+              px,py=p[1],p[2];M:RenderArt();assert(city.cityActive and city.alpha==1)
+            end
+          end
+          M:WorldView();M:RenderArt()
+          assert(not M.byID[341].cityActive and not M.byID[382].cityActive)
+        ''')
+
+    def test_landscape_release_preserves_geographic_features_and_exact_compressed_gutters(self):
+        report=json.loads(next((ROOT/'PluginHistory/Research').glob('TurtleSeamlessMap-0.8.0*.json')).read_text(encoding='utf8'))
+        audit=report['quality_audit']
+        self.assertEqual(report['map_data_sha256'],hashlib.sha256((ADDON/'MapData.lua').read_bytes()).hexdigest())
+        self.assertEqual(audit['files_checked'],report['total_files'])
+        self.assertGreater(audit['block_aligned_neighbour_pairs'],8000)
+        self.assertEqual(audit['maximum_shared_rgba_delta'],0)
+        self.assertEqual(sum(s['counts']['adts'] for s in report['sources']),1794)
+        self.assertEqual(sum(s['counts']['chunks'] for s in report['sources']),459264)
+        for source in report['sources']:
+            self.assertGreater(len(source['continuous_materials']['fields']),250)
+        self.assertGreater(sum(audit['protected_road_pixels_unchanged'].values()),10000)
+        self.assertEqual(set(audit['opaque_source_room_pixels_unchanged']),{'341','382'})
+        self.assertEqual(set(audit['opaque_source_model_pixels_unchanged']),{'301','321','362','381','509','aq','diremaul'})
+        lua=runtime(defaults=True)
+        self.assertEqual(lua.globals().TurtleSeamlessMap_Terrain.revision,9)
+        for _,scene in lua.globals().TurtleSeamlessMap_Terrain.continents.items():
+            self.assertEqual(scene.inner,248);self.assertEqual(scene.gutter,4)
 
     def test_targeted_aq_fill_preserves_courtyard_and_records_real_material(self):
         from turtle_map_archive import Client
