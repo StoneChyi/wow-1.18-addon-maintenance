@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
-  "updated_on": "2026-10-24",
+  "updated_on": "2026-10-25",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
@@ -2230,5 +2230,32 @@
     "pending_index": "PluginHistory/待确认插件.md",
     "rules": "PluginHistory/记录规范.md",
     "template": "PluginHistory/记录模板.md"
-  }
+  },
+  "runtime_components": [
+    {
+      "addon": "DXVK",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/DXVK.md",
+      "purpose": "按用户要求恢复仓库中的 DXVK 2.5.3 及旧 dxvk.conf；三个文件逐字节回退，游戏验收待确认。",
+      "sources": [
+        "PluginHistory/Research/DXVK与VanillaHelpers-回退-20261025.md"
+      ],
+      "maintenance_files": [
+        "d3d9.dll",
+        "dxvk.conf"
+      ]
+    },
+    {
+      "addon": "VanillaHelpers",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/VanillaHelpers.md",
+      "purpose": "按用户要求恢复仓库中的 VanillaHelpers.dll，撤下本次更新带入的 TexBridge 扩展版；待游戏验收。",
+      "sources": [
+        "PluginHistory/Research/DXVK与VanillaHelpers-回退-20261025.md"
+      ],
+      "maintenance_files": [
+        "VanillaHelpers.dll"
+      ]
+    }
+  ]
 }

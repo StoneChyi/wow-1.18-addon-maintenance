@@ -84,6 +84,15 @@
 - 修改插件页后运行 `python Tools/plugin_history.py build`，再运行 `python Tools/plugin_history.py check` 与 `python Tools/check_plugin_notes.py`。
 - 对应提交是可点击的 GitHub 提交链接；新记录可使用“随本条记录一并提交（见本页 Git 历史）”，避免为填入自身提交号另造提交。
 
+## 根目录运行依赖
+
+根目录 DLL 与图形配置单独记录，不计入插件目录数量或新增插件清单。
+
+| 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
+| --- | --- | --- | --- |
+| [VanillaHelpers](VanillaHelpers.md) | 2026-10-25 | [按用户要求回退到仓库旧版](VanillaHelpers.md#change-VanillaHelpers-20261025-01) | 待游戏验收 |
+| [DXVK](DXVK.md) | 2026-10-25 | [按用户要求回退到仓库旧版](DXVK.md#change-DXVK-20261025-01) | 待游戏验收 |
+
 <!-- preserved-index-context -->
 ## 历史检索与整合包记录
 

@@ -2585,5 +2585,52 @@
         }
       ]
     }
+  ],
+  "runtime_dated_records": 2,
+  "runtime_components": [
+    {
+      "addon": "VanillaHelpers",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/VanillaHelpers.md",
+      "purpose": "按用户要求恢复仓库中的 VanillaHelpers.dll，撤下本次更新带入的 TexBridge 扩展版；待游戏验收。",
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "按用户要求回退到仓库旧版",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "VanillaHelpers-20261025-01",
+          "date": "2026-10-25",
+          "title": "按用户要求回退到仓库旧版",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-VanillaHelpers-20261025-01"
+        }
+      ],
+      "scope_type": "runtime"
+    },
+    {
+      "addon": "DXVK",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/DXVK.md",
+      "purpose": "按用户要求恢复仓库中的 DXVK 2.5.3 及旧 dxvk.conf；三个文件逐字节回退，游戏验收待确认。",
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "按用户要求回退到仓库旧版",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "DXVK-20261025-01",
+          "date": "2026-10-25",
+          "title": "按用户要求回退到仓库旧版",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-DXVK-20261025-01"
+        }
+      ],
+      "scope_type": "runtime"
+    }
   ]
 }

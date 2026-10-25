@@ -63,7 +63,11 @@ def main():
         p.split("/")[2] for p in tracked if p.startswith("Interface/AddOns/")
     }
     rows, added = validate_addon_sets(index, expected)
-    all_rows = rows + added
+    runtime = index.get("runtime_components", [])
+    runtime_names = {row["addon"] for row in runtime}
+    assert len(runtime_names) == len(runtime), "Duplicate runtime components"
+    assert not runtime_names & {row["addon"] for row in rows + added}, "Runtime/addon names overlap"
+    all_rows = rows + added + runtime
     added_names = {row["addon"] for row in added}
     notes_root = ROOT / "PluginHistory/Plugins"
     expected_notes = {r["addon"] + ".md" for r in all_rows} | {"README.md"}
@@ -92,13 +96,19 @@ def main():
         assert "**" + STATUSES[row["status"]] + "**" in text
         assert "## 待补充" in text and "## 依据" in text
         actual_count = sum(p.startswith("Interface/AddOns/" + name + "/") for p in tracked)
-        assert row["tracked_files_at_reference"] == actual_count
+        if name not in runtime_names:
+            assert row["tracked_files_at_reference"] == actual_count
         for source in row["sources"]:
             assert historical_path_exists(source) or (
                 source.startswith("PluginHistory/Research/") and (ROOT / source).is_file()
             ) or current_path_exists(source), (name, source)
             evidence_count += 1
         for path in row["maintenance_files"]:
+            if name in runtime_names:
+                part = Path(path)
+                assert len(part.parts) == 1 and (part.suffix.lower() == ".dll" or path in {"dlls.txt", "dxvk.conf"}), path
+                assert path in tracked or current_path_exists(path), path
+                continue
             assert path.startswith("Interface/AddOns/" + name + "/"), path
             if name in added_names:
                 resolved = (ROOT / path).resolve()
@@ -136,6 +146,7 @@ def main():
         "counts": index["counts"],
         "added_addon_notes": len(added),
         "added_counts": index.get("added_counts", {}),
+        "runtime_component_notes": len(runtime),
         "markdown_files_checked": len(files),
         "local_links_checked": links,
         "evidence_entries_checked": evidence_count,
