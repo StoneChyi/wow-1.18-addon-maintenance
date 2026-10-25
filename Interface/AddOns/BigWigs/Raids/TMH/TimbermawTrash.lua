@@ -3,7 +3,7 @@ local module, L = BigWigs:ModuleDeclaration("Timbermaw Trash", "Timbermaw Hold")
 -- module variables
 module.revision = 30138
 module.trashMod = true
-module.enabletrigger = { "Withermaw Pathfinder", "Withermaw Shaman", "Withermaw Defiler", "Withermaw Ursa", "Corruption of Loktanag", "Tainted Mass",  "Son of Ursol", "Foulheart Trickster", "枯喉探路者", "枯喉萨满祭司", "枯喉污染者", "枯喉巨熊怪", "落潭的腐根", "被污染的胶团", "乌索尔之子", "腐心诡术师" }
+module.enabletrigger = { "Withermaw Pathfinder", "Withermaw Shaman", "Withermaw Defiler", "Withermaw Ursa", "Withermaw Totemic", "Corruption of Loktanag", "Tainted Mass",  "Son of Ursol", "Foulheart Trickster", "枯喉探路者", "枯喉萨满祭司", "枯喉污染者", "枯喉巨熊怪", "枯喉图腾师", "落潭的腐根", "被污染的胶团", "乌索尔之子", "腐心诡术师" }
 module.toggleoptions = {
     "pathfinder_illumination",
     "shaman_blessing",
@@ -15,6 +15,9 @@ module.toggleoptions = {
     -1,
     "ursa_command",
     "ursa_roar",
+    -1,
+    "totemic_stomp",
+    "totemic_totem",
     -1,
     "corruption_boils",
     "corruption_euyonalia",
@@ -40,6 +43,8 @@ module.defaultDB = {
     defiler_autotarget = false,  -- [NEW] 默认关闭
     ursa_command = playerClass == "HUNTER",
     ursa_roar = true,
+    totemic_stomp = true,
+    totemic_totem = true,
     corruption_boils = playerClass == BC["SHAMAN"] or playerClass == BC["PRIEST"] or playerClass == BC["PALADIN"],
     corruption_euyonalia = true,
     son_rage = playerClass == BC["HUNTER"],
@@ -87,6 +92,20 @@ L:RegisterTranslations("enUS", function()
         ursa_roar_cmd = "ursa_roar",
         ursa_roar_name = "Roar of the Ursa Alert",
         ursa_roar_desc = "Warns when a Withermaw Ursa begins to cast their aoe fear",
+
+        totemic_stomp_cmd = "totemic_stomp",
+        totemic_stomp_name = "War Stomp Alert",
+        totemic_stomp_desc = "Warns when a Withermaw Totemic begins to cast War Stomp",
+
+        totemic_totem_cmd = "totemic_totem",
+        totemic_totem_name = "Corrupted Totem Alert",
+        totemic_totem_desc = "Warns when a Withermaw Totemic begins to summon a Corrupted Totem",
+
+        -- 待实测校准：图腾师施法日志（来源：团本小助理规则库）
+        trigger_totemic_stomp = "begins to cast War Stomp",
+        msg_totemic_stomp = "War Stomp - melee move out, raid hug the wall!",
+        trigger_totemic_totem = "begins to cast Summon Corrupted Totem",
+        msg_totemic_totem = "Corrupted Totem - move away, watch for shadow nova!",
 
         corruption_boils_cmd = "corruption_boils",
         corruption_boils_name = "Black Boils Warning",
@@ -181,6 +200,14 @@ L:RegisterTranslations("zhCN", function()
         ursa_roar_name = "巨熊的咆哮警报",
         ursa_roar_desc = "当枯喉巨熊怪开始施放范围恐惧时发出警告",
 
+        totemic_stomp_cmd = "totemic_stomp",
+        totemic_stomp_name = "战争践踏警报",
+        totemic_stomp_desc = "当枯喉图腾师开始施放战争践踏时发出警告（待实测校准）",
+
+        totemic_totem_cmd = "totemic_totem",
+        totemic_totem_name = "堕落图腾警报",
+        totemic_totem_desc = "当枯喉图腾师开始施放召唤堕落图腾时发出警告（待实测校准）",
+
         corruption_boils_cmd = "corruption_boils",
         corruption_boils_name = "黑脓疮提醒",
         corruption_boils_desc = "当落潭的腐根施放黑脓疮时发出警告以便驱散",
@@ -217,6 +244,12 @@ L:RegisterTranslations("zhCN", function()
         msg_ursa_command = "巨熊怪增益光环激活-宁神射击！",
         trigger_ursa_roar = "枯喉巨熊怪开始施放巨熊的咆哮",
         bar_ursa_roar = "巨熊怪恐惧",
+
+        -- 待实测校准：图腾师施法日志（来源：团本小助理规则库）
+        trigger_totemic_stomp = "开始施放战争践踏",
+        msg_totemic_stomp = "战争践踏——近战离开，大团靠墙！",
+        trigger_totemic_totem = "开始施放召唤堕落图腾",
+        msg_totemic_totem = "堕落图腾——远离，注意暗影新星！",
 
         trigger_corruption_boils = "(.+)受到了黑脓疮效果的影响",
         msg_corruption_boils = "%s中了黑脓疮-驱散他们！",
@@ -258,6 +291,8 @@ local syncName = {
     shaman_blessing = "THShamanBlessing" .. module.revision,
     corruption_euyonaliaCast = "THCorruptionEuyonaliaCast" .. module.revision,
     ursa_roar = "THUrsaRoar" .. module.revision,
+    totemic_stomp = "THTotemicStomp" .. module.revision,
+    totemic_totem = "THTotemicTotem" .. module.revision,
 }
 
 local guid = {
@@ -285,6 +320,8 @@ function module:OnEnable()
     self:ThrottleSync(1, syncName.shaman_blessing)
     self:ThrottleSync(1, syncName.corruption_euyonaliaCast)
     self:ThrottleSync(1, syncName.ursa_roar)
+    self:ThrottleSync(3, syncName.totemic_stomp)
+    self:ThrottleSync(3, syncName.totemic_totem)
 end
 
 function module:OnSetup()
@@ -303,12 +340,16 @@ function module:AfflictionEvent(msg)
         return
     elseif string.find(msg, L["trigger_defiler_cloudTick"]) then
         -- 尝试提取施法者名称（英文和中文两种模式）
+        -- 注意：Lua 5.0（1.12 客户端）没有 string.match，必须用 string.find 捕获
         local caster = nil
         -- 英文模式: "from <caster>'s Poison Cloud"
-        caster = string.match(msg, "from (.+)'s Poison Cloud")
-        if not caster then
+        local _, _, cEn = string.find(msg, "from (.+)'s Poison Cloud")
+        if cEn then
+            caster = cEn
+        else
             -- 中文模式: "（<caster>的毒云术）"
-            caster = string.match(msg, "（(.+)的毒云术）")
+            local _, _, cCn = string.find(msg, "（(.+)的毒云术）")
+            if cCn then caster = cCn end
         end
         self:PoisonCloud(caster)  -- 传入提取到的施法者（可能为 nil）
         return
@@ -369,6 +410,12 @@ function module:CastEvent(msg)
     elseif string.find(msg, L["trigger_ursa_roar"]) then
         self:Sync(syncName.ursa_roar)
         return
+    elseif string.find(msg, L["trigger_totemic_stomp"]) then
+        self:Sync(syncName.totemic_stomp)
+        return
+    elseif string.find(msg, L["trigger_totemic_totem"]) then
+        self:Sync(syncName.totemic_totem)
+        return
     end
 end
 
@@ -409,6 +456,12 @@ function module:BigWigs_RecvSync(sync, rest, nick)
         self:Bar(L["bar_ursa_roar"], timer.ursa_roar, icon.ursa_roar, true, "Cyan")
         self:Sound("Alarm")
         return
+    elseif self.db.profile.totemic_stomp and sync == syncName.totemic_stomp then
+        self:Message(L["msg_totemic_stomp"], "Urgent", nil, "Alarm")
+        return
+    elseif self.db.profile.totemic_totem and sync == syncName.totemic_totem then
+        self:Message(L["msg_totemic_totem"], "Attention")
+        return
     end
 end
 
@@ -417,7 +470,7 @@ function module:PoisonCloud(caster)
     if not self.db.profile.defiler_cloud then return end
 
     self:WarningSign(icon.poisonCloud, 1, false, L["warn_defiler_cloud"])
-    self:Sound("Info")
+    self:Sound("voiceOut")
 
     -- [NEW] 自动标记并转火施法者（如果提供了施法者名称且选项开启）
     if caster and self.db.profile.defiler_autotarget then
@@ -443,7 +496,7 @@ end
 
 function module:WitheredDefiling(player)
     if player == UnitName("player") and self.db.profile.defiler_defiling then
-        self:Message(L["msg_defiler_defiling"], "Important", true, "RunAway")
+        self:Message(L["msg_defiler_defiling"], "Important", true, "voiceOut")
         self:Bar(L["bar_defiler_defiling"], timer.defiler_defiling, icon.defiler_defiling, true, "Red")
         SendChatMessage(L["say_defiler_defiling"], "SAY")
     elseif self.db.profile.defiler_defilingother then

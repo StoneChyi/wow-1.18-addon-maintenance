@@ -661,6 +661,9 @@ function Automaton_AutoNeed:OnEnable()
 end
 
 function Automaton_AutoNeed:OnDisable()
+    self.rollGeneration = (self.rollGeneration or 0) + 1
+    self.pendingRolls = {}
+    self.isRolling = false
 	self:UnhookAll()
 	self:UnregisterAllEvents()
 end
@@ -815,32 +818,40 @@ function Automaton_AutoNeed:CheckItem(itemid)
 end
 
 function Automaton_AutoNeed:START_LOOT_ROLL(id)
-    -- 使用pcall安全调用，捕获并忽略错误
-    local success, result = pcall(function()
-        local link = GetLootRollItemLink(id)
-        local itemID = link and string.match(link, "item:(%d+):")
-        if itemID then
-            itemID = tonumber(itemID)
-            local rolltype = self:CheckItem(itemID)
-            -- -1 means leave the roll window for manual selection.
-            if rolltype and rolltype ~= -1 then
-                RollOnLoot(id, rolltype)
-                if rolltype == 1 or rolltype == 2 then
-                    C_Timer.After(0.01, function()
-                        -- 确保当前弹窗是掷骰确认框
-                        if StaticPopup1 and StaticPopup1:IsVisible() and StaticPopup1.which == "CONFIRM_LOOT_ROLL" then
-                            StaticPopup1Button1:Click()
-                        end
-                    end)
-                end
-            end
-        end
-    end)
+    local link = GetLootRollItemLink(id)
+    local _, _, itemID = string.find(link or "", "item:(%d+):")
+    if not itemID then return end
+    local ok, choice = pcall(self.CheckItem, self, tonumber(itemID))
+    if not ok or choice == nil or choice == -1 then return end
+    if choice ~= 0 and choice ~= 1 and choice ~= 2 then return end
+    self.pendingRolls = self.pendingRolls or {}
+    table.insert(self.pendingRolls, {id=id, rolltype=choice})
+    self:ProcessQueue()
+end
 
-    -- 可选：记录错误但不显示给用户
-    if not success then
-        -- 可以在这里记录错误日志，但不在UI中显示
-        -- self:DebugPrint("AutoNeed错误: " .. tostring(result))
+function Automaton_AutoNeed:ProcessQueue()
+    if self.isRolling then return end
+    self.pendingRolls = self.pendingRolls or {}
+    local task = table.remove(self.pendingRolls, 1)
+    if not task then return end
+    self.isRolling = true
+    local generation = self.rollGeneration or 0
+    local function Finish()
+        if (self.rollGeneration or 0) ~= generation then return end
+        self.isRolling = false
+        self:ProcessQueue()
+    end
+    local ok = pcall(RollOnLoot, task.id, task.rolltype)
+    if ok and (task.rolltype == 1 or task.rolltype == 2) then
+        C_Timer.After(0.01, function()
+            if (self.rollGeneration or 0) ~= generation then return end
+            if StaticPopup1 and StaticPopup1:IsVisible() and StaticPopup1.which == "CONFIRM_LOOT_ROLL" then
+                StaticPopup1Button1:Click()
+            end
+            C_Timer.After(0.15, Finish)
+        end)
+    else
+        C_Timer.After(0.1, Finish)
     end
 end
 

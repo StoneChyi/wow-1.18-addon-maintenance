@@ -1163,6 +1163,8 @@ end
 -- @return persec, epersec, overpersec, isDPS（true=DPS用总战斗时间，false=EDPS用活跃时间）
 local function getPersecData(unitData, wid, effectiveViewId)
     local value = unitData._sum or 0
+    -- 未勾选"剔除伤害吸收"时把吸收并入总伤害用于计算 DPS  by 武藤纯子酱 2026.10.19
+    if config.exclude_absorb ~= 1 and unitData._absorb then value = value + unitData._absorb end
     local ctime = unitData._ctime or 1
     -- 计算总战斗时间：仅当勾选"用DPS替代EDPS"且为伤害类视图（1伤害/2DPS/9误伤/17无效伤害）时使用
     local isDPS = false
@@ -1475,6 +1477,9 @@ local function barTooltipShow()
         TooltipAddLine(this.title .. ":")
         TooltipAddDoubleLine("|cffffffff总有效承伤", "|cffffffff" .. (unitData._sum or 0))
         TooltipAddDoubleLine("|cffcc8888溢出伤害", "|cffffffff" .. (unitData._overkill or 0))
+        if ShaguDPS.hasNampower and (unitData._absorb or 0) > 0 then
+            TooltipAddDoubleLine("|cff66ccff伤害吸收", "|cffffffff" .. unitData._absorb)
+        end
         local avgLife = ShaguDPS.GetTargetAvgLifetime and ShaguDPS.GetTargetAvgLifetime(this.unit)
         if avgLife then
             TooltipAddDoubleLine("|cffffffff平均存活时间", string.format("|cffffffff%.1f秒", avgLife))
@@ -1483,11 +1488,12 @@ local function barTooltipShow()
         TooltipAddLine("伤害来源（按有效伤害排序）:")
         local sources = {}
         for source, sdata in pairs(unitData) do
-            if source ~= "_sum" and source ~= "_overkill" and type(sdata) == "table" then
+            if source ~= "_sum" and source ~= "_overkill" and source ~= "_absorb" and type(sdata) == "table" then
                 table.insert(sources, {
                     name = source,
                     sum = sdata._sum or 0,
                     over = sdata._overkill or 0,
+                    absorb = sdata._absorb or 0,
                 })
             end
         end
@@ -1496,6 +1502,9 @@ local function barTooltipShow()
             local line = string.format("|cffffffff%s|cffffffff %s", src.name, src.sum)
             if src.over > 0 then
                 line = line .. string.format(" |cffff8888(+%s)|r", src.over)
+            end
+            if src.absorb > 0 then
+                line = line .. string.format(" |cff66ccff(+%s)|r", src.absorb)
             end
             TooltipAddLine(line)
         end
@@ -1754,6 +1763,8 @@ local function barTooltipShow()
     -- 伤害/治疗
     if unitData._sum then
         local value = unitData._sum
+        -- 未勾选"剔除伤害吸收"时把吸收并入总量（显示端动态）  by 武藤纯子酱 2026.10.19
+        if config.exclude_absorb ~= 1 and unitData._absorb then value = value + unitData._absorb end
         -- 确定当前有效视图（BOSS/汇总/近期战斗时映射到具体统计类型）
         local wid = this.parent:GetID()
         local segType = config[wid].segment or 1
@@ -1817,6 +1828,13 @@ local function barTooltipShow()
         local isHealView = effectiveViewId >= 3 and effectiveViewId <= 6
         TooltipAddDoubleLine("|cffffffff总量", "|cffffffff" .. value)
         TooltipAddDoubleLine("|cffffffff" .. rateLabel, "|cffffffff" .. persec)
+        -- 溢出伤害 / 敌对目标护盾吸收掉的伤害（始终显示，不受"显示溢出伤害"开关影响）  by 武藤纯子酱 2026.10.19
+        if (unitData._overkill or 0) > 0 then
+            TooltipAddDoubleLine("|cffff8888溢出伤害", "|cffffffff" .. unitData._overkill)
+        end
+        if ShaguDPS.hasNampower and (unitData._absorb or 0) > 0 then
+            TooltipAddDoubleLine("|cff66ccff伤害吸收", "|cffffffff" .. unitData._absorb)
+        end
         if unitData._esum then
             TooltipAddDoubleLine("|cffffffff有效", "|cffffffff" .. evalue)
             TooltipAddDoubleLine("|cffcc8888过量", "|cffffffff" .. over)
@@ -1908,9 +1926,17 @@ local function barTooltipShow()
                     TooltipAddDoubleLine("|cffffffff" .. attack, str .. suffix)
                 else
                     local overkill = unitData._overkill_by_spell and unitData._overkill_by_spell[attack] or 0
+                    local absorb = unitData._absorb_by_spell and unitData._absorb_by_spell[attack] or 0
                     local str
-                    if overkill > 0 then
-                        str = string.format("|cffffffff%s|cffff8888 (+%s)|r (%.1f%%)", damage, overkill, percent)
+                    if overkill > 0 or absorb > 0 then
+                        str = string.format("|cffffffff%s", damage)
+                        if overkill > 0 then
+                            str = str .. string.format("|cffff8888 (+%s)|r", overkill)
+                        end
+                        if absorb > 0 then
+                            str = str .. string.format("|cff66ccff (+%s)|r", absorb)
+                        end
+                        str = str .. string.format(" (%.1f%%)", percent)
                     else
                         str = string.format("|cffffffff %s (%.1f%%)", damage, percent)
                     end
@@ -1969,13 +1995,15 @@ local function barTooltipShow()
                         if srcData and type(srcData) == "table" then
                             local effective = srcData._sum or 0
                             local overkill = srcData._overkill or 0
-                            local total = effective + overkill
+                            local absorb = srcData._absorb or 0
+                            local total = effective + overkill + absorb
                             if total > 0 then
                                 table.insert(targetDetails, {
                                     name = targetName,
                                     total = total,
                                     effective = effective,
                                     overkill = overkill,
+                                    absorb = absorb,
                                 })
                             end
                         end
@@ -1986,17 +2014,17 @@ local function barTooltipShow()
                     TooltipAddLine("|cff88ccff对每个目标的伤害量|r")
                     table.sort(targetDetails, function(a, b) return a.total > b.total end)
                     for idx, tInfo in ipairs(targetDetails) do
+                        local valStr
                         if tInfo.overkill > 0 then
-                            TooltipAddDoubleLine(
-                                "|cffffffff" .. idx .. ". " .. tInfo.name,
-                                string.format("|cffffffff%s|r |cffff8888(+%s)|r", tInfo.effective, tInfo.overkill)
-                            )
+                            valStr = string.format("|cffffffff%s|r |cffff8888(+%s)|r", tInfo.effective, tInfo.overkill)
                         else
-                            TooltipAddDoubleLine(
-                                "|cffffffff" .. idx .. ". " .. tInfo.name,
-                                "|cffffffff" .. tInfo.effective
-                            )
+                            valStr = "|cffffffff" .. tInfo.effective
                         end
+                        -- 该目标吸收掉的伤害（始终显示，与"剔除伤害吸收"开关无关）  by 武藤纯子酱 2026.10.19
+                        if tInfo.absorb > 0 then
+                            valStr = string.format("|cff66ccff(+%s)|r ", tInfo.absorb) .. valStr
+                        end
+                        TooltipAddDoubleLine("|cffffffff" .. idx .. ". " .. tInfo.name, valStr)
                     end
                 end
             end
@@ -2307,6 +2335,9 @@ local function GetBarDetailLines(bar)
         table.insert(lines, bar.title .. ":")
         table.insert(lines, "|cffffffff总有效承伤: |cffffffff" .. (unitData._sum or 0))
         table.insert(lines, "|cffcc8888溢出伤害: |cffffffff" .. (unitData._overkill or 0))
+        if ShaguDPS.hasNampower and (unitData._absorb or 0) > 0 then
+            table.insert(lines, "|cff66ccff伤害吸收: |cffffffff" .. unitData._absorb)
+        end
         local avgLife = ShaguDPS.GetTargetAvgLifetime and ShaguDPS.GetTargetAvgLifetime(bar.unit)
         if avgLife then
             table.insert(lines, "|cffffffff平均存活时间: |cffffffff" .. string.format("%.1f秒", avgLife))
@@ -2315,11 +2346,12 @@ local function GetBarDetailLines(bar)
         table.insert(lines, "伤害来源（按有效伤害排序）:")
         local sources = {}
         for source, sdata in pairs(unitData) do
-            if source ~= "_sum" and source ~= "_overkill" and type(sdata) == "table" then
+            if source ~= "_sum" and source ~= "_overkill" and source ~= "_absorb" and type(sdata) == "table" then
                 table.insert(sources, {
                     name = source,
                     sum = sdata._sum or 0,
                     over = sdata._overkill or 0,
+                    absorb = sdata._absorb or 0,
                 })
             end
         end
@@ -2328,6 +2360,9 @@ local function GetBarDetailLines(bar)
             local line = string.format("|cffffffff%s|cffffffff %s", src.name, src.sum)
             if src.over > 0 then
                 line = line .. string.format(" |cffff8888(+%s)|r", src.over)
+            end
+            if src.absorb > 0 then
+                line = line .. string.format(" |cff66ccff(+%s)|r", src.absorb)
             end
             table.insert(lines, line)
         end
@@ -2570,6 +2605,8 @@ local function GetBarDetailLines(bar)
     -- 伤害/治疗
     if unitData._sum then
         local value = unitData._sum
+        -- 未勾选"剔除伤害吸收"时把吸收并入总量（显示端动态）  by 武藤纯子酱 2026.10.19
+        if config.exclude_absorb ~= 1 and unitData._absorb then value = value + unitData._absorb end
         -- 确定当前有效视图（BOSS/汇总/近期战斗时映射到具体统计类型）
         local curView = config[wid].view
         local effectiveViewId = curView
@@ -2590,6 +2627,13 @@ local function GetBarDetailLines(bar)
         table.insert(lines, bar.title .. ":")
         table.insert(lines, "  |cffffcc00总量|r   |cffffffff" .. value)
         table.insert(lines, "  |cffffcc00" .. rateLabel .. "|r   |cffffffff" .. persec)
+        -- 溢出伤害 / 敌对目标护盾吸收掉的伤害（始终显示，不受"显示溢出伤害"开关影响）  by 武藤纯子酱 2026.10.19
+        if (unitData._overkill or 0) > 0 then
+            table.insert(lines, "  |cffff8888溢出伤害|r   |cffffffff" .. unitData._overkill)
+        end
+        if ShaguDPS.hasNampower and (unitData._absorb or 0) > 0 then
+            table.insert(lines, "  |cff66ccff伤害吸收|r   |cffffffff" .. unitData._absorb)
+        end
         if unitData._esum then
             table.insert(lines, "  |cffffcc00有效|r   |cff00ff00" .. evalue)
             table.insert(lines, "  |cffcc8888过量|r   |cffffffff" .. over)
@@ -2695,9 +2739,17 @@ local function GetBarDetailLines(bar)
                     table.insert(lines, "  |cff88ccff" .. attack .. "|r  " .. str .. countLine)
                 else
                     local overkill = unitData._overkill_by_spell and unitData._overkill_by_spell[attack] or 0
+                    local absorb = unitData._absorb_by_spell and unitData._absorb_by_spell[attack] or 0
                     local str
-                    if overkill > 0 then
-                        str = string.format("|cffffffff%s|cffff8888(+%s)|r (%.1f%%)", damage, overkill, percent)
+                    if overkill > 0 or absorb > 0 then
+                        str = string.format("|cffffffff%s", damage)
+                        if overkill > 0 then
+                            str = str .. string.format("|cffff8888(+%s)|r", overkill)
+                        end
+                        if absorb > 0 then
+                            str = str .. string.format("|cff66ccff(+%s)|r", absorb)
+                        end
+                        str = str .. string.format(" (%.1f%%)", percent)
                     else
                         str = string.format("|cffffffff%s (%.1f%%)", damage, percent)
                     end
@@ -2779,13 +2831,15 @@ local function GetBarDetailLines(bar)
                         if srcData and type(srcData) == "table" then
                             local effective = srcData._sum or 0
                             local overkill = srcData._overkill or 0
-                            local total = effective + overkill
+                            local absorb = srcData._absorb or 0
+                            local total = effective + overkill + absorb
                             if total > 0 then
                                 table.insert(targetDetails, {
                                     name = targetName,
                                     total = total,
                                     effective = effective,
                                     overkill = overkill,
+                                    absorb = absorb,
                                 })
                             end
                         end
@@ -2796,17 +2850,17 @@ local function GetBarDetailLines(bar)
                     table.insert(lines, "|cffffcc00对每个目标的伤害量|r")
                     table.sort(targetDetails, function(a, b) return a.total > b.total end)
                     for idx, tInfo in ipairs(targetDetails) do
+                        local valStr
                         if tInfo.overkill > 0 then
-                            table.insert(lines, string.format(
-                                "  |cff88ccff%d. %s|r  |cffffffff%s|r |cffff8888(+%s)|r",
-                                idx, tInfo.name, tInfo.effective, tInfo.overkill
-                            ))
+                            valStr = string.format("|cffffffff%s|r |cffff8888(+%s)|r", tInfo.effective, tInfo.overkill)
                         else
-                            table.insert(lines, string.format(
-                                "  |cff88ccff%d. %s|r  |cffffffff%s|r",
-                                idx, tInfo.name, tInfo.effective
-                            ))
+                            valStr = "|cffffffff" .. tInfo.effective
                         end
+                        -- 该目标吸收掉的伤害（始终显示，与"剔除伤害吸收"开关无关）  by 武藤纯子酱 2026.10.19
+                        if tInfo.absorb > 0 then
+                            valStr = string.format("|cff66ccff(+%s)|r ", tInfo.absorb) .. valStr
+                        end
+                        table.insert(lines, string.format("  |cff88ccff%d. %s|r  %s", idx, tInfo.name, valStr))
                     end
                 end
             end
@@ -3339,7 +3393,12 @@ local function CreateDetailWindow(title, lines, barData)
         else
             table.insert(reportLines, "ShaguDPS - 详情")
         end
-        for _, entry in ipairs(entries) do
+        -- 发送时按当前过滤条件重新取行：避免"改了过滤/行数但窗口尚未重建就点发送"时把未选中的行也发出去  by 武藤纯子酱 2026.10.21
+        local sendEntries = entries
+        if barData and not barData.isPlayback and barData._fullLines and barData._filter then
+            sendEntries = ApplyDetailFilter(barData._fullLines, barData._filter)
+        end
+        for _, entry in ipairs(sendEntries) do
             -- 详情通报保留行内职业色码（详情行生成时已按职业着色），仅标题剥色
             -- by 武藤纯子酱 2026.10.15
             local cleanLine = entry.text
@@ -3946,40 +4005,41 @@ end
 local function CreateBar(parent, i)
     local totalHeight = config.height + config.spacing
     local yOffset = totalHeight * (i-1) + 22
-
-    -- 职业图标（进度条最左侧）：进度条整体右移让出图标区，图标区不显示进度条、无底色
-    local iconSize = config.height - 2
-    if iconSize < 8 then iconSize = 8 end
-    local showIcon = config.show_class_icon ~= 0
-    local slotW = showIcon and (iconSize + 3) or 0   -- 图标槽宽度（图标 + 间距）
-    local barLeft = 2 + slotW                         -- 进度条左边缘（让出图标区）
-    local textPad = showIcon and 2 or 5               -- 文字距条左边缘的间距
-
     parent.bars[i] = parent.bars[i] or CreateFrame("StatusBar", "ShaguDPSBar" .. i, parent)
     parent.bars[i].parent = parent
     parent.bars[i]:SetStatusBarTexture(textures[config.texture] or textures[1])
-    parent.bars[i]:SetPoint("TOPLEFT", parent, "TOPLEFT", barLeft, -yOffset)
+    parent.bars[i]:SetPoint("TOPLEFT", parent, "TOPLEFT", 2, -yOffset)
     parent.bars[i]:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -2, -yOffset)
     parent.bars[i]:SetHeight(config.height)
     parent.bars[i]:SetFrameLevel(4)
     parent.bars[i].lowerBar = parent.bars[i].lowerBar or CreateFrame("StatusBar", "ShaguDPSLowerBar" .. i, parent)
     parent.bars[i].lowerBar:SetStatusBarTexture(textures[config.texture] or textures[1])
-    parent.bars[i].lowerBar:SetPoint("TOPLEFT", parent, "TOPLEFT", barLeft, -yOffset)
+    parent.bars[i].lowerBar:SetPoint("TOPLEFT", parent, "TOPLEFT", 2, -yOffset)
     parent.bars[i].lowerBar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -2, -yOffset)
     parent.bars[i].lowerBar:SetStatusBarColor(1, 1, 1, .4)
     parent.bars[i].lowerBar:SetHeight(config.height)
     parent.bars[i].lowerBar:SetFrameLevel(2)
 
-    -- 图标容器（透明，仅用于定位图标；图标区无任何底色，直接透出窗口背景）
+    -- 职业图标（进度条最左侧）：尺寸随条高缩放，文字左边距相应后移
+    local iconSize = config.height - 2
+    if iconSize < 8 then iconSize = 8 end
+    local showIcon = config.show_class_icon ~= 0
+    local iconPad = showIcon and (iconSize + 5) or 5
+
+    -- 图标背景框（半透明暗色，轻微遮挡进度条填充，图标保持清晰）
     parent.bars[i].iconBg = parent.bars[i].iconBg or CreateFrame("Frame", nil, parent.bars[i])
+    parent.bars[i].iconBg:SetBackdrop({
+        bgFile = "Interface\\BUTTONS\\WHITE8X8",
+        tile = false, tileSize = 0, edgeSize = 0,
+    })
+    parent.bars[i].iconBg:SetBackdropColor(0, 0, 0, 0.35)
     parent.bars[i].iconBg:SetWidth(iconSize + 2)
     parent.bars[i].iconBg:SetHeight(iconSize + 2)
     parent.bars[i].iconBg:ClearAllPoints()
-    -- 锚到条本身（祖先）而非窗口：用条相对偏移将图标定位到条左侧的间隙
-    parent.bars[i].iconBg:SetPoint("LEFT", parent.bars[i], "LEFT", 2 - barLeft, 0)
+    parent.bars[i].iconBg:SetPoint("LEFT", parent.bars[i], "LEFT", 0, 0)
     parent.bars[i].iconBg:SetFrameLevel(parent.bars[i]:GetFrameLevel() + 1)
 
-    -- 图标贴图（作为 iconBg 子贴图）
+    -- 图标贴图（作为 iconBg 子贴图，绘制在背景之上）
     parent.bars[i].classIcon = parent.bars[i].classIcon or parent.bars[i].iconBg:CreateTexture(nil, "OVERLAY")
     parent.bars[i].classIcon:SetParent(parent.bars[i].iconBg)
     parent.bars[i].classIcon:SetWidth(iconSize)
@@ -4001,7 +4061,7 @@ local function CreateBar(parent, i)
     parent.bars[i].textLeft:SetFontObject(GameFontWhite)
     parent.bars[i].textLeft:SetParent(parent.bars[i])
     parent.bars[i].textLeft:ClearAllPoints()
-    parent.bars[i].textLeft:SetPoint("TOPLEFT", parent.bars[i], "TOPLEFT", textPad, 1)
+    parent.bars[i].textLeft:SetPoint("TOPLEFT", parent.bars[i], "TOPLEFT", iconPad, 1)
     parent.bars[i].textLeft:SetPoint("BOTTOMRIGHT", parent.bars[i], "BOTTOMRIGHT", -5, 0)
     parent.bars[i].textRight = parent.bars[i].textRight or parent.bars[i]:CreateFontString("Status", "OVERLAY", "GameFontNormal")
     parent.bars[i].textRight:SetFont(STANDARD_TEXT_FONT, 10, "THINOUTLINE")
@@ -4009,7 +4069,7 @@ local function CreateBar(parent, i)
     parent.bars[i].textRight:SetFontObject(GameFontWhite)
     parent.bars[i].textRight:SetParent(parent.bars[i])
     parent.bars[i].textRight:ClearAllPoints()
-    parent.bars[i].textRight:SetPoint("TOPLEFT", parent.bars[i], "TOPLEFT", textPad, 1)
+    parent.bars[i].textRight:SetPoint("TOPLEFT", parent.bars[i], "TOPLEFT", 5, 1)
     parent.bars[i].textRight:SetPoint("BOTTOMRIGHT", parent.bars[i], "BOTTOMRIGHT", -5, 0)
     parent.bars[i]:EnableMouse(true)
     parent.bars[i]:SetScript("OnEnter", barTooltipShow)
@@ -4525,18 +4585,22 @@ local function GetCaps(view, values, isHealTaken, isBuffCoverage, segmentType, t
                     if sum > values.damage_taken_best then values.damage_taken_best = sum end
                 end
             elseif data["_sum"] and data["_ctime"] then
+                -- 未勾选"剔除伤害吸收"时把吸收并入总量 / 每秒（与显示端 value 保持一致）  by 武藤纯子酱 2026.10.19
+                local extraAbsorb = 0
+                if config.exclude_absorb ~= 1 and data["_absorb"] then extraAbsorb = data["_absorb"] end
+                local statSum = data["_sum"] + extraAbsorb
                 local useCBT = not isHealTaken and useTotalCBT and totalTimeForDPS and totalTimeForDPS > 0
                 local perSec = 0
                 if useCBT then
-                    perSec = data["_sum"] / totalTimeForDPS
+                    perSec = statSum / totalTimeForDPS
                 else
-                    perSec = data["_sum"] / data["_ctime"]
+                    perSec = statSum / data["_ctime"]
                 end
-                values.all = values.all + data["_sum"]
-                if data["_sum"] > values.best then values.best = data["_sum"] end
+                values.all = values.all + statSum
+                if statSum > values.best then values.best = statSum end
                 values.persecond_all = values.persecond_all + perSec
                 if perSec > values.persecond_best then values.persecond_best = perSec end
-                values.total_heal_all = values.total_heal_all + data["_sum"]
+                values.total_heal_all = values.total_heal_all + statSum
                 values.total_heal_hps_all = values.total_heal_hps_all + perSec
             end
             if data["_esum"] and data["_ctime"] and not isHealTaken then
@@ -4667,6 +4731,7 @@ local function GetData(unitdata, values, isHealTaken, view, isBuffCoverage, segm
         elseif unitdata._overkill and not unitdata._ctime and not unitdata._by_target and not unitdata._history then
             values.enemy_taken_value = unitdata._sum or 0
             values.enemy_taken_overkill = unitdata._overkill or 0
+            values.enemy_taken_absorb = unitdata._absorb or 0
             values.enemy_taken_percent = values.enemy_taken_all > 0 and round(values.enemy_taken_value / values.enemy_taken_all * 100, 1) or 0
             values.value = values.enemy_taken_value
             values.overkill = values.enemy_taken_overkill
@@ -4676,13 +4741,17 @@ local function GetData(unitdata, values, isHealTaken, view, isBuffCoverage, segm
             values.damage_taken_percent = values.damage_taken_all > 0 and round(unitdata._sum / values.damage_taken_all * 100, 1) or 0
             values.value = unitdata._sum or 0
         elseif unitdata["_sum"] ~= nil then
-            values.value = unitdata["_sum"]
+            -- 未勾选"剔除伤害吸收"时把吸收并入总伤害 / DPS（显示端动态计算，切换开关立即生效）  by 武藤纯子酱 2026.10.19
+            local extraAbsorb = 0
+            if config.exclude_absorb ~= 1 and unitdata["_absorb"] then extraAbsorb = unitdata["_absorb"] end
+            values.value = unitdata["_sum"] + extraAbsorb
             local ctime = unitdata["_ctime"]
             if not ctime or ctime <= 0 then ctime = 1 end
             values.value_persecond = round(values.value / ctime, 1)
             values.percent = (values.value == 0 or values.all == 0) and 0 or round(values.value / values.all * 100, 1)
             values.percent_persecond = (values.value_persecond == 0 or values.persecond_all == 0) and 0 or round(values.value_persecond / values.persecond_all * 100, 1)
             values.overkill = unitdata["_overkill"] or 0
+            values.absorb = unitdata["_absorb"] or 0
 
             if unitdata["_esum"] then
                 values.effective_value = unitdata["_esum"]
@@ -5803,6 +5872,18 @@ local function Refresh(self, force, report)
                 actualView = bossStatMap[config[wid].boss_stat_view or 1] or 1
             end
 
+            -- 伤害吸收（敌对目标护盾）：勾选"剔除伤害吸收"时前置蓝色括号数字（与溢出伤害并列）  by 武藤纯子酱 2026.10.19
+            if ShaguDPS.hasNampower and config.exclude_absorb == 1
+                and (actualView == 1 or actualView == 2)
+                and (self.values.absorb or 0) > 0 then
+                bar_string = "|cff66ccff(+%s)|r " .. bar_string
+                local absorbParams = { "absorb" }
+                for _, p in ipairs(bar_params) do
+                    table.insert(absorbParams, p)
+                end
+                bar_params = absorbParams
+            end
+
             if isEnemyTakenView then
                 if config.show_overkill == 1 and (self.values.enemy_taken_overkill or 0) > 0 then
                     bar_string = "|cffff8888+%s|r %s (%.1f%%)"
@@ -5810,6 +5891,13 @@ local function Refresh(self, force, report)
                 else
                     bar_string = "%s (%.1f%%)"
                     bar_params = { "enemy_taken_value", "enemy_taken_percent" }
+                end
+                -- 该目标吸收掉的伤害：始终前置蓝色括号（与"剔除伤害吸收"开关无关）  by 武藤纯子酱 2026.10.19
+                if ShaguDPS.hasNampower and (self.values.enemy_taken_absorb or 0) > 0 then
+                    bar_string = "|cff66ccff(+%s)|r " .. bar_string
+                    local eAbsParams = { "enemy_taken_absorb" }
+                    for _, p in ipairs(bar_params) do table.insert(eAbsParams, p) end
+                    bar_params = eAbsParams
                 end
             end
 
@@ -5874,7 +5962,9 @@ local function Refresh(self, force, report)
                     param == "enemy_taken_value" or
                     param == "enemy_taken_overkill" or
                     param == "damage_taken_value" or
-                    param == "overkill"
+                    param == "overkill" or
+                    param == "absorb" or
+                    param == "enemy_taken_absorb"
                 ) then
                     val = formatBarNumber(val)
                 end
@@ -5884,15 +5974,17 @@ local function Refresh(self, force, report)
             self.bars[bar].textRight:SetText(line)
 
             self.bars[bar]:Show()
-            if report and i <= config.report_lines then
-                local chat = string.format(template.chat_string,
-                    self.values[a[1]], self.values[a[2]], self.values[a[3]], self.values[a[4]], self.values[a[5]])
-                -- 通报到聊天时名字带职业色（宠物沿用主人职业，无职业记录保持原样）  by 武藤纯子酱 2026.10.15
-                local reportName = self.values.name
-                local reportCls = resolveClassToken(reportName)
-                if reportCls then reportName = classColorString(reportCls, reportName) end
-                table.insert(reportData, i .. ". " .. reportName .. " " .. chat)
-            end
+        end
+        -- 播报始终取前 N 行（发送数据条数），与窗口滚动/可见行数无关  by 武藤纯子酱 2026.10.21
+        if report and i <= config.report_lines then
+            local rp = template.bar_string_params
+            local chat = string.format(template.chat_string,
+                self.values[rp[1]], self.values[rp[2]], self.values[rp[3]], self.values[rp[4]], self.values[rp[5]])
+            -- 通报到聊天时名字带职业色（宠物沿用主人职业，无职业记录保持原样）  by 武藤纯子酱 2026.10.15
+            local reportName = self.values.name
+            local reportCls = resolveClassToken(reportName)
+            if reportCls then reportName = classColorString(reportCls, reportName) end
+            table.insert(reportData, i .. ". " .. reportName .. " " .. chat)
         end
         i = i + 1
     end
@@ -6048,8 +6140,12 @@ local function CreateWindow(wid)
             end
         end
         if this.needs_refresh then
-            this.needs_refresh = nil
-            this:Refresh()
+            -- 播报发送期间不刷新列表：避免新记录的BOSS战/数据变化把屏幕切走，造成"看到的和发出去的不一致"
+            -- 发送结束后 reportFrame 隐藏，下一帧再正常刷新  by 武藤纯子酱 2026.10.21
+            if not (reportFrame and reportFrame:IsShown()) then
+                this.needs_refresh = nil
+                this:Refresh()
+            end
         end
     end)
 

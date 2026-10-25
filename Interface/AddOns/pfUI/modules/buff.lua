@@ -526,7 +526,12 @@ pfUI:RegisterModule("buff", "vanilla:tbc", function ()
     container.slots = container.slots or {}
 
     local enabled = C and C.buffs and ((isharm and C.buffs.separatedebuffs == "1") or (not isharm and C.buffs.separatebuffs == "1"))
-    local fs = enabled and (C.buffs.fontsize == "-1" and C.global.font_size or C.buffs.fontsize) or 12
+    -- 监控条独立字号 sep_fontsize（-1=跟随主 Buff 字号，存量行为）
+    local fs = 12
+    if enabled then
+      fs = C.buffs.fontsize == "-1" and C.global.font_size or C.buffs.fontsize
+      if C.buffs.sep_fontsize and C.buffs.sep_fontsize ~= "-1" then fs = tonumber(C.buffs.sep_fontsize) end
+    end
 
     -- WA 式动态：名单不限长，遍历名单序号而非按钮池；超出初始池的按钮按需懒创建
     --（新高水位才建 frame，一次性成本）；名单缩短后多余的懒建按钮隐藏待复用
@@ -573,7 +578,7 @@ pfUI:RegisterModule("buff", "vanilla:tbc", function ()
       local rows = isharm and C.buffs.sepdebuffrowsize or C.buffs.sepbuffrowsize
       local bsize = isharm and C.buffs.sepdebuffsize or C.buffs.sepbuffsize
       -- 按钮字体比普通 buff 大一号，行高按 fs+1 计算才不会挤在一起
-      local r, c = pfUI.buff:RelayoutContainer(container, tonumber(rows), fs + 1, tonumber(bsize))
+      local r, c = pfUI.buff:RelayoutContainer(container, tonumber(rows), fs + 1, tonumber(bsize), C.buffs.sep_textinside)
       -- 容器尺寸贴合实际命中数量；一个都没命中时保留一格占位，保证框体仍可拖动
       if (r or 0) == 0 or (c or 0) == 0 then
         container:SetWidth(container.step or bsize)
@@ -1218,7 +1223,9 @@ pfUI:RegisterModule("buff", "vanilla:tbc", function ()
       local rows = isharm and C.buffs.septargetdebuffrowsize or C.buffs.septargetbuffrowsize
       local bsize = isharm and C.buffs.septargetdebuffsize or C.buffs.septargetbuffsize
       local fs = C.buffs.fontsize == "-1" and C.global.font_size or C.buffs.fontsize
-      local r, c = pfUI.buff:RelayoutContainer(container, tonumber(rows), fs + 1, tonumber(bsize))
+      -- 监控条独立字号 sep_fontsize（-1=跟随主 Buff 字号，存量行为）
+      if C.buffs.sep_fontsize and C.buffs.sep_fontsize ~= "-1" then fs = tonumber(C.buffs.sep_fontsize) end
+      local r, c = pfUI.buff:RelayoutContainer(container, tonumber(rows), fs + 1, tonumber(bsize), C.buffs.sep_textinside)
       if (r or 0) == 0 or (c or 0) == 0 then
         container:SetWidth(container.step or tonumber(bsize))
         container:SetHeight(container.rowheight or tonumber(bsize))
@@ -1732,6 +1739,10 @@ pfUI:RegisterModule("buff", "vanilla:tbc", function ()
   -- config loading
   function pfUI.buff:UpdateConfigBuffButton(buff)
     local fontsize = C.buffs.fontsize == "-1" and C.global.font_size or C.buffs.fontsize
+    -- 监控条（sep=1/2）独立字号 sep_fontsize（-1=跟随主 Buff 字号，存量行为）
+    if (buff.sep == 1 or buff.sep == 2) and C.buffs.sep_fontsize and C.buffs.sep_fontsize ~= "-1" then
+      fontsize = tonumber(C.buffs.sep_fontsize)
+    end
     local bsize, bsfont = tonumber(C.buffs.size), fontsize
     if buff.sep == 1 then
       bsize = tonumber(C.buffs.sepbuffsize)
@@ -1761,7 +1772,21 @@ pfUI:RegisterModule("buff", "vanilla:tbc", function ()
     buff.timer:SetNonSpaceWrap(false)
 
     buff.timer:ClearAllPoints()
-    if C.buffs.textinside == "1" then
+    -- 倒计时位置：监控条（sep=1 玩家Buff / sep=2 玩家Debuff）用独立开关 sep_textinside，
+    -- 主 Buff/Debuff 条仍用 textinside —— 两者互不干扰（独立设置需求 2026-10-22）
+    if (buff.sep == 1 or buff.sep == 2) then
+      if C.buffs.sep_textinside == "1" then
+        buff.timer:SetAllPoints(buff)
+      else
+        buff.timer:SetPoint("TOP", buff, "BOTTOM", 0, -3)
+        -- ⛔ 宽度必须显式给，而且要按**字号**算，不能只按图标尺寸算：
+        --    · 宽度 0      → 逐字换行（"15" 叠成上下两行）、单字符完全不渲染；
+        --    · 只给 2 个字宽 → 分钟档 4 字符（"100m"~"120m"）被截断成 "10…"。
+        --    倒计时最长 4 字符（分钟档 "120m" / 天档 "365d"），字号 12~13 时
+        --    约占 2.7 个字宽 → 留到 3.2 个字宽才有富余（含 OUTLINE 描边余量）。
+        buff.timer:SetWidth(max(bsize, bsfont * 3.2))
+      end
+    elseif C.buffs.textinside == "1" then
       buff.timer:SetAllPoints(buff)
     else
       buff.timer:SetPoint("TOP", buff, "BOTTOM", 0, -3)
@@ -1781,11 +1806,13 @@ pfUI:RegisterModule("buff", "vanilla:tbc", function ()
   end
 
   -- 紧凑重排：可见 buff 依次前移，隐藏后不留空格
-  function pfUI.buff:RelayoutContainer(container, rowsize, fontsize, size)
+  -- 'inside' [string|nil] 倒计时位置开关覆写（"1"/"0"）：监控条传 C.buffs.sep_textinside，
+  --                          nil 时回退主条开关 C.buffs.textinside（主条调用点不传）
+  function pfUI.buff:RelayoutContainer(container, rowsize, fontsize, size, inside)
     size = tonumber(size or C.buffs.size)
     local spacing = tonumber(C.buffs.spacing)
     local step = size + 2 * spacing
-    local rowHeight = (C.buffs.textinside == "1" and 0 or (fontsize * 1.5)) + size + 2 * spacing
+    local rowHeight = ((inside or C.buffs.textinside) == "1" and 0 or (fontsize * 1.5)) + size + 2 * spacing
     local pos = 0
     local n = getn(container.buttons)
     for i = 1, n do
@@ -1818,6 +1845,8 @@ pfUI:RegisterModule("buff", "vanilla:tbc", function ()
   function pfUI.buff:UpdateConfigTargetSepButton(btn)
     local isharm = btn.kind == "HARMFUL"
     local fontsize = C.buffs.fontsize == "-1" and C.global.font_size or C.buffs.fontsize
+    -- 监控条独立字号 sep_fontsize（-1=跟随主 Buff 字号，存量行为）
+    if C.buffs.sep_fontsize and C.buffs.sep_fontsize ~= "-1" then fontsize = tonumber(C.buffs.sep_fontsize) end
     local bsize = isharm and tonumber(C.buffs.septargetdebuffsize) or tonumber(C.buffs.septargetbuffsize)
     btn:SetWidth(bsize)
     btn:SetHeight(bsize)
@@ -1829,7 +1858,8 @@ pfUI:RegisterModule("buff", "vanilla:tbc", function ()
     btn.timer:SetNonSpaceWrap(false)
 
     btn.timer:ClearAllPoints()
-    if C.buffs.textinside == "1" then
+    -- 目标监控条用独立开关 sep_textinside（与玩家监控条一致，不再跟随主条 textinside）
+    if C.buffs.sep_textinside == "1" then
       btn.timer:SetAllPoints(btn)
     else
       btn.timer:SetPoint("TOP", btn, "BOTTOM", 0, -3)

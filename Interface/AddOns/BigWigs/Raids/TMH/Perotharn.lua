@@ -209,7 +209,7 @@ local spellId = {
 }
 
 local absorbPatternHit = "佩罗萨恩造成%d+点.*%((%d+)点被吸收%)"
-local absorbPatternSelf = "你.-佩罗萨恩造成%d+点.*%((%d+)点被吸收%)"
+local absorbPatternSelf = "^你.-佩罗萨恩造成%d+点.*%((%d+)点被吸收%)"
 local absorbPatternDot  = "佩罗萨恩受到了%d+点.*%((%d+)点被吸收%)"
 
 local absorbEvents = {

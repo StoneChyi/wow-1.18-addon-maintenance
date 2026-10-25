@@ -3,7 +3,7 @@ local card = {
     id = "warrior_berserker_stance",
     name = "狂暴姿态",
     description = "切换并保持狂暴姿态",
-    details = "切换并保持狂暴姿态。成功执行时会阻断本轮后续卡片。",
+    details = "切换并保持狂暴姿态。流程中启用“防御姿态（被强敌注视）”且其注视条件成立时跳过，条件解除后恢复保持狂暴姿态。成功执行时会阻断本轮后续卡片。",
     sort = 1,
     category = "class",
     exclusiveGroup = "warrior_stance",
@@ -28,6 +28,11 @@ function card.RefreshRuntimeData()
 end
 
 function card.Execute(context)
+    if context and context.IsCardActive
+        and context:IsCardActive("warrior_defensive_stance_boss_watching")
+        and Cat2.IsWarriorBossWatchingPlayer() then
+        return false
+    end
 
     if ShapeshiftID > 0 then
 

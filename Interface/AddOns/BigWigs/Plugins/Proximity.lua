@@ -726,12 +726,12 @@ function BigWigsProximity:UpdateDebuff()
 			for a = 1, 16 do
 				local t, c = UnitDebuff(unit, a);
 				if (t == nil) then
-					break ;
-				end ;
+					break
+				end
 				if (t == debuffTexture)
 				then
 					table.insert(hasDebuff, tostring(coloredNames[unit]) .. "|r (" .. c .. " stacks)")
-					break ;
+					break
 				end
 			end
 		end

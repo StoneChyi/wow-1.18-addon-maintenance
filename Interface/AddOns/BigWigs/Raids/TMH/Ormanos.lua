@@ -3,7 +3,7 @@ local module, L = BigWigs:ModuleDeclaration("Ormanos the Cracked", "Timbermaw Ho
 -- module variables
 module.revision = 30138
 module.enabletrigger = module.translatedName
-module.toggleoptions = { "crushcast", "crushzone", -1, "charge", "chargesay", "chargemark", -1, "attunement", "bosskill" }
+module.toggleoptions = { "crushcast", "crushzone", -1, "charge", "chargesay", "chargemark", -1, "attunement", "sons", "bosskill" }
 module.zonename = {
 	AceLibrary("AceLocale-2.2"):new("BigWigs")["Timbermaw Hold"],
 	AceLibrary("Babble-Zone-2.2")["Timbermaw Hold"],
@@ -44,9 +44,16 @@ L:RegisterTranslations("enUS", function()
 		chargemark_name = "Charge mark",
 		chargemark_desc = "Mark Charge target with Triangle",
 
-		attunement_cmd = "attunement",
-		attunement_name = "Attunement indicator",
-		attunement_desc = "Show the current vulnerability and immunity on screen",
+	attunement_cmd = "attunement",
+	attunement_name = "Attunement indicator",
+	attunement_desc = "Show the current vulnerability and immunity on screen",
+
+	sons_cmd = "sons",
+	sons_name = "Sons spawn alert",
+	sons_desc = "Warn raid to switch to Son of Ormanos / Rumbler when summoned",
+
+	trigger_sons = "欧曼诺斯之子",
+	msg_sons = "Son of Ormanos summoned - switch targets!",
 
 		trigger_engage = "Rock and Stone...",
 
@@ -96,6 +103,13 @@ L:RegisterTranslations("zhCN", function()
 		attunement_name = "共鸣指示器",
 		attunement_desc = "在屏幕上显示当前的易伤和免疫状态",
 
+		sons_cmd = "sons",
+		sons_name = "召唤之子警报",
+		sons_desc = "召唤欧曼诺斯之子/颤岩时提醒转火——待实测校准",
+
+		trigger_sons = "欧曼诺斯之子",
+		msg_sons = "转火欧曼诺斯之子/颤岩！",
+
 		trigger_engage = "岩石与石头",  -- 请根据实际BOSS喊话调整
 
 		trigger_crushCast = "裂地者欧曼诺斯开始施放破碎大地",
@@ -144,12 +158,14 @@ module:RegisterYellEngage(L["trigger_engage"])
 
 function module:OnEnable()
 	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "AfflictionEvent")
-	
+
 	self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF", "FadesEvent")
 
 	self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE", "SpellEvent")
-	
+
+	-- 服内自定义 boss emote 的通道不固定（实测 RAID_BOSS_EMOTE / MONSTER_EMOTE 都出现过）
 	self:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
+	self:RegisterEvent("CHAT_MSG_MONSTER_EMOTE", "CHAT_MSG_RAID_BOSS_EMOTE")
 end
 
 function module:OnSetup()
@@ -164,11 +180,11 @@ end
 function module:AfflictionEvent(msg)
 	if self.db.profile.crushzone then
 		if string.find(msg, L["trigger_crushZone"]) then
-			self:Sound("Info")
+			self:Sound("voiceOut")
 			self:WarningSign(icon.crush, 3, false, L["warn_crushZone"])
 			return
 		elseif self.db.profile.crushzone and string.find(msg, L["trigger_crushZoneTick"]) then
-			self:Sound("Info")
+			self:Sound("voiceOut")
 			return
 		end
 	end
@@ -197,6 +213,10 @@ function module:CHAT_MSG_RAID_BOSS_EMOTE(msg)
 	if imm and vuln then
 		self:ScheduleEvent("NewAttunement", self.Attunement, timer.attunementCast * BigWigs:GetCastTimeCoefficient(guid.ormanos), self, imm, vuln)
 	end
+
+	if self.db.profile.sons and string.find(msg, L["trigger_sons"]) then
+		self:Message(L["msg_sons"], "Urgent", true, "voiceSwitch")
+	end
 end
 
 function module:Charge(player)
@@ -207,7 +227,7 @@ function module:Charge(player)
 
 		if player == UnitName("player") then
 			-- 自己是被冲目标
-			self:Message(L["msg_chargeSelf"], "Important", true, "RunAway")
+			self:Message(L["msg_chargeSelf"], "Important", true, "voiceGather")
 
 			-- 职业特定保命提醒（不含萨满，因为萨满由全局统一提示）
 			local _, class = UnitClass("player")
@@ -222,7 +242,7 @@ function module:Charge(player)
 			end
 		else
 			-- 别人被冲：提示集合
-			self:Message(string.format(L["msg_chargeOther"], player), "Attention", nil, "Alarm")
+			self:Message(string.format(L["msg_chargeOther"], player), "Attention", nil, "voiceGather")
 		end
 
 		-- ★ 全局萨满提醒：只要有人被冲锋，当前玩家是萨满就提示使用根基图腾

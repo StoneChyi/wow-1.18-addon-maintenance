@@ -21,7 +21,7 @@ local card = {
             unit = "怒气",
             default = 20,
             minimum = 16,
-            maximum = 100,
+            maximum = 130,
         },
         {
             key = "minimumEnemies",

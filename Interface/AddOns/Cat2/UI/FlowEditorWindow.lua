@@ -828,6 +828,7 @@ local function CreateMainWindow()
     editor.CreateDragGhost()
     editor.mainWindow:SetScript("OnUpdate", function()
         editor.UpdateDragGhost()
+        editor.UpdateJumpGuide()
     end)
     editor.mainWindow:SetScript("OnShow", function()
         if editor.mainWindow.Raise then
@@ -836,6 +837,7 @@ local function CreateMainWindow()
     end)
     -- ESC、右上角关闭按钮和其他隐藏入口共用同一套收尾，避免留下弹窗或下拉菜单。
     editor.mainWindow:SetScript("OnHide", function()
+        editor.HideJumpGuide()
         CloseAllDialogs()
         if editor.mainWindow.classPreviewMenu then
             editor.mainWindow.classPreviewMenu:Hide()

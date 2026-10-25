@@ -154,7 +154,7 @@ function module:OnEngage()
 		self:IntervalBar(L["bar_detonationNext"], timer.runeCooldown[1], timer.runeCooldown[2], icon.runeDetonation, true, color.runeUpcoming)
 	end
 	if self.db.profile.floorwarn then
-		self:ScheduleRepeatingEvent("ThaurissanHealthCheck", self.CheckHealth, 0.25, self)
+		self:ScheduleRepeatingEvent("ThaurissanHealthCheck", self.CheckHealth, 0.5, self)
 	end
 end
 

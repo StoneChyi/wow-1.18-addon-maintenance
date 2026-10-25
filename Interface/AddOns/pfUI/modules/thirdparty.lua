@@ -261,6 +261,107 @@ pfUI:RegisterModule("thirdparty", "vanilla:tbc", function()
 
     pfUI.thirdparty.meters:RegisterMeter("damage", docktable)
 
+    -- ================================================================
+    -- 本地定制：ShaguDPS 进度条职业图标布局
+    -- 覆盖 ShaguDPS window.lua 中 CreateBar 的默认图标布局：
+    --   · 进度条（含低亮条）整体右移让出左侧图标区，图标区不显示进度条
+    --   · 图标容器透明无底色，仅用于定位，图标锚定在条左侧间隙
+    --   · 文字紧贴条左边缘（有图标时间距 2，无图标时 5）
+    -- 每次刷新自动重应用，更新 ShaguDPS 后无需再手动修改布局。
+    -- ================================================================
+    local function ApplyBarIconLayout(window)
+      local config = ShaguDPS.config
+      if not window or not window.bars or not config then return end
+
+      local iconSize = config.height - 2
+      if iconSize < 8 then iconSize = 8 end
+      local showIcon = config.show_class_icon ~= 0
+      local slotW = showIcon and (iconSize + 3) or 0   -- 图标槽宽度（图标 + 间距）
+      local barLeft = 2 + slotW                        -- 进度条左边缘（让出图标区）
+      local textPad = showIcon and 2 or 5              -- 文字距条左边缘的间距
+
+      for i=1,100 do
+        local bar = window.bars[i]
+        if not bar then break end
+
+        -- y 偏移沿用现有 TOPLEFT 锚点值，避免与 window.lua 的 yOffset 公式耦合；
+        -- 取不到时按 CreateBar 默认公式兜底
+        local yOffset = (config.height + (config.spacing or 0)) * (i-1) + 22
+        local ok, p, relTo, rp, x, y = pcall(bar.GetPoint, bar, 1)
+        if ok and p == "TOPLEFT" and y then
+          yOffset = -y
+          relTo = relTo or window
+          rp = rp or "TOPLEFT"
+        else
+          relTo, rp = window, "TOPLEFT"
+        end
+
+        -- 进度条与低亮条整体右移
+        bar:SetPoint("TOPLEFT", relTo, rp, barLeft, -yOffset)
+        if bar.lowerBar then
+          bar.lowerBar:SetPoint("TOPLEFT", relTo, rp, barLeft, -yOffset)
+        end
+
+        -- 图标容器：去掉可能存在的背景框，恢复透明定位容器并移到条左侧间隙
+        if bar.iconBg then
+          bar.iconBg:SetBackdrop(nil)
+          bar.iconBg:SetWidth(iconSize + 2)
+          bar.iconBg:SetHeight(iconSize + 2)
+          bar.iconBg:ClearAllPoints()
+          bar.iconBg:SetPoint("LEFT", bar, "LEFT", 2 - barLeft, 0)
+          bar.iconBg:SetFrameLevel(bar:GetFrameLevel() + 1)
+        end
+
+        -- 图标贴图尺寸随条高
+        if bar.classIcon then
+          bar.classIcon:SetWidth(iconSize)
+          bar.classIcon:SetHeight(iconSize)
+        end
+
+        -- 文字左边距：有图标时紧贴条左边缘
+        if bar.textLeft then
+          bar.textLeft:SetPoint("TOPLEFT", bar, "TOPLEFT", textPad, 1)
+        end
+        if bar.textRight then
+          bar.textRight:SetPoint("TOPLEFT", bar, "TOPLEFT", textPad, 1)
+        end
+      end
+    end
+
+    -- 包装单窗口 Refresh：切换视图等 frame:Refresh(true) 路径
+    -- 重建进度条后同样自动重应用布局（仅对真实窗口 Frame 生效）
+    local function InstallLayoutHook(window)
+      if not window or not window.bars or window.pfLayoutHook then return end
+      window.pfLayoutHook = window.Refresh
+      window.Refresh = function(self, arg1, arg2)
+        window.pfLayoutHook(self, arg1, arg2)
+        ApplyBarIconLayout(window)
+      end
+    end
+
+    -- 包装全局 Refresh：窗口（重）建后立即应用布局（独立于皮肤开关生效）
+    local hookLayoutRefresh = ShaguDPS.window.Refresh
+    ShaguDPS.window.Refresh = function (arg1, arg2)
+      hookLayoutRefresh(arg1, arg2)
+
+      for wid=1,10 do
+        local window = ShaguDPS.window[wid]
+        if window and window.bars then
+          InstallLayoutHook(window)
+          ApplyBarIconLayout(window)
+        end
+      end
+    end
+
+    -- 载入时立即应用一次（ShaguDPS 加载末尾已创建窗口，先于本回调）
+    for wid=1,10 do
+      local window = ShaguDPS.window[wid]
+      if window and window.bars then
+        InstallLayoutHook(window)
+        ApplyBarIconLayout(window)
+      end
+    end
+
     if C.thirdparty.shagudps.skin == "1" then
       local hookRefresh = ShaguDPS.window.Refresh
       ShaguDPS.window.Refresh = function (arg1, arg2)

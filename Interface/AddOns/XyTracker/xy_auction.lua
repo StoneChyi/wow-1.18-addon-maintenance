@@ -3455,34 +3455,41 @@ end)
 local function CreatePaiMinimapButton()
     local btn = CreateFrame("Button", "XyPaiMinimapButton", Minimap)
     btn:SetFrameStrata("HIGH")
-    btn:SetWidth(26)
-    btn:SetHeight(26)
+    btn:SetWidth(31)
+    btn:SetHeight(31)
     btn:EnableMouse(true)
     btn:SetMovable(true)
     btn:RegisterForDrag("LeftButton", "RightButton")
     btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
-    -- 贴 pai.tga 图标
-    btn:SetNormalTexture("Interface\\AddOns\\XyTracker\\Images\\pai")
-    local normalTex = btn:GetNormalTexture()
-    normalTex:SetWidth(20)
-    normalTex:SetHeight(20)
-    normalTex:SetPoint("CENTER", 0, 0)
+    -- 图标：圆形 alpha 版（64x64 32bit TGA）
+    -- 原来直接贴 128x128 的 pai.tga —— 它是无 alpha 的 RGB，自带一圈方形红金
+    -- 边框，缩到小地图上就是一块方块，跟其他标准圆形按钮完全不一样。
+    -- 注意：不能用 SetNormalTexture —— 按钮的正常状态贴图自带 CENTER 锚点，
+    -- 再叠一个 TOPLEFT 会让字形被拉偏、右侧被切掉（2026-10-23 实测），
+    -- 所以按 LibDBIcon 的做法自建独立 ARTWORK 贴图。
+    local iconTex = btn:CreateTexture("XyPaiMinimapButtonIcon", "ARTWORK")
+    iconTex:SetTexture("Interface\\AddOns\\XyTracker\\Images\\pai_round")
+    iconTex:SetWidth(17)
+    iconTex:SetHeight(17)
+    iconTex:SetPoint("TOPLEFT", btn, "TOPLEFT", 7, -6)
 
-    -- 悬停高亮
+    -- 悬停高亮（保持默认尺寸，与 LibDBIcon 一致）
     btn:SetHighlightTexture("Interface/Minimap/UI-Minimap-ZoomButton-Highlight")
-    local hlTex = btn:GetHighlightTexture()
-    hlTex:SetBlendMode("ADD")
-    hlTex:SetWidth(26)
-    hlTex:SetHeight(26)
-    hlTex:SetPoint("CENTER", 0, 0)
 
-    -- 标准小地图圆环边框（53px 画布锚 TOPLEFT 同款，26 按钮等比 43）
+    -- 标准小地图按钮外观：53px 金色圆环 + 20px 暗色圆底
+    -- （数值与 LibDBIcon-1.0 / Atlas 完全一致，保证和其它插件按钮一模一样）
     local borderTex = btn:CreateTexture("XyPaiMinimapButtonBorder", "OVERLAY")
     borderTex:SetTexture("Interface/Minimap/MiniMap-TrackingBorder")
-    borderTex:SetWidth(43)
-    borderTex:SetHeight(43)
+    borderTex:SetWidth(53)
+    borderTex:SetHeight(53)
     borderTex:SetPoint("TOPLEFT", btn, "TOPLEFT", 0, 0)
+
+    local bgTex = btn:CreateTexture("XyPaiMinimapButtonBg", "BACKGROUND")
+    bgTex:SetTexture("Interface/Minimap/UI-Minimap-Background")
+    bgTex:SetWidth(20)
+    bgTex:SetHeight(20)
+    bgTex:SetPoint("TOPLEFT", btn, "TOPLEFT", 7, -5)
 
     -- Tooltip
     btn:SetScript("OnEnter", function()

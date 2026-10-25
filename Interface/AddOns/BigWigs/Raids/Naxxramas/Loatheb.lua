@@ -256,6 +256,10 @@ LoathebDebuff:Hide()
 LoathebDebuff:SetFrameStrata("TOOLTIP")
 LoathebDebuff:SetOwner(WorldFrame, "ANCHOR_NONE")
 
+-- 纹理 → debuff 名称 缓存：1.12 用 GetPlayerBuffTexture 拿纹理（轻量），
+-- 仅首次遇到该纹理才扫一次 tooltip 拿名字，后续直接查缓存，避免每 0.5s 反复 SetPlayerBuff+GetText
+local LoathebDebuffNameCache = {}
+
 local timer = {
 	softEnrage = 300,
 	firstDoom = 120,
@@ -454,10 +458,23 @@ function module:CheckDebuff()
 
 		for i=0, 15 do
 			local id = GetPlayerBuff(i,"HARMFUL")
-			tooltip:SetOwner(UIParent, "ANCHOR_NONE");
-			tooltip:SetPlayerBuff(id);
-			buffName = textleft1:GetText();
-			tooltip:Hide();
+			if id == -1 then break end
+
+			-- 纹理缓存：先拿纹理（轻量），命中缓存直接取名字，避免重复扫 tooltip
+			local texture = GetPlayerBuffTexture(id)
+			local buffName
+			if texture and LoathebDebuffNameCache[texture] ~= nil then
+				buffName = LoathebDebuffNameCache[texture]
+			else
+				tooltip:SetOwner(UIParent, "ANCHOR_NONE");
+				tooltip:SetPlayerBuff(id);
+				buffName = textleft1:GetText();
+				tooltip:Hide();
+				if texture then
+					LoathebDebuffNameCache[texture] = buffName
+				end
+			end
+
 			if ( buffName and strfind(strlower(buffName), debuff )) then
 				local timeleft = GetPlayerBuffTimeLeft(id)
 				if timeleft < timer.getNextSpore then
@@ -465,8 +482,6 @@ function module:CheckDebuff()
 				elseif timeleft > timer.getNextSpore then
 					self:TriggerEvent("BigWigs_HideWarningSign", icon.sieni)
 				end
-			elseif ( buffName==nil ) then
-				break;
 			end
 		end
 	end

@@ -305,6 +305,34 @@ function GoubayuHeal.Totem_GetElementMaxCooldownRemaining(elementIndex)
     return maxRemaining
 end
 
+-- 图腾回收（Totemic Recall）剩余冷却（秒）：未学会/无冷却返回 0。
+-- 回收是与"一键放置"配套的长CD技能，显示在放置按钮上，便于判断能否"回收后重放"。
+-- 取 start/duration 两个值判断：duration<=1.6 才是公共冷却（不显示）；
+-- 真实冷却按剩余时间一直倒数到 0（不能按"剩余<=1.6"过滤，否则最后 1~2 秒会被吞掉）。
+-- by 武藤纯子酱 2026.10.20
+function GoubayuHeal.Totem_GetRecallCooldownRemaining()
+    local name = GoubayuHeal.Spell and GoubayuHeal.Spell.TotemRecall
+    if not (name and GoubayuHeal.GetSpellBookSlot) then
+        return 0
+    end
+    local slot = GoubayuHeal.GetSpellBookSlot(name)
+    if not slot then
+        return 0
+    end
+    local ok, start, duration = pcall(GetSpellCooldown, slot, BOOKTYPE_SPELL)
+    if not ok or not start or not duration or duration <= 0 then
+        return 0
+    end
+    if duration <= 1.6 then
+        return 0
+    end
+    local remain = start + duration - GetTime()
+    if remain <= 0 then
+        return 0
+    end
+    return remain
+end
+
 -- ============================================================
 -- 配置管理
 -- ============================================================
@@ -623,6 +651,15 @@ function GoubayuHeal.Totem_SetupFonts()
             cooldownText:SetShadowOffset(1, -1)
         end
     end
+
+    -- 一键放置按钮：图腾回收CD倒计时（与图腾倒计时同字号）
+    -- by 武藤纯子酱 2026.10.20
+    local placeCD = _G["GoubayuHeal_TotemButton_PlaceCooldownText"]
+    if placeCD then
+        placeCD:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
+        placeCD:SetShadowColor(0, 0, 0, 1)
+        placeCD:SetShadowOffset(1, -1)
+    end
 end
 
 -- ============================================================
@@ -739,6 +776,23 @@ function GoubayuHeal.Totem_OnTimerUpdate()
                     cooldownText:Hide()
                 end
             end
+        end
+    end
+
+    -- 一键放置按钮：显示"图腾回收"剩余冷却（回收可用时隐藏）
+    -- by 武藤纯子酱 2026.10.20
+    local placeCD = _G["GoubayuHeal_TotemButton_PlaceCooldownText"]
+    if placeCD then
+        local recallCd = 0
+        if GoubayuHeal.Totem_GetRecallCooldownRemaining then
+            recallCd = GoubayuHeal.Totem_GetRecallCooldownRemaining()
+        end
+        if recallCd > 0 then
+            placeCD:SetText(format("%.0f", recallCd))
+            placeCD:SetTextColor(1, 0.72, 0.3)
+            placeCD:Show()
+        else
+            placeCD:Hide()
         end
     end
 end

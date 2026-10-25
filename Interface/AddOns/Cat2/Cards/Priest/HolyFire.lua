@@ -1,8 +1,8 @@
 local card = {
     id = "priest_holy_fire",
     name = "神圣之火",
-    description = "神圣之火剩余|cff6bc7e0{refreshRemainingSeconds}秒|r时补神圣之火",
-    details = "目标身上的神圣之火不存在或剩余时间低于卡片设定值时重新施放。默认续杯时间为3.5秒，需要存在有效目标，并保留现有的施法间隔保护。成功执行时会阻断本轮后续卡片。",
+    description = "目标血量>|cff6bc7e0{minimumTargetHealth}|r，剩余|cff6bc7e0{refreshRemainingSeconds}秒|r补神圣之火",
+    details = "仅当施法对象当前实际血量严格大于本卡“目标血量”参数时执行，默认100；等于或低于阈值时跳过。目标身上的神圣之火不存在或剩余时间低于卡片设定值时重新施放。默认续杯时间为3.5秒，需要存在有效目标，并保留现有的施法间隔保护。成功执行时会阻断本轮后续卡片。",
     sort = 50,
     category = "class",
     classes = {
@@ -12,6 +12,16 @@ local card = {
         "Interface\\Icons\\Spell_Holy_SearingLight",
     },
     optionSchema = {
+        {
+            key = "minimumTargetHealth",
+            type = "number",
+            label = "目标血量",
+            shortLabel = "血量",
+            default = 100,
+            minimum = 0,
+            maximum = 1000000,
+            integer = true,
+        },
         {
             key = "refreshRemainingSeconds",
             type = "number",
@@ -34,6 +44,11 @@ function card.RefreshRuntimeData()
 end
 
 function card.Execute(context, step)
+    local minimumTargetHealth = context:GetStepOption(step, "minimumTargetHealth") or 100
+    if (context.playerInformation.temporary.targetHealth or 0) <= minimumTargetHealth then
+        return false
+    end
+
     local player = Cat2.PlayerInformation.temporary
     local refreshSeconds = context:GetStepOption(step, "refreshRemainingSeconds") or 3.5
 

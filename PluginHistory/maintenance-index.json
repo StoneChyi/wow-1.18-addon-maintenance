@@ -5,10 +5,10 @@
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "documented_history": 54,
-    "unconfirmed": 48,
+    "documented_history": 57,
+    "unconfirmed": 46,
     "snapshot_difference": 1,
-    "related_skin_only": 2
+    "related_skin_only": 1
   },
   "added_counts": {
     "documented_history": 2
@@ -263,7 +263,8 @@
         "Interface/AddOns/Automatonex/.workbuddy/memory/2026-09-30.md",
         "Interface/AddOns/Automatonex/.workbuddy/memory/MEMORY.md",
         "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-28.md",
-        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-18.md"
+        "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-18.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Automatonex/Core.lua",
@@ -272,10 +273,19 @@
         "Interface/AddOns/Automatonex/Modules/Plates.lua",
         "Interface/AddOns/Automatonex/Modules/QuestItemBar.lua",
         "Interface/AddOns/Automatonex/Modules/Tooltip.lua",
-        "Interface/AddOns/Automatonex/Modules/Trainer.lua"
+        "Interface/AddOns/Automatonex/Modules/Trainer.lua",
+        "Interface/AddOns/Automatonex/Modules/AutoNeed.lua",
+        "Interface/AddOns/Automatonex/Modules/LootBOP.lua"
       ],
       "tracked_files_at_reference": 122,
-      "pending": ""
+      "pending": "",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 2,
+        "game_verified": false
+      }
     },
     {
       "addon": "Bagshui",
@@ -356,7 +366,8 @@
         "Interface/AddOns/BigWigs/.workbuddy/memory/MEMORY.md",
         "Interface/AddOns/BigWigs/Raids/BWL/Ezzel.lua.20260918125911.bak",
         "PluginHistory/Research/插件更新实施-20261012.md",
-        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+        "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/BigWigs/Plugins/Comm.lua",
@@ -394,15 +405,37 @@
         "Interface/AddOns/BigWigs/Raids/TMH/Selenaxx.lua",
         "Interface/AddOns/BigWigs/Raids/TMH/TimbermawTrash.lua",
         "Interface/AddOns/BigWigs/Raids/TMH/Trioch.lua",
-        "Interface/AddOns/BigWigs/Raids/TMH/Ursol.lua"
+        "Interface/AddOns/BigWigs/Raids/TMH/Ursol.lua",
+        "Interface/AddOns/BigWigs/BigWigs.toc",
+        "Interface/AddOns/BigWigs/Core.lua",
+        "Interface/AddOns/BigWigs/Plugins/Proximity.lua",
+        "Interface/AddOns/BigWigs/Plugins/Sound.lua",
+        "Interface/AddOns/BigWigs/Raids/AQ40/Sentinels.lua",
+        "Interface/AddOns/BigWigs/Raids/MC/BaronGeddon.lua",
+        "Interface/AddOns/BigWigs/Raids/MC/Thaurissan.lua",
+        "Interface/AddOns/BigWigs/Raids/Naxxramas/Loatheb.lua",
+        "Interface/AddOns/BigWigs/Raids/Naxxramas/Razuvious.lua",
+        "Interface/AddOns/BigWigs/Raids/Other/Emeriss.lua",
+        "Interface/AddOns/BigWigs/Raids/Other/Lethon.lua",
+        "Interface/AddOns/BigWigs/Raids/Other/Taerar.lua",
+        "Interface/AddOns/BigWigs/Raids/Other/Ysondre.lua",
+        "Interface/AddOns/BigWigs/Sounds/Voice/changetarget.ogg",
+        "Interface/AddOns/BigWigs/Sounds/Voice/dispelnow.ogg",
+        "Interface/AddOns/BigWigs/Sounds/Voice/dpsstop.ogg",
+        "Interface/AddOns/BigWigs/Sounds/Voice/fearsoon.ogg",
+        "Interface/AddOns/BigWigs/Sounds/Voice/gathershare.ogg",
+        "Interface/AddOns/BigWigs/Sounds/Voice/interruptsoon.ogg",
+        "Interface/AddOns/BigWigs/Sounds/Voice/runout.ogg",
+        "Interface/AddOns/BigWigs/Sounds/Voice/switchphase.ogg",
+        "Interface/AddOns/BigWigs/Sounds/Voice/tauntboss.ogg"
       ],
       "tracked_files_at_reference": 339,
       "pending": "首领模块数量较多，各场战斗的最终实测情况请按需补充。",
       "last_package_update": {
-        "date": "2026-10-18",
-        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
-        "files_changed": 1,
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 34,
         "game_verified": false
       }
     },
@@ -565,13 +598,22 @@
       "note": "PluginHistory/Plugins/Capslock.md",
       "purpose": "修正拉人名单的职业颜色。",
       "sources": [
-        "Interface/AddOns/Capslock/.workbuddy/memory/2026-10-04.md"
+        "Interface/AddOns/Capslock/.workbuddy/memory/2026-10-04.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
-        "Interface/AddOns/Capslock/Capslock.lua"
+        "Interface/AddOns/Capslock/Capslock.lua",
+        "Interface/AddOns/Capslock/Capslock.toc"
       ],
       "tracked_files_at_reference": 6,
-      "pending": ""
+      "pending": "",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "Cat",
@@ -611,7 +653,8 @@
       "purpose": "扩展流程编辑、配置调用和动作条入口。",
       "sources": [
         "Interface/AddOns/Cat2/DEVELOPMENT-NOTES.md",
-        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+        "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Cat2/Cards/Logic/CallConfiguration.lua",
@@ -622,15 +665,126 @@
         "Interface/AddOns/Cat2/UI/FlowEditorHeader.lua",
         "Interface/AddOns/Cat2/UI/FlowEditorLists.lua",
         "Interface/AddOns/Cat2/UI/FlowEditorWindow.lua",
-        "Interface/AddOns/Cat2/UI/ProfileMacroIcon.lua"
+        "Interface/AddOns/Cat2/UI/ProfileMacroIcon.lua",
+        "Interface/AddOns/Cat2/Cards/Common/AutoCancelCasterBuffs.lua",
+        "Interface/AddOns/Cat2/Cards/Common/CustomSpell.lua",
+        "Interface/AddOns/Cat2/Cards/Custom/HunterCannon.lua",
+        "Interface/AddOns/Cat2/Cards/Custom/HunterOrbitalMissile.lua",
+        "Interface/AddOns/Cat2/Cards/Custom/PaladinAutoBlessing.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/InsectSwarm.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/InsectSwarmSolarEclipse.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/Moonfire.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/MoonfireLunarEclipse.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/Rake.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/Rip1.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/Rip2.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/Rip3.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/Rip4.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/Rip5.lua",
+        "Interface/AddOns/Cat2/Cards/Hunter/FeignDeathBossWatching.lua",
+        "Interface/AddOns/Cat2/Cards/Hunter/SerpentSting.lua",
+        "Interface/AddOns/Cat2/Cards/Hunter/SerpentStingToxicAmmo.lua",
+        "Interface/AddOns/Cat2/Cards/Items/CustomCastConsumableSelf.lua",
+        "Interface/AddOns/Cat2/Cards/Items/CustomUseItem.lua",
+        "Interface/AddOns/Cat2/Cards/Items/DenseDynamiteSelf.lua",
+        "Interface/AddOns/Cat2/Cards/Items/ElixirOfDemonslayingBoss.lua",
+        "Interface/AddOns/Cat2/Cards/Items/OilOfImmolation.lua",
+        "Interface/AddOns/Cat2/Cards/Items/StratholmeHolyWaterSelf.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpNearbyEnemyCount.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpPowerAbove.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpPowerBelow.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpSelfBuff.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpSelfNoBuff.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpTargetBehind.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpTargetBuff.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpTargetHealthPercentBelow.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpTargetInFront.lua",
+        "Interface/AddOns/Cat2/Cards/Logic/FlowJumpTargetNoBuff.lua",
+        "Interface/AddOns/Cat2/Cards/Mage/ArcanePowerFuse.lua",
+        "Interface/AddOns/Cat2/Cards/Priest/HolyFire.lua",
+        "Interface/AddOns/Cat2/Cards/Priest/ShadowWordPain.lua",
+        "Interface/AddOns/Cat2/Cards/Priest/ShadowWordPainMultiDot.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/Rupture1.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/Rupture2.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/Rupture3.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/Rupture4.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/Rupture5.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/RuptureBloody1.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/RuptureBloody2.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/RuptureBloody3.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/RuptureBloody4.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/RuptureBloody5.lua",
+        "Interface/AddOns/Cat2/Cards/Shaman/FlameShock.lua",
+        "Interface/AddOns/Cat2/Cards/Shaman/FlameShockDot.lua",
+        "Interface/AddOns/Cat2/Cards/Shaman/FlameShockLavaFollowup.lua",
+        "Interface/AddOns/Cat2/Cards/Shaman/FlameShockLavaMaximize.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/Corruption.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CorruptionMultiDot.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CurseOfAgony.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CurseOfAgonyMultiDot.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CurseOfDoom.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CurseOfRecklessnessHex.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CurseOfRecklessnessHexMultiDot.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CurseOfShadowHex.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CurseOfShadowHexMultiDot.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CurseOfTheElementsHex.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/CurseOfTheElementsHexMultiDot.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/Immolate.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/ImmolateAutoTiming.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/ImmolateMultiDot.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/ShadowWard.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/ShadowburnBoss.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/SiphonLife.lua",
+        "Interface/AddOns/Cat2/Cards/Warlock/SiphonLifeMultiDot.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/BattleStance.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/BerserkerStance.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/Bloodrage.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/Bloodthirst.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/ChargeAutoStance.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/Cleave.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/DefensiveStanceBossWatching.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/Execute.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/ExecuteHighRage.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/HamstringFlurry.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/HeroicStrike.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/HeroicStrikeAlt.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/InterceptAutoStance.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/InterveneAutoStance.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/MortalStrike.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/Overpower.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/OverpowerAfterMainSkill.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/OverpowerWithoutFlurry.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/PummelFlurry.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/Rend.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/Slam.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SlamAfterMainSkills.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SlamFlurry.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SlamFlurryAfterMainSkills.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SlamWithoutFlurry.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SpecialStrike.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SunderArmor.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SunderArmorBoss.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SunderArmorFive.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SunderArmorFiveBoss.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/SunderArmorOne.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/ThunderClapOffensive.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/Whirlwind.lua",
+        "Interface/AddOns/Cat2/Cards/Warrior/WhirlwindGroup.lua",
+        "Interface/AddOns/Cat2/Cat2.lua",
+        "Interface/AddOns/Cat2/Cat2.toc",
+        "Interface/AddOns/Cat2/Core/Buff.lua",
+        "Interface/AddOns/Cat2/Core/CatImmuneLib.lua",
+        "Interface/AddOns/Cat2/Core/ChannelDebug.lua",
+        "Interface/AddOns/Cat2/Core/Persistence.lua",
+        "Interface/AddOns/Cat2/UI/FlowEditorJumpGuide.lua"
       ],
       "tracked_files_at_reference": 708,
       "pending": "第三方动作条兼容及调用配置的完整游戏场景验收待补充。",
       "last_package_update": {
-        "date": "2026-10-18",
-        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
-        "files_changed": 10,
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 125,
         "game_verified": false
       }
     },
@@ -669,7 +823,8 @@
         "PluginHistory/Evidence/addons_tmp/catpotion-wormholes-backup-20261007/Window.lua",
         "PluginHistory/Evidence/addons_tmp/catpotion_data.py",
         "Interface/AddOns/CatPotion/README.md",
-        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+        "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/CatPotion/Core.lua",
@@ -680,10 +835,10 @@
       "tracked_files_at_reference": 19,
       "pending": "部分早期窗口功能缺完整修改前对照；实际新增物品的游戏点击结果待补充。",
       "last_package_update": {
-        "date": "2026-10-18",
-        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
-        "files_changed": 2,
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 1,
         "game_verified": false
       }
     },
@@ -694,7 +849,8 @@
       "purpose": "短冷却优先，支持 30 分钟；17 组技能及 12 类物品按实际计时归并，修复圣盾/圣佑和圣水/手雷重复，保留独立长冷却、布局、预览与字体保护。",
       "sources": [
         "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-15.md",
-        "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-24.md"
+        "Interface/AddOns/Cooline/.workbuddy/memory/2026-08-24.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Cooline/Cooline.lua",
@@ -703,7 +859,14 @@
         "Interface/AddOns/Cooline/Cooline.toc"
       ],
       "tracked_files_at_reference": 5,
-      "pending": "2026-10-13：新增 12 类 / 204 个共享物品 ID，圣水与手雷同步归并、保留工兵自身长冷却；30 组检查通过，真实物品/技能计时、消耗及成功事件仍待游戏验收。"
+      "pending": "2026-10-13：新增 12 类 / 204 个共享物品 ID，圣水与手雷同步归并、保留工兵自身长冷却；30 组检查通过，真实物品/技能计时、消耗及成功事件仍待游戏验收。",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "Cryolysis",
@@ -979,13 +1142,24 @@
     },
     {
       "addon": "EzPoison",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/EzPoison.md",
       "purpose": "等待确认是否有个人修改",
-      "sources": [],
-      "maintenance_files": [],
+      "sources": [
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/EzPoison/EzPoison.toc"
+      ],
       "tracked_files_at_reference": 7,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "FishingBuddy",
@@ -1023,15 +1197,24 @@
       "purpose": "更新瞬发人数限制、动作占用、迅捷治愈换目标及牧师驱病顺序。",
       "sources": [
         "PluginHistory/Research/插件更新实施-20261012.md",
-        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+        "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
-      "maintenance_files": [],
+      "maintenance_files": [
+        "Interface/AddOns/GoubayuHeal/GoubayuHeal.lua",
+        "Interface/AddOns/GoubayuHeal/GoubayuHeal_C.lua",
+        "Interface/AddOns/GoubayuHeal/GoubayuHeal_Dispel.lua",
+        "Interface/AddOns/GoubayuHeal/GoubayuHeal_Locale.lua",
+        "Interface/AddOns/GoubayuHeal/GoubayuHeal_Predict.lua",
+        "Interface/AddOns/GoubayuHeal/GoubayuHeal_Totem.lua",
+        "Interface/AddOns/GoubayuHeal/GoubayuHeal_UI.lua"
+      ],
       "tracked_files_at_reference": 12,
       "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
-        "date": "2026-10-18",
-        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 7,
         "game_verified": false
       }
@@ -1164,16 +1347,20 @@
       "note": "PluginHistory/Plugins/MySlash.md",
       "purpose": "按新包删除 TT助手 /at 入口。",
       "sources": [
-        "PluginHistory/Research/插件更新实施-20261012.md"
+        "PluginHistory/Research/插件更新实施-20261012.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
-      "maintenance_files": [],
+      "maintenance_files": [
+        "Interface/AddOns/MySlash/MySlash.lua",
+        "Interface/AddOns/MySlash/MySlash.toc"
+      ],
       "tracked_files_at_reference": 5,
       "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
-        "date": "2026-10-12",
-        "report": "PluginHistory/Research/插件更新实施-20261012.md",
-        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
-        "files_changed": 1,
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 2,
         "game_verified": false
       }
     },
@@ -1424,16 +1611,25 @@
         "Interface/AddOns/S_ItemTip/.workbuddy/memory/2026-09-30.md",
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
-        "PluginHistory/Evidence/legacy-20261006/Docs/Files/S_ItemTip"
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/S_ItemTip",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/S_ItemTip/Icons/classicons.blp",
         "Interface/AddOns/S_ItemTip/InspectFrame.lua",
         "Interface/AddOns/S_ItemTip/InspectGemAndEnchant.lua",
-        "Interface/AddOns/S_ItemTip/ItemSocre.lua"
+        "Interface/AddOns/S_ItemTip/ItemSocre.lua",
+        "Interface/AddOns/S_ItemTip/S_ItemTip.toc"
       ],
       "tracked_files_at_reference": 24,
-      "pending": ""
+      "pending": "",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "S_WorldMap",
@@ -1454,7 +1650,8 @@
         "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-03.md",
         "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-04.md",
         "PluginHistory/Research/插件更新实施-20261012.md",
-        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+        "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/ShaguDPS/core.lua",
@@ -1466,10 +1663,10 @@
       "tracked_files_at_reference": 16,
       "pending": "服务器响应、多人战斗及无 SuperWoW 时的兼容结果待补充。",
       "last_package_update": {
-        "date": "2026-10-18",
-        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
-        "files_changed": 7,
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 4,
         "game_verified": false
       }
     },
@@ -1601,13 +1798,30 @@
     },
     {
       "addon": "SuperMacro",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/SuperMacro.md",
       "purpose": "等待确认是否有个人修改",
-      "sources": [],
-      "maintenance_files": [],
+      "sources": [
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/SuperMacro/SM_Common.lua",
+        "Interface/AddOns/SuperMacro/SM_MacroExtend.lua",
+        "Interface/AddOns/SuperMacro/SM_Options.lua",
+        "Interface/AddOns/SuperMacro/SM_UI.lua",
+        "Interface/AddOns/SuperMacro/SuperMacro.lua",
+        "Interface/AddOns/SuperMacro/SuperMacro.toc",
+        "Interface/AddOns/SuperMacro/localization.lua"
+      ],
       "tracked_files_at_reference": 15,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 7,
+        "game_verified": false
+      }
     },
     {
       "addon": "TWThreat",
@@ -1672,15 +1886,25 @@
     },
     {
       "addon": "TrainerSkills",
-      "status": "related_skin_only",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/TrainerSkills.md",
       "purpose": "登记相关皮肤适配，等待确认主插件是否另有个人改动。",
       "sources": [
-        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-28.md"
+        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-28.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
-      "maintenance_files": [],
+      "maintenance_files": [
+        "Interface/AddOns/TrainerSkills/Locales/_Locales.xml"
+      ],
       "tracked_files_at_reference": 19,
-      "pending": "请确认本插件本体是否曾另外修改；若有，请描述变化。"
+      "pending": "请确认本插件本体是否曾另外修改；若有，请描述变化。",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "TurtleMail",
@@ -1771,21 +1995,23 @@
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-08-19.md",
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-08-28.md",
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-09-09.md",
-        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+        "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/WushuangLoot/Bindings.xml",
         "Interface/AddOns/WushuangLoot/WSLMain.lua",
         "Interface/AddOns/WushuangLoot/WushuangLoot.lua",
-        "Interface/AddOns/WushuangLoot/WushuangLoot.toc"
+        "Interface/AddOns/WushuangLoot/WushuangLoot.toc",
+        "Interface/AddOns/WushuangLoot/tga/tubiao_round.tga"
       ],
       "tracked_files_at_reference": 8,
       "pending": "请优先补充重启后的探针结果、当前实际加载文件、小地图/中文命令是否恢复以及现有 DLL 版本。",
       "last_package_update": {
-        "date": "2026-10-18",
-        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
-        "files_changed": 1,
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 2,
         "game_verified": false
       }
     },
@@ -1796,15 +2022,19 @@
       "purpose": "更新许愿权移交菜单、确认、权限判断及团队同步。",
       "sources": [
         "PluginHistory/Research/插件更新实施-20261012.md",
-        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+        "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
-      "maintenance_files": [],
+      "maintenance_files": [
+        "Interface/AddOns/XyTracker/Images/pai_round.tga",
+        "Interface/AddOns/XyTracker/xy_auction.lua"
+      ],
       "tracked_files_at_reference": 38,
       "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
-        "date": "2026-10-18",
-        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 2,
         "game_verified": false
       }
@@ -2016,7 +2246,8 @@
         "Interface/AddOns/pfUI/modules/eqcompare.20261004_093912.selfcompare.bak",
         "Interface/AddOns/pfUI/modules/tooltip.20261002_212528.alwaysperc.bak",
         "PluginHistory/pfUI-tooltip-fix-20261009.md",
-        "PluginHistory/Research/10月16日包合并实施-20261018.md"
+        "PluginHistory/Research/10月16日包合并实施-20261018.md",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI/api/api.lua",
@@ -2042,15 +2273,23 @@
         "Interface/AddOns/pfUI/modules/target.lua",
         "Interface/AddOns/pfUI/modules/tooltip.lua",
         "Interface/AddOns/pfUI/modules/unlock.lua",
-        "Interface/AddOns/pfUI/tests/monitor-tooltip-owner.lua"
+        "Interface/AddOns/pfUI/tests/monitor-tooltip-owner.lua",
+        "Interface/AddOns/pfUI/init/modules.xml",
+        "Interface/AddOns/pfUI/init/skins.xml",
+        "Interface/AddOns/pfUI/modules/combopoints.lua",
+        "Interface/AddOns/pfUI/modules/debuffmonitor.lua",
+        "Interface/AddOns/pfUI/modules/thirdparty.lua",
+        "Interface/AddOns/pfUI/modules/totems.lua",
+        "Interface/AddOns/pfUI/pfUI-tbc.toc",
+        "Interface/AddOns/pfUI/pfUI.toc"
       ],
       "tracked_files_at_reference": 277,
       "pending": "修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。",
       "last_package_update": {
-        "date": "2026-10-18",
-        "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
-        "files_changed": 4,
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 18,
         "game_verified": false
       }
     },
@@ -2087,7 +2326,8 @@
         "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-10-02.md",
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
-        "PluginHistory/Evidence/legacy-20261006/Docs/Files/pfUI-addonskinner"
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/pfUI-addonskinner",
+        "PluginHistory/Research/10月24日包合并实施-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI-addonskinner/skins/Cat.lua",
@@ -2096,10 +2336,19 @@
         "Interface/AddOns/pfUI-addonskinner/skins/RaidCheck.lua",
         "Interface/AddOns/pfUI-addonskinner/skins/StatCompare.lua",
         "Interface/AddOns/pfUI-addonskinner/skins/Tmog.lua",
-        "Interface/AddOns/pfUI-addonskinner/skins/TrainerSkills.lua"
+        "Interface/AddOns/pfUI-addonskinner/skins/TrainerSkills.lua",
+        "Interface/AddOns/pfUI-addonskinner/pfUI-addonskinner.toc",
+        "Interface/AddOns/pfUI-addonskinner/skins/WushuangLoot.lua"
       ],
       "tracked_files_at_reference": 84,
-      "pending": ""
+      "pending": "",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+        "files_changed": 2,
+        "game_verified": false
+      }
     },
     {
       "addon": "pfUI-eliteoverlay",
@@ -2217,6 +2466,37 @@
         "BetterCharacterStats",
         "StatCompare",
         "S_ItemTip"
+      ],
+      "deployed": true,
+      "game_verified": false
+    },
+    {
+      "date": "2026-10-25",
+      "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
+      "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
+      "before_tag": "before/package-20261024-20261025",
+      "addons": [
+        "Automatonex",
+        "BigWigs",
+        "Capslock",
+        "Cat2",
+        "CatPotion",
+        "Cooline",
+        "EzPoison",
+        "GoubayuHeal",
+        "MySlash",
+        "pfUI",
+        "pfUI-addonskinner",
+        "S_ItemTip",
+        "ShaguDPS",
+        "SuperMacro",
+        "TrainerSkills",
+        "WushuangLoot",
+        "XyTracker"
+      ],
+      "excluded": [
+        "BetterCharacterStats",
+        "StatCompare"
       ],
       "deployed": true,
       "game_verified": false

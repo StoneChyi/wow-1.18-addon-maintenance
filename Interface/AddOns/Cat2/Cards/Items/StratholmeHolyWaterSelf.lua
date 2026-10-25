@@ -3,8 +3,8 @@
 local card = {
     id = "item_stratholme_holy_water_self",
     name = "斯坦索姆圣水（自己）",
-    description = "以自己为投掷位置使用圣水，需UnitXP202607以上",
-    details = "物品冷却完成时，以自己为投掷位置使用斯坦索姆圣水。需要 UnitXP 202607 以上版本支持；成功执行时会阻断本轮后续卡片。",
+    description = "周围敌人>=|cff6bc7e0{enemyThreshold}|r时，以自己为投掷位置使用圣水，需UnitXP202607以上",
+    details = "物品冷却完成时，以自己为投掷位置使用斯坦索姆圣水。需要 UnitXP 202607 以上版本支持；成功执行时会阻断本轮后续卡片。使用前要求自己周围8码内敌人数达到设定值，默认1，范围1–40；敌人扫描需要SuperWoW支持。",
     sort = 1001,
     category = "item",
     exclusiveGroup = "stratholme_holy_water",
@@ -15,6 +15,10 @@ local card = {
     cooldown = {
         type = "item",
         name = "斯坦索姆圣水",
+    },
+    optionSchema = {
+        { key = "enemyThreshold", type = "number", label = "敌人数阈值", shortLabel = "敌",
+            default = 1, minimum = 1, maximum = 40 },
     },
 }
 
@@ -33,7 +37,7 @@ function card.RefreshRuntimeData()
 
 end
 
-function card.Execute(context)
+function card.Execute(context, step)
 
     if allowUse == 0 then
         DEFAULT_CHAT_FRAME:AddMessage("|cffff8000当前UnitXP模块版本不支持！|r")
@@ -41,6 +45,11 @@ function card.Execute(context)
     end
 
     if not Cat2.GetItemByNameCD("斯坦索姆圣水") then
+        return false
+    end
+
+    local enemyThreshold = context:GetStepOption(step, "enemyThreshold") or 1
+    if Cat2.ScanNearbyEnemies(8) < enemyThreshold then
         return false
     end
 

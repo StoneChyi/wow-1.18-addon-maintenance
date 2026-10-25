@@ -82,13 +82,16 @@ pfUI:RegisterModule("tooltip", "vanilla", function ()
     -- 鼠标旋转支持
     if C.tooltip.modelrotation == "1" then
       modelFrame:EnableMouse(true)
-      modelFrame:SetScript("OnUpdate", function(self, elapsed)
+      -- ⛔ 1.12 引擎只给 OnUpdate 传一个参数 elapsed ⇒ 不能写 function(self, elapsed)
+      --   （self 会吃掉 elapsed，self:GetFacing() 变成对数字取索引、每帧报错）。
+      --   按注意事项第 10 条：直接引用闭包里已创建的 frame 对象 modelFrame，不用 self。
+      modelFrame:SetScript("OnUpdate", function(elapsed)
         elapsed = elapsed or 0.016
         modelLastUpdate = modelLastUpdate + elapsed
         if modelLastUpdate >= 0.016 then
           if modelRotationEnabled and modelRotationSpeed ~= 0 then
-            local facing = self:GetFacing()
-            self:SetFacing(facing + modelRotationSpeed * 0.1)
+            local facing = modelFrame:GetFacing()
+            modelFrame:SetFacing(facing + modelRotationSpeed * 0.1)
           end
           modelLastUpdate = 0
         end
@@ -654,9 +657,11 @@ pfUI:RegisterModule("tooltip", "vanilla", function ()
   local originalOnUpdate = GameTooltip:GetScript("OnUpdate")
   -- 第一行文本的"签名"：它一变，就说明提示框内容已被换掉，需要重新确认能量条的归属
   local lastTipSig
-  GameTooltip:SetScript("OnUpdate", function(self, elapsed)
+  -- ⛔ 1.12 OnUpdate 只有一个参数 elapsed，不能写 function(self, elapsed)
+  --  （self=elapsed、elapsed=nil）。原链调用改为只透传 elapsed（与引擎行为一致）。
+  GameTooltip:SetScript("OnUpdate", function(elapsed)
     if originalOnUpdate then
-      originalOnUpdate(self, elapsed)
+      originalOnUpdate(elapsed)
     end
     OnTooltipUpdate()
 

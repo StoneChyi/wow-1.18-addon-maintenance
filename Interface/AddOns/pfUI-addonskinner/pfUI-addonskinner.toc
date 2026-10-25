@@ -22,13 +22,11 @@ skins\Atlas.lua
 skins\AtlasLoot.lua
 skins\AtlasQuest.lua
 skins\BigWigs.lua
-skins\BookStore.lua
 skins\BugSack.lua
 skins\Clique.lua
 skins\Decursive.lua
 skins\DoiteAuras.lua
 skins\En_AutoEquip.lua
-skins\GearMenu.lua
 skins\guild_bank.lua
 skins\LoseControl.lua
 skins\ModifiedPowerAuras.lua
@@ -39,10 +37,8 @@ skins\simpleAuras.lua
 skins\SP_SwingTimer.lua
 skins\SuperIgnore.lua
 skins\SuperMacro.lua
-skins\TrinketMenu.lua
 skins\YaHT.lua
 skins\KLHThreatMeter.lua
-skins\DoTimer.lua
 skins\WorldMap.lua
 skins\distancewarning.lua
 skins\MissingTradeSkillsList.lua
@@ -73,11 +69,9 @@ skins\aux-addon.lua
 --skins\JIM_CooldownPulse.lua
 
 # Create by 可可慕斯 20250322
-skins\SpecialTalentUI.lua
 skins\SUCC-bag.lua
 
 # Create by 可可慕斯 20250324
-Locale\zh.lua
 
 # Create by 可可慕斯 20250325
 skins\QuickHeal.lua

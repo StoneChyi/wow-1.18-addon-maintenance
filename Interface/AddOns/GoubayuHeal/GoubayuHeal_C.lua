@@ -181,6 +181,34 @@ function CastingSpeed:IsHealSpellId(spellId)
     return isHeal
 end
 
+-- HOT（回春/愈合/恢复）spellId → 技能名（去等级后缀）；非 HOT 返回 nil。会话内缓存。
+-- 供 SPELL_GO_OTHER 判断"别人成功落地的 HOT"（覆盖必然伴随一次成功 SPELL_GO）。
+-- by 武藤纯子酱 2026.10.19
+function CastingSpeed:HotSpellNameForId(spellId)
+    if not spellId or spellId == 0 then
+        return nil
+    end
+    if not (GoubayuHeal and GoubayuHeal.Rejuvenation and GetSpellNameAndRankForId) then
+        return nil
+    end
+    self.hotNameCache = self.hotNameCache or {}
+    local cached = self.hotNameCache[spellId]
+    if cached ~= nil then
+        return cached or nil
+    end
+    local name = false
+    local ok, nm = pcall(GetSpellNameAndRankForId, spellId)
+    if ok and nm and nm ~= "" then
+        local clean = string.gsub(nm, "%s*%(.*%)", "")
+        if clean == GoubayuHeal.Rejuvenation or clean == GoubayuHeal.Regrowth
+            or clean == GoubayuHeal.Renew then
+            name = clean
+        end
+    end
+    self.hotNameCache[spellId] = name
+    return name or nil
+end
+
 -- ============================================================
 -- 他人复活读条跟踪（一键复活竞速避让）
 -- ============================================================
@@ -265,6 +293,14 @@ end
 -- SPELL_GO：施法完成，清除记录
 function CastingSpeed:OnSpellGo(itemId, spellId, casterGuid, targetGuid,
     castFlags, numTargetsHit, numTargetsMissed, corpseOwnerGuid)
+    -- 其他施法者的 HOT 落地：通知主模块（可能覆盖了我们的 HOT → 取消预估 + 清重施锁）
+    -- by 武藤纯子酱 2026.10.19
+    if casterGuid and casterGuid ~= CastingSpeed:GetPlayerGUID() then
+        local hotName = CastingSpeed:HotSpellNameForId(spellId)
+        if hotName and GoubayuHeal.OnOtherHotApplied then
+            GoubayuHeal.OnOtherHotApplied(targetGuid, hotName, spellId)
+        end
+    end
     -- 复活读条落地（成功复活）→ 清除跟踪
     if CastingSpeed:IsRezSpellId(spellId) then
         CastingSpeed:RemoveRezCastInfo(targetGuid, corpseOwnerGuid)

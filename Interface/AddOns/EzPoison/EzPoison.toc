@@ -7,7 +7,6 @@
 ## Notes-zhCN:乌龟服专用的毒药/磨刀石助手。 |cFFFFFF00|n 乌龟服定制版 by Sunelegy, qyj（来啦坐）增加毒药数量显示、制毒助手、锁定位置、移动位置、修复缩放、增加法力油选项
 ## X-Repple: 职业
 ## Version: 1.3.13
-## DefaultState: Enabled
 ## SavedVariablesPerCharacter: EZPcfg, EZPBuyerData
 ## DefaultState: disabled
 

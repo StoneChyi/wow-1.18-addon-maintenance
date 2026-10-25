@@ -88,8 +88,8 @@ L:RegisterTranslations("zhCN", function() return {
 	
 	
 	trigger_bombYou = "你受到了活化炸弹效果的影响。", --CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
-	trigger_bombOther = "(.*)受到了活化炸弹效果的影响。", --CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE // CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE
-	trigger_bombFade = "活化炸弹效果从(.*)身上消失。", --CHAT_MSG_SPELL_AURA_GONE_SELF // CHAT_MSG_SPELL_AURA_GONE_PARTY // CHAT_MSG_SPELL_AURA_GONE_OTHER
+	trigger_bombOther = "(.+)受到了活化炸弹效果的影响。", --CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE // CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE
+	trigger_bombFade = "活化炸弹效果从(.+)身上消失。", --CHAT_MSG_SPELL_AURA_GONE_SELF // CHAT_MSG_SPELL_AURA_GONE_PARTY // CHAT_MSG_SPELL_AURA_GONE_OTHER
     bar_bomb = " 炸弹！",
     msg_bomb = " 是炸弹！",
 	
@@ -210,6 +210,10 @@ function module:Event(msg)
 	
 	elseif string.find(msg, L["trigger_bombOther"]) then
 		local _,_, bombPlayer,_ = string.find(msg, L["trigger_bombOther"])
+		-- 归一「你」字面量：自身日志文本漂移（精确比较失配）落入本分支时，
+		-- (.+) 会捕获到字面量「你」，直接广播会造成全团「你 是炸弹！」误报
+		bombPlayer = string.gsub(bombPlayer, "^%s+", "")
+		if bombPlayer == L["you"] then bombPlayer = UnitName("Player") end
 		self:Sync(syncName.bomb .. " " .. bombPlayer)
 		
 	elseif string.find(msg, L["trigger_bombFade"]) then

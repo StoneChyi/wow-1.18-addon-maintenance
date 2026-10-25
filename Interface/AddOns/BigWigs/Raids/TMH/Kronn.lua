@@ -425,7 +425,7 @@ function module:FeverGain(target)
 	end
 
 	if target == UnitName("player") then
-		self:Message(L["msg_feverYou"], "Personal", true, "Alarm")
+		self:Message(L["msg_feverYou"], "Personal", true, "voiceDispel")
 		self:WarningSign(icon.fever, 3, true)
 	else
 		local nearby = false
@@ -437,7 +437,7 @@ function module:FeverGain(target)
 			end
 		end
 		if nearby then
-			self:Message(string.format(L["msg_feverOther"], target), "Urgent", false, "Alert")
+			self:Message(string.format(L["msg_feverOther"], target), "Urgent", false, "voiceDispel")
 			self:WarningSign(icon.fever, 3, true)
 		end
 	end

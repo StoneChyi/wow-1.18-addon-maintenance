@@ -103,6 +103,7 @@ addon.ItemTextures = {
     cookedFish = "Interface\\Icons\\INV_Misc_MonsterHead_03",
     dragonbreath = "Interface\\Icons\\INV_Drink_17",
     blessedSunfruit = "Interface\\Icons\\INV_Misc_Food_41",
+    chocolateFish = "Interface\\Icons\\INV_Misc_Fishe_Au_Chocolate",
     elementalStone = "Interface\\Icons\\INV_Stone_02",
     sacredStone = "Interface\\Icons\\INV_Stone_SharpeningStone_02",
     sacredOil = "Interface\\Icons\\INV_Potion_138",
@@ -183,6 +184,7 @@ addon.ItemDetails = {
     cookedFish = "15法穿",
     dragonbreath = "喷火",
     blessedSunfruit = "10力量",
+    chocolateFish = "1闪避4防御",
     elementalStone = "2暴击",
     sacredStone = "100亡灵AP",
     sacredOil = "60亡灵法伤",
@@ -350,6 +352,7 @@ AddItem("seafood", "烹饪", "进食充分", "深海炖菜", "深海炖菜")
 AddItem("cookedFish", "烹饪", "进食充分", "煮熟的光滑大鱼", "煮熟光滑大鱼")
 AddItem("dragonbreath", "烹饪", "龙息红椒", "龙息红椒", "龙息红椒")
 AddItem("blessedSunfruit", "烹饪", "神圣太阳果", "神圣太阳果", "神圣太阳果", "Interface\\Icons\\Spell_Holy_Devotion")
+AddItem("chocolateFish", "烹饪", "进食充分", "巧克力鱼", "巧克力鱼")
 
 -- 武器强化（设置中分别选择主手/副手，小窗点击后自动落到对应装备槽位）
 AddItem("elementalStone", "武器强化", nil, "元素磨刀石", "元素磨刀石")

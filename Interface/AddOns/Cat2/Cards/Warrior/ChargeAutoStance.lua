@@ -27,7 +27,7 @@ local card = {
             unit = "怒气",
             default = 25,
             minimum = 0,
-            maximum = 100,
+            maximum = 130,
         },
     },
 }

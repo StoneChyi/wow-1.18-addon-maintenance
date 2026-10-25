@@ -2,13 +2,25 @@
 local card = {
     id = "warlock_curse_of_recklessness_hex_multi_dot",
     name = "鲁莽诅咒（邪咒，多线DOT）",
-    description = "为附近没有痛苦诅咒的敌人施放鲁莽诅咒",
-    details = "扫描鲁莽诅咒射程内的敌人，并对其中没有痛苦诅咒的目标无目标施放鲁莽诅咒。需要邪咒天赋和 SuperWoW；每轮最多选择一个敌人施放。",
+    description = "目标血量>|cff6bc7e0{minimumTargetHealth}|r，多目标补DOT",
+    details = "仅当施法对象当前实际血量严格大于本卡“目标血量”参数时执行，默认100；等于或低于阈值时跳过。逐个检查扫描到的敌人，不受当前选中目标血量影响。扫描鲁莽诅咒射程内的敌人，并对其中没有痛苦诅咒的目标无目标施放鲁莽诅咒。需要邪咒天赋和 SuperWoW；每轮最多选择一个敌人施放。",
     sort = 152,
     exclusiveGroup = "warlock_major_curse",
     category = "class",
     classes = {
         WARLOCK = 1,
+    },
+    optionSchema = {
+        {
+            key = "minimumTargetHealth",
+            type = "number",
+            label = "目标血量",
+            shortLabel = "血量",
+            default = 100,
+            minimum = 0,
+            maximum = 1000000,
+            integer = true,
+        },
     },
     icons = {
         "Interface\\Icons\\Spell_Shadow_UnholyStrength",
@@ -28,7 +40,9 @@ function card.RefreshRuntimeData()
     end
 end
 
-function card.Execute(context)
+function card.Execute(context, step)
+    local minimumTargetHealth = context:GetStepOption(step, "minimumTargetHealth") or 100
+
     if allowUse == 0 or not Cat2.SuperWoW then
         return false
     end
@@ -46,6 +60,7 @@ function card.Execute(context)
     local requireCombatTarget = context and context.parameters and context.parameters.warlockMultiDotOnlyCombatEnemies
     for guid, _ in pairs(enemyList) do
         if UnitExists(guid) and UnitCanAttack("player", guid) and not UnitIsDeadOrGhost(guid)
+            and (UnitHealth(guid) or 0) > minimumTargetHealth
             and (not requireCombatTarget or UnitAffectingCombat(guid)) then
             local hasCurseOfAgony = Cat2.Buff("痛苦诅咒", guid)
             if not hasCurseOfAgony and not Cat2.IsShadowImmune(guid) then

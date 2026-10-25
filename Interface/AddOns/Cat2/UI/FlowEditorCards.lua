@@ -19,7 +19,10 @@ end
 
 -- 逻辑类型由 behavior 标记，与卡片所在的 logic 分类独立；按原顺序调用 Execute。
 local function ApplyLogicAppearance(block, disabled, hovered)
-    if disabled then
+    if disabled and hovered then
+        block:SetBackdropColor(0.135, 0.095, 0.055, 0.9)
+        block:SetBackdropBorderColor(0.43, 0.30, 0.18, 0.85)
+    elseif disabled then
         block:SetBackdropColor(0.085, 0.06, 0.035, 0.8)
         block:SetBackdropBorderColor(0.30, 0.22, 0.14, 0.72)
     elseif hovered then
@@ -157,10 +160,10 @@ function editor.CreateStepBlock(parent, step, index, fromFlow)
     block.index = index
     block.fromFlow = fromFlow
 
-    -- 流程序号位于卡片外侧的独立留白栏中；卡片重排时由 RefreshState 更新。
+    -- 序号靠近卡片，左侧留出跳转辅助线的位置；重排时由 RefreshState 更新。
     if fromFlow then
         block.orderText = block:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        block.orderText:SetPoint("RIGHT", block, "LEFT", -4, 0)
+        block.orderText:SetPoint("RIGHT", block, "LEFT", -1, 0)
         block.orderText:SetWidth(24)
         block.orderText:SetJustifyH("RIGHT")
         block.orderText:SetFont(DAMAGE_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
@@ -169,7 +172,7 @@ function editor.CreateStepBlock(parent, step, index, fromFlow)
 
         -- 旧客户端不能调整 FontString 字距；两位数拆成两个单字，压缩中心间距并允许轻微重叠。
         block.orderTensText = block:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        block.orderTensText:SetPoint("CENTER", block, "LEFT", -18, 0)
+        block.orderTensText:SetPoint("CENTER", block, "LEFT", -15, 0)
         block.orderTensText:SetWidth(24)
         block.orderTensText:SetJustifyH("CENTER")
         block.orderTensText:SetFont(DAMAGE_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
@@ -178,7 +181,7 @@ function editor.CreateStepBlock(parent, step, index, fromFlow)
         block.orderTensText:Hide()
 
         block.orderOnesText = block:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        block.orderOnesText:SetPoint("CENTER", block, "LEFT", -10, 0)
+        block.orderOnesText:SetPoint("CENTER", block, "LEFT", -7, 0)
         block.orderOnesText:SetWidth(24)
         block.orderOnesText:SetJustifyH("CENTER")
         block.orderOnesText:SetFont(DAMAGE_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
@@ -877,7 +880,6 @@ function editor.CreateStepBlock(parent, step, index, fromFlow)
     end)
     block:SetScript("OnEnter", function()
         if IsFlowHoverSuppressed(block) then return end
-        if block.fromFlow and block.step.enabled == 0 then return end
         if block.step.isMissing then
             -- 缺失卡片悬停时只提高暗红色亮度，不切回普通卡片的蓝灰色。
             block:SetBackdropColor(0.3, 0.1, 0.11, 0.9)
@@ -885,7 +887,21 @@ function editor.CreateStepBlock(parent, step, index, fromFlow)
                 block.SetOrderTextAppearance(0.92, 0.5, 0.52, 0.88)
             end
         else
-            if block.step.behavior == "logic" then
+            if block.fromFlow and block.step.enabled == 0 then
+                -- 暂停卡也提供悬停反馈，只提亮背景和边框，保留文字、图标的暂停样式。
+                if block.step.behavior == "logic" then
+                    ApplyLogicAppearance(block, true, true)
+                elseif block.step.behavior == "passive" then
+                    block:SetBackdropColor(0.12, 0.095, 0.16, 0.9)
+                    block:SetBackdropBorderColor(0.34, 0.29, 0.46, 0.85)
+                else
+                    block:SetBackdropColor(0.11, 0.135, 0.18, 0.9)
+                    block:SetBackdropBorderColor(0.30, 0.38, 0.49, 0.85)
+                end
+                if block.SetOrderTextAppearance then
+                    block.SetOrderTextAppearance(0.54, 0.63, 0.74, 0.65)
+                end
+            elseif block.step.behavior == "logic" then
                 ApplyLogicAppearance(block, block.step.enabled == 0 and block.fromFlow, true)
                 if block.SetOrderTextAppearance then block.SetOrderTextAppearance(0.76, 0.51, 0.28, 0.88) end
             elseif block.step.behavior == "passive" then

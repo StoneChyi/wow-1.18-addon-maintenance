@@ -34,6 +34,8 @@ local legacyCardOptionValues = {
 
 -- 已明确下架的卡片在恢复旧配置时直接跳过；其他未知 ID 仍保留为缺失卡片。
 local removedCardIds = {
+    -- 撕扯改用每张技能卡自己的目标血量参数，移除旧的全流程被动。
+    druid_rip_lowHP = true,
     item_recovery_percent_50 = true,
     -- 已下架的猛击变体；旧流程恢复时直接跳过，不留下未识别占位卡。
     warrior_slam_unorthodox = true

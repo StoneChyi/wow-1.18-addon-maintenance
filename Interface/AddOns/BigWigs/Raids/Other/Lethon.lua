@@ -223,10 +223,15 @@ function module:OnSetup()
 end
 
 function module:OnEngage()
-	if self.core:IsModuleActive("Ysondre", "Ashenvale") then self.core:DisableModule("Ysondre", "Ashenvale") end
+	--用翻译后模块名查询（模块按翻译名注册），修复 zhCN 下报 "Cannot find module" -- by 武藤纯子酱 2026.10.19
+	local _BB = AceLibrary("Babble-Boss-2.2")
+	local _nY = _BB:HasTranslation("Ysondre") and _BB["Ysondre"] or "Ysondre"
+	local _nT = _BB:HasTranslation("Taerar") and _BB["Taerar"] or "Taerar"
+	local _nE = _BB:HasTranslation("Emeriss") and _BB["Emeriss"] or "Emeriss"
+	if self.core:IsModuleActive(_nY, "Ashenvale") then self.core:DisableModule(_nY, "Ashenvale") end
 	--if self.core:IsModuleActive("Lethon", "Ashenvale") then self.core:DisableModule("Lethon", "Ashenvale") end
-	if self.core:IsModuleActive("Taerar", "Ashenvale") then self.core:DisableModule("Taerar", "Ashenvale") end
-	if self.core:IsModuleActive("Emeriss", "Ashenvale") then self.core:DisableModule("Emeriss", "Ashenvale") end
+	if self.core:IsModuleActive(_nT, "Ashenvale") then self.core:DisableModule(_nT, "Ashenvale") end
+	if self.core:IsModuleActive(_nE, "Ashenvale") then self.core:DisableModule(_nE, "Ashenvale") end
 	
 	seventyFiveSoon = nil
 	fiftySoon = nil

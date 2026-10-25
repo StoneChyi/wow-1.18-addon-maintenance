@@ -73,6 +73,9 @@ local monsterBlockList = {
     ["被遗忘的先祖"] = true,
     ["哈尔甘·红标"] = true,
 
+    -- 大监狱
+    ["阿克提阿斯"] = true,
+
     -- 黑石深渊
     ["弗莱拉斯大使"] = true,
     ["安格雷尔"] = true,

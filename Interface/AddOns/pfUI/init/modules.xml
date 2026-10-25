@@ -41,6 +41,7 @@
   <Include file="..\modules\thirdparty-tbc.lua"/>
   <Include file="..\modules\buff.lua"/>
   <Include file="..\modules\buffwatch.lua"/>
+  <Include file="..\modules\debuffmonitor.lua"/>
   <Include file="..\modules\nameplates.lua"/>
   <Include file="..\modules\loot.lua"/>
   <Include file="..\modules\roll.lua"/>

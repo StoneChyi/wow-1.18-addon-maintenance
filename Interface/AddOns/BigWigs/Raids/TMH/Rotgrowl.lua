@@ -294,6 +294,9 @@ function module:OnEnable()
 	self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
 	self:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
 	self:RegisterEvent("CHAT_MSG_MONSTER_EMOTE")
+	-- 团本小助理实测：科迪亚克恐惧咆哮的「开始施放」日志走 CREATURE_VS_CREATURE_DAMAGE
+	-- 通道（RAID_BOSS_EMOTE/MONSTER_EMOTE 也各出现过），统一进 EmoteEvent 防漏报
+	self:RegisterEvent("CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE", "EmoteEvent")
 
 	self:ThrottleSync(3, syncName.frenzy)
 end
@@ -310,11 +313,11 @@ end
 function module:AfflictionEvent(msg)
 	if self.db.profile.volleyzone then
 		if string.find(msg, L["trigger_volleyZone"]) then
-			self:Sound("Info")
+			self:Sound("voiceOut")
 			self:WarningSign(icon.volley, timer.volleyDuration, false, L["warn_volleyZone"])
 			return
 		elseif self.db.profile.volleyzone and string.find(msg, L["trigger_volleyZoneTick"]) then
-			self:Sound("Info")
+			self:Sound("voiceOut")
 			return
 		end
 	end
@@ -368,6 +371,7 @@ function module:EmoteEvent(msg)
 
 	if self.db.profile.fear and string.find(msg, L["trigger_fear"]) then
 		self:Bar(L["bar_fear"], timer.fearCast, icon.fear)
+		self:Sound("voiceFear")
 	end
 end
 
@@ -381,9 +385,9 @@ function module:Arrow(player)
 	if self.db.profile.arrow then
 		self:Bar(string.format(L["bar_arrow"], player), timer.arrow, icon.arrow)
 		if player == UnitName("player") then
-			self:Message(L["msg_arrowSelf"], "Important", true, "RunAway")
+			self:Message(L["msg_arrowSelf"], "Important", true, "voiceGather")
 		else
-			self:Message(string.format(L["msg_arrowOther"],player), "Attention", nil, "Alarm")
+			self:Message(string.format(L["msg_arrowOther"],player), "Attention", nil, "voiceGather")
 		end
 	end
 
@@ -401,9 +405,9 @@ function module:KillCommand(player)
 	if self.db.profile.killcommand then
 		self:Bar(string.format(L["bar_killcommand"], player), timer.killcommand, icon.killcommand, true, "Blue")
 		if player == UnitName("player") then
-			self:Sound("RunAway")
+			self:Sound("voiceSwitch")
 		else
-			self:Sound("Alert")
+			self:Sound("voiceSwitch")
 		end
 	end
 

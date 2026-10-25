@@ -21,7 +21,7 @@ local card = {
             shortLabel = "蓝",
             unit = "%",
             default = 25,
-            minimum = 21,
+            minimum = 1,
             maximum = 30,
         },
     },

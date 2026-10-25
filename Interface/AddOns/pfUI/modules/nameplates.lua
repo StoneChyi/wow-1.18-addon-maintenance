@@ -150,6 +150,34 @@ pfUI:RegisterModule("nameplates", "vanilla", function ()
     return spellIds[name] == true
   end
 
+  -- 全局函数：隐藏姓名板全部元素（黑名单单位复用，三处调用点统一走这里）
+  -- 同 pfUI_IsCCSpell 模式：定义为全局函数，OnDataChanged 通过环境访问调用它，
+  -- 零新增 upvalue（OnDataChanged 闭包已贴着 5.0 的 upvalue 上限 32，任何对
+  -- 文件级 local / nameplates 的引用都会令整文件编译失败）。本函数内部只依赖
+  -- 参数 + 环境全局（C / tonumber），不捕获文件级 local，故自身 upvalue 也几乎为零。
+  function pfUI_HidePlateElements(nameplate)
+    nameplate.level:Hide()
+    nameplate.name:Hide()
+    nameplate.health:Hide()
+    nameplate.guild:Hide()
+    nameplate.targetname:Hide()
+    nameplate.totem:Hide()
+    nameplate.glow:Hide()
+    if nameplate.hatred then nameplate.hatred:Hide() end
+    for i = 1, 16 do
+      if nameplate.debuffs[i] then nameplate.debuffs[i]:Hide() end
+    end
+    for i = 1, (tonumber(C.nameplates.ccmax) or 4) do
+      if nameplate.ccdebuffs and nameplate.ccdebuffs[i] then nameplate.ccdebuffs[i]:Hide() end
+    end
+    if nameplate.cccontainer then nameplate.cccontainer:Hide() end
+    for i = 1, 5 do
+      nameplate.combopoints[i]:Hide()
+    end
+    nameplate.castbar:Hide()
+    if nameplate.cluster then nameplate.cluster:Hide() end
+  end
+
   local strlen = strlen
   local floor = floor
   local ceil = ceil
@@ -344,6 +372,7 @@ pfUI:RegisterModule("nameplates", "vanilla", function ()
     cfg.showdebuffs = C.nameplates["showdebuffs"] == "1"
     cfg.showdebuffs_hostile = C.nameplates["showdebuffs_hostile"] == "1"
     cfg.showdebuffs_friendly = C.nameplates["showdebuffs_friendly"] == "1"
+    cfg.showdebuffs_targetonly = C.nameplates["showdebuffs_targetonly"] == "1"
     cfg.targetzoom = C.nameplates.targetzoom == "1"
     cfg.zoomval = (tonumber(C.nameplates.targetzoomval) or 0.4) + 1
     cfg.width = tonumber(C.nameplates.width) or 120
@@ -1866,26 +1895,7 @@ end
     local isTarget = (UnitName("target") == name)
     if cfg.hideblacklist and name and blacklistUnits[nameLower] and not isTarget then
       -- 黑名单单位且不是目标：隐藏所有元素并立即返回
-      plate.level:Hide()
-      plate.name:Hide()
-      plate.health:Hide()
-      plate.guild:Hide()
-      plate.targetname:Hide()
-      plate.totem:Hide()
-      plate.glow:Hide()
-      if plate.hatred then plate.hatred:Hide() end
-      for i=1,16 do
-        if plate.debuffs[i] then plate.debuffs[i]:Hide() end
-      end
-      for i=1,(tonumber(C.nameplates.ccmax) or 4) do
-        if plate.ccdebuffs and plate.ccdebuffs[i] then plate.ccdebuffs[i]:Hide() end
-      end
-      if plate.cccontainer then plate.cccontainer:Hide() end
-      for i=1,5 do
-        plate.combopoints[i]:Hide()
-      end
-      plate.castbar:Hide()
-      if plate.cluster then plate.cluster:Hide() end
+      pfUI_HidePlateElements(plate)
       return
     end						 
     -- ignore players with npc names if plate level is lower than player level
@@ -2193,6 +2203,10 @@ end
 
     local isFriendly = unittype == "FRIENDLY_PLAYER" or unittype == "FRIENDLY_NPC"
     local showDebuffsForType = cfg.showdebuffs and (isFriendly and cfg.showdebuffs_friendly or (not isFriendly and cfg.showdebuffs_hostile))
+    -- 仅目标显示 debuff：非目标板不显示普通 debuff（CC 控制技能不受影响）
+    if showDebuffsForType and cfg.showdebuffs_targetonly and not isTarget then
+      showDebuffsForType = false
+    end
     -- 控制技能独立于普通 debuff 开关：只要启用 CC 就抓取 debuff 数据
     if showDebuffsForType or cfg.ccenabled then
       -- 优化：缓存 verify 字符串
@@ -2454,27 +2468,7 @@ end
     local nameLower = name and strlower(name) or nil
     local isTarget = frameState.hasTarget and UnitName("target") == name
     if cfg.hideblacklist and name and blacklistUnits[nameLower] and not isTarget then
-      nameplate.level:Hide()
-      nameplate.name:Hide()
-      nameplate.health:Hide()
-      nameplate.guild:Hide()
-      nameplate.targetname:Hide()
-      nameplate.totem:Hide()
-      nameplate.glow:Hide()
-      if nameplate.hatred then nameplate.hatred:Hide() end
-      -- 补充隐藏 debuff 图标
-      for i = 1, 16 do
-        if nameplate.debuffs[i] then nameplate.debuffs[i]:Hide() end
-      end
-      for i = 1, (tonumber(C.nameplates.ccmax) or 4) do
-        if nameplate.ccdebuffs and nameplate.ccdebuffs[i] then nameplate.ccdebuffs[i]:Hide() end
-      end
-      if nameplate.cccontainer then nameplate.cccontainer:Hide() end
-      for i = 1, 5 do
-        nameplate.combopoints[i]:Hide()
-      end
-      nameplate.castbar:Hide()
-      if nameplate.cluster then nameplate.cluster:Hide() end
+      pfUI_HidePlateElements(nameplate)
       return  -- 如果是黑名单单位且不是目标，直接返回，不执行后续更新
     end
     nameplates:OnDataChanged(nameplate)
@@ -2564,27 +2558,7 @@ end
     -- name lookup just above.
     if cfg.hideblacklist and name and not target then
       if blacklistUnits[strlower(name)] then
-        nameplate.level:Hide()
-        nameplate.name:Hide()
-        nameplate.health:Hide()
-        nameplate.guild:Hide()
-        nameplate.targetname:Hide()
-        nameplate.totem:Hide()
-        nameplate.glow:Hide()
-        if nameplate.hatred then nameplate.hatred:Hide() end
-        -- 补充隐藏 debuff 图标
-        for i = 1, 16 do
-          if nameplate.debuffs[i] then nameplate.debuffs[i]:Hide() end
-        end
-        for i = 1, (tonumber(C.nameplates.ccmax) or 4) do
-          if nameplate.ccdebuffs and nameplate.ccdebuffs[i] then nameplate.ccdebuffs[i]:Hide() end
-        end
-        if nameplate.cccontainer then nameplate.cccontainer:Hide() end
-        for i = 1, 5 do
-          nameplate.combopoints[i]:Hide()
-        end
-        nameplate.castbar:Hide()
-        if nameplate.cluster then nameplate.cluster:Hide() end
+        pfUI_HidePlateElements(nameplate)
         return
       end
     end
@@ -2592,7 +2566,7 @@ end
 	  -- 添加任务怪提示
     if cfg.questicon and nameplate.cluster and pfUI.api and pfUI.api.IsQuestUnit and not nameplate.raidicon:IsShown() then
         local icon = pfUI.api.IsQuestUnit(name)
-        if icon and icon ~= "0" then
+        if icon and icon ~= false then
             nameplate.cluster:SetTexture(icon)
             if nameplate.health:IsShown() then
               nameplate.cluster:Show()
@@ -3112,7 +3086,7 @@ end
     -- 任务怪提示图标（OnUpdate 中处理，固定姓名板不跑 OnUpdate，这里手动同步）
     if cfg.questicon and np.cluster and pfUI.api and pfUI.api.IsQuestUnit and not np.raidicon:IsShown() then
       local icon = pfUI.api.IsQuestUnit(name)
-      if icon and icon ~= "0" then
+      if icon and icon ~= false then
         np.cluster:SetTexture(icon)
         if np.health:IsShown() then np.cluster:Show() end
       else
@@ -3191,7 +3165,7 @@ end
       HideNameplates()
     end
 
-    -- update visibility (hostile)
+    -- update visibility (friendly)
     if C.nameplates["showfriendly"] == "1" then
       _G.FRIENDNAMEPLATES_ON = true
       ShowFriendNameplates()

@@ -1,28 +1,8 @@
 --[[
     SM_Common.lua - 超级宏通用函数模块
-    提供插件目录获取、编辑框自定义处理、滚动处理
+    提供编辑框自定义处理、滚动处理
     以及窗口尺寸/字体配置更新等通用功能
 --]]
-
--- 获取插件目录路径（结果缓存，优先精确匹配） by 武藤纯子酱 2026.9.10
-local addonDir
-local function GetAddonDir()
-    if ( addonDir ) then
-        return addonDir
-    end
-    local name = "SuperMacro"
-    for i=1, GetNumAddOns() do
-        local addonName = GetAddOnInfo(i)
-        if addonName == "SuperMacro" then
-            name = addonName
-            break
-        elseif name == "SuperMacro" and string.find(addonName, "SuperMacro") then
-            name = addonName
-        end
-    end
-    addonDir = "Interface\\AddOns\\"..name
-    return addonDir
-end
 
 -- 为编辑框添加自定义处理函数
 -- 包括：Tab键插入空格、行号显示、光标位置跟踪
@@ -42,8 +22,8 @@ local function AddCustomHandlerForEditBox(editBox)
 
     -- 创建行号显示文本（只创建一次）
     if ( not editBox.textLineNumber ) then
-        editBox.textLineNumber = scrollFrame:CreateFontString(nil, "LOW", "GameFontHighlightSmall")
-        editBox.textLineNumber:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", -50, -16)
+        editBox.textLineNumber = scrollFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        editBox.textLineNumber:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", -50, -21) -- 底部与“xxx 字符已使用”对齐 by 武藤纯子酱 2026.10.12
         editBox.textLineNumber:SetJustifyH("LEFT")
     end
 
@@ -149,11 +129,8 @@ function SuperMacroUpdateConfig()
     SM_VARS.windowHeight = math.max(SM_VARS.windowHeight, windowSizeYMin)
     SM_VARS.windowHeight = math.min(SM_VARS.windowHeight, windowSizeYMax)
 
-    -- 字体设置：等宽字体或默认字体
+    -- 字体统一使用默认字体（等宽字体功能已移除） by 武藤纯子酱 2026.9.10
     local editBoxFont = "Fonts\\FRIZQT__.TTF"
-    if SM_VARS.monoFont == 1 then
-        editBoxFont = GetAddonDir().."\\fonts\\UbuntuMono-R.ttf"
-    end
     local textFontSize = SM_VARS.editBoxFontSize or 10
 
     local sizeX = SM_VARS.windowWidth
@@ -220,8 +197,8 @@ function SuperMacroUpdateConfig()
             SuperMacroFrameExtendScrollFrame:SetPoint("BOTTOMLEFT", "SuperMacroFrameScrollFrame", "BOTTOMRIGHT", 40, 0)
         elseif SM_VARS.tabShown == "super" then
             SuperMacroFrameExtendScrollFrame:ClearAllPoints()
-            -- 超级宏时锚定到超级宏编辑框右侧
-            SuperMacroFrameExtendScrollFrame:SetPoint("BOTTOMLEFT", "SuperMacroFrameSuperEditScrollFrame", "BOTTOMRIGHT", 40, 0)
+            -- 超级宏时锚定到超级宏编辑框右侧（右移 30px） by 武藤纯子酱 2026.9.10
+            SuperMacroFrameExtendScrollFrame:SetPoint("BOTTOMLEFT", "SuperMacroFrameSuperEditScrollFrame", "BOTTOMRIGHT", 70, 0)
         end
     end
 end

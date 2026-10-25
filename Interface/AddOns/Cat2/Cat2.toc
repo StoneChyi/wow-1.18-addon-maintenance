@@ -26,6 +26,7 @@ Core\CatEvent-Shaman.lua
 Core\CatEvent-Hunter.lua
 Core\CatEvent-Mage.lua
 Core\CatEvent-Warlock.lua
+Core\ChannelDebug.lua
 Core\CardRegistry.lua
 Core\CardCooldown.lua
 Core\CardEventDispatcher.lua
@@ -39,6 +40,7 @@ Cards\Common\AutoAttackPetIdle.lua
 Cards\Common\AutoAttackPetTargetCombat.lua
 Cards\Common\RangedAttack.lua
 Cards\Common\FishingAutoBait.lua
+Cards\Common\CustomSpell.lua
 Cards\Common\WeaponSwitch.lua
 Cards\Common\AutoPick.lua
 Cards\Common\StandUp.lua
@@ -69,6 +71,11 @@ Cards\Logic\FlowJumpInCombat.lua
 Cards\Logic\FlowTerminateOutOfCombat.lua
 Cards\Logic\FlowJumpOutOfCombat.lua
 Cards\Logic\FlowJumpTargetHealthBelow.lua
+Cards\Logic\FlowJumpTargetHealthPercentBelow.lua
+Cards\Logic\FlowJumpTargetBuff.lua
+Cards\Logic\FlowJumpTargetNoBuff.lua
+Cards\Logic\FlowJumpSelfBuff.lua
+Cards\Logic\FlowJumpSelfNoBuff.lua
 Cards\Logic\FlowJumpPowerAbove.lua
 Cards\Logic\FlowJumpPowerBelow.lua
 Cards\Logic\FlowJumpTargetBoss.lua
@@ -80,6 +87,9 @@ Cards\Logic\FlowJumpTargetFrostImmune.lua
 Cards\Logic\FlowJumpTargetNatureImmune.lua
 Cards\Logic\FlowJumpTargetShadowImmune.lua
 Cards\Logic\FlowJumpTargetArcaneImmune.lua
+Cards\Logic\FlowJumpTargetInFront.lua
+Cards\Logic\FlowJumpTargetBehind.lua
+Cards\Logic\FlowJumpNearbyEnemyCount.lua
 Cards\Common\BlankPlaceholder.lua
 
 Cards\Items\HerbalTeaHP.lua
@@ -98,11 +108,14 @@ Cards\Items\ThistleTea.lua
 Cards\Items\JujuFlurry.lua
 Cards\Items\GreatRagePotion.lua
 Cards\Items\HastePotion.lua
+Cards\Items\CustomUseItem.lua
 Cards\Items\BurstOnlyBoss.lua
 Cards\Items\BurstOnlyMelee.lua
 Cards\Items\LimitedInvulnerabilityPotion.lua
 Cards\Items\LimitedInvulnerabilityPotionBossWatching.lua
 Cards\Items\GoblinSapperBomb.lua
+Cards\Items\OilOfImmolation.lua
+Cards\Items\ElixirOfDemonslayingBoss.lua
 Cards\Items\DenseDynamiteSelf.lua
 Cards\Items\DenseDynamiteTarget.lua
 Cards\Items\DenseDynamiteCursor.lua
@@ -167,7 +180,6 @@ Cards\Druid\Rip2.lua
 Cards\Druid\Rip3.lua
 Cards\Druid\Rip4.lua
 Cards\Druid\Rip5.lua
-Cards\Druid\Rip_lowHP.lua
 Cards\Druid\RipOnlyBoss.lua
 Cards\Druid\FerociousBite1_50.lua
 Cards\Druid\FerociousBite2_50.lua
@@ -209,6 +221,7 @@ Cards\Warrior\ChargeAutoStance.lua
 Cards\Warrior\Rend.lua
 Cards\Warrior\Overpower.lua
 Cards\Warrior\OverpowerAfterMainSkill.lua
+Cards\Warrior\OverpowerWithoutFlurry.lua
 Cards\Warrior\Hamstring.lua
 Cards\Warrior\HamstringFlurry.lua
 Cards\Warrior\ThunderClap.lua
@@ -244,6 +257,7 @@ Cards\Warrior\PummelFlurry.lua
 Cards\Warrior\DeathWish.lua
 Cards\Warrior\DeathWishBoss.lua
 Cards\Warrior\DefensiveStance.lua
+Cards\Warrior\DefensiveStanceBossWatching.lua
 Cards\Warrior\InterveneAutoStance.lua
 Cards\Warrior\SunderArmor.lua
 Cards\Warrior\SunderArmorBoss.lua
@@ -679,6 +693,7 @@ Cards\Warlock\ManaChannel.lua
 Cards\Warlock\SearingPainBeforePotentialThreeStacks.lua
 Cards\Warlock\PowerOverwhelming.lua
 Cards\Warlock\FelDomination.lua
+Cards\Warlock\ShadowWard.lua
 Cards\Warlock\DemonArmor.lua
 Cards\Warlock\ShadowBolt.lua
 Cards\Warlock\Immolate.lua
@@ -692,6 +707,7 @@ Cards\Warlock\RainOfFireSelf.lua
 Cards\Warlock\RainOfFireTarget.lua
 Cards\Warlock\RainOfFireCursor.lua
 Cards\Warlock\Shadowburn.lua
+Cards\Warlock\ShadowburnBoss.lua
 Cards\Warlock\ShadowburnVulnerability.lua
 Cards\Warlock\Conflagrate.lua
 Cards\Warlock\ConflagrateImmolatePresent.lua
@@ -702,6 +718,7 @@ Cards\Warlock\SpellLock.lua
 # 用户自定义卡片；职业归属与排序由各卡片自身定义。
 Cards\Custom\HunterCannon.lua
 Cards\Custom\HunterOrbitalMissile.lua
+Cards\Custom\PaladinAutoBlessing.lua
 
 # 数据恢复和编码必须在全部卡片注册后加载，才能按稳定 ID 重新绑定流程步骤。
 Core\Persistence.lua
@@ -715,6 +732,7 @@ UI\Rules.lua
 UI\ModuleStatus.lua
 # 编辑器状态先建立，随后加载卡片、列表、标题区和主窗口；快捷窗由独立模块负责。
 UI\FlowEditor.lua
+UI\FlowEditorJumpGuide.lua
 UI\FlowEditorCards.lua
 UI\FlowEditorLists.lua
 UI\FlowEditorHeader.lua

@@ -14,18 +14,14 @@ SuperMacroOptionsFrameCheckButtons["SM_MINIMAP"] = { index = 4, var = "minimap"}
 SuperMacroOptionsFrameCheckButtons["SM_REPLACE_ICON"] = { index = 5, var = "replaceIcon"};
 SuperMacroOptionsFrameCheckButtons["SM_CHECK_COOLDOWN"] = { index = 6, var = "checkCooldown"};
 SuperMacroOptionsFrameCheckButtons["SM_SHOW_MENU"] = { index = 7, var = "showMenu"};
-SuperMacroOptionsFrameCheckButtons["SM_WORDWRAP"] = { index = 8, var = "wordWrap"};
-SuperMacroOptionsFrameCheckButtons["SM_MONO_FONT"] = { index = 9, var = "monoFont"};
 
 -- 颜色选择器与变量映射表
 SuperMacroOptionsFrameColorSwatches = { };
 SuperMacroOptionsFrameColorSwatches["SM_PRINT_COLOR"] = { index = 1, var = "printColor", exampleText=SM_PRINT_COLOR_EXAMPLE_TEXT};
 
--- 输入框与变量映射表
+-- 输入框与变量映射表（仅保留字体大小；窗口宽/高设置已移除） by 武藤纯子酱 2026.9.10
 SuperMacroOptionsFrameEditBoxes = { };
-SuperMacroOptionsFrameEditBoxes["SM_WINDOW_WIDTH"] = { index = 1, var = "windowWidth"};
-SuperMacroOptionsFrameEditBoxes["SM_WINDOW_HEIGHT"] = { index = 2, var = "windowHeight"};
-SuperMacroOptionsFrameEditBoxes["SM_EDITBOX_FONT_SIZE"] = { index = 3, var = "editBoxFontSize"};
+SuperMacroOptionsFrameEditBoxes["SM_EDITBOX_FONT_SIZE"] = { index = 1, var = "editBoxFontSize"};
 
 -- 选项面板显示时调用，初始化所有控件的状态
 function SuperMacroOptionsFrame_OnShow()
@@ -168,17 +164,4 @@ function ToggleSMMenu()
     end
 end
 
--- 根据设置切换编辑框的强制换行模式
-function ToggleSMWordWrap()
-    if ( not SuperMacroFrameText.SetNonSpaceWrap ) then
-        SM_WORDWRAP = "DOESN'T WORK YET";
-        return;
-    end
-    if ( SM_VARS.wordWrap == 1 ) then
-        SuperMacroFrameText:SetNonSpaceWrap(1);
-        SuperMacroFrameSuperText:SetNonSpaceWrap(1);
-    else
-        SuperMacroFrameText:SetNonSpaceWrap(0);
-        SuperMacroFrameSuperText:SetNonSpaceWrap(0);
-    end
-end
+-- 已移除：ToggleSMWordWrap（换行）与等宽字体选项，均不受支持 by 武藤纯子酱 2026.9.10

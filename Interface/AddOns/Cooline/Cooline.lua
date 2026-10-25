@@ -125,7 +125,7 @@ end
 local function scan_record(records, seen, name, texture, start, duration, enabled, minimum)
     if ignored(name) then return end
     seen[name] = true
-    if enabled ~= 1 or type(start) ~= 'number' or type(duration) ~= 'number' then return end
+    if (enabled ~= nil and enabled ~= 1) or type(start) ~= 'number' or type(duration) ~= 'number' then return end
     if duration <= minimum or start + duration <= GetTime() then return end
     local old = records[name]
     if not old or start + duration > old.start + old.duration then

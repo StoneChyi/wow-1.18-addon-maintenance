@@ -1,8 +1,12 @@
 """AutoNeed roll choices and manual-selection behavior against the live module."""
 from pathlib import Path
+import argparse
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
+parser = argparse.ArgumentParser()
+parser.add_argument('--addons', type=Path, default=ROOT / 'Interface/AddOns')
+ADDONS = parser.parse_args().addons
 sys.path.insert(0, str(ROOT / 'addons_tmp/bcs-test-runtime'))
 from lupa.lua51 import LuaRuntime
 
@@ -38,11 +42,11 @@ function rollAndCheck(id, expected)
     else
         assert(#rolls == 1 and rolls[1][1] == id and rolls[1][2] == expected)
         local confirmations = expected == 0 and 0 or 1
-        assert(timers == confirmations and clicks == confirmations)
+        assert(clicks == confirmations)
     end
 end
 ''')
-lua.execute((ROOT / 'Interface/AddOns/Automatonex/Modules/AutoNeed.lua').read_text(encoding='utf-8'))
+lua.execute((ADDONS / 'Automatonex/Modules/AutoNeed.lua').read_text(encoding='utf-8'))
 lua.execute('''
 module:OnInitialize()
 initial = {}; for k,v in pairs(module.db.char) do initial[k] = v end
@@ -144,3 +148,32 @@ assert(module.db.char.item_4500 == "不选择")
 print(f'PASS: Lua 5.1 module load; {lua.globals().selectorCount} selectors; '
       f'{lua.globals().builtInCount} built-in items with all four choices and fallback; '
       'custom precedence, quality rules, confirmation behavior and saved settings')
+
+lua.execute('''
+-- Real asynchronous delivery: several items arrive while confirmation waits.
+tasks={};rolls={};clicks=0
+function GetLootRollItemLink(id) return 'item:'..id..':0:0:0' end
+C_Timer.After=function(delay,callback) table.insert(tasks,callback) end
+function flushOne() local cb=table.remove(tasks,1);if cb then cb() end end
+function flushAll() local guard=0;while #tasks>0 do guard=guard+1;assert(guard<30);flushOne() end end
+function module:CheckItem(id) if id==2 then return -1 elseif id==3 then return 0 else return 1 end end
+module:START_LOOT_ROLL(1);module:START_LOOT_ROLL(2);module:START_LOOT_ROLL(3);module:START_LOOT_ROLL(4)
+assert(#rolls==1 and rolls[1][1]==1)
+flushAll()
+assert(#rolls==3 and rolls[2][1]==3 and rolls[2][2]==0 and rolls[3][1]==4)
+assert(clicks==2 and not module.isRolling and #module.pendingRolls==0)
+-- Disable cancels queued automation and pending confirmation callbacks.
+function module:UnhookAll() end
+function module:UnregisterAllEvents() end
+rolls={};clicks=0
+module:START_LOOT_ROLL(5);module:START_LOOT_ROLL(6)
+assert(#rolls==1)
+module:OnDisable();flushAll()
+assert(#rolls==1 and clicks==0 and #module.pendingRolls==0 and not module.isRolling)
+-- A rejected/expired roll does not leave the queue permanently locked.
+rolls={}
+function RollOnLoot(id,choice) if id==7 then error('expired roll') end;table.insert(rolls,{id,choice}) end
+module:START_LOOT_ROLL(7);module:START_LOOT_ROLL(8);flushAll()
+assert(#rolls==1 and rolls[1][1]==8 and not module.isRolling)
+''')
+print('PASS: asynchronous FIFO, manual/pass choices, disable cancellation and expired-roll recovery')

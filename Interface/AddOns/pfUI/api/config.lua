@@ -99,6 +99,8 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("buffs",      nil,           "buffrowsize",      "16")
   pfUI:UpdateConfig("buffs",      nil,           "debuffrowsize",    "16")
   pfUI:UpdateConfig("buffs",      nil,           "textinside",       "0")
+  pfUI:UpdateConfig("buffs",      nil,           "sep_textinside",   "0") -- 监控条（分离式Buff/Debuff）独立的「显示持续时间在Buff里面」；默认 0 与存量行为一致
+  pfUI:UpdateConfig("buffs",      nil,           "sep_fontsize",     "-1") -- 监控条独立字号；-1=跟随主 Buff 字号（存量行为）
   pfUI:UpdateConfig("buffs",      nil,           "fontsize",         "-1")
   pfUI:UpdateConfig("buffs",      nil,           "filter",           "none")
   pfUI:UpdateConfig("buffs",      nil,           "whitelist",        "")
@@ -272,8 +274,32 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("unitframes", nil,           "druidmanatexture", "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
 
   pfUI:UpdateConfig("unitframes", nil,           "rangechecki",      "4")
-  pfUI:UpdateConfig("unitframes", nil,           "combowidth",       "6")
+
+  -- combopoints（目标连击点外观。combowidth/comboheight 是旧键，保留不动）
+  -- 默认值取自 light 档角色「最爱扎你」的存档（2026-10-23），即当前实际在用的观感：
+  -- 水平向右、40.5 宽 x 6 高、点间距 3、满点闪光开启。
+  -- ⚠️ 存档位置只有 pfCombo1 生效，2-5 靠 combogrow + combospacing 链出来，
+  --    这两个默认值一旦偏离 light 档，进游戏就会看起来"跟以前不一样"。
+  pfUI:UpdateConfig("unitframes", nil,           "comboshow",        "1")
+  pfUI:UpdateConfig("unitframes", nil,           "combostyle",       "pips")
+  pfUI:UpdateConfig("unitframes", nil,           "combogrow",        "right")
+  pfUI:UpdateConfig("unitframes", nil,           "combowidth",       "40.5")
   pfUI:UpdateConfig("unitframes", nil,           "comboheight",      "6")
+  pfUI:UpdateConfig("unitframes", nil,           "combospacing",     "3")
+  pfUI:UpdateConfig("unitframes", nil,           "combooffx",        "0")
+  pfUI:UpdateConfig("unitframes", nil,           "combooffy",        "0")
+  pfUI:UpdateConfig("unitframes", nil,           "combotexture",     "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("unitframes", nil,           "combocolor_low",   "1,0.3,0.3,0.75")
+  pfUI:UpdateConfig("unitframes", nil,           "combocolor_mid",   "1,1,0.3,0.75")
+  pfUI:UpdateConfig("unitframes", nil,           "combocolor_high",  "0.3,1,0.3,0.75")
+  pfUI:UpdateConfig("unitframes", nil,           "comboborder",      "1")
+  pfUI:UpdateConfig("unitframes", nil,           "comboshadow",      "1")
+  pfUI:UpdateConfig("unitframes", nil,           "comboempty",       "0")
+  pfUI:UpdateConfig("unitframes", nil,           "comboemptycolor",  "0.15,0.15,0.15,0.5")
+  pfUI:UpdateConfig("unitframes", nil,           "combopipnumbers",  "0")
+  pfUI:UpdateConfig("unitframes", nil,           "combofontsize",    "8")
+  pfUI:UpdateConfig("unitframes", nil,           "combotextcolor",   "1,1,1,1")
+  pfUI:UpdateConfig("unitframes", nil,           "comboglow",        "1")
 
   pfUI:UpdateConfig("unitframes", nil,           "swingtimerwidth",  "200")
   pfUI:UpdateConfig("unitframes", nil,           "swingtimerheight", "12")
@@ -319,7 +345,6 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("unitframes", nil,           "reactive_size",    "28")
 
   -- UnitXP Settings
-  pfUI:UpdateConfig("unitframes", nil,           "unitxp_notify",    "0")
   pfUI:UpdateConfig("unitframes", nil,           "distance_indicator",    "0")
   pfUI:UpdateConfig("unitframes", nil,           "distance_indicator_font_size", "13")
   pfUI:UpdateConfig("unitframes", nil,           "distance_indicator_use_gradient", "1")

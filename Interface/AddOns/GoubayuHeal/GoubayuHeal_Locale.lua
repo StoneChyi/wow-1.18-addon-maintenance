@@ -116,6 +116,9 @@ if zhCN then
     GoubayuHeal.Weakened_soul = "虚弱灵魂"
     GoubayuHeal.Resurrection = "复活术"
     GoubayuHeal.Redemption = "救赎"
+    -- 牧师"救赎之魂"：死亡后约 10 秒内仍可施法，死亡拦截需排除
+    -- by 武藤纯子酱 2026.10.23
+    GoubayuHeal.Spirit_of_Redemption = "救赎之魂"
     GoubayuHeal.Rebirth = "复生"
     GoubayuHeal.Ancestral_Spirit = "先祖之魂"
     GoubayuHeal.Holy_Strike = "神圣打击"
@@ -194,6 +197,7 @@ GoubayuHeal.Stormstrike = "Stormstrike" -- Shaman: enhancement check for the air
     GoubayuHeal.Weakened_soul = "Weakened Soul"
     GoubayuHeal.Resurrection = "Resurrection"
     GoubayuHeal.Redemption = "Redemption"
+    GoubayuHeal.Spirit_of_Redemption = "Spirit of Redemption"
     GoubayuHeal.Rebirth = "Rebirth"
     GoubayuHeal.Ancestral_Spirit = "Ancestral Spirit"
     GoubayuHeal.Holy_Strike = "Holy Strike"
@@ -508,7 +512,7 @@ if zhCN then
     GoubayuHeal.GUI_scale_hots = "自动恢复类法术等级"
     GoubayuHeal.GUI_predict = "预读"
     GoubayuHeal.GUI_hot_cancel = "HoT门槛"
-    GoubayuHeal.GUI_allow_regrowth_overwrite = "允许覆盖愈合"
+    GoubayuHeal.GUI_rescue_hp = "救急线"
     GoubayuHeal.GUI_hot_value = "HoT放大"
     GoubayuHeal.GUI_hot_value_battle = "HoT放大-战斗"
     GoubayuHeal.GUI_max_overheal = "最大过量治疗"
@@ -531,7 +535,7 @@ else
     GoubayuHeal.GUI_scale_hots = "Scale HOTs"
     GoubayuHeal.GUI_predict = "Pre-heal"
     GoubayuHeal.GUI_hot_cancel = "HoT health threshold"
-    GoubayuHeal.GUI_allow_regrowth_overwrite = "Allow Regrowth to overwrite"
+    GoubayuHeal.GUI_rescue_hp = "Rescue HP%"
     GoubayuHeal.GUI_hot_value = "+HoT value"
     GoubayuHeal.GUI_hot_value_battle = "+HoT value combat"
     GoubayuHeal.GUI_max_overheal = "Max overheal"
@@ -570,6 +574,7 @@ if zhCN then
         ["HoT门槛"] = "目标身上已有持续治疗效果（恢复/回春等）时：仅当目标血量低于此百分比且本次将要施放的HOT等级高于目标已有等级时，才允许用高级HOT覆盖低级HOT；同级或更低等级、或血量未低于门槛时均不覆盖。值越低越保守。0% = 有HOT就绝不覆盖（需Nampower光环数据判断等级）。",
         ["HoT放大"] = "脱战状态下持续治疗法术（恢复/回春）的智能缩放倍率。100% = 根据目标缺口自动选择等级；0% = 一律使用最低等级；最高可设到 400% = 一律使用最高等级。",
         ["HoT放大-战斗"] = "战斗状态下持续治疗法术的智能缩放倍率。通常设为低于脱战值，以节省法力用于即时治疗。100% = 与脱战相同。",
+        ["救急线"] = "目标血量低于该百分比时：完全忽略 HOT 的预估治疗量，并默认忽略其他治疗者正在读的直接治疗（仅当该目标有2个以上治疗者正在读、且没有其他救急目标时才计入），立即救急。",
         ["最大过量治疗"] = "允许的最大过量治疗比例。安全取消开启时，如果预估过量超过此阈值，正在读条的治疗法术将被自动取消。0% = 不允许任何过量，100% = 允许全部过量。",
         ["治疗门槛"] = "目标血量低于此百分比时才施放治疗。100% 表示只治疗非满血目标；70% 表示只治疗血量低于 70% 的目标，可大幅节省法力。",
         ["治疗力度"] = "直接治疗法术的智能缩放力度。100% = 根据血量缺口自动选择等级；0% = 始终最低等级；200% = 始终最高等级。",
@@ -619,6 +624,7 @@ else
         ["HoT health threshold"] = "When the target already has a HoT (Renew/Rejuvenation): it is only overwritten if target health is below this percentage AND the new HoT rank is HIGHER than the existing one (upgrade). Same or lower rank, or health above the threshold, is never overwritten. Lower = more conservative. 0% = never overwrite an existing HoT. (Rank detection requires Nampower.)",
         ["+HoT value"] = "Smart rank scaling multiplier for HoTs (Renew/Rejuvenation) while out of combat. 100% = auto based on deficit; 0% = always min rank; up to 400% = always max rank.",
         ["+HoT value combat"] = "Smart rank scaling multiplier for HoTs while in combat. Usually set lower than out-of-combat to save mana. 100% = same as out of combat.",
+        ["Rescue HP%"] = "Below this health percentage: ignore the HOT's predicted healing entirely, and by default ignore other healers' in-flight direct heals (only counted when >=2 healers are casting on the target and there is no other rescue target) - heal immediately.",
         ["Max overheal"] = "Maximum allowed overheal ratio. When safe cancel is enabled and predicted overheal exceeds this, the casting spell is cancelled. 0% = no overheal, 100% = all allowed.",
         ["Min health threshold"] = "Only heal targets below this health percentage. 100% = heal any non-full target; 70% = only heal below 70% HP to save mana.",
         ["Heal power"] = "Smart rank scaling power for direct heals. 100% = auto based on missing HP; 0% = always min rank; 200% = always max rank.",
@@ -972,6 +978,11 @@ if zhCN then
     GoubayuHeal.DispelNearbyCurseTargets = {
         "大领主印记", "麦迪文的腐化", "恶液烂芽",
     }
+    -- 强制优先驱散：只要目标有这些减益，即使同类型存在受保护（黑名单/过滤）减益，也要立刻驱散。
+    -- 由代码内维护，新版本发布时按需追加。by 武藤纯子酱 2026.10.20
+    GoubayuHeal.DispelForcePriority = {
+        "奥术集中",
+    }
     -- 移动限制（减速/定身）判定：默认名单（名字 或 spell ID，ID 最精确）
     -- 用于 Dispel_IsMovementDebuff：②名单 → ①DBC泛化 → ③描述关键词兜底
     -- by 武藤纯子酱 2026.10.13
@@ -1324,8 +1335,8 @@ if zhCN then
         T35Five = "5T3.5",
         T25Five = "5T2.5",
         T25FiveTip = "勾选后（德鲁伊5件T2.5）：治疗之触对身上有回春术或愈合的目标治疗效果提高10%。",
-        AllowRegrowthOverwrite = "允许覆盖愈合",
-        AllowRegrowthOverwriteTip = "勾选后（默认）：愈合不再受 HoT 门槛限制，目标残血时可用同级或低级愈合覆盖刷新已有愈合，避免因身上挂着旧愈合而迟迟不加血。",
+        RoLabel = "覆盖愈合阈值:",
+        RoTip = "仅德鲁伊：目标血量低于该百分比时，才允许愈合覆盖身上已有的愈合（0% = 从不覆盖，100% = 只要有缺口就覆盖）。",
         KeepInnerFire = "保持心灵之火",
         KeepInnerFireTip = "开启后，当玩家身上没有[心灵之火]buff时，自动给自己施放心灵之火。",
         DpLabel = "绝望祷言:",
@@ -1534,6 +1545,11 @@ else
     -- by 武藤纯子酱 2026.9.21
     GoubayuHeal.DispelNearbyCurseTargets = {
         "Greater Mark of the Dawn", "Medivh's Corruption", "Euyonalia",
+    }
+    -- Force-priority dispel: if the target has any of these, dispel at once even if a
+    -- protected (blacklist/filter) debuff of the same type is present.
+    GoubayuHeal.DispelForcePriority = {
+        "Arcane Focus",
     }
     -- Movement-impairing (slow/root) detection: default list (names or spell IDs, IDs most precise)
     -- by 武藤纯子酱 2026.10.13
@@ -1869,8 +1885,8 @@ else
         T35Five = "5T3.5",
         T25Five = "5T2.5",
         T25FiveTip = "When checked (Druid 5x T2.5): Healing Touch healing is increased by 10% against targets affected by Rejuvenation or Regrowth.",
-        AllowRegrowthOverwrite = "Allow Regrowth overwrite",
-        AllowRegrowthOverwriteTip = "When checked (default): Regrowth is no longer blocked by the HoT threshold - at low health it may overwrite an existing Regrowth with the same or a lower rank, so healing is not stalled by an old HoT.",
+        RoLabel = "Regrowth ow. HP%:",
+        RoTip = "Druid only: Regrowth only overwrites an existing Regrowth when target health is below this percentage (0% = never overwrite, 100% = overwrite on any deficit).",
         KeepInnerFire = "Keep Inner Fire",
         KeepInnerFireTip = "When enabled, automatically casts Inner Fire on yourself when you do not have the [Inner Fire] buff.",
         DpLabel = "Desperate Prayer:",

@@ -2,13 +2,25 @@
 local card = {
     id = "hunter_serpent_sting",
     name = "毒蛇钉刺",
-    description = "目标距离不低于8码且可以中毒时，施放毒蛇钉刺",
-    details = "目标距离不低于8码且可以中毒时，施放毒蛇钉刺。不会对机械或元素生物施放，并会检查自然免疫、目标已有毒蛇钉刺和目标距离。成功执行时会阻断本轮后续卡片。",
+    description = "目标血量>|cff6bc7e0{minimumTargetHealth}|r，补毒蛇钉刺",
+    details = "仅当施法对象当前实际血量严格大于本卡“目标血量”参数时执行，默认100；等于或低于阈值时跳过。目标距离不低于8码且可以中毒时，施放毒蛇钉刺。不会对机械或元素生物施放，并会检查自然免疫、目标已有毒蛇钉刺和目标距离。成功执行时会阻断本轮后续卡片。",
     sort = 60,
     category = "class",
     exclusiveGroup = "hunter_sting",
     classes = {
         HUNTER = 2,
+    },
+    optionSchema = {
+        {
+            key = "minimumTargetHealth",
+            type = "number",
+            label = "目标血量",
+            shortLabel = "血量",
+            default = 100,
+            minimum = 0,
+            maximum = 1000000,
+            integer = true,
+        },
     },
     icons = {
         "Interface\\Icons\\Ability_Hunter_Quickshot",
@@ -24,7 +36,12 @@ function card.RefreshRuntimeData()
     maximumDistance = tonumber(maximum) or 35
 end
 
-function card.Execute(context)
+function card.Execute(context, step)
+    local minimumTargetHealth = context:GetStepOption(step, "minimumTargetHealth") or 100
+    if (context.playerInformation.temporary.targetHealth or 0) <= minimumTargetHealth then
+        return false
+    end
+
     local player = Cat2.PlayerInformation.temporary
 
     if context.parameters.hunterStingOnlyBoss and not Cat2.IsBossTarget() then

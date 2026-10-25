@@ -1097,6 +1097,35 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         "down:" .. T["Down"],
         "up:" .. T["Up"],
       },							 		
+      ["combo_grow"] = {
+        "down:" .. T["Down"],
+        "up:" .. T["Up"],
+        "right:" .. T["Right"],
+        "left:" .. T["Left"],
+      },
+      ["combo_style"] = {
+        "pips:" .. T["Blocks"],
+        "numbers:" .. T["Numbers"],
+      },
+      -- 纯色 + 全部材质（做法同 uf_threattexture：此表构造期间 pfUI.gui.dropdowns
+      -- 自身尚未赋值，不能引用 uf_bartexture，必须把标准纹理内联后再追加 pfUI-A..Z）
+      ["combo_texture"] = (function()
+        local t = { "solid:" .. T["Solid Color"] }
+        local std = {
+          "Interface\\AddOns\\pfUI\\img\\bar:pfUI",
+          "Interface\\AddOns\\pfUI\\img\\bar_tukui:TukUI",
+          "Interface\\AddOns\\pfUI\\img\\bar_elvui:ElvUI",
+          "Interface\\AddOns\\pfUI\\img\\bar_gradient:Gradient",
+          "Interface\\AddOns\\pfUI\\img\\bar_striped:Striped",
+          "Interface\\TargetingFrame\\UI-StatusBar:Wow Status",
+          "Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar:Wow Skill"
+        }
+        for _, v in ipairs(std) do table.insert(t, v) end
+        for letter in string.gmatch("ABCDEFGHIJKLMNOPQRSTUVWXYZ", ".") do
+          table.insert(t, "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-" .. letter .. ".tga:pfUI-" .. letter)
+        end
+        return t
+      end)(),
       ["uf_color"] = {
         "0:" .. T["Class"],
         "1:" .. T["Custom"],
@@ -2168,13 +2197,13 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       CreateConfig(nil, T["Always Use 2D Portraits"], C.unitframes, "always2dportrait", "checkbox")
       CreateConfig(nil, T["Enable 2D Portraits As Fallback"], C.unitframes, "portraittexture", "checkbox")
       CreateConfig(nil, T["Unit Frame Layout"], C.unitframes, "layout", "dropdown", pfUI.gui.dropdowns.uf_layout)
-      CreateConfig(nil, T["Combopoint Width"], C.unitframes, "combowidth")
-      CreateConfig(nil, T["Combopoint Height"], C.unitframes, "comboheight")
+      -- 杂项（原属 General，保持在一起；必须排在 Combo Points 段**之前**，
+      -- 否则会挂在连击点那一串后面，看起来像连击点的配置项）
       CreateConfig(nil, T["Show Resting"], C.unitframes.player, "showRest", "checkbox")
       CreateConfig(nil, T["Enable Energy Ticks"], C.unitframes.player, "energy", "checkbox")
       CreateConfig(nil, T["Enable Mana Ticks"], C.unitframes.player, "manatick", "checkbox")
       CreateConfig(nil, T["Detect Enemy Buffs"], C.unitframes, "buffdetect", "checkbox", nil, nil, nil, nil, "vanilla" )
-      CreateConfig(nil, T["Raid Mark Icon Style"], C.unitframes, "blizzard_raidicons", "dropdown", function() return {"1:"..T["Original Blizzard"], "0:"..T["pfUI Design"]} end)																																								  
+      CreateConfig(nil, T["Raid Mark Icon Style"], C.unitframes, "blizzard_raidicons", "dropdown", function() return {"1:"..T["Original Blizzard"], "0:"..T["pfUI Design"]} end)
 
       CreateConfig(nil, T["Swing Timer"], nil, nil, "header")
       CreateConfig(nil, T["Enable Swing Timer"], C.unitframes, "swingtimer", "checkbox")																						
@@ -2265,8 +2294,44 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       CreateConfig(nil, T["Show Reactive Spell Indicator"], C.unitframes, "reactive_indicator", "checkbox", nil, nil, nil, nil, "vanilla" )
       CreateConfig(nil, T["Reactive Indicator Size"], C.unitframes, "reactive_size", nil, nil, nil, nil, nil, "vanilla" )
 
-      CreateConfig(nil, T["UnitXP Settings"], nil, nil, "header")
-      CreateConfig(function() end, T["Enable OS Notifications"], C.unitframes, "unitxp_notify", "checkbox", nil, nil, nil, nil, "vanilla" )
+    end)
+
+    -- 目标连击点（独立子页。原先 21 项塞在 General 段尾，既把 General 撑长，
+    -- 又因为紧跟杂项而看起来像"连击点的其他配置"）
+    CreateGUIEntry(T["Unit Frames"], T["Combo Points"], function()
+      CreateConfig(U["combopoints"], T["Show Combo Points"], C.unitframes, "comboshow", "checkbox")
+      CreateConfig(U["combopoints"], T["Combopoint Style"], C.unitframes, "combostyle", "dropdown", pfUI.gui.dropdowns.combo_style)
+      CreateConfig(U["combopoints"], T["Show Empty Combopoints"], C.unitframes, "comboempty", "checkbox")
+      CreateConfig(U["combopoints"], T["Show Combopoint Numbers"], C.unitframes, "combopipnumbers", "checkbox")
+      CreateConfig(U["combopoints"], T["Glow On Max Combopoints"], C.unitframes, "comboglow", "checkbox")
+
+      CreateConfig(nil, T["Layout"], nil, nil, "header")
+      CreateConfig(U["combopoints"], T["Combopoint Grow Direction"], C.unitframes, "combogrow", "dropdown", pfUI.gui.dropdowns.combo_grow)
+      CreateConfig(U["combopoints"], T["Combopoint Width"], C.unitframes, "combowidth", nil, nil, nil, nil, "number")
+      CreateConfig(U["combopoints"], T["Combopoint Height"], C.unitframes, "comboheight", nil, nil, nil, nil, "number")
+      CreateConfig(U["combopoints"], T["Combopoint Spacing"], C.unitframes, "combospacing", nil, nil, nil, nil, "number")
+      CreateConfig(U["combopoints"], T["Combopoint X Offset"], C.unitframes, "combooffx", nil, nil, nil, nil, "number")
+      CreateConfig(U["combopoints"], T["Combopoint Y Offset"], C.unitframes, "combooffy", nil, nil, nil, nil, "number")
+
+      CreateConfig(nil, T["Appearance"], nil, nil, "header")
+      CreateConfig(U["combopoints"], T["Combopoint Texture"], C.unitframes, "combotexture", "dropdown", pfUI.gui.dropdowns.combo_texture)
+      CreateConfig(U["combopoints"], T["Show Combopoint Border"], C.unitframes, "comboborder", "checkbox")
+      CreateConfig(U["combopoints"], T["Show Combopoint Shadow"], C.unitframes, "comboshadow", "checkbox")
+
+      CreateConfig(nil, T["Colors"], nil, nil, "header")
+      CreateConfig(U["combopoints"], T["Low Combopoint Color"], C.unitframes, "combocolor_low", "color")
+      CreateConfig(U["combopoints"], T["Medium Combopoint Color"], C.unitframes, "combocolor_mid", "color")
+      CreateConfig(U["combopoints"], T["High Combopoint Color"], C.unitframes, "combocolor_high", "color")
+      CreateConfig(U["combopoints"], T["Empty Combopoint Color"], C.unitframes, "comboemptycolor", "color")
+
+      CreateConfig(nil, T["Text"], nil, nil, "header")
+      CreateConfig(U["combopoints"], T["Combopoint Font Size"], C.unitframes, "combofontsize", nil, nil, nil, nil, "number")
+      CreateConfig(U["combopoints"], T["Combopoint Text Color"], C.unitframes, "combotextcolor", "color")
+    end)
+
+    -- 距离显示（原 General 页「UnitXP Settings」整段 35 项拆成独立子页，做法同连击点）
+    CreateGUIEntry(T["Unit Frames"], T["Distance Display"], function()
+      CreateConfig(nil, T["Distance Display"], nil, nil, "header")
       CreateConfig(nil, T["Show Distance of Target"], C.unitframes, "distance_indicator", "checkbox", nil, nil, nil, nil, "vanilla")
       CreateConfig(nil, T["Distance Indicator Update Interval (sec)"], C.unitframes, "distance_indicator_update_interval", nil, nil, nil, nil, "number", "vanilla")
       CreateConfig(function() end, T["Use Distance Gradient"], C.unitframes, "distance_indicator_use_gradient", "checkbox", nil, nil, nil, nil, "vanilla")
@@ -2281,6 +2346,8 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       CreateConfig(function() end, T["Play Sound When Facing"], C.unitframes, "distance_indicator_sound", "checkbox", nil, nil, nil, nil, "vanilla")
       CreateConfig(function() end, T["Only Play Sound In Group"], C.unitframes, "distance_indicator_sound_only_group", "checkbox", nil, nil, nil, nil, "vanilla")
       CreateConfig(function() end, T["Sound Cooldown (sec)"], C.unitframes, "distance_indicator_sound_cooldown", nil, nil, nil, nil, nil, "vanilla")
+
+      CreateConfig(nil, T["Mouseover"], nil, nil, "header")
       CreateConfig(nil, T["Mouseover Tooltip Distance"], C.unitframes, "mouseover_tooltip_distance", "checkbox", nil, nil, nil, nil, "vanilla")
       CreateConfig(nil, T["Mouseover Tooltip Update Interval (sec)"], C.unitframes, "mouseover_tooltip_update_interval", nil, nil, nil, nil, "number", "vanilla")
       CreateConfig(function() end, T["Use Linear Gradient"], C.unitframes, "mouseover_distance_linear_color", "checkbox", nil, nil, nil, nil, "vanilla")
@@ -2290,7 +2357,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       CreateConfig(function() end, T["End Color"], C.unitframes, "mouseover_distance_linear_color_to", "color", nil, nil, nil, nil, "vanilla")
       CreateConfig(function() end, T["Use Out of Sight Color Override"], C.unitframes, "mouseover_distance_use_outsight", "checkbox", nil, nil, nil, nil, "vanilla")
       CreateConfig(function() end, T["Out of Sight Color"], C.unitframes, "mouseover_distance_outsight_color", "color", nil, nil, nil, nil, "vanilla")
-      -- Pet Distance Display
+
       CreateConfig(nil, T["Pet Distance Display"], nil, nil, "header")
       CreateConfig(function() end, T["Display Mode"], C.unitframes, "distance_indicator_pet_mode", "dropdown", {
           "0:" .. T["Disabled"],
@@ -2661,6 +2728,11 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       end)
 
       CreateConfig(nil, T["Seperate Buffs"], nil, nil, "header")
+      -- 监控条（分离式Buff/Debuff + 目标版）独立的「显示持续时间在Buff里面」，
+      -- 不跟随主 Buff 条的 textinside（独立设置需求 2026-10-22）
+      CreateConfig(function() if pfUI.buff then pfUI.buff:UpdateConfig() end end, T["Show Duration Inside Buff"], C.buffs, "sep_textinside", "checkbox")
+      -- 监控条独立字号（-1=跟随主 Buff 字号）；改后即时重刷四组监控条
+      CreateConfig(function() if pfUI.buff then pfUI.buff:UpdateConfig() end end, T["Buff Font Size"], C.buffs, "sep_fontsize")
       CreateConfig(U["buff"], T["Enable Seperate Buffs"], C.buffs, "separatebuffs", "checkbox")
       CreateConfig(function() if pfUI.buff then pfUI.buff:UpdateConfig() end end, T["Seperate Buff List"], C.buffs, "separatelist", "list")
       CreateConfig(U["buff"], T["Seperate Buff Size"], C.buffs, "sepbuffsize")
@@ -3270,7 +3342,8 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       CreateConfig(nil, T["Debuffs"], nil, nil, "header")
       CreateConfig(U["nameplates"], T["Enable Debuffs"], C.nameplates, "showdebuffs", "checkbox")
       CreateConfig(U["nameplates"], T["Show Debuffs on Hostile"], C.nameplates, "showdebuffs_hostile", "checkbox")
-      CreateConfig(U["nameplates"], T["Show Debuffs on Friendly"], C.nameplates, "showdebuffs_friendly", "checkbox")																													
+      CreateConfig(U["nameplates"], T["Show Debuffs on Friendly"], C.nameplates, "showdebuffs_friendly", "checkbox")
+      CreateConfig(U["nameplates"], T["Show Debuffs on Target Only"], C.nameplates, "showdebuffs_targetonly", "checkbox")
       CreateConfig(U["nameplates"], T["Debuff Position"], C.nameplates.debuffs, "position", "dropdown", pfUI.gui.dropdowns.debuffposition)
       CreateConfig(U["nameplates"], T["Debuff Icon Offset"], C.nameplates, "debuffoffset")
       CreateConfig(U["nameplates"], T["Debuff Icon Size"], C.nameplates, "debuffsize")

@@ -459,6 +459,7 @@ leftPanel:CreateConfig("使用DPS替代EDPS（默认）统计", "use_total_cbt_f
 if ShaguDPS.hasNampower then
     leftPanel:CreateConfig("显示溢出伤害", "show_overkill", "boolean")
     leftPanel:CreateConfig("剔除溢出伤害", "clamp_damage_to_health", "boolean")
+    leftPanel:CreateConfig("剔除伤害吸收", "exclude_absorb", "boolean")
     leftPanel:CreateConfig("剔除小动物伤害", "exclude_critters", "boolean")
     leftPanel:CreateConfig("剔除队友误伤", "hide_friendly_damage", "boolean")
     leftPanel:CreateConfig("仅统计战斗治疗", "heal_only_in_combat", "boolean")

@@ -326,6 +326,8 @@ end
 
 local combat_start_time = 0
 local diedBossesThisFight = {}
+local bossesThisFight = {}      -- 本场出现过的 BOSS 名（含未死亡）  by 武藤纯子酱 2026.10.17
+local bossGUIDsThisFight = {}   -- 本场已采样的 BOSS GUID，避免重复取名  by 武藤纯子酱 2026.10.17
 local is_boss_encounter = false
 
 local function resetCurrentSegment()
@@ -388,7 +390,7 @@ local function mergeInterrupts(target, source)
     end
 end
 
--- 将 source 的敌人承伤数据（目标名 → 来源名 → {_sum,_overkill}）累加进 target
+-- 将 source 的敌人承伤数据（目标名 → 来源名 → {_sum,_overkill,_absorb}）累加进 target
 local function mergeEnemyDamageTaken(target, source)
     if not source then return end
     for targetName, tdata in pairs(source) do
@@ -398,13 +400,15 @@ local function mergeEnemyDamageTaken(target, source)
         local tt = target[targetName]
         tt._sum = (tt._sum or 0) + (tdata._sum or 0)
         tt._overkill = (tt._overkill or 0) + (tdata._overkill or 0)
+        if (tdata._absorb or 0) > 0 then tt._absorb = (tt._absorb or 0) + tdata._absorb end
         for sourceName, sdata in pairs(tdata) do
-            if sourceName ~= "_sum" and sourceName ~= "_overkill" and type(sdata) == "table" then
+            if sourceName ~= "_sum" and sourceName ~= "_overkill" and sourceName ~= "_absorb" and type(sdata) == "table" then
                 if not tt[sourceName] then
                     tt[sourceName] = { _sum = 0, _overkill = 0 }
                 end
                 tt[sourceName]._sum = (tt[sourceName]._sum or 0) + (sdata._sum or 0)
                 tt[sourceName]._overkill = (tt[sourceName]._overkill or 0) + (sdata._overkill or 0)
+                if (sdata._absorb or 0) > 0 then tt[sourceName]._absorb = (tt[sourceName]._absorb or 0) + sdata._absorb end
             end
         end
     end
@@ -427,6 +431,13 @@ local function mergeCurrentToSmallFight()
                 if not small.damage[name]["_overkill_by_spell"] then small.damage[name]["_overkill_by_spell"] = {} end
                 for spell, val in pairs(v) do
                     small.damage[name]["_overkill_by_spell"][spell] = (small.damage[name]["_overkill_by_spell"][spell] or 0) + val
+                end
+            elseif k == "_absorb" then
+                small.damage[name]["_absorb"] = (small.damage[name]["_absorb"] or 0) + v
+            elseif k == "_absorb_by_spell" then
+                if not small.damage[name]["_absorb_by_spell"] then small.damage[name]["_absorb_by_spell"] = {} end
+                for spell, val in pairs(v) do
+                    small.damage[name]["_absorb_by_spell"][spell] = (small.damage[name]["_absorb_by_spell"][spell] or 0) + val
                 end
             elseif k == "_effective" then
                 if not small.damage[name]["_effective"] then small.damage[name]["_effective"] = {} end
@@ -807,6 +818,40 @@ parser.combat:RegisterEvent("PLAYER_REGEN_ENABLED")
 parser.combat:RegisterEvent("PLAYER_UNGHOST")
 parser.combat:RegisterEvent("PLAYER_LOGOUT")
 
+-- 是否存在仍在战斗的队伍/团队成员（含宠物）。用于 BOSS 战"必须全团脱战才结束"判定  by 武藤纯子酱 2026.10.17
+local function AnyGroupMemberInCombat()
+    if UnitAffectingCombat("player") or UnitAffectingCombat("pet") then return true end
+    local raid = GetNumRaidMembers()
+    if raid >= 1 then
+        for i = 1, raid do
+            if UnitAffectingCombat("raid" .. i) or UnitAffectingCombat("raidpet" .. i) then return true end
+        end
+    else
+        local group = GetNumPartyMembers()
+        for i = 1, group do
+            if UnitAffectingCombat("party" .. i) or UnitAffectingCombat("partypet" .. i) then return true end
+        end
+    end
+    return false
+end
+
+-- 脚本 BOSS 不触发 UNIT_DIED 时的"通过"兜底判据（战斗结束时按采样到的 BOSS GUID 状态判断）：
+--   · 该 GUID 已死亡（UnitIsDead == 1）
+--   · 该 GUID 已转为友方（UnitCanAssist，对应"转绿名的友方NPC"）
+--   · GUID 消失不单独判胜：重置/离开视野也会消失，等待实际规则确认。
+-- 属启发式，仅在本场未捕获到死亡事件时兜底，仍可能对特殊脚本/灭团场景误判
+--  by 武藤纯子酱 2026.10.17
+local function BossClearedFallback()
+    if not next(bossGUIDsThisFight) then return false end
+    for guid, _ in pairs(bossGUIDsThisFight) do
+        if UnitExists(guid) then
+            if UnitIsDead(guid) == 1 then return true end
+            if UnitCanAssist("player", guid) then return true end
+        end
+    end
+    return false
+end
+
 function parser.combat:UpdateState(forceNoCombat)
     local state
     if forceNoCombat then
@@ -818,6 +863,9 @@ function parser.combat:UpdateState(forceNoCombat)
     elseif UnitAffectingCombat("player") then
         -- Combat() 为 false（如 P1 打完一波小怪空档），但玩家自身仍在战斗
         -- → 保持战斗中，避免空档误脱战
+        state = "COMBAT"
+    elseif (is_boss_encounter or table.getn(bossesThisFight) > 0) and AnyGroupMemberInCombat() then
+        -- BOSS 战：玩家个人脱战但队友仍在战斗时不结束，必须全团脱战才结算本场  by 武藤纯子酱 2026.10.17
         state = "COMBAT"
     else
         -- 玩家自身已真正脱战（PLAYER_REGEN_ENABLED 已触发，或通过 OnUpdate 轮询判定）
@@ -841,7 +889,14 @@ function parser.combat:UpdateState(forceNoCombat)
                 parser:finalizeWeaknessCoverage(data.last_fight_duration)
             end
 
-            if not is_boss_encounter then
+            -- BOSS 战判定：本场只要出现过 BOSS 即视为 BOSS 战（不再要求 BOSS 必须死亡）。
+            -- 仅"出现过但未击杀且战斗不足 10 秒"的擦碰才并入小怪段，避免开放世界误记  by 武藤纯子酱 2026.10.17
+            local bossSeen = is_boss_encounter or table.getn(bossesThisFight) > 0
+            local bossKilled = table.getn(diedBossesThisFight) > 0
+            -- 未捕获到死亡事件时，用脚本 BOSS 兜底判据判定"通过"  by 武藤纯子酱 2026.10.17
+            if not bossKilled then bossKilled = BossClearedFallback() end
+            local isBossFight = bossSeen and (bossKilled or (data.last_fight_duration or 0) >= 10)
+            if not isBossFight then
                 mergeCurrentToSmallFight()
             end
             is_boss_encounter = false
@@ -874,8 +929,26 @@ function parser.combat:UpdateState(forceNoCombat)
 
             storeRecentFight()
 
-            if table.getn(diedBossesThisFight) > 0 and ShaguDPS.pendingBossRecord then
-                local newBosses = diedBossesThisFight
+            -- BOSS 名未解析时的兜底：用本场血量最高的敌人作为主首领名，避免出现过 BOSS 却丢段  by 武藤纯子酱 2026.10.17
+            local bossMeta = ShaguDPS.pendingBossRecord
+            if isBossFight and not bossMeta then
+                local fbName, fbHp = nil, -1
+                if data.enemy_max_health then
+                    for mobName, hp in pairs(data.enemy_max_health) do
+                        if hp > fbHp then fbHp = hp; fbName = mobName end
+                    end
+                end
+                if not fbName and table.getn(bossesThisFight) > 0 then fbName = bossesThisFight[1] end
+                bossMeta = {
+                    name = fbName or "未知战斗",
+                    timestamp = combat_start_time,
+                    maxHealth = (fbHp > 0) and fbHp or 0,
+                }
+            end
+
+            if isBossFight and bossMeta then
+                local newBosses = (table.getn(bossesThisFight) > 0) and bossesThisFight or { bossMeta.name }
+                local bossCleared = bossKilled
                 local fightDeathTimestamps = {}
                 if ShaguDPS.battleStartDeathTimestamps then
                     for name, timestamps in pairs(data.death_timestamps) do
@@ -894,9 +967,10 @@ function parser.combat:UpdateState(forceNoCombat)
                 end
 
                 local bossFight = {
-                    name = ShaguDPS.pendingBossRecord.name,
-                    timestamp = ShaguDPS.pendingBossRecord.timestamp,
+                    name = bossMeta.name,
+                    timestamp = bossMeta.timestamp,
                     bosses = newBosses,
+                    cleared = bossCleared,
                     damage = deepcopy(data.damage[1]),
                     heal = deepcopy(data.heal[1]),
                     death = deepcopy(data.death[1]),
@@ -921,39 +995,51 @@ function parser.combat:UpdateState(forceNoCombat)
                     death_timestamps = fightDeathTimestamps,
                 }
 
-                local replaced = false
+                -- 同名 BOSS 去重：只保留最后"通过"（击杀）的那一场；若均未通过则保留最后一次尝试。
+                -- 通过判据：本场捕获到世界 BOSS 的死亡事件（diedBossesThisFight 非空）。
+                -- 旧缓存记录无 cleared 字段（历史逻辑只在击杀时落库），视为已通过，避免被清。
+                --  by 武藤纯子酱 2026.10.17
+                local matchedIndex = nil
                 for i, fight in ipairs(ShaguDPS.boss_fights) do
                     if fight.bosses then
+                        local nameMatch = false
                         for _, name in ipairs(newBosses) do
                             for _, existingName in ipairs(fight.bosses) do
-                                if name == existingName then
-                                    ShaguDPS.boss_fights[i] = bossFight
-                                    ShaguDPS_Playback.boss[i] = deepcopy(data.playback[1])
-                                    replaced = true
-                                    break
-                                end
+                                if name == existingName then nameMatch = true break end
                             end
-                            if replaced then break end
+                            if nameMatch then break end
                         end
+                        if nameMatch then matchedIndex = i break end
                     end
-                    if replaced then break end
                 end
 
-                if not replaced then
+                local stored = false
+                if matchedIndex then
+                    local existingCleared = ShaguDPS.boss_fights[matchedIndex].cleared ~= false
+                    if bossCleared or not existingCleared then
+                        ShaguDPS.boss_fights[matchedIndex] = bossFight
+                        ShaguDPS_Playback.boss[matchedIndex] = deepcopy(data.playback[1])
+                        stored = true
+                    end
+                    ShaguDPS.current_boss_index = matchedIndex
+                else
                     table.insert(ShaguDPS.boss_fights, bossFight)
                     table.insert(ShaguDPS_Playback.boss, deepcopy(data.playback[1]))
                     ShaguDPS.current_boss_index = table.getn(ShaguDPS.boss_fights)
-                else
-                    ShaguDPS.current_boss_index = i
+                    stored = true
                 end
 
-                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cff00ff00[ShaguDPS] 已记录BOSS战: %s|r", bossFight.name))
+                if stored then
+                    DEFAULT_CHAT_FRAME:AddMessage(string.format("|cff00ff00[ShaguDPS] 已记录BOSS战: %s|r", bossFight.name))
+                end
             end
 
             ShaguDPS.weaknessScannedTargets = {}
             ShaguDPS.weaknessTrackedTargets = {}
             ShaguDPS.pendingBossRecord = nil
             diedBossesThisFight = {}
+            bossesThisFight = {}
+            bossGUIDsThisFight = {}
 
             ShaguDPS.SaveDataToCache()
             if parser.ProcessDeathReplayQueue then
@@ -998,6 +1084,8 @@ function parser.combat:UpdateState(forceNoCombat)
             data.combat_start_time = combat_start_time
             ShaguDPS.pendingBossRecord = nil
             diedBossesThisFight = {}
+            bossesThisFight = {}
+            bossGUIDsThisFight = {}
             parser.extraAttacks = {}
             ShaguDPS.battleStartDeathTimestamps = deepcopy(data.death_timestamps)
             if ShaguDPS.hasNampower and parser.initBuffCoverage then
@@ -1054,7 +1142,7 @@ end)
 -- 8. 伤害/治疗统计
 -- ============================================================================
 
-local function updateStats(source, action, target, value, school, datatype, effectiveValue, petType, ownerName, overkill)
+local function updateStats(source, action, target, value, school, datatype, effectiveValue, petType, ownerName, overkill, absorb)
     if type(source) ~= "string" or not tonumber(value) then return end
     if datatype == "damage" and source == target then return end
     if datatype == "damage" and not parser.enabled.damage then return end
@@ -1068,6 +1156,7 @@ local function updateStats(source, action, target, value, school, datatype, effe
     local effective = 0
     if datatype == "heal" then effective = effectiveValue or tonumber(value) end
     local over = overkill or 0
+    local abs = absorb or 0
 
     local finalSource, finalAction
     if ownerName and config.merge_pets == 1 then
@@ -1127,6 +1216,14 @@ local function updateStats(source, action, target, value, school, datatype, effe
                     entry[finalSource]["_overkill_by_spell"] = {}
                 end
                 entry[finalSource]["_overkill_by_spell"][finalAction] = (entry[finalSource]["_overkill_by_spell"][finalAction] or 0) + over
+                -- 敌对目标自身护盾吸收掉的伤害（Nampower 高级功能，仅敌对目标计入）  by 武藤纯子酱 2026.10.19
+                if abs > 0 then
+                    entry[finalSource]["_absorb"] = (entry[finalSource]["_absorb"] or 0) + abs
+                    if not entry[finalSource]["_absorb_by_spell"] then
+                        entry[finalSource]["_absorb_by_spell"] = {}
+                    end
+                    entry[finalSource]["_absorb_by_spell"][finalAction] = (entry[finalSource]["_absorb_by_spell"][finalAction] or 0) + abs
+                end
             end
             if datatype == "heal" then
                 entry[finalSource]["_esum"] = (entry[finalSource]["_esum"] or 0) + effective
@@ -1590,17 +1687,51 @@ local function IsWorldBoss(guid)
     return UnitClassification(guid) == "worldboss"
 end
 
-local function checkBossInvolvement(casterGuid, targetGuid)
-    if not IsWorldBoss(casterGuid) and not IsWorldBoss(targetGuid) then return end
-    if IsInInstance() then
-        is_boss_encounter = true
+-- 记录本场出现过的 BOSS（出现即预标记，脱战时据此落库）。
+-- 采到名字+血量后写入 bossesThisFight，并以"血量最高者"作为主首领名；
+-- 名字未就绪时延迟重采，同一 GUID 只采样一次。  by 武藤纯子酱 2026.10.17
+local function recordBossEncounter(guid)
+    if not guid or guid == "0x0000000000000000" or bossGUIDsThisFight[guid] then return end
+    local bossName = SafeUnitName(guid)
+    if not bossName or isUnknownName(bossName) then
+        parser:ScheduleEvent(function()
+            if not bossGUIDsThisFight[guid] then recordBossEncounter(guid) end
+        end, {}, { guid })
         return
     end
-    if IsWorldBoss(casterGuid) and isPlayerOrGroupMember(targetGuid) then
-        is_boss_encounter = true
+    bossGUIDsThisFight[guid] = true
+    local found = false
+    for _, name in ipairs(bossesThisFight) do
+        if name == bossName then found = true break end
     end
-    if IsWorldBoss(targetGuid) and isPlayerOrGroupMember(casterGuid) then
+    if not found then table.insert(bossesThisFight, bossName) end
+    local maxHealth = GetUnitField(guid, "maxHealth") or 0
+    if not ShaguDPS.pendingBossRecord or maxHealth > (ShaguDPS.pendingBossRecord.maxHealth or 0) then
+        ShaguDPS.pendingBossRecord = {
+            name = bossName,
+            timestamp = combat_start_time,
+            maxHealth = maxHealth,
+        }
+    end
+end
+
+local function checkBossInvolvement(casterGuid, targetGuid)
+    local casterBoss = IsWorldBoss(casterGuid)
+    local targetBoss = IsWorldBoss(targetGuid)
+    if not casterBoss and not targetBoss then return end
+    if IsInInstance() then
         is_boss_encounter = true
+        if casterBoss then recordBossEncounter(casterGuid) end
+        if targetBoss then recordBossEncounter(targetGuid) end
+        return
+    end
+    if casterBoss and isPlayerOrGroupMember(targetGuid) then
+        is_boss_encounter = true
+        recordBossEncounter(casterGuid)
+    end
+    if targetBoss and isPlayerOrGroupMember(casterGuid) then
+        is_boss_encounter = true
+        recordBossEncounter(targetGuid)
     end
 end
 
@@ -2398,15 +2529,16 @@ end
 -- 23. 敌人承伤统计
 -- ============================================================================
 
-local function recordEnemyDamageTaken(target, source, amount, overkill)
+local function recordEnemyDamageTaken(target, source, amount, overkill, absorb)
     if not target or not source or type(amount) ~= "number" then return end
 
+    local abs = absorb or 0
     local effective = amount
     if config.clamp_damage_to_health ~= 1 then
         effective = amount - (overkill or 0)
     end
     if effective < 0 then effective = 0 end
-    if effective <= 0 and (overkill or 0) <= 0 then return end
+    if effective <= 0 and (overkill or 0) <= 0 and abs <= 0 then return end
     for segment = 0, 1 do
         local seg = data.enemy_damage_taken[segment]
         if not seg[target] then
@@ -2415,16 +2547,18 @@ local function recordEnemyDamageTaken(target, source, amount, overkill)
         local tgt = seg[target]
         tgt._sum = (tgt._sum or 0) + effective
         tgt._overkill = (tgt._overkill or 0) + (overkill or 0)
+        if abs > 0 then tgt._absorb = (tgt._absorb or 0) + abs end
         if not tgt[source] then
             tgt[source] = { _sum = 0, _overkill = 0 }
         end
         local src = tgt[source]
         src._sum = (src._sum or 0) + effective
         src._overkill = (src._overkill or 0) + (overkill or 0)
+        if abs > 0 then src._absorb = (src._absorb or 0) + abs end
     end
 end
 
-local function queueEnemyDamageTaken(targetGuid, source, amount, overkill)
+local function queueEnemyDamageTaken(targetGuid, source, amount, overkill, absorb)
     if ShaguDPS.hasNampower then
         ShaguDPS.weaknessTrackedTargets = ShaguDPS.weaknessTrackedTargets or {}
         ShaguDPS.weaknessTrackedTargets[targetGuid] = true
@@ -2447,13 +2581,13 @@ local function queueEnemyDamageTaken(targetGuid, source, amount, overkill)
     local target = SafeUnitName(targetGuid)
     if target and not isUnknownName(target) then
         recordMaxHealth(target)
-        recordEnemyDamageTaken(target, source, amount, overkill)
+        recordEnemyDamageTaken(target, source, amount, overkill, absorb)
     else
         parser:ScheduleEvent(function()
             local resolved = SafeUnitName(targetGuid)
             if resolved then
                 recordMaxHealth(resolved)
-                recordEnemyDamageTaken(resolved, source, amount, overkill)
+                recordEnemyDamageTaken(resolved, source, amount, overkill, absorb)
             end
         end, {}, { targetGuid })
     end
@@ -2859,8 +2993,11 @@ local function onUnitDied(guid)
     end
 
     if ShaguDPS.Combat() then
-        -- 记录本场死亡的 BOSS（供脱战结算 boss_fights），并缓存血量最高的 BOSS 作为主首领
+        -- 记录本场死亡的 BOSS（供脱战结算 boss_fights），并缓存血量最高的 BOSS 作为主首领。
+        -- 同时补记出现信息，防止"仅由他人击杀、本机未采到伤害事件"时漏记  by 武藤纯子酱 2026.10.17
         if UnitClassification(guid) == "worldboss" then
+            is_boss_encounter = true
+            recordBossEncounter(guid)
             local bossName = SafeUnitName(guid)
             if bossName and not isUnknownName(bossName) then
                 local found = false
@@ -2869,15 +3006,6 @@ local function onUnitDied(guid)
                 end
                 if not found then
                     table.insert(diedBossesThisFight, bossName)
-                end
-
-                local maxHealth = GetUnitField(guid, "maxHealth") or 0
-                if not ShaguDPS.pendingBossRecord or maxHealth > (ShaguDPS.pendingBossRecord.maxHealth or 0) then
-                    ShaguDPS.pendingBossRecord = {
-                        name = bossName,
-                        timestamp = combat_start_time,
-                        maxHealth = maxHealth,
-                    }
                 end
             end
         end
@@ -3426,11 +3554,15 @@ if ShaguDPS.hasNampower then
         local rawDamage = amount
         local overkill = CalculateOverkill(targetGuid, rawDamage)
         local finalDamage = (config.clamp_damage_to_health ~= 1) and rawDamage or (rawDamage - overkill)
+        -- 敌对目标自身护盾吸收的伤害单独统计（仅敌对目标）；勾选"剔除伤害吸收"时不并入总伤害，单独以括号显示  by 武藤纯子酱 2026.10.19
+        local hostileAbsorb = (not isFriendlyTarget) and absorb or 0
+        -- 总伤害始终记录实际伤害；是否把吸收并入总伤害由显示端按"剔除伤害吸收"开关动态决定  by 武藤纯子酱 2026.10.19
+        local statDamage = finalDamage
         if not isFriendlyTarget then
             recordDamageTaken(targetGuid, SafeUnitName("player"), action, amount, hitInfo == 2 and "crit" or "normal")
-            queueEnemyDamageTaken(targetGuid, SafeUnitName("player"), finalDamage, overkill)
+            queueEnemyDamageTaken(targetGuid, SafeUnitName("player"), finalDamage, overkill, hostileAbsorb)
         end
-        updateStats(SafeUnitName("player"), action, targetName, finalDamage, spellSchool, "damage", nil, nil, nil, overkill)
+        updateStats(SafeUnitName("player"), action, targetName, statDamage, spellSchool, "damage", nil, nil, nil, overkill, hostileAbsorb)
 
         if action and string.find(action, "DoT") then
             recordDotTick(SafeUnitName("player"), action, nil)
@@ -3494,6 +3626,10 @@ if ShaguDPS.hasNampower then
         local rawDamage = amount
         local overkill = CalculateOverkill(targetGuid, rawDamage)
         local finalDamage = (config.clamp_damage_to_health ~= 1) and rawDamage or (rawDamage - overkill)
+        -- 敌对目标自身护盾吸收的伤害单独统计（仅敌对目标）；勾选"剔除伤害吸收"时不并入总伤害，单独以括号显示  by 武藤纯子酱 2026.10.19
+        local hostileAbsorb = (not isFriendlyTarget) and absorb or 0
+        -- 总伤害始终记录实际伤害；是否把吸收并入总伤害由显示端按"剔除伤害吸收"开关动态决定  by 武藤纯子酱 2026.10.19
+        local statDamage = finalDamage
 
         if casterGuid == "0x0000000000000000" or targetGuid == "0x0000000000000000" then return end
         local casterName = SafeUnitName(casterGuid)
@@ -3537,27 +3673,27 @@ if ShaguDPS.hasNampower then
 
         if not isFriendlyTarget then
             recordDamageTaken(targetGuid, casterName, action, amount, hitInfo == 2 and "crit" or "normal")
-            queueEnemyDamageTaken(targetGuid, finalSourceName, finalDamage, overkill)
+            queueEnemyDamageTaken(targetGuid, finalSourceName, finalDamage, overkill, hostileAbsorb)
         end
 
         if ownerName then
             local petName = casterName
             if config.merge_pets == 1 then
-                updateStats(petName, action, targetNameLocal, finalDamage, spellSchool, "damage", nil, nil, ownerName, overkill)
+                updateStats(petName, action, targetNameLocal, statDamage, spellSchool, "damage", nil, nil, ownerName, overkill, hostileAbsorb)
                 if action and string.find(action, "DoT") then
                     recordDotTick(petName, action, ownerName)
                 end
             else
                 local displayName = ownerName .. " - " .. petName
                 if not data["classes"][displayName] then data["classes"][displayName] = data["classes"][ownerName] or "__other__" end
-                updateStats(displayName, action, targetNameLocal, finalDamage, spellSchool, "damage", nil, nil, ownerName, overkill)
+                updateStats(displayName, action, targetNameLocal, statDamage, spellSchool, "damage", nil, nil, ownerName, overkill, hostileAbsorb)
                 if action and string.find(action, "DoT") then
                     recordDotTick(petName, action, ownerName)
                 end
             end
         else
             if UnitIsPlayer(casterGuid) then
-                updateStats(casterName, action, targetNameLocal, finalDamage, spellSchool, "damage", nil, nil, nil, overkill)
+                updateStats(casterName, action, targetNameLocal, statDamage, spellSchool, "damage", nil, nil, nil, overkill, hostileAbsorb)
                 if action and string.find(action, "DoT") then
                     recordDotTick(casterName, action, nil)
                 end
@@ -3714,13 +3850,17 @@ if ShaguDPS.hasNampower then
             end
         end
         local finalDamage = (config.clamp_damage_to_health ~= 1) and rawDamage or (rawDamage - overkill)
+        -- 敌对目标自身护盾吸收的伤害单独统计（仅敌对目标）；勾选"剔除伤害吸收"时不并入总伤害，单独以括号显示  by 武藤纯子酱 2026.10.19
+        local hostileAbsorb = (not isFriendlyTarget) and (totalAbsorb or 0) or 0
+        -- 总伤害始终记录实际伤害；是否把吸收并入总伤害由显示端按"剔除伤害吸收"开关动态决定  by 武藤纯子酱 2026.10.19
+        local statDamage = finalDamage
 
         if not isFriendlyTarget then
             recordDamageTaken(targetGuid, SafeUnitName("player"), action, totalDamage, GetSwingHitType(hitInfo, victimState, totalDamage))
-            queueEnemyDamageTaken(targetGuid, SafeUnitName("player"), finalDamage, overkill)
+            queueEnemyDamageTaken(targetGuid, SafeUnitName("player"), finalDamage, overkill, hostileAbsorb)
         end
 
-        updateStats(SafeUnitName("player"), action, SafeUnitName(targetGuid), finalDamage, 0, "damage", nil, nil, nil, overkill)
+        updateStats(SafeUnitName("player"), action, SafeUnitName(targetGuid), statDamage, 0, "damage", nil, nil, nil, overkill, hostileAbsorb)
     end
 
     -- 自动攻击（其他）
@@ -3914,6 +4054,10 @@ if ShaguDPS.hasNampower then
             end
         end
         local finalDamage = (config.clamp_damage_to_health ~= 1) and rawDamage or (rawDamage - overkill)
+        -- 敌对目标自身护盾吸收的伤害单独统计（仅敌对目标）；勾选"剔除伤害吸收"时不并入总伤害，单独以括号显示  by 武藤纯子酱 2026.10.19
+        local hostileAbsorb = (not isFriendlyTarget) and (totalAbsorb or 0) or 0
+        -- 总伤害始终记录实际伤害；是否把吸收并入总伤害由显示端按"剔除伤害吸收"开关动态决定  by 武藤纯子酱 2026.10.19
+        local statDamage = finalDamage
 
         local ownerName, _ = GetOwnerInfoFromPetGUID(attackerGuid)
         local finalSourceName = attackerName
@@ -3928,21 +4072,21 @@ if ShaguDPS.hasNampower then
 
         if not isFriendlyTarget then
             recordDamageTaken(targetGuid, attackerName, action, totalDamage, GetSwingHitType(hitInfo, victimState, totalDamage))
-            queueEnemyDamageTaken(targetGuid, finalSourceName, finalDamage, overkill)
+            queueEnemyDamageTaken(targetGuid, finalSourceName, finalDamage, overkill, hostileAbsorb)
         end
 
         if ownerName then
             local petName = attackerName
             if config.merge_pets == 1 then
-                updateStats(petName, action, targetNameLocal, finalDamage, 0, "damage", nil, nil, ownerName, overkill)
+                updateStats(petName, action, targetNameLocal, statDamage, 0, "damage", nil, nil, ownerName, overkill, hostileAbsorb)
             else
                 local displayName = ownerName .. " - " .. petName
                 if not data["classes"][displayName] then data["classes"][displayName] = data["classes"][ownerName] or "__other__" end
-                updateStats(displayName, action, targetNameLocal, finalDamage, 0, "damage", nil, nil, ownerName, overkill)
+                updateStats(displayName, action, targetNameLocal, statDamage, 0, "damage", nil, nil, ownerName, overkill, hostileAbsorb)
             end
         else
             if UnitIsPlayer(attackerGuid) then
-                updateStats(attackerName, action, targetNameLocal, finalDamage, 0, "damage", nil, nil, nil, overkill)
+                updateStats(attackerName, action, targetNameLocal, statDamage, 0, "damage", nil, nil, nil, overkill, hostileAbsorb)
             end
         end
     end

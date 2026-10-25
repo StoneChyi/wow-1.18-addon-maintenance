@@ -9,4 +9,3 @@
 ## RequiredDeps: Blizzard_AuctionUI
 ## SavedVariables: zSlashLibSavedData, Tab_Set, MySlashButtonState
 MySlash.xml
-MySlashList.xml

@@ -29,6 +29,7 @@ editor.RedrawFlow = function()
     if not editor.mainWindow or not editor.flowContent or not editor.flowScroll then
         return
     end
+    if editor.HideJumpGuide then editor.HideJumpGuide() end
     local oldIndex = 1
     local oldTotal = table.getn(editor.leftBlocks)
     while oldIndex <= oldTotal do

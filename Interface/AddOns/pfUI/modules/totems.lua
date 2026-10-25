@@ -8,6 +8,11 @@ pfUI:RegisterModule("totems", "vanilla:tbc", function ()
     [AIR_TOTEM_SLOT]   = { r = .4, g = .1, b = .7 },
   }
 
+  -- 显示顺序与 GoubayuHeal 图腾条统一：火→水→土→风
+  -- 仅影响面板图标排列；libtotem 的槽位常量映射（spellId→slot、TBC API 兼容）不变
+  -- by 武藤纯子酱 2026.10.18
+  local slotOrder = { FIRE_TOTEM_SLOT, WATER_TOTEM_SLOT, EARTH_TOTEM_SLOT, AIR_TOTEM_SLOT }
+
   local totems = CreateFrame("Frame", "pfTotems", UIParent)
   totems:RegisterEvent("PLAYER_TOTEM_UPDATE")
   totems:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -50,18 +55,26 @@ end
   end
 
   totems.RefreshList = function(self)
+    -- ⛔ 1.12 (vanilla) 没有 MAX_TOTEMS / GetTotemInfo（TBC 才有）：
+    --   缺失时 `for i = 1, MAX_TOTEMS` 会因初值为 nil 直接报错。
+    --   API 不存在就收起面板，1.12 萨满不再触发 Lua 错误；TBC/有 API 的客户端行为不变。
+    if not MAX_TOTEMS or not GetTotemInfo then
+      self:Hide()
+      return
+    end
+
     local count = 0
-    for i = 1, MAX_TOTEMS do
-      local active, name, start, duration, icon = GetTotemInfo(i)
+    for _, id in ipairs(slotOrder) do
+      local active, name, start, duration, icon = GetTotemInfo(id)
 
       if active and icon and icon ~= "" then
         count = count + 1
-        local color = slots[i]
+        local color = slots[id]
 
         self.bar[count]:Show()
         self.bar[count]:SetBackdropBorderColor(color.r, color.g, color.b)
         self.bar[count].icon:SetTexture(icon)
-        self.bar[count].id = i
+        self.bar[count].id = id
 
         CooldownFrame_SetTimer(self.bar[count].cd, start, duration, 1)
       end
@@ -92,6 +105,10 @@ end
   end
 
   totems.UpdateConfig = function(self)
+    -- ⛔ 1.12 无 MAX_TOTEMS/GetTotemInfo（TBC API）：初始化时直接退出，
+    --   否则下方图标池 `for i = 1, MAX_TOTEMS` 在模块加载阶段就报 "for 初值必须为数字"。
+    if not MAX_TOTEMS or not GetTotemInfo then return end
+
     local rawborder, border = GetBorderSize()
     self.iconsize = pfUI_config.totems.iconsize
     self.direction = pfUI_config.totems.direction

@@ -128,6 +128,26 @@ local syncName = {
 
 local mcIcon = nil
 
+-- 标记名归一成中文（兼容英文版 BigWigs 同步过来的标记名）
+local iconEnToCn = {
+	Star = "星星", Circle = "大饼", Diamond = "菱形", Triangle = "三角",
+	Moon = "月亮", Square = "方块", Cross = "叉子", Skull = "骷髅",
+	NoIcon = "无标记",
+}
+local function normalizeIconName(rest)
+	if not rest then return rest end
+	if iconEnToCn[rest] then return iconEnToCn[rest] end
+	-- "玩家名 标记名" 格式：归一末段标记名
+	local idx = string.find(rest, " ")
+	if idx then
+		local head, tail = string.sub(rest, 1, idx - 1), string.sub(rest, idx + 1)
+		if iconEnToCn[tail] then
+			return head .. " " .. iconEnToCn[tail]
+		end
+	end
+	return rest
+end
+
 function module:OnEnable()
 	self:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE") --trigger_shout
 	
@@ -200,6 +220,7 @@ function module:Event(msg)
 end
 
 function module:BigWigs_RecvSync(sync, rest, nick)
+	rest = normalizeIconName(rest)
 	if sync == syncName.shout and self.db.profile.shout then
 		self:Shout()
 	

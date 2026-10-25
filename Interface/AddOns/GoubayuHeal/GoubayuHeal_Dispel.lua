@@ -378,6 +378,9 @@ function GoubayuHeal.Dispel_SetupDefaults()
     C["dispel_buttons"] = C["dispel_buttons"] or 5
     C["dispel_pets"] = C["dispel_pets"] or 0
     C["dispel_ignore_abolish"] = C["dispel_ignore_abolish"] == nil and 1 or C["dispel_ignore_abolish"]
+    -- 保护式跳过：同目标同类型存在受保护减益（黑名单/过滤/职业过滤/专用开关任一命中）时，
+    -- 该类型整批不驱散（避免群体驱散连带解掉受保护项）。默认开。by 武藤纯子酱 2026.10.20
+    C["dispel_protect_same_type"] = C["dispel_protect_same_type"] == nil and 1 or C["dispel_protect_same_type"]
     C["dispel_shadowform"] = C["dispel_shadowform"] == nil and 1 or C["dispel_shadowform"]
     C["dispel_wyvern_sting"] = C["dispel_wyvern_sting"] or 0
     C["dispel_mutating_injection"] = C["dispel_mutating_injection"] or 0
@@ -678,6 +681,12 @@ end
 -- ============================================================
 
 local DispelList = {}
+-- 扫描时按"强制优先 / 普通"分桶，扫描结束再拼成 DispelList（强制优先在前）
+local DispelForceList = {}
+local DispelNormalList = {}
+-- 强制优先驱散名单集合（代码内维护，见 Locale 的 DispelForcePriority）
+local Dispel_ForcePriority_set = {}
+for _, n in ipairs(GoubayuHeal.DispelForcePriority or {}) do Dispel_ForcePriority_set[n] = true end
 
 -- 是否有"驱散免疫"类buff（消毒术/祛病术的周期性驱散）
 function GoubayuHeal.Dispel_HasAbolish(unit, dtype)
@@ -778,6 +787,8 @@ end
 
 function GoubayuHeal.Dispel_Scan()
     DispelList = {}
+    DispelForceList = {}
+    DispelNormalList = {}
 
     if not GoubayuHeal.Config or GoubayuHeal.Config["dispel_enabled"] ~= 1 then
         return
@@ -846,6 +857,9 @@ function GoubayuHeal.Dispel_Scan()
 
                 local _, class = UnitClass(unit)
                 local i = 1
+                local protDtype = {}
+                local forceDtype = {}
+                local unitEntries = {}
 
                 -- 与主模块一致扫描 32 个光环槽（Nampower 暴露 32 槽，只扫 16 会漏掉高槽位的减益）
                 while i <= 32 do
@@ -856,16 +870,25 @@ function GoubayuHeal.Dispel_Scan()
                         break
                     end
 
-                    if name and name ~= "" and dtype and DispelUsable[dtype] and DF[dtype] == 1 then
+                    if name and name ~= "" and GoubayuHeal.Dispel_IsHidden(unit, name, dtype, class) then
+                        -- 受保护减益（黑名单/防误驱散/职业过滤/专用开关等，任一命中）：
+                        -- 记录其类型，该类型整批不驱散（群体驱散一次解多条时可能连带解掉它）
+                        -- by 武藤纯子酱 2026.10.20
+                        if dtype and C["dispel_protect_same_type"] ~= 0 then
+                            protDtype[dtype] = true
+                        end
+                    elseif name and name ~= "" and dtype and DispelUsable[dtype] and DF[dtype] == 1 then
                         if C["dispel_ignore_abolish"] ~= 1 and GoubayuHeal.Dispel_HasAbolish(unit, dtype)
                             then
                             -- 有Abolish且未强制驱散 → 跳过
-                        elseif GoubayuHeal.Dispel_IsHidden(unit, name, dtype, class) then
-                            -- 黑名单/隐藏减益/隐藏职业 → 跳过
                         elseif shadowform and dtype ~= "Disease" then
                             -- 暗影形态过滤
                         else
-                            table.insert(DispelList, {
+                            local forced = Dispel_ForcePriority_set[name] and true or false
+                            if forced and dtype then
+                                forceDtype[dtype] = true
+                            end
+                            table.insert(unitEntries, {
                                 unit = unit,
                                 guid = guid,
                                 unitName = UnitName(unit) or "",
@@ -875,14 +898,33 @@ function GoubayuHeal.Dispel_Scan()
                                 texture = texture,
                                 stacks = applications or 0,
                                 spellId = (spellId and spellId > 0) and spellId or nil,
+                                force = forced,
                             })
                         end
                     end
 
                     i = i + 1
                 end
+
+                -- 强制优先项永远入列（即使同类型有受保护项）；其余项同类型受保护 → 跳过
+                for _, e in ipairs(unitEntries) do
+                    if e.force then
+                        table.insert(DispelForceList, e)
+                    elseif not protDtype[e.dtype] then
+                        table.insert(DispelNormalList, e)
+                    end
+                end
             end
         end
+    end
+
+    -- 汇总：强制优先项排最前（第一时间驱散）
+    DispelList = {}
+    for _, e in ipairs(DispelForceList) do
+        table.insert(DispelList, e)
+    end
+    for _, e in ipairs(DispelNormalList) do
+        table.insert(DispelList, e)
     end
 end
 

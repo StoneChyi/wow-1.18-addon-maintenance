@@ -26,7 +26,7 @@ local card = {
             shortLabel = "怒",
             default = 10,
             minimum = 10,
-            maximum = 100,
+            maximum = 130,
         },
     },
 }

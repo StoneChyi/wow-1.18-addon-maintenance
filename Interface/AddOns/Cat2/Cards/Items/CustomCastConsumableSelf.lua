@@ -3,8 +3,8 @@
 local card = {
     id = "item_custom_cast_consumable_self",
     name = "「自定义」施放消耗品（自己）",
-    description = "以自己为投掷位置使用|cff6bc7e0{itemName}|r，需UnitXP202607以上",
-    details = "填写消耗品完整名称，名称为空时跳过。物品冷却完成时，以自己为投掷位置使用指定消耗品。需要 UnitXP 202607 以上版本支持；成功执行时会阻断本轮后续卡片。",
+    description = "周围敌人>=|cff6bc7e0{enemyThreshold}|r时，以自己为投掷位置使用|cff6bc7e0{itemName}|r，需UnitXP202607以上",
+    details = "填写消耗品完整名称，名称为空时跳过。物品冷却完成时，以自己为投掷位置使用指定消耗品。需要 UnitXP 202607 以上版本支持；成功执行时会阻断本轮后续卡片。使用前要求自己周围8码内敌人数达到设定值，默认1，范围1–40；敌人扫描需要SuperWoW支持。",
     sort = 1003,
     category = "item",
     canStopSequence = true,
@@ -12,6 +12,8 @@ local card = {
         "Interface\\Icons\\INV_Misc_Bomb_04",
     },
     optionSchema = {
+        { key = "enemyThreshold", type = "number", label = "敌人数阈值", shortLabel = "敌",
+            default = 1, minimum = 1, maximum = 40 },
         {
             key = "itemName",
             type = "string",
@@ -50,6 +52,11 @@ function card.Execute(context, step)
     end
 
     if not Cat2.GetItemByNameCD(itemName) then
+        return false
+    end
+
+    local enemyThreshold = context:GetStepOption(step, "enemyThreshold") or 1
+    if Cat2.ScanNearbyEnemies(8) < enemyThreshold then
         return false
     end
 

@@ -2161,7 +2161,7 @@ end
 GoubayuHeal_GUI = CreateFrame("Frame", "GoubayuHeal_GUI", UIParent)
 local mainWindow = GoubayuHeal_GUI
 mainWindow:SetWidth(880)
-mainWindow:SetHeight(600)
+mainWindow:SetHeight(616)
 mainWindow:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 mainWindow:SetFrameStrata("HIGH")
 mainWindow:SetFrameLevel(20)
@@ -2961,20 +2961,6 @@ GoubayuHeal.GUIDruidT25Five = GoubayuHeal_MakeClassCheckBox("GoubayuHeal_GUIDrui
     end,
     GoubayuHeal.UI.T25FiveTip, 0)
 
--- 允许覆盖愈合（默认开）：愈合不再被 HoT 门槛阻挡，残血时可用同级/低级愈合覆盖刷新
--- by 武藤纯子酱 2026.9.27
-GoubayuHeal.GUIRegrowthOverwrite = GoubayuHeal_MakeClassCheckBox(
-    "GoubayuHeal_GUIRegrowthOverwrite", GoubayuHeal.UI.AllowRegrowthOverwrite,
-    function()
-        return GoubayuHeal.Config and GoubayuHeal.Config["allow_regrowth_overwrite"] ~= 0
-    end,
-    function(checked)
-        if GoubayuHeal.Config then
-            GoubayuHeal.Config["allow_regrowth_overwrite"] = checked and 1 or 0
-        end
-    end,
-    GoubayuHeal.UI.AllowRegrowthOverwriteTip, 60)
-
 -- 牧师：疾速只用强效
 GoubayuHeal.GUIPriestForceGreaterHeal = GoubayuHeal_MakeClassCheckBox(
     "GoubayuHeal_GUIPriestForceGreaterHeal", GoubayuHeal.UI.ForceGreater,
@@ -3026,6 +3012,51 @@ GoubayuHeal.GUIPriestT8Two = GoubayuHeal_MakeClassCheckBox("GoubayuHeal_GUIPries
         end
     end,
     GoubayuHeal.UI.T8TwoTip, 120)
+
+-- 允许覆盖愈合的血量阈值滑块（仅德鲁伊）：目标血量低于该百分比时才允许"愈合覆盖愈合"
+-- by 武藤纯子酱 2026.10.19
+GoubayuHeal.roLabel = GoubayuHeal_UI_MakeFontString(specialBar, "OVERLAY", 10, 1, 1, 1)
+GoubayuHeal.roLabel:SetText(GoubayuHeal.UI.RoLabel)
+
+GoubayuHeal.roSlider = GoubayuHeal_UI_CreateSlider(specialBar, "GoubayuHeal_GUIRegrowthOverwritePctSlider",
+    105, 15, true)
+
+GoubayuHeal.roHigh = getglobal("GoubayuHeal_GUIRegrowthOverwritePctSliderHigh")
+if GoubayuHeal.roHigh then
+    GoubayuHeal.roHigh:SetFont(FONT, 10, "OUTLINE")
+    GoubayuHeal.roHigh:SetTextColor(1, 1, 1)
+end
+GoubayuHeal.roSlider:SetMinMaxValues(0, 100)
+GoubayuHeal.roSlider:SetValueStep(5)
+
+GoubayuHeal.roSlider.userOnValueChanged = function()
+    if GoubayuHeal.Config then
+        local v = math.floor(arg1)
+        GoubayuHeal.Config["allow_regrowth_overwrite_pct"] = v
+        GoubayuHeal_UI_SavePerScheme("allow_regrowth_overwrite_pct", v)
+    end
+    if GoubayuHeal.roHigh then
+        GoubayuHeal.roHigh:SetText(math.floor(arg1) .. "%")
+    end
+end
+
+GoubayuHeal.roSlider.userOnShow = function()
+    local v = (GoubayuHeal.Config and GoubayuHeal.Config["allow_regrowth_overwrite_pct"]) or 100
+    this:SetValue(v)
+    if GoubayuHeal.roHigh then
+        GoubayuHeal.roHigh:SetText(math.floor(v) .. "%")
+    end
+end
+
+GoubayuHeal.roSlider:SetScript("OnEnter", function()
+    GameTooltip:SetOwner(GoubayuHeal.roSlider, "ANCHOR_RIGHT")
+    GameTooltip:SetText(GoubayuHeal.UI.RoLabel, 0.9, 0.9, 0.9, 1, 1)
+    GameTooltip:AddLine(GoubayuHeal.UI.RoTip, 0.82, 0.82, 0.82, 1)
+    GameTooltip:Show()
+end)
+GoubayuHeal.roSlider:SetScript("OnLeave", function()
+    GameTooltip:Hide()
+end)
 
 -- 艾森娜之花优先级滑块
 local essenceLabel = GoubayuHeal_UI_MakeFontString(specialBar, "OVERLAY", 10, 1, 1, 1)
@@ -3760,7 +3791,7 @@ end
 
 local settingsPanel = CreateFrame("Frame", nil, mainWindow)
 settingsPanel:SetWidth(856)
-settingsPanel:SetHeight(520)
+settingsPanel:SetHeight(536)
 settingsPanel:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 10, -42)
 panels[2] = settingsPanel
 
@@ -3827,13 +3858,13 @@ end
 
 local settingsInset1 = CreateFrame("Frame", nil, settingsPanel)
 settingsInset1:SetWidth(400)
-settingsInset1:SetHeight(470)
+settingsInset1:SetHeight(526)
 settingsInset1:SetPoint("TOPLEFT", settingsPanel, "TOPLEFT", 10, -10)
 UI.ApplyFlatBackdrop(settingsInset1, 0.05, 0.05, 0.05, 0.9)
 
 local settingsInset2 = CreateFrame("Frame", nil, settingsPanel)
 settingsInset2:SetWidth(420)
-settingsInset2:SetHeight(470)
+settingsInset2:SetHeight(526)
 settingsInset2:SetPoint("TOPRIGHT", settingsPanel, "TOPRIGHT", -10, -10)
 UI.ApplyFlatBackdrop(settingsInset2, 0.05, 0.05, 0.05, 0.9)
 
@@ -3886,6 +3917,39 @@ GoubayuHeal_MakeSettingsSlider(settingsInset1, "GoubayuHeal_GUIHealStrategySlide
     'GoubayuHeal.Config["heal_strategy"]',
     function() return GoubayuHeal.Config["heal_strategy"] end
 ):SetPoint("TOPLEFT", settingsInset1, "TOPLEFT", 12, -416)
+
+-- 救急线（%）：目标血量低于此值时忽略 HOT 预估、默认忽略他人直接读条；自动夹取 rescue <= min
+-- by 武藤纯子酱 2026.10.20
+GoubayuHeal.rescueSlider = GoubayuHeal_MakeSettingsSlider(settingsInset1,
+    "GoubayuHeal_GUIRescueHpThresholdSlider", GoubayuHeal.GUI_rescue_hp, 0, 100, 1,
+    'GoubayuHeal.Config["rescue_hp_threshold"]',
+    function() return GoubayuHeal.Config["rescue_hp_threshold"] end)
+GoubayuHeal.rescueSlider:SetPoint("TOPLEFT", settingsInset1, "TOPLEFT", 12, -472)
+GoubayuHeal.rescueSlider.userOnValueChanged = function()
+    local minPct = (tonumber(GoubayuHeal.Config["min_heal_threshold"]) or 0.95) * 100
+    local v = arg1
+    if v > minPct then
+        v = minPct
+    end
+    v = math.floor(v)
+    GoubayuHeal.Config["rescue_hp_threshold"] = v
+    GoubayuHeal_UI_SavePerScheme("rescue_hp_threshold", v)
+    local hi = getglobal("GoubayuHeal_GUIRescueHpThresholdSliderHigh")
+    if hi then
+        hi:SetText(v .. "%")
+    end
+    if v ~= arg1 and this then
+        this:SetValue(v)
+    end
+end
+GoubayuHeal.rescueSlider.userOnShow = function()
+    local v = (GoubayuHeal.Config and GoubayuHeal.Config["rescue_hp_threshold"]) or 40
+    this:SetValue(v)
+    local hi = getglobal("GoubayuHeal_GUIRescueHpThresholdSliderHigh")
+    if hi then
+        hi:SetText(math.floor(v) .. "%")
+    end
+end
 
 -- Nampower专用设置项
 GoubayuHeal.NampowerOnlySettings = GoubayuHeal.NampowerOnlySettings or {}
@@ -6444,7 +6508,6 @@ local function GoubayuHeal_ReflowClassBar()
         GoubayuHeal.GUIPaladinHSInterrupt,
         GoubayuHeal.GUIDruidKeepTree,
         GoubayuHeal.GUIDruidT25Five,
-        GoubayuHeal.GUIRegrowthOverwrite,
         GoubayuHeal.GUIPriestForceGreaterHeal,
         GoubayuHeal.GUIPriestAlternateSpells,
         GoubayuHeal.GUIPriestKeepInnerFire,
@@ -6491,6 +6554,15 @@ local function GoubayuHeal_ReflowClassBar()
     end
     if GoubayuHeal.cnbLabel then
         GoubayuHeal.cnbLabel:Hide()
+    end
+    if GoubayuHeal.roSlider then
+        GoubayuHeal.roSlider:Hide()
+    end
+    if GoubayuHeal.roLabel then
+        GoubayuHeal.roLabel:Hide()
+    end
+    if GoubayuHeal.roHigh then
+        GoubayuHeal.roHigh:Hide()
     end
     if GoubayuHeal.meleeJudgmentSlider then
         GoubayuHeal.meleeJudgmentSlider:Hide()
@@ -6540,9 +6612,9 @@ local function GoubayuHeal_ReflowClassBar()
         table.insert(list, { t = "essence" })
         pushCb(GoubayuHeal.GUIDruidKeepTree, GoubayuHeal.UI.KeepTree)
         pushCb(GoubayuHeal.GUIDruidT25Five, GoubayuHeal.UI.T25Five)
-        -- 允许覆盖愈合：仅德鲁伊（愈合是德鲁伊技能）
-        -- by 武藤纯子酱 2026.9.27
-        pushCb(GoubayuHeal.GUIRegrowthOverwrite, GoubayuHeal.UI.AllowRegrowthOverwrite)
+        -- 允许覆盖愈合阈值滑块（仅德鲁伊：愈合是德鲁伊技能；0% = 不覆盖，等价于关闭）
+        -- by 武藤纯子酱 2026.10.19
+        table.insert(list, { t = "regrowthOverwrite" })
     end
 
     if isPriest then
@@ -6598,6 +6670,7 @@ local function GoubayuHeal_ReflowClassBar()
                 or (item.t == "chainno" and GoubayuHeal.UI.CnbLabel)
                 or (item.t == "meleeJudgment" and GoubayuHeal.UI.MeleeJudgmentLabel)
                 or (item.t == "tier35" and GoubayuHeal.UI.T35Label)
+                or (item.t == "regrowthOverwrite" and GoubayuHeal.UI.RoLabel)
             local lbl = (item.t == "essence" and essenceLabel)
                 or (item.t == "desperate" and GoubayuHeal.dpLabel)
                 or (item.t == "divineShield" and GoubayuHeal.dsLabel)
@@ -6605,6 +6678,7 @@ local function GoubayuHeal_ReflowClassBar()
                 or (item.t == "chainno" and GoubayuHeal.cnbLabel)
                 or (item.t == "meleeJudgment" and GoubayuHeal.meleeJudgmentLabel)
                 or (item.t == "tier35" and GoubayuHeal.t35Label)
+                or (item.t == "regrowthOverwrite" and GoubayuHeal.roLabel)
             local highW = (item.t == "meleeJudgment" or item.t == "tier35") and 45 or 30
             -- 组间距 8px（原 16px 过大，导致圣骑 4 个滑块换行）；
             -- 4 组合计约 802px + 起始 24px < 836px 可容于一行
@@ -6628,6 +6702,7 @@ local function GoubayuHeal_ReflowClassBar()
                 or (item.t == "chainno" and GoubayuHeal.cnbSlider)
                 or (item.t == "meleeJudgment" and GoubayuHeal.meleeJudgmentSlider)
                 or (item.t == "tier35" and GoubayuHeal.t35Slider)
+                or (item.t == "regrowthOverwrite" and GoubayuHeal.roSlider)
             local high = (item.t == "essence" and essenceHigh)
                 or (item.t == "desperate" and GoubayuHeal.dpHigh)
                 or (item.t == "divineShield" and GoubayuHeal.dsHigh)
@@ -6635,6 +6710,7 @@ local function GoubayuHeal_ReflowClassBar()
                 or (item.t == "chainno" and GoubayuHeal.cnbHigh)
                 or (item.t == "meleeJudgment" and GoubayuHeal.meleeJudgmentHigh)
                 or (item.t == "tier35" and GoubayuHeal.t35High)
+                or (item.t == "regrowthOverwrite" and GoubayuHeal.roHigh)
             if slider then
                 slider:Show()
                 slider:ClearAllPoints()
@@ -6667,7 +6743,7 @@ local function GoubayuHeal_ReflowClassBar()
     if specialBar:GetHeight() ~= newBarH then
         specialBar:SetHeight(newBarH)
         classesPanel:SetHeight(500 + (newBarH - 34))
-        mainWindow:SetHeight(600 + (newBarH - 34))
+        mainWindow:SetHeight(616 + (newBarH - 34))
     end
 end
 

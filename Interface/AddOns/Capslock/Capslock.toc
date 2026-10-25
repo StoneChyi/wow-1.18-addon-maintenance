@@ -10,6 +10,5 @@
 ## DefaultState: disabled
 Capslock.xml
 CapslockTitanPanel.xml
-148 130 201
 
 ## X-Turtle-Shell-Version: 1693784534

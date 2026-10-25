@@ -197,24 +197,18 @@ local function resolveName(s)
 	return s
 end
 
--- 冰锥 emote 中第一个目标名在日志里是字面 %t（boss 当前目标未被替换）。
--- 解析 %t = boss 的当前目标。注意：boss1~4 单位框是 TBC 才有的，1.12 / Turtle 1.12
--- 客户端里不存在，因此不能只靠它；这里用多级回退（参考 Onyxia.lua 的 CheckTarget）。
+-- 冰锥 emote 中第一个目标名在日志里是字面 %s（boss 当前目标未被替换）。
+-- 解析 %s = boss 的当前目标。注意：boss1~4 单位框在 1.12 客户端不存在，
+-- 且本客户端（SuperWoW/Nampower）对未知单位直接抛错（Unknown unit name: boss1）
+-- 而非返回 nil，所以绝不能探测 boss 框；只走 target/全团扫描（参考 Onyxia.lua CheckTarget）。
 local function bossTargetName()
 	local enemy = module.translatedName
-	-- 1) boss 单位框（TBC / Turtle 1.17+ 若 boss 占用框）
-	for i = 1, 4 do
-		if UnitName("boss" .. i) == enemy then
-			local t = UnitName("boss" .. i .. "target")
-			if t then return t end
-		end
-	end
-	-- 2) 玩家正瞄着 boss，取其 target 即为 boss 当前目标
+	-- 1) 玩家正瞄着 boss，取其 target 即为 boss 当前目标
 	if UnitName("target") == enemy then
 		local t = UnitName("targettarget")
 		if t then return t end
 	end
-	-- 3) 扫描全团：谁在瞄 boss，取其 target（= boss 当前目标）
+	-- 2) 扫描全团：谁在瞄 boss，取其 target（= boss 当前目标）
 	--    兼容 raid / Raid 两种写法
 	local n = (GetNumRaidMembers and GetNumRaidMembers()) or 0
 	if n > 0 then
@@ -229,7 +223,7 @@ local function bossTargetName()
 			end
 		end
 	end
-	-- 4) 小队兜底
+	-- 3) 小队兜底
 	n = (GetNumPartyMembers and GetNumPartyMembers()) or 0
 	if n > 0 then
 		for i = 1, n do
@@ -403,7 +397,7 @@ function module:BigWigs_RecvSync(sync, rest, nick)
 	elseif sync == syncName.flameFrontBack and self.db.profile.flame then
 		self:Message(L["msg_flameFrontBack"], "Important", true, "Beware")
 	elseif sync == syncName.corrosion and self.db.profile.corrosion then
-		self:Message(L["msg_corrosionCast"], "Important")
+		self:Message(L["msg_corrosionCast"], "Important", nil, "voiceSwitch")
 	end
 end
 
@@ -477,6 +471,7 @@ end
 function module:IceLance(n1, n2)
 	if not self.db.profile.icelance then return end
 	local isYou = (n1 == UnitName("player")) or (n2 and n2 == UnitName("player"))
+	self:Sound("voiceGather")
 
 	if isYou then
 		self:Message(L["msg_iceLanceYou"], "Personal", true, "Alarm")

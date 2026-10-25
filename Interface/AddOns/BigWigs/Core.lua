@@ -1077,7 +1077,7 @@ function BigWigs:OnEnable()
 end
 
 function BigWigs:AceEvent_FullyInitialized()
-	if (GetNumRaidMembers() > 0) or ((GetZoneText() == "The Black Morass") or (GetZoneText() == "Dire Maul") or (GetZoneText() == "Stratholme")) or not self.loading then
+	if (GetNumRaidMembers() > 0) or ((GetZoneText() == BZ["The Black Morass"]) or (GetZoneText() == BZ["Dire Maul"]) or (GetZoneText() == BZ["Stratholme"])) or not self.loading then -- 区域名走 BZ 翻译 -- by 武藤纯子酱 2026.10.19
 		-- Enable all disabled modules that are not boss modules.
 		for name, module in self:IterateModules() do
 			if type(module.IsBossModule) ~= "function" or not module:IsBossModule() then

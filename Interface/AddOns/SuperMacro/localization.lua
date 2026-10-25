@@ -43,10 +43,6 @@ if GetLocale() == "zhCN" then
     SM_REPLACE_ICON = "自动替换技能图标";
     SM_CHECK_COOLDOWN = "自动检查CD";
     SM_SHOW_MENU = "显示菜单超级宏按钮";
-    SM_WORDWRAP = "使用长句";
-    SM_MONO_FONT = "使用等宽字体（无法显示中文）";
-    SM_WINDOW_HEIGHT = "窗口高度"
-    SM_WINDOW_WIDTH = "窗口宽度"
     SM_EDITBOX_FONT_SIZE = "字体大小"
 
     -- 斜杠命令帮助文本
@@ -187,10 +183,6 @@ else
     SM_REPLACE_ICON = "Auto-replace action icons";
     SM_CHECK_COOLDOWN = "Auto-check cooldown for actions";
     SM_SHOW_MENU = "Show menu button";
-    SM_WORDWRAP = "Wrap long sentences";
-    SM_MONO_FONT = "Use monospaced font for script editbox";
-    SM_WINDOW_HEIGHT = "Main window height"
-    SM_WINDOW_WIDTH = "Main window width"
     SM_EDITBOX_FONT_SIZE = "Script editbox text font size"
     
     -- 斜杠命令帮助文本

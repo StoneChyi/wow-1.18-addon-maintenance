@@ -1,0 +1,3263 @@
+{
+  "date": "2026-10-25",
+  "deployed": true,
+  "before_commit": "976538accd9a1f235c8f9c0406b283a9da458fce",
+  "before_tag": "before/package-20261024-20261025",
+  "package_root": "D:\\下载\\Interface2026年10月24日\\Interface\\AddOns",
+  "selected_addons": [
+    "Automatonex",
+    "BigWigs",
+    "Capslock",
+    "Cat2",
+    "CatPotion",
+    "Cooline",
+    "EzPoison",
+    "GoubayuHeal",
+    "MySlash",
+    "pfUI",
+    "pfUI-addonskinner",
+    "S_ItemTip",
+    "ShaguDPS",
+    "SuperMacro",
+    "TrainerSkills",
+    "WushuangLoot",
+    "XyTracker"
+  ],
+  "excluded_unchanged": [
+    "BetterCharacterStats",
+    "StatCompare"
+  ],
+  "unchanged_addon_count": 89,
+  "unchanged_addons": [
+    "!Libs",
+    "Accountant",
+    "ActionBarProfiles",
+    "AdvancedTradeSkillWindow2",
+    "ArchiTotem",
+    "Atlas",
+    "AtlasLoot",
+    "AtlasQuest",
+    "AuldLangSyne",
+    "AutoBar",
+    "AutoMarker",
+    "aux-addon",
+    "Bagshui",
+    "BetterCharacterStats",
+    "Blizzard_AuctionUI",
+    "Blizzard_BattlefieldMinimap",
+    "Blizzard_BindingUI",
+    "Blizzard_CombatText",
+    "Blizzard_CraftUI",
+    "Blizzard_GMSurveyUI",
+    "Blizzard_InspectUI",
+    "Blizzard_MacroUI",
+    "Blizzard_RaidUI",
+    "Blizzard_TalentUI",
+    "Blizzard_TradeSkillUI",
+    "Blizzard_TrainerUI",
+    "BrainwasherPro",
+    "BuffTool",
+    "Cat",
+    "Cryolysis",
+    "Cursive",
+    "diminfo",
+    "DPSMateX",
+    "DPSMateXEncounters",
+    "DPSMateXExtend",
+    "DPSMateXExtendMore",
+    "DPSMateXInsights",
+    "EavesDrop",
+    "ExtraResourceBars",
+    "FishingBuddy",
+    "Flyout",
+    "HolyHope",
+    "hyx",
+    "Interact",
+    "LoseControl",
+    "Meeting",
+    "ModernMapMarkers",
+    "ModifiedPowerAuras",
+    "nampowersettings",
+    "NotGrid",
+    "OneBag",
+    "Outfitter",
+    "PallyPower",
+    "perfboostsettings",
+    "pfExtend",
+    "pfQuest",
+    "pfQuest-turtle",
+    "pfUI-CustomMedia",
+    "pfUI-eliteoverlay",
+    "pfUI_ExtendedMerchant",
+    "PizzaWorldBuffs",
+    "PlayerLinkEnhance",
+    "PlayTurtle",
+    "QianKunBag",
+    "QuickHeal",
+    "QuickReply",
+    "RaidCheck",
+    "Rinse",
+    "S_ChatBar",
+    "S_WorldMap",
+    "ShaguScan",
+    "SimpleRaidTargetIcons",
+    "SpecialTalent",
+    "SpiritSenseRec",
+    "StatCompare",
+    "STSMmayor",
+    "SuperCleveRoidMacros",
+    "TankBuddyEnh",
+    "TianYan",
+    "Tmog",
+    "Turtle_General",
+    "Turtle_GroupUI",
+    "TurtleMail",
+    "TurtleSeamlessMap",
+    "TWThreat",
+    "UnitXP_SP3_Addon",
+    "WIM",
+    "xNet",
+    "YGB_OTAlarm"
+  ],
+  "changes": {
+    "Automatonex": [
+      {
+        "path": "Automatonex/Modules/AutoNeed.lua",
+        "before": {
+          "bytes": 30458,
+          "sha256": "613e027af613edac08cb0b561f84d3234dcdd945039bb6615d3b0fd450a6cf2b"
+        },
+        "after": {
+          "bytes": 30855,
+          "sha256": "934762dbaec6fe16e446fac5b3c8d8a8011d463dc20991f66051f39416ba2a86"
+        }
+      },
+      {
+        "path": "Automatonex/Modules/LootBOP.lua",
+        "before": {
+          "bytes": 1711,
+          "sha256": "f2d8da4af4c858feb24766d3a49f88cb4c3e691c6cd222386ef2430c5e8e1631"
+        },
+        "after": {
+          "bytes": 2684,
+          "sha256": "bbfba7f149472e2d89eaa866e3af07ebfdf165b0e703532209d34708fa2333c7"
+        }
+      }
+    ],
+    "BigWigs": [
+      {
+        "path": "BigWigs/BigWigs.toc",
+        "before": {
+          "bytes": 6233,
+          "sha256": "79063899701e6e4e50d92e97d6c6191423e0c333961af176db335819254b3418"
+        },
+        "after": {
+          "bytes": 6231,
+          "sha256": "47f5af8e7554c98b47e826831b8b4886adf9953a2a71557530304e2a0012c642"
+        }
+      },
+      {
+        "path": "BigWigs/Core.lua",
+        "before": {
+          "bytes": 58308,
+          "sha256": "5920914840d65fcaaaa285860b25d779d79c6d8fbfbfb08289c3dbf934835b55"
+        },
+        "after": {
+          "bytes": 58379,
+          "sha256": "9badba093e78fd125ae68e15e8c23d9d5160b1bd462e1370a2368feaf1bef823"
+        }
+      },
+      {
+        "path": "BigWigs/Plugins/Proximity.lua",
+        "before": {
+          "bytes": 23048,
+          "sha256": "d039a83ebb7743e78038eb9969b013f4080a1d1531792d5f009891f76c72c5fd"
+        },
+        "after": {
+          "bytes": 23042,
+          "sha256": "1df3491c357e39e585d84f71903100b1abe42e4bc2ece45e88a664084487e9d7"
+        }
+      },
+      {
+        "path": "BigWigs/Plugins/Sound.lua",
+        "before": {
+          "bytes": 7748,
+          "sha256": "4c9687098c0ff0205c17763feaef3e1e77ff6c94840471929faa4767b82a956d"
+        },
+        "after": {
+          "bytes": 9582,
+          "sha256": "2e4984d245b1721e7598cc300a45bed8e175db0431869aba070db086c7a79a89"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/AQ40/Sentinels.lua",
+        "before": {
+          "bytes": 34648,
+          "sha256": "fe25d28edb8397a146bc6c977884b9f4025c8913d3945d2487abd38f3e7af28a"
+        },
+        "after": {
+          "bytes": 35124,
+          "sha256": "29f3f36d4a98df754b64deb135c141d1b7cf525424e11d474fac78967c53a8c2"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/Karazhan/Anomalus.lua",
+        "before": {
+          "bytes": 39064,
+          "sha256": "a873d1843731b308d335d31d986993e484a12d016e015b591ee42987d88bf23d"
+        },
+        "after": {
+          "bytes": 39577,
+          "sha256": "51cb3275af9e96886a53a4f6fd7cd3e6f3426a73d8ea71cfbf544a917f98df2a"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/MC/BaronGeddon.lua",
+        "before": {
+          "bytes": 12392,
+          "sha256": "91916a7d58420108aa0ae37b0b63caee0158e3f10c15d0223c5421e7c5960339"
+        },
+        "after": {
+          "bytes": 12717,
+          "sha256": "ec11536e6d4fecf3f6cf9c0f9464fd0c71ce772757c738d14904c9972c54bf21"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/MC/Thaurissan.lua",
+        "before": {
+          "bytes": 9978,
+          "sha256": "bb5314490d4aa87a9deceb0ab261bc9a26eee599625c90a4f7da9d2a2c524838"
+        },
+        "after": {
+          "bytes": 9977,
+          "sha256": "e70d3a790778fea2ec1ae8c05044beb6f081e8e55bd5e9badc9030dd3e75f2ed"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/Naxxramas/Loatheb.lua",
+        "before": {
+          "bytes": 19255,
+          "sha256": "1c56f17f2ca38273dc95d631df903fae4b25ba824f459fc2be111a8ece5a5282"
+        },
+        "after": {
+          "bytes": 19881,
+          "sha256": "b94ce3bba4a7da761eeece0803861403833111f698a2da459278a8aac9d2a851"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/Naxxramas/Razuvious.lua",
+        "before": {
+          "bytes": 8866,
+          "sha256": "83d27f9e74dd4f078f046a98838485759269a60706067a2183e01ddb180f51c1"
+        },
+        "after": {
+          "bytes": 9606,
+          "sha256": "1d8f90c3834ffb664441215c439e4dd7e30fe4dcaa9606e258cdba18530e6666"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/Other/Emeriss.lua",
+        "before": {
+          "bytes": 19533,
+          "sha256": "2e5866a2f1c160856bff41d69bdc3dc0b09c8da5cd016ced8378f2bfe1fcccfc"
+        },
+        "after": {
+          "bytes": 19904,
+          "sha256": "59e29f50ade4ba085085286d574695ccafeb5b332ad689ac28c221f427d04de1"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/Other/Lethon.lua",
+        "before": {
+          "bytes": 20441,
+          "sha256": "b9a1b071faf507eab031948d92b30e67106e9503c2e32a0aa4272df144526d5a"
+        },
+        "after": {
+          "bytes": 20813,
+          "sha256": "2d1dca0f9c4ece627ee31ef7e08c33922173991de5fab9a66af4e663c96f511b"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/Other/Taerar.lua",
+        "before": {
+          "bytes": 19951,
+          "sha256": "4c05c51d7d673172e6cba7eba4b89c63eeb920a254d4e73e68df0b911851255e"
+        },
+        "after": {
+          "bytes": 20323,
+          "sha256": "8067a350dddd417dc9cbd70438e4dcd0a1bc13381918829bd1d7a2a24d884b8f"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/Other/Ysondre.lua",
+        "before": {
+          "bytes": 22922,
+          "sha256": "1dcc69a3268d21d644575540152318aba3e103a896a38f32fd673105b5bea489"
+        },
+        "after": {
+          "bytes": 23293,
+          "sha256": "867c624bddc7fe20daab4fb9b4396394d78e9878bc164c21b09a9f6c3d576482"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Karrsh.lua",
+        "before": {
+          "bytes": 6290,
+          "sha256": "e3a2d800812d8ff74f61a80295a7e7887a1a2f2edb3cf75d91bd3b5af3b83314"
+        },
+        "after": {
+          "bytes": 11694,
+          "sha256": "331128145975a4c1a20a1b6d260a0b058afb5838d96b781fbf43333e909a2ce1"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Kronn.lua",
+        "before": {
+          "bytes": 14212,
+          "sha256": "6b0bb71db2ffed4c4d97f063be129462faaee165837a7e06a454158ddb63311a"
+        },
+        "after": {
+          "bytes": 14224,
+          "sha256": "b440b8aed1c3a87614ef2e22bd634691ac6d275e464478c96e83c03e44b96c04"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Loktanag.lua",
+        "before": {
+          "bytes": 6298,
+          "sha256": "d839a9b6adf9cdf597315f32f822a5d92dd10a0febb6ab452e08183eb0de2d32"
+        },
+        "after": {
+          "bytes": 10005,
+          "sha256": "d9806188d40dc872a18a3016cdf189b6ce41d5370ecec5a6b0960c0c3537ae98"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Ormanos.lua",
+        "before": {
+          "bytes": 8296,
+          "sha256": "2b9905ac5f00dd37dec11441e875daf0e819963031d2fbdc5e05261671bc3201"
+        },
+        "after": {
+          "bytes": 9117,
+          "sha256": "6bdadb487cab8b81b783c24da7a885aebc700de814050bb323a9d7304e4db7e8"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Partath.lua",
+        "before": {
+          "bytes": 8351,
+          "sha256": "73be12aae228969fa8a1374a90bc328fdac1c4c8e2e2d3ba0de7c849e069cfd7"
+        },
+        "after": {
+          "bytes": 2442,
+          "sha256": "ddd39403acfeeb7f61a0ea5eacc00c5d5a3596c537d11f3a3d40bd5cf44c7151"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Perotharn.lua",
+        "before": {
+          "bytes": 14851,
+          "sha256": "e1e0dfeedd3e3ef543b84bfc047371dabafbe5d3d854509ea21816c654dd73a1"
+        },
+        "after": {
+          "bytes": 14852,
+          "sha256": "a901836af7d1a2e4686fcee03fd53e9ef763fcaad0d67d9902789f6884352b8b"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Rotgrowl.lua",
+        "before": {
+          "bytes": 12809,
+          "sha256": "30e19c037a1eb9d6041e1e61b64ea0f725585141e48818c88168b4a9d58a92ed"
+        },
+        "after": {
+          "bytes": 13153,
+          "sha256": "e96d9ed5e8c91832f6e562baf1e67c3594e45aedef9cb2346dff668d59f1bdf1"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Selenaxx.lua",
+        "before": {
+          "bytes": 5326,
+          "sha256": "69fc8f08788a472cfaf80688d5b2fed98a4164d3ffee08c5f81bad436d047630"
+        },
+        "after": {
+          "bytes": 8943,
+          "sha256": "60ae86f8eb6b9279f0159857f9a48c103d78b986f987834e8ef92ee87ecdc300"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/TimbermawTrash.lua",
+        "before": {
+          "bytes": 20300,
+          "sha256": "8e5b26a0606e18a98a72cbb97320f433e11d401d5821c2dc003098fe10c41566"
+        },
+        "after": {
+          "bytes": 23017,
+          "sha256": "c285c0dbf45834a97a91bbab5c7e26ce63a0f5943a387ab1eead4d105db69cad"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Trioch.lua",
+        "before": {
+          "bytes": 18377,
+          "sha256": "a1ecb69a777a69b6113a9f78632c9bab3dee08921399d5a91b963506e1445d09"
+        },
+        "after": {
+          "bytes": 18313,
+          "sha256": "84f300c418f12b4c8abcad0e2041bfd2e0ceb9a5cb5ab5e90a870c0832fc3388"
+        }
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Ursol.lua",
+        "before": {
+          "bytes": 6863,
+          "sha256": "b5db7220d6ab64070918a3bb6fa2f83edda93d32908203f8c91a34da1b117884"
+        },
+        "after": {
+          "bytes": 8882,
+          "sha256": "420ed5571dd5cca0c493b0399544410a6dd8b32c706b75089a7db62107e419b6"
+        }
+      },
+      {
+        "path": "BigWigs/Sounds/Voice/changetarget.ogg",
+        "before": null,
+        "after": {
+          "bytes": 12067,
+          "sha256": "6cf5465c4f4c85ff63f7ac32d9803daf2199d8859a7ef69acee8ca9552484c9f"
+        }
+      },
+      {
+        "path": "BigWigs/Sounds/Voice/dispelnow.ogg",
+        "before": null,
+        "after": {
+          "bytes": 12138,
+          "sha256": "50397191003ef3137f1530624d831a80842bc43826302dbb6e64c8837fc16d43"
+        }
+      },
+      {
+        "path": "BigWigs/Sounds/Voice/dpsstop.ogg",
+        "before": null,
+        "after": {
+          "bytes": 12501,
+          "sha256": "c56808742abe0aa45cedfc125a24fa1ab9695067ac6fdcbf2b512604045cbedb"
+        }
+      },
+      {
+        "path": "BigWigs/Sounds/Voice/fearsoon.ogg",
+        "before": null,
+        "after": {
+          "bytes": 10590,
+          "sha256": "734b860c6e631c555ea14fdde6820bf4028885b585ec0f24165e716373e0c31e"
+        }
+      },
+      {
+        "path": "BigWigs/Sounds/Voice/gathershare.ogg",
+        "before": null,
+        "after": {
+          "bytes": 9926,
+          "sha256": "d60870035c68600564e79cdc78b8aa387947dac9cdb334501f735f1d36b3b615"
+        }
+      },
+      {
+        "path": "BigWigs/Sounds/Voice/interruptsoon.ogg",
+        "before": null,
+        "after": {
+          "bytes": 10266,
+          "sha256": "96494783338e18f901bde9733f6f3d97c8f498b6ca6f94b3b8ef766b6043f1d8"
+        }
+      },
+      {
+        "path": "BigWigs/Sounds/Voice/runout.ogg",
+        "before": null,
+        "after": {
+          "bytes": 14658,
+          "sha256": "5f49fe14da8c57f613d9ad1c488f71da232ff947f098ef3a02348e1bf9aa1641"
+        }
+      },
+      {
+        "path": "BigWigs/Sounds/Voice/switchphase.ogg",
+        "before": null,
+        "after": {
+          "bytes": 10378,
+          "sha256": "934435ad181a30553d7fd451ff195b101f42845f2b6c80356a9d3113ee841e84"
+        }
+      },
+      {
+        "path": "BigWigs/Sounds/Voice/tauntboss.ogg",
+        "before": null,
+        "after": {
+          "bytes": 13436,
+          "sha256": "5699f51815f4d7a504f0b83ae903f7c20ced39d9cb56e13290492fe14d7447e7"
+        }
+      }
+    ],
+    "Capslock": [
+      {
+        "path": "Capslock/Capslock.toc",
+        "before": {
+          "bytes": 525,
+          "sha256": "5f79bd24906f5e54f7d1ff501373b52ef422b44cc414ffc6179425f3910d5a14"
+        },
+        "after": {
+          "bytes": 513,
+          "sha256": "d7eaefc6ff913b4eb1e5a9a0dbf6d1d0c10b31d4f12739b6148d614b9665b61a"
+        }
+      }
+    ],
+    "Cat2": [
+      {
+        "path": "Cat2/Cards/Common/AutoCancelCasterBuffs.lua",
+        "before": {
+          "bytes": 884,
+          "sha256": "78d9e96c061c0d2562582689faa28ccc3fec075c147a8e1df0c0039e724ae23f"
+        },
+        "after": {
+          "bytes": 1456,
+          "sha256": "1cbefe22cbd9e673739f8d3ba45644590bd8c922badb6448be612f25a37b7514"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Common/CaptureElementalImmunity.lua",
+        "before": {
+          "bytes": 882,
+          "sha256": "1f54a654ceca3badc133c4ca84714c3c04134f1dd65ac5ceffd42a820e6b1017"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Cards/Common/CustomSpell.lua",
+        "before": null,
+        "after": {
+          "bytes": 1249,
+          "sha256": "f4de5d71caa10bfb3f331df6bd7764c33481deb84f1a0560f796e08ccc22c56a"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Common/FlowTerminate.lua",
+        "before": {
+          "bytes": 616,
+          "sha256": "354d27c4b9854f589804be5c2d31f19be418ef57feb0713b1550bed85daef9d3"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Cards/Common/PauseWhenTargetBanished.lua",
+        "before": {
+          "bytes": 786,
+          "sha256": "1c9813d5b7a6b2ec59508146eb2bdda13fa87e9ff900588ec0791e79c930dcb0"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Cards/Common/ViewMyCasts.lua",
+        "before": {
+          "bytes": 8660,
+          "sha256": "6cd93a21d196dc337d19258b0e2c0bf4a4bfc1a7443e4b578c4df58d6465af39"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Cards/Common/ViewMyCastsDetailed.lua",
+        "before": {
+          "bytes": 7599,
+          "sha256": "38a8d00c24a9a9fed34f026968ef3370fef623f504ce99ad97aa8611576cf259"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Cards/Custom/HunterCannon.lua",
+        "before": {
+          "bytes": 3367,
+          "sha256": "7b2ff163c9e493c9ac060b67743fe1a96e86d5b36a51f9264a1ff8d8c8f4d0f5"
+        },
+        "after": {
+          "bytes": 3373,
+          "sha256": "4ee68c5df6175163c828d3bbb9665863fc6f742439ee957c119a9153864bca67"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Custom/HunterOrbitalMissile.lua",
+        "before": {
+          "bytes": 5649,
+          "sha256": "5b064ac1c5d035efa58b92d1b0b920a6ae2ed05e175771a0ec6a2885fab293d9"
+        },
+        "after": {
+          "bytes": 5655,
+          "sha256": "cdacf9b0cebaa057067fddc32593367e1073c492bd0956bdb32ea1d917c6fbea"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Custom/PaladinAutoBlessing.lua",
+        "before": null,
+        "after": {
+          "bytes": 32879,
+          "sha256": "326315a6864a6bba972b6ae2cd11b7fe7481952f94e604fc735f8a201047f3a0"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/InsectSwarm.lua",
+        "before": {
+          "bytes": 1603,
+          "sha256": "c722e292fe45d1aa2c663b1f0a7733e65450660e1cfa89182959984651f1b8e0"
+        },
+        "after": {
+          "bytes": 2308,
+          "sha256": "aab912d46d5050c65c060e355afaf4202020e884ffac0184692bc9f60407cb83"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/InsectSwarmSolarEclipse.lua",
+        "before": {
+          "bytes": 1181,
+          "sha256": "5c368f94cbc87ee584fb4d90892bdc3a4771408ed74de458ae201f0f38870036"
+        },
+        "after": {
+          "bytes": 1862,
+          "sha256": "33617afcb4b1c11c2b1f750f4c6d33ec8f5d4e95cc374e95b61814f7f07c5add"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/Moonfire.lua",
+        "before": {
+          "bytes": 1600,
+          "sha256": "f7a50251521289ca354031417e79fcc1630e6f6bb90e4ff3c6a7cf72b9b3b9b6"
+        },
+        "after": {
+          "bytes": 2308,
+          "sha256": "7eb454fb03f2564f8c244636d3a095f7575690549268a9565f1414cdf30a700e"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/MoonfireLunarEclipse.lua",
+        "before": {
+          "bytes": 1190,
+          "sha256": "ad5f696f618c07b4973d62b67baf07f50c268f8f2eccc459ced0772e0d801b7e"
+        },
+        "after": {
+          "bytes": 1874,
+          "sha256": "aa41789c3151eeb0d16a4b2daf43ac18f59b769f3beb45dcd05a054f36ed599b"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rake.lua",
+        "before": {
+          "bytes": 2861,
+          "sha256": "af006e2d4cf0c71502676ec52f4d6593a02cb9e32174eba7715267a0807073ea"
+        },
+        "after": {
+          "bytes": 3529,
+          "sha256": "c6df943a12818eee04ac2f431ed71ecd258dbdec089b584fefd318fa80587d88"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip1.lua",
+        "before": {
+          "bytes": 2397,
+          "sha256": "004ef1591c163b48aeb7ef68b7252166683c0494861b82c398159df2ee911bed"
+        },
+        "after": {
+          "bytes": 2887,
+          "sha256": "43b12c12c09ca31cbf4c32f2d9e3f91e3bda1611ac6253a445256d0fa24992ee"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip2.lua",
+        "before": {
+          "bytes": 2397,
+          "sha256": "3e3d83dcd9de5068cd21ab6f1b376ee99840f7c6d3aec11887662f6ece29984a"
+        },
+        "after": {
+          "bytes": 2887,
+          "sha256": "d48b4325d9c1e8190286d27c153e015df4e58c62a9b07c1133ba261769470884"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip3.lua",
+        "before": {
+          "bytes": 2397,
+          "sha256": "1b854175adda42571f79b99d7727cde483936ebe25d42cdf16e4e4f8816a3382"
+        },
+        "after": {
+          "bytes": 2887,
+          "sha256": "a955d72db545baf575ebf6b85590980cfcce1642c59b5de9b4d0e33448180d9f"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip4.lua",
+        "before": {
+          "bytes": 2397,
+          "sha256": "968c822ae2a195ffd6139d7c85d0ce2343e620a4a86f7e947378421b49f7d786"
+        },
+        "after": {
+          "bytes": 2887,
+          "sha256": "b9f58359182d76fdd361e1ab2bbb35b36e32a0fed576e1362c0420aaf2cc0f72"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip5.lua",
+        "before": {
+          "bytes": 2398,
+          "sha256": "eb7d0b5b8932635af5bb97775f9a4d97c39a61fbbd6bb44587d8634e5e3fe7d1"
+        },
+        "after": {
+          "bytes": 2888,
+          "sha256": "c148bbcf85bb6fb4b6743a46dfb6c06078553ea350270824df40d6eb23d2ef4d"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip_lowHP.lua",
+        "before": {
+          "bytes": 1732,
+          "sha256": "601e8a92308fe824ec358d972be83251dcff90f8261c782ecb934adfb85d8263"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Cards/Hunter/FeignDeathBossWatching.lua",
+        "before": {
+          "bytes": 1768,
+          "sha256": "5954f48728df9a0d81a9e33d456a0ac1ea4f8b462c70017a63e8636824216785"
+        },
+        "after": {
+          "bytes": 1771,
+          "sha256": "ff7d67ed480f1114c81dbfabc62a15fc5c60061f863c727555756811f6cd324d"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Hunter/SerpentSting.lua",
+        "before": {
+          "bytes": 1895,
+          "sha256": "218ee7011d36e34714f8bfbcd516d17411bf506ea5b67625c40b5a08b5b37c24"
+        },
+        "after": {
+          "bytes": 2560,
+          "sha256": "5513007400aafe5c1716dc403a952e00eeb188e783036910799d5e3bf2ef15ab"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Hunter/SerpentStingToxicAmmo.lua",
+        "before": {
+          "bytes": 2008,
+          "sha256": "b5ba53de1d3d6dcbf6b26146b8f88476e29aa8026effed8ab21b4c4a37659bc7"
+        },
+        "after": {
+          "bytes": 2649,
+          "sha256": "569ae0201a3dc879ea6de542f24e17ddbaeb24524d40f04d87878ddfb035eb71"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Items/CustomCastConsumableSelf.lua",
+        "before": {
+          "bytes": 1735,
+          "sha256": "3fa99161b41f69590e6bc2b0111cbeb24ee823d10b91c2ac4f4ab9710fb9e6d7"
+        },
+        "after": {
+          "bytes": 2219,
+          "sha256": "d9daf830d1dbc64a265a573e88937e52233f7d0915fff4ee2f1db002101c9784"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Items/CustomUseItem.lua",
+        "before": null,
+        "after": {
+          "bytes": 1737,
+          "sha256": "a346aaa2b037422454893d2a8f9374b343bb27dcf2c679cbf1263a191fbcc31e"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Items/DenseDynamiteSelf.lua",
+        "before": {
+          "bytes": 1297,
+          "sha256": "b4eb615464302fb604b9d9ae5268eb495aaceaedfd35d1c7b440b27aa532dc6d"
+        },
+        "after": {
+          "bytes": 1815,
+          "sha256": "4765c23bddb7a19e79e2a19a98b6d2cb6b6e84b0918dc568134e35786d65419e"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Items/ElixirOfDemonslayingBoss.lua",
+        "before": null,
+        "after": {
+          "bytes": 1105,
+          "sha256": "cfa3c98265de9bcb8838f23010c99a290017bfc7370ff040bf445eb77873f118"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Items/OilOfImmolation.lua",
+        "before": null,
+        "after": {
+          "bytes": 1344,
+          "sha256": "15914f484cf3c52e439169673a56f8ee78bf8049efa47374b59a9fc846160519"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Items/StratholmeHolyWaterSelf.lua",
+        "before": {
+          "bytes": 1431,
+          "sha256": "e604d100d403c021d95f6a0f2ddebfeb68b8a48f7141285aaf9e94da571e7906"
+        },
+        "after": {
+          "bytes": 1949,
+          "sha256": "61b268655f3d85a3db250a212afa69c0c04b84931c53b83b5561f54d4d37884d"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpNearbyEnemyCount.lua",
+        "before": null,
+        "after": {
+          "bytes": 1954,
+          "sha256": "e24ecfc6bb9878f347799c28bf99b344d712e6fe66ea372217093de009f646c3"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpPowerAbove.lua",
+        "before": {
+          "bytes": 1896,
+          "sha256": "5c341543aaedbe4ec9197834fc1ce760092aea9454fbd05bb7883e10c4392980"
+        },
+        "after": {
+          "bytes": 1896,
+          "sha256": "4c3a261d3811dd46c8fafc4f1f682aa04f7a8b8573faf17dfa9403bcc0d6d313"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpPowerBelow.lua",
+        "before": {
+          "bytes": 1896,
+          "sha256": "2e18a8a32f0473c70dd3cd19402d72174ce11becfc6b38fd1c31502c5b7c1fea"
+        },
+        "after": {
+          "bytes": 1896,
+          "sha256": "c81f03d2df4fbb8a59476ab66f0cef02e3ff5c8a1a698dbf343f5c179ce65654"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpSelfBuff.lua",
+        "before": null,
+        "after": {
+          "bytes": 1601,
+          "sha256": "354721d3fe06d493461ae0275429a9ae88a7dd79c1c6febd613409a16711c41d"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpSelfNoBuff.lua",
+        "before": null,
+        "after": {
+          "bytes": 1617,
+          "sha256": "70a240890f702317cb1f87ce891c9669aff03f50b143f1228b1fa697b553cf2f"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetBehind.lua",
+        "before": null,
+        "after": {
+          "bytes": 1524,
+          "sha256": "0360fb47e10eaca22780743a3c82ed469652fc2778d5425db586ea86d4f9872c"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetBuff.lua",
+        "before": null,
+        "after": {
+          "bytes": 1654,
+          "sha256": "1d03f4516a2da17846a934eb71e9e172fb6c4f637c29e46cc6d13d5a5059aecd"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetHealthPercentBelow.lua",
+        "before": null,
+        "after": {
+          "bytes": 1931,
+          "sha256": "daa0749c5b62705d58699e1f4471e6415dc9769488454776cf01e1b9a01cdcea"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetInFront.lua",
+        "before": null,
+        "after": {
+          "bytes": 1527,
+          "sha256": "a111571b5bb42ddadb78dec92e0f6f0986f9f1887034a4c761824e6c3e335ec7"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetNoBuff.lua",
+        "before": null,
+        "after": {
+          "bytes": 1670,
+          "sha256": "b68782e70b7a4618e01664f27777b909e219993be24ea5f22b74846ad128ce88"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Mage/ArcanePowerFuse.lua",
+        "before": {
+          "bytes": 1320,
+          "sha256": "fb2fcafd9f9a53c9f5fe522e7134dd95e109cc5c066ab545739b08736b459801"
+        },
+        "after": {
+          "bytes": 1319,
+          "sha256": "bff6c269ad506a17b8caa397a0b88e0bbdc30129ec9ae16a4373b2db9985d919"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Priest/HolyFire.lua",
+        "before": {
+          "bytes": 1786,
+          "sha256": "babfb40892360dfd3448599616c3ffca2f981a007aa8887f616dc3c968437a2e"
+        },
+        "after": {
+          "bytes": 2439,
+          "sha256": "dcca34a88e144a350e19b17f19c33babcc6e82b37de7aec19a2cced28deefc68"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Priest/ShadowWordPain.lua",
+        "before": {
+          "bytes": 1699,
+          "sha256": "fe0685954210c3e8e56a1342a9dbf7c5c0d495eade2a788e48c2cc5c0aa78b31"
+        },
+        "after": {
+          "bytes": 2392,
+          "sha256": "d3c6565b6a65a16ef76de78e17a32a99d235e8f4dbc879f38a27f308645a5850"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Priest/ShadowWordPainMultiDot.lua",
+        "before": {
+          "bytes": 2440,
+          "sha256": "23873a7e40ada567b5bf58e5f1b2a8b4112d56699ff1c64977598072ee299fd0"
+        },
+        "after": {
+          "bytes": 3111,
+          "sha256": "b55923abf4295a30ae17191cc33f875dfba4dacdfc0933ddba97c5edfa56218d"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture1.lua",
+        "before": {
+          "bytes": 1571,
+          "sha256": "03729a02de96b4c771df1cdd93b6ee0e082036d3dae00fdca23b937ba7616474"
+        },
+        "after": {
+          "bytes": 2211,
+          "sha256": "125cf2f0cf445d1eaf31a055be745925f3aa674d1bf5a5982af9bbf3fe1e37d2"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture2.lua",
+        "before": {
+          "bytes": 1568,
+          "sha256": "a345b697d4e51dc5386a037f469ccc21bcc822f044aaa141f113a0da33d16212"
+        },
+        "after": {
+          "bytes": 2208,
+          "sha256": "07f20a1f3de1766245b4a015e32a277da67f68b97d52f51c1718674acfee9345"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture3.lua",
+        "before": {
+          "bytes": 1535,
+          "sha256": "d2fe866fca977414e33c98cde85e8db92737f74bd54878b8c091c63d817c1dd3"
+        },
+        "after": {
+          "bytes": 2175,
+          "sha256": "f24ba6aadb00b6dd63c724411fafe5f3cd7b180eef734fc3c3d94ee82de67b66"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture4.lua",
+        "before": {
+          "bytes": 1571,
+          "sha256": "d56ed650b5d768143eda6a5b92bf5d0d61e748af988d490dae70cc3229d6c973"
+        },
+        "after": {
+          "bytes": 2211,
+          "sha256": "aaab4735e380899932de97fd3bd47d416736627c996df740aa34e1fd992ad762"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture5.lua",
+        "before": {
+          "bytes": 1571,
+          "sha256": "5495c1622bc4960060d511dbfb38f36d4b2c136d31c96a424c058ba7c8dee418"
+        },
+        "after": {
+          "bytes": 2211,
+          "sha256": "4c6f6a7066881a9982c64c7c6b15dc8e88328836bd5072e877373471876ea023"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody1.lua",
+        "before": {
+          "bytes": 1655,
+          "sha256": "adfb169321258b244743b99602268859bf764501dc4f6682947b521f5ea7e9bd"
+        },
+        "after": {
+          "bytes": 2301,
+          "sha256": "eba48eea06505b1b4e3a7dc3af77fde07698c7292fab23334a6bd8d5cde0f96e"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody2.lua",
+        "before": {
+          "bytes": 1655,
+          "sha256": "46416bb7ce652c9b5e6fc1c9ff94744c2f83519a7d90e719b82ac49063604794"
+        },
+        "after": {
+          "bytes": 2301,
+          "sha256": "0955432d3aa57c022795c719622fe2a41929911c24689f964a03f6073945fc3d"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody3.lua",
+        "before": {
+          "bytes": 1655,
+          "sha256": "2755505e8e375ce5e6723f12c2dcbcbcba85c34145cdc3324645d5f29d6e9f4c"
+        },
+        "after": {
+          "bytes": 2301,
+          "sha256": "26847f4b1e3a53f5f75274a20fd444ca65651d4c5fdfcc4e8f89605e7312ff3a"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody4.lua",
+        "before": {
+          "bytes": 1655,
+          "sha256": "0e8aef9978a300092241b63e674caf420ca7228b870a51f62d8277f736b902d1"
+        },
+        "after": {
+          "bytes": 2301,
+          "sha256": "a9c57c63e56f6eb0e3b070f45ddec288940fbbfbbb5ff68004485a8e04d8ad2f"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody5.lua",
+        "before": {
+          "bytes": 1655,
+          "sha256": "c8071229c2cc47c3ff2bb7b2930a8df87f3b3566ff0490e4ec6fe66dc495f3aa"
+        },
+        "after": {
+          "bytes": 2301,
+          "sha256": "6f236aa7b9286ae6b1d3c9e01b3e34e85ae5e87dc07ecbddc50896d8a2d1ff3f"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Shaman/FlameShock.lua",
+        "before": {
+          "bytes": 1990,
+          "sha256": "0995d2d361fb63409be482e946b544830fd66cd8ead032734f0e023757228575"
+        },
+        "after": {
+          "bytes": 2701,
+          "sha256": "7f0254db8a2d12fbd4fa21c41d4f2a3e8a41d421138da7071d1d4be76f782754"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Shaman/FlameShockDot.lua",
+        "before": {
+          "bytes": 2164,
+          "sha256": "94c1eb72cc608cac37d875b06a279eb642bd2ef624383b672b7ae3d3b6e87914"
+        },
+        "after": {
+          "bytes": 2836,
+          "sha256": "ffd7f85d7c7edef73c078233dbdd4ec2ef2f12aa2fdd26919b91a03829aac2e4"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Shaman/FlameShockLavaFollowup.lua",
+        "before": {
+          "bytes": 2525,
+          "sha256": "a5116cfa0e0b26af6f3c75c47eea89fa78bd15797036b38a3f7431806ffa5440"
+        },
+        "after": {
+          "bytes": 3204,
+          "sha256": "8bdf8b8ea37f8f14f57f9d0a39bfc179bbe01cd4930c2e6033b455e21f2792a8"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Shaman/FlameShockLavaMaximize.lua",
+        "before": {
+          "bytes": 2353,
+          "sha256": "5235cb9b55b50d86c29b7b04447fd62e0ac4cc278b1d5c6618ebfb1d342bfdee"
+        },
+        "after": {
+          "bytes": 3028,
+          "sha256": "efdfe21ef82de465f227f6d4be5bdf9180ea5e292fdbb21e14a9c48c923d8978"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/Corruption.lua",
+        "before": {
+          "bytes": 2344,
+          "sha256": "9c2abf5eb27b53e85548ffa8fb99853872f9ef9118bbd2c7282892cddd5f078a"
+        },
+        "after": {
+          "bytes": 3037,
+          "sha256": "a56aea942c7d70c65a488cc418a184ebafa2a802fe2791bd8569e0fdb883cf78"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CorruptionMultiDot.lua",
+        "before": {
+          "bytes": 2235,
+          "sha256": "4bdf3585601bf7d84ce953d82adee88e2af3dd9cfc2c4a8d128b486e84b7857e"
+        },
+        "after": {
+          "bytes": 2918,
+          "sha256": "9022fa12b31d59918a9ec8a1dcf43413274be53bb7a3a7b557a274d11657121d"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfAgony.lua",
+        "before": {
+          "bytes": 1823,
+          "sha256": "992de4d9d96dfc92c5b63bba847ea0e64b9b68e4e5901893c808e89f9d898987"
+        },
+        "after": {
+          "bytes": 2525,
+          "sha256": "1750d9eacbce2ba328e177748d20a1fbfd98691e4f100814b24c9284485df222"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfAgonyMultiDot.lua",
+        "before": {
+          "bytes": 2220,
+          "sha256": "5f267e34a3069a4e0fb3ccd1f023ad64d6f96ed0bf57ac15a13ff59526dd71f2"
+        },
+        "after": {
+          "bytes": 2897,
+          "sha256": "79ab93254a581882742151e681627a84d644b81d9f02a99388a9ad4ede090fe2"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfDoom.lua",
+        "before": {
+          "bytes": 1755,
+          "sha256": "eb42bf95e6db2c6c7da28c8884fa699df349572b5e64868c79924d1ca7b6a024"
+        },
+        "after": {
+          "bytes": 2448,
+          "sha256": "dc2ede1812f192891f21270835ec0ce5aa11bde997ccbcaf85b89df607e16f4f"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfRecklessnessHex.lua",
+        "before": {
+          "bytes": 2052,
+          "sha256": "77c50879aa5c744af5adb7a5d3e882ef8b1bd09281c1245c598e293cf937c452"
+        },
+        "after": {
+          "bytes": 2742,
+          "sha256": "b20ee8d1371b37af4ed67bcecd5c650c8f0aec6035514824b4bffb2c41e233b8"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfRecklessnessHexMultiDot.lua",
+        "before": {
+          "bytes": 2139,
+          "sha256": "e08fc6ff0617982f3a0ac3efb154859a5d43162df114f682e385ec0204aab0e4"
+        },
+        "after": {
+          "bytes": 2816,
+          "sha256": "24bfbd75e7ab2f327ef3c3bcf7fb4a2cedd3af5fed6ac72779d2f3ef83f2ef8f"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfShadowHex.lua",
+        "before": {
+          "bytes": 2027,
+          "sha256": "c4f214074e34a4aaebcfbea3dd2f0b9c14ff2bf14dc26f8f53076631fd3bedf0"
+        },
+        "after": {
+          "bytes": 2717,
+          "sha256": "0cb43430f43e76bdfd113d09ee259bd4fecd8c54b4458640ef6cf8be2e89b77d"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfShadowHexMultiDot.lua",
+        "before": {
+          "bytes": 2135,
+          "sha256": "21d45ca5e5a8200f44af208678f1d7de2524023c9cdae53307d834542767575d"
+        },
+        "after": {
+          "bytes": 2812,
+          "sha256": "d4b877257620829b1d7f448535b2cb2216ed274d244513ee1af786a70e0a1139"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfTheElementsHex.lua",
+        "before": {
+          "bytes": 2028,
+          "sha256": "5d0d1945771f88926359ea1873545e8ad770926e2df31242d1a0bc2b53c5dde1"
+        },
+        "after": {
+          "bytes": 2718,
+          "sha256": "1cd413c1d6a8d7dbf38706813563a3c0762add9fa6e9aac99eb5f181ab39b620"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfTheElementsHexMultiDot.lua",
+        "before": {
+          "bytes": 2135,
+          "sha256": "6c60a07b6f36bf19b8bbbbf34f4a4898d73d5a82f52e61e228a131468ac23d0a"
+        },
+        "after": {
+          "bytes": 2812,
+          "sha256": "45c24aaf7b56c055733f4f52b627b30110bc56c61f287a2813bc641486c0973a"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/Immolate.lua",
+        "before": {
+          "bytes": 1878,
+          "sha256": "306322170656c0caeb306343acb3f491b8e057de25a91bdf06c0bf5a090f683b"
+        },
+        "after": {
+          "bytes": 2537,
+          "sha256": "4e76e4cb7fcdfdf9e91bb7c747eadd9784992e00d800ee44cf808342bd3d81d3"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/ImmolateAutoTiming.lua",
+        "before": {
+          "bytes": 1584,
+          "sha256": "4093b3f681ad899efe55da20e0dc982979b6a75130eaeb1bccefb2f800bca262"
+        },
+        "after": {
+          "bytes": 2268,
+          "sha256": "f6506efa3014c67ddae96d1f4e6e5eeea36e798c4628d6e4337439052170796c"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/ImmolateMultiDot.lua",
+        "before": {
+          "bytes": 2152,
+          "sha256": "fe873ed28654de1436df8048d542c0df05ef3a09cc9383b409f6361fbdcc23fd"
+        },
+        "after": {
+          "bytes": 2841,
+          "sha256": "252a9d4ad55845bb9e1d00ab1f53fe8d60cb36b1d482cc0fd742880eed406ad5"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/MultiDotOnlyCombatEnemies.lua",
+        "before": {
+          "bytes": 1020,
+          "sha256": "07c66e2abbbc42a902d01fbb53bcd594e7c7e8b023c29eb96168a8fa27ccd368"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Cards/Warlock/ShadowWard.lua",
+        "before": null,
+        "after": {
+          "bytes": 802,
+          "sha256": "85fe1450ae0d21b0fe95d19de4b41cb46a5eed3696edca2a811c47c71a861d4c"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/ShadowburnBoss.lua",
+        "before": null,
+        "after": {
+          "bytes": 2528,
+          "sha256": "59176f05bfb3395d9697e44422e700ab352e8e1942f43dd8940a7f45abafbe9a"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/SiphonLife.lua",
+        "before": {
+          "bytes": 2133,
+          "sha256": "e63de6acca10c73f81b0088eaacd14867ebe7105dc285140e6ad829b303b1e8d"
+        },
+        "after": {
+          "bytes": 2826,
+          "sha256": "5275ed465a5cd947c11567d6fa58b478d2851b822636eb77273c0a648e76edf0"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warlock/SiphonLifeMultiDot.lua",
+        "before": {
+          "bytes": 2378,
+          "sha256": "329fb26dfd77a994da349bd72485dbadea6f1238868dcd9ca2e3dac4278771ce"
+        },
+        "after": {
+          "bytes": 3055,
+          "sha256": "f249b0968f2840368d50d6afa1f90180bac1b7b8df4e77613f8f5d1e76a9a7ce"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/BattleStance.lua",
+        "before": {
+          "bytes": 1077,
+          "sha256": "64ac57cfc038cd8da1b21671ac8ff604415e6bbf6526eb185f5ac716979f73e5"
+        },
+        "after": {
+          "bytes": 1405,
+          "sha256": "a23397762fdd761cada55f5e29e2892128276522910c3e321f4f5e6d17b3808f"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/BerserkerStance.lua",
+        "before": {
+          "bytes": 1069,
+          "sha256": "51ff25f6a4f837eb630ede7b92bc9ac871d88bf8cf240eca4ec3098070ee925e"
+        },
+        "after": {
+          "bytes": 1397,
+          "sha256": "ac8e27497d6dd55486441d83981a8ae3d9b342d266f0fbd099a1493e28ce5192"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Bloodrage.lua",
+        "before": {
+          "bytes": 1501,
+          "sha256": "dd4f8bc4ef2d9d3e3d2e19c4fedcf08bb361513543737d4ae25b8086528a6f7c"
+        },
+        "after": {
+          "bytes": 1501,
+          "sha256": "a5386d47646af2e0472bf4552ef7de183510378212b98ac255e7803d976eaf5a"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Bloodthirst.lua",
+        "before": {
+          "bytes": 1396,
+          "sha256": "b28956c03309849ef7c71720e1640e7055bc5c39bbe264f066eeada3a9e60400"
+        },
+        "after": {
+          "bytes": 1396,
+          "sha256": "fb9746439285d2aebb0ef63d7a486e3917165a9048cea8f9b55bbff39ce88a7d"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/ChargeAutoStance.lua",
+        "before": {
+          "bytes": 2117,
+          "sha256": "70df1e5439d1cdf06d344370d7c8c86853938d34c367ab503fcccf0ef9310c7f"
+        },
+        "after": {
+          "bytes": 2117,
+          "sha256": "6ba9a6956dd7e36ee8c73f5b1975500d7961378f07b09b324add2b5c91fe5fde"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Cleave.lua",
+        "before": {
+          "bytes": 1484,
+          "sha256": "044b437975b1d6927eff29d9c4e68da196b8b61920933b6a7fd4684a4ea2527f"
+        },
+        "after": {
+          "bytes": 1484,
+          "sha256": "4509adf27175a89791ea921da0a2c38f717c12ea4b01d659cde3011b78a27589"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/DefensiveStanceBossWatching.lua",
+        "before": null,
+        "after": {
+          "bytes": 1994,
+          "sha256": "85bea61dc55bfaa86b3b48b9a09ef1d9ce0626c7fcaa4aa18d9c3b3edd76cd76"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Execute.lua",
+        "before": {
+          "bytes": 1393,
+          "sha256": "342ee55040909a5becc2dfc54eb2b379d29ec8a3a7683c4f8353b9bc56a34df2"
+        },
+        "after": {
+          "bytes": 1839,
+          "sha256": "a7d6ee7de52ac0ede177b825178dbca97584d61e72b60a3ad6453708d453b1d1"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/ExecuteHighRage.lua",
+        "before": {
+          "bytes": 1865,
+          "sha256": "ece8aa19fd33c33d8117726e0f24b6e2c76c935e6bc966f2c6876a4badd3a0f5"
+        },
+        "after": {
+          "bytes": 1865,
+          "sha256": "0991a71f2afb19e0dd38f47e3d1cdc0b6222ae1d88add987dc1dcc33b8746d5b"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/HamstringFlurry.lua",
+        "before": {
+          "bytes": 1496,
+          "sha256": "4e6ce92792fd78244189d246a3e2645341771abd19c675e2ec216072757b590e"
+        },
+        "after": {
+          "bytes": 1496,
+          "sha256": "61119f0b56a5343650ae6db6e87b1d84f3a2f4e067fa2d0c8b0f8f07dc257ded"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/HeroicStrike.lua",
+        "before": {
+          "bytes": 1281,
+          "sha256": "5b6077e246697ec860fb9872973a1e632498797497961712a05707d392df0a6e"
+        },
+        "after": {
+          "bytes": 1281,
+          "sha256": "6d2e377034ea1cd0743f0b764c7cdcff56ae070176cd9a8867d9ad5373157b7c"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/HeroicStrikeAlt.lua",
+        "before": {
+          "bytes": 1762,
+          "sha256": "65b56407f5ff5fc2255832dddc15a5983e4a0361b94f491d4bf2f5223a0e12f7"
+        },
+        "after": {
+          "bytes": 1762,
+          "sha256": "dfcfe26b5b853a5ba8a618c0d4495a83f7414c175f5e4177c6edfcf6cba1d2c3"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/InterceptAutoStance.lua",
+        "before": {
+          "bytes": 2030,
+          "sha256": "b2ca66c6c4945a9af598a5d2d9dedda2534c71e393dcbb8438ac8d95d04289c8"
+        },
+        "after": {
+          "bytes": 2030,
+          "sha256": "8a7867a145c17d5e38e8b3e03e37c71d74fc43491ac03fd1ee4eeb278e33e3db"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/InterveneAutoStance.lua",
+        "before": {
+          "bytes": 2047,
+          "sha256": "ed1098fb60c0ce96cafce80bcba0db8786d48cf7cf831766da47cb60841caee3"
+        },
+        "after": {
+          "bytes": 2047,
+          "sha256": "c98c5b389984126edf91e10c1e8a7d3e5e0c75d16cc0f3f06b9e5dcc736e2d75"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/MortalStrike.lua",
+        "before": {
+          "bytes": 1444,
+          "sha256": "9dbcc994c13b74b29342fba69a1a3c5fe919139e94d3d9aa5fabe9a5374895fd"
+        },
+        "after": {
+          "bytes": 1444,
+          "sha256": "3b4268172159e1368607107cc53fe5a0a8517016f43f0935365220b4129a6a05"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Overpower.lua",
+        "before": {
+          "bytes": 1904,
+          "sha256": "7589015a79405f98d18b7cf982a0202ffa57a60f6b324bf3beacc9c73ddeb601"
+        },
+        "after": {
+          "bytes": 1904,
+          "sha256": "ab553b09ddc6ec4b51ef6afe57dd6c7138622121024259fe7c371dba3946f4ac"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/OverpowerAfterMainSkill.lua",
+        "before": {
+          "bytes": 3137,
+          "sha256": "53228c0ced4cf0a492e5ff5a981b7e2ea14feedea2250ad9ad4f2340d2418f2d"
+        },
+        "after": {
+          "bytes": 3137,
+          "sha256": "fdccbffcaf621b72c4a84fa04e8d58e6cdb4061d85f04ee89303089bddc6fdbf"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/OverpowerWithoutFlurry.lua",
+        "before": null,
+        "after": {
+          "bytes": 2182,
+          "sha256": "7d65e04c1d34a077600472ce6cb0a5922098e79d67fae747b7abd383c90a890f"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/PummelFlurry.lua",
+        "before": {
+          "bytes": 1693,
+          "sha256": "3f57a26897ab6e6134ac2498f21ae2e19b537c02de137e15721be8d17408a65e"
+        },
+        "after": {
+          "bytes": 1693,
+          "sha256": "0b6d0261cbddac4a82972936e1f27f9728a8c88cabf50440eb0e6355cb8b2a07"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Rend.lua",
+        "before": {
+          "bytes": 903,
+          "sha256": "a330c520e1c85910478eae78890c4004b718fce0364fe6f6d01b8f344c0ecb6d"
+        },
+        "after": {
+          "bytes": 1584,
+          "sha256": "6b1f083e37104a49da03e4385655526039ba9fbcd707f7d58b885b159a973e23"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Slam.lua",
+        "before": {
+          "bytes": 1811,
+          "sha256": "c5e735e255795479042929fed035b58a9a82d9f1636df877cbdf6573c67021d6"
+        },
+        "after": {
+          "bytes": 1811,
+          "sha256": "58a00ecb923a325e97d156c9d35cd71acac4a212c78aeabddcd5637e9b385802"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SlamAfterMainSkills.lua",
+        "before": {
+          "bytes": 2950,
+          "sha256": "1b3c529ccc56bc82a02e3cc5fe949b30c0ae6c431e0b3207fddc2846c75f2a2f"
+        },
+        "after": {
+          "bytes": 2950,
+          "sha256": "da48cdf80f7d0a055f9900c3cbffdd3e835dc1562804033a1dc755db943fc5e2"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SlamFlurry.lua",
+        "before": {
+          "bytes": 2051,
+          "sha256": "a31ea513bf53eb457ebb860ebf80ce6e5efe34b5c69f0eaad4a85a84a971c910"
+        },
+        "after": {
+          "bytes": 2051,
+          "sha256": "29bac8b82c46efb9c4514b6c1418e4e1ac52d2227467f368d2aacf64dd948986"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SlamFlurryAfterMainSkills.lua",
+        "before": {
+          "bytes": 3727,
+          "sha256": "2fe40fc9d501353e971329a6c6d236078d841b528ba711a98c18bbbe380a1d97"
+        },
+        "after": {
+          "bytes": 3727,
+          "sha256": "59d320c4c86b50e3da140eb695c8a44a4c8610213834eaf1ecd4564fbe5c946c"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SlamWithoutFlurry.lua",
+        "before": {
+          "bytes": 1963,
+          "sha256": "3e10b62afe0791a288a32d636e75f9dd23646c7a8972559fa9b82bea6b0342d4"
+        },
+        "after": {
+          "bytes": 1963,
+          "sha256": "8105990a869059e2978a05a8cc8204541f223f7e91318383bc7e46af9027b778"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SpecialStrike.lua",
+        "before": {
+          "bytes": 1432,
+          "sha256": "df4e088a91253447678162d91c78ae02127be63d7561eb7c082c88eeb446ba76"
+        },
+        "after": {
+          "bytes": 1432,
+          "sha256": "a012b6f2650aceb07dd6f3cbc7909512c31f86584a4d8c5852c07adf043b8e69"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmor.lua",
+        "before": {
+          "bytes": 2071,
+          "sha256": "224f608157d2d5a3cd584a836d3bafafb97f7cfccc2f8e3d0380107314e0fd6e"
+        },
+        "after": {
+          "bytes": 2071,
+          "sha256": "d197272b59a606f2edf96ed77dfb9963f26349106e42f3bec7732d9304be26d5"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmorBoss.lua",
+        "before": {
+          "bytes": 2191,
+          "sha256": "faadadd501fd49652526ec40324b9d72f388d3082fc49766eae545d8141c7bf6"
+        },
+        "after": {
+          "bytes": 2191,
+          "sha256": "889f8f99df63b4b82b14ae2e176697fc582bc3b222ef70bd85859de602aa22dc"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmorFive.lua",
+        "before": {
+          "bytes": 2641,
+          "sha256": "0992a089ef4b429875ce5e5bdb8f13dc955d5b3a060e7da823cda46cf357f2c4"
+        },
+        "after": {
+          "bytes": 2641,
+          "sha256": "874d0cd8d99b9893c51bd76c6006cab733775ba04b8bd2aa59c19719a0e85fd8"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmorFiveBoss.lua",
+        "before": {
+          "bytes": 2673,
+          "sha256": "3d22fa83215ba77955d66de9324107c5d417eedecb41855a3fceff186dca4a3a"
+        },
+        "after": {
+          "bytes": 2673,
+          "sha256": "1f75585741cde195eaed6c852330e873e3e804107f12c206a88b5e7c79ead354"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmorOne.lua",
+        "before": {
+          "bytes": 2140,
+          "sha256": "05c384e79d3475caa549be9dbe52caf9bc7a510a8963d82351974fb39c83fbad"
+        },
+        "after": {
+          "bytes": 2140,
+          "sha256": "73ace52febca8a8dc7d40a9384d74691123699aa292b13a2080e60c9ebf0bba3"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/ThunderClapOffensive.lua",
+        "before": {
+          "bytes": 2654,
+          "sha256": "05ba593408e0020bb34ab4d476329fcf15e3225ba3962ed1699956a12ac34f3a"
+        },
+        "after": {
+          "bytes": 2654,
+          "sha256": "17edba6a59e1530dbbfd3aee7206412d5c7dea63449afd5e147feaa79f361874"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Whirlwind.lua",
+        "before": {
+          "bytes": 2704,
+          "sha256": "8054a84135ea23ff56f5e06e45acec9f681e4ccb2bf99c2fc2eabc7f6cb6a9fe"
+        },
+        "after": {
+          "bytes": 2704,
+          "sha256": "b9ba808f2e667239a625c5f2501adf8e72c45a9d9b7cccef8c321edd23320e56"
+        }
+      },
+      {
+        "path": "Cat2/Cards/Warrior/WhirlwindGroup.lua",
+        "before": {
+          "bytes": 2780,
+          "sha256": "d346d94777b931a2f1d64360f16c3029ae4e6c929c1a7c522fdb7e70d2ba69e5"
+        },
+        "after": {
+          "bytes": 2780,
+          "sha256": "f3de31949b91af1c18901f3c541216c2922070f90fd6dc65f252ff7307050411"
+        }
+      },
+      {
+        "path": "Cat2/Cat2.lua",
+        "before": {
+          "bytes": 3678,
+          "sha256": "cee6b92ff29f7b38ba3d8cd0dc12457ae1f5f804a01022c5a00c7d45fb223aee"
+        },
+        "after": {
+          "bytes": 3678,
+          "sha256": "1d811e791fcd03efb52f1a7e3c5f30f08d715ed80366d60956bfb3eb21ed257d"
+        }
+      },
+      {
+        "path": "Cat2/Cat2.toc",
+        "before": {
+          "bytes": 23924,
+          "sha256": "89756098f39b749a1fd0ef4b84512b7c43f7cf6261ececa6818ab9f177170584"
+        },
+        "after": {
+          "bytes": 24588,
+          "sha256": "3c78bef1954c8bbef0ca5bc6bd25a3f234adbc1bd2d31a8637adc9a5bfaa3c5a"
+        }
+      },
+      {
+        "path": "Cat2/Core/Buff.lua",
+        "before": {
+          "bytes": 6999,
+          "sha256": "96f5552a34d1847d2bfdd400e7a443febbca239da62ab5c2f457605a96c07257"
+        },
+        "after": {
+          "bytes": 7759,
+          "sha256": "02e3c91edc556c237be2e36801621146eedf0a24e935a09097413884aed1d40d"
+        }
+      },
+      {
+        "path": "Cat2/Core/CatImmuneLib.lua",
+        "before": {
+          "bytes": 42169,
+          "sha256": "8fc731d5631c79e6af3c649c77979d273ddf78d086711504d0018d5b9a33462a"
+        },
+        "after": {
+          "bytes": 42219,
+          "sha256": "ef9ee1447cbc15d480680f500fdfbdd48c45c983af3c44b57648bfdf8161f8ff"
+        }
+      },
+      {
+        "path": "Cat2/Core/ChannelDebug.lua",
+        "before": null,
+        "after": {
+          "bytes": 4825,
+          "sha256": "9ce3aa90d1f2c09f50cd68418643b323d2cf10f47e68076f53270382e32420b5"
+        }
+      },
+      {
+        "path": "Cat2/Core/Persistence.lua",
+        "before": {
+          "bytes": 20245,
+          "sha256": "91b6e2d5b977fd21e3baaa271e64469a3e3c22804e2cbc72293e3220271cf4f4"
+        },
+        "after": {
+          "bytes": 20368,
+          "sha256": "f46ae145efb0331fb6fb7e2e057f35e8280c4c16774c43de166168d921e12b00"
+        }
+      },
+      {
+        "path": "Cat2/Tests/ConfigurationCallTest.lua",
+        "before": {
+          "bytes": 9911,
+          "sha256": "7ccd637c98e5e84a16f30d51863516f83d96435c7588349140e11822da9f16ff"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Tests/ConfigurationJumpTest.lua",
+        "before": {
+          "bytes": 6600,
+          "sha256": "e008b82e6b036f787b58249f173ae989c0755db7dd9cc744df65f66ef341781c"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Tests/ProfileMacroIconTest.lua",
+        "before": {
+          "bytes": 15562,
+          "sha256": "a213b9cb60e3662c22b92e96ebc84fc700e80dad8e18d4808c2b75766f3f6af1"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/Tests/RunConfigurationTests.lua",
+        "before": {
+          "bytes": 303,
+          "sha256": "66007996378dfae86e7561aa1e8aa7b2e7ae102405b0cbc83cb61a75bf244a17"
+        },
+        "after": null
+      },
+      {
+        "path": "Cat2/UI/FlowEditorCards.lua",
+        "before": {
+          "bytes": 43988,
+          "sha256": "1991a7e7a78b854b8405ad75d8b41c2fabc6b49a85f8d2bd241787c9d9c03d20"
+        },
+        "after": {
+          "bytes": 44917,
+          "sha256": "98761a2b60b6d700cd8d995d3540c3076ce231da71149302ff4c25882df7c069"
+        }
+      },
+      {
+        "path": "Cat2/UI/FlowEditorJumpGuide.lua",
+        "before": null,
+        "after": {
+          "bytes": 5904,
+          "sha256": "d4e3b56d5a3625fbcfd1791a1b5ba182da4d055c0f1d5081abf6fde594c94c1f"
+        }
+      },
+      {
+        "path": "Cat2/UI/FlowEditorLists.lua",
+        "before": {
+          "bytes": 13709,
+          "sha256": "1f00633b2d69f4c43a9261306d67b6b2a8982cf406f00a29feebb8e4a708390f"
+        },
+        "after": {
+          "bytes": 13769,
+          "sha256": "0c470277fb40a42a4a9f960dcbd701a32e999f96f7b234004709978afd67ee2e"
+        }
+      },
+      {
+        "path": "Cat2/UI/FlowEditorWindow.lua",
+        "before": {
+          "bytes": 39426,
+          "sha256": "ee52195e12de3327a6d6c8f1f6a7deac30df909434ee397e743ea2a4164cb0bd"
+        },
+        "after": {
+          "bytes": 39490,
+          "sha256": "c6819bb0df2293f3dab7b3941a84e608cfc78061ce7c87fcae4f6ef3a4872288"
+        }
+      }
+    ],
+    "CatPotion": [
+      {
+        "path": "CatPotion/Core.lua",
+        "before": {
+          "bytes": 96398,
+          "sha256": "9430d37985033f1cfae304f246c4ec2cd1b89a65697e8ca33b2ef6562ec2afc7"
+        },
+        "after": {
+          "bytes": 96591,
+          "sha256": "c79939d69be069dd3947a3af1e6db464f1208c4c5538563131bad689845b2b46"
+        }
+      }
+    ],
+    "Cooline": [
+      {
+        "path": "Cooline/Cooline.lua",
+        "before": {
+          "bytes": 64453,
+          "sha256": "e1ab0c92cd2ca82f7c415bb40c794d914e14c0ee03010097db0ab510ea2539e7"
+        },
+        "after": {
+          "bytes": 64474,
+          "sha256": "8a57103551525b5d09372e658caa0bfdfff94e909faa8025b18285c81b132f5b"
+        }
+      }
+    ],
+    "EzPoison": [
+      {
+        "path": "EzPoison/EzPoison.toc",
+        "before": {
+          "bytes": 883,
+          "sha256": "72a68b299c1c9487a4ff8fa9dd7873ea20a15d4526b763714f7ea0da96922dd4"
+        },
+        "after": {
+          "bytes": 858,
+          "sha256": "7eca5d55a47da8a4fc9aa93fa32b1fdbef901066239305f7888741e63bc9a15c"
+        }
+      }
+    ],
+    "GoubayuHeal": [
+      {
+        "path": "GoubayuHeal/GoubayuHeal.lua",
+        "before": {
+          "bytes": 359080,
+          "sha256": "79bb3c49293dbe3c165ddea9969defdaa4758b3bbaa810ca2737e85faacd878b"
+        },
+        "after": {
+          "bytes": 413826,
+          "sha256": "cafde7a771e1c5ef8be6f80f737d65c7c533be934c70b8c89443a5e64351011e"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_C.lua",
+        "before": {
+          "bytes": 44356,
+          "sha256": "66cee7ba7d21dc22cca928c3c16e6d78c3dd6d763c1100748664ad12455cb0b5"
+        },
+        "after": {
+          "bytes": 45849,
+          "sha256": "df00f9114c086473a30fad6e21d0919f84ff123c24ce0aac7f2d5e5700a644ce"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Dispel.lua",
+        "before": {
+          "bytes": 87917,
+          "sha256": "9218431b6e078d902a4b2022117aacb5b67eb224100c470772cfff5fccbf2bd1"
+        },
+        "after": {
+          "bytes": 90207,
+          "sha256": "2139ebc6a8535c502453ab6f90b700c493324b7288bbc4bf961b0a9683a3a458"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Locale.lua",
+        "before": {
+          "bytes": 134331,
+          "sha256": "2f300225be510663837ae505852bf91e8d68a7dbbd2cadf0948766df5293461c"
+        },
+        "after": {
+          "bytes": 135449,
+          "sha256": "cfe254793ca76c852b81513cebbcf162bdea140e25354e5aa542819bb05960d5"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Predict.lua",
+        "before": {
+          "bytes": 26221,
+          "sha256": "0637041b5d9471c92f96a95bd8f948476132da7c407c683f599b9bc3cd97bc32"
+        },
+        "after": {
+          "bytes": 28582,
+          "sha256": "c957015048276a519b72271b0af36366d984256e715dc7fb2d102c877240fd5c"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Totem.lua",
+        "before": {
+          "bytes": 143937,
+          "sha256": "9ff943b3e8f693f6709cc5bdfc41deca73863a2cd3116135ac943919da971b9e"
+        },
+        "after": {
+          "bytes": 146052,
+          "sha256": "3cc1fbf6076b70acae19aca6cc6ed3adddb92a15f1d89866b91e73f75b75c456"
+        }
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_UI.lua",
+        "before": {
+          "bytes": 253337,
+          "sha256": "2673725ff640d856c6692eafe77f277f7c0b2e4412098b9813e066cb214cb0ad"
+        },
+        "after": {
+          "bytes": 256311,
+          "sha256": "9d47c7e2c1ebf9e641e0e56d0f0130507c22d147b878920ef550c6673fae833f"
+        }
+      }
+    ],
+    "MySlash": [
+      {
+        "path": "MySlash/MySlash.lua",
+        "before": {
+          "bytes": 18345,
+          "sha256": "bc207968c7d5aaae9a00280196df2da7fe8a610294c57d6b16db77e0f7427641"
+        },
+        "after": {
+          "bytes": 18346,
+          "sha256": "602ca9cddb8332fe137a12a1f519b9afdd66c69caebdb9bb88ce7d06f86828b9"
+        }
+      },
+      {
+        "path": "MySlash/MySlash.toc",
+        "before": {
+          "bytes": 516,
+          "sha256": "22861d559ed180f33febd3ba571c2bc593e67b9291a06281e7303a5526075530"
+        },
+        "after": {
+          "bytes": 499,
+          "sha256": "7a1bd983ae1ec1994334f3d8d94ea74ee5003442e8da6c8c4650df20709bcc19"
+        }
+      }
+    ],
+    "pfUI": [
+      {
+        "path": "pfUI/api/config.lua",
+        "before": {
+          "bytes": 102882,
+          "sha256": "af011fd4453e0a5c930f03fc8fd742fe1815129038e44b61973663677fa34d5b"
+        },
+        "after": {
+          "bytes": 105104,
+          "sha256": "e2306360dc3a5b64b5d700397d7e9224d0c23823ab83fbfc45778e6655795414"
+        }
+      },
+      {
+        "path": "pfUI/env/profiles.lua",
+        "before": {
+          "bytes": 182833,
+          "sha256": "6b7e00277f5ec404afbf7088b17519b58f20b1e847d0bf42d62f8fda5d4469e9"
+        },
+        "after": {
+          "bytes": 184207,
+          "sha256": "03d37a60df1d60339c94b2e852a32ffa11d40c2dda24c34532b2c2599fdb0b5c"
+        }
+      },
+      {
+        "path": "pfUI/env/translations_zhCN.lua",
+        "before": {
+          "bytes": 73102,
+          "sha256": "efb03d4c5b5af0b98495af34da71e9b54732b1dbab9b20cf72b381b6a652a9ff"
+        },
+        "after": {
+          "bytes": 75023,
+          "sha256": "87c8bc329ddce192ae0869b128390ae335ebf296f4daaba3b7c84f7cf215749f"
+        }
+      },
+      {
+        "path": "pfUI/init/modules.xml",
+        "before": {
+          "bytes": 3591,
+          "sha256": "a5de6295c17936fe180e5fc21f6253dab65d091d82be7885f4bdb2d4d8050065"
+        },
+        "after": {
+          "bytes": 3640,
+          "sha256": "5bdaf92285c4d142365065612f33709160e571985a436abb8770d33a666ac0e9"
+        }
+      },
+      {
+        "path": "pfUI/init/skins.xml",
+        "before": {
+          "bytes": 2916,
+          "sha256": "06b6ae8d691da1c54dd7305c7ea860a954afddcb62725e30892cb4850ecaec97"
+        },
+        "after": {
+          "bytes": 2804,
+          "sha256": "0324959d846d21dd56c4563083c97e17c027c614dd5a804fe1488cc40b700d84"
+        }
+      },
+      {
+        "path": "pfUI/libs/libdebuff.lua",
+        "before": {
+          "bytes": 175188,
+          "sha256": "874bd20c620f1c478de6b80212c41ee0b7ecc8e3ede2810e6f731bc626001a98"
+        },
+        "after": {
+          "bytes": 175183,
+          "sha256": "3f4540743c116825c1a61b098013c9083cb83c2f18978eb898de8f4b124e3708"
+        }
+      },
+      {
+        "path": "pfUI/modules/actionbar.lua",
+        "before": {
+          "bytes": 101456,
+          "sha256": "42f246690c3ff2da96c35f94e5ce7bc86f3303ffbd1b2c3f7d77bb0d7a1bf78c"
+        },
+        "after": {
+          "bytes": 101414,
+          "sha256": "67c61c52d730ad41b0d06d10352743d89115815cf7d69d5238b2c24ef39f9f08"
+        }
+      },
+      {
+        "path": "pfUI/modules/buff.lua",
+        "before": {
+          "bytes": 85620,
+          "sha256": "33409936774dd05d4379b7d26c9f8677d018454ecbea73eb1fe3bbc5c0be65d3"
+        },
+        "after": {
+          "bytes": 87877,
+          "sha256": "f4093dcbe75cea8eaa7a61924d6072e049a9237c3860eaa8c14c2010455ead05"
+        }
+      },
+      {
+        "path": "pfUI/modules/combopoints.lua",
+        "before": {
+          "bytes": 3484,
+          "sha256": "1d7060a2bee6149e1c7d7496dee69eff89b903f6e8bf487b0b5a90506dcd2097"
+        },
+        "after": {
+          "bytes": 12595,
+          "sha256": "72e0fb1c11d197756fb80e9962b8c06a0fae7ede7ff760e219e298c0fdbc65f1"
+        }
+      },
+      {
+        "path": "pfUI/modules/debuffmonitor.lua",
+        "before": null,
+        "after": {
+          "bytes": 57833,
+          "sha256": "75cb9eb2a14073c2200cab0bf0d4a353096310043e66b2635e34d1f6ab06d6be"
+        }
+      },
+      {
+        "path": "pfUI/modules/gui.lua",
+        "before": {
+          "bytes": 188909,
+          "sha256": "6ea9627bf5762458c9219121b357a2a32951999dc661f51abaed2829470f8814"
+        },
+        "after": {
+          "bytes": 193752,
+          "sha256": "ff8886b9e8e757c1786d8db5cb7feaa20a6ecd2850d94e1e0a583c2f038e493b"
+        }
+      },
+      {
+        "path": "pfUI/modules/nameplates.lua",
+        "before": {
+          "bytes": 140565,
+          "sha256": "94057c1eba07e34e2cad1caa30f4c36189507bc88b375cd58f6dfccd9771f33a"
+        },
+        "after": {
+          "bytes": 139938,
+          "sha256": "ff96b2b13d6d5faa87bbcaf0ecc5aad6792cdbef7a44cedca562a119611debf7"
+        }
+      },
+      {
+        "path": "pfUI/modules/thirdparty.lua",
+        "before": {
+          "bytes": 16228,
+          "sha256": "ceeff164691f570bdee37f9caf306066ae5e1a7725827e3990e645c8578f2d58"
+        },
+        "after": {
+          "bytes": 20382,
+          "sha256": "e077bc600f6b07c8a2d5d621b2a81a999e494690b4325ffb457e0c58999edb6e"
+        }
+      },
+      {
+        "path": "pfUI/modules/tooltip.lua",
+        "before": {
+          "bytes": 29873,
+          "sha256": "64d9c6911f3e12045ee9b7a083c59e303d5122156c637aa3898605c20e8bfa7d"
+        },
+        "after": {
+          "bytes": 30378,
+          "sha256": "b8b320375d599989327680d68e54b9923f2ff31cd1bb7c2a64d504216b6dc671"
+        }
+      },
+      {
+        "path": "pfUI/modules/totems.lua",
+        "before": {
+          "bytes": 5564,
+          "sha256": "2de7d100ec775185bc891c06a1596a3c447d5676f56674896b347ef3e0d4052b"
+        },
+        "after": {
+          "bytes": 6507,
+          "sha256": "9835ed8abf684524d360e0b3d026522a9b1637b4f5b3310437d3e595fc4a6c8b"
+        }
+      },
+      {
+        "path": "pfUI/modules/unlock.lua",
+        "before": {
+          "bytes": 42786,
+          "sha256": "c4744f835a156f291382d981585c0b3cb9ed687d0ed324adce6939ecaa05e10a"
+        },
+        "after": {
+          "bytes": 43411,
+          "sha256": "dae703877b17b9e1c78f2d47c7071df46320330376ae4ec4738f6b118e7e308c"
+        }
+      },
+      {
+        "path": "pfUI/pfUI-tbc.toc",
+        "before": {
+          "bytes": 530,
+          "sha256": "e58ec46b83db8a9c5b67d176ebe8e8d8ad2bb89bafadae5a8a4b1d9216b3dea9"
+        },
+        "after": {
+          "bytes": 530,
+          "sha256": "e2106c607a8fad9f52f2a57ac88a1fdd983477d3c17b488d4c2e4fe64c974bbc"
+        }
+      },
+      {
+        "path": "pfUI/pfUI.toc",
+        "before": {
+          "bytes": 510,
+          "sha256": "e97891385dde74b7c2628e9ca12baa7f6d445494a9f4e94d4ed9d716b3c786dc"
+        },
+        "after": {
+          "bytes": 510,
+          "sha256": "30860e829251d045ebf272f4043107018cfbc8b2d9baedeb344b665f4a08aa3d"
+        }
+      }
+    ],
+    "pfUI-addonskinner": [
+      {
+        "path": "pfUI-addonskinner/pfUI-addonskinner.toc",
+        "before": {
+          "bytes": 2294,
+          "sha256": "ebc0ffce648bca74b0b2c9a05e7cc0be8afcbf801aabcab863df8bed4dc0484d"
+        },
+        "after": {
+          "bytes": 2175,
+          "sha256": "4e80e2c1770e9f35e2647e6b021290273fb9439f5f6c06c3ffd59f1aaad214f0"
+        }
+      },
+      {
+        "path": "pfUI-addonskinner/skins/WushuangLoot.lua",
+        "before": {
+          "bytes": 2596,
+          "sha256": "43c329048d6530141e7f1eac00855d2bd6b181274567f18d9249cb5fe1e7c7fb"
+        },
+        "after": {
+          "bytes": 7265,
+          "sha256": "51d2ef9ea7ec4a335022be04c7e81f80ec003db9f5eec93ac43b28acb0ef5883"
+        }
+      }
+    ],
+    "S_ItemTip": [
+      {
+        "path": "S_ItemTip/S_ItemTip.toc",
+        "before": {
+          "bytes": 867,
+          "sha256": "02d0ef881d77e97b62363a258afc460b6031e5e5e8de77299208d5bb1f211668"
+        },
+        "after": {
+          "bytes": 851,
+          "sha256": "bf7080c9c2d685488c4286764aba9bbf2d1808e6d76a360175a0c319a6ac3cf5"
+        }
+      }
+    ],
+    "ShaguDPS": [
+      {
+        "path": "ShaguDPS/core.lua",
+        "before": {
+          "bytes": 43766,
+          "sha256": "5ee25d419b941c971253c4ae82e744452d67f598f91126e231b98fad5ef47296"
+        },
+        "after": {
+          "bytes": 43847,
+          "sha256": "ca0a7831414ade1f2f5bb6a0b2148473335a76322761be9ed679bcbbcf100848"
+        }
+      },
+      {
+        "path": "ShaguDPS/parser.lua",
+        "before": {
+          "bytes": 218445,
+          "sha256": "8bac5a190d9132df2e5b4ae9a44985c5266fc6942929ecadca966ff805f325de"
+        },
+        "after": {
+          "bytes": 228050,
+          "sha256": "e75e19ddd91d8c481d0064478a45993bc84bb2624eb3f64c93a3c79829f30be8"
+        }
+      },
+      {
+        "path": "ShaguDPS/settings.lua",
+        "before": {
+          "bytes": 33736,
+          "sha256": "e5727987d8f3823e069191f3f261c20187e1e7c47f9e5bd41e3ad9d898c06f1a"
+        },
+        "after": {
+          "bytes": 33814,
+          "sha256": "37a8aea85d828a737a104c03b071b2ac25a73b30294aedf9e563422653d458fa"
+        }
+      },
+      {
+        "path": "ShaguDPS/window.lua",
+        "before": {
+          "bytes": 312850,
+          "sha256": "3ebc0ef89c699b8a80c897d45a54d4f793c11ba858333c7b297b00f3d3f8da55"
+        },
+        "after": {
+          "bytes": 319425,
+          "sha256": "9047987fb3111c737f0e35dec282db3202549c448f332fad06847164bcaa092d"
+        }
+      }
+    ],
+    "SuperMacro": [
+      {
+        "path": "SuperMacro/SM_Common.lua",
+        "before": {
+          "bytes": 8913,
+          "sha256": "7bd9548072751c3afe0b31cd5f23db9e3705e7df35a6ac51a0952d0f037bf9ba"
+        },
+        "after": {
+          "bytes": 8371,
+          "sha256": "c0a0317bad449c21f5636c7e5cefb41777b19d76a0a6d610cbae3a3546f3f9fc"
+        }
+      },
+      {
+        "path": "SuperMacro/SM_MacroExtend.lua",
+        "before": {
+          "bytes": 6554,
+          "sha256": "204177d21a28d91ac11eda49dfdd13444af0fed0978600ff156e75b3967cce9c"
+        },
+        "after": {
+          "bytes": 7106,
+          "sha256": "6e695670c951a35ef470bc55acea66cb0c0a6a2fa3b9360b41d9a84a1a9678fb"
+        }
+      },
+      {
+        "path": "SuperMacro/SM_Options.lua",
+        "before": {
+          "bytes": 7757,
+          "sha256": "ca05713fbb21bcad797598f19e94d5bf5f6d5ea4cf7eef2a368dc2f579d08562"
+        },
+        "after": {
+          "bytes": 7129,
+          "sha256": "c4c4ce5c479512f5aeb5fb2bdd64e6a956feed0186b96429f675d0c698039155"
+        }
+      },
+      {
+        "path": "SuperMacro/SM_UI.lua",
+        "before": null,
+        "after": {
+          "bytes": 42571,
+          "sha256": "d1350f30345df42ab56f51d1a30c77eb2b0498dc026be686ef65bc6855eb9b4c"
+        }
+      },
+      {
+        "path": "SuperMacro/SuperMacro.lua",
+        "before": {
+          "bytes": 56153,
+          "sha256": "0fd702c1c8cd27a9560ade0dae4808755f045474e9d2b85afbea20c2530887d8"
+        },
+        "after": {
+          "bytes": 57992,
+          "sha256": "6b661951946f798393f7258cce363656820bc52336299a03b37fdfc2f6b1546c"
+        }
+      },
+      {
+        "path": "SuperMacro/SuperMacro.toc",
+        "before": {
+          "bytes": 836,
+          "sha256": "ad7e3235cf0ed34a8f640aac90a0dbb8fa9278ba401abc24529d0799d7067620"
+        },
+        "after": {
+          "bytes": 1038,
+          "sha256": "0d8eb1681b614e6196f6cf86444498c615c351e93673dfcca4a0a7de9dfd9f57"
+        }
+      },
+      {
+        "path": "SuperMacro/localization.lua",
+        "before": {
+          "bytes": 12290,
+          "sha256": "c791ecd9deb71feb21b37716ff7e58c69738a4f09e74e06727da5809d15c44ca"
+        },
+        "after": {
+          "bytes": 11928,
+          "sha256": "bf226d7b1ee003f5a8fce216d142e83c2cd031b963e4b42f4935443b640776af"
+        }
+      }
+    ],
+    "TrainerSkills": [
+      {
+        "path": "TrainerSkills/Locales/_Locales.xml",
+        "before": {
+          "bytes": 640,
+          "sha256": "8d3af86608526f629ede2a0f94b0e1a4d4b4fd558069ee064660bc2f739d48b8"
+        },
+        "after": {
+          "bytes": 475,
+          "sha256": "e3942a6d52e19ad22d7820ce1c0086f9210cd4da75d2bb070c1258108543820e"
+        }
+      }
+    ],
+    "WushuangLoot": [
+      {
+        "path": "WushuangLoot/WushuangLoot.lua",
+        "before": {
+          "bytes": 19806,
+          "sha256": "73b41b42d9d46e2b4588c519a42e8f18ba4c89902b93deba56225c3773e41351"
+        },
+        "after": {
+          "bytes": 20562,
+          "sha256": "7cbaee63932bb346010dded6d362fe44ae3a6989646234abcdcf2e8e296d77fa"
+        }
+      },
+      {
+        "path": "WushuangLoot/tga/tubiao_round.tga",
+        "before": null,
+        "after": {
+          "bytes": 16428,
+          "sha256": "5eb8df6895ae71608df2d2667eea52720d766db583f7494acfb7217b36ec7d8c"
+        }
+      }
+    ],
+    "XyTracker": [
+      {
+        "path": "XyTracker/Images/pai_round.tga",
+        "before": null,
+        "after": {
+          "bytes": 16428,
+          "sha256": "008ae0773cc7b4713b41781cf845f3aadef0b92d914df3429400b23cef278f1c"
+        }
+      },
+      {
+        "path": "XyTracker/xy_auction.lua",
+        "before": {
+          "bytes": 163287,
+          "sha256": "381a6a8e9d5ea96f3303c8ead28c83b2166d7a976924f1fe0cf93cfe166a0898"
+        },
+        "after": {
+          "bytes": 164046,
+          "sha256": "4d15415d185d44f599e1c6feec2adc4942fb2a86853afe76aec882e7d8dc2332"
+        }
+      }
+    ]
+  },
+  "summaries": {
+    "Automatonex": "合入多件掉落队列和团队拾取确认开关；保留 31 个四选项、“不选择=-1”及随机坐骑增强；补充停用取消队列和过期掷骰恢复。",
+    "BigWigs": "合入首领触发/同步、本地化修复、九类语音和相关资源；BugFamily 实际文件不存在，删除旧缺失加载入口；其他个人使用文件保留。",
+    "Capslock": "仅删除 TOC 无效加载行，拉人和职业颜色逻辑不变。",
+    "Cat2": "更新到 2026-10-23 卡片与流程增量，包含自动祝福、自定义技能/物品、条件跳转与持续伤害血量条件；按新包迁移规则跳过旧撕扯全局卡，保留未变文件及个人扩展。",
+    "CatPotion": "只新增巧克力鱼条目；迷你计时红色已由个人版实现，保留 Window/Settings 原字节及多窗口、排序、拖拽、毒药和共享冷却。",
+    "Cooline": "将 enabled 缺失兼容迁入个人统一扫描入口；保留共享冷却归并、长短优先、布局/预览和字体保护。",
+    "EzPoison": "仅删除重复默认启用声明，保留原 disabled 与全部业务代码。",
+    "GoubayuHeal": "按用户确认采用按键消费预读标识，定时器不施法；合入 HOT/救急/复活/死亡恢复、过滤、图腾回收计时等更新；保留个人 UI 字体后备、块作用域与全部未变文件。",
+    "MySlash": "增加 /cr 菜单项，移除原 /trinket 项和不存在的 MySlashList.xml 入口；其余菜单保留。",
+    "pfUI": "合入 8.56.0、减益监控、连击点自定义、独立监控字号/计时、姓名板/缩放/提示框/图腾和统计图标更新；保留个人聊天、YY、身份配色、监控多配置/拖拽/显示模式、30% 亮度、手动锚点和系统通知。",
+    "pfUI-addonskinner": "合入无双动态复选框、勾选/字体/输入框皮肤及缺失加载入口清理；保留个人附加皮肤与洗脑装置反馈。",
+    "S_ItemTip": "只删除不存在的 MajorLevel.lua 加载入口；评分、查询、观察、布局和负充能等个人功能及其他文件保持原字节。",
+    "ShaguDPS": "合入首领尝试/结算、护盾吸收、职业图标与播报更新；修复 GUID 字典误判为空；首领消失不足以判胜，仅死亡或转友方证据用于新增兜底。",
+    "SuperMacro": "按用户确认更新 3.25 与角色独立存储、首次迁移和纯 Lua 界面；保留旧账号数据，迁移宏表改为独立副本，避免首登会话内别名污染；修正无效文字绘制层。",
+    "TrainerSkills": "只清理五个不存在的语言文件加载入口，训练业务代码和原独立 Git 仓库保持原样。",
+    "WushuangLoot": "只迁入独立圆形小地图按钮及贴图；保留当前 1.6 版本和交互逻辑，不迁入 1.7 剥皮、tick 频率或白名单，不部署 DLL。",
+    "XyTracker": "只迁入拍卖圆形小地图按钮及贴图；保留许愿权移交、权限/同步、helper_version.ini 及其他个人文件。"
+  },
+  "held_changes": [
+    {
+      "addon": "BetterCharacterStats",
+      "item": "entire addon",
+      "reason": "user explicitly deferred attribute statistics update"
+    },
+    {
+      "addon": "StatCompare",
+      "item": "entire addon",
+      "reason": "user explicitly deferred attribute statistics update"
+    },
+    {
+      "addon": "pfUI",
+      "item": "system notification removal",
+      "reason": "preserve existing feature; change is only a deletion"
+    },
+    {
+      "addon": "WushuangLoot",
+      "item": "1.7 skinning, tick frequency and DLL whitelist",
+      "reason": "DLL capability/version not confirmed; no DLL deployment"
+    },
+    {
+      "addon": "XyTracker",
+      "item": "helper_version.ini removal",
+      "reason": "external consumer unknown"
+    },
+    {
+      "addon": "ShaguDPS",
+      "item": "despawn-only boss victory inference",
+      "reason": "a missing GUID alone cannot distinguish kill/script completion from reset; retain death/friendly proof"
+    }
+  ],
+  "validation": {
+    "lua": [
+      {
+        "path": "Automatonex/Modules/AutoNeed.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "Automatonex/Modules/LootBOP.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "BigWigs/Core.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "BigWigs/Plugins/Proximity.lua",
+        "max_upvalues": 9
+      },
+      {
+        "path": "BigWigs/Plugins/Sound.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "BigWigs/Raids/AQ40/Sentinels.lua",
+        "max_upvalues": 19
+      },
+      {
+        "path": "BigWigs/Raids/Karazhan/Anomalus.lua",
+        "max_upvalues": 9
+      },
+      {
+        "path": "BigWigs/Raids/MC/BaronGeddon.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "BigWigs/Raids/MC/Thaurissan.lua",
+        "max_upvalues": 8
+      },
+      {
+        "path": "BigWigs/Raids/Naxxramas/Loatheb.lua",
+        "max_upvalues": 6
+      },
+      {
+        "path": "BigWigs/Raids/Naxxramas/Razuvious.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "BigWigs/Raids/Other/Emeriss.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "BigWigs/Raids/Other/Lethon.lua",
+        "max_upvalues": 8
+      },
+      {
+        "path": "BigWigs/Raids/Other/Taerar.lua",
+        "max_upvalues": 8
+      },
+      {
+        "path": "BigWigs/Raids/Other/Ysondre.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Karrsh.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Kronn.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Loktanag.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Ormanos.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Partath.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Perotharn.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Rotgrowl.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Selenaxx.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "BigWigs/Raids/TMH/TimbermawTrash.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Trioch.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "BigWigs/Raids/TMH/Ursol.lua",
+        "max_upvalues": 6
+      },
+      {
+        "path": "Cat2/Cards/Common/AutoCancelCasterBuffs.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "Cat2/Cards/Common/CustomSpell.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Custom/HunterCannon.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "Cat2/Cards/Custom/HunterOrbitalMissile.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "Cat2/Cards/Custom/PaladinAutoBlessing.lua",
+        "max_upvalues": 16
+      },
+      {
+        "path": "Cat2/Cards/Druid/InsectSwarm.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Druid/InsectSwarmSolarEclipse.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Druid/Moonfire.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Druid/MoonfireLunarEclipse.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rake.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip1.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip3.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip4.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Druid/Rip5.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Hunter/FeignDeathBossWatching.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Hunter/SerpentSting.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Hunter/SerpentStingToxicAmmo.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Items/CustomCastConsumableSelf.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Items/CustomUseItem.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Items/DenseDynamiteSelf.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Items/ElixirOfDemonslayingBoss.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Items/OilOfImmolation.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Items/StratholmeHolyWaterSelf.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpNearbyEnemyCount.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpPowerAbove.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpPowerBelow.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpSelfBuff.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpSelfNoBuff.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetBehind.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetBuff.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetHealthPercentBelow.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetInFront.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpTargetNoBuff.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Mage/ArcanePowerFuse.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Priest/HolyFire.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Priest/ShadowWordPain.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Priest/ShadowWordPainMultiDot.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture1.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture3.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture4.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Rogue/Rupture5.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody1.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody3.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody4.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Rogue/RuptureBloody5.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Shaman/FlameShock.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Shaman/FlameShockDot.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Shaman/FlameShockLavaFollowup.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Shaman/FlameShockLavaMaximize.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/Corruption.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CorruptionMultiDot.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfAgony.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfAgonyMultiDot.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfDoom.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfRecklessnessHex.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfRecklessnessHexMultiDot.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfShadowHex.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfShadowHexMultiDot.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfTheElementsHex.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfTheElementsHexMultiDot.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/Immolate.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warlock/ImmolateAutoTiming.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warlock/ImmolateMultiDot.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warlock/ShadowWard.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warlock/ShadowburnBoss.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/SiphonLife.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warlock/SiphonLifeMultiDot.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warrior/BattleStance.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/BerserkerStance.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Bloodrage.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Bloodthirst.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/ChargeAutoStance.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Cleave.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/DefensiveStanceBossWatching.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Execute.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/ExecuteHighRage.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/HamstringFlurry.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/HeroicStrike.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/HeroicStrikeAlt.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/InterceptAutoStance.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/InterveneAutoStance.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/MortalStrike.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Overpower.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/OverpowerAfterMainSkill.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/OverpowerWithoutFlurry.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/PummelFlurry.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Rend.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Slam.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SlamAfterMainSkills.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SlamFlurry.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SlamFlurryAfterMainSkills.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SlamWithoutFlurry.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SpecialStrike.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmor.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmorBoss.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmorFive.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmorFiveBoss.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "Cat2/Cards/Warrior/SunderArmorOne.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/ThunderClapOffensive.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/Whirlwind.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cards/Warrior/WhirlwindGroup.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Cat2.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "Cat2/Core/Buff.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "Cat2/Core/CatImmuneLib.lua",
+        "max_upvalues": 6
+      },
+      {
+        "path": "Cat2/Core/ChannelDebug.lua",
+        "max_upvalues": 9
+      },
+      {
+        "path": "Cat2/Core/Persistence.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "Cat2/UI/FlowEditorCards.lua",
+        "max_upvalues": 19
+      },
+      {
+        "path": "Cat2/UI/FlowEditorJumpGuide.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "Cat2/UI/FlowEditorLists.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "Cat2/UI/FlowEditorWindow.lua",
+        "max_upvalues": 8
+      },
+      {
+        "path": "CatPotion/Core.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "Cooline/Cooline.lua",
+        "max_upvalues": 17
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_C.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Dispel.lua",
+        "max_upvalues": 10
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Locale.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Predict.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Totem.lua",
+        "max_upvalues": 9
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_UI.lua",
+        "max_upvalues": 13
+      },
+      {
+        "path": "MySlash/MySlash.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "pfUI/api/config.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "pfUI/env/profiles.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "pfUI/env/translations_zhCN.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "pfUI/libs/libdebuff.lua",
+        "max_upvalues": 31
+      },
+      {
+        "path": "pfUI/modules/actionbar.lua",
+        "max_upvalues": 22
+      },
+      {
+        "path": "pfUI/modules/buff.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "pfUI/modules/combopoints.lua",
+        "max_upvalues": 21
+      },
+      {
+        "path": "pfUI/modules/debuffmonitor.lua",
+        "max_upvalues": 12
+      },
+      {
+        "path": "pfUI/modules/gui.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "pfUI/modules/nameplates.lua",
+        "max_upvalues": 32
+      },
+      {
+        "path": "pfUI/modules/thirdparty.lua",
+        "max_upvalues": 3
+      },
+      {
+        "path": "pfUI/modules/tooltip.lua",
+        "max_upvalues": 5
+      },
+      {
+        "path": "pfUI/modules/totems.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "pfUI/modules/unlock.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "pfUI-addonskinner/skins/WushuangLoot.lua",
+        "max_upvalues": 6
+      },
+      {
+        "path": "ShaguDPS/core.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "ShaguDPS/parser.lua",
+        "max_upvalues": 28
+      },
+      {
+        "path": "ShaguDPS/settings.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "ShaguDPS/window.lua",
+        "max_upvalues": 24
+      },
+      {
+        "path": "SuperMacro/SM_Common.lua",
+        "max_upvalues": 2
+      },
+      {
+        "path": "SuperMacro/SM_MacroExtend.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "SuperMacro/SM_Options.lua",
+        "max_upvalues": 1
+      },
+      {
+        "path": "SuperMacro/SM_UI.lua",
+        "max_upvalues": 7
+      },
+      {
+        "path": "SuperMacro/SuperMacro.lua",
+        "max_upvalues": 4
+      },
+      {
+        "path": "SuperMacro/localization.lua",
+        "max_upvalues": 0
+      },
+      {
+        "path": "WushuangLoot/WushuangLoot.lua",
+        "max_upvalues": 6
+      },
+      {
+        "path": "XyTracker/xy_auction.lua",
+        "max_upvalues": 29
+      }
+    ],
+    "format_changes": [],
+    "references": {
+      "before": {
+        "count": 1282,
+        "missing": [
+          {
+            "from": "BigWigs/BigWigs.toc",
+            "ref": "Raids\\AQ40\\BugFamily.lua"
+          },
+          {
+            "from": "Capslock/Capslock.toc",
+            "ref": "148 130 201"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\AceLibrary\\AceLibrary.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\AceOO-2.0\\AceOO-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\AceAddon-2.0\\AceAddon-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\AceEvent-2.0\\AceEvent-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\Dewdrop-2.0\\Dewdrop-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\Tablet-2.0\\Tablet-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\FuBarPlugin-2.0\\FuBarPlugin-2.0.lua"
+          },
+          {
+            "from": "MySlash/MySlash.toc",
+            "ref": "MySlashList.xml"
+          },
+          {
+            "from": "pfUI-addonskinner/pfUI-addonskinner.toc",
+            "ref": "skins\\BookStore.lua"
+          },
+          {
+            "from": "pfUI-addonskinner/pfUI-addonskinner.toc",
+            "ref": "skins\\GearMenu.lua"
+          },
+          {
+            "from": "pfUI-addonskinner/pfUI-addonskinner.toc",
+            "ref": "skins\\TrinketMenu.lua"
+          },
+          {
+            "from": "pfUI-addonskinner/pfUI-addonskinner.toc",
+            "ref": "skins\\DoTimer.lua"
+          },
+          {
+            "from": "pfUI-addonskinner/pfUI-addonskinner.toc",
+            "ref": "skins\\SpecialTalentUI.lua"
+          },
+          {
+            "from": "pfUI-addonskinner/pfUI-addonskinner.toc",
+            "ref": "Locale\\zh.lua"
+          },
+          {
+            "from": "S_ItemTip/S_ItemTip.toc",
+            "ref": "MajorLevel.lua"
+          },
+          {
+            "from": "pfUI/init/skins.xml",
+            "ref": "..\\skins\\blizzard\\custom_merchant.lua"
+          },
+          {
+            "from": "pfUI/init/skins.xml",
+            "ref": "..\\skins\\blizzard\\arena_score.lua"
+          },
+          {
+            "from": "TrainerSkills/Locales/_Locales.xml",
+            "ref": "Locale_koKR.lua"
+          },
+          {
+            "from": "TrainerSkills/Locales/_Locales.xml",
+            "ref": "Locale_zhTW.lua"
+          },
+          {
+            "from": "TrainerSkills/Locales/_Locales.xml",
+            "ref": "Locale_esMX.lua"
+          },
+          {
+            "from": "TrainerSkills/Locales/_Locales.xml",
+            "ref": "Locale_itIT.lua"
+          },
+          {
+            "from": "TrainerSkills/Locales/_Locales.xml",
+            "ref": "Locale_ptBR.lua"
+          }
+        ]
+      },
+      "candidate": {
+        "count": 1293,
+        "missing": [
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\AceLibrary\\AceLibrary.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\AceOO-2.0\\AceOO-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\AceAddon-2.0\\AceAddon-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\AceEvent-2.0\\AceEvent-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\Dewdrop-2.0\\Dewdrop-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\Tablet-2.0\\Tablet-2.0.lua"
+          },
+          {
+            "from": "EzPoison/EzPoison.toc",
+            "ref": "libs\\FuBarPlugin-2.0\\FuBarPlugin-2.0.lua"
+          }
+        ]
+      }
+    },
+    "new_missing": [],
+    "preserved_personal_only_paths": true
+  },
+  "behavior_checks": {
+    "Automatonex": "31 个设置、67 个内置物品四种选择/回退、保存设置、异步队列/停用/过期恢复检查通过。",
+    "CatPotion": "11 套完整个人功能回归及严格字体失败后备通过。",
+    "Cooline": "30 组原有行为回归、204 个物品 ID、共享冷却与字体回归；新增 nil/1/0/false 冷却标志检查通过。",
+    "pfUI": "52 项姓名板、2592 项监控布局、45 组手动锚点及聊天拖选/YY 回归通过；完整连击点模块的样式/方向/开关/解锁预览与新减益图标字体失败检查通过。",
+    "GoubayuHeal": "完整预读模块的定时器不施法、按键消费、换方案/超时/移动/停用/死亡/中止/忙碌/晚到检查通过；保留个人修正的完整 UI 编译通过。 实际字体工厂及图腾特殊按钮计时字体在配置字体失败后仍可空字、隐藏与复用。",
+    "ShaguDPS": "实际首领兜底函数 6 个条件通过，包括 GUID 字典、死亡/转友方以及消失不判胜。",
+    "SuperMacro": "两角色首次迁移、旧账号数据保留、独立宏表、既有角色数据和幂等检查通过；完整新界面 251 个字体字符串的字体失败、空字/隐藏/复用与重建幂等检查通过。",
+    "Cat2": "变更 Lua 编译/闭包与 TOC/XML 引用通过；自定义施法和物品卡的引导/冷却/锁定条件受控检查通过。"
+  },
+  "runtime_files_unchanged_by_this_task": true,
+  "settings_backup_count": 30,
+  "settings_backup_location": "PluginHistory/staging/update-20261024-20261025/settings-backup (ignored local only)",
+  "settings_originals_not_edited": true,
+  "game_acceptance": "not performed; controlled tests are not game validation"
+}

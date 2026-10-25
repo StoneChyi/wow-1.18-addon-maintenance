@@ -179,6 +179,19 @@ local syncName = {
 	addDead = "SentinelAddDead"..module.revision,
 }
 
+-- 英文版 BigWigs 客户端同步过来的标记名归一成中文（兼容混编团队）
+local iconEnToCn = {
+	Star = "星星", Circle = "大饼", Diamond = "菱形", Triangle = "三角",
+	Moon = "月亮", Square = "方块", Cross = "叉子", Skull = "骷髅",
+	none = "无", unmarked = "未标记",
+}
+local function normalizeIconName(rest)
+	if rest and iconEnToCn[rest] then
+		return iconEnToCn[rest]
+	end
+	return rest
+end
+
 local raidIcon_knockBack = 2
 local raidIcon_manaBurn = 4
 local raidIcon_mending = 8
@@ -633,6 +646,7 @@ end
 
 
 function module:BigWigs_RecvSync(sync, rest, nick)
+	rest = normalizeIconName(rest)
 	if sync == syncName.knockBack and rest and knockBackFound == nil then
 		self:KnockBack(rest)
 	elseif sync == syncName.manaBurn and rest and manaBurnFound == nil then

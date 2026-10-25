@@ -6,7 +6,7 @@
 --]]
 
 -- 版本号
-SUPERMACRO_VERSION = "3.24";
+SUPERMACRO_VERSION = "3.25";
 
 -- 注册面板行为：允许在死亡时打开，可推动其他面板
 UIPanelWindows["SuperMacroFrame"] = { area = "left", pushable = 7, whileDead = 1 };
@@ -31,11 +31,11 @@ PRINT_COLOR_DEF = {r=1, g=1, b=1}; -- 默认打印颜色
 
 -- 全局变量声明（SavedVariables）
 SM_VARS = {};                       -- 选项设置表
-SM_EXTEND = {};                     -- 扩展脚本存储表
-SM_SUPER = {};                      -- 超级宏存储表（名称->{名称,纹理,内容}）
+SM_EXTEND_CHAR = {};                     -- 扩展脚本存储表
+SM_SUPER_CHAR = {};                      -- 超级宏存储表（名称->{名称,纹理,内容}）
 SM_ORDERED = {};                    -- 超级宏的排序后列表
 SM_ACTION = {};                     -- 保存当前角色动作条上的超级宏映射
-SM_ACTION_SUPER = {};               -- 各角色的超级宏动作映射（Saved per character）
+SM_ACTION_CHAR = {};               -- 各角色的超级宏动作映射（Saved per character）
 SM_MACRO_ICON = {};                 -- 宏图标ID映射表
 SM_ACTION_SPELL = {};               -- 缓存宏中的第一个法术/物品信息
 SM_ACTION_SPELL.regular = {};
@@ -125,12 +125,12 @@ end
 -- 存档表类型兜底，异常表被重置时标记排序需要重建 by 武藤纯子酱 2026.9.10
 local function SuperMacroEnsureSavedTables()
     if ( type(SM_VARS) ~= "table" ) then SM_VARS = {}; end
-    if ( type(SM_EXTEND) ~= "table" ) then SM_EXTEND = {}; end
-    if ( type(SM_SUPER) ~= "table" ) then
-        SM_SUPER = {};
+    if ( type(SM_EXTEND_CHAR) ~= "table" ) then SM_EXTEND_CHAR = {}; end
+    if ( type(SM_SUPER_CHAR) ~= "table" ) then
+        SM_SUPER_CHAR = {};
         SuperMacroMarkOrderedDirty();
     end
-    if ( type(SM_ACTION_SUPER) ~= "table" ) then SM_ACTION_SUPER = {}; end
+    if ( type(SM_ACTION_CHAR) ~= "table" ) then SM_ACTION_CHAR = {}; end
     if ( type(SM_ORDERED) ~= "table" ) then
         SM_ORDERED = {};
         SuperMacroMarkOrderedDirty();
@@ -234,8 +234,7 @@ local function OnDragStop()
     if ( needsUpdate ) then SuperMacroFrame_Update(); end
 end
 
--- 游戏主菜单按钮由 SuperMacro.xml 静态声明（GameMenuButtonSuperMacro），
--- 原此处的 createMenuButton() 动态创建分支永远不可达，已移除 by 武藤纯子酱 2026.9.10
+-- 游戏主菜单按钮 GameMenuButtonSuperMacro 现由 SM_UI.lua 用 Lua 动态创建（原 XML 声明已移除） by 武藤纯子酱 2026.9.10
 
 -- 逐槽探测所有常规宏
 -- 本客户端宏编号连续、且 GetNumMacros() 返回值不能可靠反映槽位是否存在
@@ -536,7 +535,7 @@ function SuperMacroFrame_Update()
     -- ==================== 更新超级宏面板 ====================
     if ( SM_VARS.tabShown=="super" ) then
         SuperMacroFrame_ShowFrame("super");
-        local numMacros=GetNumSuperMacros(); -- 移除恒为 nil 的 SM_SUPER_SIZE 死引用 by 武藤纯子酱 2026.9.10
+        local numMacros=GetNumSuperMacros(); -- 移除恒为 nil 的 SM_SUPER_CHAR_SIZE 死引用 by 武藤纯子酱 2026.9.10
         local macroButton, macroIcon, macroName;
         local name, texture, body;
 
@@ -854,7 +853,7 @@ function SuperMacroPopupOkayButton_OnClick()
             SuperMacroFrame_SelectMacro(index);
         elseif ( SM_VARS.tabShown=="super" ) then
             local oldsuper=GetOrderedSuperMacroInfo(SuperMacroFrame.selectedSuper);
-            if ( SM_SUPER[macroname] ) then
+            if ( SM_SUPER_CHAR[macroname] ) then
                 macroname=SuperMacroPopupFrame.oldname;
             end
             texture = texture or GetSuperMacroInfo(oldsuper, "texture");
@@ -896,7 +895,7 @@ function SuperMacroFrame_SaveSuperMacro()
             SuperMacroFrame.textChanged = nil;
             return;
         end
-        SM_SUPER[macroName] = {macroName,macroTexture,macroBody};
+        SM_SUPER_CHAR[macroName] = {macroName,macroTexture,macroBody};
         SuperMacroFrame.textChanged = nil;
         SM_UpdateActionSpell(macroName, "super", macroBody);
     end
@@ -921,6 +920,37 @@ function SuperMacroFrame_OnEvent(event)
     end
     -- 变量加载完成，初始化所有默认值并应用设置
     if ( event=="VARIABLES_LOADED" ) then
+        -- 一次性迁移（按角色）：每个角色首次登录时，把旧「账号级」超级宏/扩展脚本复制到本角色。
+        -- 旧账号数据保留不删，供其它角色/其它服务器角色继续各自迁移；本角色迁移后置标记不再迁移。
+        -- by 武藤纯子酱 2026.10.12
+        if ( not SM_MIGRATED_CHAR ) then
+            if ( type(SM_SUPER_CHAR) ~= "table" ) then SM_SUPER_CHAR = {}; end
+            if ( type(SM_EXTEND_CHAR) ~= "table" ) then SM_EXTEND_CHAR = {}; end
+            local function SM_TableEmpty(t)
+                return ( type(t) ~= "table" ) or ( next(t) == nil )
+            end
+            if ( SM_TableEmpty(SM_SUPER_CHAR) and type(SM_SUPER) == "table" and next(SM_SUPER) ~= nil ) then
+                for k,v in pairs(SM_SUPER) do
+                    if type(v) == "table" then
+                        local copy = {}; for field,value in pairs(v) do copy[field] = value end
+                        SM_SUPER_CHAR[k] = copy
+                    else SM_SUPER_CHAR[k] = v end
+                end
+            end
+            if ( SM_TableEmpty(SM_EXTEND_CHAR) and type(SM_EXTEND) == "table" and next(SM_EXTEND) ~= nil ) then
+                for k,v in pairs(SM_EXTEND) do SM_EXTEND_CHAR[k] = v; end
+            end
+            -- 动作条槽位映射：把旧账号级里「本角色」那一份迁到按角色变量 by 武藤纯子酱 2026.10.12
+            local player = SuperMacroGetPlayerKey();
+            if ( type(SM_ACTION_CHAR) ~= "table" ) then SM_ACTION_CHAR = {}; end
+            if ( SM_TableEmpty(SM_ACTION_CHAR[player]) and type(SM_ACTION_SUPER) == "table"
+                 and type(SM_ACTION_SUPER[player]) == "table" and next(SM_ACTION_SUPER[player]) ~= nil ) then
+                local t = {};
+                for k,v in pairs(SM_ACTION_SUPER[player]) do t[k] = v; end
+                SM_ACTION_CHAR[player] = t;
+            end
+            SM_MIGRATED_CHAR = 1;
+        end
         SuperMacroEnsureSavedTables();
         -- 设置默认选项值
         if ( not SM_VARS.hideAction ) then SM_VARS.hideAction = 0; end
@@ -929,11 +959,9 @@ function SuperMacroFrame_OnEvent(event)
         if ( not SM_VARS.macroTip2 ) then SM_VARS.macroTip2= 0; end
         if ( not SM_VARS.minimap ) then SM_VARS.minimap = 1; end
         if ( not SM_VARS.showMenu ) then SM_VARS.showMenu = 1; end
-        if ( not SM_VARS.wordWrap ) then SM_VARS.wordWrap = 0; end
         if ( not SM_VARS.replaceIcon ) then SM_VARS.replaceIcon = 1; end
         if ( not SM_VARS.checkCooldown ) then SM_VARS.checkCooldown = 1; end
         if ( not SM_VARS.tabShown ) then SM_VARS.tabShown = "regular"; end
-        if ( not SM_VARS.monoFont ) then SM_VARS.monoFont = 0; end
         if ( not SM_VARS.windowWidth ) then SM_VARS.windowWidth = 800; end
         if ( not SM_VARS.windowHeight ) then
             SM_VARS.windowHeight = 600;
@@ -955,7 +983,6 @@ function SuperMacroFrame_OnEvent(event)
         HideActionText();
         ToggleSMMinimap();
         ToggleSMMenu();
-        ToggleSMWordWrap();
         if ( SuperMacroInitExtend ) then
             SuperMacroInitExtend()
         end
@@ -963,10 +990,10 @@ function SuperMacroFrame_OnEvent(event)
         -- 初始化超级宏排序列表
         SuperMacroEnsureOrdered();
         local player = SuperMacroGetPlayerKey();
-        if ( type(SM_ACTION_SUPER[player]) ~= "table" ) then
-            SM_ACTION_SUPER[player] = {};
+        if ( type(SM_ACTION_CHAR[player]) ~= "table" ) then
+            SM_ACTION_CHAR[player] = {};
         end
-        SM_ACTION = SM_ACTION_SUPER[player];
+        SM_ACTION = SM_ACTION_CHAR[player];
         SM_UpdateActionSpell();
 
         -- 插入别名替换函数（兼容其他别名插件）
@@ -1298,8 +1325,8 @@ function GetNumSuperMacros()
 end
 
 function GetSuperMacroInfo( superName, code)
-    if ( not superName or not SM_SUPER[superName] ) then return; end
-    local a={}; a.name,a.texture,a.body=unpack(SM_SUPER[superName]);
+    if ( not superName or not SM_SUPER_CHAR[superName] ) then return; end
+    local a={}; a.name,a.texture,a.body=unpack(SM_SUPER_CHAR[superName]);
     if (not code) then return a.name,a.texture,a.body;
     else return a[code]; end
 end
@@ -1307,15 +1334,15 @@ end
 function SortSuperMacroList()
     SuperMacroEnsureSavedTables();
     local a={};
-    for n in pairs(SM_SUPER) do table.insert(a, n); end
+    for n in pairs(SM_SUPER_CHAR) do table.insert(a, n); end
     table.sort(a, SuperMacroSortNames);
     return a;
 end
 
 function GetOrderedSuperMacroInfo( id )
     SuperMacroEnsureOrdered();
-    if ( not SM_SUPER[SM_ORDERED[id] ] ) then return; end
-    return unpack(SM_SUPER[SM_ORDERED[id] ]);
+    if ( not SM_SUPER_CHAR[SM_ORDERED[id] ] ) then return; end
+    return unpack(SM_SUPER_CHAR[SM_ORDERED[id] ]);
 end
 
 function GetOrderedSuperMacro( name )
@@ -1325,7 +1352,7 @@ end
 
 function CreateSuperMacro( name, texture, body )
     SuperMacroEnsureSavedTables();
-    if ( not SM_SUPER[name] ) then SM_SUPER[name]={name, texture, body or ''}; end
+    if ( not SM_SUPER_CHAR[name] ) then SM_SUPER_CHAR[name]={name, texture, body or ''}; end
     SM_UpdateActionSpell( name, "super", body);
     SuperMacroMarkOrderedDirty();
     SuperMacroEnsureOrdered();
@@ -1336,10 +1363,10 @@ function EditSuperMacro( id, name, texture)
     SuperMacroEnsureSavedTables();
     local oldMacro, oldTexture, oldBody=GetOrderedSuperMacroInfo(id);
     if ( oldMacro~=name ) then
-        SM_SUPER[oldMacro]=nil;
+        SM_SUPER_CHAR[oldMacro]=nil;
         SM_UpdateActionSpell( oldMacro, "super", nil);
     end
-    SM_SUPER[name]={ name, texture, oldBody};
+    SM_SUPER_CHAR[name]={ name, texture, oldBody};
     SM_UpdateActionSpell( name, "super", oldBody);
     SuperMacroMarkOrderedDirty();
     SuperMacroEnsureOrdered();
@@ -1355,7 +1382,7 @@ function DeleteSuperMacro( macro )
     -- 删除时清理动作条/法术缓存 by 武藤纯子酱 2026.9.10
     SM_UpdateActionSpell(macro, "super", nil);
     SuperMacro_UpdateAction(macro, nil);
-    SM_SUPER[macro]=nil;
+    SM_SUPER_CHAR[macro]=nil;
     SuperMacroMarkOrderedDirty();
     SuperMacroEnsureOrdered();
     if ( GetNumSuperMacros()==0 ) then id=nil;

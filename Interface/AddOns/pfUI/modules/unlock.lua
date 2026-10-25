@@ -4,7 +4,8 @@ pfUI:RegisterModule("unlock", "vanilla:tbc", function ()
   -- grouped frames
   local clusters = {
     -- Name            Shift  Ctrl
-    { "pfCombo",          5       },
+    -- pfCombo 不再成组：连击点现在只有第 1 个点注册为可拖动模块，其余点链式跟随，
+    -- 成组选择会把它们一起 StartMoving 并访问 frame.drag（非 movable ⇒ 为 nil）而报错。
     { "pfRaidPet",        40,   5 },
     { "pfRaid",           40,   5 },
     { "pfGroup",          4       },
@@ -150,14 +151,19 @@ pfUI:RegisterModule("unlock", "vanilla:tbc", function ()
   local function SaveScale(frame, scale)
     -- 缩放会导致模块位置漂移：本客户端 SetPoint 偏移按 frame 自身 scale 缩放
     -- （offset×scale = 父级空间位移），只改 scale 不动偏移，模块必然跑位。
-    -- 修复与 map.lua 世界地图 Ctrl+滚轮缩放（实测不漂移）一致：
-    -- 保持原锚点不变，偏移按 oldscale/newscale 比例补偿，再设新 scale。
+    -- ⚠️ 不能用 frame:GetPoint() 拿偏移：1.12 下返回值不可信（relativeTo 可能是
+    -- 非 region / 退化形式，旧守卫 `if point and offx and offy` 拦不住，实测把
+    -- 垃圾 relativeTo 喂给 5 参 SetPoint 直接抛 Usage 或瞬移到屏幕角落，见
+    -- 2026-09-12 日志 SnapFinish 同款坑）。改用与 SnapFinish / DragStop 保存循环
+    -- 完全一致的绝对定位：ConvertFrameAnchor 收敛到 9 种锚点之一 + 相对 UIParent，
+    -- 偏移按 oldscale/newscale 比例补偿，锚点 UI 位置在缩放前后保持不变。
     local oldscale = frame:GetScale()
-    local point, relativeTo, relativePoint, offx, offy = frame:GetPoint()
+    if not oldscale or oldscale == 0 then oldscale = 1 end
 
-    if point and offx and offy then
-      frame:SetPoint(point, relativeTo, relativePoint, offx*oldscale/scale, offy*oldscale/scale)
-    end
+    local anchor, x, y = ConvertFrameAnchor(frame, "TOPLEFT")
+
+    frame:ClearAllPoints()
+    frame:SetPoint(anchor, UIParent, anchor, x * oldscale / scale, y * oldscale / scale)
     frame:SetScale(scale)
 
     if not C.position[frame:GetName()] then

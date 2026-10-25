@@ -1,12 +1,24 @@
 local card = {
     id = "warlock_immolate_auto_timing",
     name = "献祭（自动计时）",
-    description = "自动计算献祭剩余时间补献祭",
-    details = "根据目标身上的献祭剩余时间，结合施法时间重新施放，并保留现有的引导保护机制。需要存在有效目标；目标火焰免疫时不会施放。成功执行时会阻断本轮后续卡片。",
+    description = "目标血量>|cff6bc7e0{minimumTargetHealth}|r，自动计时补献祭",
+    details = "仅当施法对象当前实际血量严格大于本卡“目标血量”参数时执行，默认100；等于或低于阈值时跳过。根据目标身上的献祭剩余时间，结合施法时间重新施放，并保留现有的引导保护机制。需要存在有效目标；目标火焰免疫时不会施放。成功执行时会阻断本轮后续卡片。",
     sort = 20.5,
     category = "class",
     classes = {
         WARLOCK = 3,
+    },
+    optionSchema = {
+        {
+            key = "minimumTargetHealth",
+            type = "number",
+            label = "目标血量",
+            shortLabel = "血量",
+            default = 100,
+            minimum = 0,
+            maximum = 1000000,
+            integer = true,
+        },
     },
     icons = {
         "Interface\\Icons\\Spell_Fire_Immolation",
@@ -22,7 +34,12 @@ function card.RefreshRuntimeData()
     end
 end
 
-function card.Execute(context)
+function card.Execute(context, step)
+    local minimumTargetHealth = context:GetStepOption(step, "minimumTargetHealth") or 100
+    if (context.playerInformation.temporary.targetHealth or 0) <= minimumTargetHealth then
+        return false
+    end
+
     local player = Cat2.PlayerInformation.temporary
 
     if not player.targetExists then

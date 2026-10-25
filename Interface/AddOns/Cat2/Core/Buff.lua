@@ -192,6 +192,24 @@ function Cat2.CancelBuffByName(buffName)
 	]]
 end
 
+-- 合并取消多个自身Buff：名称集合只扫描一次，倒序取消避免槽位移动造成漏删或误删。
+-- buffNames 为 { [完整名称] = true }；返回取消请求数量。
+function Cat2.CancelBuffsByName(buffNames)
+    if type(buffNames) ~= "table" then return 0 end
+    local slots = {}
+    Cat2GetBuffTooltip:SetOwner(UIParent, "ANCHOR_NONE")
+    for index = 0, 32 do
+        Cat2GetBuffTooltip:ClearLines()
+        Cat2GetBuffTooltip:SetPlayerBuff(index)
+        local name = Cat2GetBuffTooltipTextLeft1:GetText()
+        if name and buffNames[name] then table.insert(slots, index) end
+    end
+    for index = table.getn(slots), 1, -1 do
+        CancelPlayerBuff(slots[index])
+    end
+    return table.getn(slots)
+end
+
 -- 获取buff层数
 function Cat2.GetBuffLevel(buffName, unit)
 	unit = unit or "player";  -- 默认检查玩家自己

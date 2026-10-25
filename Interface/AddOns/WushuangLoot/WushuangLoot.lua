@@ -361,6 +361,11 @@ SLASH_WSLootSettings1 = "/拾取设置"
 SlashCmdList["WSLootSettings"] = HandleSettings
 
 -- ==================== 小地图图标 ====================
+-- 外观对齐 LibDBIcon-1.0 / Atlas 那套标准小地图按钮：
+--   31x31 按钮 + 53x53 金色圆环(MiniMap-TrackingBorder)
+--   + 20x20 暗色圆底(UI-Minimap-Background) + 17x17 圆形图标
+-- 原实现只有一张 21x21 的方形图标（蓝色方底 + 鼠标指针），既没有圆环也没有
+-- 底盘，在 pfUI 的 /abp 按钮面板里就是一块方块，和其他插件的圆形按钮完全不同。
 local WSLootMinimapButton = CreateFrame("Button", "WSLootMinimapButton", Minimap)
 WSLootMinimapButton:SetFrameStrata("MEDIUM")
 WSLootMinimapButton:SetWidth(31)
@@ -369,19 +374,26 @@ WSLootMinimapButton:SetFrameLevel(8)
 WSLootMinimapButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 WSLootMinimapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
-local mmIcon = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonIcon", "BACKGROUND")
-mmIcon:SetTexture("Interface\\AddOns\\WushuangLoot\\tga\\tubiao")
-mmIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-mmIcon:SetWidth(20)
-mmIcon:SetHeight(20)
-mmIcon:SetPoint("CENTER", WSLootMinimapButton, "CENTER", 0, 0)
-
--- 标准小地图圆环边框（53px 画布锚 TOPLEFT，与 ShaguDPS/LibDBIcon 同款）
+-- 金色圆环（与 LibDBIcon/Atlas 同一套数值：53px 锚 TOPLEFT）
 local mmBorder = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonBorder", "OVERLAY")
 mmBorder:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 mmBorder:SetWidth(53)
 mmBorder:SetHeight(53)
 mmBorder:SetPoint("TOPLEFT", WSLootMinimapButton, "TOPLEFT", 0, 0)
+
+-- 暗色圆底
+local mmBackdrop = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonBg", "BACKGROUND")
+mmBackdrop:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+mmBackdrop:SetWidth(20)
+mmBackdrop:SetHeight(20)
+mmBackdrop:SetPoint("TOPLEFT", WSLootMinimapButton, "TOPLEFT", 7, -5)
+
+-- 图标：圆形 alpha 版（64x64 32bit TGA，源图居中内切圆裁切）
+local mmIcon = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonIcon", "ARTWORK")
+mmIcon:SetTexture("Interface\\AddOns\\WushuangLoot\\tga\\tubiao_round")
+mmIcon:SetWidth(17)
+mmIcon:SetHeight(17)
+mmIcon:SetPoint("TOPLEFT", WSLootMinimapButton, "TOPLEFT", 7, -6)
 
 WSLootMinimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 0, 0)
 local mmAngle = 225

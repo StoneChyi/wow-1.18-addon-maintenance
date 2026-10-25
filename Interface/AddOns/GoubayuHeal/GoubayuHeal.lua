@@ -1640,6 +1640,65 @@ function GoubayuHeal.PlayerIsCCd()
     return false
 end
 
+-- 牧师"救赎之魂"：死亡后约 10 秒内仍可施法，死亡拦截必须排除
+-- by 武藤纯子酱 2026.10.23
+function GoubayuHeal.IsSpiritOfRedemption()
+    if GoubayuHeal.HasBuffByName and GoubayuHeal.Spirit_of_Redemption
+        and GoubayuHeal.HasBuffByName("player", GoubayuHeal.Spirit_of_Redemption) then
+        return true
+    end
+    -- 兜底：按 aura spellId 识别（27827 = Spirit of Redemption / 救赎之魂）
+    if GetNampowerVersion and GetUnitField then
+        local auras = GetUnitField("player", "aura")
+        if auras then
+            for i = 1, 32 do
+                if auras[i] == 27827 then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+-- 清掉"死亡瞬间"可能卡住的瞬态锁（不动配置/存档）
+-- by 武藤纯子酱 2026.10.23
+function GoubayuHeal.ResetTransientLocks()
+    GoubayuHeal._abortAction = nil
+    GoubayuHeal.casting_spell = nil
+    GoubayuHeal.casting_spell_time = nil
+    GoubayuHeal.only_instant_spells = nil
+    GoubayuHeal.only_instant_spells_time = nil
+    GoubayuHeal.i_am_healing = nil
+    GoubayuHeal._lastAttempt = nil
+    GoubayuHeal.last_interrupted_spell = nil
+    GoubayuHeal.competition_fallback = nil
+    GoubayuHeal.tankheal_mode = nil
+    GoubayuHeal.heal_target_delay = nil
+    if GoubayuHeal.clean_spell_awaiting_target then
+        GoubayuHeal.clean_spell_awaiting_target()
+    end
+    -- Nampower 队列（本文件局部变量）
+    GoubayuHeal_nampower_resume_at = nil
+    GoubayuHeal_nampower_pending = nil
+    GoubayuHeal_np_allow_queue = nil
+    GoubayuHeal_np_force_cast = nil
+end
+
+-- 玩家是否处于"死亡/灵魂且不能施法"状态（救赎之魂除外）。
+-- 返回 true 时顺带清掉卡住的瞬态锁：死亡/复活后不用 /reload 也能恢复。
+-- by 武藤纯子酱 2026.10.23
+function GoubayuHeal.PlayerDeadBlocked()
+    if not (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player")) then
+        return false
+    end
+    if GoubayuHeal.IsSpiritOfRedemption() then
+        return false
+    end
+    GoubayuHeal.ResetTransientLocks()
+    return true
+end
+
 -- 检查当前是否可以执行施法
 function GoubayuHeal.NampowerCanAct()
     if not (GetNampowerVersion and GetCastInfo) then
@@ -1812,6 +1871,12 @@ end
 -- ============================================================
 
 function GoubayuHeal.HealMostWounded(spell, rank)
+    -- 死亡/灵魂状态（救赎之魂除外）：直接返回；顺带清理死亡时卡住的锁
+    -- by 武藤纯子酱 2026.10.23
+    if GoubayuHeal.PlayerDeadBlocked() then
+        return
+    end
+
     if GoubayuHeal.PlayerIsCCd() == true then
         return
     end
@@ -1921,6 +1986,11 @@ function GoubayuHeal.HealMostWounded(spell, rank)
         -- 方案切换：清除跨方案残留的施法状态，避免上一个方案的被打断技能/交替记录污染当前方案
         if GoubayuHeal.current_action_profile ~= spell then
             GoubayuHeal.current_action_profile = spell
+            -- 切换方案前先回滚上一次施法的残留（含 hot_cast_cd），避免旧目标被锁
+            -- by 武藤纯子酱 2026.10.22
+            if GoubayuHeal.RollbackLastAttempt then
+                GoubayuHeal.RollbackLastAttempt()
+            end
             GoubayuHeal.last_interrupted_spell = nil
             GoubayuHeal.last_cast_spell = nil
             GoubayuHeal.i_am_healing = nil
@@ -2074,7 +2144,7 @@ function GoubayuHeal.HealMostWoundedTB(spell, rank)
                 if (GoubayuHeal.HealUsingClass(unit, spell, 0, true)) then
                     return 1
                 end
-            elseif ((not GoubayuHeal.only_instant_spells
+            elseif ((not GoubayuHeal.OnlyInstantActive()
                 or (GoubayuHeal.Spells[spell] and GoubayuHeal.Spells[spell][rank]
                     and GoubayuHeal.Spells[spell][rank]["CastTime"] == 0))) then
                 local scaledRank = rank
@@ -2093,6 +2163,9 @@ function GoubayuHeal.HealMostWoundedTB(spell, rank)
     end
 
     for id = 1, table.getn(GoubayuHeal.most_wounded) do
+        if GoubayuHeal._abortAction then
+            break
+        end
         local unit = GoubayuHeal.most_wounded[id]["Unit"]
 
         if (not rank) then
@@ -2100,7 +2173,7 @@ function GoubayuHeal.HealMostWoundedTB(spell, rank)
                 true)) then
                 return 1
             end
-        elseif ((not GoubayuHeal.only_instant_spells
+        elseif ((not GoubayuHeal.OnlyInstantActive()
             or GoubayuHeal.Spells[spell][rank]["CastTime"] == 0)) then
             local scaledRank = rank
             if (not GoubayuHeal.dont_scale[spell]) then
@@ -2120,6 +2193,9 @@ function GoubayuHeal.HealMostWoundedTB(spell, rank)
     local fbUnit = nil
     local fbHeal = 0
     for id = 1, table.getn(GoubayuHeal.most_wounded) do
+        if GoubayuHeal._abortAction then
+            break
+        end
         local u = GoubayuHeal.most_wounded[id] and GoubayuHeal.most_wounded[id]["Unit"]
         if u and GoubayuHeal.CanCastAtUnit(u, 40) ~= false then
             fbUnit = u
@@ -2130,16 +2206,22 @@ function GoubayuHeal.HealMostWoundedTB(spell, rank)
 
     if fbUnit then
         GoubayuHeal.competition_fallback = true
+        local fbOk
         if (not rank) then
-            GoubayuHeal.HealUsingClass(fbUnit, spell, fbHeal, true)
+            fbOk = GoubayuHeal.HealUsingClass(fbUnit, spell, fbHeal, true)
         else
             local fr = rank
             if (not GoubayuHeal.dont_scale[spell]) then
                 fr = GoubayuHeal.ScaleSpell(fbUnit, spell, rank, fbHeal)
             end
-            GoubayuHeal.Heal(fbUnit, spell, fr, fbHeal)
+            fbOk = GoubayuHeal.Heal(fbUnit, spell, fr, fbHeal)
         end
         GoubayuHeal.competition_fallback = nil
+        -- 兜底施放成功即结束本次动作（原先无条件 return nil，上层会再走预读/二次尝试）
+        -- by 武藤纯子酱 2026.10.22
+        if fbOk then
+            return 1
+        end
     end
 
     return
@@ -2176,6 +2258,28 @@ function GoubayuHeal.SetMostWoundedData(unit)
         return
     end
 
+    -- 距离/视野优先：够不到/看不见就不进候选（比"竞争人数/缺口预估"更早排除，避免白算）
+    -- by 武藤纯子酱 2026.10.20
+    local castable = GoubayuHeal.CanCastAtUnit(unit, 40)
+    if (castable == false) then
+        return
+    end
+
+    -- 救急线分诊：救急线以下的目标，若已有 >=2 个治疗者正在读条 → 让给别人（优先其他救急目标）；
+    -- 若所有救急目标都有 >=2 人在治，则这些目标都不救，自然落到方案的其他目标。
+    -- by 武藤纯子酱 2026.10.20
+    local rescuePct = tonumber(GoubayuHeal.Config["rescue_hp_threshold"]) or 40
+    if rescuePct > 0 and (currentHealth / maxHealth * 100) < rescuePct then
+        local rg = GoubayuHeal.GetUnitGUID and GoubayuHeal.GetUnitGUID(unit)
+        local rcnt = 0
+        if rg and GoubayuHeal.CastingSpeed and GoubayuHeal.CastingSpeed.GetHealerCount then
+            rcnt = GoubayuHeal.CastingSpeed:GetHealerCount(rg)
+        end
+        if rcnt >= 2 then
+            return
+        end
+    end
+
     if not (GetNampowerVersion and GetCastInfo) then
         local uname = GoubayuHeal.UnitName(unit)
         if uname and GoubayuHeal.heal_target_delay
@@ -2183,11 +2287,6 @@ function GoubayuHeal.SetMostWoundedData(unit)
             and GoubayuHeal.heal_target_delay[uname] > GetTime() then
             return
         end
-    end
-
-    local castable = GoubayuHeal.CanCastAtUnit(unit, 40)
-    if (castable == false) then
-        return
     end
 
     -- 迅捷治愈豁免：本职业德鲁伊、当前方案含迅捷治愈、目标带可消耗 HOT 时，
@@ -3261,11 +3360,6 @@ function GoubayuHeal.GetOverheal()
         uh = uh * UnitLevel(unit) * perLevel / 100
     end
 
-    if (not GoubayuHeal.healing[healingtarget][GoubayuHeal.my_name]["TankHealing"]) then
-        uh = uh + GoubayuHeal.GetOtherHealing(unit,
-            GoubayuHeal.healing[healingtarget][GoubayuHeal.my_name]["TimeLeft"])
-    end
-
     local heal = GoubayuHeal.healing[healingtarget][GoubayuHeal.my_name]["Heal"]
     if (heal == 0) then
         heal = 1
@@ -3284,6 +3378,90 @@ end
 -- 计算治疗缺口量
 -- ============================================================
 
+-- 跨职业基础治疗量：读 DBC 里 effect==10(HEAL) 的 effectBasePoints/effectDieSides，返回均值；
+-- 读不到/无 HEAL 效果 → nil（不估算）。by 武藤纯子酱 2026.10.20
+function GoubayuHeal.GetDBCBaseHeal(spellId)
+    if not (GetNampowerVersion and GetSpellRecField and spellId) then
+        return nil
+    end
+    local okE, effs = pcall(GetSpellRecField, spellId, "effect")
+    local okB, bases = pcall(GetSpellRecField, spellId, "effectBasePoints")
+    local okD, dices = pcall(GetSpellRecField, spellId, "effectDieSides")
+    if not (okE and effs and okB and bases) then
+        return nil
+    end
+    local function at(v, i)
+        if type(v) == "table" then
+            return v[i]
+        end
+        if i == 1 then
+            return v
+        end
+        return nil
+    end
+    for i = 1, 3 do
+        if tonumber(at(effs, i)) == 10 then
+            local b = tonumber(at(bases, i))
+            if b then
+                local d = tonumber(at(dices, i)) or 1
+                if d < 1 then
+                    d = 1
+                end
+                -- DBC 基础量实际为 basePoints+1，波动 dieSides（取均值）
+                return (b + 1) + (d - 1) / 2
+            end
+        end
+    end
+    return nil
+end
+
+-- 非救急：他者正在读的治疗量预估（数据源 CastingSpeed.castData；治疗量按我方治疗强度估算）。
+-- 我方技能表里有的按 GetSpellHealing 精确估；跨职业的用 DBC 基础量 + 我方治疗强度×系数。
+-- by 武藤纯子酱 2026.10.20
+function GoubayuHeal.GetOtherCastingHealing(unit)
+    local total = 0
+    local CS = GoubayuHeal.CastingSpeed
+    if not (CS and CS.castData and CS.GetPlayerGUID and GetSpellNameAndRankForId
+        and GoubayuHeal.GetUnitGUID) then
+        return 0
+    end
+    local guid = GoubayuHeal.GetUnitGUID(unit)
+    if not guid or not CS.castData[guid] then
+        return 0
+    end
+    local playerGUID = CS:GetPlayerGUID()
+    local now = GetTime()
+    for casterGUID, info in pairs(CS.castData[guid]) do
+        if casterGUID ~= playerGUID and info and info.endTime and info.endTime > now
+            and info.spellID then
+            local ok, nm = pcall(GetSpellNameAndRankForId, info.spellID)
+            if ok and nm then
+                local base = string.gsub(nm, "%s*%(.*%)", "")
+                local rk = tonumber(string.match(nm, "(%d+)%)"))
+                if base and base ~= "" then
+                    if rk and GoubayuHeal.Spells[base] and GoubayuHeal.Spells[base][rk] then
+                        local h = GoubayuHeal.GetSpellHealing(unit, base, rk)
+                        if h then
+                            total = total + h
+                        end
+                    else
+                        -- 跨职业：DBC 基础治疗量 + 我方治疗强度 × 系数
+                        local bh = GoubayuHeal.GetDBCBaseHeal(info.spellID)
+                        if bh then
+                            local coeff = (GoubayuHeal.spell_heal_coeffs
+                                and GoubayuHeal.spell_heal_coeffs[base]) or 0
+                            local sp = (GoubayuHeal.GetSelfHealPower
+                                and GoubayuHeal.GetSelfHealPower()) or 0
+                            total = total + bh + sp * coeff
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return total
+end
+
 function GoubayuHeal.GetHealValue(unit)
     local currentHealth, maxHealth = GoubayuHeal.GetUnitHealth(unit)
     local hpmissing = maxHealth - currentHealth
@@ -3297,64 +3475,30 @@ function GoubayuHeal.GetHealValue(unit)
         maxHealth = maxHealth * mult
     end
 
-    local healthToThreshold = maxHealth * GoubayuHeal.Config["min_heal_threshold"] - currentHealth
-
-    local other = GoubayuHeal.GetOtherHealing(unit)
-
-    local selfIncoming = 0
     local tname = GoubayuHeal.UnitName(unit)
-    if GoubayuHeal.healing and GoubayuHeal.healing[tname]
+    -- 自身直接治疗在途（不含 HOT；HOT 统一走 trackedHOTs 的折减公式）
+    local selfDirect = 0
+    local rec = GoubayuHeal.healing and GoubayuHeal.healing[tname]
         and GoubayuHeal.healing[tname][GoubayuHeal.my_name]
-        and GoubayuHeal.healing[tname][GoubayuHeal.my_name]["Status"] == "Active" then
-        local rec = GoubayuHeal.healing[tname][GoubayuHeal.my_name]
-        selfIncoming = (rec["Heal"] or 0) + (rec["HealingOverTime"] or 0) / 4
+    if rec and rec["Status"] == "Active" then
+        selfDirect = rec["Heal"] or 0
+    end
+    local hp = (maxHealth > 0) and (currentHealth / maxHealth) or 0
+    local hotEst = GoubayuHeal.TrackedHOTEstimate(tname, hp, hpmissing)
+
+    -- 非救急（hp >= 救急线）才把"他者正在读的治疗量"计入缺口；救急线以下按分诊设计不等他人。
+    -- by 武藤纯子酱 2026.10.20
+    local otherDirect = 0
+    if hp * 100 >= (tonumber(GoubayuHeal.Config["rescue_hp_threshold"]) or 40) then
+        otherDirect = GoubayuHeal.GetOtherCastingHealing(unit)
     end
 
-    -- 实际剩余缺口 = 当前缺口 - 其他治疗者在读 - 自身在读治疗量
-    -- 在读治疗已足以补满（或超过）时，缺口归零，避免对"加了在读治疗就满"的目标重复治疗
-    local actualHealValue = hpmissing - other - selfIncoming
+    -- 实际剩余缺口 = 当前缺口 - 他者在读直接治疗 - 自身在读直接治疗 - HOT 预估
+    local actualHealValue = hpmissing - otherDirect - selfDirect - hotEst
     if actualHealValue < 0 then
         actualHealValue = 0
     end
     return actualHealValue
-end
-
--- ============================================================
--- 汇总其他治疗者的在途治疗量
--- ============================================================
-
-function GoubayuHeal.GetOtherHealing(unit, maxtimeleft)
-    local healing = 0
-    local name = GoubayuHeal.UnitName(unit)
-
-    if (string.find(unit, "pet")) then
-        if (unit == "pet") then
-            name = GoubayuHeal.UnitName("player") .. "-" .. name
-        else
-            name = GoubayuHeal.UnitName(string.gsub(unit, "pet", "")) .. "-" .. name
-        end
-    end
-
-    maxtimeleft = (maxtimeleft or 666)
-
-    local hot_multiply = GoubayuHeal.Config["hot_multiply"]
-    if (GoubayuHeal.player_in_combat) then
-        hot_multiply = GoubayuHeal.Config["hot_multiply_battle"]
-    end
-
-    if (GoubayuHeal.healing[name]) then
-        for healer, data in GoubayuHeal.healing[name] do
-            if (healer ~= GoubayuHeal.my_name
-                and GoubayuHeal.healing[name][healer]["Status"] == "Active"
-                and GoubayuHeal.healing[name][healer]["TimeLeft"] < maxtimeleft) then
-                healing = healing + GoubayuHeal.healing[name][healer]["Heal"]
-                healing = healing + GoubayuHeal.healing[name][healer]["HealingOverTime"]
-                    * hot_multiply
-            end
-        end
-    end
-
-    return healing
 end
 
 -- ============================================================
@@ -3700,13 +3844,18 @@ function GoubayuHeal.GetOtherRezing(player)
                 return 1
             end
         end
-    elseif (CT_RA_Ressers) then
+    end
+    -- 以下两项与上面的判断相互独立（原先用 elseif：healing 里有该目标的任何记录时
+    -- 会跳过 CT_RA/oRA 的"他人正在复活"检测，导致重复复活）
+    -- by 武藤纯子酱 2026.10.21
+    if (CT_RA_Ressers) then
         for rezer, data in CT_RA_Ressers do
             if data == name then
                 return 1
             end
         end
-    elseif oRA_Resurrection then
+    end
+    if oRA_Resurrection then
         for rezer, data in oRA_Resurrection.ressers do
             if data == name then
                 return 1
@@ -3839,9 +3988,31 @@ function GoubayuHeal.DoRez()
 
     local channel = GoubayuHeal.Config["rez_message_channel"]
 
+    -- 同一目标复活节流：复活成功后，目标在接受复活前仍处于"尸体"状态（如复活术需点确认），
+    -- 不加节流会导致每次按键都对同一个人重复施放复活（白耗蓝）。成功后锁定 20 秒。
+    -- by 武藤纯子酱 2026.10.21
+    local function RezAttemptBlocked(tname)
+        local t = tname and GoubayuHeal._rez_block_until and GoubayuHeal._rez_block_until[tname]
+        return (t and GetTime() < t) and true or false
+    end
+    local function RezAttemptDone(tname)
+        if not tname then
+            return
+        end
+        GoubayuHeal._rez_block_until = GoubayuHeal._rez_block_until or {}
+        GoubayuHeal._rez_block_until[tname] = GetTime() + 20
+    end
+
     if UnitExists("target") and GoubayuHeal.CanRez("target") then
         local target = GoubayuHeal.AKA("target")
-        GoubayuHeal.Heal(target, GoubayuHeal.Config["rez_spell"], GoubayuHeal.Config["rez_rank"])
+        local tname = GoubayuHeal.UnitName("target")
+        -- 施法中不重复发起（Heal 在施法中会直接返回 1，不能当作"刚放过"来打标记）
+        if (not GoubayuHeal.casting_spell) and (not RezAttemptBlocked(tname)) then
+            if GoubayuHeal.Heal(target, GoubayuHeal.Config["rez_spell"],
+                GoubayuHeal.Config["rez_rank"]) then
+                RezAttemptDone(tname)
+            end
+        end
         return
     end
 
@@ -3849,11 +4020,14 @@ function GoubayuHeal.DoRez()
         local candidates = {}
         local n = 0
 
-        for player, data in GoubayuHeal.awaiting_rez do
-            if (data["is_dead"] and (not data["waiting_time"])
-                and (not GoubayuHeal.GetOtherRezing(player))) then
-                n = n + 1
-                candidates[n] = { unit = player, priority = data["priority"] or 0 }
+        if not GoubayuHeal.casting_spell then
+            for player, data in GoubayuHeal.awaiting_rez do
+                if (data["is_dead"] and (not data["waiting_time"])
+                    and (not GoubayuHeal.GetOtherRezing(player))
+                    and (not RezAttemptBlocked(GoubayuHeal.UnitName(player)))) then
+                    n = n + 1
+                    candidates[n] = { unit = player, priority = data["priority"] or 0 }
+                end
             end
         end
 
@@ -3863,6 +4037,7 @@ function GoubayuHeal.DoRez()
             local player = candidates[i].unit
             if GoubayuHeal.Heal(player, GoubayuHeal.Config["rez_spell"],
                 GoubayuHeal.Config["rez_rank"]) then
+                RezAttemptDone(GoubayuHeal.UnitName(player))
                 GoubayuHeal.awaiting_rez[player]["status"] = "start"
                 GoubayuHeal.awaiting_rez[player]["cast"] = nil
                 return
@@ -4027,7 +4202,9 @@ function GoubayuHeal.UpdateDead(elapsed)
                 data["cast"] = data["cast"] - elapsed
                 if (data["cast"] <= 0) then
                     if (data["status"] == "stop") then
-                        GoubayuHeal.awaiting_rez[player]["waiting_time"] = 120
+                        -- 施放结束后 20 秒内不再重试同一具尸体（等对方接受；拒绝/超时后 20 秒可重试）
+                        -- by 武藤纯子酱 2026.10.21
+                        GoubayuHeal.awaiting_rez[player]["waiting_time"] = 20
                         GoubayuHeal.awaiting_rez[player]["status"] = nil
                         GoubayuHeal.awaiting_rez[player]["cast"] = nil
                     else
@@ -4124,14 +4301,13 @@ function GoubayuHeal.MaintainHots()
         end
     end
 
-    local pending = false
-
     for _, unit in ipairs(units) do
-        -- 射程/视野过滤：不可施放的单位不计入 pending。否则会对无视野/超距目标反复尝试，
-        -- 且 MaintainHots 末尾仍返回 true，使本次治疗动作被白白消费（主治疗被跳过）
+        -- 射程/视野过滤：不可施放的单位不计入，避免对无视野/超距目标反复尝试而白白占掉动作
         -- by 武藤纯子酱 2026.9.21
+        -- 离线成员同样排除：掉线的人永远补不上，反复尝试只会白占动作 by 武藤纯子酱 2026.10.20
         if (UnitExists(unit) and UnitIsFriend("player", unit)
             and not UnitIsDeadOrGhost(unit)
+            and not GoubayuHeal.UnitIsOffline(unit)
             and (not GoubayuHeal.CanCastAtUnit
                 or GoubayuHeal.CanCastAtUnit(unit, 40) ~= false)) then
             local name = GoubayuHeal.UnitName(unit)
@@ -4147,7 +4323,8 @@ function GoubayuHeal.MaintainHots()
                             -- 虚弱灵魂期间无法套盾
                         elseif (not GoubayuHeal.UnitHasHOT(unit, spell)) then
                             if (not GoubayuHeal.IsBuffBarFull(unit)) then
-                                pending = true
+                                -- 只有真的放出去才结束本次动作；被拒（P0 已回滚）就继续，
+                                -- 不能把"补 HOT 失败"当成已处理而吞掉主治疗 by 武藤纯子酱 2026.10.20
                                 if (GoubayuHeal.Heal(unit, spell, rank, 0, 1)) then
                                     return true
                                 end
@@ -4159,7 +4336,7 @@ function GoubayuHeal.MaintainHots()
         end
     end
 
-    return pending
+    return false
 end
 
 -- ============================================================
@@ -4170,6 +4347,20 @@ function GoubayuHeal.HotMaintenancePriority()
     if (not GoubayuHeal.Config or GoubayuHeal.Config["raid_hots_enabled"] ~= 1) then
         return false
     end
+
+    -- 读条中不判断 HOT 维持：判断出来也放不出去，还白扫全团血量
+    -- by 武藤纯子酱 2026.10.21
+    if (GoubayuHeal.casting_spell) then
+        return false
+    end
+
+    -- 0.5 秒节流：HOT 维持是慢节奏维护（恢复 15 秒 / 盾 30 秒 CD），
+    -- 100ms 狂按时没必要每次都全团判断 by 武藤纯子酱 2026.10.21
+    local now = GetTime()
+    if GoubayuHeal._hot_maint_at and (now - GoubayuHeal._hot_maint_at) < 0.5 then
+        return false
+    end
+    GoubayuHeal._hot_maint_at = now
 
     local threshold = tonumber(GoubayuHeal.Config["raid_hots_priority"]) or 0.8
     local minPct = 101
@@ -4760,6 +4951,142 @@ end
 -- 维持防护恐惧结界：按优先级（10 最高、1 最低）找出已设定优先级但身上没有结界的成员，
 -- 补一个（技能自身 30 秒冷却由客户端判定，CD 中不施放）。仅牧师生效
 -- by 武藤纯子酱 2026.9.21
+-- 单位是否离线（掉线的玩家）：UnitIsConnected 返回 nil/false 即视为离线。
+-- 用于"按名字配置的自动补 buff"（反恐、HOT 维持）等场景：
+-- 离线成员永远放不上，若不排除会反复尝试、并把整次治疗动作吞掉。
+-- 仅用于玩家单位（raidN/partyN/player）；宠物/图腾不要用本函数判断。
+-- by 武藤纯子酱 2026.10.20
+function GoubayuHeal.UnitIsOffline(unit)
+    if (not unit or not UnitIsConnected) then
+        return false
+    end
+    return (not UnitIsConnected(unit))
+end
+
+-- 是否有已设置的坦克（MT/8T，含 Tank 目标）处于"救急线"以下。
+-- 用于：救急期间暂停挂接的团刷技能（团刷会把治疗摊开/延后，坦克等不起）。
+-- 结果缓存 0.2 秒：同一次按键内多处判断不重复扫全团。by 武藤纯子酱 2026.10.23
+function GoubayuHeal.TankInRescue()
+    local now = GetTime()
+    if GoubayuHeal._tankRescueAt and (now - GoubayuHeal._tankRescueAt) < 0.2 then
+        return GoubayuHeal._tankRescueVal
+    end
+
+    local res = false
+    local C = GoubayuHeal.Config
+    local pct = tonumber(C and C["rescue_hp_threshold"]) or 40
+    if C and pct > 0 then
+        local roles = C["raid_roles"]
+        local tankName = GoubayuHeal.Tank and GoubayuHeal.Tank["Name"]
+
+        local function isTank(n)
+            if not n then
+                return false
+            end
+            if tankName and n == tankName then
+                return true
+            end
+            local rd = roles and roles[n]
+            return rd == "MT" or rd == "8T"
+        end
+
+        local function check(u)
+            if not (u and UnitExists(u) and not UnitIsDeadOrGhost(u)) then
+                return false
+            end
+            if GoubayuHeal.UnitIsOffline and GoubayuHeal.UnitIsOffline(u) then
+                return false
+            end
+            if not isTank(GoubayuHeal.UnitName(u)) then
+                return false
+            end
+            local h, mh = GoubayuHeal.GetUnitHealth(u)
+            if not (mh and mh > 0) then
+                return false
+            end
+            return (h / mh * 100) < pct
+        end
+
+        if check("player") then
+            res = true
+        else
+            local n = GetNumRaidMembers()
+            local por = "raid"
+            if n == 0 then
+                n = GetNumPartyMembers()
+                por = "party"
+            end
+            for i = 1, n do
+                if check(por .. i) then
+                    res = true
+                    break
+                end
+            end
+        end
+    end
+
+    GoubayuHeal._tankRescueAt = now
+    GoubayuHeal._tankRescueVal = res
+    return res
+end
+
+-- 反恐（防护恐惧结界）可施放判定：优先 CanCastAtUnit（UnitXP 距离+视野）。
+-- 返回 nil（缺 UnitXP/数据）时用 Nampower IsSpellInRange 兜底；仍判定不了 → 视为不可施放。
+-- 宁可跳过也不盲放：盲放失败会占掉整次动作，表现为"卡在这个目标上不跳过"。
+-- by 武藤纯子酱 2026.10.20
+-- 反恐真实 spellId（射程判定用），按法术书槽位缓存；法术书变化时清空
+-- by 武藤纯子酱 2026.10.22
+function GoubayuHeal.FearWardSpellId(slot)
+    if not slot then
+        return nil
+    end
+    local c = GoubayuHeal._fw_spellid_cache
+    if not c then
+        c = {}
+        GoubayuHeal._fw_spellid_cache = c
+    end
+    local v = c[slot]
+    if v ~= nil then
+        return v or nil
+    end
+    local sid
+    if GetSpellBookItemInfo then
+        local ok, stype, id = pcall(GetSpellBookItemInfo, slot, BOOKTYPE_SPELL)
+        if ok and stype == "SPELL" and type(id) == "number" and id > 0 then
+            sid = id
+        end
+    end
+    if not sid and GetNampowerVersion and GetSpellIdForName then
+        local ok2, id2 = pcall(GetSpellIdForName, GoubayuHeal.Fear_ward)
+        if ok2 and id2 and id2 > 0 then
+            sid = id2
+        end
+    end
+    c[slot] = sid or false
+    return sid
+end
+
+function GoubayuHeal.FearWardCastable(unit, slot)
+    if (not unit) then
+        return false
+    end
+    -- 离线成员：放不上，直接跳过（否则会反复尝试）
+    if GoubayuHeal.UnitIsOffline(unit) then
+        return false
+    end
+    -- 传真实 spellId：Nampower 的 IsSpellInRange 优先（含天赋/装备射程修正）
+    local sid = GoubayuHeal.FearWardSpellId and GoubayuHeal.FearWardSpellId(slot) or nil
+    if GoubayuHeal.CanCastAtUnit then
+        local c = GoubayuHeal.CanCastAtUnit(unit, 30, sid)
+        if (c ~= nil) then
+            return c and true or false
+        end
+    end
+    -- 无法判断（无 UnitXP 且无 Nampower IsSpellInRange）：放行，交给客户端与 30 秒 CD；
+    -- 否则这类环境会永远不施放反恐。by 武藤纯子酱 2026.10.22
+    return true
+end
+
 function GoubayuHeal.MaintainFearWard()
     if (GoubayuHeal.my_class ~= GoubayuHeal.Priest) then
         return false
@@ -4781,13 +5108,31 @@ function GoubayuHeal.MaintainFearWard()
         return false
     end
 
-    -- 技能冷却未就绪：直接返回（防护恐惧结界 30 秒 CD，冷却由槽位查询）
+    -- 0.5 秒节流：反恐是 30 秒 CD 的缓慢维持，100ms 狂按时没必要每次都逐个名字判断
+    -- by 武藤纯子酱 2026.10.21
+    local _fwNow = GetTime()
+    if GoubayuHeal._fw_check_at and (_fwNow - GoubayuHeal._fw_check_at) < 0.5 then
+        return false
+    end
+    GoubayuHeal._fw_check_at = _fwNow
+
+    -- 未学会反恐（法术书里找不到槽位）→ 不处理：继续盲放必然失败，又会把整次动作吞掉
+    -- by 武藤纯子酱 2026.10.20
     local slot = GoubayuHeal.GetSpellBookSlot and GoubayuHeal.GetSpellBookSlot(GoubayuHeal.Fear_ward)
-    if (slot) then
-        local okS, _, duration = pcall(GetSpellCooldown, slot, BOOKTYPE_SPELL)
-        if (okS and duration and duration > 0) then
-            return false
-        end
+    if (not slot) then
+        return false
+    end
+
+    -- 正在施法（含读条治疗中）：本次不插手，避免打断/白占一次动作
+    -- by 武藤纯子酱 2026.10.20
+    if (GoubayuHeal.casting_spell) then
+        return false
+    end
+
+    -- 技能冷却未就绪：直接返回（防护恐惧结界 30 秒 CD，冷却由槽位查询）
+    local okS, _, duration = pcall(GetSpellCooldown, slot, BOOKTYPE_SPELL)
+    if (okS and duration and duration > 0) then
+        return false
     end
 
     -- 10 最高、1 最低：降序排列，先补高优先级
@@ -4800,15 +5145,17 @@ function GoubayuHeal.MaintainFearWard()
     local top = list[1]
     if top then
         local topUnit = GoubayuHeal.GetUnitID(top.name)
-        if (topUnit and UnitExists(topUnit) and not UnitIsDeadOrGhost(topUnit)) then
+        -- 离线/不存在/死亡的最高优先级不占 CD：否则整轮都给他"留着 CD"，谁也补不上
+        -- by 武藤纯子酱 2026.10.20
+        if (topUnit and UnitExists(topUnit) and not UnitIsDeadOrGhost(topUnit)
+            and not GoubayuHeal.UnitIsOffline(topUnit)) then
             local topHasWard
             if (GoubayuHeal.HasBuffByName) then
                 topHasWard = GoubayuHeal.HasBuffByName(topUnit, GoubayuHeal.Fear_ward)
             else
                 topHasWard = GoubayuHeal.UnitGotBuff(topUnit, GoubayuHeal.Fear_ward)
             end
-            if (not topHasWard)
-                and (GoubayuHeal.CanCastAtUnit and GoubayuHeal.CanCastAtUnit(topUnit, 30) == false) then
+            if (not topHasWard) and (not GoubayuHeal.FearWardCastable(topUnit, slot)) then
                 return false
             end
         end
@@ -4817,12 +5164,10 @@ function GoubayuHeal.MaintainFearWard()
     for _, e in ipairs(list) do
         local unit = GoubayuHeal.GetUnitID(e.name)
         if (unit and UnitExists(unit) and not UnitIsDeadOrGhost(unit)) then
-            -- 距离/视野过滤：够不着或不视线的目标直接跳过，避免反复尝试失败而卡住本次治疗动作
-            -- （与主治疗同一口径 CanCastAtUnit：UnitXP distanceBetween / inSight）
-            -- by 武藤纯子酱 2026.9.23
-            if (GoubayuHeal.CanCastAtUnit and GoubayuHeal.CanCastAtUnit(unit, 30) == false) then
-                -- 本目标不可施放：继续看下一个优先级成员
-            else
+            -- 距离/视野过滤：够不着/看不见/判定不了的直接跳过，避免反复尝试失败而卡住本次治疗动作。
+            -- 统一走 FearWardCastable（CanCastAtUnit 为 nil 时用 IsSpellInRange 兜底，仍未知按不可施放处理）。
+            -- by 武藤纯子酱 2026.10.20
+            if GoubayuHeal.FearWardCastable(unit, slot) then
                 -- 已有结界则跳过：HasBuffByName 走光环字段/原生扫描（不依赖贴图映射表，
                 -- UnitGotBuff 对尚未见过的buff会因缺映射而误判为"没有"）
                 -- by 武藤纯子酱 2026.9.21
@@ -4834,6 +5179,15 @@ function GoubayuHeal.MaintainFearWard()
                 end
 
                 if (not hasWard) then
+                    -- 记录本次施放尝试：被客户端拒绝时由 UI_ERROR_MESSAGE → RollbackLastAttempt 回滚，
+                    -- 下次按键可重试；不会把"放失败"当成已处理而连累治疗动作。
+                    -- by 武藤纯子酱 2026.10.20
+                    GoubayuHeal.error_message = nil
+                    GoubayuHeal._lastAttempt = {
+                        spell = GoubayuHeal.Fear_ward,
+                        name = GoubayuHeal.UnitName(unit) or e.name,
+                        time = GetTime(),
+                    }
                     if (GetNampowerVersion and GoubayuHeal.GetUnitGUID) then
                         local guid = GoubayuHeal.GetUnitGUID(unit)
                         if (guid) then
@@ -5013,6 +5367,28 @@ function GoubayuHeal.UpdateHealing(elapsed)
     for _, rec in ipairs(toRemove) do
         if GoubayuHeal.healing[rec[1]] then
             GoubayuHeal.healing[rec[1]][rec[2]] = nil
+        end
+    end
+
+    -- HOT 记账按时间递减/过期（自身+他人统一表）
+    -- by 武藤纯子酱 2026.10.20
+    if GoubayuHeal.trackedHOTs then
+        local gone = {}
+        for tname, tracks in pairs(GoubayuHeal.trackedHOTs) do
+            for sp, t in pairs(tracks) do
+                t.timeLeft = (t.timeLeft or 0) - elapsed
+                if t.timeLeft <= 0 then
+                    gone[table.getn(gone) + 1] = { tname, sp }
+                end
+            end
+        end
+        for _, g in ipairs(gone) do
+            if GoubayuHeal.trackedHOTs[g[1]] then
+                GoubayuHeal.trackedHOTs[g[1]][g[2]] = nil
+                if next(GoubayuHeal.trackedHOTs[g[1]]) == nil then
+                    GoubayuHeal.trackedHOTs[g[1]] = nil
+                end
+            end
         end
     end
 end
@@ -5233,6 +5609,31 @@ GoubayuHeal.error_unable = {
     SPELL_FAILED_TARGETS_DEAD,
     SPELL_FAILED_TARGET_NOT_DEAD
 }
+
+-- "全局中止"错误：当前根本无法施法（沉默/昏迷/恐惧/被控/死亡）的状态。
+-- 命中后没必要再逐档、逐目标重试 → 直接结束本次治疗动作（无蓝等"仅部分技能受影响"的不在此列）。
+-- by 武藤纯子酱 2026.10.19
+GoubayuHeal.error_global_abort = {
+    [SPELL_FAILED_SILENCED] = 1,
+    [SPELL_FAILED_STUNNED] = 1,
+    [SPELL_FAILED_CONFUSED] = 1,
+    [SPELL_FAILED_FLEEING] = 1,
+    [SPELL_FAILED_NOT_IN_CONTROL] = 1,
+    [SPELL_FAILED_POSSESSED] = 1,
+    [SPELL_FAILED_CASTER_DEAD] = 1
+}
+
+function GoubayuHeal.IsGlobalAbortError(msg)
+    if not msg then
+        return false
+    end
+    for m, _ in pairs(GoubayuHeal.error_global_abort) do
+        if m and string.find(msg, m) then
+            return true
+        end
+    end
+    return false
+end
 
 GoubayuHeal.heal_spells_search = {}
 
@@ -5521,9 +5922,9 @@ GoubayuHeal.per_scheme_keys = {
     "paladin_divine_shield_pct", "paladin_divine_protection_pct",
     "shaman_totem",
     "hot_heal_threshold", "hot_multiply", "hot_multiply_battle", "max_overheal",
-    "min_heal_threshold", "heal_power", "update_player_data_time", "heal_strategy",
+    "min_heal_threshold", "rescue_hp_threshold", "heal_power", "update_player_data_time", "heal_strategy",
     "heal_charmed", "block_faster_healers", "scale_hots", "scale_spells", "safe_cancel",
-    "allow_regrowth_overwrite",
+    "allow_regrowth_overwrite_pct",
     "always_tank_target", "shapeshifted_druids", "scan_cache", "heal_anti_starvation",
     "healer_count_limit", "nampower_queue_timeout",
     "player_priority", "party_priority", "raid_priority", "pet_priority", "MT_priority",
@@ -5564,13 +5965,14 @@ function GoubayuHeal.SchemeGetDefaults()
     d["hot_multiply_battle"] = 0.5
     d["max_overheal"] = 0.2
     d["min_heal_threshold"] = 0.95
+    d["rescue_hp_threshold"] = 40
     d["heal_power"] = 1.0
     d["update_player_data_time"] = 2.5
     d["heal_strategy"] = 1
     d["heal_charmed"] = 1
     d["block_faster_healers"] = 0
     d["scale_hots"] = 0
-    d["allow_regrowth_overwrite"] = 1
+    d["allow_regrowth_overwrite_pct"] = 100
     d["scale_spells"] = 1
     d["safe_cancel"] = 1
     d["always_tank_target"] = 0
@@ -5998,14 +6400,27 @@ function GoubayuHeal.SetupSettings()
     GoubayuHeal.Config["heal_targettarget_modifier"] = (GoubayuHeal.Config[
         "heal_targettarget_modifier"] or 1)
     GoubayuHeal.Config["hot_heal_threshold"] = (GoubayuHeal.Config["hot_heal_threshold"] or 0.4)
-    -- 允许覆盖愈合（默认开）：缺失时补 1
-    if GoubayuHeal.Config["allow_regrowth_overwrite"] == nil then
-        GoubayuHeal.Config["allow_regrowth_overwrite"] = 1
+    -- "允许覆盖愈合"复选框已移除，改为"覆盖愈合阈值"滑块（0% = 不覆盖）。
+    -- 旧存档迁移：原复选框若为关(=0) 且阈值还是默认 100 → 阈值置 0（保持"不覆盖"）
+    -- by 武藤纯子酱 2026.10.19
+    if GoubayuHeal.Config["allow_regrowth_overwrite_pct"] == nil then
+        GoubayuHeal.Config["allow_regrowth_overwrite_pct"] = 100
+    end
+    if GoubayuHeal.Config["allow_regrowth_overwrite"] == 0
+        and GoubayuHeal.Config["allow_regrowth_overwrite_pct"] == 100 then
+        GoubayuHeal.Config["allow_regrowth_overwrite_pct"] = 0
     end
     GoubayuHeal.Config["hot_multiply"] = (GoubayuHeal.Config["hot_multiply"] or 1.0)
     GoubayuHeal.Config["hot_multiply_battle"] = (GoubayuHeal.Config["hot_multiply_battle"] or 0.5)
     GoubayuHeal.Config["max_overheal"] = (GoubayuHeal.Config["max_overheal"] or 0.2)
     GoubayuHeal.Config["min_heal_threshold"] = (GoubayuHeal.Config["min_heal_threshold"] or 0.95)
+    -- 救急线（百分比）：目标低于它时忽略 HOT 预估、默认忽略他人直接读条。
+    -- 读档也夹取 rescue <= min_heal_threshold。by 武藤纯子酱 2026.10.20
+    GoubayuHeal.Config["rescue_hp_threshold"] = (tonumber(GoubayuHeal.Config["rescue_hp_threshold"]) or 40)
+    local _minPct = (tonumber(GoubayuHeal.Config["min_heal_threshold"]) or 0.95) * 100
+    if GoubayuHeal.Config["rescue_hp_threshold"] > _minPct then
+        GoubayuHeal.Config["rescue_hp_threshold"] = _minPct
+    end
     GoubayuHeal.Config["party_priority"] = (GoubayuHeal.Config["party_priority"] or 0.8)
     GoubayuHeal.Config["pet_priority"] = (GoubayuHeal.Config["pet_priority"] or 0.2)
     GoubayuHeal.Config["player_priority"] = (GoubayuHeal.Config["player_priority"] or 1.0)
@@ -6320,6 +6735,12 @@ function GoubayuHeal.UpdateSpells()
                 end
             end
 
+            -- 解析失败字段兜底（tooltip 未就绪时可能为 nil；nil 进表会导致后续 nil 算术报错）
+            -- by 武藤纯子酱 2026.10.22
+            mana = tonumber(mana) or 0
+            casttime = tonumber(casttime) or 0
+            range = tonumber(range) or 0
+
             GoubayuHeal.Spells[baseName][rank]["Mana"] = mana
             GoubayuHeal.Spells[baseName][rank]["CastTime"] = casttime
 
@@ -6563,73 +6984,200 @@ function GoubayuHeal.IsBuffBarFull(unit)
 end
 
 -- ============================================================
+-- 光环 id → 技能名/等级（Nampower 优先，其次 SuperWoW）
+-- ============================================================
+
+-- 解析光环 id 对应的技能名与等级：Nampower GetSpellNameAndRankForId → SuperWoW SpellInfo。
+-- 等级取等级字符串尾部数字（"Rank 5"/"等级 5" 均可），无数字则视为未知（nil）。
+-- 结果按 id 缓存；取不到名字时不缓存（避免插件加载早期把失败结果固化）。
+-- by 武藤纯子酱 2026.10.20
+function GoubayuHeal.ResolveAuraNameRank(id)
+    -- 空槽哨兵在不同版本可能是 0 / "0" / "0x0000000000000000" / nil，非数字一律按无光环处理
+    if type(id) ~= "number" or id == 0 then
+        return nil, nil
+    end
+    local cache = GoubayuHeal._aura_info_cache
+    if not cache then
+        cache = {}
+        GoubayuHeal._aura_info_cache = cache
+    end
+    local c = cache[id]
+    if c then
+        return c.name, c.rank
+    end
+    -- 失败结果只做 30 秒负缓存：登录早期 DBC 可能尚未就绪，永久缓存会让该光环 id
+    -- 在整个会话都判不出来（HOT 检测/等级全失效）by 武藤纯子酱 2026.10.22
+    local neg = GoubayuHeal._aura_info_neg
+    if neg and neg[id] and (GetTime() - neg[id]) < 30 then
+        return nil, nil
+    end
+
+    local name, rankStr
+    if GetSpellNameAndRankForId then
+        local ok, nm, rk = pcall(GetSpellNameAndRankForId, id)
+        if ok then
+            name, rankStr = nm, rk
+        end
+    end
+    if (not name or name == "") and SpellInfo then
+        local ok, nm, rk = pcall(SpellInfo, id)
+        if ok then
+            name, rankStr = nm, rk
+        end
+    end
+    if not name or name == "" then
+        -- 30 秒负缓存（见上）：避免每次调用都反复 pcall
+        if not GoubayuHeal._aura_info_neg then
+            GoubayuHeal._aura_info_neg = {}
+        end
+        GoubayuHeal._aura_info_neg[id] = GetTime()
+        return nil, nil
+    end
+
+    local rank
+    if type(rankStr) == "number" then
+        rank = rankStr
+    elseif type(rankStr) == "string" and rankStr ~= "" then
+        local _, _, num = string.find(rankStr, "(%d+)%s*$")
+        rank = tonumber(num or "")
+    end
+
+    cache[id] = { name = name, rank = rank }
+    return name, rank
+end
+
+-- 光环 id 属于本技能的哪个等级：先查我们会的等级表（精确匹配，最快），
+-- 未命中再按名字+等级兜底（能识别我们没学的高等级光环）。
+-- by 武藤纯子酱 2026.10.20
+function GoubayuHeal.RankForAuraId(spell, id)
+    if not (spell and type(id) == "number" and id ~= 0) then
+        return nil
+    end
+    local rk = GoubayuHeal.RankForSpellId(spell, id)
+    if rk then
+        return rk
+    end
+    local nm, rank = GoubayuHeal.ResolveAuraNameRank(id)
+    if nm == spell then
+        return rank or 1
+    end
+    return nil
+end
+
+-- 光环 id 属本技能的哪个等级（带 (技能,id) 结果缓存，失败记 false）：
+-- 高频调用点（UnitHasHOT/GetUnitHOTRank/ScanTargetHOTs）重复解析降为 O(1) 查表。
+-- by 武藤纯子酱 2026.10.21
+function GoubayuHeal.RankForAuraIdCached(spell, id)
+    if not (spell and type(id) == "number" and id ~= 0) then
+        return nil
+    end
+    local c = GoubayuHeal._aura_rank_cache
+    if not c then
+        c = {}
+        GoubayuHeal._aura_rank_cache = c
+    end
+    local per = c[spell]
+    if not per then
+        per = {}
+        c[spell] = per
+    end
+    local v = per[id]
+    if v ~= nil then
+        if v == false then
+            return nil
+        end
+        return v
+    end
+    -- 只有"名字解析成功且与本技能不符"才写 false 负缓存；解析失败（未知）不缓存，
+    -- 避免登录早期一次失败把该光环永久判死。by 武藤纯子酱 2026.10.22
+    local rk = GoubayuHeal.RankForSpellId(spell, id)
+    if not rk then
+        local nm, rank = GoubayuHeal.ResolveAuraNameRank(id)
+        if nm == spell then
+            rk = rank or 1
+        elseif not nm then
+            return nil
+        end
+    end
+    per[id] = rk or false
+    return rk
+end
+
+-- ============================================================
 -- 检测单位是否已有同类HOT
 -- ============================================================
 
+-- 识别顺序：Nampower（aura id 精确 + 名字/等级）→ SuperWoW（UnitBuff 第3值 id + 名字/等级）
+-- → 纯图标（纹理 + 增益名必须同时匹配）。
+-- 有 Nampower / SuperWoW 时一律不用图标：野性印记、自然抗性与愈合共用图标，
+-- 靠图标判断会把"只有爪子/自然抗性"的目标误判为有愈合，进而让迅捷治愈被服务端拒绝、连刷报错。
+-- by 武藤纯子酱 2026.10.20
 function GoubayuHeal.UnitHasHOT(unit, spell)
     if not unit or not spell then
         return false
     end
 
+    -- HOT 只可能是增益（1-32 槽）；命中结果按 (技能,id) 缓存，重复调用只剩查表
+    -- by 武藤纯子酱 2026.10.21
+    -- 1) Nampower：aura 数组的 spellId 精确/名字判定；有光环数据就不回退图标
+    if GetNampowerVersion and GetUnitField then
+        local auras = GetUnitField(unit, "aura")
+        if auras then
+            for i = 1, 32 do
+                local id = auras[i]
+                if id and id ~= 0 and GoubayuHeal.RankForAuraIdCached(spell, id) then
+                    return true
+                end
+            end
+            return false
+        end
+    end
+
+    -- 2) SuperWoW：UnitBuff 第 3 个返回值是光环 id，同样不用图标
+    -- （若该版本 UnitBuff 不返回 id，本档拿不到任何数据，落到下面的图标+名字兜底）
+    if SpellInfo then
+        local sawSid = false
+        for i = 1, 32 do
+            local texture, _, sid = UnitBuff(unit, i)
+            if not texture then
+                break
+            end
+            if sid and sid ~= 0 then
+                sawSid = true
+                if GoubayuHeal.RankForAuraIdCached(spell, sid) then
+                    return true
+                end
+            end
+        end
+        if sawSid then
+            return false
+        end
+    end
+
+    -- 3) 两者都没有：图标纹理 + 增益名必须同时匹配（名字取不到视为没有）
     local isRenew = (spell == GoubayuHeal.Renew)
     local isReju = (spell == GoubayuHeal.Rejuvenation)
     local isRegrowth = (spell == GoubayuHeal.Regrowth)
     local isPWS = (spell == GoubayuHeal.Power_word_shield)
-
-    -- Nampower路径
-    if GetNampowerVersion and GetUnitField and GetSpellRecField and GetSpellIconTexture then
-        local auras = GetUnitField(unit, "aura")
-        if auras then
-            local idSet = GoubayuHeal.GetSpellIdSet(spell)
-            local hasAny = false
-            for _ in pairs(idSet) do
-                hasAny = true
-                break
-            end
-
-            if hasAny then
-                for i = 1, 48 do
-                    local id = auras[i]
-                    if id and id ~= 0 and idSet[id] then
-                        local matched = true
-                        local okIcon, iconId = pcall(GetSpellRecField, id, "spellIconID")
-                        if okIcon and iconId then
-                            -- 图标ID→纹理缓存（会话内，不持久化）
-                            GoubayuHeal.spell_icon_cache = GoubayuHeal.spell_icon_cache or {}
-                            local tex = GoubayuHeal.spell_icon_cache[iconId]
-                            if tex == nil then
-                                local okTex, t2 = pcall(GetSpellIconTexture, iconId)
-                                tex = okTex and t2 or false
-                                GoubayuHeal.spell_icon_cache[iconId] = tex
-                            end
-                            if tex then
-                                matched = (isRenew and string.find(tex, "Spell_Holy_Renew"))
-                                    or (isReju and string.find(tex, "Spell_Nature_Rejuvenation"))
-                                    or (isRegrowth and string.find(tex, "Spell_Nature_Regeneration"))
-                                    or (isPWS and string.find(tex, "Spell_Holy_PowerWordShield"))
-                            end
-                        end
-                        if matched then
-                            return true
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    -- 回退：UnitBuff图标扫描
     for i = 1, 32 do
         local texture = UnitBuff(unit, i)
         if not texture then
             break
         end
-
-        if (isRenew and string.find(texture, "Spell_Holy_Renew"))
-            or (isReju and string.find(texture, "Spell_Nature_Rejuvenation"))
-            or (isRegrowth and string.find(texture, "Spell_Nature_Regeneration"))
-            or (isPWS and string.find(texture, "Spell_Holy_PowerWordShield")) then
-            return true
+        local matched = false
+        if isRenew then
+            matched = (string.find(texture, "Spell_Holy_Renew") ~= nil)
+        elseif isReju then
+            matched = (string.find(texture, "Spell_Nature_Rejuvenation") ~= nil)
+        elseif isRegrowth then
+            matched = (string.find(texture, "Spell_Nature_ResistNature") ~= nil)
+        elseif isPWS then
+            matched = (string.find(texture, "Spell_Holy_PowerWordShield") ~= nil)
+        end
+        if matched then
+            if GoubayuHeal.GetBuffData(unit, i) == spell then
+                return true
+            end
         end
     end
 
@@ -6640,28 +7188,45 @@ end
 -- 获取目标身上已有HOT的等级
 -- ============================================================
 
+-- Nampower / SuperWoW 环境：id 精确命中或名字+等级解析（未知等级也能给出数值，取最大者）。
+-- 纯图标环境无法取得等级，返回 nil（调用方按"无等级"处理）。
+-- by 武藤纯子酱 2026.10.20
 function GoubayuHeal.GetUnitHOTRank(unit, spell)
     if not unit or not spell or not (GoubayuHeal.Spells and GoubayuHeal.Spells[spell]) then
         return nil
     end
 
+    local best = nil
     if GetNampowerVersion and GetUnitField then
         local auras = GetUnitField(unit, "aura")
         if auras then
-            local maxRank = table.getn(GoubayuHeal.Spells[spell])
-
-            for i = 1, 48 do
+            for i = 1, 32 do
                 local id = auras[i]
                 if id and id ~= 0 then
-                    for r = 1, maxRank do
-                        local rd = GoubayuHeal.Spells[spell][r]
-                        if rd and rd["SpellId"] and rd["SpellId"] == id then
-                            return r
-                        end
+                    local rk = GoubayuHeal.RankForAuraIdCached(spell, id)
+                    if rk and (not best or rk > best) then
+                        best = rk
                     end
                 end
             end
+            return best
         end
+    end
+
+    if SpellInfo then
+        for i = 1, 32 do
+            local texture, _, sid = UnitBuff(unit, i)
+            if not texture then
+                break
+            end
+            if sid and sid ~= 0 then
+                local rk = GoubayuHeal.RankForAuraIdCached(spell, sid)
+                if rk and (not best or rk > best) then
+                    best = rk
+                end
+            end
+        end
+        return best
     end
 
     return nil
@@ -6680,11 +7245,18 @@ function GoubayuHeal.CanCastAtUnit(unit, maxRange, spellId)
         return true
     end
 
+    -- Nampower：IsSpellInRange 按真实技能 ID 判定（含天赋/装备射程修正）。
+    -- 0=超距 → 直接不可施放；1=在范围内 → 记下 true（无 UnitXP 时据此兜底）；其余视为未知。
+    -- by 武藤纯子酱 2026.10.20
+    local npInRange = nil
     if spellId and GetNampowerVersion and IsSpellInRange then
         local ok, inRange = pcall(IsSpellInRange, spellId, unit)
         if ok then
             if inRange == 0 then
                 return false
+            end
+            if inRange == 1 then
+                npInRange = true
             end
         end
     end
@@ -6693,8 +7265,11 @@ function GoubayuHeal.CanCastAtUnit(unit, maxRange, spellId)
         GoubayuHeal_has_unitxp = pcall(UnitXP, "nop", "nop")
     end
 
+    -- 无 UnitXP：若 Nampower 的 IsSpellInRange 已明确"在范围内"，就按可施放处理
+    -- （此时无法判视野，交给客户端；被拒由 Heal() 的 P0 回滚兜底）
+    -- by 武藤纯子酱 2026.10.20
     if not GoubayuHeal_has_unitxp then
-        return nil
+        return npInRange
     end
 
     local inSight = UnitXP("inSight", unit, "player")
@@ -6714,7 +7289,492 @@ end
 -- 执行治疗
 -- ============================================================
 
+-- ============================================================
+-- 施放尝试辅助：副作用回滚 + "只瞬发"标记超时
+-- by 武藤纯子酱 2026.10.19
+-- ============================================================
+
+-- 置"只瞬发"标记并记录时间（超时后自动失效，避免卡在"只尝试瞬发"）
+function GoubayuHeal.SetOnlyInstant()
+    GoubayuHeal.only_instant_spells = 1
+    GoubayuHeal.only_instant_spells_time = GetTime()
+end
+
+-- "只瞬发"标记是否仍有效（超过 1.5s 自动清除）
+function GoubayuHeal.OnlyInstantActive()
+    if not GoubayuHeal.only_instant_spells then
+        return false
+    end
+    if GoubayuHeal.only_instant_spells_time
+        and (GetTime() - GoubayuHeal.only_instant_spells_time) > 1.5 then
+        GoubayuHeal.only_instant_spells = nil
+        GoubayuHeal.only_instant_spells_time = nil
+        return false
+    end
+    return true
+end
+
+-- 撤销"本次未真正施放"的副作用：HOT 内置冷却 + 本次写入的在途治疗记录（+ i_am_healing）。
+-- 仅当在途记录确实是本次技能（Spell 匹配）时才删，避免误删旧记录。
+function GoubayuHeal.RollbackCastAttempt(spell, name)
+    if not name then
+        return
+    end
+    if spell and GoubayuHeal.hot_cast_cd and GoubayuHeal.hot_cast_cd[spell] then
+        GoubayuHeal.hot_cast_cd[spell][name] = nil
+    end
+    local t = GoubayuHeal.healing and GoubayuHeal.healing[name]
+    local rec = t and t[GoubayuHeal.my_name]
+    if rec and (not spell or rec["Spell"] == spell) then
+        t[GoubayuHeal.my_name] = nil
+        if next(t) == nil then
+            GoubayuHeal.healing[name] = nil
+        end
+        if GoubayuHeal.i_am_healing == name then
+            GoubayuHeal.i_am_healing = nil
+        end
+    end
+    -- 本次施放失败：删掉刚写入的我方 HOT 记账
+    if spell then
+        local tr = GoubayuHeal.trackedHOTs and GoubayuHeal.trackedHOTs[name]
+            and GoubayuHeal.trackedHOTs[name][spell]
+        if tr and tr.isMine then
+            GoubayuHeal.ClearTrackedHOT(name, spell)
+        end
+    end
+end
+
+-- 若"本次施放尝试"在极短时间内被拒（同步路径读不到错误时的事件兜底），回滚其副作用。
+-- 覆盖瞬发技能（不触发 SPELLCAST_FAILED）被拒的场景；幂等（已回滚则 _lastAttempt 为空）。
+function GoubayuHeal.RollbackLastAttempt(spellName)
+    local a = GoubayuHeal._lastAttempt
+    if not (a and a.time and (GetTime() - a.time) <= 0.5) then
+        return
+    end
+    if spellName and a.spell and spellName ~= a.spell then
+        return
+    end
+    GoubayuHeal._lastAttempt = nil
+    GoubayuHeal.RollbackCastAttempt(a.spell, a.name)
+    if GoubayuHeal.last_cast_spell == a.spell then
+        GoubayuHeal.last_cast_spell = nil
+    end
+end
+
+-- 该错误串是否属于"施放被拒"（移动失败 / error_unable / 目标不满足）。
+-- 用于 UI_ERROR_MESSAGE 侧的白名单判定，避免把无关 UI 消息误当施放失败。
+function GoubayuHeal.IsRejectionError(msg)
+    if not msg then
+        return false
+    end
+    if GoubayuHeal.error_moving[msg] then
+        return true
+    end
+    for _, m in GoubayuHeal.error_unable do
+        if string.find(msg, m) then
+            return true
+        end
+    end
+    if SPELL_FAILED_TARGET_AURASTATE and string.find(msg, SPELL_FAILED_TARGET_AURASTATE) then
+        return true
+    end
+    return false
+end
+
+-- ============================================================
+-- HOT 记账与预估（统一表：目标→技能，含他人 HOT）
+-- 同一 HOT 在一个目标上只存在一条（后上覆盖先上；低级盖不过高级会被客户端拒）。
+-- trackedHOTs[目标名][技能] = { total, rank, ticks, timeLeft, isMine }
+-- by 武藤纯子酱 2026.10.20
+-- ============================================================
+
+-- HOT 每跳间隔（秒）：回春 3、愈合 2、恢复 3、8T2 强效附带恢复 3
+GoubayuHeal.hot_tick_interval = {
+    [GoubayuHeal.Rejuvenation] = 3,
+    [GoubayuHeal.Regrowth] = 2,
+    [GoubayuHeal.Renew] = 3,
+    [GoubayuHeal.Greater_heal] = 3
+}
+
+-- 跳数 = 持续时间 / 每跳间隔（四舍五入，至少 1）
+function GoubayuHeal.HotTicks(spell)
+    local dur = GoubayuHeal.hot_duration and GoubayuHeal.hot_duration[spell]
+    if not dur then
+        return 1
+    end
+    local intv = (GoubayuHeal.hot_tick_interval and GoubayuHeal.hot_tick_interval[spell]) or 3
+    if intv <= 0 then
+        intv = 3
+    end
+    local t = math.floor(dur / intv + 0.5)
+    if t < 1 then
+        t = 1
+    end
+    return t
+end
+
+-- spellId → 本技能等级（他人 HOT 落地时识别等级）
+function GoubayuHeal.RankForSpellId(spell, spellId)
+    if not (spell and spellId and GoubayuHeal.Spells and GoubayuHeal.Spells[spell]) then
+        return nil
+    end
+    for r = 1, table.getn(GoubayuHeal.Spells[spell]) do
+        local d = GoubayuHeal.Spells[spell][r]
+        if d and d["SpellId"] == spellId then
+            return r
+        end
+    end
+    return nil
+end
+
+-- 写入/替换一条 HOT 记账（同目标同技能覆盖即替换）
+-- 实扫目标光环里的回春/愈合，返回 { [回春]=等级, [愈合]=等级 }（无则不含该键）。
+-- 识别顺序与 UnitHasHOT 一致：Nampower → SuperWoW → 纯图标（纹理+名字，等级记 1）；
+-- Nampower 下一次取 spellId 数组，开销远低于 UnitBuff×32。by 武藤纯子酱 2026.10.20
+function GoubayuHeal.ScanTargetHOTs(u)
+    local out = {}
+    local rjName = GoubayuHeal.Rejuvenation
+    local rgName = GoubayuHeal.Regrowth
+
+    local function add(id)
+        if not (id and id ~= 0) then
+            return
+        end
+        -- 命中结果走 (技能,id) 缓存，重复扫描不再做名字解析
+        -- by 武藤纯子酱 2026.10.21
+        local rj = GoubayuHeal.RankForAuraIdCached(rjName, id)
+        if rj then
+            if not out[rjName] or rj > out[rjName] then
+                out[rjName] = rj
+            end
+            return
+        end
+        local rg = GoubayuHeal.RankForAuraIdCached(rgName, id)
+        if rg and (not out[rgName] or rg > out[rgName]) then
+            out[rgName] = rg
+        end
+    end
+
+    if GetNampowerVersion and GetUnitField then
+        local auras = GetUnitField(u, "aura")
+        if auras then
+            -- HOT 只可能是增益（1-32 槽）
+            for i = 1, 32 do
+                add(auras[i])
+            end
+            return out
+        end
+    end
+
+    if SpellInfo then
+        local sawSid = false
+        for i = 1, 32 do
+            local tex, _, sid = UnitBuff(u, i)
+            if not tex then
+                break
+            end
+            if sid and sid ~= 0 then
+                sawSid = true
+                add(sid)
+            end
+        end
+        if sawSid then
+            return out
+        end
+    end
+
+    -- 纯图标环境：纹理 + 增益名双条件（愈合图标与"自然抗性"共用，必须靠名字区分），等级未知记 1
+    for i = 1, 32 do
+        local tex = UnitBuff(u, i)
+        if not tex then
+            break
+        end
+        local cand = nil
+        if string.find(tex, "Spell_Nature_Rejuvenation") then
+            cand = rjName
+        elseif string.find(tex, "Spell_Nature_ResistNature") then
+            cand = rgName
+        end
+        if cand and GoubayuHeal.GetBuffData(u, i) == cand then
+            out[cand] = out[cand] or 1
+        end
+    end
+    return out
+end
+
+-- 最终兜底：对"本档百分比以下 + 距离/视野可达"的目标实扫 HOT 并刷新 trackedHOTs，
+-- 再据此选 HOT 等级最高的目标（主扫描因缓存/判错漏掉时用）。
+-- by 武藤纯子酱 2026.10.20
+function GoubayuHeal.SwiftmendRescanUnit(maxPercent)
+    -- 节流：结果缓存 0.5s（键含 maxPercent）。100ms 鼠标宏狂点时不会每次都全团实扫。
+    -- by 武藤纯子酱 2026.10.20
+    local now = GetTime()
+    local cacheKey = tostring(maxPercent)
+    local rc = GoubayuHeal._swiftRescanCache
+    if rc and rc.key == cacheKey and (now - rc.time) <= 0.5 then
+        return rc.unit
+    end
+    local n = GetNumRaidMembers()
+    local por = "raid"
+    if n == 0 then
+        n = GetNumPartyMembers()
+        por = "party"
+    end
+    local units = { "player" }
+    if UnitExists("pet") then
+        units[table.getn(units) + 1] = "pet"
+    end
+    for a = 1, n do
+        units[table.getn(units) + 1] = por .. a
+        if UnitExists(por .. "pet" .. a) then
+            units[table.getn(units) + 1] = por .. "pet" .. a
+        end
+    end
+    local best, bestRank, bestMiss = nil, -1, -1
+    for _, u in ipairs(units) do
+        if UnitExists(u) and (not GoubayuHeal.CanHeal or GoubayuHeal.CanHeal(u))
+            and not (GoubayuHeal.CanCastAtUnit and GoubayuHeal.CanCastAtUnit(u, 40) == false) then
+            local h, mh = GoubayuHeal.GetUnitHealth(u)
+            if mh and mh > 0 and (not maxPercent or (h / mh * 100) < maxPercent) then
+                local uname = GoubayuHeal.UnitName(u)
+                if uname then
+                    local hots = GoubayuHeal.ScanTargetHOTs(u)
+                    local rk = 0
+                    local sps = { GoubayuHeal.Rejuvenation, GoubayuHeal.Regrowth }
+                    for _, sp in ipairs(sps) do
+                        local r = hots[sp]
+                        if r then
+                            if r > rk then
+                                rk = r
+                            end
+                            local total = (GoubayuHeal.Spells[sp] and GoubayuHeal.Spells[sp][r]
+                                and GoubayuHeal.Spells[sp][r]["HealingOverTime"]) or 0
+                            if total > 0 then
+                                local prev = GoubayuHeal.trackedHOTs and GoubayuHeal.trackedHOTs[uname]
+                                    and GoubayuHeal.trackedHOTs[uname][sp]
+                                GoubayuHeal.SetTrackedHOT(uname, sp, total, r,
+                                    (prev and prev.isMine) and true or false)
+                            end
+                        else
+                            GoubayuHeal.ClearTrackedHOT(uname, sp)
+                        end
+                    end
+                    local miss = mh - h
+                    if rk > 0 and (rk > bestRank or (rk == bestRank and miss > bestMiss)) then
+                        best, bestRank, bestMiss = u, rk, miss
+                    end
+                end
+            end
+        end
+    end
+    GoubayuHeal._swiftRescanCache = { key = cacheKey, unit = best, time = now }
+    return best
+end
+
+function GoubayuHeal.SetTrackedHOT(name, spell, total, rank, isMine)
+    if not (name and spell and total and total > 0) then
+        return
+    end
+    GoubayuHeal.trackedHOTs = GoubayuHeal.trackedHOTs or {}
+    GoubayuHeal.trackedHOTs[name] = GoubayuHeal.trackedHOTs[name] or {}
+    GoubayuHeal.trackedHOTs[name][spell] = {
+        total = total,
+        rank = rank,
+        ticks = GoubayuHeal.HotTicks(spell),
+        timeLeft = (GoubayuHeal.hot_duration and GoubayuHeal.hot_duration[spell]) or 12,
+        isMine = (isMine == true)
+    }
+end
+
+-- 删除一条 HOT 记账
+function GoubayuHeal.ClearTrackedHOT(name, spell)
+    if not (name and spell and GoubayuHeal.trackedHOTs and GoubayuHeal.trackedHOTs[name]) then
+        return
+    end
+    GoubayuHeal.trackedHOTs[name][spell] = nil
+    if next(GoubayuHeal.trackedHOTs[name]) == nil then
+        GoubayuHeal.trackedHOTs[name] = nil
+    end
+end
+
+-- HOT 预估：救急线以下=0；否则 max(总量×(1-hp), 总量×min(2,跳数,剩余跳数)/跳数)，
+-- 再乘 HOT 放大（战斗用 hot_multiply_battle）。调用方再把总和夹到真实缺口。
+function GoubayuHeal.HOT_est(total, hp, ticks, remainingTicks)
+    if not total or total <= 0 then
+        return 0
+    end
+    local rescue = tonumber(GoubayuHeal.Config and GoubayuHeal.Config["rescue_hp_threshold"]) or 40
+    if hp * 100 < rescue then
+        return 0
+    end
+    if not ticks or ticks < 1 then
+        ticks = 1
+    end
+    local n2 = 2
+    if remainingTicks and remainingTicks < n2 then
+        n2 = remainingTicks
+    end
+    if ticks < n2 then
+        n2 = ticks
+    end
+    if n2 < 0 then
+        n2 = 0
+    end
+    local a = total * (1 - hp)
+    local b = total * n2 / ticks
+    local e = (a > b) and a or b
+    local mult = 1
+    if GoubayuHeal.Config then
+        if GoubayuHeal.player_in_combat then
+            mult = tonumber(GoubayuHeal.Config["hot_multiply_battle"]) or 0.5
+        else
+            mult = tonumber(GoubayuHeal.Config["hot_multiply"]) or 1.0
+        end
+    end
+    e = e * mult
+    return e
+end
+
+-- 目标身上所有已记账 HOT 的预估总量（自身+他人同一公式；总和不超过真实缺口）
+function GoubayuHeal.TrackedHOTEstimate(tname, hp, hpmissing)
+    local est = 0
+    local tracks = GoubayuHeal.trackedHOTs and GoubayuHeal.trackedHOTs[tname]
+    if tracks then
+        for sp, t in pairs(tracks) do
+            if type(t) == "table" then
+                local ticks = t.ticks or GoubayuHeal.HotTicks(sp)
+                local intv = (GoubayuHeal.hot_tick_interval and GoubayuHeal.hot_tick_interval[sp]) or 3
+                local remain = math.ceil((t.timeLeft or 0) / intv)
+                est = est + GoubayuHeal.HOT_est(t.total, hp, ticks, remain)
+            end
+        end
+    end
+    if hpmissing and est > hpmissing then
+        est = hpmissing
+    end
+    return est
+end
+
+-- 迅捷治愈吞噬 HOT：删掉该 HOT 记账（避免"剩余预跳 + 迅捷全额"双算），并归零单槽记录里的 HOT 部分。
+function GoubayuHeal.CancelConsumedHot(targetName, hotSpell)
+    if not (targetName and hotSpell) then
+        return
+    end
+    GoubayuHeal.ClearTrackedHOT(targetName, hotSpell)
+    local rec = GoubayuHeal.healing and GoubayuHeal.healing[targetName]
+        and GoubayuHeal.healing[targetName][GoubayuHeal.my_name]
+    if rec and rec["Spell"] == hotSpell then
+        rec["HealingOverTime"] = 0
+    end
+end
+
+-- buff spellId → 纯 HOT 技能名（回春/愈合/恢复）；非 HOT 返回 nil。
+-- by 武藤纯子酱 2026.10.19
+function GoubayuHeal.HotSpellNameForId(spellId)
+    if not (spellId and spellId ~= 0 and GoubayuHeal.GetSpellIdSet) then
+        return nil
+    end
+    local sp = GoubayuHeal.Rejuvenation
+    if sp and GoubayuHeal.GetSpellIdSet(sp)[spellId] then
+        return sp
+    end
+    sp = GoubayuHeal.Regrowth
+    if sp and GoubayuHeal.GetSpellIdSet(sp)[spellId] then
+        return sp
+    end
+    sp = GoubayuHeal.Renew
+    if sp and GoubayuHeal.GetSpellIdSet(sp)[spellId] then
+        return sp
+    end
+    return nil
+end
+
+-- 从 HOT 跟踪表清除某目标的某纯 HOT 的"标签/预估"：只归零该 HOT 的预估在途贡献，**不清重施锁**。
+-- 原因：手动/宏取消 HOT、BUFF 位被挤、被驱散、被覆盖等场景都走这里——若清锁，会导致我们
+-- 反复给一个主动取消 HOT 的目标再上 HOT（刷屏/浪费）。只有"迅捷治愈吞噬 HOT"才需要清锁，
+-- 那条在 Heal() 里单独处理。by 武藤纯子酱 2026.10.19
+function GoubayuHeal.ClearHotTrackingByName(name, hotSpell)
+    if not (name and hotSpell) then
+        return
+    end
+    GoubayuHeal.ClearTrackedHOT(name, hotSpell)
+    local rec = GoubayuHeal.healing and GoubayuHeal.healing[name]
+        and GoubayuHeal.healing[name][GoubayuHeal.my_name]
+    if rec and rec["Spell"] == hotSpell and (rec["TimeLeft"] or 0) > 0 then
+        rec["HealingOverTime"] = 0
+    end
+end
+
+function GoubayuHeal.ClearHotTracking(guid, hotSpell)
+    local name = GoubayuHeal.UnitNameFromGUID and GoubayuHeal.UnitNameFromGUID(guid)
+    if not name then
+        return
+    end
+    GoubayuHeal.ClearHotTrackingByName(name, hotSpell)
+end
+
+-- 回春/愈合光环消失（手动取消 / BUFF 位被挤 / 被驱散 / 被迅捷治愈吃掉）→ 即时清跟踪
+-- by 武藤纯子酱 2026.10.19
+function GoubayuHeal.OnHotAuraRemoved(guid, spellId)
+    local sp = GoubayuHeal.HotSpellNameForId(spellId)
+    if sp then
+        GoubayuHeal.ClearHotTracking(guid, sp)
+    end
+end
+
+-- 其他施法者的 HOT 成功落地（SPELL_GO_OTHER）：HOT 只有一条，对方覆盖了我们那条 →
+-- 记账替换为对方（含等级/总量），供预估与迅捷选目标；覆盖必然伴随成功 SPELL_GO。
+-- by 武藤纯子酱 2026.10.20
+function GoubayuHeal.OnOtherHotApplied(targetGuid, hotSpell, spellId)
+    local name = GoubayuHeal.UnitNameFromGUID and GoubayuHeal.UnitNameFromGUID(targetGuid)
+    if not name then
+        return
+    end
+    local rank = GoubayuHeal.RankForSpellId(hotSpell, spellId)
+    local total = 0
+    if rank and GoubayuHeal.Spells[hotSpell] and GoubayuHeal.Spells[hotSpell][rank] then
+        total = GoubayuHeal.Spells[hotSpell][rank]["HealingOverTime"] or 0
+    end
+    if total > 0 then
+        GoubayuHeal.SetTrackedHOT(name, hotSpell, total, rank, false)
+    else
+        GoubayuHeal.ClearTrackedHOT(name, hotSpell)
+    end
+end
+
+-- 定期核对：记账的 HOT 与目标实际光环不符（被吞噬/驱散/提前到期等）→ 删记账。
+-- 只核对 hot_cast_cd_spells（回春/愈合/恢复）；8T2 附带恢复等 UnitHasHOT 不适用，交给时效过期。
+-- 不清重施锁（只有迅捷治愈吞噬才清锁，见 Heal()）。by 武藤纯子酱 2026.10.20
+function GoubayuHeal.ReconcileTrackedHOTs()
+    if not GoubayuHeal.trackedHOTs then
+        return
+    end
+    for tname, tracks in pairs(GoubayuHeal.trackedHOTs) do
+        local u = GoubayuHeal.GetUnitID and GoubayuHeal.GetUnitID(tname)
+        if u and UnitExists(u) then
+            local gone = {}
+            for sp, t in pairs(tracks) do
+                if GoubayuHeal.hot_cast_cd_spells and GoubayuHeal.hot_cast_cd_spells[sp]
+                    and not GoubayuHeal.UnitHasHOT(u, sp) then
+                    gone[table.getn(gone) + 1] = sp
+                end
+            end
+            for _, sp in ipairs(gone) do
+                tracks[sp] = nil
+            end
+            if next(tracks) == nil then
+                GoubayuHeal.trackedHOTs[tname] = nil
+            end
+        end
+    end
+end
+
 function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
+    -- 死亡/灵魂状态（救赎之魂除外）：不发起施放（避免 CASTER_DEAD 错误把 _abortAction 置位）
+    -- by 武藤纯子酱 2026.10.23
+    if GoubayuHeal.PlayerDeadBlocked() then
+        return false
+    end
     local selfcasting = GetCVar("autoSelfCast")
 
     if (not unit or not spell or not rank or not UnitExists(unit)
@@ -6722,6 +7782,13 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
         or not GoubayuHeal.Spells[spell][rank]) then
         SetCVar("autoSelfCast", selfcasting)
         return
+    end
+
+    -- 全局中止（沉默/昏迷/恐惧等，当前根本无法施法）期间不再尝试任何施法
+    -- by 武藤纯子酱 2026.10.19
+    if GoubayuHeal._abortAction then
+        SetCVar("autoSelfCast", selfcasting)
+        return false
     end
 
     -- 神圣打击(HS)只经近战奶专用施法通道（Paladin_CastSpellOnTarget）或未来的群疗决策通道施放，
@@ -6790,7 +7857,14 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
     end
 
     -- HOT 冷却：愈合/回春/恢复 对同一目标在持续时间内只接一次（避免目标取消HOT后重复上）
-    if GoubayuHeal.hot_cast_cd_spells and GoubayuHeal.hot_cast_cd_spells[spell] then
+    -- 例外：德鲁伊"覆盖愈合阈值">0 时，愈合跳过该锁——愈合是读条直接治疗，重放目的是那口直接治疗；
+    -- 是否真的覆盖再由后面的阈值(hp<pct)判定。by 武藤纯子酱 2026.10.19
+    local roPct = tonumber(GoubayuHeal.Config and GoubayuHeal.Config["allow_regrowth_overwrite_pct"]) or 100
+    local allowRegrowthRecast = (spell == GoubayuHeal.Regrowth)
+        and (GoubayuHeal.my_class == GoubayuHeal.Druid)
+        and (roPct > 0)
+    if (not allowRegrowthRecast) and GoubayuHeal.hot_cast_cd_spells
+        and GoubayuHeal.hot_cast_cd_spells[spell] then
         GoubayuHeal.hot_cast_cd = GoubayuHeal.hot_cast_cd or {}
         GoubayuHeal.hot_cast_cd[spell] = GoubayuHeal.hot_cast_cd[spell] or {}
         local lastT = GoubayuHeal.hot_cast_cd[spell][name] or 0
@@ -6809,8 +7883,10 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
     end
 
     local casttime = GoubayuHeal.Spells[spell][rank]["CastTime"]
-    if GoubayuHeal.UnitGotBuff("player", GoubayuHeal.Natures_swiftness)
-        or GoubayuHeal.UnitGotBuff("player", GoubayuHeal.Shaman_Ancestral_swiftness) then
+    -- 迅捷 buff 判定统一用 HasBuffByName（直读 Nampower aura，不依赖可能未预热的 buff_texture_map）
+    -- by 武藤纯子酱 2026.10.19
+    if GoubayuHeal.HasBuffByName("player", GoubayuHeal.Natures_swiftness)
+        or GoubayuHeal.HasBuffByName("player", GoubayuHeal.Shaman_Ancestral_swiftness) then
         casttime = 0
     end
 
@@ -6833,17 +7909,16 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
         ["TimeLeft"] = casttime
     }
 
-    -- 门检查失败时清除刚写入的在途治疗记录（避免虚标"在途治疗"导致缺口被低估、目标被跳过）
+    -- 我方 HOT 记账（统一表：目标→技能，覆盖即替换；他者 HOT 由 SPELL_GO_OTHER 记账）
+    -- by 武藤纯子酱 2026.10.20
+    if hot and hot > 0 then
+        GoubayuHeal.SetTrackedHOT(name, spell, hot, rank, true)
+    end
+
+    -- 门检查失败时清除刚写入的在途治疗记录（复用 RollbackCastAttempt：含在途记录 + hot_cast_cd + 我方 HOT 记账）
+    -- by 武藤纯子酱 2026.10.20
     local function cancelHealingEntry()
-        if GoubayuHeal.healing[name] then
-            GoubayuHeal.healing[name][GoubayuHeal.my_name] = nil
-            if next(GoubayuHeal.healing[name]) == nil then
-                GoubayuHeal.healing[name] = nil
-            end
-        end
-        if GoubayuHeal.i_am_healing == name then
-            GoubayuHeal.i_am_healing = nil
-        end
+        GoubayuHeal.RollbackCastAttempt(spell, name)
     end
 
     if (not unit or not spell or not rank or not UnitExists(unit)) then
@@ -6946,7 +8021,8 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
         return
     end
 
-    if spell == GoubayuHeal.Renew or spell == GoubayuHeal.Rejuvenation then
+    if spell == GoubayuHeal.Renew or spell == GoubayuHeal.Rejuvenation
+        or spell == GoubayuHeal.Regrowth then
         local buffFull = GoubayuHeal.IsBuffBarFull(unit)
         if buffFull == true then
             SetCVar("autoSelfCast", selfcasting)
@@ -6969,9 +8045,10 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
             -- 允许覆盖愈合（默认开，仅德鲁伊）：目标是残血（低于 hot_heal_threshold）或该法术不是愈合时，
             -- 允许用同级/更低级愈合覆盖已有愈合，避免"目标快死了却因身上有旧愈合而不加血"
             -- by 武藤纯子酱 2026.9.27
+            -- 仅德鲁伊愈合：目标血量低于阈值才允许覆盖（阈值 0% = 从不覆盖，等价旧"关闭"）
             local allowOverwrite = (GoubayuHeal.my_class == GoubayuHeal.Druid)
-                and (GoubayuHeal.Config["allow_regrowth_overwrite"] ~= 0)
                 and (spell == GoubayuHeal.Regrowth)
+                and (hp * 100 < (tonumber(GoubayuHeal.Config["allow_regrowth_overwrite_pct"]) or 100))
 
             if allowOverwrite or (appliedRank and cr and cr > appliedRank and hp < ht) then
                 -- 允许覆盖
@@ -6985,6 +8062,10 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
 
     if (spell == GoubayuHeal.Swiftmend and not (GoubayuHeal.UnitHasHOT(unit,
         GoubayuHeal.Rejuvenation) or GoubayuHeal.UnitHasHOT(unit, GoubayuHeal.Regrowth))) then
+        -- 目标实际无回春/愈合：从 HOT 跟踪表清除（避免后续反复空跑），顺延到下一目标/下一档
+        -- by 武藤纯子酱 2026.10.19
+        GoubayuHeal.ClearHotTrackingByName(name, GoubayuHeal.Rejuvenation)
+        GoubayuHeal.ClearHotTrackingByName(name, GoubayuHeal.Regrowth)
         SetCVar("autoSelfCast", selfcasting)
         cancelHealingEntry()
         return false
@@ -7066,7 +8147,6 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
     end
 
     GoubayuHeal.error_message = nil
-    GoubayuHeal.check_for_client_error = nil
 
     local spellData = GoubayuHeal.Spells[spell][rank]
     local spell_with_rank
@@ -7082,6 +8162,10 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
     if GoubayuHeal.spell_awaiting_target_Spell then
         GoubayuHeal.clean_spell_awaiting_target()
     end
+
+    -- 记录本次施放尝试：供事件侧在"同步读不到错误"时回滚（覆盖瞬发技能被拒的场景）
+    -- by 武藤纯子酱 2026.10.19
+    GoubayuHeal._lastAttempt = { spell = spell, name = name, rank = rank, time = GetTime() }
 
     if GetNampowerVersion then
         CastSpellByName(spell_with_rank, targetGUID)
@@ -7115,37 +8199,35 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
     SetCVar("autoSelfCast", selfcasting)
 
     if (GoubayuHeal.error_message) then
-        -- 移动失败：置"只瞬发"标记并保持（后续决策只尝试瞬发，成功施法后由各成功路径清除）；
-        -- 非移动原因的失败（命中error_unable）：清除标记并按已处理收尾
-        local wasMoving = false
+        -- error_message 在施放前刚被清空（见上方），同一调用栈内不可能有别的来源 →
+        -- 这里出现的任何错误都来自本次施放。判定：
+        --  · 唯一"算成功"的例外：动作进行中(SPELL_FAILED_SPELL_IN_PROGRESS) 且本技能自身确实在
+        --    CD(GCD) 上 —— 说明我们自己的施法在途 → 终态 return 1
+        --  · 其余（移动失败 / 命中 error_unable / 迅捷治愈无 HOT 等目标不满足）：本次没放出去 →
+        --    回滚副作用并 return false（交上层顺延到下一档；旧逻辑在此 return 1 = 本次按键不出手）
+        -- by 武藤纯子酱 2026.10.19
         if (GoubayuHeal.error_moving[GoubayuHeal.error_message]) then
-            GoubayuHeal.only_instant_spells = 1
-            wasMoving = true
-        end
-
-        for error, msg in GoubayuHeal.error_unable do
-            if (string.find(GoubayuHeal.error_message, msg)) then
-                SetCVar("autoSelfCast", selfcasting)
-                GoubayuHeal.only_instant_spells = nil
-                -- "动作进行中"(SPELL_FAILED_SPELL_IN_PROGRESS)：仅当治疗技能确实在 GCD 上
-                -- （多半是自己刚放的技能占着）才当终态收尾；否则是别的动作（图腾等）占着，
-                -- 应顺延/重试，不能 return（否则本次按键彻底不出手，表现为卡死）
-                -- by 武藤纯子酱 2026.10.10
-                if not (msg == SPELL_FAILED_SPELL_IN_PROGRESS
-                    and not GoubayuHeal.IsSpellOnCooldown(spell)) then
-                    return 1
-                end
-            end
-        end
-
-        if not wasMoving then
+            GoubayuHeal.SetOnlyInstant()
+        else
             GoubayuHeal.only_instant_spells = nil
+            GoubayuHeal.only_instant_spells_time = nil
         end
-    end
 
-    if (GoubayuHeal.check_for_client_error) then
-        cancelHealingEntry()
-        return
+        if SPELL_FAILED_SPELL_IN_PROGRESS
+            and string.find(GoubayuHeal.error_message, SPELL_FAILED_SPELL_IN_PROGRESS)
+            and GoubayuHeal.IsSpellOnCooldown(spell) then
+            SetCVar("autoSelfCast", selfcasting)
+            GoubayuHeal.only_instant_spells = nil
+            GoubayuHeal.only_instant_spells_time = nil
+            return 1
+        end
+
+        if GoubayuHeal.IsGlobalAbortError(GoubayuHeal.error_message) then
+            GoubayuHeal._abortAction = true
+        end
+        SetCVar("autoSelfCast", selfcasting)
+        GoubayuHeal.RollbackCastAttempt(spell, name)
+        return false
     end
 
     if (SpellIsTargeting()) then
@@ -7162,6 +8244,12 @@ function GoubayuHeal.Heal(unit, spell, rank, healvalue, noscale, forceMax)
         and GoubayuHeal.hot_cast_cd[swiftmendConsumedHot] then
         GoubayuHeal.hot_cast_cd[swiftmendConsumedHot][name] = nil
     end
+    -- 迅捷治愈吞噬 HOT：一并取消该目标身上"被吞噬 HOT"的预估在途贡献
+    -- （否则其剩余治疗量会继续计入最长一个 HOT 时长，目标虚高导致后续不出手）
+    -- by 武藤纯子酱 2026.10.19
+    if swiftmendConsumedHot then
+        GoubayuHeal.CancelConsumedHot(name, swiftmendConsumedHot)
+    end
     return 1
 end
 
@@ -7175,6 +8263,12 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
     end
 
     if not UnitExists(unit) or not UnitIsFriend("player", unit) then
+        return
+    end
+
+    -- 全局中止（沉默/昏迷等）期间直接不做事
+    -- by 武藤纯子酱 2026.10.19
+    if GoubayuHeal._abortAction then
         return
     end
 
@@ -7212,35 +8306,58 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
 
     -- 迅捷治愈辅助：在团/队/自身/宠物中找“另一个有回春或愈合 HOT 且受伤”的目标
     -- by 武藤纯子酱 2026.9.6
-    local function swiftmendAltUnit(excludeUnit)
+    local function swiftmendAltUnit(originUnit, maxPercent)
+        -- 在所有"低于本档百分比 + 有回春/愈合"的目标里选 HOT 等级最高的（同级取更残）。
+        -- 结果短时缓存（~0.3s）：避免每次按键/每档重复全团扫描。by 武藤纯子酱 2026.10.20
+        -- 结果与 originUnit 无关（不再排除它），缓存键只用 maxPercent：同档共享一次扫描
+        local cacheKey = tostring(maxPercent)
+        local sc = GoubayuHeal._swiftAltCache
+        if sc and sc.key == cacheKey and (GetTime() - sc.time) <= 0.3 then
+            return sc.unit
+        end
         local n = GetNumRaidMembers()
         local por = "raid"
         if n == 0 then
             n = GetNumPartyMembers()
             por = "party"
         end
-        local best, bestMiss = nil, -1
+        local best, bestRank, bestMiss = nil, -1, -1
         local function consider(u)
-            if u == excludeUnit or not UnitExists(u) then
-                return
-            end
-            -- 同一单位可能以多个 token 出现（player/raidN、pet/raidpetN）：视为同目标跳过
-            if UnitIsUnit and UnitIsUnit(u, excludeUnit) then
+            if not UnitExists(u) then
                 return
             end
             if GoubayuHeal.CanHeal and not GoubayuHeal.CanHeal(u) then
+                return
+            end
+            local h, mh = GoubayuHeal.GetUnitHealth(u)
+            if not (mh and mh > 0) then
+                return
+            end
+            -- 只考虑"低于本档百分比"的目标（严格小于）
+            if maxPercent and (h / mh * 100) >= maxPercent then
                 return
             end
             if not (GoubayuHeal.UnitHasHOT(u, GoubayuHeal.Rejuvenation)
                 or GoubayuHeal.UnitHasHOT(u, GoubayuHeal.Regrowth)) then
                 return
             end
-            local h, mh = GoubayuHeal.GetUnitHealth(u)
-            if mh and mh > 0 then
-                local miss = mh - h
-                if miss > bestMiss then
-                    best, bestMiss = u, miss
-                end
+            -- 距离/视野：挑中却够不到会被 Heal 的 CanCastAtUnit 拒绝 → 本档空转（卡住）。
+            -- 旧版"当前目标有 HOT 就直接放"因当前目标已过距离检查而不会踩到，故本次必须补上。
+            -- by 武藤纯子酱 2026.10.20
+            if GoubayuHeal.CanCastAtUnit and GoubayuHeal.CanCastAtUnit(u, 40) == false then
+                return
+            end
+            -- 优先 HOT 等级最高者（同等时取更残）：迅捷吞噬量随 HOT 等级提高
+            -- by 武藤纯子酱 2026.10.20
+            local rj = GoubayuHeal.GetUnitHOTRank and GoubayuHeal.GetUnitHOTRank(u, GoubayuHeal.Rejuvenation)
+            local rg = GoubayuHeal.GetUnitHOTRank and GoubayuHeal.GetUnitHOTRank(u, GoubayuHeal.Regrowth)
+            local rk = rj or 0
+            if (rg or 0) > rk then
+                rk = rg or 0
+            end
+            local miss = mh - h
+            if rk > bestRank or (rk == bestRank and miss > bestMiss) then
+                best, bestRank, bestMiss = u, rk, miss
             end
         end
         consider("player")
@@ -7250,11 +8367,15 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
         for a = 1, n do
             consider(por .. a)
         end
+        GoubayuHeal._swiftAltCache = { key = cacheKey, unit = best, time = GetTime() }
         return best
     end
 
     if type(classConfig) == "table" then
         for curpercent, data in classConfig do
+            if GoubayuHeal._abortAction then
+                break
+            end
             if type(data) == "table" then
                 local curspell = data["Spell"]
                 local rank = data["Rank"]
@@ -7316,6 +8437,26 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
         validSpells = {}
     end
 
+    -- 救急暂停团刷主技能：已设置的坦克（MT/8T）在救急线以下时，只要本方案在"当前目标血量"
+    -- 下还有其它（单体）档位可用，就跳过团刷主技能，让循环落到单体档；
+    -- 若本档只剩团刷技能（没有可用单体档），仍照常施放团刷。
+    -- by 武藤纯子酱 2026.10.23
+    local aoeMainSpells = {
+        [GoubayuHeal.Holy_nova] = 1,
+        [GoubayuHeal.Prayer_of_healing] = 1,
+        [GoubayuHeal.Chain_heal] = 1,
+        [GoubayuHeal.Tranquility] = 1,
+    }
+    local pauseAoeMain = false
+    if GoubayuHeal.TankInRescue and GoubayuHeal.TankInRescue() then
+        for _, sd in ipairs(validSpells) do
+            if not aoeMainSpells[sd.spell] then
+                pauseAoeMain = true
+                break
+            end
+        end
+    end
+
     for _, spellData in ipairs(validSpells) do
         local curspell = spellData.spell
         local curpercent = spellData.percent
@@ -7333,9 +8474,17 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
         if not GoubayuHeal.SpellRankOutOfMana(curspell, checkRank) then
             local hasRenew = false
             local hasRejuvenation = false
+            local hasRegrowth = false
             local skipSpell = false
 
-            if curspell == GoubayuHeal.Renew or curspell == GoubayuHeal.Rejuvenation then
+            -- 救急暂停团刷主技能（坦克在救急线以下且本方案还有单体档可用）
+            -- by 武藤纯子酱 2026.10.23
+            if pauseAoeMain and aoeMainSpells[curspell] then
+                skipSpell = true
+            end
+
+            if curspell == GoubayuHeal.Renew or curspell == GoubayuHeal.Rejuvenation
+                or curspell == GoubayuHeal.Regrowth then
                 local buffFull = GoubayuHeal.IsBuffBarFull(unit)
                 if buffFull == true then
                     skipSpell = true
@@ -7344,14 +8493,17 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
                 local hasHOT = GoubayuHeal.UnitHasHOT(unit, curspell)
                 if curspell == GoubayuHeal.Renew then
                     hasRenew = hasHOT
-                else
+                elseif curspell == GoubayuHeal.Rejuvenation then
                     hasRejuvenation = hasHOT
+                else
+                    hasRegrowth = hasHOT
                 end
             end
 
             local swiftmendAttached = (attachment == GoubayuHeal.Swiftmend)
             if (curspell == GoubayuHeal.Renew and hasRenew)
-                or (curspell == GoubayuHeal.Rejuvenation and hasRejuvenation) then
+                or (curspell == GoubayuHeal.Rejuvenation and hasRejuvenation)
+                or (curspell == GoubayuHeal.Regrowth and hasRegrowth) then
                 if swiftmendAttached then
                     -- 挂靠迅捷治愈：目标有HOT时由迅捷吃掉
                 else
@@ -7367,9 +8519,11 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
 
                     -- 允许覆盖愈合（默认开，仅德鲁伊）：愈合不阻止同级/低级覆盖，避免残血目标因旧愈合而不加血
                     -- by 武藤纯子酱 2026.9.27
+                    -- 仅德鲁伊愈合：目标血量低于阈值才允许覆盖（0% = 不覆盖）
+                    -- by 武藤纯子酱 2026.10.19
                     local allowOverwrite2 = (GoubayuHeal.my_class == GoubayuHeal.Druid)
-                        and (GoubayuHeal.Config["allow_regrowth_overwrite"] ~= 0)
                         and (curspell == GoubayuHeal.Regrowth)
+                        and (hp * 100 < (tonumber(GoubayuHeal.Config["allow_regrowth_overwrite_pct"]) or 100))
 
                     if allowOverwrite2 or (appliedRank and cr and cr > appliedRank and hp < ht) then
                         -- 允许覆盖
@@ -7379,13 +8533,15 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
                 end
             end
 
-            -- 迅捷治愈（档位主技能）：目标没有回春/愈合时，先找其他"有HOT且受伤"的队友；
-            -- 找不到则本档直接跳过（skipSpell），落到下一档其他治疗技能
-            -- by 武藤纯子酱 2026.9.30
-            if curspell == GoubayuHeal.Swiftmend
-                and not (GoubayuHeal.UnitHasHOT(unit, GoubayuHeal.Rejuvenation)
-                    or GoubayuHeal.UnitHasHOT(unit, GoubayuHeal.Regrowth)) then
-                local altU = swiftmendAltUnit and swiftmendAltUnit(unit)
+            -- 迅捷治愈（档位主技能）：在本档百分比以下、身上有回春/愈合的目标里，
+            -- 选 HOT 等级最高的（同级取更残）施放；一个都没有则本档跳过，落到下一档。
+            -- by 武藤纯子酱 2026.10.20
+            if curspell == GoubayuHeal.Swiftmend then
+                local altU = swiftmendAltUnit and swiftmendAltUnit(unit, tonumber(curpercent))
+                if not altU and GoubayuHeal.SwiftmendRescanUnit then
+                    -- 最终兜底：实扫刷新 HOT 表后再选目标
+                    altU = GoubayuHeal.SwiftmendRescanUnit(tonumber(curpercent))
+                end
                 if altU then
                     local altRank = rank
                     if altRank == 0 then altRank = 1 end
@@ -7434,14 +8590,15 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
                                 GoubayuHeal.GetSpellCDId(GoubayuHeal.Spells[curspell][rank])) or 0)
 
                             if cooldown == 0 then
-                                -- 本次是否刚放了迅捷（自然迅捷/先祖迅捷）
-                                local swiftnessJustCast = false
                                 -- 团刷附件（新增祷言/链）：与主技能对比治疗量，选高者施放；tankheal 模式跳过团刷
                                 local attIsAOE = attachment and (attachment == GoubayuHeal.Holy_nova
                                     or attachment == GoubayuHeal.Prayer_of_healing
                                     or attachment == GoubayuHeal.Chain_heal)
                                 if attIsAOE then
-                                    if GoubayuHeal.tankheal_mode then
+                                    -- 有已设置的坦克（MT/8T）在救急线以下：暂停团刷挂接，优先单体治疗
+                                    -- by 武藤纯子酱 2026.10.23
+                                    if GoubayuHeal.tankheal_mode
+                                        or (GoubayuHeal.TankInRescue and GoubayuHeal.TankInRescue()) then
                                         attachment = nil
                                         attachmentRank = nil
                                     else
@@ -7518,13 +8675,11 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
                                                     (GoubayuHeal.GetSpellCooldown(spellID) or 0)
                                                 if attachmentCooldown == 0 then
                                                     CastSpellByName(attachment)
-                                                    swiftnessJustCast = true
                                                 end
                                             else
                                                 -- spellId 未取到（无等级技能反查失败）：按名字直接施放，
                                                 -- 由客户端判定CD/未就绪
                                                 CastSpellByName(attachment)
-                                                swiftnessJustCast = true
                                             end
                                         end
                                     else
@@ -7574,15 +8729,9 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
                                     end
                                 end
 
-                                -- 刚放了迅捷（自然迅捷/先祖迅捷）：本次动作到此为止。
-                                -- 迅捷占用公共冷却，紧接着尝试主治疗会被客户端拒绝；而这次失败的尝试会在
-                                -- 施放调用后就写入 HOT 内置冷却/在途记录，导致同一目标十几秒内不再被治疗。
-                                -- 下次按键时迅捷buff仍在，主治疗会以瞬发方式正常施放。
-                                -- by 武藤纯子酱 2026.9.21
-                                if swiftnessJustCast then
-                                    GoubayuHeal.only_instant_spells = nil
-                                    return 1
-                                end
+                                -- 迅捷（自然迅捷/先祖迅捷）没有公共冷却：放完直接继续用同一 Heal 施放主治疗（一次按键完成）。
+                                -- 主治疗若被拒，Heal() 的回滚会清掉在途记录/hot_cast_cd，不会锁目标。
+                                -- by 武藤纯子酱 2026.10.20
 
                                 local finalSpell = curspell
                                 local finalRank = rank
@@ -7637,9 +8786,9 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
                                 local castTime = GoubayuHeal.Spells[finalSpell][finalRank]["CastTime"]
                                     or 0
 
-                                if GoubayuHeal.UnitGotBuff("player",
+                                if GoubayuHeal.HasBuffByName("player",
                                     GoubayuHeal.Natures_swiftness)
-                                    or GoubayuHeal.UnitGotBuff("player",
+                                    or GoubayuHeal.HasBuffByName("player",
                                         GoubayuHeal.Shaman_Ancestral_swiftness) then
                                     castTime = 0
                                 end
@@ -7675,7 +8824,7 @@ function GoubayuHeal.HealUsingClass(unit, class, healvalue, allowAoE)
                                             end
                                         end
                                     end
-                                elseif (not GoubayuHeal.only_instant_spells or castTime == 0) then
+                                elseif (not GoubayuHeal.OnlyInstantActive() or castTime == 0) then
                                     -- 萨满链转波：治疗链目标周围无弹跳目标时改用等量治疗波/次级治疗波（省蓝）
                                     -- 滑块：0=不转，1=转治疗波，2=转次级治疗波
                                     local cnb = GoubayuHeal.Config
@@ -7843,6 +8992,15 @@ function GoubayuHeal.TankHealProfile(spell)
 end
 
 function GoubayuHeal.ActionHeal(spell, rank, isUserAction)
+    -- 死亡/灵魂状态（救赎之魂除外）：直接返回，不做任何计算
+    -- by 武藤纯子酱 2026.10.23
+    if GoubayuHeal.PlayerDeadBlocked() then
+        return
+    end
+    -- 每次动作开始清"全局中止"：上一次施法被沉默等中止后，本次重新评估
+    -- by 武藤纯子酱 2026.10.19
+    GoubayuHeal._abortAction = nil
+
     if GoubayuHeal.PlayerIsCCd() == true then
         return
     end
@@ -7941,6 +9099,11 @@ function GoubayuHeal.ActionHeal(spell, rank, isUserAction)
         -- 避免上一个方案的被打断技能/交替记录污染当前方案（技能串、等级错乱）
         if GoubayuHeal.current_action_profile ~= spell then
             GoubayuHeal.current_action_profile = spell
+            -- 切换方案前先回滚上一次施法的残留（含 hot_cast_cd），避免旧目标被锁
+            -- by 武藤纯子酱 2026.10.22
+            if GoubayuHeal.RollbackLastAttempt then
+                GoubayuHeal.RollbackLastAttempt()
+            end
             GoubayuHeal.last_interrupted_spell = nil
             GoubayuHeal.last_cast_spell = nil
             GoubayuHeal.i_am_healing = nil
@@ -8158,42 +9321,134 @@ end
 -- 主事件处理器
 -- ============================================================
 
--- 安全重扫：解析报错不中断调用方；报错或数值不完整时自动安排补扫（30次×2秒窗口，成功即停止）
-function GoubayuHeal.SafeUpdateSpells()
+-- 法术书签名：槽位数 + 逐名滚动哈希（不拼接整串，避免大字符串分配与每5秒抖动）
+-- 变化检测只需"是否变了"，无需可逆；逐字节 33 进制滚动哈希碰撞概率可忽略
+-- by 武藤纯子酱 2026.10.19
+function GoubayuHeal.SpellBookSignature()
+    local count = 0
+    local h = 5381
+    local j = 1
+    while true do
+        local s = GetSpellName(j, BOOKTYPE_SPELL)
+        if not s then
+            break
+        end
+        count = count + 1
+        local n = string.len(s)
+        for k = 1, n do
+            -- Lua 5.0 无取模运算符 %：用乘法 + 单次减法归约（h 恒 < 2147483647，乘积仍在 double 精度内）
+            h = h * 33 + string.byte(s, k)
+            if h >= 2147483647 then
+                h = h - 2147483647 * math.floor(h / 2147483647)
+            end
+        end
+        j = j + 1
+    end
+    -- 乘子取 2^31（> 哈希上界 2147483647）：各 count 分段不重叠，count 与哈希互不干扰
+    return count * 2147483648 + h
+end
+
+-- 签名是否变化：首次（未知）只记录基线不重扫；变化返回 true。
+-- by 武藤纯子酱 2026.10.19
+function GoubayuHeal.SpellBookChanged()
+    local sig = GoubayuHeal.SpellBookSignature()
+    if GoubayuHeal._book_sig == nil then
+        GoubayuHeal._book_sig = sig
+        return false
+    end
+    if sig ~= GoubayuHeal._book_sig then
+        GoubayuHeal._book_sig = sig
+        return true
+    end
+    return false
+end
+
+-- 法术书变化统一入口：签名未变化则直接跳过重扫（槽位缓存也不清，仅真变化时才需要）。
+-- SPELLS_CHANGED（含"按 P 开书"触发的）/ LEARNED_SPELL_IN_TAB / CHARACTER_POINTS_CHANGED 共用。
+-- by 武藤纯子酱 2026.10.19
+function GoubayuHeal.HandleSpellBookEvent()
+    if GoubayuHeal.SpellBookChanged() then
+        GoubayuHeal_SpellSlotCache = {}
+        GoubayuHeal._inner_fire_slot = nil
+        GoubayuHeal.TreeFormIndex = nil
+        -- 法术库变化：清 (技能,id)→等级缓存，避免沿用旧等级表的结果
+        -- by 武藤纯子酱 2026.10.21
+        GoubayuHeal._aura_rank_cache = nil
+        GoubayuHeal._fw_spellid_cache = nil
+        GoubayuHeal.SafeUpdateSpells()
+    end
+end
+
+-- 安全重扫：原子替换（先建新表；报错或重建成空表则回滚旧表）+ 施法中延后 + 失败持续重试
+-- 背景：UpdateSpells 会先清空 GoubayuHeal.Spells 再重建，中途报错会留下半残表，
+-- 导致 Heal() 直接 return（表现"按宏不加血"），只能 /reload 恢复。
+-- by 武藤纯子酱 2026.10.22
+function GoubayuHeal.SafeUpdateSpells(force)
+    -- 施法中不重扫（解析 tooltip 又慢又容易失败），等空闲再做
+    if (not force) and GoubayuHeal.casting_spell then
+        GoubayuHeal._book_rescan_pending = true
+        return
+    end
     -- 1秒内刚完成过完整扫描时跳过重复扫描（登录瞬间多事件连发的去重）
-    if (not GoubayuHeal._spell_parse_incomplete) and GoubayuHeal._spell_parse_last
+    if (not force) and (not GoubayuHeal._spell_parse_incomplete) and GoubayuHeal._spell_parse_last
         and (GetTime() - GoubayuHeal._spell_parse_last) < 1 then
         return
     end
-    local ok, err = pcall(GoubayuHeal.UpdateSpells)
+
+    local backup = GoubayuHeal.Spells
+    local backupSet = GoubayuHeal._spell_id_set_cache
+    local ok = pcall(GoubayuHeal.UpdateSpells)
     GoubayuHeal._spell_parse_last = GetTime()
-    if not ok or GoubayuHeal._spell_parse_incomplete then
-        if not ok then
-            GoubayuHeal._spell_parse_incomplete = true
+    GoubayuHeal._book_rescan_pending = nil
+
+    local usable = ok and GoubayuHeal.Spells and next(GoubayuHeal.Spells) ~= nil
+    if (not ok) or (not usable and backup and next(backup) ~= nil) then
+        -- 报错，或重建成空表（法术书未就绪）→ 回滚旧库，稍后重试
+        GoubayuHeal.Spells = backup
+        GoubayuHeal._spell_id_set_cache = backupSet
+        GoubayuHeal._spell_parse_incomplete = true
+        GoubayuHeal._spell_parse_error = (not ok) or nil
+        GoubayuHeal._spell_parse_tries = (GoubayuHeal._spell_parse_tries or 0) + 1
+        GoubayuHeal._spell_parse_retry_next = GetTime() + 10
+        if (not (backup and next(backup))) and not GoubayuHeal._spells_missing_warned then
+            GoubayuHeal._spells_missing_warned = true
+            GoubayuHeal.Print("法术库重建失败，正在自动重试（长时间无效请 /reload）")
         end
-        GoubayuHeal._spell_parse_retry = 30
-        GoubayuHeal._spell_parse_retry_next = GetTime() + 2
+        return
+    end
+
+    GoubayuHeal._spell_parse_error = nil
+    if GoubayuHeal._spell_parse_incomplete then
+        -- 成功但数值缺失：累计次数供"暖法术书"触发（>=2 次才试一次）
+        GoubayuHeal._spell_parse_tries = (GoubayuHeal._spell_parse_tries or 0) + 1
+        -- 重扫成功但个别技能数值解析不出：缺失数连续两轮不变就停止重试（避免每 4 秒重扫卡顿）
+        local missingNow = GoubayuHeal._spell_parse_missing or 0
+        if missingNow > 0 and missingNow == (GoubayuHeal._spell_parse_missing_prev or -1) then
+            GoubayuHeal._spell_parse_retry_next = nil
+        else
+            GoubayuHeal._spell_parse_retry_next = GetTime() + 4
+        end
+        GoubayuHeal._spell_parse_missing_prev = missingNow
+    else
+        GoubayuHeal._spell_parse_tries = 0
+        GoubayuHeal._spell_parse_retry_next = nil
+        GoubayuHeal._spell_parse_missing_prev = 0
     end
 end
 
 function GoubayuHeal.OnEvent()
     if (event == "LEARNED_SPELL_IN_TAB") then
-        -- 学新法术：槽位号整体移位，同步清空槽位缓存
-        GoubayuHeal_SpellSlotCache = {}
-        GoubayuHeal._inner_fire_slot = nil
-        GoubayuHeal.TreeFormIndex = nil
-        GoubayuHeal.SafeUpdateSpells()
+        -- 学新法术：槽位号整体移位；经统一入口判定签名是否真变再重扫
+        GoubayuHeal.HandleSpellBookEvent()
 
     elseif (event == "CHARACTER_POINTS_CHANGED") then
         GoubayuHeal_ClearTalentCache()
-        GoubayuHeal.SafeUpdateSpells()
+        GoubayuHeal.HandleSpellBookEvent()
 
     elseif (event == "SPELLS_CHANGED") then
-        -- 法术书变动会使槽位号整体移位：清空各处槽位缓存，防止GCD预检查错槽位
-        GoubayuHeal_SpellSlotCache = {}
-        GoubayuHeal._inner_fire_slot = nil
-        GoubayuHeal.TreeFormIndex = nil
-        GoubayuHeal.SafeUpdateSpells()
+        -- 法术书变动（"按 P 开书"也会发此事件）：走签名单入口，
+        -- 签名未变化则不再整库重扫（修复开书卡 0.7 秒） by 武藤纯子酱 2026.10.19
+        GoubayuHeal.HandleSpellBookEvent()
 
     elseif (event == "PLAYER_ENTERING_WORLD") then
         GoubayuHeal.player_in_combat = nil
@@ -8211,6 +9466,9 @@ function GoubayuHeal.OnEvent()
         GoubayuHeal.my_name = GoubayuHeal.UnitName("player")
         -- 首次登录法术书可能延迟就绪：失败/不完整时由 SafeUpdateSpells 自动安排补扫
         GoubayuHeal.SafeUpdateSpells()
+        -- 记录法术书基线签名：避免登录后首个 SPELLS_CHANGED/轮询再触发一次全扫
+        -- by 武藤纯子酱 2026.10.19
+        GoubayuHeal._book_sig = GoubayuHeal.SpellBookSignature()
         this:RegisterEvent("SPELLS_CHANGED")
         GoubayuHeal.SetupSettings()
 
@@ -8308,13 +9566,29 @@ function GoubayuHeal.OnEvent()
         GoubayuHeal.casting_spell = nil
         GoubayuHeal.casting_spell_time = nil
 
+        -- 被打断/失败：按 _lastAttempt（spell+name）回滚，清 hot_cast_cd 与在途记录。
+        -- 这里不受"0.5 秒同步回滚窗口"限制（长读条被打断时已远超 0.5 秒），
+        -- 也不依赖 i_am_healing 是否还指向该目标（切方案/被清时同样能解锁）。
+        -- by 武藤纯子酱 2026.10.22
+        if (event ~= "SPELLCAST_STOP") and GoubayuHeal._lastAttempt then
+            local _a = GoubayuHeal._lastAttempt
+            GoubayuHeal._lastAttempt = nil
+            if GoubayuHeal.RollbackCastAttempt then
+                GoubayuHeal.RollbackCastAttempt(_a.spell, _a.name)
+            end
+            if GoubayuHeal.last_cast_spell == _a.spell then
+                GoubayuHeal.last_cast_spell = nil
+            end
+        end
+
         if (event == "SPELLCAST_STOP") and GoubayuHeal.supported_classes
             and GoubayuHeal.supported_classes[GoubayuHeal.my_class] then
             GoubayuHeal.gcd_start = GetTime()
             GoubayuHeal.gcd_duration = GoubayuHeal.GetGCDDuration()
+            -- 施放正常结束：清掉本次尝试标记，避免之后别的技能失败时误回滚
+            -- by 武藤纯子酱 2026.10.22
+            GoubayuHeal._lastAttempt = nil
         end
-
-        GoubayuHeal.check_for_client_error = 1
 
         if (not (GetNampowerVersion and GetUnitField))
             and (event == "SPELLCAST_INTERRUPTED" or event == "SPELLCAST_FAILED") then
@@ -8410,6 +9684,11 @@ function GoubayuHeal.OnEvent()
 
     elseif (event == "UI_ERROR_MESSAGE") then
         GoubayuHeal.error_message = arg1
+        -- 事件兜底：本次施放尝试在极短时间内被拒（同步路径读不到错误时），回滚其副作用
+        -- by 武藤纯子酱 2026.10.19
+        if GoubayuHeal._lastAttempt and GoubayuHeal.IsRejectionError(arg1) then
+            GoubayuHeal.RollbackLastAttempt()
+        end
 
     elseif (event == "UNIT_INVENTORY_CHANGED" and arg1 and arg1 == "player") then
         GoubayuHeal.UpdateItemHealBonus()
@@ -8453,6 +9732,18 @@ if GetNampowerVersion then
     pcall(auraFrame.RegisterEvent, auraFrame, "BUFF_REMOVED_SELF",
         function(guid, luaSlot, spellId, stacks, auraLevel, auraSlot, state)
             GoubayuHeal._buff_remove_time = GetTime()
+            -- 自己的回春/愈合消失 → 即时清 HOT 跟踪
+            if state == 1 and GoubayuHeal.OnHotAuraRemoved then
+                GoubayuHeal.OnHotAuraRemoved(guid, spellId)
+            end
+        end)
+    -- 其他单位（含队友）的回春/愈合消失：手动取消 / BUFF 位被挤 / 被驱散 / 被迅捷治愈吃掉
+    -- → 即时清除我们的 HOT 跟踪 by 武藤纯子酱 2026.10.19
+    pcall(auraFrame.RegisterEvent, auraFrame, "BUFF_REMOVED_OTHER",
+        function(guid, luaSlot, spellId, stacks, auraLevel, auraSlot, state)
+            if state == 1 and GoubayuHeal.OnHotAuraRemoved then
+                GoubayuHeal.OnHotAuraRemoved(guid, spellId)
+            end
         end)
 end
 
@@ -8462,39 +9753,27 @@ end
 
 function GoubayuHeal.OnUpdate(elapsed)
     -- 天赋切换/法术书变动检测：乌龟服切换天赋不触发 SPELLS_CHANGED/LEARNED_SPELL_IN_TAB，
-    -- 法术库会滞留（学习/遗忘的技能不增不减）。定期比对法术书签名（全部法术名拼接），
-    -- 变化时重建法术库并刷新UI。
-    -- 间隔 2s→5s 且施法中跳过：整书遍历+字符串级联开销大，战斗施法期间法术书不可能变化，
-    -- 累积的计时器会在脱战后的第一帧触发（乌龟服切天赋的 5s 内库滞留可接受）
-    -- by 武藤纯子酱 2026.9.4
+    -- 法术库会滞留（学习/遗忘的技能不增不减）。定期比对法术书签名，变化时重建法术库并刷新UI。
+    -- 签名改用"槽位数+逐名滚动哈希"（不再拼接整串，消除每5秒的大字符串分配抖动）
+    -- by 武藤纯子酱 2026.10.19
     GoubayuHeal._book_sig_timer = (GoubayuHeal._book_sig_timer or 0) + (elapsed or 0)
     if GoubayuHeal._book_sig_timer >= 5 and not GoubayuHeal.casting_spell then
         GoubayuHeal._book_sig_timer = 0
-        local sig = ""
-        local j = 1
-        while true do
-            local s = GetSpellName(j, BOOKTYPE_SPELL)
-            if not s then
-                break
-            end
-            sig = sig .. s .. ";"
-            j = j + 1
-        end
-        if GoubayuHeal._book_sig and sig ~= GoubayuHeal._book_sig then
-            GoubayuHeal._book_sig = sig
+        if GoubayuHeal.SpellBookChanged() then
             GoubayuHeal.SafeUpdateSpells()
             if UI and UI.RedrawLibrary then
                 pcall(UI.RedrawLibrary)
             end
-        elseif not GoubayuHeal._book_sig then
-            GoubayuHeal._book_sig = sig
         end
     end
 
-    -- 原版（无Nampower）回退：解析持续失败时"暖"一次法术书（显示后立即隐藏），
+    -- 原版（无Nampower）回退：解析连续失败时"暖"一次法术书（显示后立即隐藏），
     -- 强制客户端构建法术书数据（冷启动会话tooltip可能因法术书未初始化而填充失败）
-    if GoubayuHeal._spell_parse_incomplete and GoubayuHeal._spell_parse_retry == 20
+    -- by 武藤纯子酱 2026.10.22
+    if GoubayuHeal._spell_parse_incomplete and (GoubayuHeal._spell_parse_tries or 0) >= 2
+        and not GoubayuHeal._sb_warmup_done
         and SpellBookFrame and not SpellBookFrame:IsVisible() then
+        GoubayuHeal._sb_warmup_done = true
         ShowUIPanel(SpellBookFrame)
         GoubayuHeal._sb_warmup_hide = GetTime() + 0.3
     end
@@ -8505,26 +9784,12 @@ function GoubayuHeal.OnUpdate(elapsed)
         GoubayuHeal._sb_warmup_hide = nil
     end
 
-    -- 首次登录法术书延迟就绪：登录后定时重试解析（列表为空或数值不完整时重扫，成功即自动停止）
-    if GoubayuHeal._spell_parse_retry and GoubayuHeal._spell_parse_retry > 0 then
-        if GetTime() >= (GoubayuHeal._spell_parse_retry_next or 0) then
-            GoubayuHeal._spell_parse_retry_next = GetTime() + 4
-            GoubayuHeal._spell_parse_retry = GoubayuHeal._spell_parse_retry - 1
-            if (not GoubayuHeal.Spells or next(GoubayuHeal.Spells) == nil)
-                or GoubayuHeal._spell_parse_incomplete then
-                local ok = pcall(GoubayuHeal.UpdateSpells)
-                if not ok then
-                    GoubayuHeal._spell_parse_incomplete = true
-                end
-                -- 连续两轮缺失数不变 → 解析已稳定（个别技能永久解析不出），提前停止重试，
-                -- 避免登录后前几分钟每几秒全量重扫造成卡顿
-                local missingNow = GoubayuHeal._spell_parse_missing or 0
-                if missingNow == (GoubayuHeal._spell_parse_missing_prev or -1) then
-                    GoubayuHeal._spell_parse_retry = 0
-                end
-                GoubayuHeal._spell_parse_missing_prev = missingNow
-            end
-        end
+    -- 法术库重扫：只在非施法状态执行（施法中挂起，等空闲）；报错回滚旧表并由
+    -- SafeUpdateSpells 内部调度重试 by 武藤纯子酱 2026.10.22
+    if (GoubayuHeal._book_rescan_pending or GoubayuHeal._spell_parse_retry_next)
+        and (not GoubayuHeal.casting_spell)
+        and GetTime() >= (GoubayuHeal._spell_parse_retry_next or 0) then
+        GoubayuHeal.SafeUpdateSpells(true)
     end
 
     if GoubayuHeal.NampowerUpdate then
@@ -8548,6 +9813,28 @@ function GoubayuHeal.OnUpdate(elapsed)
             -- 5秒兜底：即使GetCurrentCastingInfo仍报忙（异常/陈旧时间戳），超过最长读条缓冲也强制清除
             GoubayuHeal.casting_spell = nil
             GoubayuHeal.casting_spell_time = nil
+        end
+    end
+
+    -- 状态看门狗（P5）：清理可能卡住的"只瞬发"标记与已消失目标的在途跟踪
+    -- by 武藤纯子酱 2026.10.19
+    if GoubayuHeal.only_instant_spells and GoubayuHeal.only_instant_spells_time
+        and (GetTime() - GoubayuHeal.only_instant_spells_time) > 1.5 then
+        GoubayuHeal.only_instant_spells = nil
+        GoubayuHeal.only_instant_spells_time = nil
+    end
+    GoubayuHeal._wd_timer = (GoubayuHeal._wd_timer or 0) + (elapsed or 0)
+    if GoubayuHeal._wd_timer >= 1 then
+        GoubayuHeal._wd_timer = 0
+        if GoubayuHeal.i_am_healing and GoubayuHeal.GetUnitID then
+            local u = GoubayuHeal.GetUnitID(GoubayuHeal.i_am_healing)
+            if not (u and UnitExists(u)) then
+                GoubayuHeal.i_am_healing = nil
+            end
+        end
+        -- HOT 记录与目标实际光环核对（被别人的迅捷治愈/驱散/提前到期消耗掉）
+        if GoubayuHeal.ReconcileTrackedHOTs then
+            pcall(GoubayuHeal.ReconcileTrackedHOTs)
         end
     end
 

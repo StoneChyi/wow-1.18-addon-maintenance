@@ -13,13 +13,12 @@ local MAX_ENEMIES = 50      -- 敌方池上限（防卡顿）
 local ENEMY_IDLE_TTL = 15   -- 敌方条目空闲多久后淘汰（秒）
 local INCOMING_TTL = 4      -- 预计伤害有效期（秒）
 local SWING_DEFAULT = 2.0   -- 攻速取不到时的兜底平砍间隔（秒）
-local MAX_WAIT = 2.5        -- 允许等待起手的上限（超过则不预读该目标）
 local MAX_LATE = 1.5        -- 读条允许晚于伤害落地的上限（秒）
-local AUTO_EVAL_INTERVAL = 0.2  -- 自动预读评估间隔（秒，OnUpdate 轮询；不依赖按键）
+local AUTO_EVAL_INTERVAL = 0.2  -- 评估间隔（秒，OnUpdate 轮询；只更新标识，不施放）
 
 Predict.enemies = {}    -- [enemyGuid] = { lastSwing, speed, lastActive }
 Predict.incoming = {}   -- [allyGuid] = { enemyGuid, kind, dueTime, dmgHint, updateAt }
-Predict.pending = nil   -- { unit, spell, rank, startAt, dueTime }
+Predict.ready = nil     -- 预读标识：{ unit, spell, rank, attach, attachRank, forceMax, instant, startAt, profile, at }
 Predict.frame = nil
 Predict.cleanupTimer = 0
 
@@ -290,7 +289,7 @@ end
 -- 牧师 疾速只强效（priest_force_greater_heal）为独立提前返回（与正常流程 HealUsingClass 一致）
 -- 返回 { spell, rank, instant, attachment, attachmentRank } 或 nil
 -- by 武藤纯子酱 2026.10.15
-function Predict.ChooseSpell(unit, profile)
+function Predict.ChooseSpell(unit, profile, skipAOE)
     local name = UnitName(unit)
     local C = GoubayuHeal.Config
 
@@ -340,7 +339,16 @@ function Predict.ChooseSpell(unit, profile)
     local list = {}
     for pct, data in cfg2 do
         if type(data) == "table" and data["Spell"] then
-            table.insert(list, { pct = tonumber(pct) or 0, data = data })
+            -- skipAOE：坦克在救急线以下时优先单体，跳过团刷条目
+            -- by 武藤纯子酱 2026.10.23
+            local sp = data["Spell"]
+            local isAOE = (sp == GoubayuHeal.Holy_nova
+                or sp == GoubayuHeal.Prayer_of_healing
+                or sp == GoubayuHeal.Chain_heal
+                or sp == GoubayuHeal.Tranquility)
+            if not (skipAOE and isAOE) then
+                table.insert(list, { pct = tonumber(pct) or 0, data = data })
+            end
         end
     end
     table.sort(list, function(a, b) return a.pct > b.pct end)
@@ -469,7 +477,110 @@ function Predict.CastPick(unit, spell, rank, attach, attRank, forceMax)
     return GoubayuHeal.Heal(unit, spell, rank, nil, noscale, forceMax)
 end
 
--- by 武藤纯子酱 2026.10.15
+-- 预读评估（只计算"现在该不该预读、放什么"，绝不施放）。
+-- 由 OnUpdate 每 0.2 秒调用一次，结果存 Predict.ready；真正施放只在按键时由
+-- GoubayuHeal.Predict_TryPreHeal 消费该标识。by 武藤纯子酱 2026.10.23
+function Predict.Evaluate(profile)
+    local C = GoubayuHeal.Config
+    if not (C and C["predict_enabled"] == 1) then
+        return nil
+    end
+    if not (GetNampowerVersion and GetUnitGUID) then
+        return nil
+    end
+
+    local cands = Predict.PickCandidates()
+    if not cands or table.getn(cands) == 0 then
+        return nil
+    end
+
+    -- 满级修饰键 / always_tank_target：与正常流程一致，强制最高等级
+    local forceMax = false
+    if (GoubayuHeal.IsHealModifierKeyDown and GoubayuHeal.IsHealModifierKeyDown("heal_max_modifier"))
+        or (tonumber(C["always_tank_target"]) or 0) == 1 then
+        forceMax = true
+    end
+
+    local now = GetTime()
+    for _, c in ipairs(cands) do
+        local pick = Predict.ChooseSpell(c.guid, profile)
+        -- 救援：已设置的坦克（MT/8T）在救急线以下且选中的是团刷主技能 →
+        -- 优先换成单体条目；没有单体条目时才继续用团刷。
+        -- by 武藤纯子酱 2026.10.23
+        if pick and GoubayuHeal.TankInRescue and GoubayuHeal.TankInRescue() then
+            local psp = pick.spell
+            if psp == GoubayuHeal.Holy_nova or psp == GoubayuHeal.Prayer_of_healing
+                or psp == GoubayuHeal.Chain_heal or psp == GoubayuHeal.Tranquility then
+                local alt = Predict.ChooseSpell(c.guid, profile, true)
+                if alt then
+                    pick = alt
+                end
+            end
+        end
+        if pick then
+            local spell = pick.spell
+            local rank = pick.rank
+            local attachFirst = nil
+            local attachRank = nil
+
+            -- 附件：团刷类（新星/祷言/链）与主技能比治疗量取高者；
+            -- 单体类（保护之手/真言盾/神圣震击）先手施放，再走主技能的计时
+            local attach = pick.attachment
+            if attach and GoubayuHeal.Spells and GoubayuHeal.Spells[attach] then
+                local aRank = pick.attachmentRank or Predict.AttachMaxRank(attach)
+                if aRank and GoubayuHeal.Spells[attach][aRank] then
+                    local isAOE = (attach == GoubayuHeal.Holy_nova
+                        or attach == GoubayuHeal.Prayer_of_healing
+                        or attach == GoubayuHeal.Chain_heal)
+                    -- 坦克（MT/8T）在救急线以下：预读也不用团刷挂接（专注单体）
+                    -- by 武藤纯子酱 2026.10.23
+                    local skipAOE = isAOE and (GoubayuHeal.tankheal_mode
+                        or (GoubayuHeal.TankInRescue and GoubayuHeal.TankInRescue()))
+                    if isAOE and not skipAOE then
+                        local mainHeal = (GoubayuHeal.GetSpellHealing
+                            and GoubayuHeal.GetSpellHealing(c.guid, spell, rank)) or 0
+                        local attHeal = (GoubayuHeal.GetSpellHealing
+                            and GoubayuHeal.GetSpellHealing(c.guid, attach, aRank)) or 0
+                        if attHeal > mainHeal then
+                            spell = attach
+                            rank = aRank
+                        end
+                    elseif not isAOE then
+                        attachFirst = attach
+                        attachRank = aRank
+                    end
+                end
+            end
+
+            if forceMax and GoubayuHeal.Spells and GoubayuHeal.Spells[spell] then
+                rank = table.getn(GoubayuHeal.Spells[spell])
+            end
+
+            local instant = IsInstantSpell(spell)
+            local castTime = SpellCastTime(spell, rank)
+            if instant or castTime <= 0 then
+                return { unit = c.guid, spell = spell, rank = rank,
+                    attach = attachFirst, attachRank = attachRank,
+                    forceMax = forceMax, instant = true, startAt = now,
+                    profile = profile, at = now }
+            end
+            local startAt = c.dueTime - castTime
+            -- 到起手时机（读条结束不晚于伤害落地太多）才算 ready；
+            -- 太早 → 等下一轮评估；太晚 → 试下一个目标
+            if startAt <= now and now + castTime <= c.dueTime + MAX_LATE then
+                return { unit = c.guid, spell = spell, rank = rank,
+                    attach = attachFirst, attachRank = attachRank,
+                    forceMax = forceMax, instant = false, startAt = startAt,
+                    dueTime = c.dueTime, profile = profile, at = now }
+            end
+        end
+    end
+    return nil
+end
+
+-- 按键时消费"预读标识"：只在玩家按下 GBYH 治疗命令时被调用（ActionHeal）。
+-- 标识由 OnUpdate 维护；没有标识/标识过期/方案不一致时，在本次按键内即时算一次。
+-- by 武藤纯子酱 2026.10.23
 function GoubayuHeal.Predict_TryPreHeal(profile)
     local C = GoubayuHeal.Config
     if not (C and C["predict_enabled"] == 1) then
@@ -484,88 +595,36 @@ function GoubayuHeal.Predict_TryPreHeal(profile)
     if GoubayuHeal.casting_spell then
         return false
     end
-
-    local cands = Predict.PickCandidates()
-    if not cands or table.getn(cands) == 0 then
+    -- 全局中止（沉默/昏迷等）期间不做预读 by 武藤纯子酱 2026.10.19
+    if GoubayuHeal._abortAction then
         return false
     end
 
-    -- 满级修饰键 / always_tank_target：与正常流程一致，强制最高等级
-    local forceMax = false
-    if (GoubayuHeal.IsHealModifierKeyDown and GoubayuHeal.IsHealModifierKeyDown("heal_max_modifier"))
-        or (tonumber(C["always_tank_target"]) or 0) == 1 then
-        forceMax = true
+    local r = Predict.ready
+    if (not r) or (profile and r.profile and r.profile ~= profile)
+        or (GetTime() - (r.at or 0)) > 1.0 then
+        r = Predict.Evaluate(profile)
     end
-
-    local now = GetTime()
-    for _, c in ipairs(cands) do
-        local pick = Predict.ChooseSpell(c.guid, profile)
-        if pick then
-            local spell = pick.spell
-            local rank = pick.rank
-            local attachFirst = nil
-            local attachRank = nil
-
-            -- 附件：团刷类（新星/祷言/链）与主技能比治疗量取高者；
-            -- 单体类（保护之手/真言盾/神圣震击）先手施放，再走主技能的计时
-            local attach = pick.attachment
-            if attach and GoubayuHeal.Spells and GoubayuHeal.Spells[attach] then
-                local aRank = pick.attachmentRank or Predict.AttachMaxRank(attach)
-                if aRank and GoubayuHeal.Spells[attach][aRank] then
-                    if attach == GoubayuHeal.Holy_nova or attach == GoubayuHeal.Prayer_of_healing
-                        or attach == GoubayuHeal.Chain_heal then
-                        local mainHeal = (GoubayuHeal.GetSpellHealing
-                            and GoubayuHeal.GetSpellHealing(c.guid, spell, rank)) or 0
-                        local attHeal = (GoubayuHeal.GetSpellHealing
-                            and GoubayuHeal.GetSpellHealing(c.guid, attach, aRank)) or 0
-                        if attHeal > mainHeal then
-                            spell = attach
-                            rank = aRank
-                        end
-                    else
-                        attachFirst = attach
-                        attachRank = aRank
-                    end
-                end
-            end
-
-            if forceMax and GoubayuHeal.Spells and GoubayuHeal.Spells[spell] then
-                rank = table.getn(GoubayuHeal.Spells[spell])
-            end
-
-            local instant = IsInstantSpell(spell)
-            local castTime = SpellCastTime(spell, rank)
-            if instant or castTime <= 0 then
-                if Predict.CastPick(c.guid, spell, rank, attachFirst, attachRank, forceMax) then
-                    return true
-                end
-            else
-                local startAt = c.dueTime - castTime
-                -- 能对齐（起手等待不超上限，且读条结束不晚于伤害太多）
-                if startAt <= now + MAX_WAIT and now + castTime <= c.dueTime + MAX_LATE then
-                    if startAt <= now then
-                        if Predict.CastPick(c.guid, spell, rank, attachFirst, attachRank, forceMax) then
-                            return true
-                        end
-                    else
-                        Predict.pending = {
-                            unit = c.guid, spell = spell, rank = rank,
-                            profile = profile,
-                            attach = attachFirst, attachRank = attachRank, forceMax = forceMax,
-                            startAt = startAt, dueTime = c.dueTime,
-                        }
-                        return true
-                    end
-                end
-                -- 来不及 → 试下一个目标
-            end
-        end
+    Predict.ready = nil
+    if not r then
+        return false
     end
-    return false
+    if not (UnitExists(r.unit) and not UnitIsDeadOrGhost(r.unit)) then
+        return false
+    end
+    if (not r.instant) and GetTime() < (r.startAt or 0) then
+        return false
+    end
+    -- 读条类：已过"允许晚到"上限就不再放（避免 1 秒后才按下时白读一次条）
+    if (not r.instant) and r.dueTime and GetTime() > r.dueTime + MAX_LATE then
+        return false
+    end
+    return (Predict.CastPick(r.unit, r.spell, r.rank, r.attach, r.attachRank, r.forceMax))
+        and true or false
 end
 
 -- ============================================================
--- OnUpdate：清理 + 待起手读条
+-- OnUpdate：清理 + 只维护"是否预读"标识（绝不施放）
 -- ============================================================
 
 function Predict.OnUpdate(elapsed)
@@ -575,31 +634,16 @@ function Predict.OnUpdate(elapsed)
         pcall(Predict.Cleanup)
     end
 
-    -- 待起手读条
-    local p = Predict.pending
-    if p then
-        local activeProfile = GoubayuHeal.current_action_profile or GoubayuHeal.current_class
-        if not (GoubayuHeal.Config and GoubayuHeal.Config["predict_enabled"] == 1)
-            or (p.profile and p.profile ~= activeProfile) then
-            Predict.pending = nil
-            return
-        end
-        local now = GetTime()
-        if (not UnitExists(p.unit)) or UnitIsDeadOrGhost(p.unit)
-            or (GoubayuHeal.IsMoving and GoubayuHeal.IsMoving())
-            or GoubayuHeal.casting_spell
-            or now > p.dueTime + MAX_LATE then
-            Predict.pending = nil
-        elseif now >= p.startAt then
-            Predict.pending = nil
-            Predict.CastPick(p.unit, p.spell, p.rank, p.attach, p.attachRank, p.forceMax)
-        end
+    -- 死亡/灵魂状态（救赎之魂除外）：不评估预读
+    -- by 武藤纯子酱 2026.10.23
+    if GoubayuHeal.PlayerDeadBlocked and GoubayuHeal.PlayerDeadBlocked() then
+        Predict.ready = nil
         return
     end
 
-    -- 自动预读评估（不依赖按键）：每 AUTO_EVAL_INTERVAL 秒评估一次，让"预测的下一次伤害"
-    -- 一到窗口就自动预读，提升灵敏度/一致性（不再只靠按键那一刻）
-    -- by 武藤纯子酱 2026.10.15
+    -- 每 AUTO_EVAL_INTERVAL 秒评估一次，只更新 Predict.ready（是否预读 + 放什么）；
+    -- 真正施放只发生在玩家按下 GBYH 治疗命令时（GoubayuHeal.Predict_TryPreHeal）。
+    -- by 武藤纯子酱 2026.10.23
     Predict.autoTimer = (Predict.autoTimer or 0) + (elapsed or 0)
     if Predict.autoTimer < AUTO_EVAL_INTERVAL then
         return
@@ -607,18 +651,20 @@ function Predict.OnUpdate(elapsed)
     Predict.autoTimer = 0
 
     if not (GoubayuHeal.Config and GoubayuHeal.Config["predict_enabled"] == 1) then
+        Predict.ready = nil
         return
     end
-    if GoubayuHeal.casting_spell then
-        return
-    end
-    if GoubayuHeal.IsMoving and GoubayuHeal.IsMoving() then
+    if GoubayuHeal.casting_spell or GoubayuHeal._abortAction
+        or (GoubayuHeal.IsMoving and GoubayuHeal.IsMoving()) then
+        Predict.ready = nil
         return
     end
     local profile = GoubayuHeal.current_action_profile or GoubayuHeal.current_class
-    if profile and GoubayuHeal.Predict_TryPreHeal then
-        pcall(GoubayuHeal.Predict_TryPreHeal, profile)
+    if not profile then
+        Predict.ready = nil
+        return
     end
+    Predict.ready = Predict.Evaluate(profile)
 end
 
 -- ============================================================

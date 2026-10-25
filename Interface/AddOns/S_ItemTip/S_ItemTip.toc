@@ -17,7 +17,6 @@ ItemCount.lua
 MendeleevGlobals.lua
 MendeleevCats.lua
 Mendeleev.lua
-MajorLevel.lua
 SellValue.xml
 InspectFrame.lua
 InspectGemAndEnchant.lua

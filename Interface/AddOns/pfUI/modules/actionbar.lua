@@ -2204,46 +2204,46 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
 
       -- 点击使用（原动作条同款逻辑）；Alt+左键优先：移出监控（锁定时保留 Alt 原有功能）
       b:SetScript("OnClick", function()
-        if not this.slot then return end
-        if mon.dragButton or this.monSuppressClick then return end
+        if not b.slot then return end
+        if mon.dragButton or b.monSuppressClick then return end
         if arg1 == "LeftButton" and IsShiftKeyDown() and C.bars.monitorlock ~= "1" then return end
 
         -- Alt+左键：加入/移出监控（监控优先于 altself；锁定时不拦截）
         if IsAltKeyDown() and arg1 == "LeftButton" and C.bars.monitorlock ~= "1" then
-          pfUI.bars:ToggleMonitorSlot(this.slot)
+          pfUI.bars:ToggleMonitorSlot(b.slot)
           return
         end
 
         if C.bars.monitordisplayonly == "1" then return end
 
         -- 左键/右键：直接使用该槽位动作（与 ButtonClick 的 mouse 分支一致）
-        if HasAction(this.slot) then
+        if HasAction(b.slot) then
           if MacroFrame_SaveMacro then
             MacroFrame_SaveMacro()
           end
           local slfcast = nil
           if arg1 == "RightButton" and C.bars.rightself == "1" then slfcast = true end
           if IsAltKeyDown() and C.bars.altself == "1" then slfcast = true end
-          UseAction(this.slot, nil, slfcast)
+          UseAction(b.slot, nil, slfcast)
 
           -- 点击动画：animmode=keypress 时播放（本体 mouse 分支同条件；监控按钮恒可见，alpha 条件恒满足）
           if C.bars.animmode == "keypress" then
-            this.animation.active = 0
-            this.animation:Show()
+            b.animation.active = 0
+            b.animation:Show()
           end
         end
       end)
 
       b:SetScript("OnEnter", function()
-        this.highlight:Show()
+        b.highlight:Show()
         if C.bars.monitorhidetooltip == "1" or mon.dragButton then
           GameTooltip:Hide()
           return
         end
         GameTooltip:ClearLines()
-        GameTooltip_SetDefaultAnchor(GameTooltip, this)
-        if this.slot and HasAction(this.slot) then
-          GameTooltip:SetAction(this.slot)
+        GameTooltip_SetDefaultAnchor(GameTooltip, b)
+        if b.slot and HasAction(b.slot) then
+          GameTooltip:SetAction(b.slot)
           if C.bars.monitordisplayonly == "1" then
             GameTooltip:AddLine(T["Monitor Display Only"])
           else
@@ -2257,12 +2257,12 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
           GameTooltip:AddLine(T["Action Monitor"])
         end
         GameTooltip:Show()
-        this.highlight:Show()
+        b.highlight:Show()
       end)
 
       b:SetScript("OnLeave", function()
         GameTooltip:Hide()
-        this.highlight:Hide()
+        b.highlight:Hide()
       end)
     end
 

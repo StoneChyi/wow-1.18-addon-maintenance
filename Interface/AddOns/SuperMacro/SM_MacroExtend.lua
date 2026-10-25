@@ -9,10 +9,10 @@
 local currentPageId
 local loadingExtendPage
 
--- 确保 SM_EXTEND 表存在且为表类型
+-- 确保 SM_EXTEND_CHAR 表存在且为表类型
 local function EnsureExtendTable()
-    if ( type(SM_EXTEND) ~= "table" ) then
-        SM_EXTEND = {}
+    if ( type(SM_EXTEND_CHAR) ~= "table" ) then
+        SM_EXTEND_CHAR = {}
     end
 end
 
@@ -25,8 +25,8 @@ local function SetCurrentPage(pageId)
         return
     end
     local extendText = ""
-    if currentPageId and SM_EXTEND[currentPageId] then
-        extendText = SM_EXTEND[currentPageId]
+    if currentPageId and SM_EXTEND_CHAR[currentPageId] then
+        extendText = SM_EXTEND_CHAR[currentPageId]
     end
     loadingExtendPage = 1
     SuperMacroFrameExtendText:SetText(extendText)
@@ -39,7 +39,7 @@ local function SetCurrentPage(pageId)
     end
 end
 
--- 保存当前扩展脚本到 SM_EXTEND 并更新界面
+-- 保存当前扩展脚本到 SM_EXTEND_CHAR 并更新界面
 -- 若编辑框为空则自动删除该页面
 local function SaveCurrentPage()
     EnsureExtendTable()
@@ -49,10 +49,10 @@ local function SaveCurrentPage()
 
     local text=SuperMacroFrameExtendText:GetText()
     if text and text~="" then
-        SM_EXTEND[currentPageId]=text
+        SM_EXTEND_CHAR[currentPageId]=text
     else
         -- 自动删除空页面
-        SM_EXTEND[currentPageId]=nil
+        SM_EXTEND_CHAR[currentPageId]=nil
     end
 
     SuperMacroFrameExtendText:ClearFocus()
@@ -66,9 +66,18 @@ end
 -- 通常在插件加载或保存时执行
 local function RunAllScripts()
     EnsureExtendTable()
-    for m,e in pairs(SM_EXTEND) do
+    for m,e in pairs(SM_EXTEND_CHAR) do
         if ( e ) then
-            RunScript(e)
+            -- 单个扩展脚本存在语法/运行错误时只提示，不中断加载/保存流程 by 武藤纯子酱 2026.9.10
+            local ok, err = pcall(RunScript, e)
+            if ( not ok ) then
+                local msg = "|cffff5555SuperMacro: Extend 脚本 ["..tostring(m).."] 执行失败： "..tostring(err).."|r"
+                if ( SM_print ) then
+                    SM_print(msg)
+                else
+                    DEFAULT_CHAT_FRAME:AddMessage(msg)
+                end
+            end
         end
     end
 end
@@ -104,15 +113,15 @@ function SuperMacroCopyExtend(fromId, toId)
     assert(fromId ~= toId)
     SaveCurrentPage()
 
-    local text = SM_EXTEND[fromId]
-    SM_EXTEND[toId] = text
+    local text = SM_EXTEND_CHAR[fromId]
+    SM_EXTEND_CHAR[toId] = text
 end
 
 -- 删除指定扩展脚本页面
 function SuperMacroDeleteExtend(pageId)
     EnsureExtendTable()
     SaveCurrentPage()
-    SM_EXTEND[pageId]=nil
+    SM_EXTEND_CHAR[pageId]=nil
     -- 如果删除的是当前显示页，刷新编辑框
     if pageId == currentPageId then
         SetCurrentPage(pageId)

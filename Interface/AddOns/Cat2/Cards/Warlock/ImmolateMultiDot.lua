@@ -2,12 +2,24 @@
 local card = {
     id = "warlock_immolate_multi_dot",
     name = "献祭（多线DOT）",
-    description = "为附近没有献祭的敌人施放献祭",
-    details = "扫描献祭射程内的敌人，并对其中没有献祭、不免疫火焰伤害且处于玩家正面的目标无目标施放献祭。需要 SuperWoW；每轮最多选择一个敌人施放。",
+    description = "目标血量>|cff6bc7e0{minimumTargetHealth}|r，多目标补DOT",
+    details = "仅当施法对象当前实际血量严格大于本卡“目标血量”参数时执行，默认100；等于或低于阈值时跳过。逐个检查扫描到的敌人，不受当前选中目标血量影响。扫描献祭射程内的敌人，并对其中没有献祭、不免疫火焰伤害且处于玩家正面的目标无目标施放献祭。需要 SuperWoW；每轮最多选择一个敌人施放。",
     sort = 67,
     category = "class",
     classes = {
         WARLOCK = 3,
+    },
+    optionSchema = {
+        {
+            key = "minimumTargetHealth",
+            type = "number",
+            label = "目标血量",
+            shortLabel = "血量",
+            default = 100,
+            minimum = 0,
+            maximum = 1000000,
+            integer = true,
+        },
     },
     icons = {
         "Interface\\Icons\\Spell_Fire_Immolation",
@@ -24,7 +36,9 @@ function card.RefreshRuntimeData()
     end
 end
 
-function card.Execute(context)
+function card.Execute(context, step)
+    local minimumTargetHealth = context:GetStepOption(step, "minimumTargetHealth") or 100
+
     if not Cat2.SuperWoW then
         return false
     end
@@ -47,6 +61,7 @@ function card.Execute(context)
     local requireCombatTarget = context and context.parameters and context.parameters.warlockMultiDotOnlyCombatEnemies
     for guid, _ in pairs(enemyList) do
         if UnitExists(guid) and UnitCanAttack("player", guid) and not UnitIsDeadOrGhost(guid)
+            and (UnitHealth(guid) or 0) > minimumTargetHealth
             and (not requireCombatTarget or UnitAffectingCombat(guid)) then
             local isInFront = true
             if Cat2.UnitXP then

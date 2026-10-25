@@ -85,7 +85,6 @@ Raids\AQ20\FleshHunter.lua
 Raids\AQ20\HiveZaraSoldier.lua
 
 Raids\AQ40\Skeram.lua
-Raids\AQ40\BugFamily.lua
 Raids\AQ40\Sartura.lua
 Raids\AQ40\Fankriss.lua
 Raids\AQ40\Huhuran.lua
@@ -205,6 +204,7 @@ Raids\TMH\Ursol.lua
 Raids\TMH\Perotharn.lua
 Raids\TMH\Trioch.lua
 Raids\TMH\TimbermawTrash.lua
+Raids\TMH\Selenaxx.lua
 
 Raids\Karazhan\LordBlackwaldII.lua
 Raids\Karazhan\BroodQueenAraxxna.lua

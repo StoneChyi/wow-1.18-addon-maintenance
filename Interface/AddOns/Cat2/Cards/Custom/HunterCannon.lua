@@ -1,7 +1,7 @@
 -- 猎神加农炮：aim 最远目标选怪，仅荷枪实弹触发。
 local card = {
     id = "hunter_cannon",
-    name = "猎神加农炮 |cff00ff00-楚人美心善提供|r",
+    name = "猎神加农炮 |cff00b050-「楚人美心善」提供|r",
     description = "对最远目标无痕荷枪实弹瞄准",
     details = "在41码范围内寻找距离玩家最远的敌对目标，发现后直接无痕施放瞄准射击。需要SuperWoW+UnitXP 模组。成功执行时会阻断本轮后续卡片。",
     sort = 45.3,

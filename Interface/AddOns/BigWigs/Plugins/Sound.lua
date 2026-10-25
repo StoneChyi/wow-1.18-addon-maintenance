@@ -64,6 +64,18 @@ local sounds = {
 	Hide = "Interface\\AddOns\\BigWigs\\Sounds\\hide.mp3",
 	yuanlidatuan = "Interface\\AddOns\\BigWigs\\Sounds\\yuanlidatuan.mp3",
 	goforbuff = "Interface\\AddOns\\BigWigs\\Sounds\\goforbuff.wav",
+
+	-- 木喉要塞 DBM 语音包（源自团本小助理 RaidCommandAssistant）
+	-- 集合分摊 / 快出人群 / 快转火 / 注意仇恨 / 打断 / 驱散 / 停手 / 转阶段 / 恐惧
+	voiceGather = "Interface\\AddOns\\BigWigs\\Sounds\\Voice\\gathershare.ogg",
+	voiceOut = "Interface\\AddOns\\BigWigs\\Sounds\\Voice\\runout.ogg",
+	voiceSwitch = "Interface\\AddOns\\BigWigs\\Sounds\\Voice\\changetarget.ogg",
+	voiceThreat = "Interface\\AddOns\\BigWigs\\Sounds\\Voice\\tauntboss.ogg",
+	voiceInterrupt = "Interface\\AddOns\\BigWigs\\Sounds\\Voice\\interruptsoon.ogg",
+	voiceDispel = "Interface\\AddOns\\BigWigs\\Sounds\\Voice\\dispelnow.ogg",
+	voiceStopheal = "Interface\\AddOns\\BigWigs\\Sounds\\Voice\\dpsstop.ogg",
+	voicePhase = "Interface\\AddOns\\BigWigs\\Sounds\\Voice\\switchphase.ogg",
+	voiceFear = "Interface\\AddOns\\BigWigs\\Sounds\\Voice\\fearsoon.ogg",
 }
 
 
@@ -83,6 +95,10 @@ L:RegisterTranslations("enUS", function()
 		["default"] = true,
 		["Default only"] = true,
 		["Use only the default sound."] = true,
+
+		["voice"] = true,
+		["Use voice alerts"] = true,
+		["Toggle voice alerts (DBM voice pack) on or off."] = true,
 
 	-- Sunelegy，Wind汉化修复Turtle-WOW中文数据
 	-- Last update: 2024-06-22
@@ -150,6 +166,10 @@ L:RegisterTranslations("zhCN", function() return {
 	-- ["default"] = "默认",
 	["Default only"] = "默认",
 	["Use only the default sound."] = "只选用默认声音.",
+
+	["voice"] = "语音",
+	["Use voice alerts"] = "语音提醒",
+	["Toggle voice alerts (DBM voice pack) on or off."] = "切换语音提醒（DBM语音包）开和关.",
 	}
 end)
 
@@ -161,6 +181,7 @@ BigWigsSound = BigWigs:NewModule(L["Sounds"])
 BigWigsSound.defaultDB = {
 	defaultonly = false,
 	sound = true,
+	voice = true,
 }
 BigWigsSound.consoleCmd = L["sounds"]
 BigWigsSound.consoleOptions = {
@@ -191,6 +212,17 @@ BigWigsSound.consoleOptions = {
 				BigWigsSound.db.profile.defaultonly = v
 			end,
 		},
+		[L["voice"]] = {
+			type = "toggle",
+			name = L["Use voice alerts"],
+			desc = L["Toggle voice alerts (DBM voice pack) on or off."],
+			get = function()
+				return BigWigsSound.db.profile.voice
+			end,
+			set = function(v)
+				BigWigsSound.db.profile.voice = v
+			end,
+		},
 	}
 }
 
@@ -206,12 +238,20 @@ function BigWigsSound:OnDisable()
 	BigWigs:DebugMessage("OnDisable")
 end
 
+-- 语音键（voiceXxx）受独立的「语音提醒」开关控制，关闭时静音（不回退提示音）
+local function IsVoiceKey(sound)
+	return sound and string.sub(sound, 1, 5) == "voice"
+end
+
 function BigWigsSound:BigWigs_Message(text, color, noraidsay, sound, broadcastonly)
 	if self.db.profile.sound then
 		if not text or sound == false or broadcastonly then
 			return
 		end
 
+		if IsVoiceKey(sound) and not self.db.profile.voice then
+			return
+		end
 		if sounds[sound] and not self.db.profile.defaultonly then
 			PlaySoundFile(sounds[sound])
 		else
@@ -222,6 +262,9 @@ end
 
 function BigWigsSound:BigWigs_Sound(sound)
 	if self.db.profile.sound then
+		if IsVoiceKey(sound) and not self.db.profile.voice then
+			return
+		end
 		if sounds[sound] and not self.db.profile.defaultonly then
 			PlaySoundFile(sounds[sound])
 		else

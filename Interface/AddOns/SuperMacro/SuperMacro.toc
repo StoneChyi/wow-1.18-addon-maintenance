@@ -6,11 +6,20 @@
 ## Author: GIT, Sunelegy, 拉风武夫, 武藤纯子酱, Crazydru
 ## First created: Mar 2005
 ## OptionalDeps: !Libs
-## SavedVariables: SM_VARS SM_EXTEND SM_ACTION_SUPER SM_SUPER
+## SavedVariables: SM_VARS SM_ACTION_SUPER SM_SUPER SM_EXTEND
+## SavedVariablesPerCharacter: SM_SUPER_CHAR SM_EXTEND_CHAR SM_ACTION_CHAR SM_MIGRATED_CHAR
 ##..\..\FrameXML\Fonts.xml
 ##..\..\FrameXML\UIPanelTemplates.xml
 ##..\..\FrameXML\ClassTrainerFrameTemplates.xml
-## Version: 3.24
+## Version: 3.25
 libs\KuBa-SlashDispatch-1.0\KuBa-SlashDispatch-1.0.lua
-SuperMacro.xml
-SuperMacroOptions.xml
+SuperMacro.lua
+SM_Common.lua
+SM_MacroExtend.lua
+SM_Super.lua
+SM_ItemLink.lua
+SM_Slash.lua
+SM_Tooltip.lua
+localization.lua
+SM_Options.lua
+SM_UI.lua

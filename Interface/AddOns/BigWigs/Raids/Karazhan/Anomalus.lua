@@ -250,12 +250,16 @@ function module:OnEngage()
 		self:Bar(L["bar_arcaneOverload"], timer.arcaneOverload[arcaneOverloadCount], icon.arcaneOverload)
 	end
     
-    self:ScheduleRepeatingEvent("BigWigsAnomalusScan", self.ScanAuras, 0.5, self)
+    self:ScheduleRepeatingEvent("BigWigsAnomalusScan", self.ScanAuras, 1, self)
 end
 
 -- Tooltip Scanner
 local scannerTooltip = CreateFrame("GameTooltip", "BigWigsAnomalusTooltip", nil, "GameTooltipTemplate")
 scannerTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
+
+-- 纹理 → debuff 名称 缓存：1.12 的 UnitDebuff 返回纹理路径而非名称，tooltip 扫描是慢操作，
+-- 命中过纹理后缓存映射，后续同纹理直接取名字，避免每轮重复 ClearLines/SetUnitDebuff/GetText
+local textureNameCache = {}
 
 function module:ScanAuras()
     if not self.db.profile.custommonitor then return end
@@ -275,9 +279,14 @@ function module:ScanAuras()
 
                 -- Force tooltip scan if it looks like a texture
                 if string.find(buffName, "Interface") or string.find(buffName, "\\") then
-                     scannerTooltip:ClearLines()
-                     scannerTooltip:SetUnitDebuff(unit, j)
-                     buffName = BigWigsAnomalusTooltipTextLeft1:GetText()
+                     if textureNameCache[buffName] then
+                         buffName = textureNameCache[buffName]
+                     else
+                         scannerTooltip:ClearLines()
+                         scannerTooltip:SetUnitDebuff(unit, j)
+                         buffName = BigWigsAnomalusTooltipTextLeft1:GetText()
+                         textureNameCache[buffName] = buffName
+                     end
                 end
 
                 -- Try to get duration from pfUI's libdebuff if available (since 1.12 API doesn't support it)
