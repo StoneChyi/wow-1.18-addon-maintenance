@@ -1970,8 +1970,10 @@
       "addon": "UnitXP_SP3_Addon",
       "status": "unconfirmed",
       "note": "PluginHistory/Plugins/UnitXP_SP3_Addon.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
+      "purpose": "版本87与旧个人版17文件一致，配套DLL已恢复X2.0；早期个人修改归属仍待确认。",
+      "sources": [
+        "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md"
+      ],
       "maintenance_files": [],
       "tracked_files_at_reference": 17,
       "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
@@ -2277,7 +2279,8 @@
         "PluginHistory/pfUI-tooltip-fix-20261009.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
         "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI/api/api.lua",
@@ -2599,6 +2602,30 @@
       ],
       "maintenance_files": [
         "nampower.dll"
+      ]
+    },
+    {
+      "addon": "UnitXP_SP3",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/UnitXP_SP3.md",
+      "purpose": "按用户要求恢复个人使用版X2.0，并配套核对设置插件和恢复pfUI模块；待游戏验收。",
+      "sources": [
+        "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md"
+      ],
+      "maintenance_files": [
+        "UnitXP_SP3.dll"
+      ]
+    },
+    {
+      "addon": "CoreBridge",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/CoreBridge.md",
+      "purpose": "恢复旧个人版DLL文件，按该基准保留无独立插件/加载项的状态。",
+      "sources": [
+        "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md"
+      ],
+      "maintenance_files": [
+        "corebridge.dll"
       ]
     }
   ]

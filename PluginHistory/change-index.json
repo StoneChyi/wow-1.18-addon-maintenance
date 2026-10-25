@@ -9,7 +9,7 @@
     "related_skin_only": 1
   },
   "addon_pages": 107,
-  "dated_records": 182,
+  "dated_records": 184,
   "addons": [
     {
       "addon": "!Libs",
@@ -2248,12 +2248,22 @@
       "addon": "UnitXP_SP3_Addon",
       "status": "unconfirmed",
       "note": "PluginHistory/Plugins/UnitXP_SP3_Addon.md",
-      "purpose": "等待确认是否有个人修改",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "purpose": "版本87与旧个人版17文件一致，配套DLL已恢复X2.0；早期个人修改归属仍待确认。",
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "核对配套插件并恢复旧 DLL 组合",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "UnitXP_SP3_Addon-20261025-01",
+          "date": "2026-10-25",
+          "title": "核对配套插件并恢复旧 DLL 组合",
+          "kind": "范围确认",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-UnitXP_SP3_Addon-20261025-01"
+        }
+      ]
     },
     {
       "addon": "WIM",
@@ -2546,10 +2556,19 @@
       "note": "PluginHistory/Plugins/pfUI.md",
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "合入共享属性与本次确认的剩余新包更新",
+      "latest_record_title": "配套恢复旧个人版 UnitXP 模块",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 14,
+      "record_count": 15,
       "records": [
+        {
+          "id": "pfUI-20261025-04",
+          "date": "2026-10-25",
+          "title": "配套恢复旧个人版 UnitXP 模块",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261025-04"
+        },
         {
           "id": "pfUI-20261025-03",
           "date": "2026-10-25",
@@ -3033,7 +3052,7 @@
       ]
     }
   ],
-  "runtime_dated_records": 5,
+  "runtime_dated_records": 7,
   "runtime_components": [
     {
       "addon": "VanillaHelpers",
@@ -3053,6 +3072,28 @@
           "game_acceptance": "待游戏验收",
           "commits": [],
           "anchor": "change-VanillaHelpers-20261025-01"
+        }
+      ],
+      "scope_type": "runtime"
+    },
+    {
+      "addon": "UnitXP_SP3",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/UnitXP_SP3.md",
+      "purpose": "按用户要求恢复个人使用版X2.0，并配套核对设置插件和恢复pfUI模块；待游戏验收。",
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "按用户要求恢复此前个人版",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "UnitXP_SP3-20261025-01",
+          "date": "2026-10-25",
+          "title": "按用户要求恢复此前个人版",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-UnitXP_SP3-20261025-01"
         }
       ],
       "scope_type": "runtime"
@@ -3115,6 +3156,28 @@
           "game_acceptance": "待游戏验收",
           "commits": [],
           "anchor": "change-DXVK-20261025-01"
+        }
+      ],
+      "scope_type": "runtime"
+    },
+    {
+      "addon": "CoreBridge",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/CoreBridge.md",
+      "purpose": "恢复旧个人版DLL文件，按该基准保留无独立插件/加载项的状态。",
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "按用户要求恢复此前个人版",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "CoreBridge-20261025-01",
+          "date": "2026-10-25",
+          "title": "按用户要求恢复此前个人版",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-CoreBridge-20261025-01"
         }
       ],
       "scope_type": "runtime"

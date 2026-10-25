@@ -21,7 +21,7 @@
 | [ShaguDPS](ShaguDPS.md) | 2026-10-25 | [合入共享属性与本次确认的剩余新包更新](ShaguDPS.md#change-ShaguDPS-20261025-03) | 待游戏验收 |
 | [S_ItemTip](S_ItemTip.md) | 2026-10-25 | [合入 10 月 24 日包并保留个人功能（已部署）](S_ItemTip.md#change-S_ItemTip-20261025-02) | 待游戏验收 |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | 2026-10-25 | [配套恢复无双更新前个人皮肤](pfUI-addonskinner.md#change-pfUI-addonskinner-20261025-03) | 待游戏验收 |
-| [pfUI](pfUI.md) | 2026-10-25 | [合入共享属性与本次确认的剩余新包更新](pfUI.md#change-pfUI-20261025-03) | 待游戏验收 |
+| [pfUI](pfUI.md) | 2026-10-25 | [配套恢复旧个人版 UnitXP 模块](pfUI.md#change-pfUI-20261025-04) | 待游戏验收 |
 | [MySlash](MySlash.md) | 2026-10-25 | [合入 10 月 24 日包并保留个人功能（已部署）](MySlash.md#change-MySlash-20261025-02) | 待游戏验收 |
 | [GoubayuHeal](GoubayuHeal.md) | 2026-10-25 | [合入 10 月 24 日包并保留个人功能（已部署）](GoubayuHeal.md#change-GoubayuHeal-20261025-02) | 待游戏验收 |
 | [EzPoison](EzPoison.md) | 2026-10-25 | [合入 10 月 24 日包并保留个人功能（已部署）](EzPoison.md#change-EzPoison-20261025-02) | 待游戏验收 |
@@ -93,8 +93,10 @@
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
 | [VanillaHelpers](VanillaHelpers.md) | 2026-10-25 | [按用户要求回退到仓库旧版](VanillaHelpers.md#change-VanillaHelpers-20261025-01) | 待游戏验收 |
+| [UnitXP_SP3](UnitXP_SP3.md) | 2026-10-25 | [按用户要求恢复此前个人版](UnitXP_SP3.md#change-UnitXP_SP3-20261025-01) | 待游戏验收 |
 | [nampower](nampower.md) | 2026-10-25 | [实际启动触发致命异常，撤回候选并恢复旧版](nampower.md#change-nampower-20261025-03) | 用户实测（限本条范围） |
 | [DXVK](DXVK.md) | 2026-10-25 | [按用户要求回退到仓库旧版](DXVK.md#change-DXVK-20261025-01) | 待游戏验收 |
+| [CoreBridge](CoreBridge.md) | 2026-10-25 | [按用户要求恢复此前个人版](CoreBridge.md#change-CoreBridge-20261025-01) | 待游戏验收 |
 
 <!-- preserved-index-context -->
 ## 历史检索与整合包记录

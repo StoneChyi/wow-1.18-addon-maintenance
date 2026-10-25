@@ -1217,6 +1217,35 @@ pfUI:RegisterModule("unitxp", "vanilla", function ()
     this:UnregisterAllEvents()
   end)
 
+  -- OS Notification Support (不变)
+  if C.unitframes.unitxp_notify == "1" then
+    local notifyFrame = CreateFrame("Frame")
+    notifyFrame:RegisterEvent("CHAT_MSG_WHISPER")
+    notifyFrame:RegisterEvent("CHAT_MSG_BN_WHISPER")
+    notifyFrame:RegisterEvent("READY_CHECK")
+    notifyFrame:RegisterEvent("RAID_INSTANCE_WELCOME")
+    notifyFrame:RegisterEvent("PLAYER_LOGOUT")
+
+    notifyFrame:SetScript("OnEvent", function()
+      if event == "PLAYER_LOGOUT" then
+        this:UnregisterAllEvents()
+        this:SetScript("OnEvent", nil)
+        return
+      end
+      pcall(UnitXP, "notify", "taskbarIcon")
+      pcall(UnitXP, "notify", "systemSound")
+    end)
+
+    local origBattlefieldPortShow = BattlefieldFrame_Show
+    if origBattlefieldPortShow then
+      BattlefieldFrame_Show = function()
+        pcall(UnitXP, "notify", "taskbarIcon")
+        pcall(UnitXP, "notify", "systemSound")
+        return origBattlefieldPortShow()
+      end
+    end
+  end
+
   -- Enhanced Distance API (修改后支持野兽之眼)
   pfUI.api.GetPreciseDistance = function(unit1, unit2)
     if not unit2 then
