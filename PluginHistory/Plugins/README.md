@@ -12,36 +12,38 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
+| [XyTracker](XyTracker.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](XyTracker.md#change-XyTracker-20261025-01) | 不适用（说明或停用记录） |
+| [WushuangLoot](WushuangLoot.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](WushuangLoot.md#change-WushuangLoot-20261025-01) | 不适用（说明或停用记录） |
 | [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-25 | [重建连续材质、保留地貌细节，修复城市／海岸与压缩接界](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261025-02) | 待游戏验收 |
-| [XyTracker](XyTracker.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](XyTracker.md#change-XyTracker-20261018-02) | 待游戏验收 |
-| [WushuangLoot](WushuangLoot.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](WushuangLoot.md#change-WushuangLoot-20261018-02) | 待游戏验收 |
+| [StatCompare](StatCompare.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](StatCompare.md#change-StatCompare-20261025-01) | 不适用（说明或停用记录） |
+| [ShaguDPS](ShaguDPS.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](ShaguDPS.md#change-ShaguDPS-20261025-01) | 不适用（说明或停用记录） |
+| [S_ItemTip](S_ItemTip.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](S_ItemTip.md#change-S_ItemTip-20261025-01) | 不适用（说明或停用记录） |
+| [pfUI-addonskinner](pfUI-addonskinner.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](pfUI-addonskinner.md#change-pfUI-addonskinner-20261025-01) | 不适用（说明或停用记录） |
+| [pfUI](pfUI.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](pfUI.md#change-pfUI-20261025-01) | 不适用（说明或停用记录） |
+| [MySlash](MySlash.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](MySlash.md#change-MySlash-20261025-01) | 不适用（说明或停用记录） |
+| [GoubayuHeal](GoubayuHeal.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](GoubayuHeal.md#change-GoubayuHeal-20261025-01) | 不适用（说明或停用记录） |
+| [Cooline](Cooline.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](Cooline.md#change-Cooline-20261025-01) | 不适用（说明或停用记录） |
+| [CatPotion](CatPotion.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](CatPotion.md#change-CatPotion-20261025-01) | 不适用（说明或停用记录） |
+| [Cat2](Cat2.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](Cat2.md#change-Cat2-20261025-01) | 不适用（说明或停用记录） |
+| [Capslock](Capslock.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](Capslock.md#change-Capslock-20261025-01) | 不适用（说明或停用记录） |
+| [BigWigs](BigWigs.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](BigWigs.md#change-BigWigs-20261025-01) | 不适用（说明或停用记录） |
+| [BetterCharacterStats](BetterCharacterStats.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](BetterCharacterStats.md#change-BetterCharacterStats-20261025-01) | 不适用（说明或停用记录） |
+| [aux-addon](aux-addon.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](aux-addon.md#change-aux-addon-20261025-01) | 不适用（说明或停用记录） |
+| [Automatonex](Automatonex.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](Automatonex.md#change-Automatonex-20261025-01) | 不适用（说明或停用记录） |
+| [AutoMarker](AutoMarker.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](AutoMarker.md#change-AutoMarker-20261025-01) | 不适用（说明或停用记录） |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261018-02) | 待游戏验收 |
-| [StatCompare](StatCompare.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](StatCompare.md#change-StatCompare-20261018-01) | 不适用（说明或停用记录） |
-| [ShaguDPS](ShaguDPS.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](ShaguDPS.md#change-ShaguDPS-20261018-02) | 待游戏验收 |
-| [S_ItemTip](S_ItemTip.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](S_ItemTip.md#change-S_ItemTip-20261018-01) | 不适用（说明或停用记录） |
-| [pfUI](pfUI.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](pfUI.md#change-pfUI-20261018-02) | 待游戏验收 |
 | [Meeting](Meeting.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](Meeting.md#change-Meeting-20261018-02) | 待游戏验收 |
-| [GoubayuHeal](GoubayuHeal.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](GoubayuHeal.md#change-GoubayuHeal-20261018-02) | 待游戏验收 |
 | [diminfo](diminfo.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](diminfo.md#change-diminfo-20261018-02) | 待游戏验收 |
-| [CatPotion](CatPotion.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](CatPotion.md#change-CatPotion-20261018-02) | 待游戏验收 |
-| [Cat2](Cat2.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](Cat2.md#change-Cat2-20261018-02) | 待游戏验收 |
-| [BigWigs](BigWigs.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](BigWigs.md#change-BigWigs-20261018-02) | 待游戏验收 |
-| [BetterCharacterStats](BetterCharacterStats.md) | 2026-10-18 | [10 月 16 日包与当前个人版差异核对（未部署）](BetterCharacterStats.md#change-BetterCharacterStats-20261018-01) | 不适用（说明或停用记录） |
-| [AutoMarker](AutoMarker.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](AutoMarker.md#change-AutoMarker-20261018-02) | 待游戏验收 |
 | [!Libs](!Libs.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](!Libs.md#change-!Libs-20261018-02) | 待游戏验收 |
 | [YGB_OTAlarm](YGB_OTAlarm.md) | 2026-10-15 | [移除仇恨条阈值数字](YGB_OTAlarm.md#change-YGB_OTAlarm-20261015-01) | 待游戏验收 |
-| [pfUI-addonskinner](pfUI-addonskinner.md) | 2026-10-14 | [洗脑装置按钮悬停和按压反馈](pfUI-addonskinner.md#change-pfUI-addonskinner-20261014-01) | 待游戏验收 |
 | [BrainwasherPro](BrainwasherPro.md) | 2026-10-14 | [窗口层级、按钮反馈和风格入口](BrainwasherPro.md#change-BrainwasherPro-20261014-01) | 待游戏验收 |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | 2026-10-13 | [补充：直接清标与队外玩家本地标记](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261013-02) | 待游戏验收 |
-| [Cooline](Cooline.md) | 2026-10-13 | [合并圣水、炸药及其他共享物品冷却](Cooline.md#change-Cooline-20261013-01) | 待游戏验收 |
 | [TurtleMail](TurtleMail.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](TurtleMail.md#change-TurtleMail-20261012-01) | 待游戏验收 |
 | [S_ChatBar](S_ChatBar.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](S_ChatBar.md#change-S_ChatBar-20261012-01) | 待游戏验收 |
 | [RaidCheck](RaidCheck.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](RaidCheck.md#change-RaidCheck-20261012-01) | 待游戏验收 |
 | [PlayerLinkEnhance](PlayerLinkEnhance.md) | 2026-10-12 | [修复团队目标图标入口的错误对号](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261012-01) | 待游戏验收 |
 | [OneBag](OneBag.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](OneBag.md#change-OneBag-20261012-01) | 待游戏验收 |
-| [MySlash](MySlash.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](MySlash.md#change-MySlash-20261012-01) | 待游戏验收 |
 | [Flyout](Flyout.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](Flyout.md#change-Flyout-20261012-01) | 待游戏验收 |
-| [Automatonex](Automatonex.md) | 2026-10-12 | [随机坐骑避免连续重复](Automatonex.md#change-Automatonex-20261012-02) | 待游戏验收 |
 | [QianKunBag](QianKunBag.md) | 2026-10-11 | [独立背包首版 0.1.0](QianKunBag.md#change-QianKunBag-20261011-01) | 待游戏验收 |
 | [Cat](Cat.md) | 2026-10-11 | [审判控制面板增加惩戒输出技能按钮](Cat.md#change-Cat-20261011-01) | 待游戏验收 |
 | [Bagshui](Bagshui.md) | 2026-10-11 | [重构转入独立 QianKunBag，原插件保留](Bagshui.md#change-Bagshui-20261011-15) | 不适用（说明或停用记录） |
@@ -62,9 +64,7 @@
 | [DPSMateXExtend](DPSMateXExtend.md) | 日期待确认 | 让扩展统计详情参与 Boss/小怪汇总。 | 见早期记录 |
 | [DPSMateXEncounters](DPSMateXEncounters.md) | 日期待确认 | 提供 Boss/小怪战斗分类与可靠汇总。 | 见早期记录 |
 | [DPSMateX](DPSMateX.md) | 日期待确认 | 完善紧凑详情、统计界面及扩展模块入口。 | 见早期记录 |
-| [Capslock](Capslock.md) | 日期待确认 | 修正拉人名单的职业颜色。 | 见早期记录 |
 | [BuffTool](BuffTool.md) | 日期待确认 | 简化本职业设置，并让移动模式可靠退出。 | 见早期记录 |
-| [aux-addon](aux-addon.md) | 日期待确认 | 修正充能物品上架，并减少扫描和重复查询。 | 见早期记录 |
 | [AtlasLoot](AtlasLoot.md) | 日期待确认 | 修正地图掉落映射和愿望清单的本地化错误。 | 见早期记录 |
 | [Atlas](Atlas.md) | 日期待确认 | 让木喉要塞地图编号与首领掉落保持一致。 | 见早期记录 |
 | [ActionBarProfiles](ActionBarProfiles.md) | 日期待确认 | 让天赋切换后动作条完整恢复，减少残留和无效重复加载。 | 见早期记录 |
@@ -74,7 +74,7 @@
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
 | [Tmog](Tmog.md) | 日期待确认 | 登记相关皮肤适配，等待确认主插件是否另有个人改动。 | 见早期记录 |
-| [TrainerSkills](TrainerSkills.md) | 日期待确认 | 登记相关皮肤适配，等待确认主插件是否另有个人改动。 | 见早期记录 |
+| [TrainerSkills](TrainerSkills.md) | 2026-10-25 | [10 月 24 日原包三版本差异核对（未部署）](TrainerSkills.md#change-TrainerSkills-20261025-01) | 不适用（说明或停用记录） |
 
 ## 记录与查找
 

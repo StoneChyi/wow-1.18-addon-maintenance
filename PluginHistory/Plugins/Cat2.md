@@ -10,6 +10,8 @@
 
 ## 当前维护摘要
 
+2026-10-25 核对：10 月 24 日原包有功能更新；现用实现保持不变，详情见本页最新差异记录。
+
 2026-10-18 已合并部署：合入两张猎人自定义卡、猫德流血/撕咬与拖拽显示更新；更新文件当前原与旧包相同，其他文件全部保留。 真实游戏验收待补充。
 
 扩展流程编辑、配置调用和动作条入口。
@@ -17,6 +19,23 @@
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-Cat2-20261025-01"></a>
+
+### 2026-10-25｜10 月 24 日原包三版本差异核对（未部署）
+
+- 记录编号：`Cat2-20261025-01`
+- 记录类型：差异核对
+- 游戏验收：不适用（说明或停用记录）
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户提供 10 月 24 日插件包，要求与 10 月 16 日旧原包及当前个人版对比。
+- 修改内容：仅核对并记录，未更新插件。新包变化：版本 2026-10-23；新增自定义施法/物品、按职业自动祝福、献祭之油/屠魔药剂、血量百分比/光环/朝向/附近敌人数跳转、部分战士术士卡和跳转引导；多种持续伤害卡增加目标血量条件；实装自动取消法系增益；移除部分旧卡与测试文件。
+- 当前个人版：本插件运行内容与 16 日原包相同，沿用此前合入的卡片/编辑器。
+- 涉及文件：`Cards/Common/AutoCancelCasterBuffs.lua`、`Cards/Common/CaptureElementalImmunity.lua`、`Cards/Common/CustomSpell.lua`、`Cards/Common/FlowTerminate.lua`、`Cards/Common/PauseWhenTargetBanished.lua`、`Cards/Common/ViewMyCasts.lua`、`Cards/Common/ViewMyCastsDetailed.lua`、`Cards/Custom/HunterCannon.lua`、`Cards/Custom/HunterOrbitalMissile.lua`、`Cards/Custom/PaladinAutoBlessing.lua`、`Cards/Druid/InsectSwarm.lua`、`Cards/Druid/InsectSwarmSolarEclipse.lua` 等 125 个代码/资源/加载文件。
+- 关联功能与处理：旧 druid_rip_lowHP 在配置恢复时明确跳过，不能把删除文件全部留回；更新时需核对旧流程迁移。
+- 检查结果：逐文件字节及 SHA-256、三方关系与机械合并冲突核对；整批新包变更 Lua 186/187 可编译，GoubayuHeal 原 UI 超过 200 局部变量；可编译文件嵌套函数未超 32 upvalue。相关 TOC/XML 没有新增缺失引用。另运行 BCS 缓存、治疗 UI 编译与 ShaguDPS 兜底受控检查；具体结果与限制见[整批对照报告](../Research/三版本插件对比-20261016-20261024-20261025.md)和[逐文件清单](../Research/三版本插件对比-20261016-20261024-20261025.json)。
+- 游戏验收与未确认：本次未部署、未真实游戏或多人验收；既有个人改动归属及证据状态不变，不将原包功能记作本项目新增。
 
 <a id="change-Cat2-20261018-02"></a>
 

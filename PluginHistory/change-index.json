@@ -9,7 +9,7 @@
     "related_skin_only": 2
   },
   "addon_pages": 107,
-  "dated_records": 133,
+  "dated_records": 155,
   "addons": [
     {
       "addon": "!Libs",
@@ -145,11 +145,21 @@
       "status": "snapshot_difference",
       "note": "PluginHistory/Plugins/AtlasQuest.md",
       "purpose": "补记可核对的任务本地化差异。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "AtlasQuest-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-AtlasQuest-20261025-01"
+        }
+      ]
     },
     {
       "addon": "AuldLangSyne",
@@ -178,11 +188,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/AutoMarker.md",
       "purpose": "更新小地图按钮尺寸、图标和圆环；原有标记逻辑保留。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 3,
       "records": [
+        {
+          "id": "AutoMarker-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-AutoMarker-20261025-01"
+        },
         {
           "id": "AutoMarker-20261018-02",
           "date": "2026-10-18",
@@ -208,11 +227,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Automatonex.md",
       "purpose": "完善模块配置、物品监控及与其他界面的协作。",
-      "latest_record_date": "2026-10-12",
-      "latest_record_title": "随机坐骑避免连续重复",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 3,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 4,
       "records": [
+        {
+          "id": "Automatonex-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-Automatonex-20261025-01"
+        },
         {
           "id": "Automatonex-20261012-02",
           "date": "2026-10-12",
@@ -430,11 +458,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/BetterCharacterStats.md",
       "purpose": "保持角色属性面板布局稳定，并与观察、换天赋功能协调。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
       "latest_game_acceptance": "不适用（说明或停用记录）",
-      "record_count": 1,
+      "record_count": 2,
       "records": [
+        {
+          "id": "BetterCharacterStats-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-BetterCharacterStats-20261025-01"
+        },
         {
           "id": "BetterCharacterStats-20261018-01",
           "date": "2026-10-18",
@@ -451,11 +488,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/BigWigs.md",
       "purpose": "适配乌龟服首领、中文日志以及竖行计时条。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 4,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 5,
       "records": [
+        {
+          "id": "BigWigs-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-BigWigs-20261025-01"
+        },
         {
           "id": "BigWigs-20261018-02",
           "date": "2026-10-18",
@@ -669,11 +715,21 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Capslock.md",
       "purpose": "修正拉人名单的职业颜色。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "Capslock-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-Capslock-20261025-01"
+        }
+      ]
     },
     {
       "addon": "Cat",
@@ -703,11 +759,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Cat2.md",
       "purpose": "扩展流程编辑、配置调用和动作条入口。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 3,
       "records": [
+        {
+          "id": "Cat2-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-Cat2-20261025-01"
+        },
         {
           "id": "Cat2-20261018-02",
           "date": "2026-10-18",
@@ -733,11 +798,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/CatPotion.md",
       "purpose": "扩展常用物品，并完善多配置窗口和使用反馈。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 3,
       "records": [
+        {
+          "id": "CatPotion-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-CatPotion-20261025-01"
+        },
         {
           "id": "CatPotion-20261018-02",
           "date": "2026-10-18",
@@ -763,11 +837,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/Cooline.md",
       "purpose": "短冷却优先，支持 30 分钟；17 组技能及 12 类物品按实际计时归并，修复圣盾/圣佑和圣水/手雷重复，保留独立长冷却、布局、预览与字体保护。",
-      "latest_record_date": "2026-10-13",
-      "latest_record_title": "合并圣水、炸药及其他共享物品冷却",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 9,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 10,
       "records": [
+        {
+          "id": "Cooline-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-Cooline-20261025-01"
+        },
         {
           "id": "Cooline-20261013-01",
           "date": "2026-10-13",
@@ -973,11 +1056,21 @@
       "status": "unconfirmed",
       "note": "PluginHistory/Plugins/EzPoison.md",
       "purpose": "等待确认是否有个人修改",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "EzPoison-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-EzPoison-20261025-01"
+        }
+      ]
     },
     {
       "addon": "FishingBuddy",
@@ -1018,11 +1111,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/GoubayuHeal.md",
       "purpose": "更新瞬发人数限制、动作占用、迅捷治愈换目标及牧师驱病顺序。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 3,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 4,
       "records": [
+        {
+          "id": "GoubayuHeal-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-GoubayuHeal-20261025-01"
+        },
         {
           "id": "GoubayuHeal-20261018-02",
           "date": "2026-10-18",
@@ -1222,11 +1324,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/MySlash.md",
       "purpose": "按新包删除 TT助手 /at 入口。",
-      "latest_record_date": "2026-10-12",
-      "latest_record_title": "迁入 10 月 10 日包（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 1,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 2,
       "records": [
+        {
+          "id": "MySlash-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-MySlash-20261025-01"
+        },
         {
           "id": "MySlash-20261012-01",
           "date": "2026-10-12",
@@ -1505,11 +1616,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/S_ItemTip.md",
       "purpose": "合并评分/链接缓存优化并修复查询刷新，保留个人观察布局和负充能处理。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
       "latest_game_acceptance": "不适用（说明或停用记录）",
-      "record_count": 5,
+      "record_count": 6,
       "records": [
+        {
+          "id": "S_ItemTip-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-S_ItemTip-20261025-01"
+        },
         {
           "id": "S_ItemTip-20261018-01",
           "date": "2026-10-18",
@@ -1581,11 +1701,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/ShaguDPS.md",
       "purpose": "增加标准坦克模式统计视图并给 pfUI 提供多目标仇恨。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 4,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 5,
       "records": [
+        {
+          "id": "ShaguDPS-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-ShaguDPS-20261025-01"
+        },
         {
           "id": "ShaguDPS-20261018-02",
           "date": "2026-10-18",
@@ -1744,11 +1873,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/StatCompare.md",
       "purpose": "让属性比较面板与角色/观察窗口协调。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "10 月 16 日包与当前个人版差异核对（未部署）",
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
       "latest_game_acceptance": "不适用（说明或停用记录）",
-      "record_count": 2,
+      "record_count": 3,
       "records": [
+        {
+          "id": "StatCompare-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-StatCompare-20261025-01"
+        },
         {
           "id": "StatCompare-20261018-01",
           "date": "2026-10-18",
@@ -1806,11 +1944,21 @@
       "status": "unconfirmed",
       "note": "PluginHistory/Plugins/SuperMacro.md",
       "purpose": "等待确认是否有个人修改",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "SuperMacro-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-SuperMacro-20261025-01"
+        }
+      ]
     },
     {
       "addon": "TWThreat",
@@ -1873,11 +2021,21 @@
       "status": "related_skin_only",
       "note": "PluginHistory/Plugins/TrainerSkills.md",
       "purpose": "登记相关皮肤适配，等待确认主插件是否另有个人改动。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "TrainerSkills-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-TrainerSkills-20261025-01"
+        }
+      ]
     },
     {
       "addon": "TurtleMail",
@@ -1951,11 +2109,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/WushuangLoot.md",
       "purpose": "保留个人交互外观，适配 DLL 和可调速度。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 3,
       "records": [
+        {
+          "id": "WushuangLoot-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-WushuangLoot-20261025-01"
+        },
         {
           "id": "WushuangLoot-20261018-02",
           "date": "2026-10-18",
@@ -1981,11 +2148,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/XyTracker.md",
       "purpose": "更新许愿权移交菜单、确认、权限判断及团队同步。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 3,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 4,
       "records": [
+        {
+          "id": "XyTracker-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-XyTracker-20261025-01"
+        },
         {
           "id": "XyTracker-20261018-02",
           "date": "2026-10-18",
@@ -2045,11 +2221,21 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/aux-addon.md",
       "purpose": "修正充能物品上架，并减少扫描和重复查询。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "aux-addon-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-aux-addon-20261025-01"
+        }
+      ]
     },
     {
       "addon": "diminfo",
@@ -2152,11 +2338,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI.md",
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 11,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 12,
       "records": [
+        {
+          "id": "pfUI-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-pfUI-20261025-01"
+        },
         {
           "id": "pfUI-20261018-02",
           "date": "2026-10-18",
@@ -2292,11 +2487,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI-addonskinner.md",
       "purpose": "维护定制插件的 pfUI 皮肤，恢复洗脑装置按钮悬停与按压反馈。",
-      "latest_record_date": "2026-10-14",
-      "latest_record_title": "洗脑装置按钮悬停和按压反馈",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 1,
+      "latest_record_date": "2026-10-25",
+      "latest_record_title": "10 月 24 日原包三版本差异核对（未部署）",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 2,
       "records": [
+        {
+          "id": "pfUI-addonskinner-20261025-01",
+          "date": "2026-10-25",
+          "title": "10 月 24 日原包三版本差异核对（未部署）",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-pfUI-addonskinner-20261025-01"
+        },
         {
           "id": "pfUI-addonskinner-20261014-01",
           "date": "2026-10-14",
