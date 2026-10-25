@@ -31,9 +31,9 @@ assert boss() is False
 r.execute("bossGUIDsThisFight={['0xABCD']=true};dead=true")
 assert boss() is True
 for code,expected in [('dead=false',False),('friendly=true',True),
-                      ('friendly=false;exists=false',False),('playerDead=true',False)]:
+                      ('friendly=false;exists=false',True),('playerDead=true',False)]:
     r.execute(code);assert boss()==expected
-print('PASS: 6 actual BOSS fallback outcomes; GUID dictionaries work and despawn alone never means victory')
+print('PASS: 6 actual BOSS fallback outcomes; GUID dictionaries work; approved new despawn/alive heuristic and dead-player guard')
 
 # Complete pre-heal module: OnUpdate only evaluates, the command consumes ready.
 r=LuaRuntime(unpack_returned_tuples=True)

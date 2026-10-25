@@ -6,5 +6,6 @@
 ## Author: moh, Qcat, 狗血编剧男, 薄言织虹
 ## Version: 1.2
 ## SavedVariablesPerCharacter: BCSConfig
+BCS_GearStat.lua
 BetterCharacterStats.xml
 BCS_PropertiesPanel.lua

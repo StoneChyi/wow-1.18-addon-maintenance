@@ -2,7 +2,7 @@
 -- Font file availability is injected by tests, not inferred from local files.
 return function(methods, newObject)
     local templates = {}
-    for _, name in ipairs({'GameFontNormal', 'GameFontNormalLarge', 'GameFontNormalSmall', 'GameFontHighlight', 'GameFontHighlightSmall', 'GameFontHighlightSmallOutline'}) do
+    for _, name in ipairs({'GameFontNormal', 'GameFontNormalLarge', 'GameFontNormalSmall', 'GameFontHighlight', 'GameFontHighlightSmall', 'GameFontHighlightSmallOutline', 'GameFontDisableSmall'}) do
         local font = {font = {'Fonts\\FZXHLJW.TTF', name == 'GameFontNormalLarge' and 16 or 10}}
         templates[name] = font
         _G[name] = font

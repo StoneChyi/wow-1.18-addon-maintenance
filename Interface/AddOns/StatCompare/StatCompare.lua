@@ -499,7 +499,7 @@ STATCOMPARE_EFFECTS = {
 	{ effect = "DMGUNDEAD",		name = STATCOMPARE_DMGUNDEAD, 		format = "+%d",		short = "BD",	cat = "SBON" },
 	{ effect = "HEAL",		name = STATCOMPARE_SPELLHEAL, 		format = "%d",		short = "BH",	cat = "SBON"},
 	{ effect = "SPELLCRIT", 	name = STATCOMPARE_SPELLCRIT,		format = "+%d%%",	lformat = "%.2f%%",	short = "BSC",	cat = "SBON" },
-	{ effect = "SPELLTOHIT", 	name = STATCOMPARE_SPELLTOHIT,		format = "+%d%%",	lformat = "%.2f%%",	short = "BSH",	cat = "SBON" },
+	{ effect = "SPELLTOHIT", 	name = STATCOMPARE_SPELLTOHIT,		format = "+%d%%",	lformat = "%.2f%%",	show = 1,	short = "BSH",	cat = "SBON" },
 	{ effect = "HASTE", 		name = STATCOMPARE_HASTE,		format = "+%.2f%%",show = 1,	lformat = "%.2f%%",	short = "BHASTE",	cat = "SBON" },
 	{ effect = "SPELLPENETRATION", 	name = STATCOMPARE_SPELLPENETRATION,	format = "+%d",	lformat = "+%d",	short = "BSPELLPENETRATION",	cat = "SBON" },
 
@@ -974,7 +974,6 @@ function StatCompare_RefreshPortrait(frame, unit)
 	
 	local portrait = getglobal(frame:GetName().."Portrait")
 	if portrait then
-		if frame.portraitUpdateFrame then frame.portraitUpdateFrame:SetScript("OnUpdate", nil) end
 		local name = UnitName(unit)
 		if unit == "player" and frame.scPortraitUnit == unit and frame.scPortraitName == name
 			and frame.scPortraitTexture == portrait and not frame.scPortraitDirty
@@ -982,28 +981,27 @@ function StatCompare_RefreshPortrait(frame, unit)
 			portrait:Show()
 			return
 		end
+		if frame.portraitUpdateFrame then frame.portraitUpdateFrame:SetScript("OnUpdate", nil) end
 		-- 立即设置头像
 		SetPortraitTexture(portrait, unit)
 		portrait:Show()
 		frame.scPortraitUnit, frame.scPortraitName, frame.scPortraitTexture = unit, name, portrait
 		frame.scPortraitDirty = nil
 		
-		-- Own portrait is available immediately. Keep one reusable retry frame
-		-- only for inspected players whose model can arrive asynchronously.
-		if unit == "player" then return end
-		local timer = 0
-		local updateFrame = frame.portraitUpdateFrame or CreateFrame("Frame", nil, frame)
-		frame.portraitUpdateFrame = updateFrame
-		updateFrame:SetScript("OnUpdate", function()
-			timer = timer + arg1
-			if timer > 0.2 then
-				if frame:IsVisible() and UnitExists(unit) then
-					SetPortraitTexture(portrait, unit)
-					portrait:Show()
-				end
-				updateFrame:SetScript("OnUpdate", nil)
-			end
-		end)
+        local retry=frame.portraitUpdateFrame or CreateFrame("Frame",nil,frame)
+        frame.portraitUpdateFrame=retry
+        local intervals={.5,.8,1.2,1.8,2.5,3.5,5,7,10,15,20,25,30}
+        local step,elapsed=1,0
+        retry:SetScript("OnUpdate",function()
+            if not frame:IsShown() or not UnitExists(unit) or UnitName(unit)~=name then
+                retry:SetScript("OnUpdate",nil);return
+            end
+            elapsed=elapsed+(arg1 or 0)
+            if elapsed < intervals[step] then return end
+            elapsed=0;SetPortraitTexture(portrait,unit);portrait:Show()
+            step=step+1
+            if not intervals[step] then retry:SetScript("OnUpdate",nil) end
+        end)
 	end
 end
 
@@ -1503,7 +1501,7 @@ function StatCompare_GetTooltipText(bonuses,bSelfStat)
 					end
 				end
 			elseif(bSelfStat==0 and CharStats_fullvals and CharStats_fullvals[e.effect]) then
-				if(e.effect == "SPELLHIT" or e.effect == "TOHIT") then
+				if(e.effect == "SPELLHIT" or e.effect == "SPELLTOHIT" or e.effect == "TOHIT") then
 				elseif(CharStats_fullvals[e.effect] == 0) then
 				else
 					if(e.lformat) then
@@ -1546,7 +1544,7 @@ function StatCompare_GetTooltipText(bonuses,bSelfStat)
 			end
 		
 		elseif(CharStats_fullvals and CharStats_fullvals[e.effect]) then
-			if(e.effect == "SPELLHIT" or e.effect == "TOHIT") then
+			if(e.effect == "SPELLHIT" or e.effect == "SPELLTOHIT" or e.effect == "TOHIT") then
 			elseif(CharStats_fullvals[e.effect] == 0) then
 			elseif(not e.show) then
 			elseif(e.show == 0) then

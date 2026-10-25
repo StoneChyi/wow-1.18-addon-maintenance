@@ -76,6 +76,10 @@ local PROPERTY_LIST = {
     { key = "frostRes", label = "冰抗",     get = function(self) return self:DisplayResistance(4, "冰抗") end },
     { key = "shadowRes",label = "暗抗",     get = function(self) return self:DisplayResistance(5, "暗抗") end },
     { key = "arcaneRes",label = "奥抗",     get = function(self) return self:DisplayResistance(6, "奥抗") end },
+    -- New properties share the existing independent preset/order controls.
+    { key = "lifesteal", label = "吸血", get = function(self) return self:DisplayLifesteal() end },
+    { key = "spen", label = "法穿", get = function(self) return self:DisplaySpellPenetration() end },
+    { key = "ahit", label = "痛苦命中", get = function(self) return self:DisplayAfflictionHit() end },
     -- 其他
     { key = "score",    label = "装等",     get = function(self) return self:GetItemScore() end },
     { key = "speed",    label = "移速",     get = function(self) return self:DisplaySpeed() end },
@@ -269,11 +273,11 @@ P.frame:SetFrameStrata("LOW")
 if P.frame.SetClampedToScreen then P.frame:SetClampedToScreen(true) end
 
 -- 标题行（第一行，大字体）
-P.frame.title = P.frame:CreateFontString(nil, "ARTWORK")
+P.frame.title = P.frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 P.frame.title:SetFont("Fonts\\ARIALN.ttf", 16, "OUTLINE")
 
 -- 详细信息行（其余行，小字体）
-P.frame.details = P.frame:CreateFontString(nil, "ARTWORK")
+P.frame.details = P.frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 P.frame.details:SetFont("Fonts\\ARIALN.ttf", 13, "OUTLINE")
 
 P.frame:RegisterForDrag("LeftButton")
@@ -405,7 +409,7 @@ titleBg:SetPoint("TOPRIGHT", -4, -4)
 titleBg:SetHeight(24)
 titleBg:SetVertexColor(0.2, 0.2, 0.2, 1)
 
-local titleText = P.mainFrame:CreateFontString(nil, "OVERLAY")
+local titleText = P.mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 titleText:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
 titleText:SetPoint("TOP", 0, -5)
 titleText:SetText("属性面板")
@@ -437,7 +441,7 @@ helpButton:SetBackdrop({
 helpButton:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
 helpButton:SetBackdropBorderColor(0, 0, 0, 1)
 
-local helpText = helpButton:CreateFontString(nil, "OVERLAY")
+local helpText = helpButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 helpText:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
 helpText:SetPoint("CENTER", 0, 0)
 helpText:SetText("?")
@@ -472,7 +476,7 @@ charPanelButton:SetBackdrop({
 charPanelButton:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
 charPanelButton:SetBackdropBorderColor(0, 0, 0, 1)
 
-local charPanelText = charPanelButton:CreateFontString(nil, "OVERLAY")
+local charPanelText = charPanelButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 charPanelText:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
 charPanelText:SetPoint("CENTER", 0, 0)
 charPanelText:SetText("角色面板")
@@ -560,7 +564,7 @@ local function CreateButton(text, parent, point, relativePoint, x, y, onClick)
     button:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
     button:SetBackdropBorderColor(0, 0, 0, 1)
 
-    local label = button:CreateFontString(nil, "OVERLAY")
+    local label = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     label:SetFont(STANDARD_TEXT_FONT, 12)
     label:SetPoint("CENTER", 0, 0)
     label:SetText(text)
@@ -700,7 +704,7 @@ CreateOptionSlider("detailFontSize", "明细字号", 10, 20, 1, 252, -218)
 CreateOptionSlider("lineGap", "行距", 0, 12, 1, 24, -273)
 CreateOptionSlider("columnWidth", "列宽", 100, 240, 10, 252, -273)
 
-local layoutHint = P.mainFrame:CreateFontString(nil, "OVERLAY")
+local layoutHint = P.mainFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 layoutHint:SetFont(STANDARD_TEXT_FONT, 11)
 layoutHint:SetPoint("TOP", 0, -305)
 layoutHint:SetText("标题不计行数；超出续列，屏幕不足时自动增行")
@@ -912,7 +916,7 @@ function P:UpdateDisplay(show, firstLine, restLines)
     self.frame.columns = self.frame.columns or {self.frame.details}
     for i = 1, columns do
         if not self.frame.columns[i] then
-            self.frame.columns[i] = self.frame:CreateFontString(nil, "ARTWORK")
+            self.frame.columns[i] = self.frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
         end
     end
     if self.layoutDirty or self.layoutSignature ~= signature then
@@ -1492,6 +1496,28 @@ function P:DisplayDefense()
     end
 end
 
+function P:DisplayLifesteal()
+    if BCS then
+        local lifesteal = BCS:GetLifestealValue()
+        return "吸血: " .. math.floor(lifesteal + 0.5) .. "%"
+    else
+        return "吸血: 数据不可用"
+    end
+end
+function P:DisplaySpellPenetration()
+    if BCS then
+        local spen = BCS:GetSpellPenetrationValue()
+        return "法穿: " .. math.floor(spen + 0.5)
+    else
+        return "法穿: 数据不可用"
+    end
+end
+function P:DisplayAfflictionHit()
+    local value=ReadNumber(BCS and BCS.GetAfflictionHitRating,BCS)
+    if not IsFiniteNumber(value) then return "痛苦命中: 数据不可用" end
+    return string.format("痛苦命中: %.2f%%",value)
+end
+
 function P:DisplayArmorPenetration()
     if BCS then
         local armorPen = BCS:GetArmorPenetrationValue()
@@ -1520,7 +1546,7 @@ P.customFrame:SetFrameStrata("DIALOG")
 P.customFrame:Hide()
 
 local function EditorLabel(text, x, y, size)
-    local label = P.customFrame:CreateFontString(nil, "OVERLAY")
+    local label = P.customFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     label:SetFont(STANDARD_TEXT_FONT, size or 12)
     label:SetPoint("TOPLEFT", x, y)
     label:SetText(text)
@@ -1627,7 +1653,7 @@ local function CreateCheckRow(item, x, y)
     row.box:SetWidth(14)
     row.box:SetHeight(14)
     row.box:SetPoint("LEFT", 0, 0)
-    row.text = row:CreateFontString(nil, "OVERLAY")
+    row.text = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     row.text:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
     row.text:SetPoint("LEFT", row.box, "RIGHT", 3, 0)
     row.text:SetText(item.label)

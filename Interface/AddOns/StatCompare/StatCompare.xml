@@ -2,8 +2,6 @@
 ..\FrameXML\UI.xsd">
 	<Script file="Localization.lua"/>
 	<Script file="SCOptions.lua" />
-	<Script file="CharStats.lua"/>
-	<Script file="SpellsStats.lua" />
 	<Script file="StatScanner.lua"/>
 	<Script file="StatCompare.lua"/>
 

@@ -45,6 +45,19 @@ function BCS:EndEquipmentRead()
     end
 end
 local function ReadEquipmentTooltip(slot)
+    -- Shared physical collection; retain raw/right lines and active-set colors.
+    if GearStat and type(GearStat.GetSnapshot) == "function" then
+        local snap = equipmentReadCache and equipmentReadCache.sharedSnapshot
+        if not snap then
+            local ok, value = pcall(GearStat.GetSnapshot, GearStat, "player")
+            if ok and type(value)=="table" and value.complete and type(value.equipment)=="table" then snap=value end
+            if snap and equipmentReadCache then equipmentReadCache.sharedSnapshot=snap end
+        end
+        if snap and snap.equipment[slot] then
+            local eq=snap.equipment[slot]
+            return eq.hasItem,eq
+        end
+    end
     if equipmentReadCache and equipmentReadCache[slot] then
         local cached = equipmentReadCache[slot]
         return cached.hasItem, cached
@@ -108,46 +121,46 @@ local BCS_GET_ON_DEMAND = 1
 local VERSION = "1.0.12-SNAPSHOT"
 
 local MELEE_HIT = nil
-local GET_MELEE_HIT_TIME = 0
+local GET_MELEE_HIT_TIME = -1000000
 local HASTE_CACHE = 0
 local GET_HASTE_CACHE_TIME = nil
 local CALCULATED_MELEE_HASTE
 local CALCULATED_MELEE_HASTE_TIME
 local SPELL_CRIT = 0
-local GET_SPELL_CRIT_TIME = 0
+local GET_SPELL_CRIT_TIME = -1000000
 local RANGE_HIT = 0
-local GET_RANGE_HIT_TIME = 0
+local GET_RANGE_HIT_TIME = -1000000
 local SPELL_HIT = 0
 local SPELL_HIT_FIRE = 0
 local SPELL_HIT_FROST = 0
 local SPELL_HIT_ARCANE = 0
 local SPELL_HIT_SHADOW = 0
 local SPELL_HIT_HOLY = 0
-local GET_SPELL_HIT_TIME = 0
+local GET_SPELL_HIT_TIME = -1000000
 local MELEE_CRIT = nil
-local GET_MELEE_CRIT_TIME = 0
+local GET_MELEE_CRIT_TIME = -1000000
 local RANGE_CRIT = 0
-local GET_RANGE_CRIT_TIME =0
+local GET_RANGE_CRIT_TIME =-1000000
 local SPELL_POWER = 0
 local HEAL_POWER = 0
-local GET_HEAL_POWER_TIME = 0
+local GET_HEAL_POWER_TIME = -1000000
 local SPELL_POWER_IN_GETSPELLPOWER = 0
 local SECOND_SPELL_POWER = 0
 local SECOND_SPELL_POWER_NAME = 0
 local DAMAGE_POWER = 0
 local SPELL_POWER_BY_SCHOOL = {FIRE=0,FROST=0,ARCANE=0,SHADOW=0,HOLY=0,NATURE=0}
-local GET_SPELL_POWER_TIME = 0
+local GET_SPELL_POWER_TIME = -1000000
 local MANA_REGEN_BASE = 0
 local MANA_REGEN_CAST = 0
 local MANA_REGEN_MP5 = 0
 local MANA_REGEN_CAST_PERCENT = 0
-local GET_MANA_REGEN_TIME = 0
+local GET_MANA_REGEN_TIME = -1000000
 local GEAR_ARMOR = 0
-local GET_GEAR_ARMOR_TIME = 0
+local GET_GEAR_ARMOR_TIME = -1000000
 local BLOCK_VALUE = 0
-local GET_BLOCK_VALUE_TIME = 0
+local GET_BLOCK_VALUE_TIME = -1000000
 local ARMORPENETRATION_VALUE = 0
-local GET_ARMORPENETRATION_VALUE_TIME = 0
+local GET_ARMORPENETRATION_VALUE_TIME = -1000000
 local ESTIMATE_HASTE = 0
 local ESTIMATE_HASTE_SCHOOL = 0
 local GET_ESTIMATE_HASTE_TIME = nil
@@ -2535,44 +2548,71 @@ function BCS:GetLiveArmorPenetrationValue()
 
 	--from equip
 	local Set_bonus = {}
+	local texts = BCS.GetSlotTexts()
 	for slot=0, 19 do
-		local hasItem, equipment = ReadEquipmentTooltip(slot)
-		if hasItem then
+		local slotTexts = texts[slot]
+		if slotTexts then
 			local SET_NAME = nil
-			for line=1, equipment.count do
-				local left = equipment.left[line]
-				if left then
-					local _,_, value = strfind(left, L_ARMORPENETRATION["ARMORPENETRATION_1"])
+			local SET_EQUIPPED = 0
+			local MAX_LINES = table.getn(slotTexts)
+			for line=1, MAX_LINES do
+				local txt = slotTexts[line]
+				if txt then
+					local _,_, value = strfind(txt, L_ARMORPENETRATION["ARMORPENETRATION_1"])
 					if value then
 						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
 					end
-					_,_, value = strfind(left, L_ARMORPENETRATION["ARMORPENETRATION_2"])
+					_,_, value = strfind(txt, L_ARMORPENETRATION["ARMORPENETRATION_2"])
 					if value then
 						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
 					end
 					
-					_,_, value = strfind(left, L_ARMORPENETRATION["ARMORPENETRATION_3"])
+					_,_, value = strfind(txt, L_ARMORPENETRATION["ARMORPENETRATION_3"])
 					if value then
 						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
 					end
 					
-					--[[
-					--from set
-					_,_, value = strfind(left, "(.+)（%d/%d）")
-					if value then
-						SET_NAME = value
+					--from set（套装破甲）
+					-- 1.12 的套装效果行形如：(2) 套装： 你的攻击无视目标150点护甲。
+					-- 两个坑：
+					--   1) 行首带 "(N) " 件数前缀，所以正则不能写成 ^套装：（对不上）
+					--   2) 未达成的套装效果也会列在 tooltip 里（灰色文字），
+					--      只看文本会把「只穿 1/2 件」的套装按 2 件套加满，
+					--      所以必须用标题行「恐惧杀手的暴怒（1/2）」里的已穿件数判激活
+					local _, _, setname, seteq = BCS.GetSetTitle(txt)
+					if setname then
+						SET_NAME = setname
+						SET_EQUIPPED = tonumber(seteq) or 0
 					end
-					_, _, value = strfind(left, L_BLOCKVALUE["ARMORPENETRATION_SET_1"])
-					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
-						tinsert(Set_bonus, SET_NAME)
-						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+
+					local _, _, setneed, setvalue = strfind(txt, L_ARMORPENETRATION["ARMORPENETRATION_SET_1"])
+					if not setvalue then
+						-- 全角件数前缀「（2）套装：」
+						_, _, setneed, setvalue = strfind(txt, L_ARMORPENETRATION["ARMORPENETRATION_SET_1W"])
 					end
-					_, _, value = strfind(left, L_BLOCKVALUE["ARMORPENETRATION_SET_2"])
-					if value and SET_NAME and not tContains(Set_bonus, SET_NAME) then
-						tinsert(Set_bonus, SET_NAME)
-						armorPenetrationvalue = armorPenetrationvalue + tonumber(value)
+					if not setvalue then
+						-- 完全没有件数前缀（setneed 留 nil，靠 SET_EQUIPPED >= 1 判激活）
+						_, _, setvalue = strfind(txt, L_ARMORPENETRATION["ARMORPENETRATION_SET_2"])
 					end
-					]]
+
+					if setvalue then
+						local setActive = 1
+						if setneed then
+							if tonumber(setneed) > SET_EQUIPPED then
+								setActive = nil
+							end
+						elseif SET_EQUIPPED < 1 then
+							setActive = nil
+						end
+						if setActive and SET_NAME then
+							-- 去重键必须带件数：同一套装可能有 (2)、(3) 两条都加破甲
+							local setkey = SET_NAME .. "#" .. tostring(setneed or "?")
+							if not tContains(Set_bonus, setkey) then
+								tinsert(Set_bonus, setkey)
+								armorPenetrationvalue = armorPenetrationvalue + tonumber(setvalue)
+							end
+						end
+					end
 
 				end
 			end
@@ -2865,4 +2905,108 @@ function BCS:GetItemTypeFromInvSlot(SlotNumber)
 	local _, _, _, _, itemType = GetItemInfo(n)
 	if not itemType then return nil end
 	return itemType
+end
+
+function BCS.GetSetTitle(txt)
+	local a, b, c, d, e = strfind(txt, "(.+)（(%d+)/(%d+)）")
+	if a then
+		return a, b, c, d, e
+	end
+	return strfind(txt, "(.+)%((%d+)/(%d+)%)")
+end
+
+
+-- Expose the same raw text collection to upstream-style equipment-only getters.
+function BCS.GetSlotTexts()
+    local own=equipmentReadDepth==0
+    if own then BCS:BeginEquipmentRead() end
+    local texts={}
+    for slot=0,19 do
+        local has,eq=ReadEquipmentTooltip(slot)
+        if has then
+            local lines={};for line=1,eq.count do if eq.left[line] then tinsert(lines,eq.left[line]) end end
+            texts[slot]=lines
+        end
+    end
+    if own then BCS:EndEquipmentRead() end
+    return texts
+end
+
+function BCS:GetLifestealValue()
+    return self:GetLiveLifestealValue()
+end
+function BCS:GetSpellPenetrationValue()
+    return self:GetLiveSpellPenetrationValue()
+end
+function BCS:GetLiveLifestealValue()
+	local lifesteal = 0
+	local texts = BCS.GetSlotTexts()
+	for slot = 0, 19 do
+		local slotTexts = texts[slot]
+		if slotTexts then
+			local MAX_LINES = table.getn(slotTexts)
+			for line = 1, MAX_LINES do
+				local txt = slotTexts[line]
+				if txt then
+					local _, _, value = strfind(txt, BCS.L_LIFESTEAL["LIFESTEAL_1"])
+					if value then
+						lifesteal = lifesteal + tonumber(value)
+					end
+					_, _, value = strfind(txt, BCS.L_LIFESTEAL["LIFESTEAL_2"])
+					if value then
+						lifesteal = lifesteal + tonumber(value)
+					end
+				end
+			end
+		end
+	end
+
+	return lifesteal
+end
+function BCS:GetLiveSpellPenetrationValue()
+	local spellpen = 0
+	local texts = BCS.GetSlotTexts()
+	local patterns = BCS.L_SPELLPENETRATION
+	local patternCount = table.getn(patterns)
+	for slot = 0, 19 do
+		local slotTexts = texts[slot]
+		if slotTexts then
+			local MAX_LINES = table.getn(slotTexts)
+			for line = 1, MAX_LINES do
+				local txt = slotTexts[line]
+				if txt then
+					-- 关键词预筛：绝大多数装备行不含这两个词，省掉 5 条正则的逐行尝试
+					if strfind(txt, "穿透") or strfind(txt, "魔法抗性降低") then
+						-- 一行只取第一个命中的模式：多模式命中同一行会重复累加
+						local value = nil
+						for i = 1, patternCount do
+							local _, _, v = strfind(txt, patterns[i])
+							if v then
+								value = tonumber(v)
+								break
+							end
+						end
+						if value then
+							spellpen = spellpen + value
+						end
+					end
+				end
+			end
+		end
+	end
+
+	return spellpen
+end
+
+function BCS:GetAfflictionHitRating()
+    local base, _, _, _, shadow = self:GetSpellHitRating()
+    local bonus=0
+    if class == "WARLOCK" then
+        local total=type(GetNumTalents)=="function" and GetNumTalents(1) or 0
+        for index=1,total do
+            local name,_,_,_,rank=GetTalentInfo(1,index)
+            if name==self.L_TALENT.WARLOCK_SUPPRESSION then bonus=(tonumber(rank) or 0)*2;break end
+        end
+    end
+    return (tonumber(base) or 0)+(tonumber(shadow) or 0)+bonus
 end

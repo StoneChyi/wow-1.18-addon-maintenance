@@ -838,15 +838,18 @@ end
 -- 脚本 BOSS 不触发 UNIT_DIED 时的"通过"兜底判据（战斗结束时按采样到的 BOSS GUID 状态判断）：
 --   · 该 GUID 已死亡（UnitIsDead == 1）
 --   · 该 GUID 已转为友方（UnitCanAssist，对应"转绿名的友方NPC"）
---   · GUID 消失不单独判胜：重置/离开视野也会消失，等待实际规则确认。
+--   · GUID 消失且玩家存活时按新包规则判为通过（启发式，重置/离开视野也可能误判）。
 -- 属启发式，仅在本场未捕获到死亡事件时兜底，仍可能对特殊脚本/灭团场景误判
 --  by 武藤纯子酱 2026.10.17
 local function BossClearedFallback()
     if not next(bossGUIDsThisFight) then return false end
+    local playerDead = UnitIsDead("player") == 1
     for guid, _ in pairs(bossGUIDsThisFight) do
         if UnitExists(guid) then
             if UnitIsDead(guid) == 1 then return true end
             if UnitCanAssist("player", guid) then return true end
+        elseif not playerDead then
+            return true
         end
     end
     return false

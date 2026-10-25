@@ -327,16 +327,27 @@
         "PluginHistory/Evidence/addons_tmp/character-bcs-scan-backup-20261006/README.md",
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
-        "PluginHistory/Evidence/legacy-20261006/Docs/Files/BetterCharacterStats"
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/BetterCharacterStats",
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/BetterCharacterStats/BCS_PropertiesPanel.lua",
         "Interface/AddOns/BetterCharacterStats/BetterCharacterStats.lua",
         "Interface/AddOns/BetterCharacterStats/BetterCharacterStats.xml",
-        "Interface/AddOns/BetterCharacterStats/helper.lua"
+        "Interface/AddOns/BetterCharacterStats/helper.lua",
+        "Interface/AddOns/BetterCharacterStats/BCS_GearStat.lua",
+        "Interface/AddOns/BetterCharacterStats/BetterCharacterStats.toc",
+        "Interface/AddOns/BetterCharacterStats/Localization.lua"
       ],
       "tracked_files_at_reference": 9,
-      "pending": ""
+      "pending": "",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
+        "files_changed": 6,
+        "game_verified": false
+      }
     },
     {
       "addon": "BigWigs",
@@ -1651,7 +1662,8 @@
         "Interface/AddOns/ShaguDPS/.workbuddy/memory/2026-10-04.md",
         "PluginHistory/Research/插件更新实施-20261012.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+        "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/ShaguDPS/core.lua",
@@ -1664,9 +1676,9 @@
       "pending": "服务器响应、多人战斗及无 SuperWoW 时的兼容结果待补充。",
       "last_package_update": {
         "date": "2026-10-25",
-        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
-        "files_changed": 4,
+        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
+        "files_changed": 1,
         "game_verified": false
       }
     },
@@ -1764,7 +1776,8 @@
       "sources": [
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
-        "PluginHistory/Evidence/legacy-20261006/Docs/Files/StatCompare"
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/StatCompare",
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/StatCompare/PanelLayout.lua",
@@ -1772,10 +1785,18 @@
         "Interface/AddOns/StatCompare/StatCompare.lua",
         "Interface/AddOns/StatCompare/StatCompare.toc",
         "Interface/AddOns/StatCompare/StatCompare.xml",
-        "Interface/AddOns/StatCompare/StatScanner.lua"
+        "Interface/AddOns/StatCompare/StatScanner.lua",
+        "Interface/AddOns/StatCompare/StatCompareChar/CharStats.lua"
       ],
       "tracked_files_at_reference": 25,
-      "pending": ""
+      "pending": "",
+      "last_package_update": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
+        "files_changed": 4,
+        "game_verified": false
+      }
     },
     {
       "addon": "SuperCleveRoidMacros",
@@ -1996,22 +2017,24 @@
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-08-28.md",
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-09-09.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+        "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/WushuangLoot/Bindings.xml",
         "Interface/AddOns/WushuangLoot/WSLMain.lua",
         "Interface/AddOns/WushuangLoot/WushuangLoot.lua",
         "Interface/AddOns/WushuangLoot/WushuangLoot.toc",
-        "Interface/AddOns/WushuangLoot/tga/tubiao_round.tga"
+        "Interface/AddOns/WushuangLoot/tga/tubiao_round.tga",
+        "Interface/AddOns/WushuangLoot/SkinWhitelist.txt"
       ],
       "tracked_files_at_reference": 8,
       "pending": "请优先补充重启后的探针结果、当前实际加载文件、小地图/中文命令是否恢复以及现有 DLL 版本。",
       "last_package_update": {
         "date": "2026-10-25",
-        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
-        "files_changed": 2,
+        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
+        "files_changed": 3,
         "game_verified": false
       }
     },
@@ -2023,7 +2046,8 @@
       "sources": [
         "PluginHistory/Research/插件更新实施-20261012.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+        "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/XyTracker/Images/pai_round.tga",
@@ -2033,9 +2057,9 @@
       "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
         "date": "2026-10-25",
-        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
-        "files_changed": 2,
+        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
+        "files_changed": 1,
         "game_verified": false
       }
     },
@@ -2247,7 +2271,8 @@
         "Interface/AddOns/pfUI/modules/tooltip.20261002_212528.alwaysperc.bak",
         "PluginHistory/pfUI-tooltip-fix-20261009.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+        "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI/api/api.lua",
@@ -2281,15 +2306,16 @@
         "Interface/AddOns/pfUI/modules/thirdparty.lua",
         "Interface/AddOns/pfUI/modules/totems.lua",
         "Interface/AddOns/pfUI/pfUI-tbc.toc",
-        "Interface/AddOns/pfUI/pfUI.toc"
+        "Interface/AddOns/pfUI/pfUI.toc",
+        "Interface/AddOns/pfUI/modules/unitxp.lua"
       ],
       "tracked_files_at_reference": 277,
       "pending": "修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。",
       "last_package_update": {
         "date": "2026-10-25",
-        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
-        "files_changed": 18,
+        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
+        "files_changed": 1,
         "game_verified": false
       }
     },
@@ -2500,6 +2526,23 @@
       ],
       "deployed": true,
       "game_verified": false
+    },
+    {
+      "date": "2026-10-25",
+      "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+      "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
+      "before_tag": "before/shared-stats-20261025",
+      "addons": [
+        "BetterCharacterStats",
+        "StatCompare",
+        "WushuangLoot",
+        "pfUI",
+        "XyTracker",
+        "ShaguDPS"
+      ],
+      "deployed": true,
+      "game_verified": false,
+      "resolves_previous_holds": true
     }
   ],
   "record_layout": {

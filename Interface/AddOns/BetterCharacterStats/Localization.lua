@@ -176,6 +176,7 @@ BCS["L_TALENT"] = {
 	WARRIOR_MASTER_OF_ARMS = "武器大师",
 	WARLOCK_DESTRUCTION_DEVASTATION = "破坏",
 	WARLOCK_DESTRUCTION_IMPROVED_SEARINGPAIN = "强化灼热之痛",
+	WARLOCK_SUPPRESSION = "镇压",
 	ROGUE_SERRATED_BLADES = "锯齿利刃",
 	HUNTER_LETHAL_SHOOTS = { name = "夺命射击", tab = 2, number = 4} ,
 	HUNTER_SUREFOOTED = { name = "稳固", tab = 3, number = 13} ,
@@ -407,6 +408,37 @@ BCS["L_ARMORPENETRATION"] = {
 	
 	["ARMORPENETRATION_4"] = "忽略目标的(%d+)点护甲值。",
 	["ARMORPENETRATION_5"] = "当前目标的护甲值降低(%d+)点。",
+
+	-- 套装破甲。1.12 的套装效果行带件数前缀，形如：
+	--   (2) 套装： 你的攻击无视目标150点护甲。
+	-- 捕获组 1 = 需要件数，2 = 破甲数值。
+	-- ⚠️ 全角括号（2）与半角 (2) 分成两条模式：UTF-8 下不能放进同一个字符类
+	--   （`[(（]` 会退化成按字节匹配）。`.-` 代替 `%s*` 是为了兼容半角/全角空格。
+	["ARMORPENETRATION_SET_1"] = "%((%d+)%).-套装：.-你的攻击无视目标(%d+)点护甲",
+	["ARMORPENETRATION_SET_1W"] = "（(%d+)%）.-套装：.-你的攻击无视目标(%d+)点护甲",
+	-- 兜底写法（行首没有 "(N) " 前缀时）。只有数值一个捕获组。
+	["ARMORPENETRATION_SET_2"] = "^%s*套装：.-你的攻击无视目标(%d+)点护甲",
+}
+
+-- 吸血（Turtle 自定义词条）。两条口径与 StatCompare 的 LIFEDRAIN 完全一致。
+BCS["L_LIFESTEAL"] = {
+	["LIFESTEAL_1"] = "%+(%d+)%% 吸血",
+	["LIFESTEAL_2"] = "所造成伤害的(%d+)%%作为治疗返还。",
+}
+
+-- 法术穿透（法穿）。数组式（数字键），helper 里按 1..N 顺序试，
+-- 一行只取第一个命中的模式，避免同一行被两条规则重复累加。
+BCS["L_SPELLPENETRATION"] = {
+	-- 装备特效。与 StatCompare 的 SPELLPENETRATION 两条逐字对齐，
+	-- 只多了「装备： 」前缀（StatCompare 是在剥掉前缀后匹配的）。
+	[1] = "^装备：%s*使你的法术目标的魔法抗性降低(%d+)点",
+	[2] = "^装备：%s*将你的法术目标的魔法抗性降低(%d+)点",
+	-- 纯属性行：「+10 法术穿透」/「法术穿透 +10」
+	[3] = "%+(%d+) 法术穿透",
+	[4] = "法术穿透%s*%+(%d+)",
+	-- 兜底：「使你的法术穿透提高10点」这类整句写法。
+	-- 放最后：它对上面几种写法都不会命中（"法术穿透"后面紧接非数字），所以不会重复计。
+	[5] = "法术穿透[^%d]*(%d+)",
 }
 
 BCS["L_WEAPONTYPE"] = {

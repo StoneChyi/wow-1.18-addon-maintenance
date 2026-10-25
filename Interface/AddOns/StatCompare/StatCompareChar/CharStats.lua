@@ -288,7 +288,7 @@ CHARSTAT_EFFECTS = {
 	{ effect ="FLASHHOLYLIGHTHEAL", name = STATCOMPARE_FLASHHOLYLIGHT_HEAL},
 	--{ effect = "HOLYCRIT", 		name = STATCOMPARE_HOLYCRIT},
 	--{ effect = "SPELLCRIT", 	name = STATCOMPARE_SPELLCRIT},
-	--{ effect = "SPELLTOHIT", 	name = STATCOMPARE_SPELLTOHIT},
+	{ effect = "SPELLTOHIT", 	name = STATCOMPARE_SPELLTOHIT},
 	--{ effect = "ARCANEDMG", 	name = STATCOMPARE_ARCANEDMG},
 	--{ effect = "FIREDMG", 		name = STATCOMPARE_FIREDMG},
 	--{ effect = "FROSTDMG",		name = STATCOMPARE_FROSTDMG},
@@ -301,6 +301,33 @@ CHARSTAT_EFFECTS = {
 	{ effect = "MANAREG",		name = STATCOMPARE_MANAREG},
 
 };
+
+-- 法术命中（含天赋/光环）：取 BetterCharacterStats 的口径（base + 最高分系），
+-- 镇压仅计入 BCS 独立的「痛苦命中」，不扩展为所有暗影法术命中。
+-- 库不可用或取不到值时返回 nil，调用方保持原来的纯装备值。
+function StatCompare_GetBCSSpellHit()
+	if(not IsAddOnLoaded("BetterCharacterStats")) then
+		return nil
+	end
+	if(not (BCS and BCS.GetSpellHitRating)) then
+		return nil
+	end
+	local oldForce = BCS.ForceCalculate
+	BCS.ForceCalculate = true
+	local ok, base, fire, frost, arcane, shadow, holy = pcall(BCS.GetSpellHitRating,BCS)
+	BCS.ForceCalculate = oldForce
+    if not ok then return nil end
+	base = tonumber(base) or 0
+	local best = 0
+	local schools = { fire, frost, arcane, shadow, holy }
+	for i = 1, 5 do
+		local v = tonumber(schools[i]) or 0
+		if(v > best) then
+			best = v
+		end
+	end
+	return base + best
+end
 
 function StatCompare_CharStats_Scan(bonuses, unit)
 
@@ -690,6 +717,10 @@ function StatCompare_CharStats_Scan(bonuses, unit)
 			CharStats_fullvals["CRIT"] = BCS:GetCritChance()
 		else
 			CharStats_fullvals["CRIT"] = tonumber(StatCompare_CharStats_GetCritChance())
+		end
+		local bcsSpellHit = StatCompare_GetBCSSpellHit()
+		if(bcsSpellHit and bcsSpellHit > 0) then
+			CharStats_fullvals["SPELLTOHIT"] = bcsSpellHit
 		end
 	end
 

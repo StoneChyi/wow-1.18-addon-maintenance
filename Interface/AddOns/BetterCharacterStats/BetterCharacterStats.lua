@@ -781,7 +781,7 @@ function BCS:SetSpellCritChance(statFrame)
 	text:SetText(format("%.2f%%", spellcrit))
 	--frame.tooltip = "|cffffffff伤害和治疗法术暴击的概率.|r\n"
 	frame.tooltip = (L.SPELL_CRIT_TOOLTIP)
-	if next(spellCritBySchool) ~= nil then
+	if spellCritBySchool and next(spellCritBySchool) ~= nil then
 		local stringtooltip = ""
 		for k,v in pairs(spellCritBySchool) do
 			stringtooltip = stringtooltip .. "\n" .. k .. " |cff20ff20+" .. v .."%|r"

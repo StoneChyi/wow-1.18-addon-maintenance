@@ -35,6 +35,47 @@ function StatScanner_Scan(link)
 	end
 end
 
+local function StatScanner_MarkSetColor(sColor)
+	if (StatScanner_currentset == "") then
+		return
+	end
+	StatScanner_sets[StatScanner_currentset] = 1;
+	if (StatScanner_setcount[StatScanner_currentset]) then
+		StatScanner_setcount[StatScanner_currentset].count = StatScanner_setcount[StatScanner_currentset].count+1;
+	else
+		StatScanner_setcount[StatScanner_currentset] = {};
+		StatScanner_setcount[StatScanner_currentset].count=1;
+		StatScanner_setcount[StatScanner_currentset].color=sColor;
+		StatScanner_setcount[StatScanner_currentset].total=StatScanner_currentsetcount;
+	end
+end
+
+-- 0..1 浮点 RGB -> 三位十六进制串（与原实现同一条表达式）
+local function StatScanner_RGBToHex(r, g, b)
+	return string.format("%2x", (tonumber(r) or 1)*255)..string.format("%2x", (tonumber(g) or 1)*255)..string.format("%2x", (tonumber(b) or 1)*255)
+end
+-- Scan one slot out of a gear snapshot. Kept as a separate function so the
+-- caller can pcall it: a single bad slot must not abort the whole scan.
+local function StatScanner_ScanSlotFromSnap(snap, slot, ifScanSet)
+	local slotTexts = snap.texts[slot];
+	if (not slotTexts) then
+		return;
+	end
+	local size = table.getn(slotTexts);
+	-- texts[1] is the item name, same as the original "for j=2, lines" loop
+	for j=2, size ,1 do
+		local oneLine = slotTexts[j];
+		if (type(oneLine) == "string") then
+			StatScanner_ScanLine(oneLine, ifScanSet);
+		end
+	end
+	if (StatScanner_currentset ~= "") then
+		local c = snap.colors and snap.colors[slot];
+		StatScanner_MarkSetColor(StatScanner_RGBToHex(c and c[1] or 1, c and c[2] or 1, c and c[3] or 1));
+	end
+end
+
+
 function StatScanner_ScanAllInspect(unit, sets)
 	local slotID;
 	--[[
@@ -77,6 +118,21 @@ function StatScanner_ScanAllInspect(unit, sets)
 		ifScanSet=0;
 	end
 
+    if not sets and sunit=="player" and GearStat and type(GearStat.GetSnapshot)=="function" and not SC_GEARSTAT_OFF then
+        local ok,snap=pcall(GearStat.GetSnapshot,GearStat,"player")
+        if ok and type(snap)=="table" and snap.complete and type(snap.texts)=="table" then
+            local success,err=pcall(function()
+                for slot=1,19 do
+                    StatScanner_currentset="";StatScanner_currentsetcount=""
+                    StatScanner_ScanSlotFromSnap(snap,slot,ifScanSet)
+                end
+            end)
+            if success then SCObjectTooltip:Hide();return end
+            SC_GEARSTAT_ERR=tostring(err)
+            -- A failed shared parse must not leak a partial sum into fallback.
+            StatScanner_bonuses={};StatScanner_sets={};StatScanner_setcount={};StatScanner_setsproperty={}
+        end
+    end
 	for i=1, 19 ,1 do
 		StatScanner_currentset = "";
 		StatScanner_currentsetcount = "";

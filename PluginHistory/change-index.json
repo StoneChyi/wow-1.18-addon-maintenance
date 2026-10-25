@@ -9,7 +9,7 @@
     "related_skin_only": 1
   },
   "addon_pages": 107,
-  "dated_records": 174,
+  "dated_records": 180,
   "addons": [
     {
       "addon": "!Libs",
@@ -468,10 +468,19 @@
       "note": "PluginHistory/Plugins/BetterCharacterStats.md",
       "purpose": "保持角色属性面板布局稳定，并与观察、换天赋功能协调。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "按用户确认继续暂缓属性统计更新",
-      "latest_game_acceptance": "不适用（说明或停用记录）",
-      "record_count": 3,
+      "latest_record_title": "合入共享属性与本次确认的剩余新包更新",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 4,
       "records": [
+        {
+          "id": "BetterCharacterStats-20261025-03",
+          "date": "2026-10-25",
+          "title": "合入共享属性与本次确认的剩余新包更新",
+          "kind": "更新合并",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-BetterCharacterStats-20261025-03"
+        },
         {
           "id": "BetterCharacterStats-20261025-02",
           "date": "2026-10-25",
@@ -1801,10 +1810,19 @@
       "note": "PluginHistory/Plugins/ShaguDPS.md",
       "purpose": "增加标准坦克模式统计视图并给 pfUI 提供多目标仇恨。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "合入 10 月 24 日包并保留个人功能（已部署）",
+      "latest_record_title": "合入共享属性与本次确认的剩余新包更新",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 6,
+      "record_count": 7,
       "records": [
+        {
+          "id": "ShaguDPS-20261025-03",
+          "date": "2026-10-25",
+          "title": "合入共享属性与本次确认的剩余新包更新",
+          "kind": "更新合并",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-ShaguDPS-20261025-03"
+        },
         {
           "id": "ShaguDPS-20261025-02",
           "date": "2026-10-25",
@@ -1982,10 +2000,19 @@
       "note": "PluginHistory/Plugins/StatCompare.md",
       "purpose": "让属性比较面板与角色/观察窗口协调。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "按用户确认继续暂缓属性统计更新",
-      "latest_game_acceptance": "不适用（说明或停用记录）",
-      "record_count": 4,
+      "latest_record_title": "合入共享属性与本次确认的剩余新包更新",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 5,
       "records": [
+        {
+          "id": "StatCompare-20261025-03",
+          "date": "2026-10-25",
+          "title": "合入共享属性与本次确认的剩余新包更新",
+          "kind": "更新合并",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-StatCompare-20261025-03"
+        },
         {
           "id": "StatCompare-20261025-02",
           "date": "2026-10-25",
@@ -2245,10 +2272,19 @@
       "note": "PluginHistory/Plugins/WushuangLoot.md",
       "purpose": "保留个人交互外观，适配 DLL 和可调速度。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "合入 10 月 24 日包并保留个人功能（已部署）",
+      "latest_record_title": "合入共享属性与本次确认的剩余新包更新",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 4,
+      "record_count": 5,
       "records": [
+        {
+          "id": "WushuangLoot-20261025-03",
+          "date": "2026-10-25",
+          "title": "合入共享属性与本次确认的剩余新包更新",
+          "kind": "更新合并",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-WushuangLoot-20261025-03"
+        },
         {
           "id": "WushuangLoot-20261025-02",
           "date": "2026-10-25",
@@ -2293,10 +2329,19 @@
       "note": "PluginHistory/Plugins/XyTracker.md",
       "purpose": "更新许愿权移交菜单、确认、权限判断及团队同步。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "合入 10 月 24 日包并保留个人功能（已部署）",
+      "latest_record_title": "合入共享属性与本次确认的剩余新包更新",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 5,
+      "record_count": 6,
       "records": [
+        {
+          "id": "XyTracker-20261025-03",
+          "date": "2026-10-25",
+          "title": "合入共享属性与本次确认的剩余新包更新",
+          "kind": "更新合并",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-XyTracker-20261025-03"
+        },
         {
           "id": "XyTracker-20261025-02",
           "date": "2026-10-25",
@@ -2492,10 +2537,19 @@
       "note": "PluginHistory/Plugins/pfUI.md",
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "合入 10 月 24 日包并保留个人功能（已部署）",
+      "latest_record_title": "合入共享属性与本次确认的剩余新包更新",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 13,
+      "record_count": 14,
       "records": [
+        {
+          "id": "pfUI-20261025-03",
+          "date": "2026-10-25",
+          "title": "合入共享属性与本次确认的剩余新包更新",
+          "kind": "更新合并",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261025-03"
+        },
         {
           "id": "pfUI-20261025-02",
           "date": "2026-10-25",
