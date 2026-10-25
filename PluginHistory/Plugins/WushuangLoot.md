@@ -10,11 +10,27 @@
 
 ## 当前维护摘要
 
-按新包更新 Lua/TOC 至 1.7，加入剥皮类别（bit 32）、每帧 SkinTick 驱动、客户端错误信息及 SkinWhitelist；保留圆形按钮与存储。SkinTick 加类型检查，旧 DLL 缺少接口时跳过；不写入任何 DLL。
-
-当前以最新逐次记录及现用源码为准；被替代的暂缓说明保留为历史依据。
+已按用户要求恢复本次更新前保存的个人使用版 1.6，并配套恢复旧 wsloot.dll 与旧无双 pfUI 皮肤。撤回 1.7 剥皮、每帧 SkinTick、白名单与本次圆形贴图变更；8 个插件文件与更新前提交逐字节相同。启动体验和游戏功能待用户实测。
 
 ## 逐次修改记录
+
+<a id="change-WushuangLoot-20261025-04"></a>
+
+### 2026-10-25｜回退旧 wsloot DLL 与更新前个人使用版
+
+- 记录编号：`WushuangLoot-20261025-04`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户怀疑新版 DLL 及功能更新与启动卡顿有关，明确要求旧 wsloot 与此前个人版一并恢复。
+- 修改内容：备份现用后恢复旧 wsloot.dll；Lua/TOC 与无双皮肤恢复至更新前个人提交 976538accd9a1f235c8f9c0406b283a9da458fce，撤回 1.7 剥皮/每帧驱动及这轮圆形图标，移除本轮新增 SkinWhitelist.txt、tga/tubiao_round.tga。WSLMain.lua、Bindings.xml 及其余个人文件沿用旧版原字节，不重置角色设置。
+- 涉及文件：根目录 `wsloot.dll`、`WushuangLoot.lua`、`WushuangLoot.toc`、上述两个删除资源、`pfUI-addonskinner/skins/WushuangLoot.lua`、现有 `Tools/tests/test_shared_stats_integration.py` 中对应旧版的断言。
+- 关联功能：恢复原有分类与每 3 帧驱动，不再调用 SkinTick；配套无双皮肤同步恢复，其他皮肤和 UnitXP 不变。实际 TOC 仍加载 WushuangLoot.lua 与 Bindings.xml，未启用原本不加载的 WSLMain.lua。
+- 检查结果：8 个插件文件和对应皮肤与上述个人提交逐字节相同；3 个 Lua 编译、TOC 引用、严格字体/UI 设置开关、旧分类与 3 帧驱动、无 DLL/旧接口/额外 SkinTick 不调用分支通过。DLL SHA256 为 6a36596430299171dafacbb031089717fc223e98285754d68e15a890bf217fe0。详见[回退报告](../Research/wsloot与无双个人版回退-20261025.md)。
+- 游戏验收与未确认：没有自动启动游戏；启动速度、黑屏/崩溃及拾取功能待用户测试。本次按要求一起回退 DLL 与 Lua/皮肤，因此后续结果只能评价这组版本，不能单独给 DLL 或 Lua 定责。
+- 替代关系：撤回本日 02/03 记录中 WushuangLoot 的更新；旧记录保留。此前个人版不是官方原版认证。
+
 
 <a id="change-WushuangLoot-20261025-03"></a>
 

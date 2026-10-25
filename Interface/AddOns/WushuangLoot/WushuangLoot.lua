@@ -116,7 +116,6 @@ end
 -- ==================== 设置界面 (主界面 + 复选框) ====================
 local TYPES = {
     { label = "尸体", bit = 1, tip = "可拾取的怪物尸体" },
-    { label = "剥皮", bit = 32, tip = "拾取完毕的可剥皮尸体 (需已学剥皮且等级足够)" },
     { label = "道具", bit = 8, tip = "箱子/矿石/草药等可交互物体" },
     { label = "商人", bit = 16, tip = "友善可对话的 NPC" },
 }
@@ -125,7 +124,7 @@ local WSLootFrame = CreateFrame("Frame", "WSLootFrame", UIParent)
 WSLootFrame:SetFrameStrata("DIALOG")
 WSLootFrame:SetPoint("CENTER", 0, 0)
 WSLootFrame:SetWidth(150)
-WSLootFrame:SetHeight(278)
+WSLootFrame:SetHeight(250)
 WSLootFrame:SetScale(WSLootScreenScale * 0.8)   -- 分辨率适配 × 用户缩放(80%)
 WSLootFrame:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -243,7 +242,7 @@ local function ApplyFilter()
 end
 
 local filterCB = CreateFrame("CheckButton", "WSLootFilterCB", WSLootFrame, "UICheckButtonTemplate")
-filterCB:SetPoint("TOPLEFT", 15, -166)
+filterCB:SetPoint("TOPLEFT", 15, -138)
 filterCB:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
 filterCB:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
 filterCB:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight", "ADD")
@@ -275,7 +274,7 @@ filterTextLabel:SetPoint("LEFT", filterCB, "RIGHT", 5, 0)
 filterTextLabel:SetText("交互指定NPC")
 
 local filterEdit = CreateFrame("EditBox", "WSLootFilterEdit", WSLootFrame, "InputBoxTemplate")
-filterEdit:SetPoint("TOPLEFT", 15, -204)
+filterEdit:SetPoint("TOPLEFT", 15, -176)
 filterEdit:SetWidth(100)
 filterEdit:SetHeight(20)
 filterEdit:SetAutoFocus(false)
@@ -362,11 +361,6 @@ SLASH_WSLootSettings1 = "/拾取设置"
 SlashCmdList["WSLootSettings"] = HandleSettings
 
 -- ==================== 小地图图标 ====================
--- 外观对齐 LibDBIcon-1.0 / Atlas 那套标准小地图按钮：
---   31x31 按钮 + 53x53 金色圆环(MiniMap-TrackingBorder)
---   + 20x20 暗色圆底(UI-Minimap-Background) + 17x17 圆形图标
--- 原实现只有一张 21x21 的方形图标（蓝色方底 + 鼠标指针），既没有圆环也没有
--- 底盘，在 pfUI 的 /abp 按钮面板里就是一块方块，和其他插件的圆形按钮完全不同。
 local WSLootMinimapButton = CreateFrame("Button", "WSLootMinimapButton", Minimap)
 WSLootMinimapButton:SetFrameStrata("MEDIUM")
 WSLootMinimapButton:SetWidth(31)
@@ -375,26 +369,19 @@ WSLootMinimapButton:SetFrameLevel(8)
 WSLootMinimapButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 WSLootMinimapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
--- 金色圆环（与 LibDBIcon/Atlas 同一套数值：53px 锚 TOPLEFT）
+local mmIcon = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonIcon", "BACKGROUND")
+mmIcon:SetTexture("Interface\\AddOns\\WushuangLoot\\tga\\tubiao")
+mmIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+mmIcon:SetWidth(20)
+mmIcon:SetHeight(20)
+mmIcon:SetPoint("CENTER", WSLootMinimapButton, "CENTER", 0, 0)
+
+-- 标准小地图圆环边框（53px 画布锚 TOPLEFT，与 ShaguDPS/LibDBIcon 同款）
 local mmBorder = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonBorder", "OVERLAY")
 mmBorder:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 mmBorder:SetWidth(53)
 mmBorder:SetHeight(53)
 mmBorder:SetPoint("TOPLEFT", WSLootMinimapButton, "TOPLEFT", 0, 0)
-
--- 暗色圆底
-local mmBackdrop = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonBg", "BACKGROUND")
-mmBackdrop:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
-mmBackdrop:SetWidth(20)
-mmBackdrop:SetHeight(20)
-mmBackdrop:SetPoint("TOPLEFT", WSLootMinimapButton, "TOPLEFT", 7, -5)
-
--- 图标：圆形 alpha 版（64x64 32bit TGA，源图居中内切圆裁切）
-local mmIcon = WSLootMinimapButton:CreateTexture("WSLootMinimapButtonIcon", "ARTWORK")
-mmIcon:SetTexture("Interface\\AddOns\\WushuangLoot\\tga\\tubiao_round")
-mmIcon:SetWidth(17)
-mmIcon:SetHeight(17)
-mmIcon:SetPoint("TOPLEFT", WSLootMinimapButton, "TOPLEFT", 7, -6)
 
 WSLootMinimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 0, 0)
 local mmAngle = 225
@@ -504,30 +491,18 @@ initFrame:SetScript("OnUpdate", function()
     end
 end)
 
--- 常驻驱动: 每 1 帧调一次 DLL 的 tick 函数; DLL 端 NPC_WAIT_FRAMES=2
+-- 常驻驱动: 每 5 帧调一次 DLL 的 tick 函数; DLL 端 NPC_WAIT_FRAMES=2
 -- 优先 CorpseTick, 低版本 DLL 降级到 NpcTick (由 DetectDllCaps 解析缓存到 tickFn)
 local tickFrame = CreateFrame("Frame")
 local tickCount = 0
 tickFrame:SetScript("OnUpdate", function()
     tickCount = tickCount + 1
-    if tickCount >= 1 then
+    if tickCount >= 3 then
         tickCount = 0
         if DllReady() then
             if not dllCaps then DetectDllCaps() end   -- 首次连接时解析一次
             if tickFn then tickFn() end
-            -- 剥皮状态机并行推进 (旧版 DLL 无此接口则跳过; 空闲时 DLL 内部直接返回, 零开销)
-            if type(WSLoot.SkinTick) == "function" then WSLoot.SkinTick() end
         end
-    end
-end)
-
--- 客户端错误信息捕获: 供 DLL 剥皮诊断使用 (失败时报告客户端拒绝原因, 如"剥皮技能不够")
-WSLastErr = nil
-local errFrame = CreateFrame("Frame")
-errFrame:RegisterEvent("UI_ERROR_MESSAGE")
-errFrame:SetScript("OnEvent", function()
-    if event == "UI_ERROR_MESSAGE" then
-        WSLastErr = arg1
     end
 end)
 

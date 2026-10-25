@@ -2,7 +2,7 @@
 ## Title:  |CFFEE7600[模组增强]|R |cff00ffff无双交互|cffff1450[需WSLoot模组]
 ## Notes: /无双交互 或者设置按键，小地图自定义
 ## Author: 无双孙尚香
-## Version: 1.7
+## Version: 1.6
 ## SavedVariables: WushuangLootDB
 WushuangLoot.lua
 Bindings.xml

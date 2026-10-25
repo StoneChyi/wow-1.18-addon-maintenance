@@ -9,7 +9,7 @@
     "related_skin_only": 1
   },
   "addon_pages": 107,
-  "dated_records": 180,
+  "dated_records": 182,
   "addons": [
     {
       "addon": "!Libs",
@@ -2270,12 +2270,21 @@
       "addon": "WushuangLoot",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/WushuangLoot.md",
-      "purpose": "保留个人交互外观，适配 DLL 和可调速度。",
+      "purpose": "恢复更新前个人版1.6及旧wsloot DLL，撤回剥皮与每帧驱动；启动体验待游戏实测。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "合入共享属性与本次确认的剩余新包更新",
+      "latest_record_title": "回退旧 wsloot DLL 与更新前个人使用版",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 5,
+      "record_count": 6,
       "records": [
+        {
+          "id": "WushuangLoot-20261025-04",
+          "date": "2026-10-25",
+          "title": "回退旧 wsloot DLL 与更新前个人使用版",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-WushuangLoot-20261025-04"
+        },
         {
           "id": "WushuangLoot-20261025-03",
           "date": "2026-10-25",
@@ -2704,10 +2713,19 @@
       "note": "PluginHistory/Plugins/pfUI-addonskinner.md",
       "purpose": "维护定制插件的 pfUI 皮肤，恢复洗脑装置按钮悬停与按压反馈。",
       "latest_record_date": "2026-10-25",
-      "latest_record_title": "合入 10 月 24 日包并保留个人功能（已部署）",
+      "latest_record_title": "配套恢复无双更新前个人皮肤",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 3,
+      "record_count": 4,
       "records": [
+        {
+          "id": "pfUI-addonskinner-20261025-03",
+          "date": "2026-10-25",
+          "title": "配套恢复无双更新前个人皮肤",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-addonskinner-20261025-03"
+        },
         {
           "id": "pfUI-addonskinner-20261025-02",
           "date": "2026-10-25",

@@ -86,7 +86,7 @@ for mode in ['absent','legacy','skinning']:
  stub=fixture('bcs_float_ui.lua').replace('UIParent=CreateFrame("Frame","UIParent")',r"""
 installFontContract(Object,object)
 strictObject=object
-for _,key in ipairs({'SetNormalTexture','SetPushedTexture','SetHighlightTexture','RegisterForClicks','SetFrameLevel','EnableKeyboard','SetNormalFontObject','SetPushedTextOffset','AddDoubleLine'}) do Object[key]=function() end end
+for _,key in ipairs({'SetNormalTexture','SetPushedTexture','SetHighlightTexture','RegisterForClicks','SetFrameLevel','EnableKeyboard','SetNormalFontObject','SetPushedTextOffset','AddDoubleLine','SetTexCoord'}) do Object[key]=function() end end
 function Object:GetCenter() return 500,500 end
 function Object:GetEffectiveScale() return 1 end
 function Object:SetChecked(v) self.checked=v end
@@ -108,15 +108,17 @@ print=function() end
  if mode=='skinning':r.execute('WSLoot.SkinTick=function() skinCalls=skinCalls+1 end')
  r.execute(raw('WushuangLoot/WushuangLoot.lua'))
  r.execute(r"""
-assert(WSLootCB2.label=='剥皮' and WSLootCB2.bit==32, tostring(WSLootCB2.label)..' '..tostring(WSLootCB2.bit))
+assert(WSLootCB2.label=='道具' and WSLootCB2.bit==8 and WSLootCB3.bit==16 and WSLootCB4==nil)
 assert(not pcall(function() strictObject('FontString'):SetText('bad') end))
 WSLootBindPick();SlashCmdList.WSLootSettings();SlashCmdList.WSLootSettings()
-for _,f in ipairs(frames) do
- if f.scripts.OnUpdate and f~=WSLootMinimapButton then f:Fire('OnUpdate') end
+for i=1,3 do
+ for _,f in ipairs(frames) do
+  if f.scripts.OnUpdate and f~=WSLootMinimapButton then f:Fire('OnUpdate') end
+ end
 end
 """)
  if mode=='absent':assert r.globals().lootCalls==0 and r.globals().skinCalls==0
  else:
-  assert r.globals().lootCalls==1 and r.globals().corpseCalls==1 and r.globals().mask==57
-  assert r.globals().skinCalls==(1 if mode=='skinning' else 0)
-print('PASS: complete WushuangLoot UI/strict fonts, skinning mask, missing/legacy/new DLL API dispatch and settings reopen')
+  assert r.globals().lootCalls==1 and r.globals().corpseCalls==1 and r.globals().mask==25
+  assert r.globals().skinCalls==0
+print('PASS: personal WushuangLoot 1.6 UI/strict fonts, original mask/3-frame tick, no SkinTick, missing/legacy DLL dispatch and settings reopen')

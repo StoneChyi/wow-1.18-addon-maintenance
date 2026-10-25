@@ -2011,22 +2011,21 @@
       "addon": "WushuangLoot",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/WushuangLoot.md",
-      "purpose": "保留个人交互外观，适配 DLL 和可调速度。",
+      "purpose": "恢复更新前个人版1.6及旧wsloot DLL，撤回剥皮与每帧驱动；启动体验待游戏实测。",
       "sources": [
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-08-19.md",
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-08-28.md",
         "Interface/AddOns/WushuangLoot/.workbuddy/memory/2026-09-09.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
         "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "PluginHistory/Research/wsloot与无双个人版回退-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/WushuangLoot/Bindings.xml",
         "Interface/AddOns/WushuangLoot/WSLMain.lua",
         "Interface/AddOns/WushuangLoot/WushuangLoot.lua",
-        "Interface/AddOns/WushuangLoot/WushuangLoot.toc",
-        "Interface/AddOns/WushuangLoot/tga/tubiao_round.tga",
-        "Interface/AddOns/WushuangLoot/SkinWhitelist.txt"
+        "Interface/AddOns/WushuangLoot/WushuangLoot.toc"
       ],
       "tracked_files_at_reference": 8,
       "pending": "请优先补充重启后的探针结果、当前实际加载文件、小地图/中文命令是否恢复以及现有 DLL 版本。",
@@ -2036,6 +2035,12 @@
         "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
         "files_changed": 3,
         "game_verified": false
+      },
+      "last_rollback": {
+        "date": "2026-10-25",
+        "report": "PluginHistory/Research/wsloot与无双个人版回退-20261025.md",
+        "personal_commit": "976538accd9a1f235c8f9c0406b283a9da458fce",
+        "game_acceptance": "待游戏验收"
       }
     },
     {
@@ -2353,7 +2358,8 @@
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
         "PluginHistory/Evidence/legacy-20261006/Docs/Files/pfUI-addonskinner",
-        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+        "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "PluginHistory/Research/wsloot与无双个人版回退-20261025.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI-addonskinner/skins/Cat.lua",
