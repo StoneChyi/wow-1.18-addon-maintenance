@@ -154,7 +154,7 @@ function Banana_OnEvent()
 		end
 		iconsReady = true
 		Banana_Print("标记条已加载。输入 /srti 打开设置面板。")
-		Banana_Print("左键定位标记单位 / 右键或 Ctrl+左键标记当前目标")
+		Banana_Print("单击定位标记单位 / 双击、右键或 Ctrl+左键标记当前目标")
 		Banana_Print("Ctrl + 右键拖动按钮 / Alt + 左键清除全部标记")
 
 		if not BANANA_CONFIG.SHOW_EXTRA_INFO then
@@ -177,6 +177,7 @@ end
 -- 总开关：关闭时停掉 OnUpdate 定时器并隐藏全部按钮，做到零常驻开销
 function Banana_SetEnabled(on)
 	BANANA_CONFIG.ENABLED = on and 1 or 0
+	if not on then SRTI_CancelBarClick() end
 	if not iconsReady then
 		BananaFrame:SetScript("OnUpdate", nil)
 		return
@@ -230,43 +231,76 @@ function Banana_RaidTargetButtonOnLoad()
     Banana_TexCoord(icon,index)
 end
 
+local barClickFrame = CreateFrame("Frame", "SRTI_BarClick", UIParent)
+local pendingBarClick
+local BAR_DOUBLE_CLICK = 0.3
+
+function SRTI_CancelBarClick()
+	pendingBarClick = nil
+	barClickFrame:SetScript("OnUpdate", nil)
+	barClickFrame:UnregisterEvent("PLAYER_TARGET_CHANGED")
+end
+barClickFrame:SetScript("OnEvent", SRTI_CancelBarClick)
+
+local function Banana_ToggleTargetSymbol(index)
+	if not UnitExists("target") then
+		Banana_Error("未选中目标。")
+		Banana_PlayError()
+		return
+	end
+	local oldindex = Banana_GetSymbol("target") or 0
+	if index <= 8 and oldindex == index then
+		if Banana_SetSymbol("target", 0) ~= false then Banana_PlayRemove1() end
+	else
+		Banana_SetSymbol("target", index)
+	end
+	Banana_UpdateStatus()
+end
+
+local function Banana_BarLeftClick(index)
+	local now = GetTime()
+	local exists, guid = UnitExists("target")
+	if pendingBarClick and pendingBarClick.index == index
+		and now - pendingBarClick.time <= BAR_DOUBLE_CLICK
+		and pendingBarClick.guid == guid and pendingBarClick.hasTarget == (exists and true or false) then
+		SRTI_CancelBarClick()
+		Banana_ToggleTargetSymbol(index)
+		return
+	end
+	SRTI_CancelBarClick()
+	pendingBarClick = {index=index, time=now, guid=guid, hasTarget=exists and true or false}
+	barClickFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+	-- Wait before reverse-targeting: the first click of a double-click must not steal target.
+	barClickFrame:SetScript("OnUpdate", function()
+		if not pendingBarClick or GetTime() - pendingBarClick.time <= BAR_DOUBLE_CLICK then return end
+		local requested = pendingBarClick.index
+		local exists, guid = UnitExists("target")
+		local sameTarget = pendingBarClick.guid == guid and pendingBarClick.hasTarget == (exists and true or false)
+		SRTI_CancelBarClick()
+		if BANANA_CONFIG.ENABLED == 1 and sameTarget then Banana_TargetRaidSymbol(requested) end
+	end)
+end
+
 function Banana_ButtonOnClick(mouseButton)
 	local index = this:GetID()
-	-- Alt+左键：清除全部标记（必须先判，否则会被下面的左键分支吃掉）
-	if (IsAltKeyDown()) and mouseButton == "LeftButton" then
+	if BANANA_CONFIG.ENABLED ~= 1 then SRTI_CancelBarClick() return end
+	if IsAltKeyDown() and mouseButton == "LeftButton" then
+		SRTI_CancelBarClick()
 		Banana_ClearAllSymbols()
 		return
 	end
-	-- Ctrl+左键（原有）与右键（新增的快捷标记）：给当前目标打/取消该标记
-	if ( IsControlKeyDown() and mouseButton == "LeftButton" ) or ( (not IsControlKeyDown()) and (not IsAltKeyDown()) and mouseButton == "RightButton" ) then
-		if not UnitExists("target") then
-			Banana_TargetRaidSymbol(index)
-			if not UnitExists("target") then
-				Banana_Error("未选中目标。")
-				Banana_PlayError()
-				return
-			end
-		end
-
-		local oldindex = (Banana_GetSymbol("target") or 0)
-		if oldindex == index then
-			if Banana_SetSymbol("target", 0) ~= false then Banana_PlayRemove1() end
-		else
-			Banana_SetSymbol("target", index)
-		end
-		Banana_UpdateStatus()
+	if not IsControlKeyDown() and not IsAltKeyDown() and mouseButton == "LeftButton" then
+		Banana_BarLeftClick(index)
 		return
 	end
-	-- 左键：选中带该标记的单位（原有反向寻标）
-	if (not IsControlKeyDown()) and (not IsAltKeyDown()) and mouseButton == "LeftButton" then
-		Banana_TargetRaidSymbol(index)
+	SRTI_CancelBarClick()
+	if (IsControlKeyDown() and mouseButton == "LeftButton")
+		or (not IsControlKeyDown() and not IsAltKeyDown() and mouseButton == "RightButton") then
+		Banana_ToggleTargetSymbol(index)
 		return
 	end
-	if (IsControlKeyDown()) and mouseButton == "RightButton" then
-		--moving
-		return
-	end
-	Banana_Print("左键定位标记单位 / 右键或 Ctrl+左键标记当前目标")
+	if IsControlKeyDown() and mouseButton == "RightButton" then return end -- dragging
+	Banana_Print("单击定位标记单位 / 双击、右键或 Ctrl+左键标记当前目标")
 	Banana_Print("Ctrl + 右键拖动按钮 / Alt + 左键清除全部标记")
 end
 
@@ -274,6 +308,7 @@ local movingButton = nil
 
 function Banana_ButtonOnMouseDown(mouseButton)
 	if IsControlKeyDown() and mouseButton == "RightButton" then
+		SRTI_CancelBarClick()
 		local index = this:GetID()
 		if not movingButton then
 			if getglobal("RaidTargetFrame"..icons[index].MovingButton.."Button"):IsMovable() then
@@ -321,14 +356,19 @@ function Banana_ButtonOnEnter()
 				end
 			end
 		end
+		GameTooltip:AddLine("单击定位；双击 / 右键 / Ctrl+左键设置或取消标记",0.5,0.5,0.5)
 		GameTooltip:AddLine("/srti 打开设置面板",0.5,0.5,0.5)
 		GameTooltip:Show()
 	else
-		GameTooltip:SetText("未使用\n左键：定位此标记单位\n右键 / Ctrl + 左键：标记当前目标\nAlt + 左键：清除所有标记\nCtrl + 右键：拖动按钮\n/srti 打开设置面板")
+		GameTooltip:SetText("未使用\n单击：定位此标记单位\n双击 / 右键 / Ctrl + 左键：设置或取消当前目标标记\nAlt + 左键：清除所有标记\nCtrl + 右键：拖动按钮\n/srti 打开设置面板")
 	end
 end
 
 function Banana_TargetRaidSymbol(index)
+	SRTI_CancelBarClick()
+	for _, unit in ipairs({"target", "mouseover", "pet", "targettarget"}) do
+		if Banana_TargetRaidSymbolUnit(unit, index) then return end
+	end
 	if superwow then
 		if Banana_TargetRaidSymbolUnit("mark"..index, index) then
 			return
@@ -347,19 +387,6 @@ function Banana_TargetRaidSymbol(index)
 	if Banana_TargetRaidSymbolUnit("player", index) then
 		return
 	end
-	------------------------
-	local parentcount = WorldFrame:GetNumChildren()
-    -- 保证查询次数足够
-    if parentcount < 20 then
-        parentcount = 20
-    end
-    for i = 1, parentcount, 1 do
-        TargetNearestEnemy(true)
-        if Banana_TargetRaidSymbolUnit("target", index) then
-            return;
-        end
-    end
-	------------------------
 	if Banana_ScanNameplates(index) then
 		return
 	end
@@ -1012,6 +1039,7 @@ function Banana_ProcessClearTargets()
 end
 
 function Banana_ClearAllSymbols()
+	SRTI_CancelBarClick()
 	Banana_PlayRemoveAll()
 	SRTI_CancelPendingClear()
 	local function AddTarget(unit)

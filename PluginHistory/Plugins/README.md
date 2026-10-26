@@ -12,6 +12,7 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
+| [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | 2026-10-27 | [修复单击误选最近目标并增加图标双击标记](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261027-01) | 待游戏验收 |
 | [EavesDrop](EavesDrop.md) | 2026-10-27 | [统一上下滚动、历史入口与返回最新按钮样式](EavesDrop.md#change-EavesDrop-20261027-03) | 待游戏验收 |
 | [pfUI](pfUI.md) | 2026-10-26 | [减益监控支持所有当前选中目标](pfUI.md#change-pfUI-20261026-03) | 待游戏验收 |
 | [XyTracker](XyTracker.md) | 2026-10-25 | [合入共享属性与本次确认的剩余新包更新](XyTracker.md#change-XyTracker-20261025-03) | 待游戏验收 |
@@ -41,7 +42,6 @@
 | [!Libs](!Libs.md) | 2026-10-18 | [合入 10 月 16 日包并保留个人功能（已部署）](!Libs.md#change-!Libs-20261018-02) | 待游戏验收 |
 | [YGB_OTAlarm](YGB_OTAlarm.md) | 2026-10-15 | [移除仇恨条阈值数字](YGB_OTAlarm.md#change-YGB_OTAlarm-20261015-01) | 待游戏验收 |
 | [BrainwasherPro](BrainwasherPro.md) | 2026-10-14 | [窗口层级、按钮反馈和风格入口](BrainwasherPro.md#change-BrainwasherPro-20261014-01) | 待游戏验收 |
-| [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | 2026-10-13 | [补充：直接清标与队外玩家本地标记](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261013-02) | 待游戏验收 |
 | [TurtleMail](TurtleMail.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](TurtleMail.md#change-TurtleMail-20261012-01) | 待游戏验收 |
 | [S_ChatBar](S_ChatBar.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](S_ChatBar.md#change-S_ChatBar-20261012-01) | 待游戏验收 |
 | [RaidCheck](RaidCheck.md) | 2026-10-12 | [迁入 10 月 10 日包（已部署）](RaidCheck.md#change-RaidCheck-20261012-01) | 待游戏验收 |

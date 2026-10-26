@@ -9,7 +9,7 @@
     "related_skin_only": 1
   },
   "addon_pages": 107,
-  "dated_records": 191,
+  "dated_records": 192,
   "addons": [
     {
       "addon": "!Libs",
@@ -1936,11 +1936,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/SimpleRaidTargetIcons.md",
       "purpose": "完善标记条生命显示、团队工具和透明图标。",
-      "latest_record_date": "2026-10-13",
-      "latest_record_title": "补充：直接清标与队外玩家本地标记",
+      "latest_record_date": "2026-10-27",
+      "latest_record_title": "修复单击误选最近目标并增加图标双击标记",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 6,
+      "record_count": 7,
       "records": [
+        {
+          "id": "SimpleRaidTargetIcons-20261027-01",
+          "date": "2026-10-27",
+          "title": "修复单击误选最近目标并增加图标双击标记",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-SimpleRaidTargetIcons-20261027-01"
+        },
         {
           "id": "SimpleRaidTargetIcons-20261013-02",
           "date": "2026-10-13",
