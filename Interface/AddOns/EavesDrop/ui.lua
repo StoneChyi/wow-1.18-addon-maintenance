@@ -423,6 +423,61 @@ local function SkinExistingButton(button, isIcon)
   if caption then Font(caption, 11) end
 end
 
+local function UtilityColors(button, highlighted)
+  local profile = Profile()
+  local bg, border = profile.FRAME, profile.BORDER
+  button:SetBackdropColor(bg.r, bg.g, bg.b, bg.a)
+  if highlighted then button:SetBackdropBorderColor(.35, .8, .7, border.a or 1)
+  else button:SetBackdropBorderColor(border.r, border.g, border.b, border.a or 1) end
+  local r, g, b = .78, .78, .78
+  if highlighted then r, g, b = .35, .8, .7 end
+  if button.edCaption then button.edCaption:SetTextColor(r, g, b) end
+  if button.edGlyph then button.edGlyph:SetVertexColor(r, g, b) end
+end
+
+local function SkinUtilityButton(button, label, direction)
+  if not button then return end
+  button:SetNormalTexture("")
+  button:SetPushedTexture("")
+  button:SetHighlightTexture("")
+  button:SetDisabledTexture("")
+  Backdrop(button)
+  button:SetHeight(18)
+  if button.SetHitRectInsets then button:SetHitRectInsets(-2, -2, -2, -2) end
+  button.edCaption = button.edCaption or button.caption or Text(button, "", 10)
+  Font(button.edCaption, 10)
+  button.edCaption:ClearAllPoints()
+  button.edCaption:SetPoint("CENTER", button, "CENTER", 0, 0)
+  if label then button.edCaption:SetText(label) end
+  local image = direction and pfUI and pfUI.media and pfUI.media["img:" .. direction]
+  if image then
+    if not button.edGlyph then
+      button.edGlyph = button:CreateTexture(nil, "ARTWORK")
+      button.edGlyph:SetWidth(10); button.edGlyph:SetHeight(10)
+      button.edGlyph:SetPoint("CENTER", button, "CENTER", 0, 0)
+    end
+    button.edGlyph:SetTexture(image)
+    button.edGlyph:Show(); button.edCaption:Hide()
+  else
+    if button.edGlyph then button.edGlyph:Hide() end
+    button.edCaption:Show()
+  end
+  UtilityColors(button, false)
+  -- Keep XML OnClick (including Shift+click) intact. Only replace appearance.
+  button:SetScript("OnEnter", function()
+    UtilityColors(this, true)
+    local hint = this.hint or this.tooltipText
+    if hint and hint ~= "" then
+      GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+      GameTooltip:SetText(hint, 1, 1, 1, 1, 1)
+    end
+  end)
+  button:SetScript("OnLeave", function()
+    UtilityColors(this, false)
+    GameTooltip:Hide()
+  end)
+end
+
 function EavesDrop:ApplySkin()
   if not self.db then return end
   local profile = self.db.profile
@@ -454,7 +509,7 @@ function EavesDrop:ApplySkin()
       if text then Font(text, 11) end
     end
   end
-  for _, name in ipairs({ "EavesDropHistoryButton", "EavesDropHistoryFrameOutgoingHit", "EavesDropHistoryFrameOutgoingHeal",
+  for _, name in ipairs({ "EavesDropHistoryFrameOutgoingHit", "EavesDropHistoryFrameOutgoingHeal",
       "EavesDropHistoryFrameIncomingHit", "EavesDropHistoryFrameIncomingHeal" }) do
     SkinExistingButton(getglobal(name), true)
   end
@@ -465,25 +520,36 @@ function EavesDrop:ApplySkin()
     close.edCaption = Text(close, "×", 13)
     close.edCaption:SetPoint("CENTER", close, "CENTER", 0, 0)
   end
-  for _, entry in ipairs({ { EavesDropFrameUpButton, "↑" }, { EavesDropFrameDownButton, "↓" } }) do
+  for _, entry in ipairs({ { EavesDropFrameUpButton, "^", "up", "TOPRIGHT", -4, -4 },
+      { EavesDropFrameDownButton, "v", "down", "BOTTOMRIGHT", -4, 4 } }) do
     local button = entry[1]
     if button then
-      SkinExistingButton(button, false)
-      if not button.edCaption then
-        button.edCaption = Text(button, entry[2], 12)
-        button.edCaption:SetPoint("CENTER", button, "CENTER", 0, 0)
-      end
+      SkinUtilityButton(button, entry[2], entry[3])
+      button:SetWidth(18)
+      button:ClearAllPoints()
+      button:SetPoint(entry[4], EavesDropFrame, entry[4], entry[5], entry[6])
     end
   end
+  if EavesDropHistoryButton then
+    local history = EavesDropHistoryButton
+    history:SetParent(EavesDropFrame)
+    history:ClearAllPoints()
+    history:SetPoint("TOPLEFT", EavesDropFrame, "TOPLEFT", 4, -4)
+    history:SetWidth(18)
+    history:SetAlpha(1)
+    SkinUtilityButton(history, "历")
+    if profile.HISTORY == false then history:Hide() else history:Show() end
+  end
   if not reader and EavesDropFrame then
-    reader = Button(EavesDropFrame, "", 160, 19, function() EavesDrop:ScrollToBottom() end)
-    reader:SetPoint("BOTTOM", EavesDropFrame, "BOTTOM", 0, 4)
+    reader = Button(EavesDropFrame, "", 160, 18, function() EavesDrop:ScrollToBottom() end)
+    reader:SetPoint("BOTTOMLEFT", EavesDropFrame, "BOTTOMLEFT", 4, 4)
     reader:Hide()
-    Hover(reader, "正在浏览历史，新的战斗事件继续收集。点击返回最新记录。")
+    reader.hint = "正在浏览历史，新的战斗事件继续收集。点击返回最新记录。"
     EavesDrop.readIndicator = reader
   end
   if reader and EavesDropFrame then
-    reader:SetWidth(math.max(100, EavesDropFrame:GetWidth() - 42))
+    SkinUtilityButton(reader)
+    reader:SetWidth(math.max(70, EavesDropFrame:GetWidth() - 30))
     reader.caption:SetWidth(reader:GetWidth() - 8)
     reader.caption:SetHeight(16)
   end

@@ -25,6 +25,11 @@ function CreateFrame(kind,name,parent) return object(kind,name,parent) end
 function methods:SetScript(k,v) self.scripts[k]=v end
 function methods:GetScript(k) return self.scripts[k] end
 function methods:GetParent() return self.parent end
+function methods:SetParent(v) self.parent=v end
+function methods:ClearAllPoints() self.points={} end
+function methods:SetHitRectInsets(...) self.hitInsets={...} end
+function methods:CreateTexture(name,layer) return object('Texture',name,self) end
+function methods:SetTexture(v) self.texture=v end
 function methods:SetWidth(v) self.width=v end
 function methods:SetHeight(v) self.height=v end
 function methods:GetWidth() return self.width end
@@ -57,6 +62,7 @@ function methods:SetTexCoord(...) self.texcoords={...} end
 function methods:SetNormalTexture(v) self.normal=v end
 function methods:SetPushedTexture(v) self.pushed=v end
 function methods:SetHighlightTexture(v) self.highlight=v end
+function methods:SetDisabledTexture(v) self.disabledTexture=v end
 function methods:GetNormalTexture() return type(self.normal)=='table' and self.normal or nil end
 function methods:GetPushedTexture() return type(self.pushed)=='table' and self.pushed or nil end
 function methods:GetFontString() return self.captionObject end
@@ -195,6 +201,31 @@ panel:Hide(); EavesDrop:OpenSettings()
 assert(panel.rows[3].slider:GetValue()==1 and panel.rows[4].slider:GetValue()==1)
 print('PASS border opacity endpoints, independent backgrounds and saved control reuse')
 
+-- Compact utility controls share the main window's skin and retain opacity.
+local utilities={EavesDropFrameUpButton,EavesDropFrameDownButton,EavesDropHistoryButton,EavesDrop.readIndicator}
+assert(EavesDropHistoryButton:GetParent()==EavesDropFrame and EavesDropHistoryButton:GetAlpha()==1)
+assert(EavesDropHistoryButton:GetWidth()==18 and EavesDropHistoryButton.edCaption.text=='历')
+for _,button in ipairs(utilities) do
+ assert(button:GetHeight()==18 and button.normal=='' and button.pushed=='' and button.highlight=='' and button.disabledTexture=='')
+ local click=button:GetScript('OnClick')
+ invoke(button,'OnEnter'); assert(button.border[1]==.35 and button.border[4]==EavesDrop.db.profile.BORDER.a)
+ invoke(button,'OnLeave'); assert(button.border[1]==EavesDrop.db.profile.BORDER.r)
+ assert(button.bg[4]==EavesDrop.db.profile.FRAME.a and button:GetScript('OnClick')==click)
+end
+if pfUI and pfUI.media then
+ assert(EavesDropFrameUpButton.edGlyph.texture=='pf-up' and EavesDropFrameDownButton.edGlyph.texture=='pf-down')
+else assert(EavesDropFrameUpButton.edCaption.text=='^' and EavesDropFrameDownButton.edCaption.text=='v') end
+local count=table.getn(objects)
+EavesDrop:ApplySkin(); EavesDrop:ApplySkin(); assert(table.getn(objects)==count,'utility skin allocated duplicate objects')
+EavesDrop.db.profile.FRAME.a=0; EavesDrop.db.profile.BORDER.a=0; EavesDrop:ApplySkin()
+for _,button in ipairs(utilities) do
+ invoke(button,'OnEnter'); assert(button.bg[4]==0 and button.border[4]==0)
+ invoke(button,'OnLeave'); assert(button.bg[4]==0 and button.border[4]==0)
+end
+EavesDrop.db.profile.HISTORY=false; EavesDrop:ApplySkin(); assert(not EavesDropHistoryButton:IsShown())
+EavesDrop.db.profile.HISTORY=true; EavesDrop:ApplySkin(); assert(EavesDropHistoryButton:IsShown())
+print('PASS compact utility skin, pfUI arrows/fallback, hover, opacity, reuse and history switch')
+
 historyState.reading=true
 EavesDrop:UpdateReadIndicator(0,false)
 assert(EavesDrop.readIndicator:IsShown(),'empty-unseen reading indicator was hidden')
@@ -224,7 +255,7 @@ def scenario(mode):
     lua.execute(STUB, install)
     if mode != "no-pfui":
         lua.execute(r'''
-pfUI={font_default='MissingCustomFont.ttf',api={}}
+pfUI={font_default='MissingCustomFont.ttf',api={},media={['img:up']='pf-up',['img:down']='pf-down'}}
 function pfUI.api.CreateBackdrop(frame,inset,legacy,alpha)
  assert(inset==1 and legacy==true,'wrong 1.12 pfUI backdrop signature')
  frame.pfSkinCalls=(frame.pfSkinCalls or 0)+1

@@ -184,6 +184,9 @@ function CreateFrame(kind,name,parent) return newObject(kind,name,parent) end
 function methods:SetScript(k,v) self.scripts=self.scripts or {}; self.scripts[k]=v end
 function methods:GetScript(k) return self.scripts and self.scripts[k] end
 function methods:GetParent() return self.parent end
+function methods:SetParent(v) self.parent=v end
+function methods:SetHitRectInsets(...) self.hitInsets={...} end
+function methods:CreateTexture(name,layer) return newObject('Texture',name,self) end
 function methods:SetBackdrop(v) self.backdrop=v end
 function methods:SetFrameStrata(v) self.strata=v end
 function methods:SetMovable(v) self.movable=v end
@@ -199,6 +202,7 @@ function methods:SetVertexColor(...) self.vertex={...} end
 function methods:SetNormalTexture(v) self.normal=v end
 function methods:SetPushedTexture(v) self.pushed=v end
 function methods:SetHighlightTexture(v) self.highlight=v end
+function methods:SetDisabledTexture(v) self.disabledTexture=v end
 function methods:GetNormalTexture() return type(self.normal)=='table' and self.normal or nil end
 function methods:GetPushedTexture() return type(self.pushed)=='table' and self.pushed or nil end
 function methods:GetFontString() return self.caption end
@@ -436,6 +440,19 @@ class EavesDropCoreTests(unittest.TestCase):
     def test_empty_auto_hidden_window_stays_hidden_until_new_event(self):
         lua = runtime()
         lua.execute("EavesDrop.db.profile.FADEFRAME=true; EavesDrop:HideFrame(); EavesDrop:OnUpdate(.1); assert(EavesDropFrame:GetAlpha()==0); EavesDrop:OnUpdate(.1); assert(EavesDropFrame:GetAlpha()==0); emit(10); EavesDrop:OnUpdate(.1); assert(EavesDropFrame:GetAlpha()==1)")
+
+    def test_utility_skin_preserves_xml_click_actions(self):
+        lua = runtime()
+        lua.execute(INTEGRATION)
+        tree = ET.parse(ADDON / "EavesDrop.xml")
+        ns = "{http://www.blizzard.com/wow/ui/}"
+        for name, variable in (("$parentUpButton", "upClick"), ("$parentDownButton", "downClick"), ("EavesDropHistoryButton", "historyClick")):
+            element = next(e for e in tree.iter(ns + "Button") if e.attrib.get("name") == name)
+            source = element.find(ns + "Scripts/" + ns + "OnClick").text
+            lua.globals()[variable] = lua.eval("function()\n" + source + "\nend")
+        lua.execute("EavesDropFrameUpButton:SetScript('OnClick',upClick); EavesDropFrameDownButton:SetScript('OnClick',downClick); EavesDropHistoryButton:SetScript('OnClick',historyClick); function PlaySound()end; shift=false; IsShiftKeyDown=function()return shift end")
+        lua.execute((ADDON / "ui.lua").read_text(encoding="utf-8-sig"))
+        lua.execute("EavesDrop:ApplySkin(); assert(EavesDropFrameUpButton:GetScript('OnClick')==upClick and EavesDropFrameDownButton:GetScript('OnClick')==downClick and EavesDropHistoryButton:GetScript('OnClick')==historyClick); fill(30); invoke(EavesDropFrameUpButton,'OnClick'); assert(EavesDrop:GetHistoryState().offset==1); shift=true; invoke(EavesDropFrameUpButton,'OnClick'); assert(EavesDrop:GetHistoryState().offset==20); shift=false; invoke(EavesDropFrameDownButton,'OnClick'); assert(EavesDrop:GetHistoryState().offset==19); shift=true; invoke(EavesDropFrameDownButton,'OnClick'); assert(not EavesDrop:GetHistoryState().reading); invoke(EavesDropHistoryButton,'OnClick'); assert(EavesDropHistoryFrame:IsShown()); invoke(EavesDropHistoryButton,'OnClick'); assert(not EavesDropHistoryFrame:IsShown()); shift=false; invoke(EavesDropFrameUpButton,'OnClick'); emit(31); invoke(EavesDrop.readIndicator,'OnClick'); assert(not EavesDrop:GetHistoryState().reading and EavesDrop:GetHistoryState().unseen==0)")
 
 
 if __name__ == "__main__":
