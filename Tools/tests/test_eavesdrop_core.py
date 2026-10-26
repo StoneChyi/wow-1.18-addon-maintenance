@@ -428,5 +428,10 @@ class EavesDropCoreTests(unittest.TestCase):
         ''')
 
 
+    def test_empty_auto_hidden_window_stays_hidden_until_new_event(self):
+        lua = runtime()
+        lua.execute("EavesDrop.db.profile.FADEFRAME=true; EavesDrop:HideFrame(); EavesDrop:OnUpdate(.1); assert(EavesDropFrame:GetAlpha()==0); EavesDrop:OnUpdate(.1); assert(EavesDropFrame:GetAlpha()==0); emit(10); EavesDrop:OnUpdate(.1); assert(EavesDropFrame:GetAlpha()==1)")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

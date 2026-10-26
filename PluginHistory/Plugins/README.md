@@ -12,8 +12,8 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
+| [EavesDrop](EavesDrop.md) | 2026-10-27 | [修复自动隐藏状态下空窗口被刷新重新显示](EavesDrop.md#change-EavesDrop-20261027-01) | 待游戏验收 |
 | [pfUI](pfUI.md) | 2026-10-26 | [减益监控支持所有当前选中目标](pfUI.md#change-pfUI-20261026-03) | 待游戏验收 |
-| [EavesDrop](EavesDrop.md) | 2026-10-26 | [pfUI界面与透明度、稳定历史阅读、停用恢复及增强战斗记录适配](EavesDrop.md#change-EavesDrop-20261026-01) | 待游戏验收 |
 | [XyTracker](XyTracker.md) | 2026-10-25 | [合入共享属性与本次确认的剩余新包更新](XyTracker.md#change-XyTracker-20261025-03) | 待游戏验收 |
 | [WushuangLoot](WushuangLoot.md) | 2026-10-25 | [回退旧 wsloot DLL 与更新前个人使用版](WushuangLoot.md#change-WushuangLoot-20261025-04) | 待游戏验收 |
 | [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-25 | [重建连续材质、保留地貌细节，修复城市／海岸与压缩接界](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261025-02) | 待游戏验收 |

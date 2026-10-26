@@ -810,9 +810,9 @@ function EavesDrop:OnUpdate(elapsed)
 	end
 	--hide frame when none active
 	if (self.db.profile["FADEFRAME"] == true) then
-		if ((count == 0) and (scroll==0) and (EavesDropFrame:GetAlpha() == 1)) then
+		if ((count == 0) and (scroll==0)) then
 			self:HideFrame();
-		elseif (EavesDropFrame:GetAlpha() == 0) then
+		else
 			self:ShowFrame();
 		end
 	end
