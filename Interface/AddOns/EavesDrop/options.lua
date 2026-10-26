@@ -572,7 +572,7 @@ function EavesDrop:SetupOptions()
 				    end,
 				    set = function(v)
 				        self.db.profile["FADEFRAME"] = v
-				        if v ~= true then
+				        if v == true and not EavesDrop:GetHistoryState().reading then
 				        	self:HideFrame();
 				        else
 				        	self:ShowFrame();
@@ -727,7 +727,7 @@ function EavesDrop:GetDefaultConfig()
 		["REPC"] = {r = 0.5, g = 0.5, b = 1},
 		["SKILLC"] = {r = 0, g = 0, b = 1},
 		["FRAME"] = {r = 0, g = 0, b = 0, a = 0.33},
-		["BORDER"] = {r = 1, g = 1, b = 1, a = 0.75},
+		["BORDER"] = {r = 0.25, g = 0.25, b = 0.25, a = 1},
 		["LABELC"] = {r = 1, g = 1, b = 0, a = 1},
 		["PETO"] =  {r = 0.6, g = 0.6, b = 0.0},
 		["PETI"] =  {r = 0.6, g = 0.6, b = 0.0},
@@ -762,6 +762,9 @@ function EavesDrop:GetDefaultConfig()
 		["PLACEHOLDER"] = false,
 		["HISTORY"] = true,
 		["TEXTSIZE"] = 14,
+		["SETTINGALPHA"] = 0.95,
+		["HISTORYLIMIT"] = 512,
+		["DATASOURCE"] = "auto",
 	}
 	return default
 end

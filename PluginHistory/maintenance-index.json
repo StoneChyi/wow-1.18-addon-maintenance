@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
-  "updated_on": "2026-10-25",
+  "updated_on": "2026-10-27",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "documented_history": 57,
-    "unconfirmed": 46,
+    "documented_history": 58,
+    "unconfirmed": 45,
     "snapshot_difference": 1,
     "related_skin_only": 1
   },
@@ -1133,13 +1133,23 @@
     },
     {
       "addon": "EavesDrop",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/EavesDrop.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
-      "maintenance_files": [],
+      "purpose": "pfUI界面与背景透明度、稳定历史阅读、停用恢复及增强战斗记录适配。",
+      "sources": [
+        "PluginHistory/Research/EavesDrop优化-20261026.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/EavesDrop/EavesDrop.lua",
+        "Interface/AddOns/EavesDrop/EavesDrop.toc",
+        "Interface/AddOns/EavesDrop/EavesDrop.xml",
+        "Interface/AddOns/EavesDrop/EavesDropStats.lua",
+        "Interface/AddOns/EavesDrop/options.lua",
+        "Interface/AddOns/EavesDrop/ui.lua",
+        "Interface/AddOns/EavesDrop/enhanced.lua"
+      ],
       "tracked_files_at_reference": 16,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "待游戏验收；2026-10-26以前是否存在个人修改仍无证据。"
     },
     {
       "addon": "ExtraResourceBars",

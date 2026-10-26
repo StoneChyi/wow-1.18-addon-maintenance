@@ -194,7 +194,7 @@
 	</Button>
 		
 	<!-- MAIN FRAME -->
-	<Frame name="EavesDropFrame" enableMouse="true" movable="true" frameStrata="LOW" parent="UIParent">
+	<Frame name="EavesDropFrame" hidden="true" enableMouse="true" movable="true" frameStrata="LOW" parent="UIParent">
 		<Backdrop bgFile="Interface\ChatFrame\ChatFrameBackground" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
 			<EdgeSize>
 				<AbsValue val="16"/>

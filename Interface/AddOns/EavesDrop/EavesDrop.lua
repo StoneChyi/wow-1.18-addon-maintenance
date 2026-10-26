@@ -32,6 +32,9 @@ local arrSize = 10;
 local arrMaxSize = 128;
 local scroll = 0;
 local allShown = false;
+local eventCount = 0;
+local readSnapshot, readCount;
+local unseenEvents = 0;
 
 --set table default size sense table.insert no longer does
 for i=1, arrMaxSize do
@@ -53,21 +56,36 @@ local eventlist = {
 	"CHAT_MSG_SPELL_HOSTILEPLAYER_DAMAGE",
 	"CHAT_MSG_SPELL_PERIODIC_CREATURE_DAMAGE",
 	"CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_BUFFS",
+	"CHAT_MSG_SPELL_PERIODIC_HOSTILEPLAYER_BUFFS",
 	"CHAT_MSG_SPELL_PERIODIC_HOSTILEPLAYER_DAMAGE",
 	"CHAT_MSG_SPELL_PERIODIC_PARTY_BUFFS",
 	"CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS",
 	"CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE",
 	"CHAT_MSG_SPELL_SELF_BUFF",
 	"CHAT_MSG_SPELL_SELF_DAMAGE",
-	"CHAT_MSG_COMBAT_HOSTILE_DEATH",
-}
-
-local peteventlist = {
+	"CHAT_MSG_SPELL_PARTY_BUFF",
+	"CHAT_MSG_SPELL_FRIENDLYPLAYER_BUFF",
+	"CHAT_MSG_SPELL_PARTY_DAMAGE",
+	"CHAT_MSG_SPELL_FRIENDLYPLAYER_DAMAGE",
+	"CHAT_MSG_SPELL_CREATURE_VS_PARTY_DAMAGE",
+	"CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE",
+	"CHAT_MSG_SPELL_CREATURE_VS_PARTY_BUFF",
+	"CHAT_MSG_SPELL_CREATURE_VS_CREATURE_BUFF",
+	"CHAT_MSG_COMBAT_CREATURE_VS_PARTY_HITS",
+	"CHAT_MSG_COMBAT_CREATURE_VS_PARTY_MISSES",
+	"CHAT_MSG_COMBAT_CREATURE_VS_CREATURE_HITS",
+	"CHAT_MSG_COMBAT_CREATURE_VS_CREATURE_MISSES",
+	"CHAT_MSG_COMBAT_PARTY_HITS",
+	"CHAT_MSG_COMBAT_PARTY_MISSES",
+	"CHAT_MSG_COMBAT_FRIENDLYPLAYER_HITS",
+	"CHAT_MSG_COMBAT_FRIENDLYPLAYER_MISSES",
+	"CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE",
+	"CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE",
+	"CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS",
 	"CHAT_MSG_COMBAT_PET_HITS",
 	"CHAT_MSG_SPELL_PET_DAMAGE",
 	"CHAT_MSG_COMBAT_PET_MISSES",
-	"CHAT_MSG_SPELL_HOSTILEPLAYER_BUFF",
-	"CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS",
+	"CHAT_MSG_COMBAT_HOSTILE_DEATH",
 }
 
 local arrSpellColors = {
@@ -91,19 +109,30 @@ function EavesDrop:OnInitialize()
 	self:RegisterDB("EavesDropDB","EavesDropStatsDB")
 	self:RegisterDefaults('profile', default_config )
 	self:RegisterDefaults('char', {Stats = {[OUTGOING] = {},[INCOMING] = {}}})
-	self:RegisterChatCommand({"/EavesDrop"}, self.options)
+	self:RegisterChatCommand({"/EavesDrop", "/ed"}, function(message)
+		if message == "enable" then EavesDrop:ToggleActive(true)
+		elseif message == "disable" then EavesDrop:ToggleActive(false)
+		elseif message == "legacy" then EavesDrop:OpenLegacySettings()
+		else EavesDrop:OpenSettings() end
+	end)
 	
+	self:ResizeHistory();
 	self:PerformDisplayOptions();
 	waterfall:Register('EavesDrop', 'aceOptions', EavesDrop.options, 'title','EavesDrop Options')  
+	-- Ace2 does not call OnDisable for an initially disabled addon.
+	EavesDropFrame:Hide();
+	EavesDropHistoryFrame:Hide();
 end
 
 function EavesDrop:OnEnable()
+	self._running = true;
+	parser:UnregisterAllEvents("EavesDrop");
 	self:RegisterEvent("PLAYER_DEAD")
+	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:UpdateExpEvents();
 	self:UpdateRepEvents();
 	self:UpdateHonorEvents();
 	self:UpdateCombatEvents();
-	self:UpdatePetEvents();
 	self:UpdateFadeEvents();
 	self:UpdateSkillEvents()
 
@@ -111,29 +140,39 @@ function EavesDrop:OnEnable()
 		parser:RegisterEvent(
 			"EavesDrop",
 			event,
-			EavesDrop.CombatEvent
+			EavesDrop.RouteCombatEvent
 		)
 	end
 	
 	--setup metro
 	self:RegisterMetro("EavesDrop", self.OnUpdate, .1, self) 
+	self:StartEnhancedEvents();
+	self:ApplySkin();
+	self:UpdateEvents();
 	
 	--show frame
 	EavesDropFrame:Show();
-	if (self.db.profile["FADEFRAME"] == true) then
+	if (self.db.profile["FADEFRAME"] == true) and not readSnapshot then
 		self:HideFrame();
+	else
+		self:ShowFrame();
 	end
 
 end
 
 function EavesDrop:OnDisable()
+	self._running = false;
+	self:StopEnhancedEvents();
 	parser:UnregisterAllEvents("EavesDrop")
 	self:UnregisterAllEvents()
 	self:UnregisterMetro("EavesDrop")
 	EavesDropFrame:Hide();
+	EavesDropHistoryFrame:Hide();
+	if self.UpdateSettings then self:UpdateSettings() end
 end
 
 function EavesDrop:UpdateCombatEvents()
+	if not self._running then return end
 	if (self.db.profile["COMBAT"] == true) then
 		self:RegisterEvent("PLAYER_REGEN_DISABLED");
 		self:RegisterEvent("PLAYER_REGEN_ENABLED");
@@ -148,57 +187,51 @@ function EavesDrop:UpdateCombatEvents()
 end
 
 function EavesDrop:UpdatePetEvents()
-	if (self.db.profile["PET"] == true) then
-		for _, event in pairs(peteventlist) do
-			parser:RegisterEvent(
-				"EavesDrop",
-				event,
-				EavesDrop.CombatPetOutEvent
-			)
-		end
-	else
-		for _, event in pairs(peteventlist) do
-			parser:UnregisterEvent(
-				"EavesDrop",
-				event
-			)
-		end
-	end
+	-- Shared channels stay subscribed once; RouteCombatEvent filters pets.
 end
 
 function EavesDrop:UpdateExpEvents()
+	if not self._running then return end
+	parser:UnregisterEvent("EavesDrop", "CHAT_MSG_COMBAT_XP_GAIN");
 	if (self.db.profile["EXP"] == true) then
-		parser:RegisterEvent("EavesDrop","CHAT_MSG_COMBAT_XP_GAIN",EavesDrop.CombatEvent)
+		parser:RegisterEvent("EavesDrop","CHAT_MSG_COMBAT_XP_GAIN",EavesDrop.RouteCombatEvent)
 	else
 		parser:UnregisterEvent("EavesDrop","CHAT_MSG_COMBAT_XP_GAIN")
 	end
 end
 
 function EavesDrop:UpdateRepEvents()
+	if not self._running then return end
+	parser:UnregisterEvent("EavesDrop", "CHAT_MSG_COMBAT_FACTION_CHANGE");
 	if (self.db.profile["REP"] == true) then
-		parser:RegisterEvent("EavesDrop","CHAT_MSG_COMBAT_FACTION_CHANGE",EavesDrop.CombatEvent)
+		parser:RegisterEvent("EavesDrop","CHAT_MSG_COMBAT_FACTION_CHANGE",EavesDrop.RouteCombatEvent)
 	else
 		parser:UnregisterEvent("EavesDrop","CHAT_MSG_COMBAT_FACTION_CHANGE")
 	end
 end
 
 function EavesDrop:UpdateHonorEvents()
+	if not self._running then return end
+	parser:UnregisterEvent("EavesDrop", "CHAT_MSG_COMBAT_HONOR_GAIN");
 	if (self.db.profile["HONOR"] == true) then
-		parser:RegisterEvent("EavesDrop","CHAT_MSG_COMBAT_HONOR_GAIN",EavesDrop.CombatEvent)
+		parser:RegisterEvent("EavesDrop","CHAT_MSG_COMBAT_HONOR_GAIN",EavesDrop.RouteCombatEvent)
 	else
 		parser:UnregisterEvent("EavesDrop","CHAT_MSG_COMBAT_HONOR_GAIN")
 	end
 end
 
 function EavesDrop:UpdateFadeEvents()
+	if not self._running then return end
+	parser:UnregisterEvent("EavesDrop", "CHAT_MSG_SPELL_AURA_GONE_SELF");
 	if (self.db.profile["FADE"] == true) then
-		parser:RegisterEvent("EavesDrop","CHAT_MSG_SPELL_AURA_GONE_SELF",EavesDrop.CombatEvent)
+		parser:RegisterEvent("EavesDrop","CHAT_MSG_SPELL_AURA_GONE_SELF",EavesDrop.RouteCombatEvent)
 	else
 		parser:UnregisterEvent("EavesDrop","CHAT_MSG_SPELL_AURA_GONE_SELF")
 	end
 end
 
 function EavesDrop:UpdateSkillEvents()
+	if not self._running then return end
 	if (self.db.profile["SKILL"] == true) then
 		self:RegisterEvent("CHAT_MSG_SKILL");
 	else
@@ -231,6 +264,23 @@ end
 --Reset everything to default
 function EavesDrop:Reset()
 	self:ResetDB("profile");
+	self:RefreshProfile();
+end
+
+function EavesDrop:RefreshCombatSources()
+	self:StopEnhancedEvents();
+	if self._running then self:StartEnhancedEvents() end
+	if self.UpdateSettings then self:UpdateSettings() end
+end
+
+function EavesDrop:PLAYER_ENTERING_WORLD()
+	-- Unit GUIDs can be unavailable during initial addon enable/loading screens.
+	if self._running and self.enhancedNeedsRetry then self:RefreshCombatSources() end
+end
+
+function EavesDrop:RefreshProfile()
+	self:ResizeHistory();
+	self:RefreshCombatSources();
 	self:UpdateExpEvents();
 	self:UpdateRepEvents();
 	self:UpdateHonorEvents();
@@ -242,9 +292,14 @@ function EavesDrop:Reset()
 	self:UpdateEvents();
 end
 
+function EavesDrop:OnProfileEnable()
+	self:RefreshProfile();
+end
+
 function EavesDrop:PerformDisplayOptions()
 	--set size
 	arrSize = self.db.profile["NUMLINES"];
+	scroll = math.max(0, math.min(scroll, (readCount or eventCount) - arrSize));
 	frameSize = self.db.profile["LINEHEIGHT"] + 1;
 	local totalh = (frameSize * arrSize) + 50;
 	local totalw = (self.db.profile["LINEHEIGHT"] * 2) + self.db.profile["LINEWIDTH"]
@@ -285,6 +340,13 @@ function EavesDrop:PerformDisplayOptions()
  	
 	self:ResetEvents()
 	self:SetupHistory()
+	if self.ApplySkin then self:ApplySkin() end
+	if not self._running then
+		EavesDropFrame:Hide();
+		EavesDropHistoryFrame:Hide();
+	elseif not self.db.profile.FADEFRAME or readSnapshot then
+		self:ShowFrame();
+	end
 end
 
 function EavesDrop:HideFrame()
@@ -292,15 +354,42 @@ function EavesDrop:HideFrame()
 end
 
 function EavesDrop:ShowFrame()
+	if not self._running then return end
 	EavesDropFrame:SetAlpha(1);
 	EavesDropTab:SetAlpha(0);
+end
+
+-- ParserLib calls methods as func(eventName, info), not as object methods.
+function EavesDrop:RouteCombatEvent(info)
+	local self = EavesDrop;
+	if not self._running or type(info) ~= "table" then return end
+	if not info.enhanced and self:ShouldSuppressLegacy(info) then return end
+	local player = info.source == ParserLib_SELF or info.victim == ParserLib_SELF
+		or info.sourceGained == ParserLib_SELF;
+	local pet;
+	if info.enhanced then
+		pet = info.sourceIsPet or info.victimIsPet;
+	else
+		pet = self:GetTargetUnit(info.source) == "pet" or self:GetTargetUnit(info.victim) == "pet";
+	end
+	self.eventMessage = info.message or arg1;
+	if player or info.type == "experience" or info.type == "reputation" or info.type == "honor" then
+		self:CombatEvent(info);
+	elseif pet and self.db.profile.PET then
+		self:CombatPetOutEvent(info);
+	end
+	self.eventMessage = nil;
+end
+
+local function IsHealth(attribute)
+	return attribute == "Health" or attribute == "health" or attribute == HEALTH;
 end
 
 function EavesDrop:CombatEvent(info)
 	local text = info.amount
 	local self = EavesDrop;
-	local texture
-	if (info.skill and type(info.skill) ~= "number") then
+	local texture = info.texture;
+	if not texture and (info.skill and type(info.skill) ~= "number") then
 		texture = BS:GetSpellIcon(info.skill);
 		if (texture == nil and self.db.profile["PLACEHOLDER"] == true) then 
 			texture = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -347,22 +436,22 @@ function EavesDrop:CombatEvent(info)
 				self:DisplayEvent(OUTGOING, text, texture, self.db.profile["PETO"])
 			end
 		end
-	elseif info.type == "drain" and info.attribute == "Health" then
+	elseif info.type == "drain" and IsHealth(info.attribute) then
 		if info.source == ParserLib_SELF then
 				self:DisplayEvent(OUTGOING, text, texture, self:SpellColor(self.db.profile["TSPELL"], info.element))
 			elseif info.victim == ParserLib_SELF then
 				self:DisplayEvent(INCOMING, "-"..text, texture, self:SpellColor(self.db.profile["PSPELL"], info.element))
 			end
 	elseif info.type == "leech" then
-		text = info.amountGained
-		if info.attribute == "Health" then
+		if IsHealth(info.attribute) then
 			if info.source == ParserLib_SELF then
 				self:DisplayEvent(OUTGOING, text, texture, self:SpellColor(self.db.profile["TSPELL"], info.element))
 			elseif info.victim == ParserLib_SELF then
 				self:DisplayEvent(INCOMING, "-"..text, texture, self:SpellColor(self.db.profile["PSPELL"], info.element))
 			end
 		end
-		if info.attributeGained == "Health" then
+		text = info.amountGained;
+		if IsHealth(info.attributeGained) then
 			if info.sourceGained == ParserLib_SELF then
 				if (text < self.db.profile["HFILTER"]) then return end; 
 				if (self:TrackStat(INCOMING, info)) then
@@ -394,7 +483,7 @@ function EavesDrop:CombatEvent(info)
 			self:DisplayEvent(OUTGOING, text, texture, self.db.profile["THEAL"])
 		end
 	elseif info.type == "miss" then
-		local miss = getglobal(strupper(info.missType));
+		local miss = getglobal(strupper(info.missType or "MISS")) or info.missType or MISS;
 		if (info.source == ParserLib_SELF or info.victim == ParserLib_SELF) then
 			if info.source == ParserLib_SELF then
 				local tcolor;
@@ -421,7 +510,7 @@ function EavesDrop:CombatEvent(info)
 		end
 	elseif info.type == "gain" then
 		if (info.victim == ParserLib_SELF) then
-			if (info.attribute == "health") then
+			if IsHealth(info.attribute) then
 				if (text < self.db.profile["HFILTER"]) then return end; 
 				self:DisplayEvent(INCOMING, "+"..text, texture, self.db.profile["PHEAL"])
 			else
@@ -471,15 +560,17 @@ function EavesDrop:CombatEvent(info)
 end
 
 function EavesDrop:CombatPetOutEvent(info)
+	local incoming = info.enhanced and info.victimIsPet or
+		(not info.enhanced and EavesDrop:GetTargetUnit(info.victim) == "pet");
 	local text = info.amount
 	local self = EavesDrop;
-	local texture
-	if (info.skill and type(info.skill) ~= "number") then
+	local texture = info.texture;
+	if not texture and (info.skill and type(info.skill) ~= "number") then
 		texture = BS:GetSpellIcon(info.skill);
 		if (texture == nil and self.db.profile["PLACEHOLDER"] == true) then 
 			texture = "Interface\\Icons\\INV_Misc_QuestionMark"
 		end
-	else
+	elseif not texture then
 		texture = "pet"
 	end
 	if info.type == "hit" then
@@ -489,18 +580,22 @@ function EavesDrop:CombatPetOutEvent(info)
 			if (info.amountResist) then text = text.." ("..info.amountResist..")" end;
 			if (info.amountBlock) then text = text.." ("..info.amountBlock..")" end;
 			if (info.amountAbsorb) then text = text.." ("..info.amountAbsorb..")" end;
-			self:DisplayEvent(OUTGOING, text, texture, self.db.profile["PETO"])
+			if incoming then
+				self:DisplayEvent(INCOMING, "-"..text, texture, self.db.profile["PETI"])
+			else
+				self:DisplayEvent(OUTGOING, text, texture, self.db.profile["PETO"])
+			end
 	elseif info.type == "miss" then
-		local miss = getglobal(strupper(info.missType));
-		if (self:GetTargetUnit(info.victim) == "pet" and self.db.profile["PET"] == true) then
+		local miss = getglobal(strupper(info.missType or "MISS")) or info.missType or MISS;
+		if incoming then
 			if texture==nil then texture = "pet" end
 			self:DisplayEvent(INCOMING, miss, texture, self.db.profile["PETI"])
-		elseif (self:GetTargetUnit(info.source) == "pet" and self.db.profile["PET"] == true) then
+		else
 			if texture==nil then texture = "pet" end
 			self:DisplayEvent(OUTGOING, miss, texture, self.db.profile["PETO"])
 		end
 	elseif info.type == "heal" then
-		if (self:GetTargetUnit(info.victim) == "pet" and self.db.profile["PET"] == true) then
+		if incoming then
 			if (text < self.db.profile["HFILTER"]) then return end; 
 			if (info.isCrit) then text = critchar..text..critchar end;
 			if (self.db.profile["HEALERID"] == true and info.source ~= ParserLib_SELF) then text = text.." ("..info.source..")" end;
@@ -508,30 +603,38 @@ function EavesDrop:CombatPetOutEvent(info)
 				text = newhigh..text..newhigh
 			end
 			self:DisplayEvent(INCOMING, "+"..text, texture, self.db.profile["PETI"]);
-		elseif (self:GetTargetUnit(info.source) == "pet" and self.db.profile["PET"] == true) then
+		else
 			if (text < self.db.profile["HFILTER"]) then return end; 
 			if (info.isCrit) then text = critchar..text..critchar end;
 			if (self.db.profile["HEALERID"] == true and info.source ~= ParserLib_SELF) then text = text.." ("..info.source..")" end;
-			if (self:TrackStat(INCOMING, info)) then
+			if (self:TrackStat(OUTGOING, info)) then
 				text = newhigh..text..newhigh
 			end
-			self:DisplayEvent(OUTGOING,  "+"..text, texture, self.db.profile["PETI"])
+			self:DisplayEvent(OUTGOING,  "+"..text, texture, self.db.profile["PETO"])
+		end
+	elseif info.type == "environment" and incoming then
+		self:DisplayEvent(INCOMING, "-"..text, texture, self.db.profile.PETI)
+	elseif info.type == "gain" and incoming and self.db.profile.GAIN then
+		if text >= self.db.profile.MFILTER then
+			self:DisplayEvent(INCOMING, text.." "..(info.attribute or ""), texture, self.db.profile.PETI)
 		end
 	end
 end
 
 function EavesDrop:DisplayEvent(type, text, texture, color)
+	if not self._running then return end
 	--remove oldest table and create new display event
 	local pEvent = tremove(arrEventData, 1);
 	if (self.db.profile["FLIP"] == true) then type = type * -1 end;
 	pEvent.type = type;
 	pEvent.text = text;
 	pEvent.texture = texture;
-	pEvent.color = color;
+	pEvent.color = color or self.db.profile.MISC;
+	local message = self.eventMessage or arg1;
 	if (self.db.profile["TIMESTAMP"] == true) then
-		pEvent.tooltipText = string.format('|cffffffff%s|r\n%s', date('%H:%M:%S'), arg1 or '');
+		pEvent.tooltipText = string.format('|cffffffff%s|r\n%s', date('%H:%M:%S'), message or text or '');
 	else
-		pEvent.tooltipText = arg1;
+		pEvent.tooltipText = message or text;
 	end
 	if pEvent.text == L["StartCombat"] then
 		if pEvent.tooltipText ~= nil then
@@ -555,10 +658,17 @@ function EavesDrop:DisplayEvent(type, text, texture, color)
 		end
 	end
 	tinsert(arrEventData, arrMaxSize, pEvent);
-	self:UpdateEvents();
+	eventCount = math.min(arrMaxSize, eventCount + 1);
+	if readSnapshot then
+		unseenEvents = unseenEvents + 1;
+		self:UpdateReadIndicator(unseenEvents, unseenEvents >= arrMaxSize);
+	else
+		self:UpdateEvents();
+	end
 end
 
 function EavesDrop:UpdateEvents()
+	if not self._running then return end
 	local i, key, value
 	local frame, text, intexture, outexture;
 	local start, finish
@@ -566,12 +676,19 @@ function EavesDrop:UpdateEvents()
 	start = arrMaxSize-scroll;
 	finish = arrMaxSize-arrSize+1-scroll;
 	for i=start,finish,-1 do
-		value = arrEventData[i];
+		value = (readSnapshot or arrEventData)[i];
 		key = i - (arrMaxSize-arrSize) + scroll;
 		frame = getglobal("EavesDropEvent"..key);
 		text = getglobal("EavesDropEvent"..key.."EventText");
 		intexture = getglobal("EavesDropEvent"..key.."IncomingTexture");
 		outtexture = getglobal("EavesDropEvent"..key.."OutgoingTexture");
+		-- XML templates initialize fonts; keep a valid fallback on every path.
+		local fontName = text:GetFont();
+		if not fontName then
+			text:SetFontObject(GameFontNormal);
+			fontName = text:GetFont();
+		end
+		if fontName then text:SetFont(fontName, self.db.profile["TEXTSIZE"]) end
 		if (not value.text) then
 			text:SetText(nil);
 			intexture:SetTexture(nil);
@@ -610,10 +727,8 @@ function EavesDrop:UpdateEvents()
 				intexture:SetTexture(nil);
 				outtexture:SetTexture(nil);
 			end
-			local fontName, _, _ = text:GetFont()
 			text:SetText(value.text);
 			text:SetTextColor(value.color.r, value.color.g, value.color.b);
-			text:SetFont(fontName, self.db.profile["TEXTSIZE"]);
 			frame.delay = delay;
 			frame.alpha = 1;
 			if (self.db.profile["TOOLTIPS"] == true) then
@@ -636,7 +751,7 @@ function EavesDrop:UpdateEvents()
 	self:UpdateScrollButtons()
 	--Start up onUpdate
 	local _, _, run, _, _ = self:MetroStatus("EavesDrop")
-	if (not run) then
+	if (not run) and not readSnapshot then
 		self:StartMetro("EavesDrop");
 	end
 end
@@ -664,6 +779,7 @@ function EavesDrop:ResetEvents()
 end
 
 function EavesDrop:OnUpdate(elapsed)
+	if not self._running or readSnapshot then return end
 	local frame
 	local count = 0;
 	for i=1,arrSize do
@@ -718,31 +834,80 @@ function EavesDrop:Scroll()
   end
 end
 
+function EavesDrop:GetHistoryState()
+	return { reading = readSnapshot ~= nil, unseen = unseenEvents,
+		overflow = unseenEvents >= arrMaxSize, capacity = arrMaxSize,
+		count = eventCount, offset = scroll };
+end
+
+function EavesDrop:ResizeHistory()
+	local limit = tonumber(self.db.profile.HISTORYLIMIT) or 512;
+	limit = math.max(128, math.min(2048, math.floor(limit)));
+	self.db.profile.HISTORYLIMIT = limit;
+	if limit == arrMaxSize then return end
+	while table.getn(arrEventData) > limit do tremove(arrEventData, 1) end
+	while table.getn(arrEventData) < limit do tinsert(arrEventData, 1, {}) end
+	arrMaxSize = limit;
+	eventCount = math.min(eventCount, limit);
+	readSnapshot, readCount = nil, nil;
+	scroll, unseenEvents = 0, 0;
+	if self.UpdateReadIndicator then self:UpdateReadIndicator(0, false) end
+	if self._running then self:UpdateEvents() end
+end
+
+local function MaximumScroll()
+	return math.max(0, (readCount or eventCount) - arrSize);
+end
+
+local function BeginReading()
+	if readSnapshot or eventCount <= arrSize then return end
+	readSnapshot = {};
+	readCount = eventCount;
+	-- Event tables are recycled by the live buffer: copy values, not references.
+	for i = 1, arrMaxSize do
+		local record = {};
+		for key, value in pairs(arrEventData[i]) do record[key] = value end
+		readSnapshot[i] = record;
+	end
+	unseenEvents = 0;
+	EavesDrop:StopMetro("EavesDrop");
+end
+
 function EavesDrop:ScrollToTop()
-	scroll = arrMaxSize-arrSize;
+	BeginReading();
+	scroll = MaximumScroll();
+	self:ShowFrame();
+	self:UpdateReadIndicator(unseenEvents, unseenEvents >= arrMaxSize);
 	self:UpdateScrollButtons();
 	self:UpdateEvents();
 end
 
 function EavesDrop:ScrollToBottom()
-	scroll = 0;
+	readSnapshot, readCount = nil, nil;
+	scroll, unseenEvents = 0, 0;
+	self:UpdateReadIndicator(0, false);
+	self:ShowFrame();
 	self:UpdateScrollButtons();
 	self:UpdateEvents();
 end
 
 function EavesDrop:ScrollUp()
+	BeginReading();
 	scroll = scroll + 1;
-	if (scroll > (arrMaxSize-arrSize)) then
-		scroll = arrMaxSize-arrSize
+	if (scroll > MaximumScroll()) then
+		scroll = MaximumScroll()
 	end;
+	self:ShowFrame();
+	self:UpdateReadIndicator(unseenEvents, unseenEvents >= arrMaxSize);
 	self:UpdateScrollButtons();
 	self:UpdateEvents();
 end
 
 function EavesDrop:ScrollDown()
 	scroll = scroll - 1;
-	if (scroll < 0) then
-		scroll = 0
+	if (scroll <= 0) then
+		self:ScrollToBottom();
+		return
 	end;
 	self:UpdateScrollButtons();
 	self:UpdateEvents();
@@ -752,7 +917,7 @@ function EavesDrop:UpdateScrollButtons()
 	if (self.db.profile["SCROLLBUTTON"] == false) then
 		if (scroll > 0) then
 			EavesDropFrameDownButton:Show();
-			if (scroll == arrMaxSize-arrSize) then
+			if (scroll == MaximumScroll()) then
 				EavesDropFrameUpButton:Hide();
 			else
 			 	EavesDropFrameUpButton:Show();
@@ -783,18 +948,26 @@ local function DewDropOptions()
 end
 
 function EavesDrop:DropMenu()    
-	waterfall:Open('EavesDrop')
+	self:OpenSettings();
 end
 
 function EavesDrop:DewDropMenu() 
-	dewdrop:Open(EavesDropFrame, 'children', DewDropOptions, 'cursorX', true, 'cursorY', true)
+	self:OpenSettings();
+end
+
+function EavesDrop:OpenLegacySettings()
+	if dewdrop.InjectAceOptionsTable then
+		dewdrop:InjectAceOptionsTable(self, self.options);
+	end
+	waterfall:Open('EavesDrop');
 end
 
 -------------------------
 --Return the unit if for a given  target
 function EavesDrop:GetTargetUnit(target)
 	local unit;
-	if (target == "player") then
+	if target == nil then return end
+	if (target == "player" or target == ParserLib_SELF or target == UnitName("player")) then
 		return "player";
 	end
 	if (target == UnitName("pet")) then

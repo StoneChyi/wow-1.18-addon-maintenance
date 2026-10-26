@@ -3,7 +3,7 @@
 ## Title: EavesDrop |cff7fff7f战斗图形事件框v4|r
 ## Notes: A simple combat log that displays events similar to SCT
 ## Notes-ruRU: Простой журнал боевых действий, в котором отображаются события, похожие на SCT
-## Version: 1.4.2
+## Version: 1.4.3-pfUI
 ## Author: Grayhoof, Cabro, laytya
 ## SavedVariables: EavesDropDB
 ## SavedVariablesPerCharacter: EavesDropStatsDB
@@ -11,7 +11,7 @@
 ## X-Website: https://github.com/Cabro/EavesDrop
 ## X-Category: Combat
 ## X-Embeds: Ace2, Babble-2.2, Metrognome, ParserLib, DewdropLib 
-## OptionalDeps: Ace2, Babble-2.2, Metrognome, ParserLib, DewdropLib 
+## OptionalDeps: Ace2, Babble-2.2, Metrognome, ParserLib, DewdropLib, pfUI
 
 libs\Metrognome-2.0\Metrognome-2.0.lua
 libs\ParserLib-1.1\ParserLib.lua
@@ -22,6 +22,8 @@ localization-koKR.lua
 EavesDrop.lua
 EavesDropStats.lua
 options.lua
+enhanced.lua
+ui.lua
 EavesDrop.xml
 
 

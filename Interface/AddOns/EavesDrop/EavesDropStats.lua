@@ -12,7 +12,7 @@ local display_sub_type = "hit";
 ----------------------
 -- append date and time to event
 local function geteventtime(arg1)
-	return string.format('|cffffffff%s|r\n%s', date('%x %I:%M:%S'), arg1 or '');
+	return string.format('|cffffffff%s|r\n%s', date('%x %I:%M:%S'), EavesDrop.eventMessage or arg1 or '');
 end
 
 ----------------------
