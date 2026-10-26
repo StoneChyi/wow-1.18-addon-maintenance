@@ -725,7 +725,7 @@ pfUI:RegisterModule("debuffmonitor", "vanilla:tbc", function()
     pfUI.debuffmonitor.target.name:SetText("|cffffff00减益监控")
     pfUI.debuffmonitor.target.armor:SetText("|cffffff00甲: ") -- 护甲文本
     pfUI.debuffmonitor.target.fire:SetText("|cffFF0000火: ") -- 火焰文本
-    pfUI.debuffmonitor.target.nature:SetText("|cff00FF00毒: ") -- 自然文本
+    pfUI.debuffmonitor.target.nature:SetText("|cff00FF00自: ") -- 自然文本
     pfUI.debuffmonitor.target.frost:SetText("|cff4AE8F5冰: ") -- 冰霜文本
     pfUI.debuffmonitor.target.shadow:SetText("|cff800080暗: ") -- 暗影文本
   end
@@ -792,7 +792,7 @@ pfUI:RegisterModule("debuffmonitor", "vanilla:tbc", function()
       pfUI.debuffmonitor.target.name:SetText(strupper(UnitName(scan_unit))) -- 设置目标名称
       pfUI.debuffmonitor.target.armor:SetText("|cffffff00甲: " .. UnitResistance(scan_unit, 0) or "??") -- 护甲值
       pfUI.debuffmonitor.target.fire:SetText("|cffFF0000火: " .. UnitResistance(scan_unit, 2) or "??") -- 火焰值
-      pfUI.debuffmonitor.target.nature:SetText("|cff00FF00毒: " .. UnitResistance(scan_unit, 3) or "??") -- 自然值
+      pfUI.debuffmonitor.target.nature:SetText("|cff00FF00自: " .. UnitResistance(scan_unit, 3) or "??") -- 自然值
       pfUI.debuffmonitor.target.frost:SetText("|cff4AE8F5冰: " .. UnitResistance(scan_unit, 4) or "??") -- 冰霜值
       pfUI.debuffmonitor.target.shadow:SetText("|cff800080暗: " .. UnitResistance(scan_unit, 5) or "??") -- 暗影值
       pfUI.debuffmonitor.target:Show() -- 显示目标
