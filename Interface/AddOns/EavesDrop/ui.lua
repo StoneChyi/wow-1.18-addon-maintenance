@@ -139,6 +139,11 @@ local function BuildOptions(tab)
       set = function(value) Profile().FRAME.a = value; EavesDrop:ApplySkin() end,
     })
     Add(Range("SETTINGALPHA", "设置面板背景不透明度", 0, 1, .05, function() EavesDrop:ApplySkin() end))
+    Add({ type = "range", name = "战斗窗口 / 历史窗口边框不透明度", min = 0, max = 1, step = .05,
+      get = function() return Profile().BORDER.a or 1 end,
+      set = function(value) Profile().BORDER.a = value; EavesDrop:ApplySkin() end,
+    })
+    Add(Range("SETTINGBORDERALPHA", "设置面板边框不透明度", 0, 1, .05, function() EavesDrop:ApplySkin() end))
     Add(args.lock)
     SortedOptions(args.frame, options)
     -- Keep all the old miscellaneous appearance controls, not only a subset.
@@ -391,7 +396,7 @@ function EavesDrop:UpdateSettings()
   panel.next:SetAlpha(page < pages and 1 or .4)
   panel.pageText:SetText(string.format("%d / %d", page, pages))
   if not panel.confirmReset then
-    panel.notice:SetText("背景不透明度 0% 为透明，100% 为不透明。可通过 /ed 或右键战斗窗口打开设置。")
+    panel.notice:SetText("背景与边框不透明度 0% 为透明，100% 为不透明。可通过 /ed 或右键战斗窗口打开设置。")
   end
   panel.refreshing = nil
 end
@@ -482,7 +487,10 @@ function EavesDrop:ApplySkin()
     reader.caption:SetWidth(reader:GetWidth() - 8)
     reader.caption:SetHeight(16)
   end
-  if panel then Backdrop(panel, .035, .035, .035, profile.SETTINGALPHA or .95) end
+  if panel then
+    Backdrop(panel, .035, .035, .035, profile.SETTINGALPHA or .95)
+    panel:SetBackdropBorderColor(.25, .25, .25, profile.SETTINGBORDERALPHA or 1)
+  end
 end
 
 function EavesDrop:UpdateReadIndicator(count, overflow)

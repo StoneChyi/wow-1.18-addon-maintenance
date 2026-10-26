@@ -406,6 +406,11 @@ class EavesDropCoreTests(unittest.TestCase):
           assert(math.abs(EavesDropFrame.bg[4]-.4)<.0001)
           assert(math.abs(EavesDropHistoryFrame.bg[4]-.4)<.0001)
           assert(math.abs(panel.bg[4]-.25)<.0001 and panel:GetAlpha()==1)
+          panel.rows[3].slider:SetValue(.35); panel.rows[4].slider:SetValue(0)
+          assert(math.abs(EavesDropFrame.border[4]-.35)<.0001)
+          assert(math.abs(EavesDropHistoryFrame.border[4]-.35)<.0001)
+          assert(panel.border[4]==0 and panel:GetAlpha()==1)
+          assert(math.abs(panel.bg[4]-.25)<.0001 and math.abs(EavesDropFrame.bg[4]-.4)<.0001)
 
           invoke(panel.enabled,'OnClick')
           assert(not EavesDrop:IsActive() and not EavesDropFrame:IsShown())

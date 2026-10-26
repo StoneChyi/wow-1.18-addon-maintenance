@@ -9,7 +9,7 @@
     "related_skin_only": 1
   },
   "addon_pages": 107,
-  "dated_records": 189,
+  "dated_records": 190,
   "addons": [
     {
       "addon": "!Libs",
@@ -1105,12 +1105,21 @@
       "addon": "EavesDrop",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/EavesDrop.md",
-      "purpose": "pfUI界面与背景透明度、稳定历史阅读、停用恢复及增强战斗记录适配。",
+      "purpose": "pfUI界面与独立背景/边框透明度、稳定历史阅读、停用恢复及增强战斗记录适配。",
       "latest_record_date": "2026-10-27",
-      "latest_record_title": "修复自动隐藏状态下空窗口被刷新重新显示",
+      "latest_record_title": "新增独立边框不透明度滑块",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "record_count": 3,
       "records": [
+        {
+          "id": "EavesDrop-20261027-02",
+          "date": "2026-10-27",
+          "title": "新增独立边框不透明度滑块",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-EavesDrop-20261027-02"
+        },
         {
           "id": "EavesDrop-20261027-01",
           "date": "2026-10-27",

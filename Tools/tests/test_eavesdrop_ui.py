@@ -179,6 +179,22 @@ panel.rows[2].slider:SetValue(.25)
 assert(math.abs(EavesDrop.db.profile.SETTINGALPHA-.25)<.00001)
 print('PASS transparency endpoints and live sliders preserve control opacity')
 
+-- Border opacity is independent from the backdrop and foreground opacity.
+local mainBg, settingBg=EavesDropFrame.bg[4],panel.bg[4]
+for _,alpha in ipairs({0,.35,1}) do
+ panel.rows[3].slider:SetValue(alpha)
+ panel.rows[4].slider:SetValue(alpha)
+ assert(math.abs(EavesDrop.db.profile.BORDER.a-alpha)<.00001)
+ assert(math.abs(EavesDrop.db.profile.SETTINGBORDERALPHA-alpha)<.00001)
+ assert(math.abs(EavesDropFrame.border[4]-alpha)<.00001 and math.abs(EavesDropHistoryFrame.border[4]-alpha)<.00001)
+ assert(math.abs(panel.border[4]-alpha)<.00001)
+ assert(EavesDropFrame.bg[4]==mainBg and panel.bg[4]==settingBg)
+ assert(panel:GetAlpha()==1 and panel.title:GetAlpha()==1 and panel.enabled:GetAlpha()==1)
+end
+panel:Hide(); EavesDrop:OpenSettings()
+assert(panel.rows[3].slider:GetValue()==1 and panel.rows[4].slider:GetValue()==1)
+print('PASS border opacity endpoints, independent backgrounds and saved control reuse')
+
 historyState.reading=true
 EavesDrop:UpdateReadIndicator(0,false)
 assert(EavesDrop.readIndicator:IsShown(),'empty-unseen reading indicator was hidden')

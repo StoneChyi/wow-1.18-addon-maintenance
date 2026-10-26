@@ -1135,7 +1135,7 @@
       "addon": "EavesDrop",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/EavesDrop.md",
-      "purpose": "pfUI界面与背景透明度、稳定历史阅读、停用恢复及增强战斗记录适配。",
+      "purpose": "pfUI界面与独立背景/边框透明度、稳定历史阅读、停用恢复及增强战斗记录适配。",
       "sources": [
         "PluginHistory/Research/EavesDrop优化-20261026.md"
       ],

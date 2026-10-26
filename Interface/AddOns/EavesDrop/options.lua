@@ -763,6 +763,7 @@ function EavesDrop:GetDefaultConfig()
 		["HISTORY"] = true,
 		["TEXTSIZE"] = 14,
 		["SETTINGALPHA"] = 0.95,
+		["SETTINGBORDERALPHA"] = 1,
 		["HISTORYLIMIT"] = 512,
 		["DATASOURCE"] = "auto",
 	}
