@@ -9,7 +9,7 @@
     "related_skin_only": 1
   },
   "addon_pages": 107,
-  "dated_records": 184,
+  "dated_records": 185,
   "addons": [
     {
       "addon": "!Libs",
@@ -2555,11 +2555,20 @@
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI.md",
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
-      "latest_record_date": "2026-10-25",
-      "latest_record_title": "配套恢复旧个人版 UnitXP 模块",
+      "latest_record_date": "2026-10-26",
+      "latest_record_title": "减益监控不显示排查（未修改代码或设置）",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 15,
+      "record_count": 16,
       "records": [
+        {
+          "id": "pfUI-20261026-01",
+          "date": "2026-10-26",
+          "title": "减益监控不显示排查（未修改代码或设置）",
+          "kind": "差异核对",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261026-01"
+        },
         {
           "id": "pfUI-20261025-04",
           "date": "2026-10-25",

@@ -12,6 +12,7 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
+| [pfUI](pfUI.md) | 2026-10-26 | [减益监控不显示排查（未修改代码或设置）](pfUI.md#change-pfUI-20261026-01) | 待游戏验收 |
 | [XyTracker](XyTracker.md) | 2026-10-25 | [合入共享属性与本次确认的剩余新包更新](XyTracker.md#change-XyTracker-20261025-03) | 待游戏验收 |
 | [WushuangLoot](WushuangLoot.md) | 2026-10-25 | [回退旧 wsloot DLL 与更新前个人使用版](WushuangLoot.md#change-WushuangLoot-20261025-04) | 待游戏验收 |
 | [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-25 | [重建连续材质、保留地貌细节，修复城市／海岸与压缩接界](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261025-02) | 待游戏验收 |
@@ -21,7 +22,6 @@
 | [ShaguDPS](ShaguDPS.md) | 2026-10-25 | [合入共享属性与本次确认的剩余新包更新](ShaguDPS.md#change-ShaguDPS-20261025-03) | 待游戏验收 |
 | [S_ItemTip](S_ItemTip.md) | 2026-10-25 | [合入 10 月 24 日包并保留个人功能（已部署）](S_ItemTip.md#change-S_ItemTip-20261025-02) | 待游戏验收 |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | 2026-10-25 | [配套恢复无双更新前个人皮肤](pfUI-addonskinner.md#change-pfUI-addonskinner-20261025-03) | 待游戏验收 |
-| [pfUI](pfUI.md) | 2026-10-25 | [配套恢复旧个人版 UnitXP 模块](pfUI.md#change-pfUI-20261025-04) | 待游戏验收 |
 | [MySlash](MySlash.md) | 2026-10-25 | [合入 10 月 24 日包并保留个人功能（已部署）](MySlash.md#change-MySlash-20261025-02) | 待游戏验收 |
 | [GoubayuHeal](GoubayuHeal.md) | 2026-10-25 | [合入 10 月 24 日包并保留个人功能（已部署）](GoubayuHeal.md#change-GoubayuHeal-20261025-02) | 待游戏验收 |
 | [EzPoison](EzPoison.md) | 2026-10-25 | [合入 10 月 24 日包并保留个人功能（已部署）](EzPoison.md#change-EzPoison-20261025-02) | 待游戏验收 |
