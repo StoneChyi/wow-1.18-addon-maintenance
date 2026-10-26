@@ -766,15 +766,11 @@ pfUI:RegisterModule("debuffmonitor", "vanilla:tbc", function()
       return
     end
 
+    -- 始终监控当前选中单位：玩家、NPC、自身及友方/中立/敌对目标均适用。
+    -- 不自动跳到目标的目标，避免选中队友时显示另一个单位的减益。
     local scan_unit
-    if UnitIsPlayer("target") then
-      if not UnitIsPlayer("targettarget") and UnitCanAttack("player", "targettarget") then
-        scan_unit = "targettarget" -- 扫描目标的目标
-      end
-    else
-      if UnitCanAttack("player", "target") then
-        scan_unit = "target" -- 扫描当前目标
-      end
+    if UnitExists("target") then
+      scan_unit = "target"
     end
 
     if config.alive == "1" and (scan_unit ~= nil and UnitIsDead(scan_unit) == 1) then
@@ -1133,7 +1129,7 @@ pfUI:RegisterModule("debuffmonitor", "vanilla:tbc", function()
     if msg == "scan" then
       local unit = pfUI.debuffmonitor.target and pfUI.debuffmonitor.target.unit
       if not unit then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff33ffcc[pfdm]|r 无有效扫描目标（先选中怪）")
+        DEFAULT_CHAT_FRAME:AddMessage("|cff33ffcc[pfdm]|r 无有效扫描目标（先选中目标）")
         return
       end
       DEFAULT_CHAT_FRAME:AddMessage("|cff33ffcc[pfdm]|r 扫描目标: " .. tostring(UnitName(unit)))
@@ -1166,7 +1162,7 @@ pfUI:RegisterModule("debuffmonitor", "vanilla:tbc", function()
         end
       end
     else
-      DEFAULT_CHAT_FRAME:AddMessage("|cff33ffcc[pfdm]|r 用法: /pfdm scan（选中怪后扫描其全部光环）")
+      DEFAULT_CHAT_FRAME:AddMessage("|cff33ffcc[pfdm]|r 用法: /pfdm scan（选中目标后扫描其全部光环）")
     end
   end
 end)
