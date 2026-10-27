@@ -93,7 +93,7 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
-| [nampower](nampower.md) | 2026-10-28 | [保存更新前现用 DLL](nampower.md#change-nampower-20261028-01) | 不适用（说明或停用记录） |
+| [nampower](nampower.md) | 2026-10-28 | [更新至发布版 4.6.3](nampower.md#change-nampower-20261028-02) | 待游戏验收 |
 | [VanillaHelpers](VanillaHelpers.md) | 2026-10-25 | [按用户要求回退到仓库旧版](VanillaHelpers.md#change-VanillaHelpers-20261025-01) | 待游戏验收 |
 | [UnitXP_SP3](UnitXP_SP3.md) | 2026-10-25 | [按用户要求恢复此前个人版](UnitXP_SP3.md#change-UnitXP_SP3-20261025-01) | 待游戏验收 |
 | [DXVK](DXVK.md) | 2026-10-25 | [按用户要求回退到仓库旧版](DXVK.md#change-DXVK-20261025-01) | 待游戏验收 |
