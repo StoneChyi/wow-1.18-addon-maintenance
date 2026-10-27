@@ -3152,8 +3152,57 @@
       ]
     }
   ],
-  "runtime_dated_records": 7,
+  "runtime_dated_records": 8,
   "runtime_components": [
+    {
+      "addon": "nampower",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/nampower.md",
+      "purpose": "PSS 候选实际启动触发 ERROR #132，已撤回并恢复旧 DLL；确认 GetThreadContext 错误31，原始卡顿与关联 DLL/配置继续排查。",
+      "latest_record_date": "2026-10-28",
+      "latest_record_title": "保存更新前现用 DLL",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 4,
+      "records": [
+        {
+          "id": "nampower-20261028-01",
+          "date": "2026-10-28",
+          "title": "保存更新前现用 DLL",
+          "kind": "范围确认",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-nampower-20261028-01"
+        },
+        {
+          "id": "nampower-20261025-03",
+          "date": "2026-10-25",
+          "title": "实际启动触发致命异常，撤回候选并恢复旧版",
+          "kind": "修改",
+          "game_acceptance": "用户实测（限本条范围）",
+          "commits": [],
+          "anchor": "change-nampower-20261025-03"
+        },
+        {
+          "id": "nampower-20261025-02",
+          "date": "2026-10-25",
+          "title": "按用户要求替换候选 DLL 供手动启动对照",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-nampower-20261025-02"
+        },
+        {
+          "id": "nampower-20261025-01",
+          "date": "2026-10-25",
+          "title": "实现 PSS 线程枚举候选并保留启动计时与回退",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-nampower-20261025-01"
+        }
+      ],
+      "scope_type": "runtime"
+    },
     {
       "addon": "VanillaHelpers",
       "status": "documented_history",
@@ -3194,46 +3243,6 @@
           "game_acceptance": "待游戏验收",
           "commits": [],
           "anchor": "change-UnitXP_SP3-20261025-01"
-        }
-      ],
-      "scope_type": "runtime"
-    },
-    {
-      "addon": "nampower",
-      "status": "documented_history",
-      "note": "PluginHistory/Plugins/nampower.md",
-      "purpose": "PSS 候选实际启动触发 ERROR #132，已撤回并恢复旧 DLL；确认 GetThreadContext 错误31，原始卡顿与关联 DLL/配置继续排查。",
-      "latest_record_date": "2026-10-25",
-      "latest_record_title": "实际启动触发致命异常，撤回候选并恢复旧版",
-      "latest_game_acceptance": "用户实测（限本条范围）",
-      "record_count": 3,
-      "records": [
-        {
-          "id": "nampower-20261025-03",
-          "date": "2026-10-25",
-          "title": "实际启动触发致命异常，撤回候选并恢复旧版",
-          "kind": "修改",
-          "game_acceptance": "用户实测（限本条范围）",
-          "commits": [],
-          "anchor": "change-nampower-20261025-03"
-        },
-        {
-          "id": "nampower-20261025-02",
-          "date": "2026-10-25",
-          "title": "按用户要求替换候选 DLL 供手动启动对照",
-          "kind": "修改",
-          "game_acceptance": "待游戏验收",
-          "commits": [],
-          "anchor": "change-nampower-20261025-02"
-        },
-        {
-          "id": "nampower-20261025-01",
-          "date": "2026-10-25",
-          "title": "实现 PSS 线程枚举候选并保留启动计时与回退",
-          "kind": "修改",
-          "game_acceptance": "待游戏验收",
-          "commits": [],
-          "anchor": "change-nampower-20261025-01"
         }
       ],
       "scope_type": "runtime"
