@@ -236,6 +236,8 @@ CASES = [
       assert(not EavesDrop:ObserveSummonCombat({type='hit',sourceGUID=lost,amount=-1}))
       assert(not EavesDrop:ObserveSummonCombat({type='hit',sourceGUID=lost,amount=0/0}))
       assert(not EavesDrop:ObserveSummonCombat({type='hit',sourceGUID=lost,amount=math.huge}))
+      local infinity=math.huge;math.huge=nil
+      assert(not EavesDrop:ObserveSummonCombat({type='hit',sourceGUID=lost,amount=infinity}))
       assert(not EavesDrop:ObserveSummonCombat({type='fade',sourceGUID=lost}))
     '''),
     ("future explicit verified spell rules do not use fuzzy matching", r'''

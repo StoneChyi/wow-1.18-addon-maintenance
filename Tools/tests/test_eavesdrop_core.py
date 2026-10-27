@@ -271,6 +271,19 @@ class EavesDropCoreTests(unittest.TestCase):
         lua = runtime(False)
         lua.execute("saved.disabled.Default=true; EavesDropFrame:Show(); EavesDropHistoryFrame:Show(); EavesDrop:OnInitialize(); assert(not EavesDropFrame:IsShown()); assert(not EavesDropHistoryFrame:IsShown()); assert(not EavesDrop:IsActive()); assert(next(parser.clients)==nil)")
 
+    def test_unavailable_enhanced_module_keeps_legacy_and_clean_disable(self):
+        lua = runtime(False)
+        lua.execute(r'''
+          EavesDrop.StartEnhancedEvents=nil; EavesDrop.StopEnhancedEvents=nil; EavesDrop.ShouldSuppressLegacy=nil
+          EavesDrop:OnEnable(); assert(EavesDrop._running and EavesDrop.metroRegistered)
+          EavesDrop:RefreshCombatSources()
+          EavesDrop:RouteCombatEvent({type='hit',source=ParserLib_SELF,victim='Enemy',skill=ParserLib_MELEE,amount=12})
+          assert(EavesDrop:GetHistoryState().count==1)
+          EavesDrop:OnDisable()
+          assert(not EavesDrop._running and not EavesDrop.metroRegistered and not EavesDropFrame:IsShown())
+          assert(next(parser.clients)==nil)
+        ''')
+
     def test_disable_refresh_and_command_reenable(self):
         lua = runtime()
         lua.execute("EavesDrop.command('disable'); assert(not EavesDrop:IsActive()); assert(not EavesDrop._running); EavesDrop:RefreshProfile(); assert(next(parser.clients)==nil); assert(next(EavesDrop.events)==nil); assert(not EavesDropFrame:IsShown()); assert(not EavesDropHistoryFrame:IsShown()); EavesDrop.command(''); assert(EavesDrop.settingsOpened); EavesDrop.command('enable'); assert(EavesDrop:IsActive()); assert(EavesDrop._running); assert(EavesDropFrame:IsShown()); assert(parser.clients.CHAT_MSG_SPELL_PARTY_BUFF)")

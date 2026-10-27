@@ -104,7 +104,7 @@ local function atLeast(major, minor, patch, a, b, c)
 end
 
 local function flag(value, mask)
-  return math.floor((tonumber(value) or 0) / mask) % 2 == 1
+  return math.mod(math.floor((tonumber(value) or 0) / mask), 2) == 1
 end
 
 local function positive(value)

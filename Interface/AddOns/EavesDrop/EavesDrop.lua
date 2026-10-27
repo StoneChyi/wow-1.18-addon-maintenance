@@ -153,7 +153,7 @@ function EavesDrop:OnEnable()
 	
 	--setup metro
 	self:RegisterMetro("EavesDrop", self.OnUpdate, .1, self) 
-	self:StartEnhancedEvents();
+	if self.StartEnhancedEvents then self:StartEnhancedEvents() end
 	if self.StartProcMonitoring then self:StartProcMonitoring() end
 	self:ApplySkin();
 	self:UpdateEvents();
@@ -172,7 +172,7 @@ function EavesDrop:OnDisable()
 	self._running = false;
 	if self.StopCapture then self:StopCapture("监视已停用") end
 	if self.StopProcMonitoring then self:StopProcMonitoring() end
-	self:StopEnhancedEvents();
+	if self.StopEnhancedEvents then self:StopEnhancedEvents() end
 	parser:UnregisterAllEvents("EavesDrop")
 	self:UnregisterAllEvents()
 	self:UnregisterMetro("EavesDrop")
@@ -278,8 +278,8 @@ function EavesDrop:Reset()
 end
 
 function EavesDrop:RefreshCombatSources()
-	self:StopEnhancedEvents();
-	if self._running then self:StartEnhancedEvents() end
+	if self.StopEnhancedEvents then self:StopEnhancedEvents() end
+	if self._running and self.StartEnhancedEvents then self:StartEnhancedEvents() end
 	if self.UpdateSettings then self:UpdateSettings() end
 end
 
@@ -374,7 +374,7 @@ end
 function EavesDrop:RouteCombatEvent(info)
 	local self = EavesDrop;
 	if not self._running or type(info) ~= "table" then return end
-	if not info.enhanced and self:ShouldSuppressLegacy(info) then return end
+	if not info.enhanced and self.ShouldSuppressLegacy and self:ShouldSuppressLegacy(info) then return end
 	local player = info.source == ParserLib_SELF or info.victim == ParserLib_SELF
 		or info.sourceGained == ParserLib_SELF;
 	if info.enhanced and (info.sourceIsTemporary or info.victimIsTemporary) and self.ObserveSummonCombat then

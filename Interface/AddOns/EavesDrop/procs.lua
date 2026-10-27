@@ -170,7 +170,7 @@ function EavesDrop:ObserveSummonCombat(info, passthrough)
   if not enabled("SUMMONWATCH") or type(info) ~= "table" then return false end
   if info.type ~= "hit" and info.type ~= "heal" and info.type ~= "miss" then return false end
   if info.type ~= "miss" and (type(info.amount) ~= "number" or info.amount < 0 or
-      info.amount ~= info.amount or info.amount == math.huge) then return false end
+      info.amount * 0 ~= 0) then return false end
   local ownsSource, sourceLabel, sourceKey = self:IsOwnedTemporarySummon(info.sourceGUID)
   local ownsVictim, victimLabel, victimKey = self:IsOwnedTemporarySummon(info.victimGUID)
   if not ownsSource and not ownsVictim then return false end
