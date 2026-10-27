@@ -3152,8 +3152,52 @@
       ]
     }
   ],
-  "runtime_dated_records": 9,
+  "runtime_dated_records": 11,
   "runtime_components": [
+    {
+      "addon": "weirdperformance",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/weirdperformance.md",
+      "purpose": "按用户要求更新作者独立版 0.6.2 至 0.7.0；游戏验收待确认。",
+      "latest_record_date": "2026-10-28",
+      "latest_record_title": "更新作者版独立 DLL 至 0.7.0",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "weirdperformance-20261028-01",
+          "date": "2026-10-28",
+          "title": "更新作者版独立 DLL 至 0.7.0",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-weirdperformance-20261028-01"
+        }
+      ],
+      "scope_type": "runtime"
+    },
+    {
+      "addon": "transmogfix",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/transmogfix.md",
+      "purpose": "按用户要求更新作者独立版 0.5.0 至 0.7.0；游戏验收待确认。",
+      "latest_record_date": "2026-10-28",
+      "latest_record_title": "更新作者版独立 DLL 至 0.7.0",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "transmogfix-20261028-01",
+          "date": "2026-10-28",
+          "title": "更新作者版独立 DLL 至 0.7.0",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-transmogfix-20261028-01"
+        }
+      ],
+      "scope_type": "runtime"
+    },
     {
       "addon": "nampower",
       "status": "documented_history",

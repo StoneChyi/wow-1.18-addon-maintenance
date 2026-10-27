@@ -2641,6 +2641,26 @@
       "maintenance_files": [
         "corebridge.dll"
       ]
+    },
+    {
+      "addon": "transmogfix",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/transmogfix.md",
+      "purpose": "按用户要求更新作者独立版 0.5.0 至 0.7.0；游戏验收待确认。",
+      "sources": [],
+      "maintenance_files": [
+        "transmogfix.dll"
+      ]
+    },
+    {
+      "addon": "weirdperformance",
+      "status": "documented_history",
+      "note": "PluginHistory/Plugins/weirdperformance.md",
+      "purpose": "按用户要求更新作者独立版 0.6.2 至 0.7.0；游戏验收待确认。",
+      "sources": [],
+      "maintenance_files": [
+        "weirdperformance.dll"
+      ]
     }
   ]
 }

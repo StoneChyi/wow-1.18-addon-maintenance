@@ -93,6 +93,8 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
+| [weirdperformance](weirdperformance.md) | 2026-10-28 | [更新作者版独立 DLL 至 0.7.0](weirdperformance.md#change-weirdperformance-20261028-01) | 待游戏验收 |
+| [transmogfix](transmogfix.md) | 2026-10-28 | [更新作者版独立 DLL 至 0.7.0](transmogfix.md#change-transmogfix-20261028-01) | 待游戏验收 |
 | [nampower](nampower.md) | 2026-10-28 | [更新至发布版 4.6.3](nampower.md#change-nampower-20261028-02) | 待游戏验收 |
 | [VanillaHelpers](VanillaHelpers.md) | 2026-10-25 | [按用户要求回退到仓库旧版](VanillaHelpers.md#change-VanillaHelpers-20261025-01) | 待游戏验收 |
 | [UnitXP_SP3](UnitXP_SP3.md) | 2026-10-25 | [按用户要求恢复此前个人版](UnitXP_SP3.md#change-UnitXP_SP3-20261025-01) | 待游戏验收 |
