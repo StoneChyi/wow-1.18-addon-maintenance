@@ -150,16 +150,21 @@ local function relevant(source, victim)
   local playerGuid, petGuid = unitGuid("player"), unitGuid("pet")
   if not playerGuid then return end
   local pets = EavesDrop.db and EavesDrop.db.profile.PET == true
+  local sourceTemporary, victimTemporary = false, false
+  if EavesDrop.IsOwnedTemporarySummon then
+    if validGuid(source) then sourceTemporary = EavesDrop:IsOwnedTemporarySummon(source) end
+    if validGuid(victim) then victimTemporary = EavesDrop:IsOwnedTemporarySummon(victim) end
+  end
   if source == playerGuid or victim == playerGuid or
-      (pets and petGuid and (source == petGuid or victim == petGuid)) then
-    return playerGuid, petGuid, true
+      (pets and petGuid and (source == petGuid or victim == petGuid)) or sourceTemporary or victimTemporary then
+    return playerGuid, petGuid, true, sourceTemporary, victimTemporary
   end
   return playerGuid, petGuid, false
 end
 
 local function emit(category, info, sourceGuid, victimGuid, spellId, isSpell)
   if not ready(category) then return end
-  local playerGuid, petGuid, isRelevant = relevant(sourceGuid, victimGuid)
+  local playerGuid, petGuid, isRelevant, sourceTemporary, victimTemporary = relevant(sourceGuid, victimGuid)
   if not isRelevant then
     if not playerGuid or (not validGuid(sourceGuid) and not validGuid(victimGuid)) then
       observed[category] = nil
@@ -171,6 +176,7 @@ local function emit(category, info, sourceGuid, victimGuid, spellId, isSpell)
   info.sourceIsPlayer, info.victimIsPlayer = sourceGuid == playerGuid, victimGuid == playerGuid
   info.sourceIsPet = petGuid ~= nil and sourceGuid == petGuid
   info.victimIsPet = petGuid ~= nil and victimGuid == petGuid
+  info.sourceIsTemporary, info.victimIsTemporary = sourceTemporary, victimTemporary
   info.source = displayName(sourceGuid, playerGuid, petGuid)
   info.victim = displayName(victimGuid, playerGuid, petGuid)
   info.spellId = positive(spellId)

@@ -9,7 +9,7 @@
     "related_skin_only": 1
   },
   "addon_pages": 107,
-  "dated_records": 192,
+  "dated_records": 193,
   "addons": [
     {
       "addon": "!Libs",
@@ -1105,12 +1105,21 @@
       "addon": "EavesDrop",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/EavesDrop.md",
-      "purpose": "pfUI界面与独立背景/边框透明度、稳定历史阅读、停用恢复及增强战斗记录适配。",
+      "purpose": "pfUI界面与独立背景/边框透明度、稳定历史阅读、停用恢复、增强日志及装备触发/临时召唤和手动采样。",
       "latest_record_date": "2026-10-27",
-      "latest_record_title": "统一上下滚动、历史入口与返回最新按钮样式",
+      "latest_record_title": "新增装备触发、临时召唤监视及手动事件采样",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 4,
+      "record_count": 5,
       "records": [
+        {
+          "id": "EavesDrop-20261027-04",
+          "date": "2026-10-27",
+          "title": "新增装备触发、临时召唤监视及手动事件采样",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-EavesDrop-20261027-04"
+        },
         {
           "id": "EavesDrop-20261027-03",
           "date": "2026-10-27",

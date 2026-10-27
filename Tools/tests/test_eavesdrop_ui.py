@@ -106,6 +106,13 @@ function EavesDrop:Reset() self.resets=(self.resets or 0)+1 end
 function EavesDrop:ScrollToBottom() historyState.reading=false; self:UpdateReadIndicator(0,false) end
 function EavesDrop:GetHistoryState() return historyState end
 function EavesDrop:GetCombatSourceStatus() return '增强：伤害/治疗；文字：其他' end
+function EavesDrop:RefreshProcMonitoring() self.procRefresh=(self.procRefresh or 0)+1 end
+function EavesDrop:GetProcStatus() return '触发提示 0 次；首次发现 0 个' end
+function EavesDrop:GetProcRecords() return self.sampleProcRecords or {} end
+function EavesDrop:StartCapture() self.captureStarts=(self.captureStarts or 0)+1; self.captureActive=true end
+function EavesDrop:StopCapture() self.captureStops=(self.captureStops or 0)+1; self.captureActive=false end
+function EavesDrop:ClearCapture() self.captureClears=(self.captureClears or 0)+1; self.captureActive=false end
+function EavesDrop:GetCaptureStatus() return self.captureActive and '正在采样' or '采样已停止' end
 for _,name in ipairs({'EavesDropFrame','EavesDropHistoryFrame','EavesDropTab',
  'EavesDropHistoryButton','EavesDropHistoryFrameOutgoingHit','EavesDropHistoryFrameOutgoingHeal',
  'EavesDropHistoryFrameIncomingHit','EavesDropHistoryFrameIncomingHeal','EavesDropHistoryFrameReset',
@@ -148,7 +155,7 @@ local originalColor={.2,.4,.6,.8}
 EavesDropFramePlayerText:SetTextColor(unpack(originalColor))
 -- Visit all pages (and overflow pages): hidden/reused controls must also have fonts.
 for pass=1,2 do
- for tab=1,5 do
+ for tab=1,7 do
   invoke(panel.nav[tab],'OnClick')
   for n=1,4 do
    for _,row in ipairs(panel.rows) do
@@ -246,6 +253,35 @@ assert(EavesDrop.currentProfile=='Healer' and EavesDrop.profileRefresh==1)
 invoke(panel.rows[3].action,'OnClick'); assert(not EavesDrop.resets)
 invoke(panel.rows[3].action,'OnClick'); assert(EavesDrop.resets==1)
 print('PASS source/capacity callbacks, trimmed profile name, reset confirmation')
+
+invoke(panel.nav[6],'OnClick')
+invoke(panel.rows[1].action,'OnClick'); assert(not EavesDrop.db.profile.PROCWATCH)
+invoke(panel.rows[1].action,'OnClick'); assert(EavesDrop.db.profile.PROCWATCH)
+for _,source in ipairs({'native','superwow','floating'}) do
+ invoke(panel.rows[4].action,'OnClick'); assert(EavesDrop.db.profile.PROCSOURCE==source)
+end
+EavesDrop.sampleProcRecords={}
+for i=1,18 do EavesDrop.sampleProcRecords[i]={timestamp='12:34:56',text='record '..i,detail='detail '..i} end
+invoke(panel.rows[7].action,'OnClick')
+local records=EavesDropProcRecordsFrame
+assert(records:IsShown() and records:GetWidth()==610 and string.find(records.rows[1].label.text,'record 18',1,true))
+invoke(records.older,'OnClick'); assert(string.find(records.rows[1].label.text,'record 2',1,true))
+assert(not records.rows[3]:IsShown())
+invoke(records.newer,'OnClick'); assert(string.find(records.rows[1].label.text,'record 18',1,true))
+invoke(records.rows[1],'OnEnter'); assert(GameTooltip.text=='detail 18')
+invoke(records.rows[1],'OnLeave'); assert(not GameTooltip:IsShown())
+local recordCount=table.getn(objects)
+records:Hide(); EavesDrop:OpenProcRecords(); invoke(records.refresh,'OnClick')
+assert(table.getn(objects)==recordCount,'record viewer allocated duplicate controls')
+EavesDrop.db.profile.SETTINGBORDERALPHA=0; EavesDrop:ApplySkin(); assert(records.border[4]==0)
+EavesDrop.sampleProcRecords={}; EavesDrop:RefreshProcRecords(); assert(not records.rows[1]:IsShown())
+invoke(panel.nav[7],'OnClick')
+invoke(panel.rows[1].action,'OnClick'); assert(EavesDrop.captureActive and EavesDrop.captureStarts==1)
+invoke(panel.rows[2].action,'OnClick'); assert(not EavesDrop.captureActive and EavesDrop.captureStops==1)
+invoke(panel.rows[3].action,'OnClick'); assert(EavesDrop.captureClears==1)
+EavesDrop:OpenSettings(6); assert(panel.rows[1].option.name=='装备触发提示')
+EavesDrop:OpenSettings(7); assert(panel.rows[1].option.name=='开始新一轮事件采样')
+print('PASS seven settings tabs, proc source, record paging/reuse/fonts/opacity and capture controls')
 '''
 
 

@@ -6,9 +6,9 @@ local BACKDROP = {
   insets = { left = 1, right = 1, top = 1, bottom = 1 },
 }
 local rowsPerPage = 8
-local panel, reader
+local panel, reader, procPanel
 local selectedTab, page = 1, 1
-local tabs = { "外观", "事件", "颜色", "历史与数据", "配置" }
+local tabs = { "外观", "事件", "颜色", "历史与数据", "配置", "触发与召唤", "事件采样" }
 
 local function Font(text, size)
   -- SetText(nil) also needs a font in 1.12. Keep a known-valid object even
@@ -109,6 +109,13 @@ local function Range(key, name, low, high, step, after)
   }
 end
 
+local function EventColor(key, name)
+  return { type = "color", name = name,
+    get = function() local c = Profile()[key]; return c.r, c.g, c.b end,
+    set = function(r, g, b) local c = Profile()[key]; c.r, c.g, c.b = r, g, b end,
+  }
+end
+
 local function SortedOptions(group, result, prefix)
   if not group or not group.args then return end
   local ordered = {}
@@ -168,7 +175,7 @@ local function BuildOptions(tab)
       if EavesDrop:IsActive() and Profile().HISTORY then EavesDropHistoryFrame:Show() end
     end, desc = "最高数值历史独立保存；滚轮浏览的是本次登录内的战斗记录。" })
     Add({ type = "status", name = "当前数据状态" })
-  else
+  elseif tab == 5 then
     Add({ type = "profile", name = "切换或新建配置文件", desc = "输入配置名后点击应用。配置文件沿用现有 AceDB 数据。" })
     Add({ type = "execute", name = "使用默认配置文件", func = function()
       EavesDrop:SetProfile("Default"); EavesDrop:RefreshProfile()
@@ -186,6 +193,28 @@ local function BuildOptions(tab)
       elseif AceLibrary:HasInstance("Waterfall-1.0") then AceLibrary("Waterfall-1.0"):Open("EavesDrop") end
     end, desc = "保留原版选项与配置文件管理入口，不改变其他插件的菜单。" })
     Add({ type = "status", name = "当前配置文件", profileStatus = true })
+  elseif tab == 6 then
+    local refresh = function() EavesDrop:RefreshProcMonitoring() end
+    Add(Toggle("PROCWATCH", "装备触发提示", "首批识别召唤迷失者；提示施放不等于确认生物已经生成。", refresh))
+    Add(Toggle("SUMMONWATCH", "临时召唤物监视", "仅识别能确认属于自己的迷失者，首次攻击只标记首次发现。", refresh))
+    Add(Toggle("PROCMERGE", "并入战斗事件窗口", "关闭后仍可在最近触发记录中查看。"))
+    Add({ type = "selectprocsource", name = "装备触发提示来源",
+      get = function() return Profile().PROCSOURCE or "floating" end,
+      set = function(value) Profile().PROCSOURCE = value; refresh() end,
+      desc = "浮动信息：默认 1.12 提示；nampower / SuperWoW：独立施法来源。一次只使用一种来源计数，技能可用提示不计召唤次数。",
+    })
+    Add(EventColor("PROCCOLOR", "装备触发提示颜色"))
+    Add(EventColor("SUMMONCOLOR", "临时召唤物记录颜色"))
+    Add({ type = "execute", name = "查看最近触发记录", func = function() EavesDrop:OpenProcRecords() end })
+    Add({ type = "status", name = "本次登录监视状态", wide = true, get = function() return EavesDrop:GetProcStatus() end })
+  else
+    Add({ type = "execute", name = "开始新一轮事件采样", func = function() EavesDrop:StartCapture() end,
+      desc = "手动开启，最多 120 秒或 1000 条；开始新一轮会替换上一轮。仅记录相关战斗事件，结果保存在本机。" })
+    Add({ type = "execute", name = "停止并保留采样", func = function() EavesDrop:StopCapture("手动停止") end })
+    Add({ type = "execute", name = "清除本模块采样", func = function() EavesDrop:ClearCapture() end })
+    Add({ type = "status", name = "当前采样状态", wide = true, get = function() return EavesDrop:GetCaptureStatus() end })
+    Add({ type = "status", name = "测试步骤", wide = true, get = function() return "测试步骤：开始 → 装备套装并触发迷失者 → 让它攻击数次 → 停止。" end })
+    Add({ type = "status", name = "结果保存", wide = true, get = function() return "结果保存：正常退出或 /reload 后写入本机 EavesDrop 设置存档。不会自动上传。" end })
   end
   return options
 end
@@ -235,6 +264,9 @@ local function NewRow(parent, index)
     if option.type == "toggle" then option.set(not option.get())
     elseif option.type == "color" then ChooseColor(option)
     elseif option.type == "selectsource" then option.set(option.get() == "legacy" and "auto" or "legacy")
+    elseif option.type == "selectprocsource" then
+      local sources = { floating = "native", native = "superwow", superwow = "floating" }
+      option.set(sources[option.get()] or "floating")
     elseif option.type == "execute" then option.func() end
     RefreshAfterSet()
   end)
@@ -310,12 +342,12 @@ local function CreateSettings()
   panel.nav = {}
   for i, name in ipairs(tabs) do
     local index = i
-    local button = Button(panel, name, 108, 27, function()
+    local button = Button(panel, name, 76, 27, function()
       selectedTab, page = index, 1
       panel.confirmReset = nil
       EavesDrop:UpdateSettings()
     end)
-    button:SetPoint("TOPLEFT", panel, "TOPLEFT", 18 + (i - 1) * 116, -55)
+    button:SetPoint("TOPLEFT", panel, "TOPLEFT", 18 + (i - 1) * 82, -55)
     panel.nav[i] = button
   end
   panel.subtitle = Text(panel, "", 11)
@@ -349,7 +381,10 @@ function EavesDrop:UpdateSettings()
   for i, button in ipairs(panel.nav) do
     button:SetBackdropBorderColor(i == selectedTab and .35 or .25, i == selectedTab and .8 or .25, i == selectedTab and .7 or .25, 1)
   end
-  panel.subtitle:SetText(selectedTab == 4 and "浏览历史时固定内容；点击窗口底部提示返回最新。" or "修改即时生效，设置随配置文件保存。")
+  local subtitles = { [4] = "浏览历史时固定内容；点击窗口底部提示返回最新。",
+    [6] = "首次发现不等于生成；施法与技能可用提示分开记录。",
+    [7] = "采样默认关闭，达到时间或条数上限自动停止；停用监视也会停止采样。" }
+  panel.subtitle:SetText(subtitles[selectedTab] or "修改即时生效，设置随配置文件保存。")
   for i, row in ipairs(panel.rows) do
     local entry = options[(page - 1) * rowsPerPage + i]
     row.action:Hide(); row.slider:Hide(); row.value:Hide(); row.edit:Hide(); row.apply:Hide(); row.status:Hide()
@@ -376,7 +411,10 @@ function EavesDrop:UpdateSettings()
         row.edit:SetText(self:GetProfile() or "Default")
       elseif option.type == "status" then
         row.status:Show()
-        if option.profileStatus then row.status:SetText(self:GetProfile() or "Default")
+        row.status:SetWidth(option.wide and 570 or 255)
+        if option.wide then row.label:SetText("") end
+        if option.get then row.status:SetText(option.get())
+        elseif option.profileStatus then row.status:SetText(self:GetProfile() or "Default")
         else row.status:SetText(self.GetCombatSourceStatus and self:GetCombatSourceStatus() or "旧文字日志") end
       else
         row.action:Show()
@@ -388,6 +426,9 @@ function EavesDrop:UpdateSettings()
           SetCaption(row.action, "选择颜色")
         elseif option.type == "selectsource" then
           SetCaption(row.action, option.get() == "legacy" and "旧文字日志" or "自动使用增强事件")
+        elseif option.type == "selectprocsource" then
+          local sourceNames = { floating = "默认浮动战斗信息", native = "nampower 施法事件", superwow = "SuperWoW 施法事件" }
+          SetCaption(row.action, sourceNames[option.get()] or "默认浮动战斗信息")
         else SetCaption(row.action, "打开 / 执行") end
       end
     else row:Hide() end
@@ -401,11 +442,95 @@ function EavesDrop:UpdateSettings()
   panel.refreshing = nil
 end
 
-function EavesDrop:OpenSettings()
+function EavesDrop:RefreshCaptureStatus()
+  -- A diagnostic timer must not reset a profile name being edited elsewhere.
+  if panel and panel:IsShown() and selectedTab == 7 then self:UpdateSettings() end
+end
+
+function EavesDrop:OpenSettings(tab)
   CreateSettings()
+  if type(tab) == "number" and tab >= 1 and tab <= table.getn(tabs) then selectedTab, page = tab, 1 end
   self:ApplySkin()
   self:UpdateSettings()
   panel:Show()
+end
+
+function EavesDrop:RefreshProcRecords()
+  if not procPanel then return end
+  local records = self.GetProcRecords and self:GetProcRecords() or {}
+  local count = table.getn(records)
+  local lastPage = math.max(0, math.floor((count - 1) / 16))
+  procPanel.page = math.min(procPanel.page or 0, lastPage)
+  for i, row in ipairs(procPanel.rows) do
+    local record = records[count - procPanel.page * 16 - i + 1]
+    if record then
+      row.label:SetText((record.timestamp or "") .. "  " .. (record.text or record.message or ""))
+      row.tooltipText = record.detail or record.message or record.text
+      row:Show()
+    else
+      row.label:SetText("")
+      row.tooltipText = nil
+      row:Hide()
+    end
+  end
+  procPanel.status:SetText(count == 0 and "尚无记录；穿戴套装后触发一次，再点击刷新。" or
+    string.format("第 %d / %d 页 · 共 %d 条 · 点击刷新查看新记录", procPanel.page + 1, lastPage + 1, count))
+end
+
+function EavesDrop:OpenProcRecords()
+  if not procPanel then
+    procPanel = CreateFrame("Frame", "EavesDropProcRecordsFrame", UIParent)
+    procPanel:Hide()
+    procPanel:SetWidth(610); procPanel:SetHeight(400)
+    procPanel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    procPanel:SetFrameStrata("DIALOG"); procPanel:SetMovable(true); procPanel:EnableMouse(true)
+    procPanel:SetClampedToScreen(true); procPanel:RegisterForDrag("LeftButton")
+    procPanel:SetScript("OnDragStart", function() this:StartMoving() end)
+    procPanel:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
+    procPanel.title = Text(procPanel, "装备触发 / 临时召唤记录", 14)
+    procPanel.title:SetPoint("TOPLEFT", procPanel, "TOPLEFT", 18, -14)
+    procPanel.close = Button(procPanel, "×", 25, 24, function() procPanel:Hide() end)
+    procPanel.close:SetPoint("TOPRIGHT", procPanel, "TOPRIGHT", -10, -10)
+    procPanel.subtitle = Text(procPanel, "触发提示不等于确认生成；首次发现仅代表首次观测。悬停可看来源。", 11)
+    procPanel.subtitle:SetPoint("TOPLEFT", procPanel, "TOPLEFT", 18, -38)
+    procPanel.rows = {}
+    for i = 1, 16 do
+      local row = CreateFrame("Button", nil, procPanel)
+      row:SetWidth(574); row:SetHeight(18)
+      row:SetPoint("TOPLEFT", procPanel, "TOPLEFT", 18, -60 - (i - 1) * 18)
+      row.label = Text(row, "", 11)
+      row.label:SetPoint("LEFT", row, "LEFT", 0, 0)
+      row.label:SetWidth(574); row.label:SetHeight(18); row.label:SetJustifyH("LEFT")
+      row:SetScript("OnEnter", function()
+        if this.tooltipText then
+          GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+          GameTooltip:SetText(this.tooltipText, 1, 1, 1, 1, 1)
+        end
+      end)
+      row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+      procPanel.rows[i] = row
+    end
+    procPanel.older = Button(procPanel, "较早", 65, 24, function()
+      procPanel.page = (procPanel.page or 0) + 1; EavesDrop:RefreshProcRecords()
+    end)
+    procPanel.older:SetPoint("BOTTOMLEFT", procPanel, "BOTTOMLEFT", 18, 12)
+    procPanel.newer = Button(procPanel, "较新", 65, 24, function()
+      procPanel.page = math.max(0, (procPanel.page or 0) - 1); EavesDrop:RefreshProcRecords()
+    end)
+    procPanel.newer:SetPoint("LEFT", procPanel.older, "RIGHT", 5, 0)
+    procPanel.refresh = Button(procPanel, "刷新", 65, 24, function()
+      procPanel.page = 0; EavesDrop:RefreshProcRecords()
+    end)
+    procPanel.refresh:SetPoint("BOTTOMRIGHT", procPanel, "BOTTOMRIGHT", -18, 12)
+    procPanel.status = Text(procPanel, "", 10)
+    procPanel.status:SetPoint("BOTTOM", procPanel, "BOTTOM", 30, 18)
+    procPanel.status:SetWidth(300); procPanel.status:SetJustifyH("CENTER")
+    if UISpecialFrames then table.insert(UISpecialFrames, "EavesDropProcRecordsFrame") end
+  end
+  procPanel.page = 0
+  self:ApplySkin()
+  self:RefreshProcRecords()
+  procPanel:Show()
 end
 
 local function SkinExistingButton(button, isIcon)
@@ -556,6 +681,10 @@ function EavesDrop:ApplySkin()
   if panel then
     Backdrop(panel, .035, .035, .035, profile.SETTINGALPHA or .95)
     panel:SetBackdropBorderColor(.25, .25, .25, profile.SETTINGBORDERALPHA or 1)
+  end
+  if procPanel then
+    Backdrop(procPanel, .035, .035, .035, profile.SETTINGALPHA or .95)
+    procPanel:SetBackdropBorderColor(.25, .25, .25, profile.SETTINGBORDERALPHA or 1)
   end
 end
 

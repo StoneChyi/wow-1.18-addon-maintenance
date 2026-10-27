@@ -113,6 +113,13 @@ function EavesDrop:OnInitialize()
 		if message == "enable" then EavesDrop:ToggleActive(true)
 		elseif message == "disable" then EavesDrop:ToggleActive(false)
 		elseif message == "legacy" then EavesDrop:OpenLegacySettings()
+		elseif message == "procs" then EavesDrop:OpenSettings(6)
+		elseif message == "capture" then EavesDrop:OpenSettings(7)
+		elseif message == "capture start" then EavesDrop:StartCapture()
+		elseif message == "capture stop" then EavesDrop:StopCapture("手动停止")
+		elseif message == "capture clear" then EavesDrop:ClearCapture()
+		elseif message == "capture status" then
+			if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("EavesDrop: "..EavesDrop:GetCaptureStatus()) end
 		else EavesDrop:OpenSettings() end
 	end)
 	
@@ -147,6 +154,7 @@ function EavesDrop:OnEnable()
 	--setup metro
 	self:RegisterMetro("EavesDrop", self.OnUpdate, .1, self) 
 	self:StartEnhancedEvents();
+	if self.StartProcMonitoring then self:StartProcMonitoring() end
 	self:ApplySkin();
 	self:UpdateEvents();
 	
@@ -162,6 +170,8 @@ end
 
 function EavesDrop:OnDisable()
 	self._running = false;
+	if self.StopCapture then self:StopCapture("监视已停用") end
+	if self.StopProcMonitoring then self:StopProcMonitoring() end
 	self:StopEnhancedEvents();
 	parser:UnregisterAllEvents("EavesDrop")
 	self:UnregisterAllEvents()
@@ -281,6 +291,7 @@ end
 function EavesDrop:RefreshProfile()
 	self:ResizeHistory();
 	self:RefreshCombatSources();
+	if self.RefreshProcMonitoring then self:RefreshProcMonitoring() end
 	self:UpdateExpEvents();
 	self:UpdateRepEvents();
 	self:UpdateHonorEvents();
@@ -366,6 +377,9 @@ function EavesDrop:RouteCombatEvent(info)
 	if not info.enhanced and self:ShouldSuppressLegacy(info) then return end
 	local player = info.source == ParserLib_SELF or info.victim == ParserLib_SELF
 		or info.sourceGained == ParserLib_SELF;
+	if info.enhanced and (info.sourceIsTemporary or info.victimIsTemporary) and self.ObserveSummonCombat then
+		if self:ObserveSummonCombat(info, player) then return end
+	end
 	local pet;
 	if info.enhanced then
 		pet = info.sourceIsPet or info.victimIsPet;

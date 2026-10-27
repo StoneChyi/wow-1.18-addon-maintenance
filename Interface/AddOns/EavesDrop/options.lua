@@ -766,6 +766,12 @@ function EavesDrop:GetDefaultConfig()
 		["SETTINGBORDERALPHA"] = 1,
 		["HISTORYLIMIT"] = 512,
 		["DATASOURCE"] = "auto",
+		["PROCWATCH"] = true,
+		["SUMMONWATCH"] = true,
+		["PROCMERGE"] = true,
+		["PROCSOURCE"] = "floating",
+		["PROCCOLOR"] = {r = 0.35, g = 0.8, b = 0.7, a = 1},
+		["SUMMONCOLOR"] = {r = 0.65, g = 0.6, b = 1, a = 1},
 	}
 	return default
 end

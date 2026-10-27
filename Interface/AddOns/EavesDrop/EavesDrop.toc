@@ -5,7 +5,7 @@
 ## Notes-ruRU: Простой журнал боевых действий, в котором отображаются события, похожие на SCT
 ## Version: 1.4.3-pfUI
 ## Author: Grayhoof, Cabro, laytya
-## SavedVariables: EavesDropDB
+## SavedVariables: EavesDropDB, EavesDropCaptureDB
 ## SavedVariablesPerCharacter: EavesDropStatsDB
 ## X-Email: laytya@gmail.com
 ## X-Website: https://github.com/Cabro/EavesDrop
@@ -23,6 +23,8 @@ EavesDrop.lua
 EavesDropStats.lua
 options.lua
 enhanced.lua
+procs.lua
+diagnostics.lua
 ui.lua
 EavesDrop.xml
 
