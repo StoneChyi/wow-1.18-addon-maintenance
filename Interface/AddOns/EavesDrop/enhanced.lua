@@ -16,7 +16,6 @@ local status = "文字战斗日志"
 local originalSetCVar, cvarObserver
 local cvarAttached, monitorCVars = false, false
 local zeroGuid = "0x0000000000000000"
-local questionMark = "Interface\\Icons\\INV_Misc_QuestionMark"
 local categoryCVars = {
   melee = "NP_EnableAutoAttackEvents",
   heal = "NP_EnableSpellHealEvents",
@@ -136,7 +135,7 @@ local function spellInfo(id)
     name = name or n
     texture = texture or t
   end
-  return name or ("#" .. id), texture or questionMark
+  return name or ("#" .. id), texture
 end
 
 local function displayName(guid, playerGuid, petGuid)

@@ -9,7 +9,7 @@
     "related_skin_only": 1
   },
   "addon_pages": 107,
-  "dated_records": 194,
+  "dated_records": 195,
   "addons": [
     {
       "addon": "!Libs",
@@ -1107,10 +1107,19 @@
       "note": "PluginHistory/Plugins/EavesDrop.md",
       "purpose": "pfUI界面与独立背景/边框透明度、稳定历史阅读、停用恢复、增强日志及装备触发/临时召唤和手动采样。",
       "latest_record_date": "2026-10-27",
-      "latest_record_title": "修复旧客户端增强模块语法错误及启停连锁报错",
+      "latest_record_title": "补充法术、增益与减益图标查找",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 6,
+      "record_count": 7,
       "records": [
+        {
+          "id": "EavesDrop-20261027-06",
+          "date": "2026-10-27",
+          "title": "补充法术、增益与减益图标查找",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-EavesDrop-20261027-06"
+        },
         {
           "id": "EavesDrop-20261027-05",
           "date": "2026-10-27",

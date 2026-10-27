@@ -28,7 +28,7 @@ end
 
 ----------------------
 -- track highest stats
-function EavesDrop:TrackStat(type, info)
+function EavesDrop:TrackStat(type, info, resolvedTexture)
 	-- if its not enabled
 	if self.db.profile["HISTORY"] == false then
 		return false;
@@ -68,6 +68,11 @@ function EavesDrop:TrackStat(type, info)
 	if ((self.db.char.Stats[type][info.type][key][critkey].amount == nil) or (info.amount > self.db.char.Stats[type][info.type][key][critkey].amount)) then
 		self.db.char.Stats[type][info.type][key][critkey].amount = info.amount;
 		self.db.char.Stats[type][info.type][key][critkey].time = geteventtime(arg1);
+		-- Incoming damage keys are schools, not skills; do not attach one spell's
+		-- icon to all damage in that school. Old saved entries need no migration.
+		if ((type == OUTGOING) or (info.type == "heal")) and self.ResolveSpellIcon then
+			self.db.char.Stats[type][info.type][key][critkey].texture = self:ResolveSpellIcon(info.skill, resolvedTexture or info.texture, info.spellId, false)
+		end
 		self:ScrollBar_Update()
 		return true;
 	end
@@ -106,7 +111,12 @@ function EavesDrop:ScrollBar_Update()
 			for j=2,idx do
 				k,key = next(sort_table, k)
 			end
-			texturestr = BS:GetSpellIcon(key);
+			if self.ResolveSpellIcon then
+				local normal, critical = current_table[key][NONCRIT], current_table[key][CRIT]
+				texturestr = self:ResolveSpellIcon(key, normal.texture or critical.texture, nil, self.db.profile.PLACEHOLDER == true)
+			else
+				texturestr = BS:GetSpellIcon(key);
+			end
 			texture:SetTexture(texturestr);
 			texture:SetTexCoord(.1,.9,.1,.9);
 			skill:SetText(key);

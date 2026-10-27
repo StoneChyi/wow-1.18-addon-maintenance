@@ -223,10 +223,10 @@ CASES = [
       assert(not EavesDrop:ShouldSuppressLegacy({type='hit',skill='UnknownSpell'}))
       assert(EavesDrop.enhancedCategories.heal)
     '''),
-    ("missing name/icon retain a spell-ID placeholder", r'''
+    ("missing name/icon retain ID for later icon fallback", r'''
       GetSpellRecField=nil
       send('SPELL_DAMAGE_EVENT_SELF',enemy,player,42,5,'0,0,0',0,5,'0,0,0,3')
-      assert(last().skill=='#42' and last().texture=='Interface\\Icons\\INV_Misc_QuestionMark')
+      assert(last().skill=='#42' and last().texture==nil)
     '''),
     ("legacy 1.12 global event dispatch", r'''
       event='SPELL_DAMAGE_EVENT_OTHER'; arg1=player; arg2=enemy; arg3=42; arg4=10

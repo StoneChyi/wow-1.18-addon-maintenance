@@ -403,7 +403,9 @@ function EavesDrop:CombatEvent(info)
 	local text = info.amount
 	local self = EavesDrop;
 	local texture = info.texture;
-	if not texture and (info.skill and type(info.skill) ~= "number") then
+	if self.ResolveSpellIcon then
+		texture = self:ResolveSpellIcon(info.skill, texture, info.spellId, self.db.profile["PLACEHOLDER"] == true)
+	elseif not texture and (info.skill and type(info.skill) ~= "number") then
 		texture = BS:GetSpellIcon(info.skill);
 		if (texture == nil and self.db.profile["PLACEHOLDER"] == true) then 
 			texture = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -419,24 +421,24 @@ function EavesDrop:CombatEvent(info)
 		if (info.source == ParserLib_SELF or info.victim == ParserLib_SELF) then
 			if info.skill == ParserLib_MELEE then
 				if info.source == ParserLib_SELF then
-					if (self:TrackStat(OUTGOING, info)) then
+					if (self:TrackStat(OUTGOING, info, texture)) then
 						text = newhigh..text..newhigh
 					end
 					self:DisplayEvent(OUTGOING, text, texture, self.db.profile["TMELEE"])
 				elseif info.victim == ParserLib_SELF then
-					if (self:TrackStat(INCOMING, info)) then
+					if (self:TrackStat(INCOMING, info, texture)) then
 						text = newhigh..text..newhigh
 					end
 					self:DisplayEvent(INCOMING, "-"..text, texture, self.db.profile["PHIT"])
 				end
 			else
 				if info.source == ParserLib_SELF and info.victim ~= ParserLib_SELF then
-					if (self:TrackStat(OUTGOING, info)) then
+					if (self:TrackStat(OUTGOING, info, texture)) then
 						text = newhigh..text..newhigh
 					end
 					self:DisplayEvent(OUTGOING, text, texture, self:SpellColor(self.db.profile["TSPELL"], info.element))
 				elseif info.victim == ParserLib_SELF then
-					if (self:TrackStat(INCOMING, info)) then
+					if (self:TrackStat(INCOMING, info, texture)) then
 						text = newhigh..text..newhigh
 					end
 					self:DisplayEvent(INCOMING, "-"..text, texture, self:SpellColor(self.db.profile["PSPELL"], info.element))
@@ -468,7 +470,7 @@ function EavesDrop:CombatEvent(info)
 		if IsHealth(info.attributeGained) then
 			if info.sourceGained == ParserLib_SELF then
 				if (text < self.db.profile["HFILTER"]) then return end; 
-				if (self:TrackStat(INCOMING, info)) then
+				if (self:TrackStat(INCOMING, info, texture)) then
 					text = newhigh..text..newhigh
 				end
 				self:DisplayEvent(INCOMING, "+"..text, texture, self.db.profile["PHEAL"])
@@ -479,7 +481,7 @@ function EavesDrop:CombatEvent(info)
 			if (text < self.db.profile["HFILTER"]) then return end; 
 			if (info.isCrit) then text = critchar..text..critchar end;
 			if (self.db.profile["HEALERID"] == true and info.source ~= ParserLib_SELF) then text = text.." ("..info.source..")" end;
-			if (self:TrackStat(INCOMING, info)) then
+			if (self:TrackStat(INCOMING, info, texture)) then
 				text = newhigh..text..newhigh
 			end
 			self:DisplayEvent(INCOMING, "+"..text, texture, self.db.profile["PHEAL"]);
@@ -491,7 +493,7 @@ function EavesDrop:CombatEvent(info)
 			if (info.isCrit) then text = critchar..text..critchar end;
 			text = "+"..text;
 			if (self.db.profile["HEALERID"] == true) then text = info.victim..": "..text end;
-			if (self:TrackStat(OUTGOING, info)) then
+			if (self:TrackStat(OUTGOING, info, texture)) then
 				text = newhigh..text..newhigh
 			end
 			self:DisplayEvent(OUTGOING, text, texture, self.db.profile["THEAL"])
@@ -579,14 +581,15 @@ function EavesDrop:CombatPetOutEvent(info)
 	local text = info.amount
 	local self = EavesDrop;
 	local texture = info.texture;
-	if not texture and (info.skill and type(info.skill) ~= "number") then
+	if self.ResolveSpellIcon then
+		texture = self:ResolveSpellIcon(info.skill, texture, info.spellId, self.db.profile["PLACEHOLDER"] == true)
+	elseif not texture and (info.skill and type(info.skill) ~= "number") then
 		texture = BS:GetSpellIcon(info.skill);
 		if (texture == nil and self.db.profile["PLACEHOLDER"] == true) then 
 			texture = "Interface\\Icons\\INV_Misc_QuestionMark"
 		end
-	elseif not texture then
-		texture = "pet"
 	end
+	if not texture and (not info.skill or type(info.skill) == "number") then texture = "pet" end
 	if info.type == "hit" then
 			if (info.isCrit) then text = critchar..text..critchar end;
 			if (info.isCrushing) then text = crushchar..text..crushchar end;
@@ -613,7 +616,7 @@ function EavesDrop:CombatPetOutEvent(info)
 			if (text < self.db.profile["HFILTER"]) then return end; 
 			if (info.isCrit) then text = critchar..text..critchar end;
 			if (self.db.profile["HEALERID"] == true and info.source ~= ParserLib_SELF) then text = text.." ("..info.source..")" end;
-			if (self:TrackStat(INCOMING, info)) then
+			if (self:TrackStat(INCOMING, info, texture)) then
 				text = newhigh..text..newhigh
 			end
 			self:DisplayEvent(INCOMING, "+"..text, texture, self.db.profile["PETI"]);
@@ -621,7 +624,7 @@ function EavesDrop:CombatPetOutEvent(info)
 			if (text < self.db.profile["HFILTER"]) then return end; 
 			if (info.isCrit) then text = critchar..text..critchar end;
 			if (self.db.profile["HEALERID"] == true and info.source ~= ParserLib_SELF) then text = text.." ("..info.source..")" end;
-			if (self:TrackStat(OUTGOING, info)) then
+			if (self:TrackStat(OUTGOING, info, texture)) then
 				text = newhigh..text..newhigh
 			end
 			self:DisplayEvent(OUTGOING,  "+"..text, texture, self.db.profile["PETO"])
@@ -738,7 +741,9 @@ function EavesDrop:UpdateEvents()
 				text:SetJustifyH("CENTER");
 				text:SetWidth((self.db.profile["LINEHEIGHT"] * 2) + (self.db.profile["LINEWIDTH"]-10));
 				text:SetPoint("LEFT", intexture, "LEFT", 0, 0);
-				intexture:SetTexture(nil);
+				intexture:SetTexCoord(.1,.9,.1,.9);
+				if value.texture == "pet" then SetPortraitTexture(intexture, "pet")
+				else intexture:SetTexture(value.texture) end
 				outtexture:SetTexture(nil);
 			end
 			text:SetText(value.text);

@@ -22,6 +22,7 @@ localization-koKR.lua
 EavesDrop.lua
 EavesDropStats.lua
 options.lua
+icons.lua
 enhanced.lua
 procs.lua
 diagnostics.lua

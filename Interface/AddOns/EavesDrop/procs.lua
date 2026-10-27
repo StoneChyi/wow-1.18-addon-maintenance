@@ -97,6 +97,9 @@ local function unitRule(guid)
 end
 
 local function publish(record)
+  if record.skill and EavesDrop.ResolveSpellIcon then
+    record.texture = EavesDrop:ResolveSpellIcon(record.skill, record.texture, record.spellId, EavesDrop.db.profile.PLACEHOLDER == true)
+  end
   record.time = now()
   record.timestamp = date and date("%H:%M:%S") or tostring(record.time)
   record.detail = record.detail or record.message or record.text
@@ -195,14 +198,14 @@ function EavesDrop:ObserveSummonCombat(info, passthrough)
     guid = incoming and info.victimGUID or info.sourceGUID, amount = info.amount,
     combatType = info.type, direction = incoming and -1 or 1,
     merge = not passthrough,
-    text = "[" .. label .. "] " .. text, texture = info.texture,
+    text = "[" .. label .. "] " .. text, texture = info.texture, skill = info.skill,
     message = info.message or ("已确认归属的" .. label .. "：" .. text) })
   return not passthrough
 end
 
 local function trigger(rule, key, name, id, evidence)
   stats.triggers = stats.triggers + 1
-  publish({ kind = "proc", evidence = evidence, rule = key, spellId = tonumber(id),
+  publish({ kind = "proc", evidence = evidence, rule = key, spellId = tonumber(id), skill = name,
     text = "[" .. rule.label .. "] 召唤触发",
     message = "来源：" .. evidence .. "；" .. (name or "已核实技能") ..
       "。记录施法/触发提示，不据此认定单位已生成。" })
@@ -218,7 +221,7 @@ function EavesDrop:HandleProcEvent(eventName, a1, a2, a3, a4)
     elseif a1 == "SPELL_ACTIVE" then
       -- Original CombatText calls this a reactive/available-skill message.
       stats.available = stats.available + 1
-      publish({ kind = "proc", evidence = "available", rule = key,
+      publish({ kind = "proc", evidence = "available", rule = key, skill = a2,
         text = "[" .. rule.label .. "] 技能可用提示",
         message = (a2 or "") .. "：SPELL_ACTIVE 只表示技能变为可用，不计入召唤触发次数。" })
     end

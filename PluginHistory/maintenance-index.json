@@ -1148,6 +1148,7 @@
         "Interface/AddOns/EavesDrop/options.lua",
         "Interface/AddOns/EavesDrop/ui.lua",
         "Interface/AddOns/EavesDrop/enhanced.lua",
+        "Interface/AddOns/EavesDrop/icons.lua",
         "Interface/AddOns/EavesDrop/procs.lua",
         "Interface/AddOns/EavesDrop/diagnostics.lua"
       ],

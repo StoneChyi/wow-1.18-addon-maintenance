@@ -52,13 +52,68 @@ def full_runtime():
     lua = runtime()
     lua.execute(INTEGRATION)
     lua.execute(SETUP)
-    for name in ('enhanced.lua', 'procs.lua', 'diagnostics.lua', 'ui.lua'):
+    for name in ('icons.lua', 'enhanced.lua', 'procs.lua', 'diagnostics.lua', 'ui.lua'):
         lua.execute((ADDON / name).read_text(encoding='utf-8-sig'))
     lua.execute('EavesDrop:RefreshCombatSources(); EavesDrop:StartProcMonitoring(); EavesDrop:ApplySkin()')
     return lua
 
 
 class EavesDropModuleTests(unittest.TestCase):
+    def test_legacy_buffs_debuffs_and_late_icon_provider(self):
+        lua = full_runtime()
+        lua.execute(r'''
+          AceLibrary('Babble-Spell-2.2').GetSpellIcon=function()return nil end
+          EavesDrop.db.profile.BUFF=true; EavesDrop.db.profile.DEBUFF=true; EavesDrop.db.profile.FADE=true
+          local info={type='buff',victim=ParserLib_SELF,skill='测试光环'}
+          EavesDrop:RouteCombatEvent(info)
+          assert(EavesDropEvent10IncomingTexture.texture==nil)
+          DPSMateX={BabbleSpellX={GetSpellIcon=function(self,name)
+            if name=='测试光环' then return 'Interface\\Icons\\TestAura' end
+          end}}
+          for _,kind in ipairs({'buff','debuff','fade'}) do
+            EavesDrop:RouteCombatEvent({type=kind,victim=ParserLib_SELF,skill='测试光环'})
+            assert(EavesDropEvent10IncomingTexture.texture=='Interface\\Icons\\TestAura')
+          end
+          EavesDrop.db.profile.PLACEHOLDER=true
+          EavesDrop:RouteCombatEvent({type='buff',victim=ParserLib_SELF,skill='未知光环'})
+          assert(EavesDropEvent10IncomingTexture.texture=='Interface\\Icons\\INV_Misc_QuestionMark')
+        ''')
+
+    def test_unknown_enhanced_icon_uses_name_and_high_record_retains_texture(self):
+        lua = full_runtime()
+        lua.execute(r'''
+          AceLibrary('Babble-Spell-2.2').GetSpellIcon=function()return nil end
+          local original=GetSpellRecField
+          function GetSpellRecField(id,key)
+            if id==42 and key=='spellIconID' then return 0 end
+            return original(id,key)
+          end
+          DPSMateX={BabbleSpellX={GetSpellIcon=function(self,name)
+            if name=='Spell42' then return 'Interface\\Icons\\KnownSpell' end
+          end}}
+          native('SPELL_DAMAGE_EVENT_SELF',enemyGuid,playerGuid,42,33,'0,0,0',0,5,'0,0,0,3')
+          assert(EavesDropEvent10OutgoingTexture.texture=='Interface\\Icons\\KnownSpell')
+          assert(EavesDrop.db.char.Stats[1].hit.Spell42[-2].texture=='Interface\\Icons\\KnownSpell')
+          DPSMateX=nil
+          EavesDrop:SetDisplay(1,'hit')
+          assert(EavesDropHistoryEvent1_Texture.texture=='Interface\\Icons\\KnownSpell')
+          EavesDrop:RouteCombatEvent({type='hit',source='Enemy',victim=ParserLib_SELF,
+            skill='Spell42',element='Fire',amount=11,texture='Interface\\Icons\\KnownSpell',enhanced=true})
+          assert(EavesDrop.db.char.Stats[-1].hit.Fire[-2].texture==nil)
+        ''')
+
+    def test_proc_notification_uses_named_icon(self):
+        lua = full_runtime()
+        lua.execute(r'''
+          AceLibrary('Babble-Spell-2.2').GetSpellIcon=function()return nil end
+          DPSMateX={BabbleSpellX={GetSpellIcon=function(self,name)
+            if name=='召唤迷失者' then return 'Interface\\Icons\\Spell_Shadow_RaiseDead' end
+          end}}
+          floating('SPELL_CAST','召唤迷失者')
+          assert(EavesDrop:GetProcRecords()[1].texture=='Interface\\Icons\\Spell_Shadow_RaiseDead')
+          assert(EavesDropEvent10IncomingTexture.texture=='Interface\\Icons\\Spell_Shadow_RaiseDead')
+        ''')
+
     def test_floating_available_and_cast_stay_distinct_in_records_and_sample(self):
         lua = full_runtime()
         lua.execute(r'''
