@@ -9,7 +9,7 @@
     "related_skin_only": 1
   },
   "addon_pages": 107,
-  "dated_records": 195,
+  "dated_records": 196,
   "addons": [
     {
       "addon": "!Libs",
@@ -2224,12 +2224,22 @@
       "addon": "TianYan",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/TianYan.md",
-      "purpose": "让怪物数量和战斗平均值更可靠。",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "purpose": "2.1.0 已拆分发现模块，接入迷失者真实施法/攻击事件，保留当前数量、均值、历史最高及紧凑界面。离线回归与 Lua 5.0 编译通过，待游戏验收。",
+      "latest_record_date": "2026-10-28",
+      "latest_record_title": "重构无姓名板召唤物发现与事件统计链路",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "TianYan-20261028-01",
+          "date": "2026-10-28",
+          "title": "重构无姓名板召唤物发现与事件统计链路",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-TianYan-20261028-01"
+        }
+      ]
     },
     {
       "addon": "Tmog",

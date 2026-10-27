@@ -12,6 +12,7 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
+| [TianYan](TianYan.md) | 2026-10-28 | [重构无姓名板召唤物发现与事件统计链路](TianYan.md#change-TianYan-20261028-01) | 待游戏验收 |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | 2026-10-27 | [修复单击误选最近目标并增加图标双击标记](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261027-01) | 待游戏验收 |
 | [EavesDrop](EavesDrop.md) | 2026-10-27 | [补充法术、增益与减益图标查找](EavesDrop.md#change-EavesDrop-20261027-06) | 待游戏验收 |
 | [pfUI](pfUI.md) | 2026-10-26 | [减益监控支持所有当前选中目标](pfUI.md#change-pfUI-20261026-03) | 待游戏验收 |
@@ -56,7 +57,6 @@
 | [NotGrid](NotGrid.md) | 2026-10-10 | [修复治疗祷言预估条残留](NotGrid.md#change-NotGrid-20261010-01) | 待游戏验收 |
 | [HideOutdoorWorldState](HideOutdoorWorldState.md) | 2026-10-10 | [用户确认主动删除并停用](HideOutdoorWorldState.md#change-HideOutdoorWorldState-20261010-01) | 不适用（说明或停用记录） |
 | [WIM](WIM.md) | 日期待确认 | 保持私聊界面可见，同时避免收到消息抢按键。 | 见早期记录 |
-| [TianYan](TianYan.md) | 日期待确认 | 让怪物数量和战斗平均值更可靠。 | 见早期记录 |
 | [TankBuddyEnh](TankBuddyEnh.md) | 日期待确认 | 完善坦克公告开关、技能识别及设置界面。 | 见早期记录 |
 | [SpecialTalent](SpecialTalent.md) | 日期待确认 | 修复天赋方案翻页、拖动和 ESC 关闭。 | 见早期记录 |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | 日期待确认 | 让材质可见、可预览并容易应用。 | 见早期记录 |

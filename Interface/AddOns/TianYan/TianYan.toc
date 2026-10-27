@@ -2,7 +2,8 @@
 ## Title: TianYan
 ## Notes: Summon tracker with history records
 ## Author: zaomao
-## Version: 2.0
+## Version: 2.1.0
 ## SavedVariablesPerCharacter: TY_DB
 
+Tracker.lua
 TianYan.lua

@@ -1,280 +1,13 @@
--- ========== TianYan: Summon tracker with history records ==========
-
-local TY = {}
-TY.summonCache = {}
-local bar = nil
-local lines = {}
-local values = {}
-
-local scanTip = nil
-local function initScanTip()
-	if not scanTip then
-		scanTip = CreateFrame("GameTooltip", "TYScanTip", UIParent, "GameTooltipTemplate")
-		scanTip:SetOwner(UIParent, "ANCHOR_NONE")
-	end
-end
-
-local EXCLUDE_NAMES = {
-	"疲倦的骡子",
-	"修理机器人75B型",
-	"拍卖师德雷兹比特",
-	"车队科多兽",
-	"机械拍卖师",
-}
-
-local function isExcluded(unitName)
-	if not unitName then return false end
-	for _, excl in ipairs(EXCLUDE_NAMES) do
-		if string.find(unitName, excl) then return true end
-	end
-	return false
-end
-
--- GUIDs identify real units; temporary entries are keyed by the frame object.
+-- TianYan UI and time-weighted combat statistics; discovery lives in Tracker.lua.
+local tracker = TianYanTracker
+local bar, lines, values = nil, {}, {}
 local SCAN_INTERVAL = 0.3
-local UNKNOWN_GRACE = 0.9
-local OWNER_CACHE_TIME = 2
-local temporary = {}
-local ownerCache = {}
-local deadUntil = {}
-local playerName, playerGuid
-local diagnostics = { scans = 0, tooltips = 0, events = 0 }
 local lastCount, lastGroups, lastUncertain = 0, {}, 0
-
-local function safeCall(fn, unit)
-    if type(fn) ~= "function" then return nil end
-    local ok, result = pcall(fn, unit)
-    if ok then return result end
-    return nil
-end
-
-local function validGuid(guid)
-    return type(guid) == "string" and guid ~= "" and
-        not string.find(guid, "^0x0+$")
-end
-
-local function getGuid(unit)
-    local guid = safeCall(GetUnitGUID, unit) or safeCall(UnitGUID, unit)
-    if validGuid(guid) then return guid end
-    if unit and type(UnitExists) == "function" then
-        local ok, exists, fallback = pcall(UnitExists, unit)
-        if ok and exists and validGuid(fallback) then return fallback end
-    end
-    return nil
-end
-
-local function cleanText(text)
-    if type(text) ~= "string" then return nil end
-    text = string.gsub(text, "|c%x%x%x%x%x%x%x%x", "")
-    text = string.gsub(text, "|r", "")
-    text = string.gsub(text, "^%s+", "")
-    return string.gsub(text, "%s+$", "")
-end
-
-local function ownerTextMatches(text)
-    text = cleanText(text)
-    if not text or not playerName or playerName == "" then return false end
-    -- Whole owner lines only: a guild name or a longer character name is not ownership.
-    if text == playerName then return true end
-    local suffixes = {"的宠物", "的仆从", "的守护者", "的召唤物", "的图腾", "的随从",
-        "'s Pet", "'s Minion", "'s Guardian", "'s Totem", "'s Summon"}
-    for _, suffix in ipairs(suffixes) do
-        if text == playerName .. suffix or text == "<" .. playerName .. suffix .. ">" then return true end
-    end
-    return false
-end
-
-local function eligible(unit)
-    if not unit or not safeCall(UnitExists, unit) then return false end
-    if safeCall(UnitIsDead, unit) or safeCall(UnitIsDeadOrGhost, unit) then return false end
-    if UnitCanAttack and UnitCanAttack("player", unit) then return false end
-    if UnitIsUnit and UnitIsUnit(unit, "player") then return false end
-    if safeCall(UnitIsPlayer, unit) then return false end
-    local name = safeCall(UnitName, unit)
-    return name and name ~= "" and not isExcluded(name)
-end
-
-local function ownership(unit, guid, now, force)
-    -- Nampower owner suffix is authoritative when it resolves (including another owner).
-    local owner = getGuid(unit .. "owner")
-    if owner and playerGuid then
-        ownerCache[guid or unit] = {mine = owner == playerGuid, name = UnitName(unit), time = now}
-        return owner == playerGuid
-    end
-    local key = guid or unit
-    local name = UnitName(unit)
-    local cached = ownerCache[key]
-    if not force and cached and cached.name == name and now - cached.time < OWNER_CACHE_TIME then
-        return cached.mine
-    end
-    initScanTip()
-    scanTip:ClearLines()
-    scanTip:SetUnit(unit)
-    diagnostics.tooltips = diagnostics.tooltips + 1
-    local mine = false
-    for i = 1, 30 do
-        local left = getglobal("TYScanTipTextLeft" .. i)
-        local right = getglobal("TYScanTipTextRight" .. i)
-        if not left and not right then break end
-        if (left and ownerTextMatches(left:GetText())) or
-            (right and ownerTextMatches(right:GetText())) then mine = true; break end
-    end
-    ownerCache[key] = {mine = mine, name = name, time = now}
-    return mine
-end
-
-local function observeUnit(unit, now, force)
-    local guid = getGuid(unit)
-    if guid and deadUntil[guid] and now < deadUntil[guid] then return nil end
-    if not eligible(unit) then
-        if guid then TY.summonCache[guid] = nil; ownerCache[guid] = nil end
-        return nil
-    end
-    if not ownership(unit, guid, now, force) then
-        if guid then TY.summonCache[guid] = nil end
-        return nil
-    end
-    local name = UnitName(unit)
-    if guid then
-        TY.summonCache[guid] = {name = name, time = now, state = "alive"}
-    end
-    return guid, name
-end
-
-local function frameGuid(frame)
-    -- Never associate a WorldFrame child index with nameplateN: those indices are unrelated.
-    if frame.GetName then
-        local ok, guid = pcall(frame.GetName, frame, 1)
-        if ok and validGuid(guid) and string.find(guid, "^0x%x+$") then return guid end
-    end
-    if type(frame.unit) == "string" then return getGuid(frame.unit) end
-    return nil
-end
-
-local function plateText(frame)
-    if not frame.GetRegions then return nil end
-    local regions = {frame:GetRegions()}
-    local isPlate = frame._pfNamePlate or frame.nameplate
-    local owned, name = false, nil
-    for _, region in ipairs(regions) do
-        local kind = region.GetObjectType and region:GetObjectType()
-        if kind == "Texture" and region.GetTexture and
-            region:GetTexture() == "Interface\\Tooltips\\Nameplate-Border" then isPlate = true end
-        if kind == "FontString" and region.GetText then
-            local text = cleanText(region:GetText())
-            if ownerTextMatches(text) then owned = true
-            elseif text and text ~= "" and not tonumber(text) and
-                not string.find(text, "^[<>]") and text ~= "??" and not name then name = text end
-        end
-    end
-    -- pfUI retains the original text regions even after hiding/replacing them.
-    local original = frame.nameplate and frame.nameplate.original
-    if original and original.name then name = cleanText(original.name:GetText()) or name end
-    if isPlate then
-        local health = original and original.healthbar
-        if not health and frame.GetChildren then
-            local children = {frame:GetChildren()}
-            health = children[1]
-        end
-        if health and health.GetValue and health.GetMinMaxValues then
-            local ok, minimum, maximum = pcall(health.GetMinMaxValues, health)
-            local value = safeCall(function() return health:GetValue() end)
-            -- Zero with an initialized health range is death, unlike a hidden plate.
-            if ok and type(maximum) == "number" and maximum > 0 and
-                type(value) == "number" and value <= 0 then owned = false end
-        end
-    end
-    return isPlate and owned, name
-end
-
-local function mergePromotedFrames(guid)
-    for frame in pairs(temporary) do
-        if frameGuid(frame) == guid then temporary[frame] = nil end
-    end
-end
-
-local function countTracked(now)
-    local count, groups, uncertain = 0, {}, 0
-    local function add(name, estimated)
-        count = count + 1
-        groups[name] = (groups[name] or 0) + 1
-        if estimated then uncertain = uncertain + 1 end
-    end
-    for guid, info in pairs(TY.summonCache) do
-        if deadUntil[guid] and now < deadUntil[guid] then
-            TY.summonCache[guid] = nil
-        elseif safeCall(UnitExists, guid) then
-            if not eligible(guid) or not ownership(guid, guid, now, false) then
-                TY.summonCache[guid] = nil
-            else
-                info.name = UnitName(guid)
-                info.state = "alive"; info.unknownSince = nil
-                add(info.name, false)
-            end
-        else
-            -- Loss of visibility is not a death. Keep only a short, explicitly estimated tail.
-            info.unknownSince = info.unknownSince or now
-            info.state = "unobserved"
-            if now - info.unknownSince < UNKNOWN_GRACE then add(info.name, true)
-            else TY.summonCache[guid] = nil; ownerCache[guid] = nil end
-        end
-    end
-    for frame, info in pairs(temporary) do
-        if not frame:IsShown() then info.state = "unobserved" end
-        if now - info.time < UNKNOWN_GRACE then add(info.name, true)
-        else temporary[frame] = nil end
-    end
-    for key, info in pairs(ownerCache) do
-        if now - info.time > OWNER_CACHE_TIME and not TY.summonCache[key] then ownerCache[key] = nil end
-    end
-    for guid, deadline in pairs(deadUntil) do
-        if now >= deadline then deadUntil[guid] = nil end
-    end
-    lastCount, lastGroups, lastUncertain = count, groups, uncertain
-    return count, groups, uncertain
-end
-
+local isExcluded = tracker.IsExcluded
 local function scanForSummons()
-    local now = GetTime()
-    playerName, playerGuid = UnitName("player"), getGuid("player")
-    diagnostics.scans = diagnostics.scans + 1
-    local seen = {}
-    local units = {"pet", "target", "mouseover"}
-    for i = 1, 40 do table.insert(units, "nameplate" .. i) end
-    for _, unit in ipairs(units) do
-        if safeCall(UnitExists, unit) then
-            local guid = getGuid(unit)
-            if not guid or not seen[guid] then
-                observeUnit(unit, now, false)
-                if guid then seen[guid] = true end
-            end
-        end
-    end
-    if WorldFrame and WorldFrame.GetChildren then
-        local children = {WorldFrame:GetChildren()}
-        for _, frame in ipairs(children) do
-            if frame.IsShown and frame:IsShown() then
-                local guid = frameGuid(frame)
-                if guid then
-                    temporary[frame] = nil
-                    if not seen[guid] then observeUnit(guid, now, false); seen[guid] = true end
-                elseif type(frame.unit) == "string" and safeCall(UnitExists, frame.unit) then
-                    local _, name = observeUnit(frame.unit, now, false)
-                    if name then temporary[frame] = {name = name, time = now, state = "observed"}
-                    else temporary[frame] = nil end
-                else
-                    local owned, name = plateText(frame)
-                    if owned and name and not isExcluded(name) then
-                        temporary[frame] = {name = name, time = now, state = "observed"}
-                    else temporary[frame] = nil end
-                end
-            end
-        end
-    end
-    return countTracked(now)
+    lastCount, lastGroups, lastUncertain = tracker.Scan()
+    return lastCount, lastGroups, lastUncertain
 end
-
-
 -- ========== Per-combat time-weighted averages ==========
 local currentCombat = nil
 
@@ -386,6 +119,7 @@ local function refreshDisplay(count, groups, uncertain)
     if not bar then return end
     local now = GetTime()
     if count == nil then count, groups, uncertain = scanForSummons() end
+    lastCount, lastGroups, lastUncertain = count, groups, uncertain
     recordSample(now, count, groups, uncertain)
     updateHistory(groups)
     local stats = combatStats(now)
@@ -623,10 +357,11 @@ function TY_CreateMiniBtn()
 	miniBtn:SetPoint("CENTER", Minimap, "CENTER", x, y)
 
 	miniBtn:SetScript("OnDragStart", function()
-		this:LockPoint()
 		miniBtn:SetScript("OnUpdate", function()
 			local mx, my = Minimap:GetCenter()
-			local cx, cy = this:GetCenter()
+			local cx, cy = GetCursorPosition()
+            local scale = UIParent:GetEffectiveScale()
+            cx, cy = cx / scale, cy / scale
 			local a = math.atan2(cy - my, cx - mx)
 			local dist = 80
 			this:ClearAllPoints()
@@ -700,21 +435,8 @@ eventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 
--- Register each optional extension event independently; polling remains the fallback.
-for _, name in ipairs({"UNIT_COMBAT_GUID", "UNIT_MODEL_CHANGED_GUID", "UNIT_DIED"}) do
-    pcall(function() eventFrame:RegisterEvent(name) end)
-end
+tracker.Register(eventFrame)
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-
-local function unitChanged(unit, force)
-    if not bar or type(unit) ~= "string" then return end
-    local now = GetTime()
-    diagnostics.events = diagnostics.events + 1
-    local guid = observeUnit(unit, now, force)
-    if guid then mergePromotedFrames(guid) end
-    local count, groups, uncertain = countTracked(now)
-    refreshDisplay(count, groups, uncertain)
-end
 
 eventFrame:SetScript("OnEvent", function()
 	if event == "VARIABLES_LOADED" then
@@ -729,19 +451,11 @@ eventFrame:SetScript("OnEvent", function()
 		if TY_DB.shown == false then
 			TYBar:Hide()
 		end
-		pcall(function()
-			SetCVar("nameplateShowFriends", 1)
-		end)
-		pcall(function()
-			if GetCVar("NP_EnableUnitEventsGuid") ~= "1" then
-				SetCVar("NP_EnableUnitEventsGuid", 1)
-			end
-		end)
-		TY_Print("TianYan loaded!")
+		TY_Print("TianYan 2.1.0 loaded!")
 
     elseif event == "PLAYER_ENTERING_WORLD" then
-        TY.summonCache = {}; temporary = {}; ownerCache = {}; deadUntil = {}
-        playerName, playerGuid = UnitName("player"), getGuid("player")
+        tracker.Reset()
+        if currentCombat then currentCombat.partial = true end
         nextUpdate = 0
         if bar then refreshDisplay() end
     elseif event == "PLAYER_REGEN_DISABLED" then
@@ -751,24 +465,13 @@ eventFrame:SetScript("OnEvent", function()
     elseif event == "PLAYER_REGEN_ENABLED" then
         finishCombat(GetTime())
         refreshDisplay()
-    elseif event == "PLAYER_TARGET_CHANGED" then
-        unitChanged("target", true)
-    elseif event == "UPDATE_MOUSEOVER_UNIT" then
-        unitChanged("mouseover", false)
-    elseif event == "UNIT_COMBAT_GUID" or event == "UNIT_MODEL_CHANGED_GUID" then
-        -- Model/combat events are observations, not unconditional summon increments.
-        unitChanged(arg1, event == "UNIT_MODEL_CHANGED_GUID")
-    elseif event == "UNIT_DIED" and type(arg1) == "string" and bar then
-        local guid = arg1
-        local now = GetTime()
-        if TY.summonCache[guid] then
-            deadUntil[guid] = now + 2
-            TY.summonCache[guid] = nil; ownerCache[guid] = nil
-            mergePromotedFrames(guid)
-            diagnostics.events = diagnostics.events + 1
-            local count, groups, uncertain = countTracked(now)
-            refreshDisplay(count, groups, uncertain)
-        end
+    elseif event == "PLAYER_TARGET_CHANGED" or event == "UPDATE_MOUSEOVER_UNIT" then
+        refreshDisplay()
+    elseif tracker.Event(event, arg1, arg2, arg3) then
+        -- Integrate immediately; the scheduled UI refresh avoids per-event scans/redraws.
+        local count, groups, uncertain = tracker.Totals()
+        recordSample(GetTime(), count, groups, uncertain)
+        updateHistory(groups)
     end
 end)
 
@@ -800,13 +503,17 @@ end
 SLASH_TYDEBUG1 = "/tydebug"
 SlashCmdList["TYDEBUG"] = function()
     refreshDisplay()
-    TY_Print("当前 " .. lastCount .. "，估计 " .. lastUncertain ..
-        "；扫描 " .. diagnostics.scans .. "，提示读取 " .. diagnostics.tooltips ..
-        "，事件更新 " .. diagnostics.events)
-    for guid, info in pairs(TY.summonCache) do
-        TY_Print((info.name or "未知") .. " | " .. guid .. " | " .. info.state)
+    TY_Print("TianYan 2.1.0")
+    if type(GetNampowerVersion) == "function" then
+        local ok, major, minor, patch = pcall(GetNampowerVersion)
+        if ok then TY_Print("Nampower: " .. tostring(major) .. "." .. tostring(minor) .. "." .. tostring(patch)) end
     end
-    for _, info in pairs(temporary) do
-        TY_Print(info.name .. " | 无GUID姓名板 | " .. info.state .. " (估计)")
+    local d, counts, registered, cache, temporary = tracker.Diagnostics()
+    TY_Print("当前 " .. lastCount .. "，估计 " .. lastUncertain .. "；扫描 " .. d.scans ..
+        "，事件更新 " .. d.events .. "，发现 " .. d.discovered .. "，重试 " .. d.retry)
+    for name, ok in pairs(registered) do
+        TY_Print(name .. ": " .. (ok and "已注册" or "不可用") .. "，收到 " .. (counts[name] or 0))
     end
+    for guid, info in pairs(cache) do TY_Print(info.name .. " | " .. guid .. " | " .. info.state) end
+    for _, info in pairs(temporary) do TY_Print(info.name .. " | 姓名板估计") end
 end

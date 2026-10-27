@@ -1895,14 +1895,17 @@
       "addon": "TianYan",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/TianYan.md",
-      "purpose": "让怪物数量和战斗平均值更可靠。",
+      "purpose": "2.1.0 已拆分发现模块，接入迷失者真实施法/攻击事件，保留当前数量、均值、历史最高及紧凑界面。离线回归与 Lua 5.0 编译通过，待游戏验收。",
       "sources": [
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
-        "PluginHistory/Evidence/legacy-20261006/Docs/Files/TianYan"
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/TianYan",
+        "PluginHistory/Research/TianYan-事件发现重构-20261028.md"
       ],
       "maintenance_files": [
-        "Interface/AddOns/TianYan/TianYan.lua"
+        "Interface/AddOns/TianYan/TianYan.lua",
+        "Interface/AddOns/TianYan/Tracker.lua",
+        "Interface/AddOns/TianYan/TianYan.toc"
       ],
       "tracked_files_at_reference": 3,
       "pending": "未被客户端观测到的单位无法保证完整统计；请补充实际战斗验收情况。"
