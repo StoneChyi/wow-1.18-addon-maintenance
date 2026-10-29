@@ -600,7 +600,7 @@ local function CreateProfileWindow(profileId)
         end
         if addon.IsAutoUseItem and addon.IsAutoUseItem(item) then
             local config = addon.GetAutoUseConfig(item)
-            GameTooltip:AddLine("右键：设置生命/法力阈值", 0.55, 0.7, 0.85)
+            GameTooltip:AddLine("右键：设置恢复品自动使用阈值", 0.55, 0.7, 0.85)
             GameTooltip:AddLine(addon.ToBoolean(config.enabled) and "阈值自动使用：已开启" or "阈值自动使用：已关闭", 1, 0.75, 0.3)
             GameTooltip:AddLine("不参与一键补药；阈值自动使用单独设置", 0.55, 0.7, 0.85)
         elseif item.manualOnly then

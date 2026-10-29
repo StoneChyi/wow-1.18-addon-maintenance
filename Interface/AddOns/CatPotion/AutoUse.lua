@@ -4,12 +4,41 @@ local definitions = {
     majorHealing = { id = 13446, health = 35, mana = 0 },
     majorMana = { id = 13444, health = 0, mana = 25 },
     nordanaarTea = { id = 61675, health = 35, mana = 25 },
+    majorHealthstone = { id = 9421, alternateIDs = { 19012, 19013 }, health = 35, mana = 0 },
+    majorRejuvenation = { id = 18253, health = 35, mana = 25 },
+    superiorHealing = { id = 3928, health = 35, mana = 0 },
+    superiorMana = { id = 13443, health = 0, mana = 25 },
+    greaterMana = { id = 6149, health = 0, mana = 25 },
+    greaterDreamlessSleep = { id = 20002, health = 35, mana = 25, needsRest = true },
+    dreamlessSleep = { id = 12190, health = 35, mana = 25, needsRest = true },
+    thistleTea = { id = 7676, health = 0, mana = 0, energy = 25, classFile = "ROGUE" },
+    demonicRune = { id = 12662, health = 0, mana = 25, costsHealth = true, minHealthValue = 1101 },
+    darkRune = { id = 20520, health = 0, mana = 25, costsHealth = true, minHealthValue = 1101 },
+    conjuredManaOrange = { id = 83004, health = 35, mana = 25, outOfCombatOnly = true, needsRest = true },
 }
-local keys = { "majorHealing", "majorMana", "nordanaarTea" }
+local keys = { "majorHealing", "majorMana", "nordanaarTea", "majorHealthstone", "majorRejuvenation",
+    "superiorHealing", "superiorMana", "greaterMana", "greaterDreamlessSleep", "dreamlessSleep",
+    "thistleTea", "demonicRune", "darkRune", "conjuredManaOrange" }
+local priorities = {
+    health = { "majorHealthstone", "majorHealing", "nordanaarTea", "majorRejuvenation", "superiorHealing",
+        "greaterDreamlessSleep", "dreamlessSleep", "conjuredManaOrange" },
+    mana = { "majorMana", "nordanaarTea", "majorRejuvenation", "superiorMana", "greaterMana",
+        "demonicRune", "darkRune", "greaterDreamlessSleep", "dreamlessSleep", "conjuredManaOrange" },
+    energy = { "thistleTea" },
+}
+local metadata = {}
+for key, definition in pairs(definitions) do
+    metadata[key] = { key = key, id = definition.id, health = definition.health > 0, mana = definition.mana > 0,
+        energy = (definition.energy or 0) > 0, costsHealth = definition.costsHealth == true,
+        outOfCombatOnly = definition.outOfCombatOnly == true, needsRest = definition.needsRest == true,
+        minHealthValue = definition.minHealthValue or 0, classFile = definition.classFile }
+end
 local configs, configDatabase, enabled = nil, nil, {}
+local activePriorities = { health = {}, mana = {}, energy = {} }
 local states, pending, internalRequest = {}, nil, false
 local nextAttempt, nextCheck, dirty = 0, 0, false
 local castingUntil, channelUntil = 0, 0
+local restAuraDirty, restAuraBlocked, restAuraUntil, restGuarded = true, false, nil, false
 local driver = CreateFrame("Frame")
 addon.AutoUseDriver = driver
 
@@ -17,7 +46,11 @@ local function Resolve(value)
     local key = type(value) == "table" and value.key or value
     local definition = definitions[key]
     if not definition then return end
-    if type(value) == "table" and value.itemID ~= definition.id then return end
+    if type(value) == "table" and value.itemID ~= definition.id then
+        local alternate
+        for _, id in ipairs(definition.alternateIDs or {}) do if value.itemID == id then alternate = true end end
+        if not alternate then return end
+    end
     return key
 end
 
@@ -41,6 +74,11 @@ function addon.IsAutoUseItem(value)
     return Resolve(value) ~= nil
 end
 
+function addon.GetAutoUseDefinition(value)
+    local key = Resolve(value)
+    return key and metadata[key] or nil
+end
+
 function addon.GetAutoUseConfig(value)
     local key = Resolve(value)
     if not key then return end
@@ -49,13 +87,16 @@ function addon.GetAutoUseConfig(value)
     local config = root[key]
     config.enabled = addon.ToBoolean(config.enabled) and 1 or 0
     config.combatOnly = config.combatOnly == nil and 1 or (addon.ToBoolean(config.combatOnly) and 1 or 0)
+    if definition.outOfCombatOnly then config.combatOnly = 0 end
     config.healthThreshold = definition.health > 0 and Threshold(config.healthThreshold, definition.health) or 0
     config.manaThreshold = definition.mana > 0 and Threshold(config.manaThreshold, definition.mana) or 0
+    config.energyThreshold = (definition.energy or 0) > 0 and Threshold(config.energyThreshold, definition.energy) or 0
+    config.minHealthPercent = definition.costsHealth and Threshold(config.minHealthPercent, 60) or 0
     return config
 end
 
 local function State(key)
-    if not states[key] then states[key] = { health = true, mana = true, status = "ready" } end
+    if not states[key] then states[key] = { health = true, mana = true, energy = true, status = "ready" } end
     return states[key]
 end
 
@@ -71,6 +112,12 @@ local function Rebuild()
     for _, key in ipairs(keys) do
         if addon.GetAutoUseConfig(key).enabled == 1 then table.insert(enabled, key) end
     end
+    activePriorities = { health = {}, mana = {}, energy = {} }
+    for resource, ordered in pairs(priorities) do
+        for _, key in ipairs(ordered) do
+            if configs[key].enabled == 1 then table.insert(activePriorities[resource], key) end
+        end
+    end
     if table.getn(enabled) == 0 and not pending then
         dirty, nextCheck = false, 0
         driver:Hide()
@@ -83,7 +130,7 @@ function addon.SetAutoUseConfig(value, values)
     local key = Resolve(value)
     if not key or type(values) ~= "table" then return false end
     local config = addon.GetAutoUseConfig(key)
-    for _, field in ipairs({ "enabled", "combatOnly", "healthThreshold", "manaThreshold" }) do
+    for _, field in ipairs({ "enabled", "combatOnly", "healthThreshold", "manaThreshold", "energyThreshold", "minHealthPercent" }) do
         if values[field] ~= nil then config[field] = values[field] end
     end
     addon.GetAutoUseConfig(key)
@@ -114,7 +161,7 @@ function addon.NotifyAutoUseManual(item, beforeCount)
         if not count then local _, _, current = addon.FindBagItem(item.item); count = current end
         pending = { key = key, item = item, count = count or 0, deadline = now+2 }
         local state = State(key)
-        state.health, state.mana, state.status = false, false, "pending"
+        state.health, state.mana, state.energy, state.status = false, false, false, "pending"
     end
     Wake(.2)
 end
@@ -132,10 +179,73 @@ local function ObservePending(now)
         state.cooldownEnd = remaining > 0 and now+remaining or nil
         pending = nil
     elseif now >= request.deadline then
-        state.health, state.mana, state.status = true, true, "unconfirmed"
+        state.health, state.mana, state.energy, state.status = true, true, true, "unconfirmed"
         nextAttempt = math.max(nextAttempt, now+2)
         pending = nil
     end
+end
+
+local function Recovering(now)
+    if restAuraUntil and now >= restAuraUntil then restAuraBlocked, restAuraUntil = false, nil end
+    if restAuraDirty then
+        restAuraDirty, restAuraBlocked, restAuraUntil = false, false, nil
+        local untimed = false
+        -- Dreamless Sleep can be a harmful aura outside Core's normal buff cache.
+        -- Read actual HARMFUL handles once per aura event, not every evaluation.
+        if type(GetPlayerBuff) == "function" and type(GetPlayerBuffTexture) == "function" then
+            for index = 0, 63 do
+                local handle = GetPlayerBuff(index, "HARMFUL")
+                if not handle or handle < 0 then break end
+                local texture = GetPlayerBuffTexture(handle)
+                if type(texture) == "string" and string.lower(texture) == "interface\\icons\\spell_nature_sleep" then
+                    restAuraBlocked = true
+                    local remaining = type(GetPlayerBuffTimeLeft) == "function" and GetPlayerBuffTimeLeft(handle)
+                    if remaining and remaining > 0 then
+                        restAuraUntil = math.max(restAuraUntil or 0, now+remaining)
+                    else
+                        untimed = true
+                    end
+                end
+            end
+        end
+        if untimed then restAuraUntil = nil end
+    end
+    if restAuraBlocked then return true end
+    if type(addon.PlayerIsEating) == "function" and addon.PlayerIsEating() then return true end
+    if type(addon.GetBuffTime) == "function" then
+        for _, name in ipairs({ "喝水", "饮水", "Food", "Drink", "无梦睡眠", "昏睡", "强效昏睡",
+            "Dreamless Sleep", "Greater Dreamless Sleep" }) do
+            if addon.GetBuffTime(name) > 0 then return true end
+        end
+    end
+    return false
+end
+
+local function Moving()
+    local known = false
+    -- These optional providers are already used by the local Cat2 movement path.
+    if type(PlayerIsMoving) == "function" then
+        local ok, value = pcall(PlayerIsMoving)
+        if ok and (value == true or value == 1) then return true end
+        if ok and (value == false or value == 0) then known = true end
+    end
+    if type(UnitXP) == "function" then
+        local ok, speed = pcall(UnitXP, "speed", "player")
+        if ok and type(speed) == "number" and speed >= 0 and speed-speed == 0 then
+            if speed > .01 then return true end
+            known = true
+        end
+    end
+    -- Not assumed to exist on a 1.12 client.
+    if type(GetUnitSpeed) == "function" then
+        local ok, speed = pcall(GetUnitSpeed, "player")
+        if ok and type(speed) == "number" and speed >= 0 and speed-speed == 0 then
+            if speed > .01 then return true end
+            known = true
+        end
+    end
+    if known then return false end
+    return nil -- Map position (0,0) cannot prove that the player is stationary.
 end
 
 local function Unsafe(now)
@@ -150,15 +260,35 @@ local function Unsafe(now)
     if type(UnitCastingInfo) == "function" and UnitCastingInfo("player") then return true end
     if type(UnitChannelInfo) == "function" and UnitChannelInfo("player") then return true end
     if type(SpellIsTargeting) == "function" and SpellIsTargeting() then return true end
+    if Recovering(now) then return true end
     return false
 end
 
-local function TryItem(key, resource, percent, inCombat, now)
+local function TryItem(key, resource, percent, health, currentHealth, inCombat, now)
     local config = configs[key]
     if not config or config.enabled ~= 1 or (config.combatOnly == 1 and not inCombat) then return false end
-    local threshold = config[resource == "health" and "healthThreshold" or "manaThreshold"]
+    local definition = definitions[key]
+    if definition.outOfCombatOnly and inCombat then return false end
+    local threshold = config[resource .. "Threshold"]
     local state = State(key)
     if not percent or threshold <= 0 or percent >= threshold or not state[resource] then return false end
+    if definition.classFile then
+        local classFile
+        if type(UnitClass) == "function" then local _, class = UnitClass("player"); classFile = class end
+        if classFile ~= definition.classFile then state.status = "unavailable"; return false end
+    end
+    if definition.costsHealth and (health <= config.minHealthPercent or currentHealth < definition.minHealthValue) then
+        state.status = "health_guard"
+        return false
+    end
+    if definition.needsRest then
+        local moving = Moving()
+        if moving ~= false then
+            state.status = moving and "moving" or "stationary_unknown"
+            restGuarded = true
+            return false
+        end
+    end
     if state.cooldownEnd and state.cooldownEnd > now then return false end
     local item = addon.ItemsByID[definitions[key].id]
     if not item then return false end
@@ -182,7 +312,7 @@ local function TryItem(key, resource, percent, inCombat, now)
     nextAttempt = now+2
     if ok and requested then
         pending = { key = key, item = item, count = count, deadline = now+2 }
-        state.health, state.mana, state.status = false, false, "pending"
+        state.health, state.mana, state.energy, state.status = false, false, false, "pending"
     else
         state.status = "blocked"
     end
@@ -193,33 +323,44 @@ local function Evaluate(now)
     ObservePending(now)
     if pending or now < nextAttempt or table.getn(enabled) == 0 then return end
     if Unsafe(now) then return true end
+    restGuarded = false
     local maximum = UnitHealthMax("player")
-    local health = maximum and maximum > 0 and UnitHealth("player") * 100 / maximum or nil
+    local currentHealth = UnitHealth("player")
+    local health = maximum and maximum > 0 and currentHealth * 100 / maximum or nil
     if not health or health <= 0 then return end
-    local mana
-    if type(UnitPowerType) == "function" and UnitPowerType("player") == 0 then
+    local mana, energy
+    local powerType = type(UnitPowerType) == "function" and UnitPowerType("player")
+    if powerType == 0 or powerType == 3 then
         local manaMaximum = UnitManaMax("player")
-        if manaMaximum and manaMaximum > 0 then mana = UnitMana("player") * 100 / manaMaximum end
+        if manaMaximum and manaMaximum > 0 then
+            local percent = UnitMana("player") * 100 / manaMaximum
+            if powerType == 0 then mana = percent else energy = percent end
+        end
     end
     local inCombat = type(UnitAffectingCombat) == "function" and addon.ToBoolean(UnitAffectingCombat("player"))
     for _, key in ipairs(enabled) do
         local config, state = configs[key], State(key)
         if health >= math.min(100, config.healthThreshold+5) then state.health = true end
         if mana and mana >= math.min(100, config.manaThreshold+5) then state.mana = true end
+        if energy and energy >= math.min(100, config.energyThreshold+5) then state.energy = true end
         if state.cooldownEnd and now >= state.cooldownEnd then
             local item = addon.ItemsByID[definitions[key].id]
             local remaining = item and addon.GetCooldownInfo(item.item) or 0
             if remaining <= 0 then
-                state.health, state.mana, state.cooldownEnd = true, true, nil
+                state.health, state.mana, state.energy, state.cooldownEnd = true, true, true, nil
             else
                 state.cooldownEnd = now+remaining
             end
         end
     end
-    if TryItem("majorHealing", "health", health, inCombat, now) then return end
-    if TryItem("nordanaarTea", "health", health, inCombat, now) then return end
-    if TryItem("majorMana", "mana", mana, inCombat, now) then return end
-    TryItem("nordanaarTea", "mana", mana, inCombat, now)
+    for _, resource in ipairs({ "health", "mana", "energy" }) do
+        local percent
+        if resource == "health" then percent = health elseif resource == "mana" then percent = mana else percent = energy end
+        for _, key in ipairs(activePriorities[resource]) do
+            if TryItem(key, resource, percent, health, currentHealth, inCombat, now) then return end
+        end
+    end
+    return restGuarded
 end
 
 driver:SetScript("OnUpdate", function()
@@ -243,7 +384,8 @@ driver:SetScript("OnUpdate", function()
 end)
 
 for _, name in ipairs({ "PLAYER_LOGIN", "PLAYER_ENTERING_WORLD", "PLAYER_ALIVE", "PLAYER_UNGHOST", "PLAYER_DEAD",
-    "UNIT_HEALTH", "UNIT_MAXHEALTH", "UNIT_MANA", "UNIT_MAXMANA", "UNIT_DISPLAYPOWER",
+    "UNIT_HEALTH", "UNIT_MAXHEALTH", "UNIT_MANA", "UNIT_MAXMANA", "UNIT_ENERGY", "UNIT_MAXENERGY", "UNIT_DISPLAYPOWER",
+    "PLAYER_AURAS_CHANGED",
     "BAG_UPDATE", "BAG_UPDATE_COOLDOWN", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
     "SPELLCAST_START", "SPELLCAST_STOP", "SPELLCAST_FAILED", "SPELLCAST_INTERRUPTED", "SPELLCAST_DELAYED",
     "SPELLCAST_CHANNEL_START", "SPELLCAST_CHANNEL_UPDATE", "SPELLCAST_CHANNEL_STOP" }) do
@@ -253,7 +395,11 @@ driver:SetScript("OnEvent", function()
     local now = GetTime()
     if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
         castingUntil, channelUntil = 0, 0
+        restAuraDirty = true
         Rebuild()
+    elseif event == "PLAYER_AURAS_CHANGED" then
+        restAuraDirty = true
+        Wake(.2)
     elseif string.sub(event, 1, 5) == "UNIT_" then
         if arg1 == "player" then Wake(.2) end
     elseif event == "SPELLCAST_START" then

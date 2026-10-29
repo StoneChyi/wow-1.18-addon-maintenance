@@ -931,7 +931,7 @@ local function CreateWindow()
         if category == "功能药水" then
             categoryLabel:SetText(category .. "  · 默认仅显示，短效 Buff 可在小窗 Shift+右键开启补药")
         elseif category == "恢复物品" then
-            categoryLabel:SetText(category .. "  · 手动使用；大红/大蓝/草药茶可设阈值")
+            categoryLabel:SetText(category .. "  · 手动使用；恢复类物品可右键设阈值")
         elseif category == "常用炸药" or category == "工程道具" then
             categoryLabel:SetText(category .. "  · 手动点击使用")
         end

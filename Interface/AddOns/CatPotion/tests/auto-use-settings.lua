@@ -13,6 +13,17 @@ end
 local create = CreateFrame
 CreateFrame = function(kind, name, parent, template)
     local frame = create(kind, name, parent, template)
+    if name == "CatPotionAutoUseSettings" then
+        frame.pointWrites, frame.clampCalls = 0, 0
+        local setPoint = frame.SetPoint
+        function frame:SetPoint(...)
+            self.pointWrites = self.pointWrites+1
+            setPoint(self, ...)
+        end
+        function frame:RegisterForDrag(button) self.dragButton = button end
+        function frame:SetMovable(value) self.movable = value end
+        function frame:SetClampedToScreen(value) self.clampCalls = self.clampCalls+1; self.clamped = value end
+    end
     if kind == "Slider" then
         function frame:SetValue(value)
             self.value = value
@@ -152,5 +163,100 @@ other.rows[1].scripts.OnClick()
 Equal(panel.item.key, red.key, "another window opens same item")
 Equal(panel.health:GetValue(), 40, "all windows share character threshold")
 Equal(uses, 1, "another window opening still sends no use")
+panel:Hide()
+
+-- Every recovery type gets only meaningful resource and safety controls.
+local function Item(key)
+    for _, item in ipairs(addon.Items) do if item.key == key then return item end end
+    error("missing item: " .. key)
+end
+local stone, vitality, rune, energyTea, orange = Item("majorHealthstone"), Item("majorRejuvenation"), Item("darkRune"), Item("thistleTea"), Item("conjuredManaOrange")
+addon.ShowAutoUseSettings(stone)
+Equal(panel.health:IsVisible(), true, "healthstone health control")
+Equal(panel.mana:IsVisible(), false, "healthstone has no mana condition")
+Equal(panel.energy:IsVisible(), false, "healthstone has no energy condition")
+Equal(panel.minHealth:IsVisible(), false, "healthstone needs no self-damage guard")
+Equal(addon.GetAutoUseConfig(stone).enabled, 0, "new healthstone remains disabled")
+addon.ShowAutoUseSettings(vitality)
+Equal(panel.health:IsVisible(), true, "rejuvenation health condition")
+Equal(panel.mana:IsVisible(), true, "rejuvenation mana condition")
+Equal(string.find(panel.hint.text, "任一", 1, true) ~= nil, true, "rejuvenation explains OR semantics")
+addon.ShowAutoUseSettings(rune)
+Equal(panel.health:IsVisible(), false, "rune never triggers from low health")
+Equal(panel.mana:IsVisible(), true, "rune mana trigger")
+Equal(panel.minHealth:IsVisible(), true, "rune safety threshold available")
+Equal(panel.minHealth:GetValue(), 60, "rune default percent safety")
+Equal(string.find(panel.hint.text, "1101", 1, true) ~= nil, true, "rune fixed absolute guard explained")
+panel.minHealth:SetValue(73)
+panel.mana:SetValue(19)
+Click(panel.enabled)
+Click(panel.save)
+Equal(addon.GetAutoUseConfig(rune).minHealthPercent, 73, "rune safety percent persisted")
+Equal(addon.GetAutoUseConfig(rune).manaThreshold, 19, "rune mana independent of safety percent")
+addon.ShowAutoUseSettings(rune)
+panel.mana:SetValue(0)
+Click(panel.save)
+Equal(panel:IsVisible(), true, "safety slider alone is not a trigger")
+Click(panel.cancel)
+addon.ShowAutoUseSettings(energyTea)
+Equal(panel.energy:IsVisible(), true, "thistle tea uses energy")
+Equal(panel.health:IsVisible(), false, "thistle tea has no health trigger")
+Equal(panel.mana:IsVisible(), false, "thistle tea has no mana trigger")
+panel.energy:SetValue(16)
+Click(panel.enabled)
+Click(panel.save)
+Equal(addon.GetAutoUseConfig(energyTea).energyThreshold, 16, "energy threshold persisted")
+Equal(addon.GetAutoUseConfig(energyTea).manaThreshold, 0, "energy setting does not turn into mana")
+addon.ShowAutoUseSettings(orange)
+Equal(panel.combatOnly.disabled, true, "orange cannot enable combat-only use")
+Equal(addon.GetAutoUseConfig(orange).combatOnly, 0, "orange is forced out-of-combat")
+Equal(panel.combatOnly.mark:IsVisible(), false, "orange combat option displayed accurately")
+Click(panel.combatOnly)
+Click(panel.save)
+Equal(addon.GetAutoUseConfig(orange).combatOnly, 0, "disabled combat option cannot be changed")
+Equal(addon.GetAutoUseConfig(orange).enabled, 0, "opening orange settings never opts in")
+Equal(addon.GetAutoUseConfig(red).healthThreshold, 40, "new items retain old red threshold")
+Equal(addon.GetAutoUseConfig(red).enabled, 1, "new items retain old enabled state")
+Equal(addon.ShowAutoUseSettings(Item("powerfulAntivenom")), false, "antidote is not a resource threshold item")
+
+-- Dragging stores a proportional centre; it must not re-anchor at drag stop.
+Equal(panel.dragButton, "LeftButton", "settings frame accepts dragging")
+Equal(panel.movable, true, "settings frame movable")
+Equal(panel.clampCalls, 1, "screen clamp configured exactly once")
+local starts, stops = 0, 0
+panel.StartMoving = function() starts = starts+1 end
+panel.StopMovingOrSizing = function() stops = stops+1 end
+panel.GetCenter = function() return 960, 540 end
+local pointWrites = panel.pointWrites
+panel.scripts.OnDragStart()
+panel.scripts.OnDragStop()
+Equal(starts, 1, "drag starts movement")
+Equal(stops, 1, "drag stops movement")
+Equal(panel.pointWrites, pointWrites, "drop never re-anchors visible frame")
+Equal(db.autoUseWindowPosition[1], .5, "drag saves proportional x")
+Equal(db.autoUseWindowPosition[2], .5, "drag saves proportional y")
+Equal(db.autoUseWindowPosition.rel, true, "drag identifies relative coordinates")
+local savedPosition = db.autoUseWindowPosition
+panel.GetCenter = function() return nil, nil end
+panel.scripts.OnDragStop()
+Equal(db.autoUseWindowPosition, savedPosition, "missing geometry keeps last valid position")
+panel:Hide()
+GetScreenWidth = function() return 2560 end
+GetScreenHeight = function() return 1440 end
+dofile("CatPotion/AutoUseSettings.lua")
+addon.ShowAutoUseSettings(stone)
+panel = addon.AutoUseSettings
+Equal(panel.point[3], "BOTTOMLEFT", "reload restores screen-relative centre")
+Equal(panel.point[4], 1280, "position follows changed screen width")
+Equal(panel.point[5], 720, "position follows changed screen height")
+Equal(panel.title.font ~= nil, true, "recreated controls retain fallback font")
+panel:Hide()
+db.autoUseWindowPosition = { 0/0, 1/0, rel = true }
+dofile("CatPotion/AutoUseSettings.lua")
+addon.ShowAutoUseSettings(stone)
+panel = addon.AutoUseSettings
+Equal(panel.point[3], "CENTER", "malformed stored position safely falls back")
+Equal(panel.point[4], 0, "fallback finite x")
+Equal(panel.point[5], 0, "fallback finite y")
 panel:Hide()
 print("PASS: " .. checks .. " threshold dialog, strict font, cancel/save and row interaction assertions")

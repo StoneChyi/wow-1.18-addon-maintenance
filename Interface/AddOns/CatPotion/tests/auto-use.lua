@@ -6,6 +6,7 @@ local originalHuge = math.huge
 math.huge = nil -- Stock Lua 5.0.3 does not define this field.
 local now, hp, mp, manaMaximum, power, combat, dead, ghost, targeting, castAPI, channelAPI
 local counts, cooldownEnds, locked, requests, itemReads, resourceReads, useFault
+local maxHP, classFile, moving, buffs, harmfulSleep, harmfulScans
 local red = addon.ItemsByID[13446]
 local blue = addon.ItemsByID[13444]
 local tea = addon.ItemsByID[61675]
@@ -19,16 +20,18 @@ local function Item(name) return addon.ItemsByName[name] end
 local function Reset()
     now, hp, mp, manaMaximum, power, combat = 1000, 100, 100, 100, 0, true
     dead, ghost, targeting, castAPI, channelAPI = false, false, false, nil, nil
+    maxHP, classFile, moving, buffs, harmfulSleep, harmfulScans = 100, "ROGUE", false, {}, false, 0
     counts, cooldownEnds, locked, requests = {}, {}, {}, {}
     itemReads, resourceReads, useFault = 0, 0, nil
     counts[red.key], counts[blue.key], counts[tea.key] = 10, 10, 10
     CatPotionDB.autoUseItems = {}
     GetTime = function() return now end
     UnitHealth = function() resourceReads=resourceReads+1; return hp end
-    UnitHealthMax = function() return 100 end
+    UnitHealthMax = function() return maxHP end
     UnitMana = function() return mp end
     UnitManaMax = function() return manaMaximum end
     UnitPowerType = function() return power end
+    UnitClass = function() return classFile, classFile end
     UnitAffectingCombat = function() return combat end
     UnitIsDeadOrGhost = function() return dead or ghost end
     UnitIsDead = function() return dead end
@@ -36,6 +39,19 @@ local function Reset()
     UnitCastingInfo = function() return castAPI end
     UnitChannelInfo = function() return channelAPI end
     SpellIsTargeting = function() return targeting end
+    PlayerIsMoving = function() return moving end
+    UnitXP, GetUnitSpeed = nil, nil
+    addon.PlayerIsEating = function() return buffs.eating == true end
+    addon.GetBuffTime = function(name) return buffs[name] or 0 end
+    GetPlayerBuff = function(index, filter)
+        Equal(filter, "HARMFUL", "sleep detection reads harmful aura handles")
+        harmfulScans = harmfulScans+1
+        return harmfulSleep and index==0 and 40 or -1
+    end
+    GetPlayerBuffTexture = function(handle)
+        return harmfulSleep and handle==40 and "Interface\\Icons\\Spell_Nature_Sleep" or nil
+    end
+    GetPlayerBuffTimeLeft = function(handle) return handle==40 and 30 or 0 end
     addon.AutoUseSettings = nil
     addon.FindBagItem = function(name)
         itemReads = itemReads+1
@@ -328,6 +344,182 @@ Event("BAG_UPDATE", 0)
 Tick()
 Equal(Status(red.key), "cooldown", "settings popup does not prevent pending confirmation")
 Equal(table.getn(requests), 1, "settings popup cannot issue an additional item")
+
+-- Extended catalogue is opt-in; capability metadata drives the dynamic dialog.
+local extraKeys = { "majorHealthstone", "majorRejuvenation", "superiorHealing", "superiorMana", "greaterMana",
+    "greaterDreamlessSleep", "dreamlessSleep", "thistleTea", "demonicRune", "darkRune", "conjuredManaOrange" }
+Reset()
+for _, key in ipairs(extraKeys) do
+    Equal(addon.IsAutoUseItem(key), true, key .. " supported")
+    Equal(addon.GetAutoUseConfig(key).enabled, 0, key .. " remains disabled by default")
+    Equal(type(addon.GetAutoUseDefinition(key).health), "boolean", key .. " metadata is a capability boolean")
+end
+Equal(addon.IsAutoUseItem("hourglassSand"), false, "non-recovery sand remains manual")
+Equal(addon.IsAutoUseItem("powerfulAntivenom"), false, "non-resource antivenom remains manual")
+Equal(addon.IsAutoUseItem("limitedInvulnerability"), false, "functional potion does not become resource-triggered")
+Equal(addon.GetAutoUseConfig({ key="majorHealthstone", itemID=19012 }), addon.GetAutoUseConfig("majorHealthstone"), "healthstone talent variant shares config")
+Equal(addon.GetAutoUseConfig({ key="majorHealthstone", itemID=19013 }), addon.GetAutoUseConfig("majorHealthstone"), "second healthstone variant shares config")
+Equal(addon.GetAutoUseDefinition("thistleTea").energy, true, "thistle tea energy capability")
+Equal(addon.GetAutoUseDefinition("thistleTea").mana, false, "thistle tea has no mana capability")
+Equal(addon.GetAutoUseDefinition("demonicRune").costsHealth, true, "rune health-cost capability")
+Equal(addon.GetAutoUseDefinition("demonicRune").minHealthValue, 1101, "rune uses conservative absolute floor")
+Equal(addon.GetAutoUseDefinition("conjuredManaOrange").outOfCombatOnly, true, "orange is always outside combat")
+Equal(addon.GetAutoUseDefinition("dreamlessSleep").needsRest, true, "sleep potion requires rest guard")
+addon.SetAutoUseConfig(red.key, { enabled=1, healthThreshold=44, combatOnly=0 })
+dofile("CatPotion/AutoUse.lua")
+Equal(addon.GetAutoUseConfig(red.key).enabled, 1, "expanded catalogue does not reset old enabled state")
+Equal(addon.GetAutoUseConfig(red.key).healthThreshold, 44, "expanded catalogue preserves old threshold")
+Equal(addon.GetAutoUseConfig(red.key).combatOnly, 0, "expanded catalogue preserves old combat preference")
+
+for _, key in ipairs({ "majorHealthstone", "majorRejuvenation", "superiorHealing", "greaterDreamlessSleep", "dreamlessSleep", "conjuredManaOrange" }) do
+    Reset()
+    Enable(key)
+    counts[key], hp = 10, 10
+    if key=="conjuredManaOrange" then combat=false end
+    Tick()
+    Equal(requests[1], key, key .. " responds to health")
+end
+for _, key in ipairs({ "majorRejuvenation", "superiorMana", "greaterMana", "greaterDreamlessSleep", "dreamlessSleep", "demonicRune", "darkRune", "conjuredManaOrange" }) do
+    Reset()
+    Enable(key)
+    counts[key], hp, maxHP, mp = 10, 2500, 3000, 10
+    if key=="conjuredManaOrange" then combat=false end
+    Tick()
+    Equal(requests[1], key, key .. " responds to mana")
+end
+
+Reset()
+Enable("majorHealthstone")
+Enable(red.key)
+Enable(tea.key)
+counts.majorHealthstone, hp, mp = 10, 10, 10
+Tick()
+Equal(requests[1], "majorHealthstone", "healthstone leads health priority")
+Reset()
+Enable("superiorHealing")
+Enable(red.key)
+counts.superiorHealing, counts[red.key], hp = 10, 0, 10
+Tick()
+Equal(requests[1], "superiorHealing", "lower-tier heal fills missing major potion")
+
+Reset()
+Enable("thistleTea", { manaThreshold=90 })
+counts.thistleTea, power, mp = 10, 3, 24
+Equal(addon.GetAutoUseConfig("thistleTea").energyThreshold, 25, "energy default threshold")
+Equal(addon.GetAutoUseConfig("thistleTea").manaThreshold, 0, "energy item cannot use mana rule")
+Tick()
+Equal(requests[1], "thistleTea", "rogue low energy uses thistle tea")
+for _, wrongPower in ipairs({ 0, 1, 2 }) do
+    Reset()
+    Enable("thistleTea")
+    counts.thistleTea, power, mp = 10, wrongPower, 1
+    Tick()
+    Equal(table.getn(requests), 0, "non-energy resource cannot trigger thistle tea")
+end
+Reset()
+Enable("thistleTea")
+counts.thistleTea, power, mp, classFile = 10, 3, 1, "DRUID"
+Tick()
+Equal(table.getn(requests), 0, "druid energy form does not consume rogue-only tea")
+Reset()
+Enable(blue.key)
+Enable(tea.key)
+power, mp = 3, 1
+Tick()
+Equal(table.getn(requests), 0, "energy is never substituted for missing mana percent")
+Reset()
+Enable("thistleTea")
+counts.thistleTea, power, mp = 10, 3, 100
+Tick()
+local energyReads = resourceReads
+mp = 24
+Event("UNIT_ENERGY", "target")
+Tick()
+Equal(resourceReads, energyReads, "target energy event ignored")
+Event("UNIT_ENERGY", "player")
+Tick()
+Equal(requests[1], "thistleTea", "player energy event wakes engine")
+
+for _, key in ipairs({ "demonicRune", "darkRune" }) do
+    Reset()
+    Enable(key)
+    counts[key], hp, maxHP, mp = 10, 1800, 3000, 10
+    Tick()
+    Equal(table.getn(requests), 0, key .. " equal safety percentage blocked")
+    Health(1801)
+    Equal(requests[1], key, key .. " strictly above safety percentage permitted")
+    Reset()
+    Enable(key, { minHealthPercent=50 })
+    counts[key], hp, maxHP, mp = 10, 1100, 2000, 10
+    Tick()
+    Equal(table.getn(requests), 0, key .. " absolute health floor still blocks")
+    Health(1101)
+    Equal(requests[1], key, key .. " conservative absolute floor is inclusive at 1101")
+    Reset()
+    Enable(key)
+    counts[key], hp, maxHP, mp, power = 10, 2500, 3000, 1, 3
+    Tick()
+    Equal(table.getn(requests), 0, key .. " low energy cannot trigger health sacrifice")
+end
+
+Reset()
+Enable("conjuredManaOrange", { combatOnly=1 })
+counts.conjuredManaOrange, hp = 10, 10
+Equal(addon.GetAutoUseConfig("conjuredManaOrange").combatOnly, 0, "orange cannot get contradictory combat-only config")
+Tick()
+Equal(table.getn(requests), 0, "orange never used during combat")
+combat = false
+Event("PLAYER_REGEN_ENABLED")
+Tick()
+Equal(requests[1], "conjuredManaOrange", "orange becomes eligible outside combat")
+for _, key in ipairs({ "conjuredManaOrange", "greaterDreamlessSleep", "dreamlessSleep" }) do
+    Reset()
+    Enable(key)
+    counts[key], hp, moving = 10, 10, true
+    if key=="conjuredManaOrange" then combat=false end
+    Tick()
+    Equal(table.getn(requests), 0, key .. " cannot start while moving")
+    Equal(Status(key), "moving", key .. " reports movement guard")
+    moving = false
+    Tick(.6)
+    Equal(requests[1], key, key .. " resumes once stationary")
+end
+Reset()
+Enable("dreamlessSleep")
+counts.dreamlessSleep, hp = 10, 10
+PlayerIsMoving = nil
+Tick()
+Equal(Status("dreamlessSleep"), "stationary_unknown", "missing motion provider is not guessed stationary")
+Equal(table.getn(requests), 0, "unknown movement leaves manual option")
+PlayerIsMoving = function() return false end
+UnitXP = function(command) if command=="speed" then return 2 end end
+Tick(.6)
+Equal(table.getn(requests), 0, "any provider confirming movement blocks rest item")
+UnitXP = function(command) if command=="speed" then return 0 end end
+Tick(.6)
+Equal(requests[1], "dreamlessSleep", "confirmed optional movement API enables rest item")
+
+for _, aura in ipairs({ "eating", "Drink", "无梦睡眠", "强效昏睡" }) do
+    Reset()
+    Enable(red.key)
+    hp = 10
+    if aura=="eating" then buffs.eating=true else buffs[aura]=20 end
+    Tick()
+    Equal(table.getn(requests), 0, aura .. " recovery is not interrupted by another automatic item")
+end
+Reset()
+Enable(red.key)
+hp, harmfulSleep = 10, true
+Tick()
+Equal(table.getn(requests), 0, "harmful sleep outside ordinary buff cache blocks auto-use")
+local scans = harmfulScans
+Tick(.6)
+Tick(.6)
+Equal(harmfulScans, scans, "harmful aura scan is event-cached, not repeated per poll")
+harmfulSleep = false
+Event("PLAYER_AURAS_CHANGED")
+Tick()
+Equal(requests[1], red.key, "aura removal event resumes recovery requests")
 
 -- Real Core.UseItem performs the final bag lock/cooldown checks and invokes the
 -- manual notification hook. The automatic path must remain one request.
