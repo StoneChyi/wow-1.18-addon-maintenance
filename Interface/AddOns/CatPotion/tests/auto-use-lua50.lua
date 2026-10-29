@@ -1,6 +1,7 @@
 -- Run from Interface/AddOns with the actual lua50.exe interpreter.
 -- No FontStrings or game/account files are constructed or changed.
 local now, uses, cooldownUntil, checks = 0, 0, 0, 0
+local quantities = {}
 local health, maximumHealth, mana, powerType, combat, moving, lastItem = 20, 100, 100, 0, true, false, nil
 local function Check(value, message)
     assert(value, message)
@@ -21,7 +22,7 @@ addon.ItemsByID[9421], addon.ItemsByID[7676], addon.ItemsByID[12662] = stone, th
 addon.ItemsByID[83004], addon.ItemsByID[12190] = orange, sleep
 function addon.ToBoolean(value) return value==true or value==1 or value=="1" end
 function addon.GetDatabase() return CatPotionDB end
-function addon.FindBagItem() return 0, 1, 10 end
+function addon.FindBagItem(name) return 0, 1, quantities[name] or 10 end
 function addon.GetCooldownInfo() return math.max(0, cooldownUntil-now), "item", false end
 function addon.UseItem(name, item)
     uses = uses+1
@@ -56,6 +57,8 @@ math.huge = nil
 dofile("CatPotion/AutoUse.lua")
 Check(not addon.AutoUseDriver:IsVisible(), "default-off engine must sleep")
 Check(addon.GetAutoUseConfig(red).enabled==0, "default disabled")
+Check(addon.GetAutoUsePolicy().singlePerEpisode==1, "single round policy defaults on")
+addon.SetAutoUsePolicy({ singlePerEpisode=0 }) -- Legacy cooldown rearm regression below.
 Check(addon.SetAutoUseConfig(red, { healthThreshold=41 }), "normal numeric setter")
 Check(addon.GetAutoUseConfig(red).healthThreshold==41, "normal number normalized")
 addon.SetAutoUseConfig(red, { healthThreshold=0/0 })
@@ -81,8 +84,10 @@ Check(uses==2, "cooldown expiry rearms still-low health")
 
 local function Fresh()
     now, uses, cooldownUntil, lastItem = 0, 0, 0, nil
+    quantities = {}
     health, maximumHealth, mana, powerType, combat, moving = 20, 100, 100, 0, true, false
     CatPotionDB.autoUseItems = {}
+    CatPotionDB.autoUsePolicy = { singlePerEpisode=0 }
     dofile("CatPotion/AutoUse.lua")
 end
 local function Event(name)
@@ -133,4 +138,54 @@ Check(uses==0, "native rest movement guard")
 moving, now=false,1
 addon.AutoUseDriver.scripts.OnUpdate()
 Check(lastItem=="dreamlessSleep", "native rest resumes stationary")
+
+Fresh()
+addon.SetAutoUsePolicy({ singlePerEpisode=1 })
+addon.SetAutoUseConfig(stone, { enabled=1 })
+addon.SetAutoUseConfig(red, { enabled=1, priority=1 })
+Check(addon.GetAutoUseConfig(stone).priority==10, "native default priority")
+now=.21
+addon.AutoUseDriver.scripts.OnUpdate()
+Check(lastItem=="majorHealing", "native configured priority wins")
+now, cooldownUntil = .42, 1
+addon.AutoUseDriver.scripts.OnUpdate()
+Check(addon.GetAutoUseStatus(stone)=="episode_locked", "native cross-item round lock")
+now=3
+addon.AutoUseDriver.scripts.OnUpdate()
+Check(uses==1, "native cooldown expiry cannot reset same low-health round")
+addon.SetAutoUseConfig(stone, { priority=1, healthThreshold=15 })
+addon.SetAutoUsePolicy({ singlePerEpisode=1 })
+now=3.3
+addon.AutoUseDriver.scripts.OnUpdate()
+Check(uses==1, "native save/repriority does not clear round")
+health=40
+Event("UNIT_HEALTH")
+health=10
+Event("UNIT_HEALTH")
+now=4
+addon.AutoUseDriver.scripts.OnUpdate()
+Check(uses==2, "native real recovery peak rearms next round")
+Check(lastItem=="majorHealthstone", "native stable old order breaks equal priority tie")
+
+Fresh()
+addon.SetAutoUsePolicy({ singlePerEpisode=1 })
+addon.SetAutoUseConfig(stone, { enabled=1 })
+addon.SetAutoUseConfig(red, { enabled=1 })
+now=.21
+addon.AutoUseDriver.scripts.OnUpdate()
+now=2.4
+addon.AutoUseDriver.scripts.OnUpdate()
+Check(addon.GetAutoUseStatus(red)~="episode_locked", "native unconfirmed timeout releases provisional lock")
+quantities.stone, cooldownUntil = 9, 10
+Event("BAG_UPDATE")
+now=2.7
+addon.AutoUseDriver.scripts.OnUpdate()
+Check(addon.GetAutoUseStatus(red)=="episode_locked", "native late quantity receipt restores current-generation lock")
+now=15
+addon.AutoUseDriver.scripts.OnUpdate()
+Check(uses==1, "native late success cannot chain another healing item")
+addon.SetAutoUsePolicy({ singlePerEpisode=0 })
+now=15.3
+addon.AutoUseDriver.scripts.OnUpdate()
+Check(uses==2, "native explicit policy-off allows eligible recovery again")
 print("PASS: " .. checks .. " native " .. tostring(_VERSION) .. " auto-use compatibility assertions")

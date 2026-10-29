@@ -25,6 +25,7 @@ local function Reset()
     itemReads, resourceReads, useFault = 0, 0, nil
     counts[red.key], counts[blue.key], counts[tea.key] = 10, 10, 10
     CatPotionDB.autoUseItems = {}
+    CatPotionDB.autoUsePolicy = { singlePerEpisode=0 } -- Preserve legacy-mode regression coverage below.
     GetTime = function() return now end
     UnitHealth = function() resourceReads=resourceReads+1; return hp end
     UnitHealthMax = function() return maxHP end
@@ -520,6 +521,270 @@ harmfulSleep = false
 Event("PLAYER_AURAS_CHANGED")
 Tick()
 Equal(requests[1], red.key, "aura removal event resumes recovery requests")
+
+-- Configurable stable priority and cross-item low-resource rounds.
+do
+local function RoundReset()
+    Reset()
+    CatPotionDB.autoUsePolicy = nil
+    dofile("CatPotion/AutoUse.lua")
+    Equal(addon.GetAutoUsePolicy().singlePerEpisode, 1, "single item per low-resource round defaults on")
+end
+local function Consume(key, duration)
+    counts[key] = counts[key]-1
+    cooldownEnds[key] = now+(duration or 0)
+    Event("BAG_UPDATE", 0)
+    Tick()
+end
+local function HealthItems()
+    Enable("majorHealthstone")
+    Enable(red.key)
+    Enable(tea.key)
+    counts.majorHealthstone, hp = 10, 20
+end
+
+RoundReset()
+Equal(addon.GetAutoUseConfig("majorHealthstone").priority, 10, "healthstone default priority")
+Equal(addon.GetAutoUseConfig(red.key).priority, 20, "major potion default priority")
+Equal(addon.GetAutoUseConfig(tea.key).priority, 30, "tea default priority")
+addon.SetAutoUseConfig(red.key, { priority=0 })
+Equal(addon.GetAutoUseConfig(red.key).priority, 1, "priority clamps to one")
+addon.SetAutoUseConfig(red.key, { priority=999 })
+Equal(addon.GetAutoUseConfig(red.key).priority, 100, "priority clamps to hundred")
+addon.SetAutoUseConfig(red.key, { priority="5.6" })
+Equal(addon.GetAutoUseConfig(red.key).priority, 6, "priority normalized to integer")
+addon.SetAutoUseConfig(tea.key, { priority=0/0 })
+Equal(addon.GetAutoUseConfig(tea.key).priority, 30, "invalid priority uses stable default")
+Equal(addon.SetAutoUsePolicy("bad"), false, "policy setter rejects invalid shape")
+HealthItems()
+addon.SetAutoUseConfig(red.key, { priority=1 })
+Tick()
+Equal(requests[1], red.key, "smaller configured priority wins health group")
+RoundReset()
+HealthItems()
+addon.SetAutoUseConfig(red.key, { priority=5 })
+addon.SetAutoUseConfig("majorHealthstone", { priority=5 })
+Tick()
+Equal(requests[1], "majorHealthstone", "equal priority retains original stable order")
+RoundReset()
+Enable(blue.key)
+Enable(tea.key, { priority=1 })
+mp = 10
+Tick()
+Equal(requests[1], tea.key, "mana group supports independent configured order")
+RoundReset()
+Enable("majorHealthstone", { priority=100 })
+Enable(blue.key, { priority=1 })
+counts.majorHealthstone, hp, mp = 10, 10, 10
+Tick()
+Equal(requests[1], "majorHealthstone", "health group remains ahead of mana regardless of item priority")
+
+RoundReset()
+HealthItems()
+Tick()
+Consume("majorHealthstone", 1)
+Tick(4)
+Equal(table.getn(requests), 1, "same low-health round never chains stone/red/tea after cooldown")
+Equal(Status(red.key), "episode_locked", "other healing item exposes round lock")
+addon.SetAutoUseConfig(red.key, { priority=1, healthThreshold=15 })
+addon.SetAutoUsePolicy({ singlePerEpisode=1 })
+Tick(2)
+Equal(table.getn(requests), 1, "saving priority/lower threshold/same policy preserves live lock")
+Health(39)
+Health(20)
+Equal(table.getn(requests), 1, "partial recovery below original line cannot reset round")
+Health(40)
+Health(10)
+Equal(table.getn(requests), 2, "real recovery to original line starts a new low-health round")
+Equal(requests[2], red.key, "new round obeys revised priority")
+
+RoundReset()
+HealthItems()
+addon.SetAutoUseConfig(tea.key, { healthThreshold=70 })
+Tick()
+Consume("majorHealthstone", 1)
+Health(50)
+Tick(3)
+Equal(table.getn(requests), 1, "higher tea threshold cannot consume another item in same round")
+Health(74)
+Health(20)
+Equal(table.getn(requests), 1, "highest enabled threshold plus five is the reset line")
+Health(75)
+Health(20)
+Equal(table.getn(requests), 2, "reaching highest threshold plus five resets group")
+
+RoundReset()
+HealthItems()
+Enable("conjuredManaOrange", { healthThreshold=95 })
+Tick()
+Consume("majorHealthstone", 1)
+Health(40)
+Health(20)
+Tick(3)
+Equal(table.getn(requests), 2, "combat round ignores inapplicable high-threshold rest food")
+RoundReset()
+Enable("conjuredManaOrange", { healthThreshold=70 })
+counts.conjuredManaOrange, combat, hp = 10, false, 20
+Tick()
+Consume("conjuredManaOrange", 0)
+Health(30)
+moving = true
+Tick(3)
+Event("UNIT_HEALTH", "player")
+Tick()
+moving = false
+Event("UNIT_HEALTH", "player")
+Tick()
+Equal(table.getn(requests), 1, "walking cannot lower an established food recovery line and permit re-eating")
+
+RoundReset()
+HealthItems()
+Enable(blue.key)
+addon.SetAutoUseConfig(tea.key, { priority=1 })
+mp = 10
+Tick()
+Consume(tea.key, 1)
+Health(50)
+Tick(3)
+Equal(table.getn(requests), 1, "dual restore keeps mana locked after only health recovered")
+power = 3
+Event("UNIT_DISPLAYPOWER", "player")
+Tick()
+power = 0
+Event("UNIT_DISPLAYPOWER", "player")
+Tick()
+Equal(table.getn(requests), 1, "changing to an energy form cannot reset a mana round")
+mp = 30
+Event("UNIT_MANA", "player")
+Tick()
+mp = 10
+Event("UNIT_MANA", "player")
+Tick()
+Equal(table.getn(requests), 2, "dual restore's mana group rearms only after mana recovery")
+RoundReset()
+HealthItems()
+Enable(blue.key)
+addon.SetAutoUseConfig(tea.key, { priority=1 })
+Tick()
+Consume(tea.key, 1)
+Health(100)
+mp = 10
+Event("UNIT_MANA", "player")
+Tick(3)
+Equal(table.getn(requests), 2, "dual item does not lock the mana pool that was already full")
+
+RoundReset()
+HealthItems()
+Tick()
+Health(50)
+Health(20)
+Consume("majorHealthstone", 5)
+Tick(2.1)
+Equal(table.getn(requests), 2, "real recovery peak during pending permits a later newly damaged round")
+RoundReset()
+HealthItems()
+Tick()
+Consume("majorHealthstone", 5)
+addon.AutoUseSettings = { IsVisible=function() return true end }
+Health(50)
+Health(20)
+Tick(3)
+Equal(table.getn(requests), 1, "settings popup pauses requests while observing resource recovery")
+addon.AutoUseSettings = nil
+Tick(.6)
+Equal(table.getn(requests), 2, "popup-time recovery remains recorded after popup closes")
+
+RoundReset()
+HealthItems()
+Tick()
+Consume("majorHealthstone", 1)
+addon.SetAutoUseConfig("majorHealthstone", { enabled=0 })
+addon.SetAutoUseConfig(red.key, { enabled=0 })
+addon.SetAutoUseConfig(tea.key, { enabled=0 })
+Health(100)
+Health(20)
+addon.SetAutoUseConfig(red.key, { enabled=1 })
+Tick(3)
+Equal(table.getn(requests), 2, "recovery while all auto items are off prevents stale lock after re-enabling")
+
+RoundReset()
+HealthItems()
+local beforeManual = addon.CaptureAutoUseResources(red)
+counts[red.key], cooldownEnds[red.key], hp = 9, now+1, 100
+addon.NotifyAutoUseManual(red, 10, beforeManual)
+Tick()
+hp = 20
+Event("UNIT_HEALTH", "player")
+Tick(3)
+Equal(requests[1], "majorHealthstone", "manual pre-use snapshot captures synchronous healing and the next round")
+RoundReset()
+HealthItems()
+Tick()
+Consume("majorHealthstone", 1)
+Equal(addon.UseItem(red.item, red), true, "manual item use remains allowed during automatic round lock")
+Equal(table.getn(requests), 2, "manual use bypasses only the automatic round gate")
+
+RoundReset()
+HealthItems()
+addon.SetAutoUsePolicy({ singlePerEpisode=0 })
+Tick()
+Consume("majorHealthstone", 120)
+Tick(1.8)
+Equal(table.getn(requests), 1, "disabled single mode still waits two seconds after confirmation")
+Tick(.3)
+Equal(requests[2], red.key, "explicitly disabling single mode allows another eligible item after settling")
+
+RoundReset()
+HealthItems()
+useFault = "reject"
+Tick()
+useFault = nil
+addon.SetAutoUseConfig(tea.key, { priority=1 })
+Tick(2.1)
+Equal(requests[2], tea.key, "rejected request does not spend the resource round")
+RoundReset()
+HealthItems()
+Tick()
+Tick(2.1)
+Equal(Status(red.key) ~= "episode_locked", true, "unconfirmed timeout releases provisional round lock")
+counts.majorHealthstone, cooldownEnds.majorHealthstone = 9, now+10
+Event("BAG_UPDATE", 0)
+Tick()
+Equal(Status(red.key), "episode_locked", "late quantity confirmation restores lock for same unrecovered round")
+Tick(12)
+Equal(table.getn(requests), 1, "late successful use cannot later chain red after its own cooldown")
+RoundReset()
+HealthItems()
+Tick()
+Tick(2.1)
+Health(40)
+addon.SetAutoUseConfig("majorHealthstone", { enabled=0 })
+addon.SetAutoUseConfig(tea.key, { enabled=0 })
+locked[red.key] = true
+Health(20)
+Tick(2.1)
+counts.majorHealthstone, cooldownEnds.majorHealthstone = 9, now+10
+Event("BAG_UPDATE", 0)
+Tick()
+Equal(Status(red.key) ~= "episode_locked", true, "old late confirmation cannot lock a recovered generation")
+locked[red.key] = false
+Tick(2.1)
+Equal(requests[2], red.key, "new low-health generation remains usable after old late receipt")
+
+RoundReset()
+HealthItems()
+Tick()
+local normalCooldown = addon.GetCooldownInfo
+addon.GetCooldownInfo = function(name)
+    if name==addon.ItemsByID[9421].item then return 5, "shared", false end
+    return normalCooldown(name)
+end
+Event("BAG_UPDATE_COOLDOWN")
+Tick()
+Equal(Status("majorHealthstone"), "pending", "unrelated shared cooldown is not own-consumption confirmation")
+Tick(2.1)
+Equal(Status("majorHealthstone"), "unconfirmed", "shared cooldown without quantity evidence times out conservatively")
+end
 
 -- Real Core.UseItem performs the final bag lock/cooldown checks and invokes the
 -- manual notification hook. The automatic path must remain one request.

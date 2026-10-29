@@ -69,13 +69,19 @@ local function Check(parent, value, field, y)
     return check
 end
 
-local function Threshold(parent, value, field, y)
+local function NumberText(field, number)
+    if field == "priority" then return tostring(number) end
+    return number == 0 and (field == "minHealthPercent" and "仅生命点数下限" or "关闭此条件") or (number .. "%")
+end
+
+local function Threshold(parent, value, field, y, minimum, maximum)
+    minimum, maximum = minimum or 0, maximum or 100
     local slider = CreateFrame("Slider", nil, parent)
     slider:SetWidth(348)
     slider:SetHeight(14)
     slider:SetPoint("TOPLEFT", parent, "TOPLEFT", 24, y)
     slider:SetOrientation("HORIZONTAL")
-    slider:SetMinMaxValues(0, 100)
+    slider:SetMinMaxValues(minimum, maximum)
     slider:SetValueStep(1)
     slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
     addon.ApplyFlatBackdrop(slider, 0.035, 0.055, 0.09, 0.98)
@@ -85,9 +91,9 @@ local function Threshold(parent, value, field, y)
     slider.valueText:SetPoint("BOTTOMRIGHT", slider, "TOPRIGHT", 0, 7)
     slider:SetScript("OnValueChanged", function()
         if loading or not draft then return end
-        local number = math.max(0, math.min(100, math.floor((tonumber(slider:GetValue()) or 0) + 0.5)))
+        local number = math.max(minimum, math.min(maximum, math.floor((tonumber(slider:GetValue()) or minimum) + 0.5)))
         draft[field] = number
-        slider.valueText:SetText(number == 0 and (field == "minHealthPercent" and "仅生命点数下限" or "关闭此条件") or (number .. "%"))
+        slider.valueText:SetText(NumberText(field, number))
     end)
     return slider
 end
@@ -128,6 +134,28 @@ local function CreatePanel()
     frame.description:SetPoint("TOPLEFT", frame, "TOPLEFT", 18, -42)
     frame.enabled = Check(frame, "启用此物品的阈值自动使用（默认关闭）", "enabled", -66)
     frame.combatOnly = Check(frame, "仅在战斗中自动使用", "combatOnly", -98)
+    frame.singlePerEpisode = Check(frame, "同轮资源不足只自动用一种（本角色共用）", "singlePerEpisode", -130)
+    frame.singlePerEpisode:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(frame.singlePerEpisode, "ANCHOR_RIGHT")
+        GameTooltip:ClearLines()
+        GameTooltip:AddLine("同一轮资源不足，只自动使用一种恢复品。", 0.85, 0.9, 1)
+        GameTooltip:AddLine("恢复至本轮最高触发线加5个百分点（上限100%）后重新允许。", 0.7, 0.8, 0.9)
+        GameTooltip:AddLine("关闭此项可继续自动补用；左键手动始终可用。", 0.7, 0.8, 0.9)
+        GameTooltip:Show()
+    end)
+    frame.singlePerEpisode:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    frame.episodeHint = Text(frame, "同轮限制需资源恢复后重置，仍可左键手动使用。", 10)
+    frame.episodeHint:SetPoint("TOPLEFT", frame, "TOPLEFT", 18, -159)
+    frame.priority = Threshold(frame, "自动优先级（数值越小越先）", "priority", -194, 1, 100)
+    frame.priority:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(frame.priority, "ANCHOR_RIGHT")
+        GameTooltip:ClearLines()
+        GameTooltip:AddLine("数值越小，同类资源恢复中越先使用。", 0.85, 0.9, 1)
+        GameTooltip:AddLine("保命仍优先于回蓝；同值沿用原有顺序。", 0.7, 0.8, 0.9)
+        GameTooltip:AddLine("无货、冷却或条件不符时会考虑下一项。", 0.7, 0.8, 0.9)
+        GameTooltip:Show()
+    end)
+    frame.priority:SetScript("OnLeave", function() GameTooltip:Hide() end)
     frame.health = Threshold(frame, "生命低于", "healthThreshold", -162)
     frame.mana = Threshold(frame, "法力低于", "manaThreshold", -218)
     frame.energy = Threshold(frame, "能量低于", "energyThreshold", -274)
@@ -157,6 +185,7 @@ local function CreatePanel()
             frame.message:SetText("设置未保存，请重新打开后再试。")
             return
         end
+        addon.SetAutoUsePolicy({ singlePerEpisode = draft.singlePerEpisode })
         frame:Hide()
         if addon.RefreshPotionTimers then addon.RefreshPotionTimers() end
     end)
@@ -169,6 +198,7 @@ function addon.ShowAutoUseSettings(item)
     if not addon.IsAutoUseItem or not addon.IsAutoUseItem(item) then return false end
     local config = addon.GetAutoUseConfig(item)
     local definition = addon.GetAutoUseDefinition(item)
+    local policy = addon.GetAutoUsePolicy()
     if not config or not definition then return false end
     panel = panel or CreatePanel()
     panel:Hide()
@@ -177,23 +207,26 @@ function addon.ShowAutoUseSettings(item)
         enabled = config.enabled, combatOnly = config.combatOnly,
         healthThreshold = config.healthThreshold, manaThreshold = config.manaThreshold,
         energyThreshold = config.energyThreshold, minHealthPercent = config.minHealthPercent,
+        priority = config.priority, singlePerEpisode = policy.singlePerEpisode,
     }
     loading = true
     panel.title:SetText((item.label or item.item) .. " · 自动使用")
     panel.message:SetText("")
     if addon.ToBoolean(draft.enabled) then panel.enabled.mark:Show() else panel.enabled.mark:Hide() end
     if addon.ToBoolean(draft.combatOnly) then panel.combatOnly.mark:Show() else panel.combatOnly.mark:Hide() end
+    if addon.ToBoolean(draft.singlePerEpisode) then panel.singlePerEpisode.mark:Show() else panel.singlePerEpisode.mark:Hide() end
     panel.combatOnly.disabled = definition.outOfCombatOnly
     panel.combatOnly:EnableMouse(not definition.outOfCombatOnly)
     panel.combatOnly:SetAlpha(definition.outOfCombatOnly and 0.5 or 1)
     panel.combatOnly.label:SetText(definition.outOfCombatOnly and "此物品仅在脱战时自动使用" or "仅在战斗中自动使用")
     local rows = {
+        { panel.priority, "priority", true },
         { panel.health, "healthThreshold", definition.health },
         { panel.mana, "manaThreshold", definition.mana },
         { panel.energy, "energyThreshold", definition.energy },
         { panel.minHealth, "minHealthPercent", definition.costsHealth },
     }
-    local y, last = 162, 162
+    local y, last = 194, 194
     for _, row in ipairs(rows) do
         local slider, field, supported = unpack(row)
         slider:EnableMouse(supported)
@@ -203,7 +236,7 @@ function addon.ShowAutoUseSettings(item)
             slider:SetPoint("TOPLEFT", panel, "TOPLEFT", 24, -y)
             slider:Show()
             local number = draft[field] or 0
-            slider.valueText:SetText(number == 0 and (field == "minHealthPercent" and "仅生命点数下限" or "关闭此条件") or (number .. "%"))
+            slider.valueText:SetText(NumberText(field, number))
             last, y = y, y+56
         else
             slider:Hide()

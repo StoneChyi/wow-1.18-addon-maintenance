@@ -1258,6 +1258,7 @@ function addon.UseItem(itemName, itemData, weaponSlot, profileId, groundTarget)
         TargetUnit("player")
     end
 
+    local autoUseResources = addon.CaptureAutoUseResources and addon.CaptureAutoUseResources(itemData)
     if itemData then pendingItemUses[itemData.key] = { item = itemData, count = itemCount, time = GetTime() } end
     if instantGround then
         if not UseInstantGroundItem(bag, slot, groundAtPlayer) then
@@ -1299,7 +1300,7 @@ function addon.UseItem(itemName, itemData, weaponSlot, profileId, groundTarget)
         addon.MarkAuraCacheDirty()
         addon.MarkWeaponEnchantCacheDirty()
     end
-    if addon.NotifyAutoUseManual then addon.NotifyAutoUseManual(itemData, itemCount) end
+    if addon.NotifyAutoUseManual then addon.NotifyAutoUseManual(itemData, itemCount, autoUseResources) end
     addon.Print("尝试使用：" .. itemName, false, profileId)
     return true
 end
