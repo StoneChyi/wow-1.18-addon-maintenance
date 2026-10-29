@@ -82,16 +82,34 @@ class RecordTests(unittest.TestCase):
             root = Path(directory).resolve()
             assert root.is_relative_to(parent.resolve())
             notes = root / 'PluginHistory/Plugins'; notes.mkdir(parents=True)
+            runtime = root / 'PluginHistory/Runtime'; runtime.mkdir()
             (notes / 'README.md').write_bytes(b'\xef\xbb\xbf# index\r\n')
             (notes / 'Fixture.md').write_text(page(entry()), encoding='utf-8')
             (notes / 'Unknown.md').write_text('# Unknown 修改说明\n', encoding='utf-8')
+            (notes / 'Unattributed.md').write_text(page(entry()).replace('Fixture', 'Unattributed'), encoding='utf-8')
+            (runtime / 'ExampleDLL.md').write_text(page(entry()).replace('Fixture', 'ExampleDLL'), encoding='utf-8')
             (root / 'PluginHistory/maintenance-index.json').write_text(json.dumps({'addons': [
-                {'addon': 'Fixture', 'status': 'documented_history', 'note': 'PluginHistory/Plugins/Fixture.md', 'purpose': '真实修改'},
-                {'addon': 'Unknown', 'status': 'unconfirmed', 'note': 'PluginHistory/Plugins/Unknown.md', 'purpose': '待确认'}]}), encoding='utf-8')
+                {'addon': 'Fixture', 'status': 'documented_history', 'history_group': 'modified', 'note': 'PluginHistory/Plugins/Fixture.md', 'purpose': '真实修改'},
+                {'addon': 'Unknown', 'status': 'unconfirmed', 'history_group': 'unchanged', 'note': 'PluginHistory/Plugins/Unknown.md', 'purpose': '待确认'},
+                {'addon': 'Unattributed', 'status': 'unconfirmed', 'history_group': 'modified', 'note': 'PluginHistory/Plugins/Unattributed.md', 'purpose': '版本更新已确认，作者未确认'}],
+                'runtime_components': [{'addon': 'ExampleDLL', 'status': 'documented_history', 'note': 'PluginHistory/Runtime/ExampleDLL.md', 'purpose': '独立 DLL 更新'}]}), encoding='utf-8')
             generated, _ = outputs(root)
             self.assertIn('Fixture.md#change-Fixture-20261015-01', generated['PluginHistory/Plugins/README.md'])
-            self.assertNotIn('[Unknown]', generated['PluginHistory/Plugins/README.md'])
-            self.assertIn('[Unknown]', generated['PluginHistory/待确认插件.md'])
+            main = generated['PluginHistory/Plugins/README.md']
+            unchanged, modified = main.split('## 二、经过版本迭代或修改的插件')
+            self.assertIn('[Unknown]', unchanged)
+            self.assertNotIn('[Unattributed]', unchanged)
+            self.assertIn('[Unattributed]', modified)
+            self.assertNotIn('[Unknown]', generated['PluginHistory/待确认插件.md'])
+            self.assertNotIn('[ExampleDLL]', main)
+            self.assertIn('[ExampleDLL]', generated['PluginHistory/Runtime/README.md'])
+            machine = json.loads(generated['PluginHistory/change-index.json'])
+            self.assertEqual(machine['history_group_counts'], {'unchanged': 1, 'modified': 2})
+            self.assertEqual(machine['addon_pages'], 3)
+            self.assertEqual(len(machine['runtime_components']), 1)
+            self.assertEqual(machine['runtime_components'][0]['note'], 'PluginHistory/Runtime/ExampleDLL.md')
+            self.assertNotIn('## 目前存在的问题', (notes / 'Fixture.md').read_text(encoding='utf-8'))
+            self.assertNotIn('## 进一步优化方案', (notes / 'Fixture.md').read_text(encoding='utf-8'))
             for name, text in generated.items(): write_text(root / name, text)
             snapshot = {name: (root / name).read_bytes() for name in generated}
             repeated, _ = outputs(root)

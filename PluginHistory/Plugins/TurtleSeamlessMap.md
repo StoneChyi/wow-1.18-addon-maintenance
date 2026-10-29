@@ -4,6 +4,8 @@
 
 ## 插件概况
 
+- 分类：经过版本迭代或修改的插件。
+
 - 插件：`TurtleSeamlessMap`，独立新增，版本 0.8.0。
 - 维护状态：**有维护记录**。
 
@@ -402,6 +404,9 @@
 
 ## 早期历史汇总与维护依据
 
+<details>
+<summary>展开早期原始说明与证据（不是当前问题或优化清单）</summary>
+
 本插件于 2026-10-24 独立创建，不将 ModernMapMarkers 的既有功能或 OpenMap 项目算作本项目历史新增。
 
 ## 待补充
@@ -416,3 +421,5 @@
 - [地图提取报告](../Research/TurtleSeamlessMap-地图提取-20261024.json)
 - [地图资源指纹](../Research/TurtleSeamlessMap-地图资源清单-20261024.json)
 - [插件目录](../../Interface/AddOns/TurtleSeamlessMap)
+
+</details>

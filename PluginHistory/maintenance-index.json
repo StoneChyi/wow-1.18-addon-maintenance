@@ -34,7 +34,8 @@
         "Interface/AddOns/QianKunBag/README.md"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "首版受控检查通过，实际 1.12 加载/显示/原生操作/第三方钩子及性能资源验收待补充；复杂规则、徽标与后续功能分步推进。"
+      "pending": "首版受控检查通过，实际 1.12 加载/显示/原生操作/第三方钩子及性能资源验收待补充；复杂规则、徽标与后续功能分步推进。",
+      "history_group": "modified"
     },
     {
       "addon": "TurtleSeamlessMap",
@@ -87,7 +88,8 @@
         "Interface/AddOns/TurtleSeamlessMap/Art/v9_city301_64_0_0.blp"
       ],
       "tracked_files_at_reference": 0,
-      "pending": "0.8.0通过81组离线检查；51条记录、60区域／城市、98地理窗口已复核。实际登录／传送、接缝、街区桥梁、缩放及性能待游戏验收；四处未证实地理候选、原生角形地貌、源精度与静态光照保留限制，不声称全部视觉问题已最终解决。"
+      "pending": "0.8.0通过81组离线检查；51条记录、60区域／城市、98地理窗口已复核。实际登录／传送、接缝、街区桥梁、缩放及性能待游戏验收；四处未证实地理候选、原生角形地貌、源精度与静态光照保留限制，不声称全部视觉问题已最终解决。",
+      "history_group": "modified"
     }
   ],
   "addons": [
@@ -113,7 +115,8 @@
         "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
         "files_changed": 33,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Accountant",
@@ -123,7 +126,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 18,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "ActionBarProfiles",
@@ -141,7 +145,8 @@
         "Interface/AddOns/ActionBarProfiles/ActionBarProfiles.lua"
       ],
       "tracked_files_at_reference": 4,
-      "pending": "早于 10-06 的个人改动尚无完整逐项记录；请补充额外配置需求。"
+      "pending": "早于 10-06 的个人改动尚无完整逐项记录；请补充额外配置需求。",
+      "history_group": "modified"
     },
     {
       "addon": "AdvancedTradeSkillWindow2",
@@ -151,7 +156,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 44,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "ArchiTotem",
@@ -161,7 +167,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 16,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Atlas",
@@ -176,7 +183,8 @@
         "Interface/AddOns/Atlas/AtlasMaps.lua"
       ],
       "tracked_files_at_reference": 115,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "AtlasLoot",
@@ -194,7 +202,8 @@
         "Interface/AddOns/AtlasLoot/Locale/locale.en.lua"
       ],
       "tracked_files_at_reference": 61,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "AtlasQuest",
@@ -208,7 +217,8 @@
         "Interface/AddOns/AtlasQuest/Locale/localization.cn.lua"
       ],
       "tracked_files_at_reference": 10,
-      "pending": "请确认是否本人增加乌龟服任务资料，还是随整合包更新带入；旧备份不是官方原版。"
+      "pending": "请确认是否本人增加乌龟服任务资料，还是随整合包更新带入；旧备份不是官方原版。",
+      "history_group": "modified"
     },
     {
       "addon": "AuldLangSyne",
@@ -218,7 +228,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 5,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "AutoBar",
@@ -228,7 +239,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 16,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "AutoMarker",
@@ -247,7 +259,8 @@
         "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Automatonex",
@@ -285,7 +298,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 2,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Bagshui",
@@ -312,7 +326,8 @@
       "maintenance_files_added_after_reference": [
         "Interface/AddOns/Bagshui/Components/Performance.lua",
         "Interface/AddOns/Bagshui/Components/StartupKeys.lua"
-      ]
+      ],
+      "history_group": "modified"
     },
     {
       "addon": "BetterCharacterStats",
@@ -347,7 +362,8 @@
         "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
         "files_changed": 6,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "BigWigs",
@@ -448,7 +464,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 34,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Blizzard_AuctionUI",
@@ -458,7 +475,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_BattlefieldMinimap",
@@ -468,7 +486,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_BindingUI",
@@ -478,7 +497,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_CombatText",
@@ -488,7 +508,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_CraftUI",
@@ -498,7 +519,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_GMSurveyUI",
@@ -508,7 +530,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_InspectUI",
@@ -518,7 +541,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_MacroUI",
@@ -528,7 +552,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_RaidUI",
@@ -538,7 +563,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_TalentUI",
@@ -548,7 +574,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_TradeSkillUI",
@@ -558,7 +585,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Blizzard_TrainerUI",
@@ -568,7 +596,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "BrainwasherPro",
@@ -587,7 +616,8 @@
         "Interface/AddOns/BrainwasherPro/BrainwasherPro.lua"
       ],
       "tracked_files_at_reference": 2,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "BuffTool",
@@ -601,7 +631,8 @@
         "Interface/AddOns/BuffTool/BuffTool.lua"
       ],
       "tracked_files_at_reference": 52,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "Capslock",
@@ -624,7 +655,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Cat",
@@ -655,7 +687,8 @@
         "Interface/AddOns/Cat/UI/Settings-PaladinTank.lua"
       ],
       "tracked_files_at_reference": 100,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "Cat2",
@@ -797,7 +830,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 125,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "CatPotion",
@@ -851,7 +885,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Cooline",
@@ -877,7 +912,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Cryolysis",
@@ -887,7 +923,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 273,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Cursive",
@@ -897,7 +934,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 40,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "DPSMateX",
@@ -931,7 +969,8 @@
         "Interface/AddOns/DPSMateX/Damage/DPSMateX_Details_DamageTotal.xml"
       ],
       "tracked_files_at_reference": 105,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "DPSMateXEncounters",
@@ -954,7 +993,8 @@
         "Interface/AddOns/DPSMateXEncounters/Views.lua"
       ],
       "tracked_files_at_reference": 5,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "DPSMateXExtend",
@@ -1046,7 +1086,8 @@
         "Interface/AddOns/DPSMateXExtend/DPSMateX_SunderArmor/DPSMateX_Details_SunderArmorTotal.xml"
       ],
       "tracked_files_at_reference": 100,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "DPSMateXExtendMore",
@@ -1103,7 +1144,8 @@
         "Interface/AddOns/DPSMateXExtendMore/DPSMateX_Procs/DPSMateX_Details_ProcsTotal.xml"
       ],
       "tracked_files_at_reference": 49,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "DPSMateXInsights",
@@ -1129,7 +1171,8 @@
         "Interface/AddOns/DPSMateXInsights/README.md"
       ],
       "tracked_files_at_reference": 8,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "EavesDrop",
@@ -1153,7 +1196,8 @@
         "Interface/AddOns/EavesDrop/diagnostics.lua"
       ],
       "tracked_files_at_reference": 16,
-      "pending": "待游戏验收；2026-10-26以前是否存在个人修改仍无证据。"
+      "pending": "待游戏验收；2026-10-26以前是否存在个人修改仍无证据。",
+      "history_group": "modified"
     },
     {
       "addon": "ExtraResourceBars",
@@ -1163,7 +1207,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 41,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "EzPoison",
@@ -1184,7 +1229,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "FishingBuddy",
@@ -1194,7 +1240,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 78,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Flyout",
@@ -1213,7 +1260,8 @@
         "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
         "files_changed": 3,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "GoubayuHeal",
@@ -1242,7 +1290,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 7,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "HideOutdoorWorldState",
@@ -1261,7 +1310,8 @@
       "tracked_files_at_reference": 4,
       "pending": "",
       "current_state": "removed",
-      "removal_confirmed_on": "2026-10-10"
+      "removal_confirmed_on": "2026-10-10",
+      "history_group": "modified"
     },
     {
       "addon": "HolyHope",
@@ -1271,7 +1321,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 69,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Interact",
@@ -1281,7 +1332,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 4,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "LoseControl",
@@ -1291,7 +1343,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 3,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Meeting",
@@ -1344,7 +1397,8 @@
         "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "ModernMapMarkers",
@@ -1354,7 +1408,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 16,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "ModifiedPowerAuras",
@@ -1364,7 +1419,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 403,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "MySlash",
@@ -1387,7 +1443,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 2,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "NotGrid",
@@ -1399,7 +1456,8 @@
         "Interface/AddOns/NotGrid/core.lua"
       ],
       "tracked_files_at_reference": 22,
-      "pending": "团队实测待确认；2026-10-10 前的个人修改归属仍待补充。"
+      "pending": "团队实测待确认；2026-10-10 前的个人修改归属仍待补充。",
+      "history_group": "modified"
     },
     {
       "addon": "OneBag",
@@ -1424,7 +1482,8 @@
         "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
         "files_changed": 2,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Outfitter",
@@ -1455,7 +1514,8 @@
         "Interface/AddOns/Outfitter/pfui-skin.lua"
       ],
       "tracked_files_at_reference": 40,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "PallyPower",
@@ -1478,7 +1538,8 @@
         "Interface/AddOns/PallyPower/PallyPower.xml"
       ],
       "tracked_files_at_reference": 77,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "PizzaWorldBuffs",
@@ -1488,7 +1549,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 26,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "PlayTurtle",
@@ -1498,7 +1560,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 35,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "PlayerLinkEnhance",
@@ -1517,7 +1580,8 @@
         "Interface/AddOns/PlayerLinkEnhance/SaferMenu.lua"
       ],
       "tracked_files_at_reference": 5,
-      "pending": "2026-10-12：10 组 Lua 5.1 模拟及归档菜单回归通过；实际 1.12 菜单对号验收待补充。"
+      "pending": "2026-10-12：10 组 Lua 5.1 模拟及归档菜单回归通过；实际 1.12 菜单对号验收待补充。",
+      "history_group": "modified"
     },
     {
       "addon": "QuickHeal",
@@ -1529,7 +1593,8 @@
         "Interface/AddOns/QuickHeal/libs/HealComm-1.0/HealComm-1.0.lua"
       ],
       "tracked_files_at_reference": 25,
-      "pending": "真实团队通讯与完整选人流程待验收；此前个人修改归属待补充。"
+      "pending": "真实团队通讯与完整选人流程待验收；此前个人修改归属待补充。",
+      "history_group": "modified"
     },
     {
       "addon": "QuickReply",
@@ -1539,7 +1604,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 6,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "RaidCheck",
@@ -1568,7 +1634,8 @@
         "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
         "files_changed": 4,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Rinse",
@@ -1578,7 +1645,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 4,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "STSMmayor",
@@ -1599,7 +1667,8 @@
         "Interface/AddOns/STSMmayor/STSMmayor.toc"
       ],
       "tracked_files_at_reference": 36,
-      "pending": "真实墙体碰撞及服务器交互规则待实测。"
+      "pending": "真实墙体碰撞及服务器交互规则待实测。",
+      "history_group": "modified"
     },
     {
       "addon": "S_ChatBar",
@@ -1625,7 +1694,8 @@
         "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "S_ItemTip",
@@ -1654,7 +1724,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "S_WorldMap",
@@ -1664,7 +1735,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 15,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "ShaguDPS",
@@ -1694,7 +1766,8 @@
         "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "ShaguScan",
@@ -1704,7 +1777,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 21,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "SimpleRaidTargetIcons",
@@ -1755,7 +1829,8 @@
         "Interface/AddOns/SimpleRaidTargetIcons/img/srti_icons_borderless.tga"
       ],
       "tracked_files_at_reference": 30,
-      "pending": "服务器就位/重置响应、实际血条和缩放效果待游戏确认。"
+      "pending": "服务器就位/重置响应、实际血条和缩放效果待游戏确认。",
+      "history_group": "modified"
     },
     {
       "addon": "SpecialTalent",
@@ -1770,7 +1845,8 @@
         "Interface/AddOns/SpecialTalent/SpecialTalentUI.xml"
       ],
       "tracked_files_at_reference": 10,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "SpiritSenseRec",
@@ -1780,7 +1856,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 3,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "StatCompare",
@@ -1810,7 +1887,8 @@
         "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
         "files_changed": 4,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "SuperCleveRoidMacros",
@@ -1829,7 +1907,8 @@
         "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
         "files_changed": 2,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "SuperMacro",
@@ -1856,7 +1935,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 7,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "TWThreat",
@@ -1872,7 +1952,8 @@
         "retention_history": "整合包后期删除此插件，用户自行保存",
         "event_dates_verified": false
       },
-      "pending": "下载及移除日期、移除原因、个人修改归属，以及 10.5.0 的真实安装包、发布来源和同系列关系。"
+      "pending": "下载及移除日期、移除原因、个人修改归属，以及 10.5.0 的真实安装包、发布来源和同系列关系。",
+      "history_group": "unchanged"
     },
     {
       "addon": "TankBuddyEnh",
@@ -1889,7 +1970,8 @@
         "Interface/AddOns/TankBuddyEnh/TankBuddyEnh.xml"
       ],
       "tracked_files_at_reference": 8,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "TianYan",
@@ -1908,7 +1990,8 @@
         "Interface/AddOns/TianYan/TianYan.toc"
       ],
       "tracked_files_at_reference": 3,
-      "pending": "未被客户端观测到的单位无法保证完整统计；请补充实际战斗验收情况。"
+      "pending": "未被客户端观测到的单位无法保证完整统计；请补充实际战斗验收情况。",
+      "history_group": "modified"
     },
     {
       "addon": "Tmog",
@@ -1920,7 +2003,8 @@
       ],
       "maintenance_files": [],
       "tracked_files_at_reference": 53,
-      "pending": "请确认本插件本体是否曾另外修改；若有，请描述变化。"
+      "pending": "请确认本插件本体是否曾另外修改；若有，请描述变化。",
+      "history_group": "unchanged"
     },
     {
       "addon": "TrainerSkills",
@@ -1942,7 +2026,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "TurtleMail",
@@ -1961,7 +2046,8 @@
         "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
         "files_changed": 8,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "Turtle_General",
@@ -1971,7 +2057,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "Turtle_GroupUI",
@@ -1981,7 +2068,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 1,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "UnitXP_SP3_Addon",
@@ -1993,7 +2081,8 @@
       ],
       "maintenance_files": [],
       "tracked_files_at_reference": 17,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "WIM",
@@ -2024,7 +2113,8 @@
         "Interface/AddOns/WIM/localization.lua"
       ],
       "tracked_files_at_reference": 47,
-      "pending": "战斗按键、连续回复、ESC/外部点击和其他界面覆盖情况请补充游戏验收。"
+      "pending": "战斗按键、连续回复、ESC/外部点击和其他界面覆盖情况请补充游戏验收。",
+      "history_group": "modified"
     },
     {
       "addon": "WushuangLoot",
@@ -2060,7 +2150,8 @@
         "report": "PluginHistory/Research/wsloot与无双个人版回退-20261025.md",
         "personal_commit": "976538accd9a1f235c8f9c0406b283a9da458fce",
         "game_acceptance": "待游戏验收"
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "XyTracker",
@@ -2085,7 +2176,8 @@
         "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "YGB_OTAlarm",
@@ -2103,7 +2195,8 @@
         "Interface/AddOns/YGB_OTAlarm/YGB_OTAlarm.toc"
       ],
       "tracked_files_at_reference": 7,
-      "pending": ""
+      "pending": "",
+      "history_group": "modified"
     },
     {
       "addon": "aux-addon",
@@ -2128,7 +2221,8 @@
         "Interface/AddOns/aux-addon/util/temptable.lua"
       ],
       "tracked_files_at_reference": 49,
-      "pending": "缓存与扫描优化的真实游戏收益、异常消息根源仍待补充。"
+      "pending": "缓存与扫描优化的真实游戏收益、异常消息根源仍待补充。",
+      "history_group": "modified"
     },
     {
       "addon": "diminfo",
@@ -2152,7 +2246,8 @@
         "manifest": "PluginHistory/Research/10月16日包合并实施-20261018.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "hyx",
@@ -2173,7 +2268,8 @@
         "Interface/AddOns/hyx/hyx.toc"
       ],
       "tracked_files_at_reference": 3,
-      "pending": "游戏内滚动、中文布局、定向施法及术士宠物行为待验收。"
+      "pending": "游戏内滚动、中文布局、定向施法及术士宠物行为待验收。",
+      "history_group": "modified"
     },
     {
       "addon": "nampowersettings",
@@ -2183,7 +2279,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 19,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "perfboostsettings",
@@ -2193,7 +2290,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 18,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "pfExtend",
@@ -2203,7 +2301,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 36,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "pfQuest",
@@ -2213,7 +2312,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 256,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "pfQuest-turtle",
@@ -2223,7 +2323,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 38,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "pfUI",
@@ -2342,7 +2443,8 @@
         "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
         "files_changed": 1,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "pfUI-CustomMedia",
@@ -2362,7 +2464,8 @@
         "Interface/AddOns/pfUI-CustomMedia/pfUI-CustomMedia.toc"
       ],
       "tracked_files_at_reference": 37,
-      "pending": "26 张材质的实际预览和各应用目标刷新结果待补充。"
+      "pending": "26 张材质的实际预览和各应用目标刷新结果待补充。",
+      "history_group": "modified"
     },
     {
       "addon": "pfUI-addonskinner",
@@ -2400,7 +2503,8 @@
         "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
         "files_changed": 2,
         "game_verified": false
-      }
+      },
+      "history_group": "modified"
     },
     {
       "addon": "pfUI-eliteoverlay",
@@ -2410,7 +2514,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 8,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "pfUI_ExtendedMerchant",
@@ -2420,7 +2525,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 3,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     },
     {
       "addon": "xNet",
@@ -2430,7 +2536,8 @@
       "sources": [],
       "maintenance_files": [],
       "tracked_files_at_reference": 2,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。"
+      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "history_group": "unchanged"
     }
   ],
   "package_comparisons": [
@@ -2584,7 +2691,7 @@
     {
       "addon": "DXVK",
       "status": "documented_history",
-      "note": "PluginHistory/Plugins/DXVK.md",
+      "note": "PluginHistory/Runtime/DXVK.md",
       "purpose": "按用户要求恢复仓库中的 DXVK 2.5.3 及旧 dxvk.conf；三个文件逐字节回退，游戏验收待确认。",
       "sources": [
         "PluginHistory/Research/DXVK与VanillaHelpers-回退-20261025.md"
@@ -2597,7 +2704,7 @@
     {
       "addon": "VanillaHelpers",
       "status": "documented_history",
-      "note": "PluginHistory/Plugins/VanillaHelpers.md",
+      "note": "PluginHistory/Runtime/VanillaHelpers.md",
       "purpose": "按用户要求恢复仓库中的 VanillaHelpers.dll，撤下本次更新带入的 TexBridge 扩展版；待游戏验收。",
       "sources": [
         "PluginHistory/Research/DXVK与VanillaHelpers-回退-20261025.md"
@@ -2609,7 +2716,7 @@
     {
       "addon": "nampower",
       "status": "documented_history",
-      "note": "PluginHistory/Plugins/nampower.md",
+      "note": "PluginHistory/Runtime/nampower.md",
       "purpose": "PSS 候选实际启动触发 ERROR #132，已撤回并恢复旧 DLL；确认 GetThreadContext 错误31，原始卡顿与关联 DLL/配置继续排查。",
       "sources": [
         "PluginHistory/Research/nampower-候选实现-20261025.md",
@@ -2624,7 +2731,7 @@
     {
       "addon": "UnitXP_SP3",
       "status": "documented_history",
-      "note": "PluginHistory/Plugins/UnitXP_SP3.md",
+      "note": "PluginHistory/Runtime/UnitXP_SP3.md",
       "purpose": "按用户要求恢复个人使用版X2.0，并配套核对设置插件和恢复pfUI模块；待游戏验收。",
       "sources": [
         "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md"
@@ -2636,7 +2743,7 @@
     {
       "addon": "CoreBridge",
       "status": "documented_history",
-      "note": "PluginHistory/Plugins/CoreBridge.md",
+      "note": "PluginHistory/Runtime/CoreBridge.md",
       "purpose": "恢复旧个人版DLL文件，按该基准保留无独立插件/加载项的状态。",
       "sources": [
         "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md"
@@ -2648,7 +2755,7 @@
     {
       "addon": "transmogfix",
       "status": "documented_history",
-      "note": "PluginHistory/Plugins/transmogfix.md",
+      "note": "PluginHistory/Runtime/transmogfix.md",
       "purpose": "按用户要求更新作者独立版 0.5.0 至 0.7.0；游戏验收待确认。",
       "sources": [],
       "maintenance_files": [
@@ -2658,12 +2765,50 @@
     {
       "addon": "weirdperformance",
       "status": "documented_history",
-      "note": "PluginHistory/Plugins/weirdperformance.md",
+      "note": "PluginHistory/Runtime/weirdperformance.md",
       "purpose": "按用户要求更新作者独立版 0.6.2 至 0.7.0；游戏验收待确认。",
       "sources": [],
       "maintenance_files": [
         "weirdperformance.dll"
       ]
+    }
+  ],
+  "history_group_note": "按已确认本插件版本/文件变化分类，不按个人作者归属分类；unchanged 表示现有记录未确认本体变化，不宣称官方原版或从未修改。",
+  "preserved_runtime_notes": [
+    {
+      "path": "PluginHistory/Plugins/DXVK.md",
+      "source_commit": "c6cd57ce442201592e9519e0179ea82dba0d628f",
+      "sha256": "10fe454edb4738cc160aba89f8c105a88730d917ce4cf04caae63f1e85583f1b"
+    },
+    {
+      "path": "PluginHistory/Plugins/VanillaHelpers.md",
+      "source_commit": "c6cd57ce442201592e9519e0179ea82dba0d628f",
+      "sha256": "8dddbe96eca19dbf532c29d8c9047ad509c32f9fa0f810d7c5ecc7a1af84af22"
+    },
+    {
+      "path": "PluginHistory/Plugins/nampower.md",
+      "source_commit": "c6cd57ce442201592e9519e0179ea82dba0d628f",
+      "sha256": "8e90602b6e6cc609fc30a4d202111aeffe5ea6c4051bca2c7e5ec2b2a757c2f9"
+    },
+    {
+      "path": "PluginHistory/Plugins/UnitXP_SP3.md",
+      "source_commit": "c6cd57ce442201592e9519e0179ea82dba0d628f",
+      "sha256": "21c6c7ce9edc59f4d28d164f517c6c4de8dc8ac7343e495b3e87f96d79f62964"
+    },
+    {
+      "path": "PluginHistory/Plugins/CoreBridge.md",
+      "source_commit": "c6cd57ce442201592e9519e0179ea82dba0d628f",
+      "sha256": "f863f2082022bfca74b25dce337a483941937611319660ae155179c420daf27a"
+    },
+    {
+      "path": "PluginHistory/Plugins/transmogfix.md",
+      "source_commit": "c6cd57ce442201592e9519e0179ea82dba0d628f",
+      "sha256": "1408848cf2459a0023b824a511ce36a8fa3b0b178fd5ca490dbebd41794fa0d2"
+    },
+    {
+      "path": "PluginHistory/Plugins/weirdperformance.md",
+      "source_commit": "c6cd57ce442201592e9519e0179ea82dba0d628f",
+      "sha256": "2fadca5b47a3bbb15b7b7e8ee98b8a62f35e26ec3c2bfc72a38875383abe72e4"
     }
   ]
 }
