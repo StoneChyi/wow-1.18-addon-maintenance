@@ -10,4 +10,5 @@
 	<Include file="Bags.lua"/>
 	<Include file="Gold.lua"/>
 	<Include file="Calculat.lua"/>	
+	<Include file="Teleport.lua"/>
 </Ui>

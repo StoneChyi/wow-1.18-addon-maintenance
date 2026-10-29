@@ -13,7 +13,7 @@
     "modified": 61
   },
   "addon_pages": 107,
-  "dated_records": 198,
+  "dated_records": 199,
   "addons": [
     {
       "addon": "!Libs",
@@ -2648,11 +2648,20 @@
       "note": "PluginHistory/Plugins/diminfo.md",
       "purpose": "支持渐隐，并消除信息条空白处右键误触。",
       "history_group": "modified",
-      "latest_record_date": "2026-10-18",
-      "latest_record_title": "合入 10 月 16 日包并保留个人功能（已部署）",
+      "latest_record_date": "2026-10-30",
+      "latest_record_title": "加入可切换的传送物品按钮",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "record_count": 3,
       "records": [
+        {
+          "id": "diminfo-20261030-01",
+          "date": "2026-10-30",
+          "title": "加入可切换的传送物品按钮",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-diminfo-20261030-01"
+        },
         {
           "id": "diminfo-20261018-02",
           "date": "2026-10-18",

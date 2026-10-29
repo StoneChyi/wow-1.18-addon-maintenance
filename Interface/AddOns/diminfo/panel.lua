@@ -22,7 +22,7 @@ local function GetCharacterConfig()
             spacing = 20,  -- 添加间距设置，默认20
             Hidden = {},
             OrderLeft = { "diminfo_Performance", "diminfo_RaidCD", "diminfo_Quest", "diminfo_Friend", "diminfo_Time" },
-            OrderRight = { "diminfo_Loaddll", "diminfo_Durability", "diminfo_Bag", "diminfo_Gold" },
+            OrderRight = { "diminfo_Loaddll", "diminfo_Durability", "diminfo_Bag", "diminfo_Gold", "diminfo_Teleport" },
             ShowSeconds = false,  -- 默认不显示秒
             FontSize = 14,  -- 添加字体大小设置，默认14
             FadeMode = false,  -- 渐隐模式默认关闭
@@ -37,7 +37,7 @@ local function GetCharacterConfig()
         config.OrderLeft = { "diminfo_Performance", "diminfo_RaidCD", "diminfo_Quest", "diminfo_Friend", "diminfo_Time" }
     end
     if not config.OrderRight then
-        config.OrderRight = { "diminfo_Loaddll", "diminfo_Durability", "diminfo_Bag", "diminfo_Gold" }
+        config.OrderRight = { "diminfo_Loaddll", "diminfo_Durability", "diminfo_Bag", "diminfo_Gold", "diminfo_Teleport" }
     end
     if config.x == nil then config.x = 0 end
     if config.spacing == nil then config.spacing = 20 end  -- 确保间距字段存在
@@ -45,6 +45,16 @@ local function GetCharacterConfig()
     if config.FontSize == nil then config.FontSize = 14 end  -- 确保字体大小字段存在
     if config.FadeMode == nil then config.FadeMode = false end  -- 确保渐隐模式字段存在（默认关闭）
     if config.FadeAlpha == nil then config.FadeAlpha = 0.15 end  -- 确保渐隐透明度字段存在
+
+    -- Add the new module once without disturbing either saved order or visibility.
+    local hasTeleport = false
+    for _, name in ipairs(config.OrderLeft) do
+        if name == "diminfo_Teleport" then hasTeleport = true end
+    end
+    for _, name in ipairs(config.OrderRight) do
+        if name == "diminfo_Teleport" then hasTeleport = true end
+    end
+    if not hasTeleport then table.insert(config.OrderRight, "diminfo_Teleport") end
 
     return config
 end
@@ -58,7 +68,7 @@ local function ResetCharacterConfig()
         spacing = 20,  -- 重置为默认间距
         Hidden = {},
         OrderLeft = { "diminfo_Performance", "diminfo_RaidCD", "diminfo_Quest", "diminfo_Friend", "diminfo_Time" },
-        OrderRight = { "diminfo_Loaddll", "diminfo_Durability", "diminfo_Bag", "diminfo_Gold" },
+        OrderRight = { "diminfo_Loaddll", "diminfo_Durability", "diminfo_Bag", "diminfo_Gold", "diminfo_Teleport" },
         ShowSeconds = false,  -- 默认不显示秒
         FontSize = 14,  -- 重置为默认字体大小
         FadeMode = false,  -- 重置渐隐模式为关闭
@@ -78,7 +88,7 @@ end
 local AllModuleNames = {
     "diminfo_Time", "diminfo_RaidCD", "diminfo_Quest", "diminfo_pos",
     "diminfo_Performance", "diminfo_Loaddll", "diminfo_Gold",
-    "diminfo_Friend", "diminfo_Durability", "diminfo_Bag"
+    "diminfo_Friend", "diminfo_Durability", "diminfo_Bag", "diminfo_Teleport"
 }
 
 -- 更新所有模块字体大小
@@ -284,7 +294,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
             config.OrderLeft = { "diminfo_Friend", "diminfo_Time", "diminfo_RaidCD", "diminfo_Quest" }
         end
         if not config.OrderRight then
-            config.OrderRight = { "diminfo_Loaddll", "diminfo_Performance", "diminfo_Durability", "diminfo_Bag", "diminfo_Gold" }
+            config.OrderRight = { "diminfo_Loaddll", "diminfo_Performance", "diminfo_Durability", "diminfo_Bag", "diminfo_Gold", "diminfo_Teleport" }
         end
 
         local posFrame = getglobal("diminfo_pos")
@@ -327,7 +337,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                 end
 
                 -- 特殊处理金币模块（无论在左侧还是右侧）
-                if name == "diminfo_Gold" then
+                if name == "diminfo_Gold" or name == "diminfo_Teleport" then
                     -- 先锚定整个Frame
                     frame:ClearAllPoints()
                     frame:SetPoint(myAnchorPoint, lastAnchor, lastAnchorPoint, xOffset, 0)
@@ -335,7 +345,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                     -- 如果文字存在，将其锚定到Frame的左侧
                     if textRegion then
                         textRegion:ClearAllPoints()
-                        textRegion:SetPoint("LEFT", frame, "LEFT", 2, 0)
+                        textRegion:SetPoint("LEFT", frame, "LEFT", name == "diminfo_Teleport" and 20 or 2, 0)
                     end
 
                     lastAnchor = frame
@@ -384,7 +394,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                 end
 
                 -- 特殊处理金币模块（无论在左侧还是右侧）
-                if name == "diminfo_Gold" then
+                if name == "diminfo_Gold" or name == "diminfo_Teleport" then
                     -- 先锚定整个Frame
                     frame:ClearAllPoints()
                     frame:SetPoint(myAnchorPoint, lastAnchor, lastAnchorPoint, xOffset, 0)
@@ -392,7 +402,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                     -- 如果文字存在，将其锚定到Frame的左侧
                     if textRegion then
                         textRegion:ClearAllPoints()
-                        textRegion:SetPoint("LEFT", frame, "LEFT", 2, 0)
+                        textRegion:SetPoint("LEFT", frame, "LEFT", name == "diminfo_Teleport" and 20 or 2, 0)
                     end
 
                     lastAnchor = frame
@@ -421,7 +431,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
         local allModules = {
             "diminfo_Time", "diminfo_RaidCD", "diminfo_Quest", "diminfo_pos",
             "diminfo_Performance", "diminfo_Loaddll", "diminfo_Gold",
-            "diminfo_Friend", "diminfo_Durability", "diminfo_Bag"
+            "diminfo_Friend", "diminfo_Durability", "diminfo_Bag", "diminfo_Teleport"
         }
 
         for _, name in pairs(allModules) do
@@ -450,6 +460,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
         panel.SetFadeMode(config.FadeMode)  -- 重置渐隐模式（关闭并恢复不透明）
         panel.SetFadeAlpha(config.FadeAlpha or 0.15)  -- 重置渐隐透明度
         panel.ApplyVisibility()
+        if diminfo_Teleport then diminfo_Teleport.Refresh() end
 
         --刷新设置页面
         if DimInfoOptions and DimInfoOptions.RefreshList then
@@ -462,6 +473,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
         end
     end
 
+	panel.GetCharacterConfig = GetCharacterConfig
 	return panel
 end
 
@@ -486,6 +498,7 @@ local niceNames = {
     diminfo_Loaddll = "模组",
     diminfo_Durability = "耐久",
     diminfo_Bag = "背包",
+    diminfo_Teleport = "传送",
     diminfo_Gold = "金币"
 }
 
