@@ -233,14 +233,16 @@ addon.RefreshPotionRows()
 local rows = addon.Windows[addon.GetDatabase().defaultProfileId].rows
 local quickRow
 for _, row in ipairs(rows) do if row.itemData and row.itemData.key == "quickness" then quickRow = row end end
+IsShiftKeyDown = function() return true end
 this, arg1 = quickRow, "RightButton"
 this.scripts.OnClick()
-Equal(profile.macroExcluded.quickness, 0, "row right click opts buff into macro")
+Equal(profile.macroExcluded.quickness, 0, "row Shift-right click opts buff into macro")
 Equal(#calls, 1, "right click never uses an item")
 profile.selected.majorHealing = 1
 addon.RefreshPotionRows()
 local healRow
 for _, row in ipairs(rows) do if row.itemData and row.itemData.key == "majorHealing" then healRow = row end end
+IsShiftKeyDown = function() return false end
 this, arg1 = healRow, "RightButton"
 this.scripts.OnClick()
 assert(addon.IsMacroExcluded(potion, profile), "restoration row stays manual-only")

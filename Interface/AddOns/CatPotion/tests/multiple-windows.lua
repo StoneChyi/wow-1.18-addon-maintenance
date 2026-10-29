@@ -28,12 +28,14 @@ assert(a.rows[1].itemData.key == "mongoose" and b.rows[1].itemData.key == "great
 assert(a.window:GetScale() == 0.6 and b.window:GetScale() == 1.3)
 assert(a.window.point[4] == 50 and b.window.point[4] == 100)
 addon.SelectProfile(secondId)
+IsShiftKeyDown = function() return true end
 this, arg1 = a.rows[1], "RightButton"
 a.rows[1].scripts.OnClick()
 assert(first.macroExcluded.mongoose == 1 and not second.macroExcluded.mongoose)
 local usedProfile
 local originalUse = addon.UseItem
 addon.UseItem = function(item, data, slot, profileId) usedProfile = profileId end
+IsShiftKeyDown = function() return false end
 arg1 = "LeftButton"
 a.rows[1].scripts.OnClick()
 assert(usedProfile == firstId and db.activeProfileId == secondId)

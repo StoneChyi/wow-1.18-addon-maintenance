@@ -11,7 +11,7 @@
 默认配置由 defaultProfileId 判断，显示金色 [默认]，不可删除或改名。管理窗口打开时必须
 显示 mainWindowDim，关闭时恢复。两个只读宏框都必须通过 GetProfileCommand 生成文本。
 
-普通药剂的宏调用开关仅由药剂小窗右键控制，状态保存在当前配置的 macroExcluded。
+普通药剂的宏调用开关仅由药剂小窗 Shift+右键控制，状态保存在当前配置的 macroExcluded。
 主设置界面只负责药剂勾选；取消勾选或全部清除时同时清除对应的宏排除标记。
 
 武器强化和毒药不是普通复选项：weaponSlotButtons 的 main/off 独立写入当前配置的 weaponSlots，
@@ -929,7 +929,7 @@ local function CreateWindow()
     for categoryIndex, category in ipairs(addon.Categories) do
         local categoryLabel = CreateText(content, category, 13, 1, 0.7, 0.24)
         if category == "功能药水" then
-            categoryLabel:SetText(category .. "  · 默认仅显示，短效 Buff 可在小窗右键开启补药")
+            categoryLabel:SetText(category .. "  · 默认仅显示，短效 Buff 可在小窗 Shift+右键开启补药")
         elseif category == "恢复物品" or category == "常用炸药" or category == "工程道具" then
             categoryLabel:SetText(category .. "  · 手动点击使用")
         end
@@ -966,7 +966,7 @@ local function CreateWindow()
                         if data.categoryCooldown and data.categoryCooldown > 0 then GameTooltip:AddLine("类别共享冷却：" .. addon.SecondsToText(data.categoryCooldown), 0.55, 0.7, 0.85) end
                         if data.gcd and data.gcd > 0 then GameTooltip:AddLine("公共冷却：" .. data.gcd .. "秒（实际以客户端为准）", 0.55, 0.7, 0.85) end
                         if data.manualOnly then GameTooltip:AddLine("仅手动使用，不参与一键补药", 0.55, 0.7, 0.85)
-                        elseif data.defaultMacroExcluded then GameTooltip:AddLine("默认仅显示；小窗右键可开启一键补药", 0.55, 0.7, 0.85) end
+                        elseif data.defaultMacroExcluded then GameTooltip:AddLine("默认仅显示；小窗 Shift+右键可开启一键补药", 0.55, 0.7, 0.85) end
                         GameTooltip:Show()
                     end)
                     check:SetScript("OnLeave", function()

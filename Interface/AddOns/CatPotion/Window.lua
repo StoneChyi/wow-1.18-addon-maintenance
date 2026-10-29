@@ -312,6 +312,7 @@ local function CreateProfileWindow(profileId)
         label:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
         label:SetTextColor(0.86, 0.92, 1)
         label:SetText(text)
+        button.label = label
         button:SetScript("OnEnter", function()
             this:SetBackdropBorderColor(0.45, 0.82, 1, 1)
         end)
@@ -324,10 +325,39 @@ local function CreateProfileWindow(profileId)
     local settingsButton = CreateHeaderButton("设置", 42, 0.08, 0.22, 0.34)
     ui.settingsButton = settingsButton
     settingsButton:SetPoint("TOPRIGHT", window, "TOPRIGHT", -36, -8)
+    settingsButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    local function ShowSettingsTooltip()
+        GameTooltip:SetOwner(settingsButton, "ANCHOR_RIGHT")
+        GameTooltip:ClearLines()
+        GameTooltip:AddLine(profile.name, 1, 0.82, 0.2)
+        GameTooltip:AddLine(addon.ToBoolean(profile.locked) and "窗口位置：已锁定" or "窗口位置：可拖动", 0.8, 0.9, 1)
+        GameTooltip:AddLine("左键：打开设置", 0.55, 0.7, 0.85)
+        GameTooltip:AddLine(addon.ToBoolean(profile.locked) and "右键：解锁窗口位置" or "右键：锁定窗口位置", 0.55, 0.7, 0.85)
+        GameTooltip:Show()
+    end
+    settingsButton:SetScript("OnEnter", function()
+        settingsButton:SetBackdropBorderColor(0.45, 0.82, 1, 1)
+        ui.settingsHovered = true
+        ShowSettingsTooltip()
+    end)
+    settingsButton:SetScript("OnLeave", function()
+        settingsButton:SetBackdropBorderColor(0.3, 0.4, 0.52, 0.9)
+        ui.settingsHovered = false
+        GameTooltip:Hide()
+    end)
     settingsButton:SetScript("OnClick", function()
+        if arg1 == "RightButton" then
+            profile.locked = addon.ToBoolean(profile.locked) and 0 or 1
+            if addon.ToBoolean(profile.locked) then window:StopMovingOrSizing() end
+            if addon.RefreshSettings then addon.RefreshSettings() end
+            if ui.settingsHovered then ShowSettingsTooltip() end
+            return
+        end
         addon.SelectProfile(profileId)
         if addon.RefreshSettings then addon.RefreshSettings() end
-        if addon.ToggleSettings then
+        if addon.ShowSettings then
+            addon.ShowSettings()
+        elseif addon.ToggleSettings then
             addon.ToggleSettings()
         end
     end)
@@ -562,12 +592,17 @@ local function CreateProfileWindow(profileId)
         if item.cooldown and item.cooldown > 0 then GameTooltip:AddLine("自身冷却：" .. addon.SecondsToText(item.cooldown), 0.55, 0.7, 0.85) end
         if item.categoryCooldown and item.categoryCooldown > 0 then GameTooltip:AddLine("类别共享冷却：" .. addon.SecondsToText(item.categoryCooldown), 0.55, 0.7, 0.85) end
         if bag then GameTooltip:AddLine("左键：使用物品", 0.48, 0.55, 0.62) end
-        if item.category == "常用炸药" then GameTooltip:AddLine("投掷类物品需手动选择地面位置", 0.55, 0.7, 0.85) end
+        if addon.IsInstantGroundItem(item) then
+            GameTooltip:AddLine("左键：手动选择落点；右键：投掷到自己脚下", 0.55, 0.7, 0.85)
+            GameTooltip:AddLine("脚下投掷需要 UnitXP 支持，失败时仍可左键手选", 0.55, 0.7, 0.85)
+        elseif item.category == "常用炸药" then
+            GameTooltip:AddLine("投掷类物品需手动选择地面位置", 0.55, 0.7, 0.85)
+        end
         if item.manualOnly then
             GameTooltip:AddLine("仅手动使用，不参与一键补药", 0.55, 0.7, 0.85)
         elseif not addon.IsWeaponCategory(row.itemData.category) then
             GameTooltip:AddLine(row.macroExcluded and "宏调用：已关闭" or "宏调用：已开启", 1, 0.75, 0.3)
-            GameTooltip:AddLine(row.macroExcluded and "右键：开启宏调用" or "右键：关闭宏调用", 0.55, 0.7, 0.85)
+            GameTooltip:AddLine(row.macroExcluded and "Shift+右键：开启一键补药" or "Shift+右键：关闭一键补药", 0.55, 0.7, 0.85)
         else
             GameTooltip:AddLine(row.itemData.category .. "不参与一键补药", 0.55, 0.7, 0.85)
         end
@@ -639,18 +674,26 @@ local function CreateProfileWindow(profileId)
             this.hovered = false
         end)
         row:SetScript("OnClick", function()
-            if ui.dragSourceKey or IsRowSortModifierDown() or GetTime() < (ui.suppressRowClickUntil or 0) then return end
+            if ui.dragSourceKey or GetTime() < (ui.suppressRowClickUntil or 0) then return end
             if this.itemData then
                 local clickedRow = this
                 local item = clickedRow.itemData
-                if arg1 == "RightButton" then
-                    -- 右键只切换当前配置的宏标记，绝不发送使用请求。
-                    if not addon.IsWeaponCategory(item.category) and not item.manualOnly then
+                if IsRowSortModifierDown() then
+                    if arg1 == "RightButton" and not addon.IsWeaponCategory(item.category) and not item.manualOnly then
                         local excluded = profile.macroExcluded
                         excluded[item.key] = addon.IsMacroExcluded(item, profile) and 0 or 1
                         ui.RefreshPotionTimers()
+                        if addon.RefreshSettings then addon.RefreshSettings() end
                         if clickedRow.hovered then ShowRowTooltip(clickedRow) end
                     end
+                    return
+                end
+                if arg1 == "RightButton" then
+                    if not IsRowSortModifierDown() and addon.IsInstantGroundItem(item) then
+                        addon.UseItem(item.item, item, nil, profileId, "player")
+                        ui.RefreshPotionTimers()
+                    end
+                    -- 普通物品的右键保留，不切换宏标记，也不发送使用请求。
                     return
                 end
                 addon.UseItem(item.item, item, clickedRow.weaponSlot, profileId)
@@ -873,8 +916,8 @@ local function CreateProfileWindow(profileId)
             local minimized = addon.ToBoolean(profile.minimized)
             local contentWidth = actualColumns * (minimized and 40 or 135) + (actualColumns - 1) * 4
             local contentHeight = lineCount * 42 - 2
-            -- 最窄图标窗也为配置切换与关闭按钮保留 68 像素。
-            local windowWidth = math.max(minimized and 68 or 150, contentWidth + 20)
+            -- 工具栏独立于物品列数；最窄图标窗也保留切换、设置和关闭入口。
+            local windowWidth = math.max(minimized and 94 or 150, contentWidth + 20)
             title:SetWidth(math.max(20, windowWidth - 120))
             title:SetText(profile.name)
             title:Show()
@@ -883,23 +926,24 @@ local function CreateProfileWindow(profileId)
             scrollFrame:SetVerticalScroll(0)
             SetFrameSizeIfChanged(window, windowWidth, contentHeight + 46)
         end
-        -- 标题栏按实际宽度分配空间，不能用药剂列数控制配置切换入口。
-        -- 三个按钮需要 114 像素；窄图标窗省略设置，保留切换与关闭。
-        local showSettings = window:GetWidth() >= 114
-        local switchOffset = showSettings and -82 or -36
+        -- 窄图标窗只缩短已有设置按钮，不隐藏入口，也不占用任何物品格。
+        local compactHeader = window:GetWidth() < 114
+        SetFrameSizeIfChanged(settingsButton, compactHeader and 22 or 42, 22)
+        settingsButton.label:SetText(compactHeader and "设" or "设置")
+        local switchOffset = compactHeader and -62 or -82
         if ui.profileSwitchOffset ~= switchOffset then
             ui.profileSwitchButton:ClearAllPoints()
             ui.profileSwitchButton:SetPoint("TOPRIGHT", window, "TOPRIGHT", switchOffset, -8)
             ui.profileSwitchOffset = switchOffset
         end
-        if addon.ToBoolean(profile.minimized) then
+        local titleWidth = window:GetWidth() - (compactHeader and 94 or 114) - 10
+        if addon.ToBoolean(profile.minimized) or titleWidth < 40 then
             title:Hide()
         else
-            local headerWidth = showSettings and 114 or 68
-            title:SetWidth(math.max(20, window:GetWidth() - headerWidth - 10))
+            title:SetWidth(titleWidth)
             title:Show()
         end
-        if showSettings then settingsButton:Show() else settingsButton:Hide() end
+        settingsButton:Show()
         ui.profileSwitchButton:Show()
     end
 

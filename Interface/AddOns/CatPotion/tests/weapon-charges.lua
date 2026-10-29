@@ -6,14 +6,14 @@ local now, scans = 100, 0
 local equipped = {}
 local frames = {}
 local function noop() end
-local function NewFrame()
-    local frame = { scripts = {}, visible = true, width = 100, height = 100, scale = 1 }
-    setmetatable(frame, { __index = function() return noop end })
+local methods = {}
+local function NewFrame(kind, name, parent)
+    local frame = { kind = kind or "Frame", name = name, parent = parent, scripts = {}, visible = true, width = 100, height = 100, scale = 1 }
+    setmetatable(frame, { __index = function(_, key) if key == "font" then return nil end; return methods[key] or noop end })
     function frame:SetScript(name, callback) self.scripts[name] = callback end
     function frame:CreateTexture() return NewFrame() end
-    function frame:CreateFontString() return NewFrame() end
-    function frame:SetText(value) self.text = value end
     function frame:SetTextColor(red, green, blue) self.textColor = { red, green, blue } end
+    function frame:SetText(value) methods.SetText(self, value); self.text = value end
     function frame:GetText() return self.text end
     function frame:SetWidth(value) self.width = value end
     function frame:SetHeight(value) self.height = value end
@@ -36,11 +36,13 @@ local function NewFrame()
     frames[#frames + 1] = frame
     return frame
 end
-function CreateFrame(kind, name)
-    local frame = NewFrame()
+dofile("../../Tools/tests/wow112_fontstring_mock.lua")(methods, NewFrame)
+function CreateFrame(kind, name, parent)
+    local frame = NewFrame(kind, name, parent)
     if name then _G[name] = frame end
     return frame
 end
+STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"
 UIParent = NewFrame()
 GameTooltip = NewFrame()
 SlashCmdList = {}

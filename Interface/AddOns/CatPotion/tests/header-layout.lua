@@ -57,7 +57,7 @@ CheckHeader("switch back to two columns")
 profile.minimized = 1
 Refresh()
 Check(ui.window:GetWidth() == 104, "compact two columns retain existing width")
-Check(not ui.settingsButton:IsVisible(), "compact header leaves space for switch and close")
+Check(ui.settingsButton:IsVisible(), "compact header always retains settings")
 CheckHeader("compact two columns")
 profile.selected = { mongoose = 1 }
 Refresh()

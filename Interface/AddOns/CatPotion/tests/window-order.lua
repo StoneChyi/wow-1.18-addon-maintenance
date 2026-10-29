@@ -80,7 +80,8 @@ Click(source)
 local excluded = profile.macroExcluded.mongoose
 Click(source, "RightButton")
 Equal(#uses, 0, "Shift click never consumes")
-Equal(profile.macroExcluded.mongoose, excluded, "Shift right click never changes macro flag")
+Equal(profile.macroExcluded.mongoose, addon.ToBoolean(excluded) and 0 or 1, "Shift right click changes only macro flag")
+excluded = profile.macroExcluded.mongoose
 Start(source)
 Equal(ui.dragSourceKey, "mongoose", "Shift arms source")
 local targetPoint = target.point

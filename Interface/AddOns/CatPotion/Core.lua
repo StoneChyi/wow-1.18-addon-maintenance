@@ -373,7 +373,7 @@ AddItem("woundPoison", "毒药", nil, "致伤毒药", "致伤毒药")
 AddItem("cripplingPoison", "毒药", nil, "致残毒药", "致残毒药")
 
 -- 短效药水、恢复品与工程道具：数据来自本客户端 WDB/DBC（2026-10-06）。
--- 短效 Buff 默认仅显示，右键可启用宏；无 Buff 的恢复品、炸药和工程道具仅手动使用。
+-- 短效 Buff 默认仅显示，Shift+右键可启用宏；无 Buff 的恢复品、炸药和工程道具仅手动使用。
 -- 按用户要求只收录背包直接使用的工程道具，不收录需装备的饰品、头盔和靴子。
 local usableItems = {
     { key = "swiftness", category = "功能药水", item = "迅捷药水", label = "迅捷药水", buff = "速度", detail = "50%移速/15秒", texture = "Interface\\Icons\\INV_Potion_95", defaultMacroExcluded = true, macroWarningSeconds = 0, itemID = 2459, cooldown = 120.0, cooldownCategory = 4, categoryCooldown = 120.0, gcdCategory = 0, gcd = 0.0 },
@@ -1136,12 +1136,88 @@ function addon.CancelPendingItemUses()
     pendingItemUses = {}
 end
 
+-- 只有已核实的瞬发、立即爆炸地面物品才允许右键脚下投掷。
+-- 不依赖 Cat2；沿用其 UnitXP 版本门槛和 castAOE/player 调用契约。
+function addon.IsInstantGroundItem(item)
+    return item and item.key == "stratholmeWater" and item.itemID == 13180
+end
+
+function addon.CanGroundTargetPlayer()
+    if type(UnitXP) ~= "function" or type(SpellIsTargeting) ~= "function" then return false end
+    local ok, stamp = pcall(UnitXP, "version", "coffTimeDateStamp")
+    return ok and type(stamp) == "number" and stamp >= 1782864000
+end
+
+local function GroundSelectionPending()
+    -- 与现用宏插件一致，使用旧客户端已经验证的目标选择状态。
+    -- UnitXP 的 isGroundTargetPending 缺少已核实的返回契约，不据此误认其他状态。
+    return type(SpellIsTargeting) == "function" and SpellIsTargeting()
+end
+
+local function UseInstantGroundItem(bag, slot, atPlayer)
+    -- Nampower 快速施法不能抢先把本次圣水投到鼠标位置，也不留下延迟队列。
+    -- 仅改客户端已有的 0/1 设置；所有出口都恢复原值，不注册未知 CVar。
+    local changed = {}
+    local settings = { "NP_QuickcastTargetingSpells", "NP_QueueTargetingSpells" }
+    local ok, message = pcall(function()
+        if type(GetCVar) == "function" then
+            for _, name in ipairs(settings) do
+                local read, value = pcall(GetCVar, name)
+                if read and (value == "1" or value == 1) then
+                    table.insert(changed, { name, value })
+                    if type(SetCVar) ~= "function" then error("投掷设置无法临时调整") end
+                    SetCVar(name, "0")
+                    local verify, current = pcall(GetCVar, name)
+                    if not verify or (current ~= "0" and current ~= 0) then error("投掷设置未能临时关闭") end
+                end
+            end
+        end
+        UseContainerItem(bag, slot)
+        if atPlayer then
+            -- 不排队重试：之后出现的另一个法术落点绝不能被本次请求误投。
+            if GroundSelectionPending() then
+                local cast, result = pcall(UnitXP, "castAOE", "player")
+                if not cast or result == false or GroundSelectionPending() then
+                    addon.Print("脚下投掷未完成，请手动选择当前落点。", true)
+                end
+            else
+                addon.Print("未检测到本次落点选择，未自动投掷；若选择圈稍后出现，请手动选择。", true)
+            end
+        end
+    end)
+    local restored = true
+    for index = table.getn(changed), 1, -1 do
+        local setting = changed[index]
+        local reset = type(SetCVar) == "function" and pcall(SetCVar, setting[1], setting[2])
+        local read, current = false, nil
+        if type(GetCVar) == "function" then read, current = pcall(GetCVar, setting[1]) end
+        if not reset or not read or tostring(current) ~= tostring(setting[2]) then restored = false end
+    end
+    if not restored then addon.Print("临时投掷设置未能恢复，请检查 Nampower 的地面施法设置。", true) end
+    if not ok then addon.Print("未能完成投掷请求，请用左键手动选择落点。", true) end
+    return ok
+end
+
 -- 返回 true 只代表已向客户端发出使用请求，并不代表服务器已经确认物品生效。
 -- itemData 用于执行分类及物品限制（例如阻止战斗中进食）。
-function addon.UseItem(itemName, itemData, weaponSlot, profileId)
+function addon.UseItem(itemName, itemData, weaponSlot, profileId, groundTarget)
     itemData = itemData or addon.ItemsByName[itemName]
     if not addon.IsItemAvailableForPlayer(itemData) then
         addon.Print("当前角色无法使用：" .. itemName, true)
+        return false
+    end
+    local instantGround = addon.IsInstantGroundItem(itemData) and itemData.item == itemName
+    local groundAtPlayer = groundTarget == "player"
+    if groundTarget and (not groundAtPlayer or not instantGround or weaponSlot) then
+        addon.Print("该物品不支持脚下投掷。", true)
+        return false
+    end
+    if instantGround and GroundSelectionPending() then
+        addon.Print("请先完成或取消当前的目标或落点选择。", true)
+        return false
+    end
+    if groundAtPlayer and not addon.CanGroundTargetPlayer() then
+        addon.Print("当前 UnitXP 不支持脚下投掷，请用左键手动选择落点。", true)
         return false
     end
     local bag, slot, itemCount = addon.FindBagItem(itemName)
@@ -1183,7 +1259,14 @@ function addon.UseItem(itemName, itemData, weaponSlot, profileId)
     end
 
     if itemData then pendingItemUses[itemData.key] = { item = itemData, count = itemCount, time = GetTime() } end
-    UseContainerItem(bag, slot)
+    if instantGround then
+        if not UseInstantGroundItem(bag, slot, groundAtPlayer) then
+            if itemData then pendingItemUses[itemData.key] = nil end
+            return false
+        end
+    else
+        UseContainerItem(bag, slot)
+    end
     if weaponSlot then
         -- 与旧版客户端现有的武器上毒流程一致：使用物品后直接点击目标装备槽位。
         PickupInventoryItem(weaponSlot)
