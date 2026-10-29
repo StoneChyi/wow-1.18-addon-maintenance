@@ -2,7 +2,7 @@
 
 - 实施日期：2026-10-25（北京时间）。
 - 目的：用户更新补丁后出现启动黑屏、Alt+Tab 失效和退出额外等待约 10 秒，明确要求按仓库旧版回退。
-- 组件记录：[DXVK](../Plugins/DXVK.md#change-DXVK-20261025-01)、[VanillaHelpers](../Plugins/VanillaHelpers.md#change-VanillaHelpers-20261025-01)。
+- 组件记录：[DXVK](../Runtime/DXVK.md#change-DXVK-20261025-01)、[VanillaHelpers](../Runtime/VanillaHelpers.md#change-VanillaHelpers-20261025-01)。
 - 对应提交：随本条记录一并提交（见组件页 Git 历史）。
 
 ## 来源与范围

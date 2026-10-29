@@ -5,6 +5,7 @@ commit, so another task's uncommitted addon deletion is not mistaken for lost
 historical evidence. Does not validate addon behavior or infer authorship.
 """
 from collections import Counter
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -70,14 +71,23 @@ def main():
     all_rows = rows + added + runtime
     added_names = {row["addon"] for row in added}
     notes_root = ROOT / "PluginHistory/Plugins"
-    expected_notes = {r["addon"] + ".md" for r in all_rows} | {"README.md"}
+    preserved = index.get("preserved_runtime_notes", [])
+    preserved_names = {Path(row["path"]).name for row in preserved}
+    assert len(preserved_names) == len(preserved), "Duplicate preserved originals"
+    for row in preserved:
+        path = Path(row["path"])
+        assert path.parent.as_posix() == "PluginHistory/Plugins" and path.stem in runtime_names
+        assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == row["sha256"], row["path"]
+    expected_notes = {r["addon"] + ".md" for r in rows + added} | preserved_names | {"README.md"}
     assert {p.name for p in notes_root.glob("*.md")} == expected_notes
+    assert {p.name for p in (ROOT / "PluginHistory/Runtime").glob("*.md")} == {r["addon"] + ".md" for r in runtime} | {"README.md"}
 
     def historical_path_exists(path):
         return path in tracked or any(p.startswith(path.rstrip("/") + "/") for p in tracked)
 
-    files = [ROOT / r["note"] for r in all_rows] + [
+    files = [ROOT / r["note"] for r in all_rows] + [ROOT / r["path"] for r in preserved] + [
         notes_root / "README.md",
+        ROOT / "PluginHistory/Runtime/README.md",
         ROOT / "PluginHistory/待补充清单.md",
         ROOT / "PluginHistory/README.md",
         ROOT / "PluginHistory/待确认插件.md",
@@ -90,11 +100,15 @@ def main():
     evidence_count = 0
     for row in all_rows:
         name = row["addon"]
-        assert row["note"] == "PluginHistory/Plugins/" + name + ".md"
+        directory = "Runtime" if name in runtime_names else "Plugins"
+        assert row["note"] == "PluginHistory/" + directory + "/" + name + ".md"
+        if name not in runtime_names:
+            assert row["history_group"] in {"unchanged", "modified"}
         text = (ROOT / row["note"]).read_text(encoding="utf-8")
         assert text.startswith("# " + name + " 修改说明\n")
         assert "**" + STATUSES[row["status"]] + "**" in text
-        assert "## 待补充" in text and "## 依据" in text
+        assert "## 早期历史汇总与维护依据" in text
+        # Current issues/plans are optional; absence is not a documentation defect.
         actual_count = sum(p.startswith("Interface/AddOns/" + name + "/") for p in tracked)
         if name not in runtime_names:
             assert row["tracked_files_at_reference"] == actual_count
@@ -147,6 +161,7 @@ def main():
         "added_addon_notes": len(added),
         "added_counts": index.get("added_counts", {}),
         "runtime_component_notes": len(runtime),
+        "preserved_runtime_originals": len(preserved),
         "markdown_files_checked": len(files),
         "local_links_checked": links,
         "evidence_entries_checked": evidence_count,

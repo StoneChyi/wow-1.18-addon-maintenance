@@ -90,7 +90,8 @@ def collect(root):
     for row in rows:
         addon = row["addon"]
         assert addon not in {".", ".."} and not re.search(r"[/\\]", addon)
-        assert row["note"] == "PluginHistory/Plugins/" + addon + ".md"
+        expected_directory = "Runtime" if addon in runtime_names else "Plugins"
+        assert row["note"] == "PluginHistory/" + expected_directory + "/" + addon + ".md"
         text = read_text(root / row["note"])
         events = parse_entries(text, addon)
         assert row["status"] in STATES
@@ -98,7 +99,7 @@ def collect(root):
             assert "## 插件概况" in text and "## 当前维护摘要" in text, addon
             assert "## 早期历史汇总与维护依据" in text, addon
         records.append({"addon": addon, "status": row["status"], "note": row["note"],
-                        "purpose": row["purpose"], "latest_record_date": events[0]["date"] if events else None,
+                        "purpose": row["purpose"], "history_group": row.get("history_group"), "latest_record_date": events[0]["date"] if events else None,
                         "latest_record_title": events[0]["title"] if events else "早期历史汇总（日期待确认）",
                         "latest_game_acceptance": events[0]["game_acceptance"] if events else "见早期记录",
                         "record_count": len(events), "records": events})
@@ -112,21 +113,19 @@ def cell(value):
     return str(value).replace("|", "\\|").replace("\n", " ").replace("\r", "")
 
 
-def table(records, pending=False):
-    if pending:
-        lines = ["| 插件 | 证据状态 | 已知情况 / 待确认 |", "| --- | --- | --- |"]
-    else:
-        lines = ["| 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |", "| --- | --- | --- | --- |"]
+def table(records, base="Plugins"):
+    lines = ["| 插件 / 组件 | 最近记录 |", "| --- | --- |"]
     for row in records:
-        prefix = "Plugins/" if pending else ""
-        link = f'[{row["addon"]}]({prefix}{row["addon"]}.md)'
-        if pending:
-            lines.append(f'| {link} | {STATES[row["status"]]} | {cell(row["purpose"])} |')
-        else:
-            latest = row["latest_record_title"] if row["records"] else row["purpose"]
-            if row["records"]:
-                latest = f'[{cell(latest)}]({row["addon"]}.md#{row["records"][0]["anchor"]})'
-            lines.append(f'| {link} | {row["latest_record_date"] or "日期待确认"} | {latest} | {row["latest_game_acceptance"]} |')
+        directory = "Runtime" if row.get("scope_type") == "runtime" else "Plugins"
+        prefix = "" if directory == base else "../" + directory + "/"
+        link = prefix + row["addon"] + ".md"
+        latest = row["latest_record_date"] or "早期记录，日期待确认"
+        if row["records"]:
+            latest += " · " + row["latest_record_title"]
+            latest = f'[{cell(latest)}]({link}#{row["records"][0]["anchor"]})'
+        elif row.get("history_group") == "unchanged":
+            latest = "暂无本体变化记录"
+        lines.append(f'| [{row["addon"]}]({link}) | {latest} |')
     return "\n".join(lines)
 
 
@@ -134,66 +133,57 @@ def outputs(root):
     catalog, all_records = collect(root)
     records = [r for r in all_records if r.get("scope_type") != "runtime"]
     runtime_records = sorted((r for r in all_records if r.get("scope_type") == "runtime"),
-                             key=lambda r: (r["latest_record_date"] or "", r["addon"].casefold()), reverse=True)
+                             key=lambda r: r["addon"].casefold())
+    assert all(r["history_group"] in {"unchanged", "modified"} for r in records), "Missing history classification"
+    unchanged = sorted((r for r in records if r["history_group"] == "unchanged"), key=lambda r: r["addon"].casefold())
+    changed = sorted((r for r in records if r["history_group"] == "modified"), key=lambda r: r["addon"].casefold())
     counts = dict(Counter(r["status"] for r in records))
-    changed = sorted((r for r in records if r["status"] == "documented_history"),
-                     key=lambda r: (r["latest_record_date"] or "", r["addon"].casefold()), reverse=True)
-    related = sorted((r for r in records if r["status"] == "related_skin_only"), key=lambda r: r["addon"].casefold())
-    pending = sorted((r for r in records if r["status"] in {"snapshot_difference", "unconfirmed"}), key=lambda r: r["addon"].casefold())
-    previous = read_text(root / "PluginHistory/Plugins/README.md")
-    context = previous.split(CONTEXT_MARKER, 1)[1].lstrip("\r\n") if CONTEXT_MARKER in previous else ""
     main = f'''# 插件修改记录
 
-每个插件一个文件，每次修改一条记录；点插件名查看完整历史，点最近记录直接跳转。最新记录在前，早期历史及依据保留在文件末尾。
+按插件查找，每个插件一页；页内按时间倒序记录。共 **{len(records)} 个插件档案**，包含已停用插件的历史，不等于当前安装数量。
 
-当前覆盖 **{len(records)} 个插件页面**：有维护记录 **{counts.get("documented_history", 0)} 个**，仅关联皮肤适配 **{len(related)} 个**，其余 **{len(pending)} 个**的个人修改归属或内容待确认。已停用插件保留历史。
+[总入口](../README.md) · [DLL 等其他组件](../Runtime/README.md) · [记录规范](../记录规范.md)
 
-[待确认插件](../待确认插件.md) · [验收与历史缺项](../待补充清单.md) · [记录规范](../记录规范.md) · [记录模板](../记录模板.md) · [机器索引](../change-index.json)
+## 一、没有变化的插件
 
-## 有维护记录的插件
+共 **{len(unchanged)} 个**。这里的“没有变化”仅指现有依据未确认本插件本体的版本迭代或文件修改，不宣称从未修改或等同官方原版。仅来源补充、未实施的核对、其他插件的皮肤适配不算本体修改；取得真实变化依据后移入第二类。
 
-“最近记录”包含修改、更新、反馈和方案，记录类型在插件页注明；日期待确认的早期汇总不伪造修改时间。游戏验收只代表最近一条的范围，其他功能请查相应记录。
+{table(unchanged)}
+
+## 二、经过版本迭代或修改的插件
+
+共 **{len(changed)} 个**。包括版本更新、自行修改、新增、回退，以及有文件差异证据但作者未确认的历史；是否个人原创另按实际证据说明。
+
+每页以时间记录为主。只有确实存在的当前问题或已经提出的进一步优化方案才设相应章节；没有则不设。待游戏验收不自动等于存在故障。
 
 {table(changed)}
 
-## 仅确认关联皮肤适配
+## 三、DLL 等其他组件
 
-{table(related)}
-
-## 记录与查找
-
-- 有明确日期的维护逐条记录；同日多次修改分别编号，旧记录保留。
-- 尚不能准确拆分的早期内容保留为历史汇总，附原始依据。
-- 新插件独立加入 added_addons；初始化的 105 项与基线证据保持原义。
-- 修改插件页后运行 `python Tools/plugin_history.py build`，再运行 `python Tools/plugin_history.py check` 与 `python Tools/check_plugin_notes.py`。
-- 对应提交是可点击的 GitHub 提交链接；新记录可使用“随本条记录一并提交（见本页 Git 历史）”，避免为填入自身提交号另造提交。
-
-## 根目录运行依赖
-
-根目录 DLL 与图形配置单独记录，不计入插件目录数量或新增插件清单。
-
-{table(runtime_records) if runtime_records else "暂无独立记录。"}
-
-{CONTEXT_MARKER}
-{context}'''
-    pending_text = f'''# 待确认插件
-
-这里列出 **{len(pending)} 个**尚不能确认个人修改归属或具体内容的插件。保留原说明页和完整基线；未找到依据不等于从未修改。TWThreat 的来源补充也不等于确认个人修改。
-
-[返回插件修改记录](Plugins/README.md) · [补充历史与游戏验收](待补充清单.md)
-
-{table(pending, pending=True)}
-
-用户补充按实际确认日期新增记录，不反填未经证实的历史日期。仅关联皮肤适配的插件单列于主索引。
+见 [独立组件记录](../Runtime/README.md)，不混入插件分类或插件数量。
 '''
-    machine = {"schema_version": 1, "source": "PluginHistory/Plugins/*.md + maintenance-index.json",
-               "note": "Generated by Tools/plugin_history.py; dates describe records, not proof of original authorship or global game acceptance.",
-               "counts": counts, "addon_pages": len(records),
-               "dated_records": sum(r["record_count"] for r in records), "addons": records,
-               "runtime_dated_records": sum(r["record_count"] for r in runtime_records),
-               "runtime_components": runtime_records}
+    runtime = f'''# DLL 等其他组件记录
+
+[返回总入口](../README.md) · [插件修改记录](../Plugins/README.md)
+
+共 **{len(runtime_records)} 个**已有独立记录的组件。每个组件分别保留版本更新、修改、验证和回退历史；没有修改任何实际 DLL 或运行配置。原 Plugins 路径的已有历史原件暂时保留，不重复计数，也不作为新的维护入口。
+
+{table(runtime_records, base="Runtime")}
+'''
+    pending = '''# 历史分类入口已合并
+
+插件只按 [没有变化 / 经过版本迭代或修改](Plugins/README.md) 两类查找，不再用“个人修改归属待确认”另建一套分类。
+
+原有来源不明、作者待确认等说明仍在各插件的早期历史中；没有依据不等于从未修改。此页保留旧链接兼容，不再重复维护名单。
+'''
+    machine = {"schema_version": 2, "source": "PluginHistory/Plugins/*.md + Runtime/*.md + maintenance-index.json",
+               "note": "Generated by Tools/plugin_history.py; classification concerns recorded changes, not authorship or game acceptance.",
+               "counts": counts, "history_group_counts": {"unchanged": len(unchanged), "modified": len(changed)},
+               "addon_pages": len(records), "dated_records": sum(r["record_count"] for r in records), "addons": records,
+               "runtime_dated_records": sum(r["record_count"] for r in runtime_records), "runtime_components": runtime_records}
     return {"PluginHistory/Plugins/README.md": main,
-            "PluginHistory/待确认插件.md": pending_text,
+            "PluginHistory/Runtime/README.md": runtime,
+            "PluginHistory/待确认插件.md": pending,
             "PluginHistory/change-index.json": json.dumps(machine, ensure_ascii=False, indent=2) + "\n"}, all_records
 
 

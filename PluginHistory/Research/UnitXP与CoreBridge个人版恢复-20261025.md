@@ -25,4 +25,4 @@
 - 由于两个 DLL 恢复到已记录 blob，Git 不出现额外 DLL 差异；本次以说明记录实际部署，未先提交有问题的新 DLL 来制造回退差异。
 - 没有自动启动游戏。实际启动速度、黑屏/崩溃、距离/视线/通知与其他依赖接口待用户测试，不能用离线检查代替游戏验收。
 
-[UnitXP DLL](../Plugins/UnitXP_SP3.md) · [配套设置插件](../Plugins/UnitXP_SP3_Addon.md) · [CoreBridge](../Plugins/CoreBridge.md) · [pfUI](../Plugins/pfUI.md)
+[UnitXP DLL](../Runtime/UnitXP_SP3.md) · [配套设置插件](../Plugins/UnitXP_SP3_Addon.md) · [CoreBridge](../Runtime/CoreBridge.md) · [pfUI](../Plugins/pfUI.md)

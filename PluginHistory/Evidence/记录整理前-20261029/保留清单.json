@@ -1,0 +1,762 @@
+{
+  "source_commit": "c6cd57ce442201592e9519e0179ea82dba0d628f",
+  "policy": "保留原始记录，不删除原文件；全部整理完成后的清理需另行确认。",
+  "files": [
+    {
+      "original_path": "PluginHistory/Plugins/!Libs.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/!Libs.md",
+      "sha256": "c6f88b7c3a23ac769b42d132cf1daa62976e54c1a275fbc5b8a7079e272cc052",
+      "bytes": 15623
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Accountant.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Accountant.md",
+      "sha256": "97dbf5893a0f0e96ef77fe23d088902598bc973d7b20f158a0d22aae42b1dc93",
+      "bytes": 1568
+    },
+    {
+      "original_path": "PluginHistory/Plugins/ActionBarProfiles.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/ActionBarProfiles.md",
+      "sha256": "a65ad506c2e882a888fc4c106bbd20e4f36a1897fb5098e29b8c8fdfa4057532",
+      "bytes": 4121
+    },
+    {
+      "original_path": "PluginHistory/Plugins/AdvancedTradeSkillWindow2.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/AdvancedTradeSkillWindow2.md",
+      "sha256": "9cab6c8178bbf81dde3b9a41134a03b5d4230024d7bf5ccbf6e3f78f4124f98b",
+      "bytes": 1598
+    },
+    {
+      "original_path": "PluginHistory/Plugins/ArchiTotem.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/ArchiTotem.md",
+      "sha256": "829310b9905ecec04e5a489863bc918597e519e3a3c184ca06a551630f3be4f4",
+      "bytes": 1568
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Atlas.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Atlas.md",
+      "sha256": "59ac7d64ab1b4a0c3af1182e74de8e7f883b7a6e5b2ec311464138a3b2b1e7c1",
+      "bytes": 3505
+    },
+    {
+      "original_path": "PluginHistory/Plugins/AtlasLoot.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/AtlasLoot.md",
+      "sha256": "a6e5a2ff772d2883bf8f1a547a6f904c4604982b1aed7b960e87d1b10fc7a03e",
+      "bytes": 3632
+    },
+    {
+      "original_path": "PluginHistory/Plugins/AtlasQuest.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/AtlasQuest.md",
+      "sha256": "59d5e2ace5a0889b86223914de8fe93c0c27c79df50220e8000d1068b054659a",
+      "bytes": 4443
+    },
+    {
+      "original_path": "PluginHistory/Plugins/AuldLangSyne.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/AuldLangSyne.md",
+      "sha256": "5b7ec77fc5919c164c90cc9903072002ecbd08ccaada61725a6c733e31100069",
+      "bytes": 1572
+    },
+    {
+      "original_path": "PluginHistory/Plugins/AutoBar.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/AutoBar.md",
+      "sha256": "fce8f02c85df92191a6dc08f8ffa862028a4bb061059ef73252afd70cf29c974",
+      "bytes": 1562
+    },
+    {
+      "original_path": "PluginHistory/Plugins/AutoMarker.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/AutoMarker.md",
+      "sha256": "20430b6d781b41fad6ec1bbe5b6cccf2380e8704fc13838ea6d980cfeadf6ce5",
+      "bytes": 6484
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Automatonex.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Automatonex.md",
+      "sha256": "113449fce557696c336c5fb47250a1d53a3b3496bb9edd7c10d97e285eb91e0d",
+      "bytes": 16414
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Bagshui.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Bagshui.md",
+      "sha256": "dd11c941b69a703583a2eb3cf52491a31f699cd85bbf8a294e2bdb202a4a4187",
+      "bytes": 67345
+    },
+    {
+      "original_path": "PluginHistory/Plugins/BetterCharacterStats.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/BetterCharacterStats.md",
+      "sha256": "030e241f9fc0214ed40b48c091896fefcda256c133b045f7fcfff422938f0ed1",
+      "bytes": 12175
+    },
+    {
+      "original_path": "PluginHistory/Plugins/BigWigs.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/BigWigs.md",
+      "sha256": "37b130a9f02c034e45c177f5d7d931c56f1acf5a25f5dcf7bb7ad97b8586cb7e",
+      "bytes": 19452
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_AuctionUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_AuctionUI.md",
+      "sha256": "d5997361ce64d1fbcb59ae2ea4a7ea5e879fd3579cf4ccdd4a772e946d76fad9",
+      "bytes": 1584
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_BattlefieldMinimap.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_BattlefieldMinimap.md",
+      "sha256": "5cd1b1ea5b5833187193a4f5148eeb43e700922a25c428d3f800cbabbe0d415b",
+      "bytes": 1602
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_BindingUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_BindingUI.md",
+      "sha256": "1f16a0aae462890a565af4cf8c0045464841bf33219d7bce6b7e4ef2385283f4",
+      "bytes": 1584
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_CombatText.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_CombatText.md",
+      "sha256": "e5648204740422d1794a0b05d625b16020217635288f926bb59263d7644b91a2",
+      "bytes": 1586
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_CraftUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_CraftUI.md",
+      "sha256": "f5839c316067d16ddfd64b94762a876953e8885032abf8c5232731f86def0745",
+      "bytes": 1580
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_GMSurveyUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_GMSurveyUI.md",
+      "sha256": "c8f2e60a43045d6ad1a654957c56fed3d4414a43f92d4d0d896a34b255827124",
+      "bytes": 1586
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_InspectUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_InspectUI.md",
+      "sha256": "38399c4f11fc328dee33b612946ba671ac9e9f87a82fe6d6737913986a166ead",
+      "bytes": 1584
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_MacroUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_MacroUI.md",
+      "sha256": "9a209a8d5724ad8302be1dd925a40cb2d1c155a8eb3a70b08b4d29a68859b7f0",
+      "bytes": 1580
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_RaidUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_RaidUI.md",
+      "sha256": "fadd48bf0ffa8a32f8ee5dd6ad15f3c57d8f51d8c02884d27b388b3f1839cb57",
+      "bytes": 1578
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_TalentUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_TalentUI.md",
+      "sha256": "810bb6277076bcfbbc9279da19237eb1285303bceb56bb0854192641f3935a5e",
+      "bytes": 1582
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_TradeSkillUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_TradeSkillUI.md",
+      "sha256": "873d1a54305adefc5a5cee67214bdb42cc1bb707fe399556865df076ffa87c3e",
+      "bytes": 1590
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Blizzard_TrainerUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Blizzard_TrainerUI.md",
+      "sha256": "f4cda6e06b7f49a19f6dbaa177d511535411d4d4fd7bb132c03ced7d06d91707",
+      "bytes": 1584
+    },
+    {
+      "original_path": "PluginHistory/Plugins/BrainwasherPro.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/BrainwasherPro.md",
+      "sha256": "db1597b9868df360fc4aa036c9ab1da18fb9455c1d42195658cbc60c59380cc6",
+      "bytes": 5911
+    },
+    {
+      "original_path": "PluginHistory/Plugins/BuffTool.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/BuffTool.md",
+      "sha256": "83dc0325dc51d38381d4dc7752ba396eae168ebc3fb2798aef055c8ec6376aba",
+      "bytes": 3306
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Capslock.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Capslock.md",
+      "sha256": "c42a7f26bbe9815d71b7d6fcf47183550031d5d7676c0b472786b29a0ebc30fc",
+      "bytes": 5844
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Cat.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Cat.md",
+      "sha256": "c9618eda78a8c08f9608389f2a447c9921f1f95a075b2ec2f378db8ccc49f166",
+      "bytes": 8531
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Cat2.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Cat2.md",
+      "sha256": "d6052ebee0fa66c8b3d3931c472562f99e19a31b9b28ea3d17b8dd2a150b0806",
+      "bytes": 12286
+    },
+    {
+      "original_path": "PluginHistory/Plugins/CatPotion.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/CatPotion.md",
+      "sha256": "ea6d53b52a21240c1716a37642ce18623bbbe2e7b10ff29b63e5f9fd6074c266",
+      "bytes": 16217
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Cooline.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Cooline.md",
+      "sha256": "10b6f8878b3ae2508bf9a85547ff261a86fe3369a7eeecc6662dd25798360ab5",
+      "bytes": 36019
+    },
+    {
+      "original_path": "PluginHistory/Plugins/CoreBridge.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/CoreBridge.md",
+      "sha256": "f863f2082022bfca74b25dce337a483941937611319660ae155179c420daf27a",
+      "bytes": 2135
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Cryolysis.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Cryolysis.md",
+      "sha256": "786dbe2a9f358e324617305bec39008836f7af508c88f5f2f0b3cd2f2f1e65be",
+      "bytes": 1566
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Cursive.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Cursive.md",
+      "sha256": "71eba9c0e346b7d475cd23535d907d43f0470439bdadece2b922011bffe717ac",
+      "bytes": 1562
+    },
+    {
+      "original_path": "PluginHistory/Plugins/DPSMateX.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/DPSMateX.md",
+      "sha256": "918e1ddad53c536550c5496751eca006fb6ba45fde73508500d0e20603d66703",
+      "bytes": 6659
+    },
+    {
+      "original_path": "PluginHistory/Plugins/DPSMateXEncounters.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/DPSMateXEncounters.md",
+      "sha256": "e4d333aea7692f503ab7a1ba819c14a436c086e07a9d18856b2fe2157b77a313",
+      "bytes": 4808
+    },
+    {
+      "original_path": "PluginHistory/Plugins/DPSMateXExtend.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/DPSMateXExtend.md",
+      "sha256": "92d9842a073117ff291f0700b8fd7714270939ed11502c30dd41c9359a01276a",
+      "bytes": 15465
+    },
+    {
+      "original_path": "PluginHistory/Plugins/DPSMateXExtendMore.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/DPSMateXExtendMore.md",
+      "sha256": "6a499979c13afeded84b00a91d2ad2f8e4dc0b00ce5dddd2f71b8fcc3c327745",
+      "bytes": 10412
+    },
+    {
+      "original_path": "PluginHistory/Plugins/DPSMateXInsights.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/DPSMateXInsights.md",
+      "sha256": "4ea8adaf5c6d96db68989c9b0ae98a81d1a9bc801a21f096474dd610d87f7e39",
+      "bytes": 5326
+    },
+    {
+      "original_path": "PluginHistory/Plugins/DXVK.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/DXVK.md",
+      "sha256": "10fe454edb4738cc160aba89f8c105a88730d917ce4cf04caae63f1e85583f1b",
+      "bytes": 3118
+    },
+    {
+      "original_path": "PluginHistory/Plugins/EavesDrop.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/EavesDrop.md",
+      "sha256": "483a69ca0c48ef58dfc2fd65779f3e6704db191e8c178043408931e1010b6e41",
+      "bytes": 21727
+    },
+    {
+      "original_path": "PluginHistory/Plugins/ExtraResourceBars.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/ExtraResourceBars.md",
+      "sha256": "35d10d8d8091ef094705c8132aeba6a66229a246d566da2093d72ca9ed3958b1",
+      "bytes": 1582
+    },
+    {
+      "original_path": "PluginHistory/Plugins/EzPoison.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/EzPoison.md",
+      "sha256": "c886cfba1ea94ca4300d546f1603c9ade11ae2984212de4902bc71b8a4d72c58",
+      "bytes": 4802
+    },
+    {
+      "original_path": "PluginHistory/Plugins/FishingBuddy.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/FishingBuddy.md",
+      "sha256": "8106e2d3f2d1d5efcf1babd0e5c1837a8e92336dda9b8bc9216be5cc02dd4eca",
+      "bytes": 1572
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Flyout.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Flyout.md",
+      "sha256": "51c01210a43dbf5c6793c7552b48f4029cdc94b4b9f2bb9483fc051daa852cb5",
+      "bytes": 3640
+    },
+    {
+      "original_path": "PluginHistory/Plugins/GoubayuHeal.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/GoubayuHeal.md",
+      "sha256": "cd64518db884dcd86be5025d56e48ae98a982a42d63b5639131a0b974d6b8088",
+      "bytes": 11687
+    },
+    {
+      "original_path": "PluginHistory/Plugins/HideOutdoorWorldState.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/HideOutdoorWorldState.md",
+      "sha256": "58ab2f8cff4f5af4ed5eb5f77dc27417c26262c01dffd8fd345cb3294667ecd9",
+      "bytes": 7768
+    },
+    {
+      "original_path": "PluginHistory/Plugins/HolyHope.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/HolyHope.md",
+      "sha256": "543352c2e18c99786fcf5ca47a30dacc4a44fab941218add7a36c43c33c91b13",
+      "bytes": 1564
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Interact.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Interact.md",
+      "sha256": "543da909b44cb4154a78e5e566ad3c09dfa43b6199cf0540f283060390844225",
+      "bytes": 1564
+    },
+    {
+      "original_path": "PluginHistory/Plugins/LoseControl.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/LoseControl.md",
+      "sha256": "7ead7518d8410f0cc371f767c1f2578e56997c5393e0e3940641d67b5499e82d",
+      "bytes": 1570
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Meeting.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Meeting.md",
+      "sha256": "70ee525a3dcb3c499d4dc30a3e52676bd500c3552253be140afda8f73ebd5949",
+      "bytes": 12280
+    },
+    {
+      "original_path": "PluginHistory/Plugins/ModernMapMarkers.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/ModernMapMarkers.md",
+      "sha256": "c6ab270db94ae74cced233c560398b0da727125711c1a570dffe841e3e6e180c",
+      "bytes": 1580
+    },
+    {
+      "original_path": "PluginHistory/Plugins/ModifiedPowerAuras.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/ModifiedPowerAuras.md",
+      "sha256": "8474b30dc7a65330fe0ad69551284760a19af4ac45c53b8532244846333793da",
+      "bytes": 1584
+    },
+    {
+      "original_path": "PluginHistory/Plugins/MySlash.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/MySlash.md",
+      "sha256": "56ee4c18f6b76b2089e76ee774a4562bdd780a0e788dd7b2d3a47bbf003071b8",
+      "bytes": 6719
+    },
+    {
+      "original_path": "PluginHistory/Plugins/NotGrid.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/NotGrid.md",
+      "sha256": "d4b71a63da2fd131c00595d2358e623b360b0a457e0e7b23685191aafaec67ec",
+      "bytes": 5105
+    },
+    {
+      "original_path": "PluginHistory/Plugins/OneBag.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/OneBag.md",
+      "sha256": "94941a86ff0766358c80f6b292d4cfc12c1a0ea5bce543ee5494d0b4d7c25364",
+      "bytes": 5774
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Outfitter.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Outfitter.md",
+      "sha256": "9def533152c8123e15479e543cb2bf132a2707bf9270ea4ca45bed0a6f215cc7",
+      "bytes": 5765
+    },
+    {
+      "original_path": "PluginHistory/Plugins/PallyPower.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/PallyPower.md",
+      "sha256": "99ebd604dac33714739f8091059e2f9427fc9f58d4ffd656adff886dd0c9f635",
+      "bytes": 4662
+    },
+    {
+      "original_path": "PluginHistory/Plugins/PizzaWorldBuffs.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/PizzaWorldBuffs.md",
+      "sha256": "b48cd5e7cbddc6b5cf29988ee2d2b2033b8af87983cb857ffdeb031e224e319d",
+      "bytes": 1578
+    },
+    {
+      "original_path": "PluginHistory/Plugins/PlayTurtle.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/PlayTurtle.md",
+      "sha256": "6ce09da7f28472185b32f3caef525e8502f800165b8b38c7fa5a4d73dc725393",
+      "bytes": 1568
+    },
+    {
+      "original_path": "PluginHistory/Plugins/PlayerLinkEnhance.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/PlayerLinkEnhance.md",
+      "sha256": "c2c8f5c26407b56a8111aaaee4905c7638baa742a48e6ffaf8c0f9c20c94f7de",
+      "bytes": 5958
+    },
+    {
+      "original_path": "PluginHistory/Plugins/QianKunBag.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/QianKunBag.md",
+      "sha256": "f0be3edf3cd45c5e22ffc3d13e8fd6ffb62dc03880d1296d7e60a81ef1ed97c3",
+      "bytes": 6663
+    },
+    {
+      "original_path": "PluginHistory/Plugins/QuickHeal.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/QuickHeal.md",
+      "sha256": "66edf40b293c8fec138db3e693e33c4da422005bae1015fe792889fa1b955dc9",
+      "bytes": 4279
+    },
+    {
+      "original_path": "PluginHistory/Plugins/QuickReply.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/QuickReply.md",
+      "sha256": "b4c3f564fcb5d7ed74241da91d5d694cc86fcd7245f4a8773d01fd9ebe9b99cb",
+      "bytes": 1568
+    },
+    {
+      "original_path": "PluginHistory/Plugins/README.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/README.md",
+      "sha256": "3b41e02017e686380c6f73f2d3a1bd53b886f8259df2e6e9f0bebc92ee7b9967",
+      "bytes": 14722
+    },
+    {
+      "original_path": "PluginHistory/Plugins/RaidCheck.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/RaidCheck.md",
+      "sha256": "8f4bf33338647f262d5f8b5a30264581279c66882fd6be05a1978f0a7b5ab4b7",
+      "bytes": 6748
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Rinse.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Rinse.md",
+      "sha256": "6183f9a1b2c63806332e9a8d4dceccbfc5ba7c6807b7b0b33332fb0302b1fe59",
+      "bytes": 1558
+    },
+    {
+      "original_path": "PluginHistory/Plugins/STSMmayor.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/STSMmayor.md",
+      "sha256": "b43726add3fec3eaef9356d0bdaf112313efcc7e16d7013d0e5b877c2365bbef",
+      "bytes": 6364
+    },
+    {
+      "original_path": "PluginHistory/Plugins/S_ChatBar.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/S_ChatBar.md",
+      "sha256": "1dfaaf77b7cc4539cc50abecbdfa2d043b5f302732f09957c69d0ccc2fc04151",
+      "bytes": 6446
+    },
+    {
+      "original_path": "PluginHistory/Plugins/S_ItemTip.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/S_ItemTip.md",
+      "sha256": "3003b3d648d9ddce22ad6887fa0a92e95ab8a24460d11268e1c7020d1db5ddd4",
+      "bytes": 14590
+    },
+    {
+      "original_path": "PluginHistory/Plugins/S_WorldMap.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/S_WorldMap.md",
+      "sha256": "7069d690604602468d511bb5e61baaf539e710155a26841d8ae8ebb2c4843e2e",
+      "bytes": 1568
+    },
+    {
+      "original_path": "PluginHistory/Plugins/ShaguDPS.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/ShaguDPS.md",
+      "sha256": "356b129b801b4d8a5508e09407d2131769a43428f771b0e2df346c89e5ed6fcc",
+      "bytes": 14467
+    },
+    {
+      "original_path": "PluginHistory/Plugins/ShaguScan.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/ShaguScan.md",
+      "sha256": "ca7273a6d95638492d2269ea9a2ce112472f35db9777475e3f6cfc920e4fbbcf",
+      "bytes": 1566
+    },
+    {
+      "original_path": "PluginHistory/Plugins/SimpleRaidTargetIcons.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/SimpleRaidTargetIcons.md",
+      "sha256": "b685a75999db3fe51736356f5f463a2b034002cc6d0aaa8f39928f58302168eb",
+      "bytes": 31968
+    },
+    {
+      "original_path": "PluginHistory/Plugins/SpecialTalent.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/SpecialTalent.md",
+      "sha256": "4651ac7ad422c9ba063e9c92d9bc46fb79424ac0c7494c3248e58c11ef65c54e",
+      "bytes": 3205
+    },
+    {
+      "original_path": "PluginHistory/Plugins/SpiritSenseRec.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/SpiritSenseRec.md",
+      "sha256": "815cf3f9a6e4c9381cdc6b91fc0abbc467bd37bb8db0f950c58c7d18b81c8834",
+      "bytes": 1576
+    },
+    {
+      "original_path": "PluginHistory/Plugins/StatCompare.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/StatCompare.md",
+      "sha256": "94d65a3024f66cc72bee0bf688293ba2a55b1c622aa04c36de7a1f9602ff660b",
+      "bytes": 13252
+    },
+    {
+      "original_path": "PluginHistory/Plugins/SuperCleveRoidMacros.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/SuperCleveRoidMacros.md",
+      "sha256": "a5bfa4bdae42701f6884052552c013594684f907352dd79b9df4dd067f7ca310",
+      "bytes": 5204
+    },
+    {
+      "original_path": "PluginHistory/Plugins/SuperMacro.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/SuperMacro.md",
+      "sha256": "2bf3c77f9522678af3bdde7eadde64f01e5d3e4a230c96873a4aa1e7fe945339",
+      "bytes": 5728
+    },
+    {
+      "original_path": "PluginHistory/Plugins/TWThreat.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/TWThreat.md",
+      "sha256": "2731d425d2207326aebedbf22e00498dc8115256412d1459d71d086866e79fce",
+      "bytes": 4472
+    },
+    {
+      "original_path": "PluginHistory/Plugins/TankBuddyEnh.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/TankBuddyEnh.md",
+      "sha256": "12db2ce44a355b3de3adebac13dd92fe83d021990eb835071154e05022bd8b95",
+      "bytes": 3729
+    },
+    {
+      "original_path": "PluginHistory/Plugins/TianYan.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/TianYan.md",
+      "sha256": "c1f474fb915af4dc8a19abe96506c3ed526d0b0323e26d65f5e770e5f40efe05",
+      "bytes": 5081
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Tmog.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Tmog.md",
+      "sha256": "07f238695b2b05860b41d4118384d3430358a7a052c60e1ac6fa5be8d7801eb5",
+      "bytes": 2701
+    },
+    {
+      "original_path": "PluginHistory/Plugins/TrainerSkills.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/TrainerSkills.md",
+      "sha256": "2533b1a2c96bf964e236da7e81d996623cf148f97d872007bc441edc3cd59e9a",
+      "bytes": 5836
+    },
+    {
+      "original_path": "PluginHistory/Plugins/TurtleMail.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/TurtleMail.md",
+      "sha256": "75587243f2493326113997702abff680049cc3c924b68828e2f606d06aca02a2",
+      "bytes": 3966
+    },
+    {
+      "original_path": "PluginHistory/Plugins/TurtleSeamlessMap.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/TurtleSeamlessMap.md",
+      "sha256": "f75290170436c6422326dc3b41d9671a0e6e3842edf9f4a9193503260118e311",
+      "bytes": 46654
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Turtle_General.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Turtle_General.md",
+      "sha256": "43f1ee603bb9f3c4f04e7c14bab87b2ceddcf88469f5522e9015367e007ff22e",
+      "bytes": 1576
+    },
+    {
+      "original_path": "PluginHistory/Plugins/Turtle_GroupUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/Turtle_GroupUI.md",
+      "sha256": "16e9ddb2dbad3e1dbb8b7167ad7e891d1fc5777fe74b0e6cf98b9daa1f82e632",
+      "bytes": 1576
+    },
+    {
+      "original_path": "PluginHistory/Plugins/UnitXP_SP3.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/UnitXP_SP3.md",
+      "sha256": "21c6c7ce9edc59f4d28d164f517c6c4de8dc8ac7343e495b3e87f96d79f62964",
+      "bytes": 1978
+    },
+    {
+      "original_path": "PluginHistory/Plugins/UnitXP_SP3_Addon.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/UnitXP_SP3_Addon.md",
+      "sha256": "3be796a530bdb95c1cb80b8709d3d5ff15b6c04b77194028c7addb58ddb886ed",
+      "bytes": 3177
+    },
+    {
+      "original_path": "PluginHistory/Plugins/VanillaHelpers.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/VanillaHelpers.md",
+      "sha256": "8dddbe96eca19dbf532c29d8c9047ad509c32f9fa0f810d7c5ecc7a1af84af22",
+      "bytes": 3158
+    },
+    {
+      "original_path": "PluginHistory/Plugins/WIM.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/WIM.md",
+      "sha256": "7053a3514cb9fac530fcd1eaf21b376ed9ac18271c880adaf5597d64557cd654",
+      "bytes": 5302
+    },
+    {
+      "original_path": "PluginHistory/Plugins/WushuangLoot.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/WushuangLoot.md",
+      "sha256": "0d79131394c2eb1edd7cdf690375b1e61da85478edd56139f5b3b9cc22f85cc7",
+      "bytes": 14008
+    },
+    {
+      "original_path": "PluginHistory/Plugins/XyTracker.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/XyTracker.md",
+      "sha256": "92cd45cd5ebc997851b71fc0d98fbab88b22a892361826c7221d4e36c6eb65cc",
+      "bytes": 11224
+    },
+    {
+      "original_path": "PluginHistory/Plugins/YGB_OTAlarm.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/YGB_OTAlarm.md",
+      "sha256": "67d0344e74313439516ec4306456b397991b3c4d000be8cd3475d98586d404ec",
+      "bytes": 4891
+    },
+    {
+      "original_path": "PluginHistory/Plugins/aux-addon.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/aux-addon.md",
+      "sha256": "48309a757cb0ccd301a545c6b129f3c3de14d7dece58bee9f126db6d86d39358",
+      "bytes": 5969
+    },
+    {
+      "original_path": "PluginHistory/Plugins/diminfo.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/diminfo.md",
+      "sha256": "5de9007c2673f2e8a35a44834b9dfea14bddbb5e0bfafa119fe60155be1caedb",
+      "bytes": 6235
+    },
+    {
+      "original_path": "PluginHistory/Plugins/hyx.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/hyx.md",
+      "sha256": "727160ca1c1b75ec93e1460419af92b137dc5e739f5f473adf5db8c2da77b7da",
+      "bytes": 4296
+    },
+    {
+      "original_path": "PluginHistory/Plugins/nampower.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/nampower.md",
+      "sha256": "8e90602b6e6cc609fc30a4d202111aeffe5ea6c4051bca2c7e5ec2b2a757c2f9",
+      "bytes": 9860
+    },
+    {
+      "original_path": "PluginHistory/Plugins/nampowersettings.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/nampowersettings.md",
+      "sha256": "3a2f7fe0bb8fbb651ad8af617aa03143b7768f8e99a81d924404a98c2a9b2b3c",
+      "bytes": 1580
+    },
+    {
+      "original_path": "PluginHistory/Plugins/perfboostsettings.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/perfboostsettings.md",
+      "sha256": "19c87c8dab695b823d1073e260e129ecfbca73b940be58b3c84864b36b32c59b",
+      "bytes": 1582
+    },
+    {
+      "original_path": "PluginHistory/Plugins/pfExtend.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/pfExtend.md",
+      "sha256": "1c89947da6ea0e844fee54ba71e4bd4e60a0065bf9507c5a3b28bc3f7492f11e",
+      "bytes": 1564
+    },
+    {
+      "original_path": "PluginHistory/Plugins/pfQuest-turtle.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/pfQuest-turtle.md",
+      "sha256": "13ab64b8ce17efbb358a57111caadf5f839e8a88ae2e51f62adfd437ec06f65c",
+      "bytes": 1576
+    },
+    {
+      "original_path": "PluginHistory/Plugins/pfQuest.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/pfQuest.md",
+      "sha256": "4fd343c0178c5579989130ae1aaa3a8f8e4c39379b0fe327b5e40e2a60f7f746",
+      "bytes": 1562
+    },
+    {
+      "original_path": "PluginHistory/Plugins/pfUI-CustomMedia.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/pfUI-CustomMedia.md",
+      "sha256": "128cb229067554fed02924af5702acb905944a4577d9f3c28fa8947a60146b35",
+      "bytes": 4117
+    },
+    {
+      "original_path": "PluginHistory/Plugins/pfUI-addonskinner.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/pfUI-addonskinner.md",
+      "sha256": "c2879f9cf04d852cbeb451f5c9aa193a21b624da75aa1d7970a999565530305c",
+      "bytes": 11026
+    },
+    {
+      "original_path": "PluginHistory/Plugins/pfUI-eliteoverlay.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/pfUI-eliteoverlay.md",
+      "sha256": "ccf694e46f66939d8b2a8f3f405857dc38e8c36f0a031c063858898de7e36a7b",
+      "bytes": 1582
+    },
+    {
+      "original_path": "PluginHistory/Plugins/pfUI.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/pfUI.md",
+      "sha256": "5093ae153346368a6397f93497a13201765f1256b1b43d32ac40b19135b0c5f4",
+      "bytes": 50320
+    },
+    {
+      "original_path": "PluginHistory/Plugins/pfUI_ExtendedMerchant.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/pfUI_ExtendedMerchant.md",
+      "sha256": "dd7601183c5b997027c9ab7da1f3d828116034f2d2dc6f1b6244295c4e2dc130",
+      "bytes": 1590
+    },
+    {
+      "original_path": "PluginHistory/Plugins/transmogfix.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/transmogfix.md",
+      "sha256": "1408848cf2459a0023b824a511ce36a8fa3b0b178fd5ca490dbebd41794fa0d2",
+      "bytes": 2297
+    },
+    {
+      "original_path": "PluginHistory/Plugins/weirdperformance.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/weirdperformance.md",
+      "sha256": "2fadca5b47a3bbb15b7b7e8ee98b8a62f35e26ec3c2bfc72a38875383abe72e4",
+      "bytes": 2321
+    },
+    {
+      "original_path": "PluginHistory/Plugins/xNet.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Plugins/xNet.md",
+      "sha256": "5ed988dc07a274690bca9b1d306f26d279b8ddd657d86ac7c9a87c8469e2db54",
+      "bytes": 1556
+    },
+    {
+      "original_path": "PluginHistory/README.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/README.md",
+      "sha256": "c1d3a71b7ed075268096c1e2c14917569a993b5fd8615161a96adc6a594961a7",
+      "bytes": 6203
+    },
+    {
+      "original_path": "PluginHistory/Research/DXVK与VanillaHelpers-回退-20261025.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Research/DXVK与VanillaHelpers-回退-20261025.md",
+      "sha256": "9f57df8e6fa93ab44e41aaf2f33d6ba3c9d869faa9fe63cf2f1e97a119d7bae5",
+      "bytes": 4963
+    },
+    {
+      "original_path": "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Research/UnitXP与CoreBridge个人版恢复-20261025.md",
+      "sha256": "cfa65fa61b97da89b08e8aada7b4e7d92e09330362e96e5fabc1271aa0028be5",
+      "bytes": 2570
+    },
+    {
+      "original_path": "PluginHistory/Research/nampower-候选部署-20261025.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Research/nampower-候选部署-20261025.md",
+      "sha256": "3e499532535268abff0db426bd226ad699f818a7775a4834fc89b12df8fb3def",
+      "bytes": 2505
+    },
+    {
+      "original_path": "PluginHistory/Research/nampower-启动失败与撤回-20261025.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/Research/nampower-启动失败与撤回-20261025.md",
+      "sha256": "753628bef9307a6824e171a9636221aa91bf62466cab6e7995d94acae741fb97",
+      "bytes": 4305
+    },
+    {
+      "original_path": "PluginHistory/change-index.json",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/change-index.json",
+      "sha256": "fa38350f33b7c99c028804cb0fac393e1c38f90d30e46e244d746e0b83a3d23f",
+      "bytes": 123855
+    },
+    {
+      "original_path": "PluginHistory/maintenance-index.json",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/maintenance-index.json",
+      "sha256": "3232bd9b479723075e465f7e117603372abd2da095d8481525fe2e5d9e5c8973",
+      "bytes": 131703
+    },
+    {
+      "original_path": "PluginHistory/待确认插件.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/待确认插件.md",
+      "sha256": "fd78b38baedc7047f849c8dc7636fe126dc82853c647d34926422d9b19c1e75f",
+      "bytes": 5787
+    },
+    {
+      "original_path": "PluginHistory/待补充清单.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/待补充清单.md",
+      "sha256": "347355a115a624bfb116dc4a03f51d631373ac80379d945f11d2797dda59bb5e",
+      "bytes": 7098
+    },
+    {
+      "original_path": "PluginHistory/记录模板.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/记录模板.md",
+      "sha256": "363c6e21fcf43bab1ca8dd6871d2800bb8e4e9911a823df14aca1b3e31c7d897",
+      "bytes": 2087
+    },
+    {
+      "original_path": "PluginHistory/记录规范.md",
+      "archived_path": "PluginHistory/Evidence/记录整理前-20261029/记录规范.md",
+      "sha256": "241de89ff8184db92270b598662a1f3fddefc6c721a6e2ba639258f3240e5ff1",
+      "bytes": 5676
+    }
+  ]
+}
