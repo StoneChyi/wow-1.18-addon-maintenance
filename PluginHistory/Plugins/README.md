@@ -81,7 +81,7 @@
 | [Capslock](Capslock.md) | [2026-10-25 · 合入 10 月 24 日包并保留个人功能（已部署）](Capslock.md#change-Capslock-20261025-02) |
 | [Cat](Cat.md) | [2026-10-11 · 审判控制面板增加惩戒输出技能按钮](Cat.md#change-Cat-20261011-01) |
 | [Cat2](Cat2.md) | [2026-10-25 · 合入 10 月 24 日包并保留个人功能（已部署）](Cat2.md#change-Cat2-20261025-02) |
-| [CatPotion](CatPotion.md) | [2026-10-30 · 圣水左右键投掷、Shift右键补药开关与窄小窗锁定](CatPotion.md#change-CatPotion-20261030-01) |
+| [CatPotion](CatPotion.md) | [2026-10-30 · 大红大蓝与草药茶阈值自动使用和右键设置](CatPotion.md#change-CatPotion-20261030-02) |
 | [Cooline](Cooline.md) | [2026-10-25 · 合入 10 月 24 日包并保留个人功能（已部署）](Cooline.md#change-Cooline-20261025-02) |
 | [diminfo](diminfo.md) | [2026-10-30 · 修正炉石传送按钮图标的垂直对齐](diminfo.md#change-diminfo-20261030-02) |
 | [DPSMateX](DPSMateX.md) | 早期记录，日期待确认 |

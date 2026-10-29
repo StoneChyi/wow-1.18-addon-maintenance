@@ -8,7 +8,9 @@
 ## SavedVariablesPerCharacter: CatPotionDB
 
 Core.lua
+AutoUse.lua
 Window.lua
 Settings.lua
+AutoUseSettings.lua
 MinimapButton.lua
 Bindings.xml

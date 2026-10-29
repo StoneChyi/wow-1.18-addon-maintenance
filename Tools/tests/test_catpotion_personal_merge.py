@@ -18,7 +18,7 @@ def main():
     addons=parser.parse_args().addons.resolve()
     suites=['weapon-charges','weapon-macro','profile-layout','multiple-windows',
         'window-order','drag-preview','shortcut-picker','profile-menu-edges',
-        'header-layout','header-lock','engineering-wormholes','consumable-cooldowns','instant-ground']
+        'header-layout','header-lock','engineering-wormholes','consumable-cooldowns','instant-ground','auto-use','auto-use-settings']
     for suite in suites:
         lua=LuaRuntime(unpack_returned_tuples=True)
         def dofile(relative):

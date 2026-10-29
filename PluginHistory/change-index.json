@@ -13,7 +13,7 @@
     "modified": 61
   },
   "addon_pages": 107,
-  "dated_records": 200,
+  "dated_records": 201,
   "addons": [
     {
       "addon": "!Libs",
@@ -890,10 +890,19 @@
       "purpose": "扩展常用物品，并完善多配置窗口和使用反馈。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "圣水左右键投掷、Shift右键补药开关与窄小窗锁定",
+      "latest_record_title": "大红大蓝与草药茶阈值自动使用和右键设置",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 5,
+      "record_count": 6,
       "records": [
+        {
+          "id": "CatPotion-20261030-02",
+          "date": "2026-10-30",
+          "title": "大红大蓝与草药茶阈值自动使用和右键设置",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-CatPotion-20261030-02"
+        },
         {
           "id": "CatPotion-20261030-01",
           "date": "2026-10-30",

@@ -930,7 +930,9 @@ local function CreateWindow()
         local categoryLabel = CreateText(content, category, 13, 1, 0.7, 0.24)
         if category == "功能药水" then
             categoryLabel:SetText(category .. "  · 默认仅显示，短效 Buff 可在小窗 Shift+右键开启补药")
-        elseif category == "恢复物品" or category == "常用炸药" or category == "工程道具" then
+        elseif category == "恢复物品" then
+            categoryLabel:SetText(category .. "  · 手动使用；大红/大蓝/草药茶可设阈值")
+        elseif category == "常用炸药" or category == "工程道具" then
             categoryLabel:SetText(category .. "  · 手动点击使用")
         end
         categoryLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 2, -y)
@@ -965,7 +967,10 @@ local function CreateWindow()
                         if data.cooldown and data.cooldown > 0 then GameTooltip:AddLine("自身冷却：" .. addon.SecondsToText(data.cooldown), 0.55, 0.7, 0.85) end
                         if data.categoryCooldown and data.categoryCooldown > 0 then GameTooltip:AddLine("类别共享冷却：" .. addon.SecondsToText(data.categoryCooldown), 0.55, 0.7, 0.85) end
                         if data.gcd and data.gcd > 0 then GameTooltip:AddLine("公共冷却：" .. data.gcd .. "秒（实际以客户端为准）", 0.55, 0.7, 0.85) end
-                        if data.manualOnly then GameTooltip:AddLine("仅手动使用，不参与一键补药", 0.55, 0.7, 0.85)
+                        if addon.IsAutoUseItem and addon.IsAutoUseItem(data) then
+                            GameTooltip:AddLine("可在小窗右键设置阈值自动使用；默认关闭", 0.55, 0.7, 0.85)
+                            GameTooltip:AddLine("不参与一键补药；自动使用单独设置", 0.55, 0.7, 0.85)
+                        elseif data.manualOnly then GameTooltip:AddLine("仅手动使用，不参与一键补药", 0.55, 0.7, 0.85)
                         elseif data.defaultMacroExcluded then GameTooltip:AddLine("默认仅显示；小窗 Shift+右键可开启一键补药", 0.55, 0.7, 0.85) end
                         GameTooltip:Show()
                     end)

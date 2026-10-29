@@ -1299,6 +1299,7 @@ function addon.UseItem(itemName, itemData, weaponSlot, profileId, groundTarget)
         addon.MarkAuraCacheDirty()
         addon.MarkWeaponEnchantCacheDirty()
     end
+    if addon.NotifyAutoUseManual then addon.NotifyAutoUseManual(itemData, itemCount) end
     addon.Print("尝试使用：" .. itemName, false, profileId)
     return true
 end

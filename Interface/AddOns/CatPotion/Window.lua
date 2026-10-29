@@ -598,7 +598,12 @@ local function CreateProfileWindow(profileId)
         elseif item.category == "常用炸药" then
             GameTooltip:AddLine("投掷类物品需手动选择地面位置", 0.55, 0.7, 0.85)
         end
-        if item.manualOnly then
+        if addon.IsAutoUseItem and addon.IsAutoUseItem(item) then
+            local config = addon.GetAutoUseConfig(item)
+            GameTooltip:AddLine("右键：设置生命/法力阈值", 0.55, 0.7, 0.85)
+            GameTooltip:AddLine(addon.ToBoolean(config.enabled) and "阈值自动使用：已开启" or "阈值自动使用：已关闭", 1, 0.75, 0.3)
+            GameTooltip:AddLine("不参与一键补药；阈值自动使用单独设置", 0.55, 0.7, 0.85)
+        elseif item.manualOnly then
             GameTooltip:AddLine("仅手动使用，不参与一键补药", 0.55, 0.7, 0.85)
         elseif not addon.IsWeaponCategory(row.itemData.category) then
             GameTooltip:AddLine(row.macroExcluded and "宏调用：已关闭" or "宏调用：已开启", 1, 0.75, 0.3)
@@ -693,7 +698,10 @@ local function CreateProfileWindow(profileId)
                         addon.UseItem(item.item, item, nil, profileId, "player")
                         ui.RefreshPotionTimers()
                     end
-                    -- 普通物品的右键保留，不切换宏标记，也不发送使用请求。
+                    if addon.IsAutoUseItem and addon.IsAutoUseItem(item) and addon.ShowAutoUseSettings then
+                        addon.ShowAutoUseSettings(item)
+                    end
+                    -- 普通右键不切换宏标记；恢复品只打开设置，不使用物品。
                     return
                 end
                 addon.UseItem(item.item, item, clickedRow.weaponSlot, profileId)
