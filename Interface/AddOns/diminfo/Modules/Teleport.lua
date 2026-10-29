@@ -1,9 +1,9 @@
 -- One entry on the bar; selecting a destination never uses the item.
 local items = {
-    { id = 6948, name = "炉石", icon = "INV_Misc_Rune_01" },
-    { id = 41915, name = "翠绿符文", icon = "INV_Misc_Rune_01" },
-    { id = 61000, name = "时光符文", icon = "INV_Misc_Rune_01" },
-    { id = 5976, name = "公会战袍", icon = "INV_Shirt_GuildTabard_01", equip = true }
+    { id = 6948, name = "炉石", icon = "hearth" },
+    { id = 41915, name = "翠绿符文", icon = "verdant" },
+    { id = 61000, name = "时光符文", icon = "time" },
+    { id = 5976, name = "公会战袍", icon = "guild", equip = true }
 }
 local button = CreateFrame("Button", "diminfo_Teleport", UIParent)
 button:SetHeight(18)
@@ -43,14 +43,14 @@ end
 local function Locate(id)
     for slot = 1, 19 do
         if ItemID(GetInventoryItemLink("player", slot)) == id then
-            return { inventory = slot, texture = GetInventoryItemTexture("player", slot) }
+            return { inventory = slot }
         end
     end
     for bag = 0, 4 do
         for slot = 1, GetContainerNumSlots(bag) do
             if ItemID(GetContainerItemLink(bag, slot)) == id then
-                local texture, _, locked = GetContainerItemInfo(bag, slot)
-                return { bag = bag, slot = slot, texture = texture, locked = locked }
+                local _, _, locked = GetContainerItemInfo(bag, slot)
+                return { bag = bag, slot = slot, locked = locked }
             end
         end
     end
@@ -108,8 +108,11 @@ local function Refresh()
     local location = Locate(item.id)
     local state, ready = State(item, location)
     text:SetText(item.name .. " " .. state)
-    text:SetTextColor(ready and .3 or .7, ready and 1 or .7, ready and .6 or .7)
-    icon:SetTexture(location and location.texture or ("Interface\\Icons\\" .. item.icon))
+    local r, g, b = ready and .3 or .7, ready and 1 or .7, ready and .6 or .7
+    text:SetTextColor(r, g, b)
+    -- Transparent line art shares the label tint; item artwork never enters the bar.
+    icon:SetTexture("Interface\\AddOns\\diminfo\\Media\\Teleport\\" .. item.icon)
+    icon:SetVertexColor(r, g, b)
     button:SetWidth(text:GetStringWidth() + 20)
     if hovering then Tooltip() end
 end

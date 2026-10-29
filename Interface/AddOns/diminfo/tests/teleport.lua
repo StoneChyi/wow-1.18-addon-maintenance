@@ -24,9 +24,9 @@ function methods:SetAllPoints(v) self.allpoints=v end
 function methods:SetPoint(...) self.points=arg end
 function methods:ClearAllPoints() self.points={} end
 function methods:SetTexture(v) self.texture=v end
-function methods:SetVertexColor(...) end
+function methods:SetVertexColor(...) self.vertex=arg end
 function methods:SetGradientAlpha(...) end
-function methods:SetTextColor(...) end
+function methods:SetTextColor(...) self.textcolor=arg end
 function methods:GetFont() return unpack(self.font or {}) end
 function methods:GetObjectType() return self.kind end
 function methods:GetRegions() return unpack(self.regions) end
@@ -72,7 +72,7 @@ function GetContainerItemCooldown(bag,slot)
     local i=bags[bag][slot];return i.start or 0,i.duration or 0,i.enabled==nil and 1 or i.enabled
 end
 function GetInventoryItemLink(unit,slot) return inventory[slot] and link(inventory[slot].id) end
-function GetInventoryItemTexture(unit,slot) return "equipped-icon" end
+function GetInventoryItemTexture(unit,slot) error("bar must use local line art") end
 function GetInventoryItemCooldown(unit,slot)
     local i=inventory[slot];return i.start or 0,i.duration or 0,i.enabled==nil and 1 or i.enabled
 end
@@ -171,4 +171,19 @@ check(aligned() and text.points[4]==20,"left sort preserves icon spacing")
 cfg().OrderLeft={};cfg().OrderRight={'diminfo_Teleport','diminfo_Gold'}
 diminfopanel.ReanchorModules()
 check(aligned() and b.points[1]=='LEFT' and text.points[4]==20,"right sort preserves icon spacing")
+-- Each choice keeps its own glyph even when the item leaves the bags.
+for _, item in ipairs({{6948,'hearth'},{41915,'verdant'},{61000,'time'},{5976,'guild'}}) do
+    cfg().TeleportItem=item[1]
+    invoke(b,"OnEvent")
+    check(icon.texture=="Interface\\AddOns\\diminfo\\Media\\Teleport\\"..item[2]
+        and aligned(),"local glyph identity and alignment")
+end
+cfg().TeleportItem=6948;invoke(b,"OnEvent")
+check(icon.vertex[1]==.3 and icon.vertex[2]==1 and icon.vertex[3]==.6
+    and text.textcolor[1]==icon.vertex[1] and text.textcolor[2]==icon.vertex[2]
+    and text.textcolor[3]==icon.vertex[3],"ready icon and label share tint")
+bags[0][1]=nil;invoke(b,"OnEvent")
+check(icon.vertex[1]==.7 and icon.vertex[2]==.7 and icon.vertex[3]==.7
+    and text.textcolor[1]==.7 and icon.texture=="Interface\\AddOns\\diminfo\\Media\\Teleport\\hearth",
+    "missing item keeps glyph and shares disabled tint")
 print('diminfo teleport: '..checks..' checks passed (Lua '.._VERSION..', strict font fallback)')
