@@ -13,7 +13,7 @@
     "modified": 61
   },
   "addon_pages": 107,
-  "dated_records": 204,
+  "dated_records": 205,
   "addons": [
     {
       "addon": "!Libs",
@@ -890,10 +890,19 @@
       "purpose": "扩展常用物品，并完善多配置窗口和使用反馈。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "扩展14种恢复品并支持拖动阈值设置",
+      "latest_record_title": "修复配置菜单缩放偏移并保留原有交互",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 7,
+      "record_count": 8,
       "records": [
+        {
+          "id": "CatPotion-20261030-04",
+          "date": "2026-10-30",
+          "title": "修复配置菜单缩放偏移并保留原有交互",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-CatPotion-20261030-04"
+        },
         {
           "id": "CatPotion-20261030-03",
           "date": "2026-10-30",

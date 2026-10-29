@@ -6,8 +6,12 @@ local screenWidth, screenHeight, rootScale, barScale = 1200, 800, 1, 1
 local anchorX, anchorY = 400, 40
 GetScreenWidth = function() return screenWidth end
 GetScreenHeight = function() return screenHeight end
-UIParent.GetWidth = function() return screenWidth end
-UIParent.GetHeight = function() return screenHeight end
+UIParent.GetWidth = function() return screenWidth * rootScale end
+UIParent.GetHeight = function() return screenHeight * rootScale end
+UIParent.GetLeft = function() return 0 end
+UIParent.GetRight = function() return screenWidth end
+UIParent.GetBottom = function() return 0 end
+UIParent.GetTop = function() return screenHeight end
 UIParent.GetScale = function() return rootScale end
 UIParent.GetEffectiveScale = function() return rootScale end
 CatPotionDB = {
@@ -183,6 +187,14 @@ for _, corner in ipairs({ { 15, 25 }, { 1190, 25 }, { 1190, 790 }, { 15, 790 } }
 end
 rootScale, barScale = 0.75, 1.4
 CheckBounds("scaled toolbar")
+-- Free-space toolbar menu must stay attached even with legacy root sizes.
+anchorX, anchorY = 1100, 600
+CheckBounds("attached scaled toolbar")
+local menu = picker.profileMenu
+local menuScale = menu:GetEffectiveScale()
+local menuRight = menu.point[4] * menuScale + menu:GetWidth() * menuScale
+local buttonRight = anchorX * rootScale + button:GetWidth() * rootScale * barScale / 2
+Check(math.abs(menuRight - buttonRight) < 0.01, "shortcut menu remains attached to button")
 screenWidth, screenHeight, anchorX, anchorY = 240, 150, 230, 20
 CheckBounds("small screen")
 Check(picker.profileMenuPageSize < 8, "small screen reduces rows per page")

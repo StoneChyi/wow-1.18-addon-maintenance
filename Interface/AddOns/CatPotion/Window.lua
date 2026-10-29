@@ -84,9 +84,13 @@ local function CreateProfileMenu(ui, parent, onSelect, getAppearance)
     -- 只调整弹出菜单，不在主窗拖动回调中读取四边或纠正主窗位置。
     local function GetProfileMenuViewport()
         local rootScale = tonumber((UIParent:GetEffectiveScale())) or tonumber((UIParent:GetScale())) or 1
-        local rootWidth = tonumber((UIParent:GetWidth()))
-        local rootHeight = tonumber((UIParent:GetHeight()))
-        if not rootWidth or not rootHeight or rootWidth <= 0 or rootHeight <= 0 or rootScale <= 0 then return nil end
+        -- 1.12 中由锚点决定的宽高可能已包含缩放，不能再把 GetWidth/GetHeight
+        -- 当成本地尺寸相乘。四边坐标始终按自身坐标系返回，只换算一次。
+        local left, right = tonumber((UIParent:GetLeft())), tonumber((UIParent:GetRight()))
+        local bottom, top = tonumber((UIParent:GetBottom())), tonumber((UIParent:GetTop()))
+        if not left or not right or not bottom or not top or rootScale <= 0 then return nil end
+        local rootWidth, rootHeight = right - left, top - bottom
+        if rootWidth <= 0 or rootHeight <= 0 then return nil end
         return rootWidth * rootScale, rootHeight * rootScale, 8 * rootScale, rootScale
     end
 
