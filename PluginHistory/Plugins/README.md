@@ -83,7 +83,7 @@
 | [Cat2](Cat2.md) | [2026-10-25 · 合入 10 月 24 日包并保留个人功能（已部署）](Cat2.md#change-Cat2-20261025-02) |
 | [CatPotion](CatPotion.md) | [2026-10-30 · 大红大蓝与草药茶阈值自动使用和右键设置](CatPotion.md#change-CatPotion-20261030-02) |
 | [Cooline](Cooline.md) | [2026-10-25 · 合入 10 月 24 日包并保留个人功能（已部署）](Cooline.md#change-Cooline-20261025-02) |
-| [diminfo](diminfo.md) | [2026-10-30 · 传送按钮改用统一的原创线条图标](diminfo.md#change-diminfo-20261030-03) |
+| [diminfo](diminfo.md) | [2026-10-30 · 统一传送图标与整条信息栏的文字对齐逻辑](diminfo.md#change-diminfo-20261030-04) |
 | [DPSMateX](DPSMateX.md) | 早期记录，日期待确认 |
 | [DPSMateXEncounters](DPSMateXEncounters.md) | 早期记录，日期待确认 |
 | [DPSMateXExtend](DPSMateXExtend.md) | 早期记录，日期待确认 |

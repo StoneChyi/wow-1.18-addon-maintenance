@@ -6,17 +6,32 @@ local items = {
     { id = 5976, name = "公会战袍", icon = "guild", equip = true }
 }
 local button = CreateFrame("Button", "diminfo_Teleport", UIParent)
-button:SetHeight(18)
-button:SetPoint("LEFT", diminfo_Gold, "RIGHT", 20, 0)
+button.IconPadding = 20
 button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 local text = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 text:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE") -- Template remains valid if SetFont fails.
-text:SetPoint("LEFT", button, "LEFT", 20, 0)
+-- Use the same independent text anchor and outline-only style as the other modules.
+text:SetShadowOffset(0, 0)
+text:SetJustifyV("MIDDLE")
+text:SetPoint("LEFT", diminfo_Gold, "RIGHT", 40, 0)
 local icon = button:CreateTexture(nil, "ARTWORK")
-icon:SetWidth(16)
-icon:SetHeight(16)
--- Match the visible glyph center (the font line box sits above the glyphs).
-icon:SetPoint("RIGHT", text, "LEFT", -4, -2)
+-- The visible artwork is centered in every texture, including the hourglass.
+local function UpdateLayout()
+    local _, size = text:GetFont()
+    size = size or 14
+    local iconSize = size + 2
+    button.IconPadding = iconSize + 4
+    icon:SetWidth(iconSize)
+    icon:SetHeight(iconSize)
+    icon:ClearAllPoints()
+    -- Scale the glyph/line-box correction with the actual font, including fallback.
+    icon:SetPoint("RIGHT", text, "LEFT", -4, -size / 7)
+    button:ClearAllPoints()
+    button:SetPoint("TOPLEFT", text, "TOPLEFT", -button.IconPadding, 0)
+    button:SetPoint("BOTTOMRIGHT", text, "BOTTOMRIGHT", 0, 0)
+end
+button.UpdateLayout = UpdateLayout
+UpdateLayout()
 local menu = CreateFrame("Frame", "DimInfoTeleportMenu", UIParent, "UIDropDownMenuTemplate")
 menu:Hide()
 local hovering, elapsed = false, 0
@@ -113,7 +128,7 @@ local function Refresh()
     -- Transparent line art shares the label tint; item artwork never enters the bar.
     icon:SetTexture("Interface\\AddOns\\diminfo\\Media\\Teleport\\" .. item.icon)
     icon:SetVertexColor(r, g, b)
-    button:SetWidth(text:GetStringWidth() + 20)
+    UpdateLayout()
     if hovering then Tooltip() end
 end
 

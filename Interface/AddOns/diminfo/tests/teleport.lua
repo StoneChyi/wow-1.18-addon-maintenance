@@ -21,12 +21,18 @@ function methods:SetFrameStrata(v) end
 function methods:SetBackdropColor(...) end
 function methods:SetBackdropBorderColor(...) end
 function methods:SetAllPoints(v) self.allpoints=v end
-function methods:SetPoint(...) self.points=arg end
-function methods:ClearAllPoints() self.points={} end
+function methods:SetPoint(...)
+    self.points=arg
+    self.anchors=self.anchors or {};self.anchors[arg[1]]=arg
+end
+function methods:ClearAllPoints() self.points={};self.anchors={};self.allpoints=nil end
 function methods:SetTexture(v) self.texture=v end
 function methods:SetVertexColor(...) self.vertex=arg end
 function methods:SetGradientAlpha(...) end
 function methods:SetTextColor(...) self.textcolor=arg end
+function methods:SetShadowOffset(x,y) self.shadow={x,y} end
+function methods:SetJustifyV(v) self.justifyV=v end
+function methods:SetTexCoord(...) end
 function methods:GetFont() return unpack(self.font or {}) end
 function methods:GetObjectType() return self.kind end
 function methods:GetRegions() return unpack(self.regions) end
@@ -142,7 +148,7 @@ check(GameTooltip.lines[2]=="炉石绑定：旅店","hearth bind tooltip")
 check(b.regions[1].font[1]~='missing-configured-font.ttf',"font template survives SetFont failure")
 cfg().OrderLeft={'diminfo_Teleport'};cfg().OrderRight={'diminfo_Gold'}
 cfg();check(table.getn(cfg().OrderRight)==1,"keep module moved to left")
-diminfopanel.ReanchorModules();check(b.points[1]=='RIGHT' and b.regions[1].points[4]==20,"left anchor reserves icon")
+diminfopanel.ReanchorModules();check(b.regions[1].points[1]=='RIGHT' and b.regions[1].points[2]~=b,"left text anchors independently")
 cfg().Hidden.diminfo_Teleport=true;diminfopanel.ApplyVisibility()
 check(not b:IsShown(),"hide through panel")
 cfg().Hidden.diminfo_Teleport=nil;diminfopanel.ApplyVisibility();check(b:IsShown(),"show through panel")
@@ -155,8 +161,9 @@ check(diminfopanel.mouse==false,"bar background stays click-through")
 -- Keep the icon attached to the label across sorting, resizing and refreshes.
 local text, icon=b.regions[1], b.regions[2]
 local function aligned()
+    local _, size=text:GetFont()
     return icon.points[1]=='RIGHT' and icon.points[2]==text and icon.points[3]=='LEFT'
-        and icon.points[4]==-4 and icon.points[5]==-2
+        and icon.points[4]==-4 and icon.points[5]==-size/7
 end
 check(aligned(),"icon follows label with baseline correction")
 for _, size in ipairs({10,14,20}) do
@@ -167,10 +174,10 @@ for _, size in ipairs({10,14,20}) do
 end
 cfg().OrderLeft={'diminfo_Teleport'};cfg().OrderRight={'diminfo_Gold'}
 diminfopanel.ReanchorModules()
-check(aligned() and text.points[4]==20,"left sort preserves icon spacing")
+check(aligned() and text.points[1]=='RIGHT' and text.points[2]~=b,"left sort preserves independent text")
 cfg().OrderLeft={};cfg().OrderRight={'diminfo_Teleport','diminfo_Gold'}
 diminfopanel.ReanchorModules()
-check(aligned() and b.points[1]=='LEFT' and text.points[4]==20,"right sort preserves icon spacing")
+check(aligned() and text.points[1]=='LEFT' and text.points[4]==cfg().spacing/2+b.IconPadding,"right sort reserves scaled icon spacing")
 -- Each choice keeps its own glyph even when the item leaves the bags.
 for _, item in ipairs({{6948,'hearth'},{41915,'verdant'},{61000,'time'},{5976,'guild'}}) do
     cfg().TeleportItem=item[1]
@@ -186,4 +193,111 @@ bags[0][1]=nil;invoke(b,"OnEvent")
 check(icon.vertex[1]==.7 and icon.vertex[2]==.7 and icon.vertex[3]==.7
     and text.textcolor[1]==.7 and icon.texture=="Interface\\AddOns\\diminfo\\Media\\Teleport\\hearth",
     "missing item keeps glyph and shares disabled tint")
-print('diminfo teleport: '..checks..' checks passed (Lua '.._VERSION..', strict font fallback)')
+-- Resolve full rectangles rather than just checking the last SetPoint arguments.
+-- Font height deliberately alternates odd/even with size, exposing fixed hit boxes.
+local fractions={LEFT={0,.5},RIGHT={1,.5},CENTER={.5,.5},TOPLEFT={0,1},
+    TOPRIGHT={1,1},BOTTOMLEFT={0,0},BOTTOMRIGHT={1,0},TOP={.5,1},BOTTOM={.5,0}}
+local function rectangle(o,cache,visiting)
+    if cache[o] then return cache[o] end
+    assert(not visiting[o], 'circular UI anchors: '..tostring(o.name));visiting[o]=true
+    local result
+    if o==UIParent then result={0,0,1920,1080}
+    elseif o.allpoints then result=rectangle(o.allpoints,cache,visiting)
+    else
+        local constraints={}
+        for point,p in pairs(o.anchors or {}) do
+            local r=rectangle(p[2],cache,visiting)
+            local a,t=fractions[point],fractions[p[3]]
+            table.insert(constraints,{a[1],r[1]+t[1]*r[3]+p[4],a[2],r[2]+t[2]*r[4]+p[5]})
+        end
+        local width=o.kind=='FontString' and o:GetStringWidth() or o.width
+        local height=o.kind=='FontString' and o.font[2]+3 or o.height
+        local function axis(index,extent)
+            local first=constraints[1]
+            if not first then return 0,extent end
+            for _, c in ipairs(constraints) do
+                if c[index]~=first[index] then
+                    extent=(c[index+1]-first[index+1])/(c[index]-first[index])
+                    break
+                end
+            end
+            assert(extent>=0,'negative UI extent')
+            return first[index+1]-first[index]*extent,extent
+        end
+        local x,w=axis(1,width);local y,h=axis(3,height)
+        result={x,y,w,h}
+    end
+    visiting[o]=nil;cache[o]=result;return result
+end
+local function rect(o,cache) return rectangle(o,cache or {},{}) end
+local function centerY(r) return r[2]+r[4]/2 end
+local function near(a,b) return math.abs(a-b)<.0001 end
+local function source(file)
+    local f=assert(io.open('Interface/AddOns/diminfo/Modules/'..file..'.lua','rb'))
+    local data=f:read('*a');f:close();return (string.gsub(data,'^\239\187\191',''))
+end
+-- Execute the actual bar-widget constructors, without unrelated timers/tooltips.
+for _, file in ipairs({'Positions','Friend','Time','RaidCD','Quest','Performance','Loaddll','Durability','Bags'}) do
+    local data=source(file)
+    local start=assert(string.find(data,'local [%w_]+ = CreateFrame%("Button", "diminfo_'))
+    local _,finish=string.find(data,':SetAllPoints%(Text%)',start)
+    assert(loadstring(string.sub(data,start,assert(finish))))()
+end
+floor=math.floor;COPPER_PER_SILVER=100;SILVER_PER_GOLD=100
+function GetMoney() return 123456 end
+assert(loadstring(source('Gold')))()
+event='PLAYER_LOGIN';invoke(diminfo_Gold,'OnEvent')
+local left={'diminfo_Performance','diminfo_RaidCD','diminfo_Quest','diminfo_Friend','diminfo_Time'}
+local right={'diminfo_Loaddll','diminfo_Durability','diminfo_Bag','diminfo_Gold'}
+local ids={6948,41915,61000,5976}
+local layouts=0
+for size=10,20 do
+    for placement=1,6 do
+        for hidden=0,1 do
+            for _, id in ipairs(ids) do
+                local c=cfg();c.OrderLeft={unpack(left)};c.OrderRight={unpack(right)}
+                c.Hidden={};if hidden==1 then c.Hidden.diminfo_pos=true end
+                local order=placement<=3 and c.OrderRight or c.OrderLeft
+                local where=math.mod(placement-1,3)
+                table.insert(order,where==0 and 1 or where==1 and 3 or table.getn(order)+1,'diminfo_Teleport')
+                c.TeleportItem=id;c.spacing=1+(size-10)*4
+                invoke(b,'OnEvent');diminfopanel.UpdateFontSize(size)
+                local cache={};local baseline=centerY(rect(diminfopanel,cache));local ok=true
+                for _, chain in ipairs({c.OrderLeft,c.OrderRight}) do
+                    for _, name in ipairs(chain) do
+                        local f=_G[name]
+                        for _, region in ipairs(f.regions) do
+                            if region.kind=='FontString' then
+                                ok=ok and near(centerY(rect(region,cache)),baseline) and region.font[2]==size
+                            elseif region.kind=='Texture' and f~=b then
+                                ok=ok and near(centerY(rect(region,cache)),baseline)
+                            end
+                        end
+                    end
+                end
+                local tr,br,ir=rect(text,cache),rect(b,cache),rect(icon,cache)
+                ok=ok and near(centerY(br),baseline) and near(br[4],tr[4])
+                    and near(br[3],tr[3]+b.IconPadding) and near(ir[3],size+2)
+                    and near(tr[1]-(ir[1]+ir[3]),4)
+                    and near(centerY(ir)+size/7,baseline)
+                    and text.shadow[1]==0 and text.shadow[2]==0 and text.justifyV=='MIDDLE'
+                -- Centered 24/32 ink fits inside the text-height click target.
+                ok=ok and centerY(ir)-ir[4]*.375>=br[2]-.001
+                    and centerY(ir)+ir[4]*.375<=br[2]+br[4]+.001
+                -- Both chains retain the configured gaps, including around the icon.
+                for _, chain in ipairs({c.OrderLeft,c.OrderRight}) do
+                    for i=2,table.getn(chain) do
+                        local a,z=rect(_G[chain[i-1]],cache),rect(_G[chain[i]],cache)
+                        ok=ok and near(z[1]-(a[1]+a[3]),c.spacing)
+                    end
+                end
+                for _, scale in ipairs({.64,1,1.333333}) do
+                    ok=ok and near(centerY(tr)*scale,baseline*scale)
+                end
+                check(ok,'full bar geometry: font '..size..', placement '..placement..', center hidden '..hidden..', item '..id)
+                layouts=layouts+1
+            end
+        end
+    end
+end
+print('diminfo teleport: '..checks..' checks passed, including '..layouts..' full-bar geometry cases (Lua '.._VERSION..')')

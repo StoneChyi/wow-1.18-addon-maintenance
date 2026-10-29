@@ -116,6 +116,10 @@ local function UpdateAllModulesFontSize()
                 end
             end
 
+            if name == "diminfo_Teleport" and frame.UpdateLayout then
+                frame.UpdateLayout()
+            end
+
             -- 特殊处理金币模块：还需要检查子Frame中的FontString
             if name == "diminfo_Gold" then
                 local children = {frame:GetChildren()}
@@ -283,6 +287,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
         config.FontSize = newFontSize
         SaveCharacterConfig()
         UpdateAllModulesFontSize()
+        panel.ReanchorModules()
     end
 
     -- 重新锚定模块以消除空隙
@@ -337,7 +342,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                 end
 
                 -- 特殊处理金币模块（无论在左侧还是右侧）
-                if name == "diminfo_Gold" or name == "diminfo_Teleport" then
+                if name == "diminfo_Gold" then
                     -- 先锚定整个Frame
                     frame:ClearAllPoints()
                     frame:SetPoint(myAnchorPoint, lastAnchor, lastAnchorPoint, xOffset, 0)
@@ -345,7 +350,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                     -- 如果文字存在，将其锚定到Frame的左侧
                     if textRegion then
                         textRegion:ClearAllPoints()
-                        textRegion:SetPoint("LEFT", frame, "LEFT", name == "diminfo_Teleport" and 20 or 2, 0)
+                        textRegion:SetPoint("LEFT", frame, "LEFT", 2, 0)
                     end
 
                     lastAnchor = frame
@@ -354,7 +359,11 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                     -- 标准模块
                     if textRegion then
                         textRegion:ClearAllPoints()
-                        textRegion:SetPoint(myAnchorPoint, lastAnchor, lastAnchorPoint, xOffset, 0)
+                        local textOffset = xOffset
+                        if name == "diminfo_Teleport" and myAnchorPoint == "LEFT" then
+                            textOffset = textOffset + (frame.IconPadding or 20)
+                        end
+                        textRegion:SetPoint(myAnchorPoint, lastAnchor, lastAnchorPoint, textOffset, 0)
 
                         lastAnchor = frame
                         lastAnchorPoint = "LEFT"
@@ -394,7 +403,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                 end
 
                 -- 特殊处理金币模块（无论在左侧还是右侧）
-                if name == "diminfo_Gold" or name == "diminfo_Teleport" then
+                if name == "diminfo_Gold" then
                     -- 先锚定整个Frame
                     frame:ClearAllPoints()
                     frame:SetPoint(myAnchorPoint, lastAnchor, lastAnchorPoint, xOffset, 0)
@@ -402,7 +411,7 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                     -- 如果文字存在，将其锚定到Frame的左侧
                     if textRegion then
                         textRegion:ClearAllPoints()
-                        textRegion:SetPoint("LEFT", frame, "LEFT", name == "diminfo_Teleport" and 20 or 2, 0)
+                        textRegion:SetPoint("LEFT", frame, "LEFT", 2, 0)
                     end
 
                     lastAnchor = frame
@@ -411,7 +420,11 @@ local CreatePanel = function(anchor, parent, relativeTo, x, y, w, h, a)
                     -- 标准模块
                     if textRegion then
                         textRegion:ClearAllPoints()
-                        textRegion:SetPoint(myAnchorPoint, lastAnchor, lastAnchorPoint, xOffset, 0)
+                        local textOffset = xOffset
+                        if name == "diminfo_Teleport" and myAnchorPoint == "LEFT" then
+                            textOffset = textOffset + (frame.IconPadding or 20)
+                        end
+                        textRegion:SetPoint(myAnchorPoint, lastAnchor, lastAnchorPoint, textOffset, 0)
 
                         lastAnchor = frame
                         lastAnchorPoint = "RIGHT"

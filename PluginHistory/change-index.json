@@ -13,7 +13,7 @@
     "modified": 61
   },
   "addon_pages": 107,
-  "dated_records": 202,
+  "dated_records": 203,
   "addons": [
     {
       "addon": "!Libs",
@@ -2658,10 +2658,19 @@
       "purpose": "支持渐隐，并消除信息条空白处右键误触。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "传送按钮改用统一的原创线条图标",
+      "latest_record_title": "统一传送图标与整条信息栏的文字对齐逻辑",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 5,
+      "record_count": 6,
       "records": [
+        {
+          "id": "diminfo-20261030-04",
+          "date": "2026-10-30",
+          "title": "统一传送图标与整条信息栏的文字对齐逻辑",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-diminfo-20261030-04"
+        },
         {
           "id": "diminfo-20261030-03",
           "date": "2026-10-30",

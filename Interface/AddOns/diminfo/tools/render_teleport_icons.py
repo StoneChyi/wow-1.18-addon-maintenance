@@ -58,6 +58,18 @@ def points(commands):
     return [(round(x*SCALE), round(y*SCALE)) for x, y in result]
 
 
+def normalize(paths):
+    """Give every glyph the same ink center and maximum visible extent."""
+    cloud = [point for commands in paths for point in points(commands)]
+    left, right = min(p[0] for p in cloud)/SCALE, max(p[0] for p in cloud)/SCALE
+    top, bottom = min(p[1] for p in cloud)/SCALE, max(p[1] for p in cloud)/SCALE
+    cx, cy = (left+right)/2, (top+bottom)/2
+    factor = (24-STROKE)/max(right-left, bottom-top)
+    return [[(command[0], *(round(16+(v-(cx if i%2==0 else cy))*factor, 6)
+                            for i, v in enumerate(command[1:])))
+             for command in commands] for commands in paths]
+
+
 def render(paths):
     image = Image.new('RGBA', (SIZE*SCALE, SIZE*SCALE))
     draw = ImageDraw.Draw(image)
@@ -113,7 +125,8 @@ def main():
     parser.add_argument('--preview', type=Path)
     args = parser.parse_args()
     images = {}
-    for key, paths in PATHS.items():
+    for key, source in PATHS.items():
+        paths = normalize(source)
         image = render(paths)
         images[key] = image
         buffer = BytesIO()
@@ -122,6 +135,10 @@ def main():
         assert data[2] == 2 and data[16] == 32 and data[17] & 15 == 8
         alpha = image.getchannel('A')
         assert alpha.getextrema() == (0, 255) and image.getpixel((0, 0))[3] == 0
+        box = alpha.point(lambda v: 255 if v >= 128 else 0).getbbox()
+        cx, cy = (box[0]+box[2])/2, (box[1]+box[3])/2
+        assert abs(cx-16) <= .5 and abs(cy-16) <= .5, (key, box)
+        assert 23 <= max(box[2]-box[0], box[3]-box[1]) <= 25, (key, box)
         for suffix, content in [('svg', svg(paths)), ('tga', data)]:
             path = MEDIA / (key+'.'+suffix)
             if args.check:
