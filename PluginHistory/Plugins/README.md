@@ -83,7 +83,7 @@
 | [Cat2](Cat2.md) | [2026-10-25 · 合入 10 月 24 日包并保留个人功能（已部署）](Cat2.md#change-Cat2-20261025-02) |
 | [CatPotion](CatPotion.md) | [2026-10-30 · 圣水左右键投掷、Shift右键补药开关与窄小窗锁定](CatPotion.md#change-CatPotion-20261030-01) |
 | [Cooline](Cooline.md) | [2026-10-25 · 合入 10 月 24 日包并保留个人功能（已部署）](Cooline.md#change-Cooline-20261025-02) |
-| [diminfo](diminfo.md) | [2026-10-30 · 加入可切换的传送物品按钮](diminfo.md#change-diminfo-20261030-01) |
+| [diminfo](diminfo.md) | [2026-10-30 · 修正炉石传送按钮图标的垂直对齐](diminfo.md#change-diminfo-20261030-02) |
 | [DPSMateX](DPSMateX.md) | 早期记录，日期待确认 |
 | [DPSMateXEncounters](DPSMateXEncounters.md) | 早期记录，日期待确认 |
 | [DPSMateXExtend](DPSMateXExtend.md) | 早期记录，日期待确认 |

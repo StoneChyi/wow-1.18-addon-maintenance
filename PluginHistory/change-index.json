@@ -13,7 +13,7 @@
     "modified": 61
   },
   "addon_pages": 107,
-  "dated_records": 199,
+  "dated_records": 200,
   "addons": [
     {
       "addon": "!Libs",
@@ -2649,10 +2649,19 @@
       "purpose": "支持渐隐，并消除信息条空白处右键误触。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "加入可切换的传送物品按钮",
+      "latest_record_title": "修正炉石传送按钮图标的垂直对齐",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 3,
+      "record_count": 4,
       "records": [
+        {
+          "id": "diminfo-20261030-02",
+          "date": "2026-10-30",
+          "title": "修正炉石传送按钮图标的垂直对齐",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-diminfo-20261030-02"
+        },
         {
           "id": "diminfo-20261030-01",
           "date": "2026-10-30",

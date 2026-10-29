@@ -15,7 +15,8 @@ text:SetPoint("LEFT", button, "LEFT", 20, 0)
 local icon = button:CreateTexture(nil, "ARTWORK")
 icon:SetWidth(16)
 icon:SetHeight(16)
-icon:SetPoint("LEFT", button, "LEFT", 0, 0)
+-- Match the visible glyph center (the font line box sits above the glyphs).
+icon:SetPoint("RIGHT", text, "LEFT", -4, -2)
 local menu = CreateFrame("Frame", "DimInfoTeleportMenu", UIParent, "UIDropDownMenuTemplate")
 menu:Hide()
 local hovering, elapsed = false, 0

@@ -152,4 +152,23 @@ player='Player';cfg().TeleportItem=987654;invoke(b,"OnEvent");check(label()=="�
 cfg().TeleportItem=5976;diminfopanel.ResetAllModules()
 check(cfg().TeleportItem==nil and label()=="炉石 就绪" and b:IsShown(),"reset settings")
 check(diminfopanel.mouse==false,"bar background stays click-through")
+-- Keep the icon attached to the label across sorting, resizing and refreshes.
+local text, icon=b.regions[1], b.regions[2]
+local function aligned()
+    return icon.points[1]=='RIGHT' and icon.points[2]==text and icon.points[3]=='LEFT'
+        and icon.points[4]==-4 and icon.points[5]==-2
+end
+check(aligned(),"icon follows label with baseline correction")
+for _, size in ipairs({10,14,20}) do
+    failedFontPaths[STANDARD_TEXT_FONT]=nil
+    diminfopanel.UpdateFontSize(size)
+    invoke(b,"OnEvent")
+    check(aligned() and text.font[2]==size,"font size preserves icon alignment")
+end
+cfg().OrderLeft={'diminfo_Teleport'};cfg().OrderRight={'diminfo_Gold'}
+diminfopanel.ReanchorModules()
+check(aligned() and text.points[4]==20,"left sort preserves icon spacing")
+cfg().OrderLeft={};cfg().OrderRight={'diminfo_Teleport','diminfo_Gold'}
+diminfopanel.ReanchorModules()
+check(aligned() and b.points[1]=='LEFT' and text.points[4]==20,"right sort preserves icon spacing")
 print('diminfo teleport: '..checks..' checks passed (Lua '.._VERSION..', strict font fallback)')
