@@ -12,10 +12,10 @@
 
 | 插件 | 最近记录日期 | 最近记录 | 游戏验收（仅最近一条） |
 | --- | --- | --- | --- |
+| [pfUI](pfUI.md) | 2026-10-30 | [目标光环换行时动态避让目标的目标](pfUI.md#change-pfUI-20261030-01) | 待游戏验收 |
 | [TianYan](TianYan.md) | 2026-10-28 | [重构无姓名板召唤物发现与事件统计链路](TianYan.md#change-TianYan-20261028-01) | 待游戏验收 |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | 2026-10-27 | [修复单击误选最近目标并增加图标双击标记](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261027-01) | 待游戏验收 |
 | [EavesDrop](EavesDrop.md) | 2026-10-27 | [补充法术、增益与减益图标查找](EavesDrop.md#change-EavesDrop-20261027-06) | 待游戏验收 |
-| [pfUI](pfUI.md) | 2026-10-26 | [减益监控支持所有当前选中目标](pfUI.md#change-pfUI-20261026-03) | 待游戏验收 |
 | [XyTracker](XyTracker.md) | 2026-10-25 | [合入共享属性与本次确认的剩余新包更新](XyTracker.md#change-XyTracker-20261025-03) | 待游戏验收 |
 | [WushuangLoot](WushuangLoot.md) | 2026-10-25 | [回退旧 wsloot DLL 与更新前个人使用版](WushuangLoot.md#change-WushuangLoot-20261025-04) | 待游戏验收 |
 | [TurtleSeamlessMap](TurtleSeamlessMap.md) | 2026-10-25 | [重建连续材质、保留地貌细节，修复城市／海岸与压缩接界](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261025-02) | 待游戏验收 |

@@ -21,6 +21,7 @@
   <Include file="..\modules\swingtimer.lua"/>
   <Include file="..\modules\targettarget.lua"/>
   <Include file="..\modules\targettargettarget.lua"/>
+  <Include file="..\modules\targetlayout.lua"/>
   <Include file="..\modules\pet.lua"/>
   <Include file="..\modules\group.lua"/>
   <Include file="..\modules\raid.lua"/>
