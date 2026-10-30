@@ -206,15 +206,19 @@ pfUI:RegisterModule("energytick", "vanilla:tbc", function()
     local rawPowerType = UnitPowerType("player")
     local powerType = tonumber(rawPowerType) or 0
 
-    if powerType == 0 and C.unitframes.player.manatick == "1" then
+    -- Keep the existing calibrator running independently of its avatar spark.
+    -- The standalone bar consumes the same phase; it never samples a second model.
+    if powerType == 0 then
       this.mode = "MANA"
-      this:Show()
-    elseif powerType == 3 and C.unitframes.player.energy == "1" then
+    elseif powerType == 3 then
       this.mode = "ENERGY"
-      this:Show()
     else
-      this:Hide()
+      this.mode = nil
     end
+
+    local wantShow = (powerType == 0 and C.unitframes.player.manatick == "1")
+      or (powerType == 3 and C.unitframes.player.energy == "1")
+    if wantShow then this:Show() else this:Hide() end
 
     -- Filter known instant energy gains from talents/buffs (extra guard on
     -- top of the delta window; also works for effects the delta window
@@ -345,4 +349,21 @@ pfUI:RegisterModule("energytick", "vanilla:tbc", function()
     energytick.spark:SetWidth(C.unitframes.player.pheight + 5)
     hookUpdateConfig(pfUI.uf.player)
   end
+
+  -- Read-only display interface. No anchor means no prediction; consumers
+  -- must hide the spark instead of inventing an uncalibrated cadence.
+  function energytick:EnergyProgress()
+    local rawPowerType = UnitPowerType("player")
+    if tonumber(rawPowerType) ~= 3 or self.mode ~= "ENERGY" or not self.anchorMS then return nil end
+    local nowMS = GetTime() * 1000
+    local period = EffectiveEnergyTickMS(self)
+    local n = math.floor((nowMS - self.anchorMS) / period) + 1
+    if n < 0 then n = 0 end
+    local nextTick = self.anchorMS + n * period
+    while nextTick <= nowMS do nextTick = nextTick + period end
+    return 1 - Clamp((nextTick - nowMS) / period, 0, 1)
+  end
+
+  pfUI.energytick = energytick
+
 end)

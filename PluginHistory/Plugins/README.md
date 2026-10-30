@@ -100,7 +100,7 @@
 | [OneBag](OneBag.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](OneBag.md#change-OneBag-20261030-02) |
 | [Outfitter](Outfitter.md) | 早期记录，日期待确认 |
 | [PallyPower](PallyPower.md) | 早期记录，日期待确认 |
-| [pfUI](pfUI.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](pfUI.md#change-pfUI-20261030-03) |
+| [pfUI](pfUI.md) | [2026-10-30 · 内置独立资源显示层，保留个人回能与原布局](pfUI.md#change-pfUI-20261030-04) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](pfUI-addonskinner.md#change-pfUI-addonskinner-20261030-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | 早期记录，日期待确认 |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](PizzaWorldBuffs.md#change-PizzaWorldBuffs-20261030-02) |

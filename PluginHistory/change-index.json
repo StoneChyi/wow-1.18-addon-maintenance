@@ -13,7 +13,7 @@
     "modified": 63
   },
   "addon_pages": 107,
-  "dated_records": 236,
+  "dated_records": 237,
   "addons": [
     {
       "addon": "!Libs",
@@ -3061,10 +3061,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "保留个人核心合入 10 月 29 日明确增量（已部署）",
+      "latest_record_title": "内置独立资源显示层，保留个人回能与原布局",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 21,
+      "record_count": 22,
       "records": [
+        {
+          "id": "pfUI-20261030-04",
+          "date": "2026-10-30",
+          "title": "内置独立资源显示层，保留个人回能与原布局",
+          "kind": "更新合并",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261030-04"
+        },
         {
           "id": "pfUI-20261030-03",
           "date": "2026-10-30",

@@ -1103,6 +1103,8 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         "right:" .. T["Right"],
         "left:" .. T["Left"],
       },
+      ["comboenergy_format"] = { "0:" .. T["Current"], "1:" .. T["Current / Maximum"], "2:" .. T["Percent"] },
+      ["comboenergy_align"] = { "left:" .. T["Left"], "center:" .. T["Center"], "right:" .. T["Right"] },
       ["combo_style"] = {
         "pips:" .. T["Blocks"],
         "numbers:" .. T["Numbers"],
@@ -2327,6 +2329,42 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       CreateConfig(nil, T["Text"], nil, nil, "header")
       CreateConfig(U["combopoints"], T["Combopoint Font Size"], C.unitframes, "combofontsize", nil, nil, nil, nil, "number")
       CreateConfig(U["combopoints"], T["Combopoint Text Color"], C.unitframes, "combotextcolor", "color")
+    end)
+
+    -- Standalone display; intentionally independent of combo/distance/threat layouts.
+    CreateGUIEntry(T["Unit Frames"], T["Independent Resource Bar"], function()
+      CreateConfig(U["energybar"], T["Enable Independent Resource Bar"], C.unitframes, "comboenergyshow", "checkbox")
+      CreateConfig(U["energybar"], T["Show On All Power Types"], C.unitframes, "comboenergyallpower", "checkbox")
+
+      CreateConfig(nil, T["Layout"], nil, nil, "header")
+      CreateConfig(U["energybar"], T["Resource Bar Width"], C.unitframes, "comboenergywidth", nil, nil, nil, nil, "number")
+      CreateConfig(U["energybar"], T["Resource Bar Height"], C.unitframes, "comboenergyheight", nil, nil, nil, nil, "number")
+      CreateConfig(U["energybar"], T["Resource Bar X Offset"], C.unitframes, "comboenergyoffx", nil, nil, nil, nil, "number")
+      CreateConfig(U["energybar"], T["Resource Bar Y Offset"], C.unitframes, "comboenergyoffy", nil, nil, nil, nil, "number")
+      CreateConfig(U["energybar"], T["Show Druid Mana Bar"], C.unitframes, "comboenergydruidmana", "checkbox", nil, nil, nil, nil, "vanilla")
+      CreateConfig(U["energybar"], T["Druid Mana Bar Height"], C.unitframes, "comboenergydruidmanaheight", nil, nil, nil, nil, "number", "vanilla")
+
+      CreateConfig(nil, T["Appearance"], nil, nil, "header")
+      CreateConfig(U["energybar"], T["Resource Bar Texture"], C.unitframes, "comboenergytexture", "dropdown", pfUI.gui.dropdowns.combo_texture)
+      CreateConfig(U["energybar"], T["Resource Bar Color"], C.unitframes, "comboenergycolor", "color")
+      CreateConfig(U["energybar"], T["Auto Power Color"], C.unitframes, "comboenergyautocolor", "checkbox")
+      CreateConfig(U["energybar"], T["Resource Bar Background"], C.unitframes, "comboenergybgcolor", "color")
+      CreateConfig(U["energybar"], T["Show Resource Bar Border"], C.unitframes, "comboenergyborder", "checkbox")
+      CreateConfig(U["energybar"], T["Smooth Resource Bar"], C.unitframes, "comboenergysmooth", "checkbox")
+
+      CreateConfig(nil, T["Auto Hide"], nil, nil, "header")
+      CreateConfig(U["energybar"], T["Enable Auto Hide"], C.unitframes, "comboenergyauthide", "checkbox")
+      CreateConfig(U["energybar"], T["Autohide Timeout"], C.unitframes, "comboenergyhidetime", nil, nil, nil, nil, "number")
+      CreateConfig(U["energybar"], T["Keep Visible In Combat"], C.unitframes, "comboenergyhidecombat", "checkbox")
+      CreateConfig(U["energybar"], T["Hide At Full Resource"], C.unitframes, "comboenergyhidefull", "checkbox")
+
+      CreateConfig(nil, T["Text"], nil, nil, "header")
+      CreateConfig(U["energybar"], T["Show Resource Value"], C.unitframes, "comboenergyshowtext", "checkbox")
+      CreateConfig(U["energybar"], T["Resource Value Format"], C.unitframes, "comboenergytextformat", "dropdown", pfUI.gui.dropdowns.comboenergy_format)
+      CreateConfig(U["energybar"], T["Resource Font Size"], C.unitframes, "comboenergyfontsize", nil, nil, nil, nil, "number")
+      CreateConfig(U["energybar"], T["Resource Text Color"], C.unitframes, "comboenergytextcolor", "color")
+      CreateConfig(U["energybar"], T["Resource Text Align"], C.unitframes, "comboenergytextalign", "dropdown", pfUI.gui.dropdowns.comboenergy_align)
+      CreateConfig(U["energybar"], T["Show Energy Tick Indicator"], C.unitframes, "comboenergyshowtick", "checkbox")
     end)
 
     -- 距离显示（原 General 页「UnitXP Settings」整段 35 项拆成独立子页，做法同连击点）
