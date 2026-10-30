@@ -78,6 +78,7 @@ Cards\Logic\FlowJumpSelfBuff.lua
 Cards\Logic\FlowJumpSelfNoBuff.lua
 Cards\Logic\FlowJumpPowerAbove.lua
 Cards\Logic\FlowJumpPowerBelow.lua
+Cards\Logic\FlowJumpStance.lua
 Cards\Logic\FlowJumpTargetBoss.lua
 Cards\Logic\FlowJumpTargetNotBoss.lua
 Cards\Logic\FlowJumpTargetCanBleed.lua
@@ -186,8 +187,15 @@ Cards\Druid\FerociousBite2_50.lua
 Cards\Druid\FerociousBite3_50.lua
 Cards\Druid\FerociousBite4_50.lua
 Cards\Druid\FerociousBite5_50.lua
+Cards\Druid\FerociousBiteRip1.lua
+Cards\Druid\FerociousBiteRip2.lua
+Cards\Druid\FerociousBiteRip3.lua
+Cards\Druid\FerociousBiteRip4.lua
+Cards\Druid\FerociousBiteRip5.lua
 Cards\Druid\FerociousBiteEmergencyRefill.lua
 Cards\Druid\Stealth.lua
+Cards\Druid\StealthPounce.lua
+Cards\Druid\StealthRavage.lua
 Cards\Druid\Shred.lua
 Cards\Druid\ShredClearcasting.lua
 Cards\Druid\ShredClaw.lua
@@ -480,6 +488,8 @@ Cards\Rogue\AdrenalineRushBoss.lua
 Cards\Rogue\Feint.lua
 Cards\Rogue\Rush.lua
 Cards\Rogue\Stealth.lua
+Cards\Rogue\StealthGarrote.lua
+Cards\Rogue\StealthAmbush.lua
 Cards\Rogue\Preparation.lua
 Cards\Rogue\Hemorrhage.lua
 Cards\Rogue\GhostlyStrike.lua

@@ -30,6 +30,11 @@ function card.RefreshRuntimeData()
 end
 
 function card.Execute(context, step)
+    -- 引导期间跳过，避免使用物品或爆发技能打断当前引导。
+    if Cat2.GetChanneled() > 0 then
+        return false
+    end
+
 
     local player = Cat2.PlayerInformation.temporary
     local maximumRage = context:GetStepOption(step, "maximumRage") or 20

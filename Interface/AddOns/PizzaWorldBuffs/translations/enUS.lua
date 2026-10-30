@@ -49,4 +49,7 @@ PWB_translations['enUS'] = {
   ['Set font size'] = nil,
   ['Align text left/center/right'] = nil,
   ['Show current version'] = nil,
+  ['Hide the server time message'] = nil,
+  ['Hiding the server time message'] = nil,
+  ['Showing the server time message'] = nil,
 }

@@ -619,7 +619,7 @@ local function mergeCurrentToSmallFight()
                     for spell, dmg in pairs(tdata) do
                         if spell == "_sum" then
                             small.invalid_damage[name]["_by_target"][target]["_sum"] = (small.invalid_damage[name]["_by_target"][target]["_sum"] or 0) + dmg
-                        else
+                        elseif type(dmg) == "number" then
                             small.invalid_damage[name]["_by_target"][target][spell] = (small.invalid_damage[name]["_by_target"][target][spell] or 0) + dmg
                             local cntKey = "_count_" .. spell
                             small.invalid_damage[name]["_by_target"][target][cntKey] = (small.invalid_damage[name]["_by_target"][target][cntKey] or 0) + (tdata[cntKey] or 0)

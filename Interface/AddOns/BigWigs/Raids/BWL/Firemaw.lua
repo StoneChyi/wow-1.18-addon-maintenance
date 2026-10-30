@@ -2,7 +2,7 @@
 local module, L = BigWigs:ModuleDeclaration("Firemaw", "Blackwing Lair")
 local bbfiremaw = AceLibrary("Babble-Boss-2.2")["Firemaw"]
 
-module.revision = 30085
+module.revision = 30141
 module.enabletrigger = module.translatedName
 module.toggleoptions = {"wingbuffet", "shadowflame", "sfzonealert", "sfzonebar", "sfexplosion", "flamebuffet", "stacks", "bosskill"}
 
@@ -214,6 +214,8 @@ function module:OnSetup()
 end
 
 function module:OnEngage()
+	zoneWarned = false
+
 	if self.db.profile.wingbuffet then
 		self:Bar(L["bar_wingBuffetCd"], timer.wingBuffetFirstCd, icon.wingBuffet, true, color.wingBuffetCd)
 		self:DelayedMessage(timer.wingBuffetFirstCd - 2, L["msg_wingBuffetSoon"], "Attention", false, nil, false)

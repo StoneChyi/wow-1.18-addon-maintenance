@@ -101,3 +101,6 @@ skins\PallyPower.lua
 
 # Create by 可可慕斯 20260928
 skins\Tmog.lua
+
+# Create by 可可慕斯 20261027
+skins\diminfo.lua

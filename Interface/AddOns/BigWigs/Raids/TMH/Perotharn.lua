@@ -267,7 +267,9 @@ function module:OnEnable()
 	self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
 	self:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
 	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_BUFFS", "BuffEvent")
-	self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER", "FadeEvent")
+	-- 野蛮短刃是从「自己身上」消失的，必须收 _SELF；_OTHER 只在他人光环消失时触发，永远收不到自己
+	self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_SELF", "FadeEvent")
+	--self:RegisterEvent("CHAT_MSG_SPELL_AURA_GONE_OTHER", "FadeEvent")
 
 	self:ThrottleSync(5, syncName.shieldGain)
 	self:ThrottleSync(5, syncName.shieldFade)

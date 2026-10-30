@@ -1,7 +1,8 @@
 local module, L = BigWigs:ModuleDeclaration("Ezzel Darkbrewer", "Blackwing Lair")
+local print = print or function(t) if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage(tostring(t)) end end
 
 -- module variables
-module.revision = 30138
+module.revision = 30141
 module.enabletrigger = module.translatedName
 module.toggleoptions = { "charge", "chargemark", "precharge", "chemicalRage", "acid", "transmute", "tongues", "bosskill" }
 

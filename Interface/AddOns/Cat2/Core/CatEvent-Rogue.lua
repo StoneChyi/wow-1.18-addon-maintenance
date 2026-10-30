@@ -198,8 +198,11 @@ local function OnEvent()
                     RogueSurpriseStrikeTargetGUID = guid
                 end
             
+            end
+
+            -- 技能失败判定独立执行，避免通用躲闪处理吞掉破甲或割裂的失败反馈。
             -- 破甲
-            elseif string.find( arg2, "你的破甲.*招架.*" ) or string.find( arg2, "你的破甲.*躲闪.*" ) or string.find( arg2, "你的破甲.*格挡.*" ) or string.find( arg2, "你的破甲.*没有击中.*" ) then
+            if string.find( arg2, "你的破甲.*招架.*" ) or string.find( arg2, "你的破甲.*躲闪.*" ) or string.find( arg2, "你的破甲.*格挡.*" ) or string.find( arg2, "你的破甲.*没有击中.*" ) then
                 local targetGUID = Cat2.MatchGUID(arg2)
                 if targetGUID and ExposeArmorDelayTime[targetGUID] then 
                     local timer = GetTime() - ExposeArmorDelayTime[targetGUID]

@@ -2,7 +2,7 @@
 local module, L = BigWigs:ModuleDeclaration("Broodlord Lashlayer", "Blackwing Lair")
 local bbbroodlordlashlayer = AceLibrary("Babble-Boss-2.2")["Broodlord Lashlayer"]
 
-module.revision = 30085
+module.revision = 30141
 module.enabletrigger = module.translatedName
 module.toggleoptions = {"ms", "bw", "knock", "serrated", -1, "targeticon", "bosskill"}
 
@@ -40,7 +40,7 @@ L:RegisterTranslations("enUS", function() return {
 	trigger_msFade = "Mortal Strike fades from (.+).", --CHAT_MSG_SPELL_AURA_GONE_SELF // CHAT_MSG_SPELL_AURA_GONE_PARTY // CHAT_MSG_SPELL_AURA_GONE_OTHER
 	bar_msCd = "Mortal Strike CD",
 	bar_msSoon = "Mortal Strike Soon...",
-	bar_msDur = ">%s< Mortal Strike",
+	bar_msDur = " Mortal Strike",
 	msg_ms = " Mortal Strike",
 	
 	trigger_bw = "Broodlord Lashlayer's Blast Wave", --CHAT_MSG_SPELL_CREATURE_VS_SELF_DAMAGE // CHAT_MSG_SPELL_CREATURE_VS_PARTY_DAMAGE // CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE
@@ -94,7 +94,7 @@ L:RegisterTranslations("zhCN", function() return {
     trigger_msFade = "致死打击效果从(.+)身上消失了", --CHAT_MSG_SPELL_AURA_GONE_SELF // CHAT_MSG_SPELL_AURA_GONE_PARTY // CHAT_MSG_SPELL_AURA_GONE_OTHER
     bar_msCd = "致死打击冷却",
     bar_msSoon = "即将致死打击...",
-    bar_msDur = ">%s< 致死打击",
+    bar_msDur = " 致死打击",
     msg_ms = " 致死打击",
 
     trigger_bw = "^(.+)(.+)冲击波效果的影响。", --CHAT_MSG_SPELL_CREATURE_VS_SELF_DAMAGE // CHAT_MSG_SPELL_CREATURE_VS_PARTY_DAMAGE // CHAT_MSG_SPELL_CREATURE_VS_CREATURE_DAMAGE
@@ -113,7 +113,7 @@ L:RegisterTranslations("zhCN", function() return {
 } end )
 
 local timer = {
-	msFirstCd = 48,--first supposed to be 25, saw 48!?
+	msFirstCd = 30, -- Observed at 32.61s in 2026-09-04 log (was 15.4s late)
 	msCd = 20,--cd supposed to be {20,30}, saw 26, 27
 	msSoon = 10,
 	msDur = 5,
@@ -144,7 +144,6 @@ local color = {
 	
 	knockCd = "Cyan",
 	knockSoon = "Blue",
-	
 	serrated = "Yellow",
 }
 local syncName = {
@@ -274,7 +273,7 @@ function module:BigWigs_RecvSync(sync, rest, nick)
 		
 	elseif sync == syncName.knock and self.db.profile.knock then
 		self:Knock()
-	
+		
 	elseif sync == syncName.serrated and rest and self.db.profile.serrated then
 		self:Serrated(rest)
 	elseif sync == syncName.serratedFade and rest and self.db.profile.serrated then
@@ -289,7 +288,7 @@ function module:Ms(rest)
 	self:RemoveBar(L["bar_msCd"])
 	
 	if rest ~= "msEvade" then
-		self:ClickBar(string.format(L["bar_msDur"],rest), timer.msDur, icon.ms, rest, nil, true, color.msDur)
+		self:ClickBar(rest..L["bar_msDur"], timer.msDur, icon.ms, rest, nil, true, color.msDur)
 		self:Message(rest..L["msg_ms"], "Urgent", false, nil, false)
 	
 		self:DelayedBar(timer.msDur, L["bar_msCd"], timer.msCd, icon.ms, true, color.msCd)

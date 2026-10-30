@@ -1,7 +1,7 @@
 local module, L = BigWigs:ModuleDeclaration("Flamegor", "Blackwing Lair")
 local BC = AceLibrary("Babble-Class-2.2")
 
-module.revision = 30085
+module.revision = 30141
 module.enabletrigger = module.translatedName
 module.toggleoptions = {"wingbuffet", "shadowflame", "frenzy", -1, "mcalert", "mcbar", "mcmark", "bosskill"}
 module.defaultDB = {

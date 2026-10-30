@@ -271,6 +271,11 @@ settings:SetScript("OnEvent", function()
             config[k] = v
         end
     end
+    -- Preserve the previous absorption-display choice before separating it
+    -- from exclusion. An explicit new choice must never be overwritten.
+    if not source or source.show_absorb == nil then
+        config.show_absorb = config.exclude_absorb == 1 and 1 or 0
+    end
     -- 迁移旧版配置：为新增统计项补充默认启用状态
     if type(config.enabled_stats) ~= "table" then
         config.enabled_stats = {}
@@ -459,6 +464,7 @@ leftPanel:CreateConfig("使用DPS替代EDPS（默认）统计", "use_total_cbt_f
 if ShaguDPS.hasNampower then
     leftPanel:CreateConfig("显示溢出伤害", "show_overkill", "boolean")
     leftPanel:CreateConfig("剔除溢出伤害", "clamp_damage_to_health", "boolean")
+    leftPanel:CreateConfig("显示伤害吸收", "show_absorb", "boolean")
     leftPanel:CreateConfig("剔除伤害吸收", "exclude_absorb", "boolean")
     leftPanel:CreateConfig("剔除小动物伤害", "exclude_critters", "boolean")
     leftPanel:CreateConfig("剔除队友误伤", "hide_friendly_damage", "boolean")

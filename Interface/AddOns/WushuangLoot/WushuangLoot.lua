@@ -103,6 +103,7 @@ local function HandleSlash()
 end
 
 SLASH_WSLoot1 = "/无双交互"
+SLASH_WSLoot2 = "/wsloot"   -- ASCII 备用命令（中文匹配/编码出问题时用）
 SlashCmdList["WSLoot"] = HandleSlash
 
 -- 按键绑定安全包装: 绑定快捷键时调用, 无 DLL 给提示而非报错
@@ -358,6 +359,7 @@ local function HandleSettings()
 end
 
 SLASH_WSLootSettings1 = "/拾取设置"
+SLASH_WSLootSettings2 = "/wsset"   -- ASCII 备用命令
 SlashCmdList["WSLootSettings"] = HandleSettings
 
 -- ==================== 小地图图标 ====================
@@ -389,7 +391,8 @@ local mmAngle = 225
 local function UpdateMinimapButtonPosition()
     local radius = 80
     local mx, my = Minimap:GetCenter()
-    if not mx or not my then return end
+    -- 登录瞬间 Minimap 还没布局时 GetCenter 会返回 0,0, 直接算会把按钮丢到屏幕角外
+    if (not mx or not my) or (mx == 0 and my == 0) then return end
     local rad = math.rad(mmAngle)
     local x = math.cos(rad) * radius
     local y = math.sin(rad) * radius
@@ -413,6 +416,22 @@ WSLootMinimapButton:SetScript("OnDragStart", function()
 end)
 WSLootMinimapButton:SetScript("OnDragStop", function()
     WSLootMinimapButton:SetScript("OnUpdate", nil)
+    WushuangLootDB = WushuangLootDB or {}
+    WushuangLootDB.mmAngle = mmAngle   -- 位置记忆：下次登录回到拖动后的角度
+end)
+
+-- 位置记忆恢复：必须声明在 mmAngle / UpdateMinimapButtonPosition **之后**，
+-- 否则函数体里的 mmAngle 会退化成全局引用(nil)，记忆静默失效（Lua 5.0 老坑）。
+local mmPosFrame = CreateFrame("Frame")
+mmPosFrame:RegisterEvent("VARIABLES_LOADED")
+mmPosFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+mmPosFrame:SetScript("OnEvent", function()
+    if WushuangLootDB and type(WushuangLootDB.mmAngle) == "number" then
+        mmAngle = WushuangLootDB.mmAngle
+    end
+    -- 此时 Minimap 已布局，GetCenter 有效，重新贴一次位置
+    -- （pfUI 会在进世界后重设小地图位置，所以 VARIABLES_LOADED 之后再补一次）
+    UpdateMinimapButtonPosition()
 end)
 
 WSLootMinimapButton:SetScript("OnClick", function()

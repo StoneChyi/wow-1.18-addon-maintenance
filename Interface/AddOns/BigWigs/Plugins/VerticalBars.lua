@@ -41,6 +41,11 @@ L:RegisterTranslations("enUS", function()
 		["Lock the vertical bar anchor so it cannot be dragged."] = true,
 		["Show labels"] = true,
 		["Show the spell name text next to each icon."] = true,
+		["Label side"] = true,
+		["Choose which side of the icon the spell name text is shown on."] = true,
+		["Right"] = true,
+		["Left"] = true,
+		["Label side is now %s"] = true,
 	}
 end)
 
@@ -75,6 +80,11 @@ L:RegisterTranslations("zhCN", function()
 		["Lock the vertical bar anchor so it cannot be dragged."] = "锁定竖行条锚点，禁止拖动.",
 		["Show labels"] = "显示名称",
 		["Show the spell name text next to each icon."] = "在图标旁显示技能名称.",
+		["Label side"] = "名称方向",
+		["Choose which side of the icon the spell name text is shown on."] = "选择技能名称显示在图标的左侧还是右侧.",
+		["Right"] = "右侧",
+		["Left"] = "左侧",
+		["Label side is now %s"] = "名称方向已切换为：%s",
 	}
 end)
 
@@ -91,6 +101,7 @@ BigWigsVerticalBars.defaultDB = {
 	trackHeight = 300,
 	scale = 1.0,
 	showLabels = true,
+	labelSide = "right",   -- "right" / "left"：技能名称显示在图标的哪一侧
 	locked = false,
 	bgVisible = true,
 	posx = nil,
@@ -185,11 +196,26 @@ BigWigsVerticalBars.consoleOptions = {
 				BigWigsVerticalBars.db.profile.showLabels = v
 			end,
 		},
+		labelSide = {
+			type = "text",
+			name = L["Label side"],
+			desc = L["Choose which side of the icon the spell name text is shown on."],
+			order = 7,
+			get = function()
+				return (BigWigsVerticalBars.db.profile.labelSide == "left") and L["Left"] or L["Right"]
+			end,
+			validate = { L["Right"], L["Left"] },
+			set = function(v)
+				BigWigsVerticalBars.db.profile.labelSide = (v == L["Left"]) and "left" or "right"
+				BigWigsVerticalBars:ApplyLayout()
+				BigWigsVerticalBars:UpdateAllIcons()
+			end,
+		},
 		locked = {
 			type = "toggle",
 			name = L["Lock position"],
 			desc = L["Lock the vertical bar anchor so it cannot be dragged."],
-			order = 7,
+			order = 8,
 			get = function()
 				return BigWigsVerticalBars.db.profile.locked
 			end,
@@ -288,10 +314,24 @@ local function AddTimelineBar(text, timer, icon, key, module)
 	SortTimeline()
 end
 
-local function RemoveTimelineBarByKey(key)
+-- keepShort: 剩余 <= 2 秒的残条不删，让它自然下落到期。
+-- 原因：多数 boss 模块在「开始施放」时先 RemoveBar(旧冷却条) 再开读条条
+--（如 BWL 三龙 WingBuffet：RemoveBar("龙翼打击冷却") → Bar("正在施放龙翼打击！",1)
+-- → DelayedBar(1, "龙翼打击冷却", 29)）。此时旧冷却条通常只剩 1~3 秒（1s 读条 + 29s CD = 30s 循环），
+-- 一刀切掉会让竖行条瞬间失去该条；若场上只有这一条，timeline 变空 → 整个锚点隐藏，
+-- 表现就是「剩几秒时竖行条突然消失，1 秒后才重新冒出来」。
+-- 保留残条后：它自然走到底，同一时刻 DelayedBar 开出的同 key 新条会原地刷新它，无缝衔接。
+local function RemoveTimelineBarByKey(key, keepShort)
+	local now = GetTime()
 	for i = table.getn(timeline), 1, -1 do
-		if timeline[i].key == key then
-			table.remove(timeline, i)
+		local entry = timeline[i]
+		if entry.key == key then
+			local remain = entry.endTime - now
+			if keepShort and remain <= 2 and remain > 0 then
+				-- 残条：保留，交给过期清理 / 同 key 刷新
+			else
+				table.remove(timeline, i)
+			end
 		end
 	end
 end
@@ -336,17 +376,23 @@ local function CreateIconFrame(self)
 	f.autocastAnim:SetBlendMode("ADD")
 	f.autocastAnim:Hide()
 
-	f.cooldown = f:CreateFontString(nil, "OVERLAY")
+	f.cooldown = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	f.cooldown:SetPoint("CENTER", f, "CENTER")
 	f.cooldown:SetJustifyH("CENTER")
 	f.cooldown:SetJustifyV("MIDDLE")
 	f.cooldown:SetFont(FONT, math.floor(self.db.profile.iconSize * 0.45), "OUTLINE")
 	f.cooldown:SetTextColor(1, 1, 1, 1)
 
-	f.text = f:CreateFontString(nil, "OVERLAY")
+	f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	f.text:SetFont(FONT, 13, "OUTLINE")
-	f.text:SetPoint("LEFT", f, "RIGHT", 6, 0)
-	f.text:SetJustifyH("LEFT")
+	-- 名称方向：左侧时文字右对齐贴在图标左边，右侧时文字左对齐贴在图标右边
+	if (self.db.profile.labelSide or "right") == "left" then
+		f.text:SetPoint("RIGHT", f, "LEFT", -6, 0)
+		f.text:SetJustifyH("RIGHT")
+	else
+		f.text:SetPoint("LEFT", f, "RIGHT", 6, 0)
+		f.text:SetJustifyH("LEFT")
+	end
 
 	-- 点击图标播报倒计时（对齐横向条 Bars.lua 的 OnBarClick 原逻辑）：
 	-- ctrl+左键 → 团队警报（RAID_WARNING）；shift+左键 → 团队/战场频道
@@ -406,6 +452,7 @@ end
 local TRACK_CAP = 40   -- 轨道顶对应的剩余秒数
 local FALL_AT = 10     -- 10s 以下为精确下落段（下半段）
 local QUEUE_GAP = 6    -- 等待堆叠最小间距
+local LABEL_W = 150    -- 名称文字区预留宽度（决定锚点总宽）
 
 -- 剩余时间 → 图标中心相对锚点顶部的 y 偏移（向下为负）
 -- 上半段 40s→10s 占 trackH/2，下半段 10s→0 占 trackH/2
@@ -464,8 +511,11 @@ function BigWigsVerticalBars:UpdateAllIcons()
 	while table.getn(longList) > maxWait do
 		table.remove(longList)   -- 列表尾 = 最晚进入轨道，丢弃
 	end
+	-- 超限丢弃最晚到期的（列表尾），与 longList 的取舍一致：宁可少显示一个还很远的技能，
+	-- 也不能把马上要到的条砍掉。原先这里是 table.remove(waiting, 1)——删的正是最先到期那条，
+	-- 等于等待区一满就先丢掉最紧迫的条目。
 	while table.getn(waiting) > maxWait do
-		table.remove(waiting, 1)
+		table.remove(waiting)
 	end
 
 	-- 长冷却区高度按实际长条数量动态收缩：无长条时为 0（不占空轨道），
@@ -515,8 +565,12 @@ function BigWigsVerticalBars:UpdateAllIcons()
 
 		if remain <= 5 then
 			-- 1.12 没有 SetRotation，用透明度脉冲模拟特效圈闪烁
-			iconFrame.autocastAnim:SetWidth(iconSize * 1.7)
-			iconFrame.autocastAnim:SetHeight(iconSize * 1.7)
+			-- 尺寸除以 curScale：图标本体在 5s 内被放大到 1.3 倍，特效圈如果也跟着乘，
+			-- 实际显示会是 1.7×1.3 ≈ 2.2 倍，多个条同时进 5 秒区时圈会互相盖住相邻图标。
+			-- 这里归一成恒定的 1.7 倍图标尺寸，只保留闪烁做紧迫感。
+			local ringSize = iconSize * 1.7 / curScale
+			iconFrame.autocastAnim:SetWidth(ringSize)
+			iconFrame.autocastAnim:SetHeight(ringSize)
 			iconFrame.autocastAnim:Show()
 			local pulse = 0.55 + 0.45 * math.abs(math.sin(now * 4))
 			iconFrame.autocastAnim:SetAlpha(pulse)
@@ -533,13 +587,35 @@ function BigWigsVerticalBars:UpdateAllIcons()
 
 	local count = 0
 
-	-- 下落区（下半段）：位置严格对应剩余时间，10s 在轨道中点，0 在轨道底
+	-- 下落区（下半段）：位置对应剩余时间，10s 在轨道中点，0 在轨道底。
+	-- 但默认轨道 300px 里 10s→0 只摊开约 134px，等于每秒仅 13.4px，而图标直径 32px
+	--（5s 内放大到 1.3 倍 = 41.6px）：两个技能相差 2.4s（放大态 3.1s）以内必然叠在一起。
+	-- 因此这里和等待区一样做最小间距推挤——拥挤时宁可让「位置=时间」的线性略微偏移，
+	-- 也不让两个图标互相压住；条少时会自动回到纯线性下落，观感不变。
+	local prevY, prevScale = nil, 1
 	for i = 1, table.getn(falling) do
 		local data = falling[i]
 		local remain = data.endTime - now
 		count = count + 1
-		local y = trackTopY + TimeToY(remain, trackH, iconSize)
 		local curScale = (remain <= 5) and 1.3 or 1
+		local y = trackTopY + TimeToY(remain, trackH, iconSize)
+		if prevY then
+			-- 间距取相邻两条中较大的那个尺寸（放大态占位更宽）
+			local gap
+			if curScale > prevScale then
+				gap = iconSize * curScale + 2
+			else
+				gap = iconSize * prevScale + 2
+			end
+			if y < prevY + gap then
+				y = prevY + gap
+			end
+		end
+		-- 兜底：条多到队列被推到 10s 刻度以上时压在轨道顶，不越界去盖等待区
+		if y > trackTopY then
+			y = trackTopY
+		end
+		prevY, prevScale = y, curScale
 		DrawIcon(count, data, y, curScale)
 	end
 
@@ -605,12 +681,32 @@ function BigWigsVerticalBars:ApplyLayout()
 	local anchor = self.frames.anchor
 	local iconSize = db.iconSize
 	local trackH = db.trackHeight
-	local x = 25  -- 轨道在锚点内偏左，右侧留名称/刻度文字空间
+	-- 名称方向决定轨道在锚点内的横向位置：
+	-- 右侧 → 轨道贴锚点左边（25px 余量），名称向右展开；
+	-- 左侧 → 轨道右移 LABEL_W，名称向左展开，整块仍落在锚点内（热区/拖动范围一致）
+	local labelSide = db.labelSide or "right"
+	local oldTrackX = anchor.trackX
+	local x
+	if labelSide == "left" then
+		x = 25 + LABEL_W
+		anchor:SetWidth(x + iconSize + 25)
+	else
+		x = 25
+		anchor:SetWidth(x + iconSize + LABEL_W)
+	end
 	anchor.trackX = x  -- UpdateAllIcons 用同一 x 定位图标，保证居中在轨道内
+
+	-- 名称方向切换会改变轨道在锚点内的偏移：反向平移锚点，
+	-- 让轨道在屏幕上的位置不动（只让名称换边），避免切一次方向整条竖条跳一下
+	if oldTrackX and oldTrackX ~= x and anchor:GetLeft() then
+		local left, top = anchor:GetLeft(), anchor:GetTop()
+		anchor:ClearAllPoints()
+		anchor:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left - (x - oldTrackX), top)
+		self:SavePosition()
+	end
 
 	-- 长冷却区占锚点顶部 longZoneH，下落轨道整体下移；锚点总高 = 长冷却区 + 轨道 + 底部余量
 	local longZoneH = db.maxIcons * (iconSize + QUEUE_GAP)
-	anchor:SetWidth(iconSize + 150)
 	anchor:SetHeight(longZoneH + trackH + 8)
 
 	-- 锁定按钮（悬停可见，置于最顶部）
@@ -639,8 +735,12 @@ function BigWigsVerticalBars:ApplyLayout()
 		anchor.sepLine:SetPoint("CENTER", anchor, "TOPLEFT", x + iconSize / 2, -longZoneH)
 	end
 
-	-- 重建图标池（尺寸变化）
+	-- 重建图标池（尺寸/名称方向变化）：旧框先隐藏再丢弃，
+	-- 否则它们仍挂在锚点下且保持 Show 状态，会留下换边前的幽灵图标与旧方向文字
 	for i in pairs(iconPool) do
+		if iconPool[i] then
+			iconPool[i]:Hide()
+		end
 		iconPool[i] = nil
 	end
 	-- 尺寸变化后重置动态长冷却区高度缓存，下一帧 UpdateAllIcons 会按实际长条数重算
@@ -703,7 +803,7 @@ function BigWigsVerticalBars:ResetAnchor()
 end
 
 -- 按需显示：竖行条启用且轨道上有进行中的计时条时才显示锚点，
--- 没有任何条时整体隐藏（与 EasyDBM 一致，进团队不会空轨道挂着）
+-- 没有任何条时整体隐藏（与 EasyDBM 一致，进团队不会空轨道挂着）。
 function BigWigsVerticalBars:RefreshShownState()
 	local db = self.db.profile
 	if not self.frames.anchor then
@@ -764,7 +864,7 @@ function BigWigsVerticalBars:SetupFrames()
 		edgeSize = 8,
 	})
 	lockBtn:SetAlpha(0)
-	lockBtn.text = lockBtn:CreateFontString(nil, "OVERLAY")
+	lockBtn.text = lockBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	lockBtn.text:SetPoint("CENTER", lockBtn, "CENTER")
 	lockBtn.text:SetFont(FONT, 13, "OUTLINE")
 	lockBtn:SetScript("OnClick", function()
@@ -925,7 +1025,9 @@ function BigWigsVerticalBars:BigWigs_StopBar(module, text)
 	if not text then
 		return
 	end
-	RemoveTimelineBarByKey(text)
+	-- keepShort = true：不掐断只剩 1~2 秒的条（见 RemoveTimelineBarByKey 注释），
+	-- 避免「冷却条剩几秒 → 模块开读条条前先删冷却条 → 竖行条瞬隐再重冒」
+	RemoveTimelineBarByKey(text, true)
 	self:RefreshShownState()
 end
 
@@ -947,6 +1049,15 @@ SlashCmdList["BIGWIGSVERTICAL"] = function(msg)
 	msg = string.lower(msg or "")
 	if msg == "test" then
 		BigWigsVerticalBars:RunTest()
+		return
+	end
+	-- /bwv left | /bwv right：快速切换技能名称方向（等同选项里的「名称方向」）
+	if msg == "left" or msg == "right" then
+		BigWigsVerticalBars.db.profile.labelSide = msg
+		BigWigsVerticalBars:ApplyLayout()
+		BigWigsVerticalBars:UpdateAllIcons()
+		BigWigs:Print(string.format(L["Label side is now %s"],
+			(msg == "left") and L["Left"] or L["Right"]))
 		return
 	end
 	local db = BigWigsVerticalBars.db.profile

@@ -190,7 +190,9 @@ end
 
 -- 检查pfQuest是否存在
 function Automaton_AutoDB:IsPfQuestAvailable()
-    return pfQuest or SlashCmdList["DB"] or false
+    -- 不硬编码注册键：pfQuest 的处理函数挂在 SlashCmdList["PFDB"]，
+    -- 按别名 /db 反查才能命中
+    return pfQuest or self:ResolveSlashHandler("/db") or false
 end
 
 -- 定期检查并执行命令
@@ -230,22 +232,71 @@ end
 -- 执行斜杠命令：优先直接调用 SlashCmdList 处理函数（pcall 保护），
 -- 避免在登录早期操作 DEFAULT_CHAT_FRAME.editBox 与 pfUI 聊天框冲突；
 -- 未命中处理函数时再回退到输入框方式。
-function Automaton_AutoDB:ExecuteSlashCommand(command)
-    local _, _, slash, msg = string.find(command, "^(%S+)%s*(.-)%s*$")
-    if slash then
-        -- SLASH_DB1 -> SlashCmdList.DB（键为大写命令名，不带斜杠）
-        local handler = SlashCmdList[string.upper(string.sub(slash, 2))]
-        if handler then
-            local ok, err = pcall(handler, msg or "")
-            if ok then return end
+function Automaton_AutoDB:ResolveSlashHandler(slash)
+    if not slash then return nil end
+
+    local key = string.lower(slash)
+    self.slashHandlerCache = self.slashHandlerCache or {}
+    if self.slashHandlerCache[key] then
+        return self.slashHandlerCache[key]
+    end
+
+    local handler
+
+    -- 1) 遍历全局 SLASH_* 用别名反查注册键（不依赖插件的键名约定）
+    local name, value
+    for name, value in pairs(_G) do
+        if type(name) == "string" and type(value) == "string"
+            and string.sub(name, 1, 6) == "SLASH_"
+            and string.lower(value) == key then
+            local listKey = string.gsub(string.sub(name, 7), "%d+$", "")
+            if SlashCmdList[listKey] then
+                handler = SlashCmdList[listKey]
+                break
+            end
         end
     end
 
-    -- 回退：走聊天输入框（同样 pcall 保护，防止登录期报错打断加载链）
+    -- 2) 回退：命令名大写直查（不走 SLASH_ 全局的注册方式）
+    if not handler then
+        handler = SlashCmdList[string.upper(string.sub(key, 2))]
+    end
+
+    if handler then
+        self.slashHandlerCache[key] = handler
+    end
+
+    return handler
+end
+
+function Automaton_AutoDB:ExecuteSlashCommand(command)
+    local _, _, slash, msg = string.find(command, "^(%S+)%s*(.-)%s*$")
+    if not slash then return false end
+
+    local handler = self:ResolveSlashHandler(slash)
+    if handler then
+        local ok = pcall(handler, msg or "")
+        if ok then return true end
+    end
+
+    -- 兜底：仍走输入框时，第二参必须显式传 false。
+    -- ChatEdit_SendText 内部是 if (addHistory) 判定，
+    -- 传 0 在 Lua 里是真值 → 命令会被 ChatEdit_AddHistory 写进上翻历史。
     pcall(function()
-        DEFAULT_CHAT_FRAME.editBox:SetText(command)
-        ChatEdit_SendText(DEFAULT_CHAT_FRAME.editBox, 0)
+        local editBox = DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.editBox
+        if not editBox then return end
+
+        -- 登录后 5 秒窗口期内玩家可能正在打字，不要覆盖输入框内容
+        local current = editBox:GetText()
+        if current and string.len(current) > 0 then return end
+
+        editBox:SetText(command)
+        -- 内层 pcall：即使发送失败也保证清空，不在输入框留下命令文本
+        pcall(ChatEdit_SendText, editBox, false)
+        editBox:SetText("")
     end)
+
+    return false
 end
 
 function Automaton_AutoDB:ExecuteEnabledCommands()

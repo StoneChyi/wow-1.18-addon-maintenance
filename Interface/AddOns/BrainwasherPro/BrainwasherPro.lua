@@ -296,6 +296,7 @@ end
 
 -- 使用完整天赋记录识别，无须先与洗脑装置交互。
 local lastNoMatchDiagKey = nil
+local noMatchPendingKey, noMatchPendingSince = nil, 0
 local function FindCurrentSpecName()
     if not BrainwasherProDB or not BrainwasherProDB.specs then return nil end
     local t1, t2, t3 = GetTalentCounts()
@@ -326,7 +327,11 @@ local function FindCurrentSpecName()
     if not matchedSlot then
         if gossipSlots.load then
             local diagKey = t1 .. "/" .. t2 .. "/" .. t3
-            if diagKey ~= lastNoMatchDiagKey then
+            local now = GetTime()
+            if diagKey ~= noMatchPendingKey then
+                noMatchPendingKey, noMatchPendingSince = diagKey, now
+            end
+            if diagKey ~= lastNoMatchDiagKey and now - noMatchPendingSince >= 1.5 then
                 lastNoMatchDiagKey = diagKey
                 DEFAULT_CHAT_FRAME:AddMessage("|cffffaa00[洗脑器] 当前天赋无法唯一匹配已保存的完整记录，暂不联动。请在对应天赋下重新保存；相同天赋请明确点击要启用的槽位。|r")
             end
@@ -334,6 +339,7 @@ local function FindCurrentSpecName()
         return nil
     end
     lastNoMatchDiagKey = nil
+    noMatchPendingKey = nil
     return BrainwasherProDB.specs[matchedSlot].name, matchedSlot
 end
 

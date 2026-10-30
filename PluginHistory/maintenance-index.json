@@ -5,8 +5,8 @@
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "documented_history": 58,
-    "unconfirmed": 45,
+    "documented_history": 60,
+    "unconfirmed": 43,
     "snapshot_difference": 1,
     "related_skin_only": 1
   },
@@ -150,14 +150,25 @@
     },
     {
       "addon": "AdvancedTradeSkillWindow2",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/AdvancedTradeSkillWindow2.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
-      "maintenance_files": [],
+      "purpose": "只合入制作数量短缓存和材料/任务失效，缓存键补专业，递归 Visited 分支绕过缓存；原制作队列、列表渲染、预建和字体行为保持。真实 Lua 5.0 编译通过，既有 1then 语句未改。",
+      "sources": [
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/AdvancedTradeSkillWindow2/AdvancedTradeSkillWindow2.lua"
+      ],
       "tracked_files_at_reference": 44,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
-      "history_group": "unchanged"
+      "pending": "本次维护已明确记录；2026-10-30 之前的个人修改归属仍待补充。",
+      "history_group": "modified",
+      "last_package_update": {
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "ArchiTotem",
@@ -277,7 +288,8 @@
         "Interface/AddOns/Automatonex/.workbuddy/memory/MEMORY.md",
         "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-28.md",
         "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-18.md",
-        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+        "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Automatonex/Core.lua",
@@ -288,15 +300,19 @@
         "Interface/AddOns/Automatonex/Modules/Tooltip.lua",
         "Interface/AddOns/Automatonex/Modules/Trainer.lua",
         "Interface/AddOns/Automatonex/Modules/AutoNeed.lua",
-        "Interface/AddOns/Automatonex/Modules/LootBOP.lua"
+        "Interface/AddOns/Automatonex/Modules/LootBOP.lua",
+        "Interface/AddOns/Automatonex/Modules/AutoDB.lua",
+        "Interface/AddOns/Automatonex/Modules/TSTargetMark.lua",
+        "Interface/AddOns/Automatonex/Modules/Unlock.lua",
+        "Interface/AddOns/Automatonex/Plubics/CleanChat/CleanChat.lua"
       ],
       "tracked_files_at_reference": 122,
       "pending": "",
       "last_package_update": {
-        "date": "2026-10-25",
-        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
-        "files_changed": 2,
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 4,
         "game_verified": false
       },
       "history_group": "modified"
@@ -394,7 +410,8 @@
         "Interface/AddOns/BigWigs/Raids/BWL/Ezzel.lua.20260918125911.bak",
         "PluginHistory/Research/插件更新实施-20261012.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+        "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/BigWigs/Plugins/Comm.lua",
@@ -454,15 +471,23 @@
         "Interface/AddOns/BigWigs/Sounds/Voice/interruptsoon.ogg",
         "Interface/AddOns/BigWigs/Sounds/Voice/runout.ogg",
         "Interface/AddOns/BigWigs/Sounds/Voice/switchphase.ogg",
-        "Interface/AddOns/BigWigs/Sounds/Voice/tauntboss.ogg"
+        "Interface/AddOns/BigWigs/Sounds/Voice/tauntboss.ogg",
+        "Interface/AddOns/BigWigs/Plugins/Bars.lua",
+        "Interface/AddOns/BigWigs/Raids/BWL/Alchemists.lua",
+        "Interface/AddOns/BigWigs/Raids/BWL/Broodlord.lua",
+        "Interface/AddOns/BigWigs/Raids/BWL/Ebonroc.lua",
+        "Interface/AddOns/BigWigs/Raids/BWL/Ezzel.lua",
+        "Interface/AddOns/BigWigs/Raids/BWL/Firemaw.lua",
+        "Interface/AddOns/BigWigs/Raids/BWL/Flamegor.lua",
+        "Interface/AddOns/BigWigs/Raids/BWL/Wyrmguards.lua"
       ],
       "tracked_files_at_reference": 339,
       "pending": "首领模块数量较多，各场战斗的最终实测情况请按需补充。",
       "last_package_update": {
-        "date": "2026-10-25",
-        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
-        "files_changed": 34,
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 12,
         "game_verified": false
       },
       "history_group": "modified"
@@ -610,14 +635,22 @@
         "PluginHistory/Evidence/addons_tmp/talent-sync-performance-backup-20261006-202746/README.md",
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
-        "PluginHistory/Evidence/legacy-20261006/Docs/Files/BrainwasherPro"
+        "PluginHistory/Evidence/legacy-20261006/Docs/Files/BrainwasherPro",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/BrainwasherPro/BrainwasherPro.lua"
       ],
       "tracked_files_at_reference": 2,
       "pending": "",
-      "history_group": "modified"
+      "history_group": "modified",
+      "last_package_update": {
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 1,
+        "game_verified": false
+      }
     },
     {
       "addon": "BuffTool",
@@ -698,7 +731,8 @@
       "sources": [
         "Interface/AddOns/Cat2/DEVELOPMENT-NOTES.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+        "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Cat2/Cards/Logic/CallConfiguration.lua",
@@ -820,15 +854,35 @@
         "Interface/AddOns/Cat2/Core/CatImmuneLib.lua",
         "Interface/AddOns/Cat2/Core/ChannelDebug.lua",
         "Interface/AddOns/Cat2/Core/Persistence.lua",
-        "Interface/AddOns/Cat2/UI/FlowEditorJumpGuide.lua"
+        "Interface/AddOns/Cat2/UI/FlowEditorJumpGuide.lua",
+        "Interface/AddOns/Cat2/Cards/Common/AutoTrinketLower.lua",
+        "Interface/AddOns/Cat2/Cards/Common/AutoTrinketUpper.lua",
+        "Interface/AddOns/Cat2/Cards/Common/BurstAutoTrinketLower.lua",
+        "Interface/AddOns/Cat2/Cards/Common/BurstAutoTrinketUpper.lua",
+        "Interface/AddOns/Cat2/Cards/Common/RacialBurst.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/FerociousBiteEmergencyRefill.lua",
+        "Interface/AddOns/Cat2/Cards/Druid/Stealth.lua",
+        "Interface/AddOns/Cat2/Cards/Items/CustomCastConsumableCursor.lua",
+        "Interface/AddOns/Cat2/Cards/Items/CustomCastConsumableTarget.lua",
+        "Interface/AddOns/Cat2/Cards/Items/DenseDynamiteCursor.lua",
+        "Interface/AddOns/Cat2/Cards/Items/DenseDynamiteTarget.lua",
+        "Interface/AddOns/Cat2/Cards/Items/GoblinSapperBomb.lua",
+        "Interface/AddOns/Cat2/Cards/Items/GreatRagePotion.lua",
+        "Interface/AddOns/Cat2/Cards/Items/HastePotion.lua",
+        "Interface/AddOns/Cat2/Cards/Items/JujuFlurry.lua",
+        "Interface/AddOns/Cat2/Cards/Items/StratholmeHolyWaterCursor.lua",
+        "Interface/AddOns/Cat2/Cards/Items/StratholmeHolyWaterTarget.lua",
+        "Interface/AddOns/Cat2/Cards/Items/ThistleTea.lua",
+        "Interface/AddOns/Cat2/Cards/Rogue/Stealth.lua",
+        "Interface/AddOns/Cat2/Core/CatEvent-Rogue.lua"
       ],
       "tracked_files_at_reference": 708,
       "pending": "第三方动作条兼容及调用配置的完整游戏场景验收待补充。",
       "last_package_update": {
-        "date": "2026-10-25",
-        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
-        "files_changed": 125,
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 40,
         "game_verified": false
       },
       "history_group": "modified"
@@ -1271,7 +1325,8 @@
       "sources": [
         "PluginHistory/Research/插件更新实施-20261012.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
-        "PluginHistory/Research/10月24日包合并实施-20261025.md"
+        "PluginHistory/Research/10月24日包合并实施-20261025.md",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/GoubayuHeal/GoubayuHeal.lua",
@@ -1285,10 +1340,10 @@
       "tracked_files_at_reference": 12,
       "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
-        "date": "2026-10-25",
-        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
-        "files_changed": 7,
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 1,
         "game_verified": false
       },
       "history_group": "modified"
@@ -1468,7 +1523,8 @@
         "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-18.md",
         "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-23.md",
         "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-25.md",
-        "PluginHistory/Research/插件更新实施-20261012.md"
+        "PluginHistory/Research/插件更新实施-20261012.md",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/OneBag/OneBag.lua",
@@ -1477,10 +1533,10 @@
       "tracked_files_at_reference": 30,
       "pending": "",
       "last_package_update": {
-        "date": "2026-10-12",
-        "report": "PluginHistory/Research/插件更新实施-20261012.md",
-        "manifest": "PluginHistory/Research/插件更新实施-20261012.json",
-        "files_changed": 2,
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 1,
         "game_verified": false
       },
       "history_group": "modified"
@@ -1543,14 +1599,29 @@
     },
     {
       "addon": "PizzaWorldBuffs",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/PizzaWorldBuffs.md",
-      "purpose": "等待确认是否有个人修改",
-      "sources": [],
-      "maintenance_files": [],
+      "purpose": "合入校时期间的服务器时间消息屏蔽与 /wb systime 开关；将新包子串匹配收窄为完整行首匹配，保留玩家聊天中引用的文字。",
+      "sources": [
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
+      ],
+      "maintenance_files": [
+        "Interface/AddOns/PizzaWorldBuffs/src/config.lua",
+        "Interface/AddOns/PizzaWorldBuffs/src/main.lua",
+        "Interface/AddOns/PizzaWorldBuffs/src/slashcommands.lua",
+        "Interface/AddOns/PizzaWorldBuffs/translations/enUS.lua",
+        "Interface/AddOns/PizzaWorldBuffs/translations/zhCN.lua"
+      ],
       "tracked_files_at_reference": 26,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
-      "history_group": "unchanged"
+      "pending": "本次维护已明确记录；2026-10-30 之前的个人修改归属仍待补充。",
+      "history_group": "modified",
+      "last_package_update": {
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 5,
+        "game_verified": false
+      }
     },
     {
       "addon": "PlayTurtle",
@@ -1749,7 +1820,8 @@
         "PluginHistory/Research/插件更新实施-20261012.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
         "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/ShaguDPS/core.lua",
@@ -1761,10 +1833,10 @@
       "tracked_files_at_reference": 16,
       "pending": "服务器响应、多人战斗及无 SuperWoW 时的兼容结果待补充。",
       "last_package_update": {
-        "date": "2026-10-25",
-        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
-        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
-        "files_changed": 1,
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 4,
         "game_verified": false
       },
       "history_group": "modified"
@@ -2128,7 +2200,8 @@
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
         "PluginHistory/Research/10月24日包合并实施-20261025.md",
         "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
-        "PluginHistory/Research/wsloot与无双个人版回退-20261025.md"
+        "PluginHistory/Research/wsloot与无双个人版回退-20261025.md",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/WushuangLoot/Bindings.xml",
@@ -2139,10 +2212,10 @@
       "tracked_files_at_reference": 8,
       "pending": "请优先补充重启后的探针结果、当前实际加载文件、小地图/中文命令是否恢复以及现有 DLL 版本。",
       "last_package_update": {
-        "date": "2026-10-25",
-        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
-        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
-        "files_changed": 3,
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 1,
         "game_verified": false
       },
       "last_rollback": {
@@ -2398,7 +2471,8 @@
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
         "PluginHistory/Research/10月24日包合并实施-20261025.md",
         "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
-        "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md"
+        "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI/api/api.lua",
@@ -2438,9 +2512,9 @@
       "tracked_files_at_reference": 277,
       "pending": "修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。",
       "last_package_update": {
-        "date": "2026-10-25",
-        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
-        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
         "files_changed": 1,
         "game_verified": false
       },
@@ -2482,7 +2556,8 @@
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
         "PluginHistory/Evidence/legacy-20261006/Docs/Files/pfUI-addonskinner",
         "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "PluginHistory/Research/wsloot与无双个人版回退-20261025.md"
+        "PluginHistory/Research/wsloot与无双个人版回退-20261025.md",
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI-addonskinner/skins/Cat.lua",
@@ -2498,10 +2573,10 @@
       "tracked_files_at_reference": 84,
       "pending": "",
       "last_package_update": {
-        "date": "2026-10-25",
-        "report": "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "manifest": "PluginHistory/Research/10月24日包合并实施-20261025.json",
-        "files_changed": 2,
+        "date": "2026-10-30",
+        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
+        "files_changed": 3,
         "game_verified": false
       },
       "history_group": "modified"

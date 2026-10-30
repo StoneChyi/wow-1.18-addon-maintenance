@@ -12,6 +12,7 @@ local card = {
     sort = 410,
     -- 仅能是 common、item、class 三种分类之一。
     category = "class",
+    exclusiveGroup = "druid_stealth_opener",
     canStopSequence = true,
     -- 游戏职业文件代码；仅职业卡需要设置。
     classes = {

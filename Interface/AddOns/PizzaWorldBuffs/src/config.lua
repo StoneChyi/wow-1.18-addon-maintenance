@@ -18,6 +18,7 @@ local defaultConfig = {
   dmf = true,
   mapHeads = true,
   wbtSync = true, -- Import accurate world-buff timers from WorldBuffsTracker's TWB channel
+  hideServerTime = true, -- Hide the "Server Time: ..." chat line printed by the .server info calibration
   orientation = 'vertical', -- New option: 'vertical' or 'horizontal'
 }
 

@@ -1831,11 +1831,14 @@ function BigWigs:GetCastTimeCoefficient(unitId)
 	local coefficient = 1
 	
 	if UnitExists(unitId) then
-		for i=1,table.getn(debuffs) do
+		local i = 1
+		local n = table.getn(debuffs)
+		while i <= n do
 			if BigWigs:AuraIsPresent(unitId, debuffs[i][1]) then
 				coefficient = coefficient * debuffs[i][2]
 				i = i + debuffs[i][3] -- skip checking lower ranks
 			end
+			i = i + 1
 		end
 	end
 	

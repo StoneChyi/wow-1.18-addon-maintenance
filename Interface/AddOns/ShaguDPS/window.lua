@@ -3156,6 +3156,19 @@ local function CreateDetailWindow(title, lines, barData)
         lines = { "无数据" }
     end
 
+    -- 闭合每行未闭合的颜色码，避免聊天框/聊天插件把颜色码后的正文吞掉
+    -- by 武藤纯子酱 2026.10.28
+    for li = 1, table.getn(lines) do
+        local ln = lines[li]
+        if type(ln) == "string" and string.find(ln, "|c") then
+            local _, cCount = string.gsub(ln, "|c", "")
+            local _, rCount = string.gsub(ln, "|r", "")
+            if cCount > rCount then
+                lines[li] = ln .. string.rep("|r", cCount - rCount)
+            end
+        end
+    end
+
     if ShaguDPS.detailWindow then
         ShaguDPS.detailWindow:Hide()
         ShaguDPS.detailWindow = nil
@@ -3387,9 +3400,50 @@ local function CreateDetailWindow(title, lines, barData)
             text = string.gsub(text, "|r", "")
             return text
         end
+        -- 转义清洗：把不是合法 WoW 转义序列的 | 替换为 ||（字面竖线），
+        -- 避免 SendChatMessage 抛 "Invalid escape code in chat message"
+        -- by 武藤纯子酱 2026.10.28
+        local function sanitizeChatEscapes(text)
+            if type(text) ~= "string" then
+                text = tostring(text)
+            end
+            if not string.find(text, "|", 1, true) then return text end
+            local out = {}
+            local i = 1
+            local n = string.len(text)
+            while i <= n do
+                local ch = string.sub(text, i, i)
+                if ch == "|" then
+                    local nc = string.sub(text, i + 1, i + 1)
+                    if nc == "|" or nc == "r" or nc == "n" then
+                        table.insert(out, string.sub(text, i, i + 1))
+                        i = i + 2
+                    elseif nc == "c" then
+                        local hex = string.sub(text, i + 2, i + 9)
+                        if string.find(hex, "^%x%x%x%x%x%x%x%x$") then
+                            table.insert(out, string.sub(text, i, i + 9))
+                            i = i + 10
+                        else
+                            table.insert(out, "||")
+                            i = i + 1
+                        end
+                    elseif nc == "H" or nc == "h" or nc == "T" or nc == "t" then
+                        table.insert(out, string.sub(text, i, i + 1))
+                        i = i + 2
+                    else
+                        table.insert(out, "||")
+                        i = i + 1
+                    end
+                else
+                    table.insert(out, ch)
+                    i = i + 1
+                end
+            end
+            return table.concat(out)
+        end
         local reportLines = {}
         if title and title ~= "" then
-            table.insert(reportLines, "ShaguDPS - " .. stripColorCodes(title))
+            table.insert(reportLines, "ShaguDPS - " .. sanitizeChatEscapes(stripColorCodes(title)))
         else
             table.insert(reportLines, "ShaguDPS - 详情")
         end
@@ -3399,12 +3453,16 @@ local function CreateDetailWindow(title, lines, barData)
             sendEntries = ApplyDetailFilter(barData._fullLines, barData._filter)
         end
         for _, entry in ipairs(sendEntries) do
-            -- 详情通报保留行内职业色码（详情行生成时已按职业着色），仅标题剥色
-            -- by 武藤纯子酱 2026.10.15
+            -- 发布时给溢出/吸收数字加文字标识（插件内显示仍靠颜色区分，不加字）
+            -- by 武藤纯子酱 2026.10.28
             local cleanLine = entry.text
             if type(cleanLine) ~= "string" then
                 cleanLine = tostring(cleanLine)
             end
+            cleanLine = string.gsub(cleanLine, "|cffff8888%(%+(%d+)%)|r", "|cffff8888(溢出+%1)|r")
+            cleanLine = string.gsub(cleanLine, "|cff66ccff%(%+(%d+)%)|r", "|cff66ccff(吸收+%1)|r")
+            -- Preserve existing class colors and escape literal invalid bars.
+            cleanLine = sanitizeChatEscapes(cleanLine)
             if string.find(cleanLine, "%S") then
                 if showLineNumbers then
                     table.insert(reportLines, string.format("%02d. ", entry.num) .. cleanLine)
@@ -4654,6 +4712,9 @@ end
 
 local function GetData(unitdata, values, isHealTaken, view, isBuffCoverage, segmentType, totalTimeOverride, isVulnCoverage)
     local values = values or {}
+    -- 每行重置溢出/吸收，避免非伤害视图沿用上一行的值（供主发布加文字描述）  by 武藤纯子酱 2026.10.28
+    values.overkill = 0
+    values.absorb = 0
     if type(unitdata) == "table" then
         if isBuffCoverage or isVulnCoverage then
             local details
@@ -4735,6 +4796,7 @@ local function GetData(unitdata, values, isHealTaken, view, isBuffCoverage, segm
             values.enemy_taken_percent = values.enemy_taken_all > 0 and round(values.enemy_taken_value / values.enemy_taken_all * 100, 1) or 0
             values.value = values.enemy_taken_value
             values.overkill = values.enemy_taken_overkill
+            values.absorb = unitdata._absorb or 0
             values.percent = values.enemy_taken_percent
         elseif unitdata._history then
             values.damage_taken_value = unitdata._sum or 0
@@ -5872,8 +5934,8 @@ local function Refresh(self, force, report)
                 actualView = bossStatMap[config[wid].boss_stat_view or 1] or 1
             end
 
-            -- 伤害吸收（敌对目标护盾）：勾选"剔除伤害吸收"时前置蓝色括号数字（与溢出伤害并列）  by 武藤纯子酱 2026.10.19
-            if ShaguDPS.hasNampower and config.exclude_absorb == 1
+            -- 伤害吸收（敌对目标护盾）：勾选"显示伤害吸收"时前置蓝色括号数字（与"显示溢出伤害"并列；剔除由"剔除伤害吸收"单独控制）  by 武藤纯子酱 2026.10.25
+            if ShaguDPS.hasNampower and config.show_absorb == 1
                 and (actualView == 1 or actualView == 2)
                 and (self.values.absorb or 0) > 0 then
                 bar_string = "|cff66ccff(+%s)|r " .. bar_string
@@ -5984,7 +6046,13 @@ local function Refresh(self, force, report)
             local reportName = self.values.name
             local reportCls = resolveClassToken(reportName)
             if reportCls then reportName = classColorString(reportCls, reportName) end
-            table.insert(reportData, i .. ". " .. reportName .. " " .. chat)
+            -- 主发布时给溢出/吸收加文字描述，放在伤害量前面（仅聊天，插件内不加字）  by 武藤纯子酱 2026.10.28
+            local extraDesc = ""
+            local rkOver = self.values.overkill or 0
+            local rkAbs = self.values.absorb or 0
+            if rkOver > 0 then extraDesc = extraDesc .. "(溢出+" .. rkOver .. ") " end
+            if rkAbs > 0 then extraDesc = extraDesc .. "(吸收+" .. rkAbs .. ") " end
+            table.insert(reportData, i .. ". " .. reportName .. " " .. extraDesc .. chat)
         end
         i = i + 1
     end

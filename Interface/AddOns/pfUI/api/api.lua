@@ -664,11 +664,15 @@ end
 -- 'script'     [string]            the handler to hook
 -- 'func'       [function]          the function that should be added
 function HookScript(f, script, func)
-  local prev = f:GetScript(script)
-  f:SetScript(script, function(a1,a2,a3,a4,a5,a6,a7,a8,a9)
+  local ok, prev = pcall(f.GetScript, f, script)
+  if not ok then return false end
+
+  local done = pcall(f.SetScript, f, script, function(a1,a2,a3,a4,a5,a6,a7,a8,a9)
     if prev then prev(a1,a2,a3,a4,a5,a6,a7,a8,a9) end
     func(a1,a2,a3,a4,a5,a6,a7,a8,a9)
   end)
+
+  return done
 end
 
 -- [ HookAddonOrVariable ]

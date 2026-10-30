@@ -90,6 +90,7 @@ function module:OnEnable()
 	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_FRIENDLYPLAYER_DAMAGE", "AfflictionEvent")
 	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_DAMAGE", "AfflictionEvent")
 	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE", "AfflictionEvent")
+	self:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_DAMAGE", "AfflictionEvent") -- pets
 end
 
 function module:OnSetup()
@@ -104,7 +105,9 @@ end
 function module:AfflictionEvent(msg)
 	local _, _, player = string.find(msg, L["trigger_fire"])
 	if player then
-		player = player == "You" and UnitName("player") or player
+		if player == "你" or player == "You" or player == "you" then
+			player = UnitName("player")
+		end
 		self:Sync(syncName.fire .. player) -- bake player into sync name to throttle per player
 		return
 	end

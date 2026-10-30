@@ -23,6 +23,11 @@ function card.RefreshRuntimeData()
 end
 
 function card.Execute(context, step)
+    -- 引导期间跳过，避免使用物品或爆发技能打断当前引导。
+    if Cat2.GetChanneled() > 0 then
+        return false
+    end
+
     local itemName = context:GetStepOption(step, "itemName")
     if type(itemName) ~= "string" or itemName == "" then
         return false

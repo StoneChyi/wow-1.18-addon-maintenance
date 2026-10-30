@@ -244,6 +244,18 @@ SlashCmdList['PIZZAWORLDBUFFS'] = function (args, editbox)
     return
   end
 
+  if command == 'systime' then
+    local number = tonumber(msg)
+    if not number or (number ~= 0 and number ~= 1) then
+      PWB:Print(T['Valid options are 0 and 1'])
+      return
+    end
+
+    PWB_config.hideServerTime = number == 1
+    PWB:Print(PWB_config.hideServerTime and T['Hiding the server time message'] or T['Showing the server time message'])
+    return
+  end
+
   -- Add new commands HERE, just before the help text
   if command == 'horizontal' then
     PWB_config.orientation = 'horizontal'
@@ -279,4 +291,5 @@ SlashCmdList['PIZZAWORLDBUFFS'] = function (args, editbox)
   PWB:PrintClean(PWB.Colors.primary .. '   /wb|r dmfbuffs ' .. PWB.Colors.grey .. '- ' .. T['Show list of Darkmoon Faire buffs'])
   PWB:PrintClean(PWB.Colors.primary .. '   /wb|r version ' .. PWB.Colors.grey .. '- ' .. T['Show current version'])
   PWB:PrintClean(PWB.Colors.primary .. '   /wb|r wbtsync ' .. (PWB_config.wbtSync and 1 or 0) .. PWB.Colors.grey .. ' - ' .. '从 WorldBuffsTracker 的 TWB 频道同步龙头计时')
+  PWB:PrintClean(PWB.Colors.primary .. '   /wb|r systime ' .. (PWB_config.hideServerTime and 1 or 0) .. PWB.Colors.grey .. ' - ' .. T['Hide the server time message'])
 end

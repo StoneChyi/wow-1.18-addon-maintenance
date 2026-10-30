@@ -16,6 +16,11 @@ function card.RefreshRuntimeData()
 end
 
 function card.Execute(context)
+    -- 引导期间跳过，避免使用物品或爆发技能打断当前引导。
+    if Cat2.GetChanneled() > 0 then
+        return false
+    end
+
     if not Cat2.GetItemByNameCD("致密炸弹") then
         return false
     end

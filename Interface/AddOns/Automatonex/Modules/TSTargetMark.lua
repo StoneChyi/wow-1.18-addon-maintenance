@@ -108,7 +108,10 @@ local function UpdateFloatAnimation(elapsed)
         return
     end
     
-    animationData.time = animationData.time + (elapsed or 0.016)
+    -- 防御写法：elapsed 一般是数值（本客户端实测 arg1 = number），
+    -- 非数值时回退 0.016，避免 "attempt to perform arithmetic on a table value"
+    local elapsedValue = tonumber(elapsed)
+    animationData.time = animationData.time + (elapsedValue or 0.016)
     
     -- 更新普通模式箭头的浮动动画（垂直方向）
     for namePlate, arrowData in pairs(animationData.arrows) do

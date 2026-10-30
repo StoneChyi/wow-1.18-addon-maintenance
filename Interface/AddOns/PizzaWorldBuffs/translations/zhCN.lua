@@ -109,4 +109,8 @@ PWB_translations['zhCN'] = {
   ['Darkmoon Faire location is currently unknown. Try'] = '暗月马戏团位置当前未知，可尝试',
   ['Darkmoon Faire was last seen in '] = '暗月马戏团最后出现于',
 
+  ['Hide the server time message'] = '隐藏「服务器时间」提示',
+  ['Hiding the server time message'] = '已隐藏「服务器时间」提示（当前 /wb systime 1）',
+  ['Showing the server time message'] = '已恢复显示「服务器时间」提示（当前 /wb systime 0）',
+
 }

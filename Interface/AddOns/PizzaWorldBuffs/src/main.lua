@@ -88,6 +88,42 @@ function PWB:PrintClean(msg)
   PWB:Print(msg, false)
 end
 
+-- Turtle's '.server info' reply looks like "Server Time: 27.10.2026 20:33:14" (often followed by a
+-- "Server Uptime: ..." line) and we only need the time line to calibrate PWB.serverTime -- but the
+-- client also prints the whole reply into the chat frame. Wrap ChatFrameN:AddMessage (same approach
+-- pfUI / CleanChat use on this client) and swallow those lines right after the calibration command
+-- is sent, so the chat stays clean. Everything else is passed straight through to whatever
+-- AddMessage implementation was installed before us.
+local function hookServerTimeFilter(frame)
+  if not frame or type(frame.AddMessage) ~= 'function' then return end
+  -- Already wrapped (and nobody replaced our wrapper since) -- nothing to do.
+  if frame.pwbAddMessageWrapper and frame.AddMessage == frame.pwbAddMessageWrapper then return end
+
+  local origAddMessage = frame.AddMessage
+  local wrapper = function(self, msg, r, g, b, id)
+    if PWB_config.hideServerTime and PWB.serverTimeFilterUntil and PWB.serverTimeFilterUntil > GetTime()
+      and type(msg) == 'string' then
+      local plain = string.gsub(string.gsub(msg, '|c%x%x%x%x%x%x%x%x', ''), '|r', '')
+      if string.find(plain, '^%s*Server [Tt]ime%s*:')
+        or string.find(plain, '^%s*Server [Uu]ptime%s*:')
+        or string.find(plain, '^%s*服务器时间%s*[:：]')
+        or string.find(plain, '^%s*服务器运行时间%s*[:：]') then
+        return
+      end
+    end
+    return origAddMessage(self, msg, r, g, b, id)
+  end
+  frame.AddMessage = wrapper
+  frame.pwbAddMessageWrapper = wrapper
+end
+
+function PWB.hookServerTimeFilter()
+  hookServerTimeFilter(DEFAULT_CHAT_FRAME)
+  for i = 1, (NUM_CHAT_WINDOWS or 7) do
+    hookServerTimeFilter(_G['ChatFrame' .. i])
+  end
+end
+
 local timerStrs = {}
 PWB:RegisterEvent('ADDON_LOADED')
 PWB:RegisterEvent('PLAYER_ENTERING_WORLD')
@@ -140,6 +176,11 @@ PWB:SetScript('OnEvent', function()
   if event == 'PLAYER_ENTERING_WORLD' then
     -- Calibrate the server clock so world-buff countdowns are accurate regardless of the
     -- in-game clock speed or the player's local timezone. Mirrors WorldBuffsTracker.
+    -- The reply line itself is only useful to us, so hide it from chat (config: hideServerTime).
+    if PWB_config.hideServerTime then
+      PWB.hookServerTimeFilter()
+      PWB.serverTimeFilterUntil = GetTime() + 20
+    end
     SendChatMessage('.server info')
 
     -- Store player's name & faction ('A' or 'H') for future use

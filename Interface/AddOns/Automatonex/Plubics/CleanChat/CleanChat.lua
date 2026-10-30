@@ -265,9 +265,13 @@ Automaton_CleanChat.options = {
       purge = {
         type = "execute",
         name = "清除全部关键字",
-        desc = "清除全部关键字，清空关键字列表。",
+        desc = "清除全部关键字，清空关键字列表（会先弹窗二次确认）。",
         order = 4,
-        func = function() Automaton_CleanChat:PurgeTHighlightText() end
+        func = function()
+          -- 先弹确认框，防止误点一下就把全部高亮关键字清空
+          local count = table.getn(Automaton_CleanChat.db.profile.THighlightText)
+          Automaton_CleanChat:ShowPurgePopup("CLEANCHAT_PURGE_HIGHLIGHT", count)
+        end
       }
     },
   },
@@ -313,9 +317,13 @@ Automaton_CleanChat.options = {
       purge = {
         type = "execute",
         name = "清除全部关键字",
-        desc = "清除全部关键字，清空关键字列表。",
+        desc = "清除全部关键字，清空关键字列表（会先弹窗二次确认）。",
         order = 5,
-        func = function() Automaton_CleanChat:PurgeTFilterKeyworld() end
+        func = function()
+          -- 先弹确认框，防止误点一下就把全部屏蔽关键字清空
+          local count = table.getn(Automaton_CleanChat.db.profile.TFilterKeyworld)
+          Automaton_CleanChat:ShowPurgePopup("CLEANCHAT_PURGE_FILTER", count)
+        end
       }
     },
   },
@@ -518,6 +526,7 @@ function Automaton_CleanChat:OnInitialize()
   })
   Automaton:SetDisabledAsDefault(self, "CleanChat")
   self:RegisterOptions(self.options)
+  self:RegisterStaticPopups()  -- 注册「清除全部关键字」的二次确认弹窗
   self:HideButtons()      --隐藏无用按钮
   self:SetupPrefix();     --频道缩写
   self:SetupMouseWheel(); --初始化鼠标滚轮
@@ -537,6 +546,62 @@ end
 function Automaton_CleanChat:OnDisable()
   self:UnhookAll()
   self:UnregisterAllEvents()
+end
+
+-- ===== 「清除全部关键字」二次确认弹窗 =====
+-- 高亮 / 屏蔽两组各注册一个，避免误点一下就把整份关键字列表清空。
+-- 弹窗文案里的 %s 由 StaticPopup_Show(dialog, arg1) 的 arg1 填充（这里传当前关键字数量）。
+function Automaton_CleanChat:RegisterStaticPopups()
+  StaticPopupDialogs["CLEANCHAT_PURGE_HIGHLIGHT"] = {
+    text = "确定要清除全部高亮关键字吗？\n当前共 %s 个关键字，清除后将无法恢复。",
+    button1 = "确定",
+    button2 = "取消",
+    OnAccept = function()
+      Automaton_CleanChat:PurgeTHighlightText()
+    end,
+    timeout = 0,
+    whileDead = 1,
+    hideOnEscape = 1,
+  }
+
+  StaticPopupDialogs["CLEANCHAT_PURGE_FILTER"] = {
+    text = "确定要清除全部屏蔽关键字吗？\n当前共 %s 个关键字，清除后将无法恢复。",
+    button1 = "确定",
+    button2 = "取消",
+    OnAccept = function()
+      Automaton_CleanChat:PurgeTFilterKeyworld()
+    end,
+    timeout = 0,
+    whileDead = 1,
+    hideOnEscape = 1,
+  }
+end
+
+-- 弹出确认框，并把弹窗抬到 TOOLTIP 层。
+-- 原因：Automaton 主窗口本身是 DIALOG 层、且比 FrameXML 的 StaticPopup1~4 后创建，
+-- 同层同级别时新窗口在上，会把弹窗的「确定/取消」压住点不到。
+function Automaton_CleanChat:ShowPurgePopup(which, count)
+  count = count or 0
+  if count <= 0 then
+    self:Print("关键字列表为空，无需清除")
+    return
+  end
+
+  local dialog = StaticPopup_Show(which, tostring(count))
+  if not dialog then
+    -- 老版本 StaticPopup_Show 不返回 frame，按 which 回查一次
+    for i = 1, 10 do
+      local f = getglobal("StaticPopup" .. i)
+      if not f then break end
+      if f:IsShown() and f.which == which then
+        dialog = f
+        break
+      end
+    end
+  end
+  if dialog and dialog.SetFrameStrata then
+    dialog:SetFrameStrata("TOOLTIP")
+  end
 end
 
 -- 新增：事件处理

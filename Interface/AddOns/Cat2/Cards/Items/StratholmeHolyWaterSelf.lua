@@ -38,6 +38,11 @@ function card.RefreshRuntimeData()
 end
 
 function card.Execute(context, step)
+    -- 引导期间跳过，避免使用物品或爆发技能打断当前引导。
+    if Cat2.GetChanneled() > 0 then
+        return false
+    end
+
 
     if allowUse == 0 then
         DEFAULT_CHAT_FRAME:AddMessage("|cffff8000当前UnitXP模块版本不支持！|r")

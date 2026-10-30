@@ -6,6 +6,7 @@ local card = {
     details = "潜行时，起手根据目标流血状态选择。需要存在有效目标。成功执行时会阻断本轮后续卡片。",
     sort = 10,
     category = "class",
+    exclusiveGroup = "rogue_stealth_opener",
     canStopSequence = true,
     classes = {
         ROGUE = 3,

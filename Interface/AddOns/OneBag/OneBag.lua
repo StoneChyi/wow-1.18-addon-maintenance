@@ -280,7 +280,7 @@ function OneBag_SafeContainerFrame_Update(frame)
             -- 才是真空槽（清掉已卖物品的幽灵图标）；粘锁且有物（link 还在）保留旧图标。
             local isEmpty = (not texture or texture == "")
             if not (isEmpty and locked) or (OneBag_IsSlotLockStale(itemButton, locked) and OneBag_SlotReallyEmpty(id, itemButton:GetID())) then
-                SetItemButtonTexture(itemButton, texture)
+                OneBag_SetSlotTexture(itemButton, texture)
                 OneBag_SetSlotCount(itemButton, itemCount, OneBag_GetSlotCharges(id, itemButton:GetID(), itemCount))
                 if isEmpty then
                     itemButton.hasItem = nil
@@ -765,6 +765,8 @@ function OneBag_SortResyncLockVisuals(frame, bag)
             -- 否则整理结束的红染物品会被这里冲成白色，下一轮又表现成"颜色不对/发灰"
             local shadeLink
             if not locked then shadeLink = GetContainerItemLink(bag, slot) end
+            -- 整理结束的强制去灰路径，必须无条件重设（2026.10.27）
+            btn._obShadeState = nil
             OneBag_SetSlotShade(btn, locked, shadeLink)
         end
     end
@@ -2900,12 +2902,23 @@ function module:SetBorderColor(slot)
         end
     end
     
-    if special and self.db.profile.colors.glow then        
+    -- 性能：边框（贴图 + 混合模式 + 顶点色）逐项比对（2026.10.27）
+    -- 一次开关背包 / 每次 BAG_UPDATE 都会把全包 80+ 格的边框重设一遍，
+    -- 而 SetNormalTexture 是"按路径重新绑定贴图"、SetPoint 会重建锚点，
+    -- 两者在 1.12 下都不便宜；品质色 / 包类型决定的目标样式绝大多数时候没变。
+    -- tpl: 1 = 发光边框，2 = 特殊（包类型 / 品质），3 = 普通
+    local tpl = special and ((self.db.profile.colors.glow and 1) or 2) or 3
+    if slot._obBcTpl == tpl and slot._obBcR == color.r and slot._obBcG == color.g and slot._obBcB == color.b then
+        return
+    end
+    slot._obBcTpl, slot._obBcR, slot._obBcG, slot._obBcB = tpl, color.r, color.g, color.b
+
+    if tpl == 1 then
         slot:SetNormalTexture("Interface\\Buttons\\UI-ActionButton-Border")
         slot:GetNormalTexture():SetBlendMode("ADD")
         slot:GetNormalTexture():SetAlpha(.8)
         slot:GetNormalTexture():SetPoint("CENTER", slot:GetName(), "CENTER", 0, 1)
-    elseif special then
+    elseif tpl == 2 then
         slot:SetNormalTexture("Interface\\AddOns\\OneBag\\media\\BagSlot2")
         slot:GetNormalTexture():SetBlendMode("BLEND")
         slot:GetNormalTexture():SetPoint("CENTER", slot:GetName(), "CENTER", 0, 0)
@@ -3132,6 +3145,16 @@ function OneBag_GetSlotCharges(bag, slot, itemCount)
     return nil
 end
 
+-- 图标贴图逐项比对（2026.10.27）：SetItemButtonTexture 会重设图标贴图并按需 Show/Hide
+-- 图标层，一次背包刷新每格都要调一遍；贴图路径没变就没有任何视觉收益。
+-- texture 为空时照常调用（走清理路径，保守，避免按钮残留幽灵图标）。
+function OneBag_SetSlotTexture(button, texture)
+    if not button then return end
+    if texture and button._obTex == texture then return end
+    button._obTex = texture
+    SetItemButtonTexture(button, texture)
+end
+
 -- 统一的数量/充能显示出口：所有刷新路径改走这里，保证同一槽位无论走哪条
 -- 刷新链路，图标右下角显示的都是同一种东西（堆叠数白字 / 充能橙字 xN）。
 -- 注意：SetItemButtonCount 不会重置字体颜色 —— 充能橙字显示过后必须显式复位，
@@ -3147,22 +3170,36 @@ function OneBag_SetSlotCount(button, count, charges)
     local name = button.GetName and button:GetName()
     local text = name and getglobal(name .. "Count")
     if not text then return end
+    -- 性能：堆叠数/充能文本逐项比对（2026.10.27）
+    -- 每次背包刷新会对每格 SetText + SetTextColor + Show/Hide，即使数值完全没变
+    -- （空槽的 Hide 也会走一遍 Hudoken 的子元素遍历）。用「模式 + 数值」两个标量做缓存，
+    -- 数值没变就整块跳过，避免 80+ 格每帧重复排版同样文本。
+    local cntMode, cntVal = 0, 0
     if charges and charges > 0 then
-        text:SetText("x" .. charges)
-        text:SetTextColor(1, 0.82, 0)  -- 橙色，与 Guda 的充能文本同色
-        text:Show()
-        button._hadCharges = true
-        -- 有可见充能 → 唤醒低频轮询（涂油后无 BAG_UPDATE 也能在 1.2s 内跟上）
-        if OneBagChargesPollFrame then OneBagChargesPollFrame:Show() end
-    else
-        button._hadCharges = nil
-        if count and count > 1 then
+        cntMode, cntVal = 2, charges
+    elseif count and count > 1 then
+        cntMode, cntVal = 1, count
+    end
+    if button._obCntMode ~= cntMode or button._obCntVal ~= cntVal then
+        button._obCntMode, button._obCntVal = cntMode, cntVal
+        if cntMode == 2 then
+            text:SetText("x" .. charges)
+            text:SetTextColor(1, 0.82, 0)  -- 橙色，与 Guda 的充能文本同色
+            text:Show()
+        elseif cntMode == 1 then
             text:SetText(count)
             text:SetTextColor(1, 1, 1)
             text:Show()
         else
             text:Hide()
         end
+    end
+    if cntMode == 2 then
+        button._hadCharges = true
+        -- 有可见充能 → 唤醒低频轮询（涂油后无 BAG_UPDATE 也能在 1.2s 内跟上）
+        if OneBagChargesPollFrame then OneBagChargesPollFrame:Show() end
+    else
+        button._hadCharges = nil
     end
 end
 
@@ -3213,6 +3250,12 @@ end
 
 function OneBag_SetSlotShade(button, locked, link)
     if not SetItemButtonDesaturated then return end
+    -- 性能：着色状态机 + 结果缓存（2026.10.27）
+    -- SetItemButtonDesaturated / SetItemButtonTextureVertexColor 都是 C 侧改 GPU 着色状态，
+    -- 一次背包刷新会对每格调 2 遍（SafeContainerFrame_Update 内 + UpdateBag 外层循环），
+    -- 而 99% 的格子上次和这次的目标状态完全一致。目标状态没变就直接跳过。
+    -- 状态编码：0 = 解锁白；1 = 服务器锁定灰。红染由 UpdateUnusableItems 单独负责，
+    -- 它每次都会写顶点色，所以这里不把红染纳入状态（否则会互相顶掉缓存）。
     if locked then
         local seen = _slotLockSeen[button]
         if not seen then
@@ -3220,14 +3263,20 @@ function OneBag_SetSlotShade(button, locked, link)
             _slotLockSeen[button] = seen
         end
         if GetTime() - seen < STALE_LOCK_SECONDS then
-            SetItemButtonDesaturated(button, true, 0.5, 0.5, 0.5)
+            if button._obShadeState ~= 1 then
+                button._obShadeState = 1
+                SetItemButtonDesaturated(button, true, 0.5, 0.5, 0.5)
+            end
             return
         end
         -- 连续锁定超时：视为陈旧锁，落到下方解锁着色路径（白/红染）
     else
         _slotLockSeen[button] = nil  -- 恢复解锁即清计时，下一轮真实锁重新起算
     end
-    SetItemButtonDesaturated(button, false, 1, 1, 1)
+    if button._obShadeState ~= 0 then
+        button._obShadeState = 0
+        SetItemButtonDesaturated(button, false, 1, 1, 1)
+    end
     if link then
         local cache = OneCore._unusableCache
         if cache and cache[link] == true then
@@ -3586,7 +3635,7 @@ function module:UpdateBagSlots(bag)
             -- 陈旧锁感知：连续锁定超 5 秒视为锁标志残留 —— 但只有"贴图空 + 链接也没有"
             -- 才是真空槽；粘锁且有物（link 还在）保留旧图标（见 OneBag_SlotReallyEmpty）。
             if not (isEmpty and locked) or (OneBag_IsSlotLockStale(button, locked) and OneBag_SlotReallyEmpty(bag, slot)) then
-                SetItemButtonTexture(button, texture)
+                OneBag_SetSlotTexture(button, texture)
                 OneBag_SetSlotCount(button, itemCount, OneBag_GetSlotCharges(bag, slot, itemCount))
                 if not isEmpty then
                     if type(ContainerFrame_UpdateCooldown) == "function" then
@@ -3628,7 +3677,7 @@ function module:UpdateBagSlotLocks(bag)
             -- 陈旧锁分支同样要求"链接也没有"才算真空（见 OneBag_SlotReallyEmpty）。
             local isEmpty = (not texture or texture == "")
             if not (isEmpty and locked) or (OneBag_IsSlotLockStale(button, locked) and OneBag_SlotReallyEmpty(bag, slot)) then
-                SetItemButtonTexture(button, texture)
+                OneBag_SetSlotTexture(button, texture)
                 OneBag_SetSlotCount(button, itemCount, OneBag_GetSlotCharges(bag, slot, itemCount))
                 if isEmpty then
                     button.hasItem = nil
@@ -3640,6 +3689,9 @@ function module:UpdateBagSlotLocks(bag)
                 -- 统一着色出口：解锁槽保留/恢复已缓存红染，不再一律刷白
                 local shadeLink
                 if not locked then shadeLink = GetContainerItemLink(bag, slot) end
+                -- 这条是「解锁抢救」路径（客户端解锁后不会自己恢复饱和度），必须无条件重设，
+                -- 不能被 OneBag_SetSlotShade 的目标状态缓存挡掉（2026.10.27）
+                button._obShadeState = nil
                 OneBag_SetSlotShade(button, locked, shadeLink)
             end
             button.readable = readable
@@ -3661,7 +3713,7 @@ function module:UpdateBagSlotLock(bag, slot)
     -- 陈旧锁分支同样要求"链接也没有"才算真空（见 OneBag_SlotReallyEmpty）。
     local isEmpty = (not texture or texture == "")
     if not (isEmpty and locked) or (OneBag_IsSlotLockStale(button, locked) and OneBag_SlotReallyEmpty(bag, slot)) then
-        SetItemButtonTexture(button, texture)
+        OneBag_SetSlotTexture(button, texture)
         OneBag_SetSlotCount(button, itemCount, OneBag_GetSlotCharges(bag, slot, itemCount))
         if isEmpty then
             button.hasItem = nil
@@ -3672,6 +3724,8 @@ function module:UpdateBagSlotLock(bag, slot)
     if SetItemButtonDesaturated then
         local shadeLink
         if not locked then shadeLink = GetContainerItemLink(bag, slot) end
+        -- ITEM_LOCK_CHANGED 单格同步同样是「解锁抢救」路径，强制重设（2026.10.27）
+        button._obShadeState = nil
         OneBag_SetSlotShade(button, locked, shadeLink)
     end
     button.readable = readable
@@ -4069,6 +4123,9 @@ function module:HighlightBagSlots(bag)
     if not self.frame.bags[bag] then return end
     local color = self.db.profile.colors.mouseover 
     for k, v in ipairs(self.frame.bags[bag]) do 
+        -- 高亮绕过了 SetBorderColor 的逐项比对缓存，必须把缓存清掉，
+        -- 否则鼠标移开后 UnhighlightBagSlots → SetBorderColor 会误判"没变"而跳过，边框卡在高亮态（2026.10.27）
+        v._obBcTpl, v._obBcR, v._obBcG, v._obBcB = nil, nil, nil, nil
         if self.db.profile.colors.glow then        
             v:SetNormalTexture("Interface\\Buttons\\UI-ActionButton-Border")
             v:GetNormalTexture():SetBlendMode("ADD")
@@ -4214,14 +4271,23 @@ function module:MrPlow()
 end
 
 function module:OnBaseShow()
-    if not self.frame then return end
-    this:SetScale(self.db.profile.scale)
-    this:SetAlpha(self.db.profile.alpha)
-    this:SetFrameStrata(self.stratas[self.db.profile.strata])
-    StackSplitFrame:SetFrameStrata(self.stratas[self.db.profile.strata+1])
-    local color = self.db.profile.colors.bground
-    this:SetBackdropColor(color.r, color.g, color.b, color.a)
-    self.frame:SetClampedToScreen(self.db.profile.clamped or false)
+    local frame = self.frame
+    if not frame then return end
+    local profile = self.db.profile
+    -- Avoid repeated layout/strata writes; re-read actual state so external
+    -- skins or opacity changes cannot leave this cache stale.
+    if frame:GetScale() ~= profile.scale then frame:SetScale(profile.scale) end
+    if frame:GetAlpha() ~= profile.alpha then frame:SetAlpha(profile.alpha) end
+    local strata = self.stratas[profile.strata]
+    if frame:GetFrameStrata() ~= strata then frame:SetFrameStrata(strata) end
+    local splitStrata = self.stratas[profile.strata + 1]
+    if StackSplitFrame:GetFrameStrata() ~= splitStrata then StackSplitFrame:SetFrameStrata(splitStrata) end
+    local color = profile.colors.bground
+    local r, g, b, a = frame:GetBackdropColor()
+    if r ~= color.r or g ~= color.g or b ~= color.b or a ~= color.a then
+        frame:SetBackdropColor(color.r, color.g, color.b, color.a)
+    end
+    frame:SetClampedToScreen(profile.clamped or false)
 end
 
 function module:OnShow()

@@ -1,3 +1,10 @@
+ATSW_PossibleCache = {}
+ATSW_PossibleGeneration = 0
+ATSW_PossibleTTL = 0.25
+function ATSW_PossibleInvalidate()
+    ATSW_PossibleGeneration = ATSW_PossibleGeneration + 1
+end
+
 -- copyright 2006 by Rene Schneider (Slarti on EU-Blackhand), 2017 by laytya
 -- Modified by Alexander Shelokhnev (Dreamios on Tel'Abim (Turtle-WoW)) in 2022
 
@@ -5090,7 +5097,7 @@ function ATSW_HowManyItemsArePossibleToCreateWithConsidering(Name)
 				ATSW_POSSIBLE_NOTASK	)
 end
 
-function ATSW_HowManyItemsArePossibleToCreate(Name, ...)
+function ATSW_CalcPossible(Name, ...)
 	-- A visited table passed as the last argument guards against circular
 	-- recipe dependencies (would otherwise recurse until stack overflow)
 	local Visited 	= {}
@@ -5205,6 +5212,47 @@ function ATSW_HowManyItemsArePossibleToCreate(Name, ...)
 	return 0
 end
 
+function ATSW_HowManyItemsArePossibleToCreate(Name, ...)
+	local ArgCount = arg.n
+	
+	if type(arg[ArgCount]) == 'table' then
+		return ATSW_CalcPossible(Name, unpack(arg))
+	end
+	
+	-- 参数组合压成一个数字当缓存槽：数字键不产生字符串垃圾
+	local Bits = 0
+	
+	for I = 1, ArgCount do
+		local A = arg[I]
+		
+		if 			A == ATSW_POSSIBLE_BANK 			then Bits = Bits + 1
+		elseif 	A == ATSW_POSSIBLE_ALTS 			then Bits = Bits + 2
+		elseif 	A == ATSW_POSSIBLE_MERCHANT 	then Bits = Bits + 4
+		elseif 	A == ATSW_POSSIBLE_NOTASK 		then Bits = Bits + 8 end
+	end
+	
+	local CacheKey = tostring(Profession() or "") .. "\001" .. tostring(Name)
+	local Slot = ATSW_PossibleCache[CacheKey]
+	
+	if not Slot then
+		Slot 											= { Value = {}, Gen = {}, Time = {} }
+		ATSW_PossibleCache[CacheKey] 	= Slot
+	end
+	
+	local Now = GetTime()
+	
+	if Slot.Gen[Bits] == ATSW_PossibleGeneration and (Now - (Slot.Time[Bits] or 0)) < ATSW_PossibleTTL then
+		return Slot.Value[Bits]
+	end
+	
+	local Value 			= ATSW_CalcPossible(Name, unpack(arg))
+	Slot.Value[Bits] 	= Value
+	Slot.Gen[Bits] 		= ATSW_PossibleGeneration
+	Slot.Time[Bits] 	= Now
+	
+	return Value
+end
+
 function ATSW_SetNecessary(Name, Amount, Link, Texture, NecessaryReagentMode)
 	if  Name and Amount and Amount > 0 then
 		local NPos
@@ -5290,6 +5338,7 @@ local function AmountInTasks(Name, Prof)
 end
 
 function ATSW_AddTask(Name, Amount, Link, Texture, Recursive, NecessaryReagentMode, Insert, Prof)
+	ATSW_PossibleInvalidate() -- 任务变了（2026.10.28）
 	if IsEnchanting() then
 		return
 	end
@@ -5365,6 +5414,7 @@ function ATSW_AddTask(Name, Amount, Link, Texture, Recursive, NecessaryReagentMo
 end
 
 function ATSW_DeleteTask(Name, Amount, Prof)
+	ATSW_PossibleInvalidate() -- 任务变了（2026.10.28）
 	for I = 1, TasksSize(Prof) do
 		T = Task(I, Prof)
 		
@@ -6137,6 +6187,7 @@ end
 ATSW_Bags = {}
 
 function ATSW_SaveBag(Bag)
+	ATSW_PossibleInvalidate() -- 背包内容变了（2026.10.28）
     if ATSW_Bags[realm] == nil then
         ATSW_Bags[realm] = {}
     end
@@ -6195,6 +6246,7 @@ end
 ATSW_Bank = {}
 
 function ATSW_SaveBank()
+	ATSW_PossibleInvalidate() -- 银行内容变了（2026.10.28）
 	if BankFrameOpened then
 		if not ATSW_Bank[realm] then
 			ATSW_Bank[realm] = {}
@@ -6361,6 +6413,7 @@ end
 ATSW_Merchant = {}
 
 function ATSW_UpdateMerchant()
+	ATSW_PossibleInvalidate() -- 商人出售列表变了（2026.10.28）
     if MerchantFrame:IsVisible() then
 		for I = 1, GetMerchantNumItems() do
 			local Name, _, _, _, Available = GetMerchantItemInfo(I)

@@ -224,6 +224,7 @@ local config = {
     ineff_threshold = 5,        -- 低效目标阈值（秒），平均死亡时间低于此值即打"低效"标签；0=不设置
     hide_friendly_damage = 0,
     clamp_damage_to_health = 0,
+    show_absorb = 0,
     exclude_absorb = 1,
     heal_only_in_combat = 1,
     show_dps_in_damage = 1,

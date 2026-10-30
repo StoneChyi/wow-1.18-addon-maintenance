@@ -891,6 +891,10 @@ function GoubayuHeal.Dispel_Scan()
                             table.insert(unitEntries, {
                                 unit = unit,
                                 guid = guid,
+                                -- 职业文件名（PRIEST/WARRIOR…）：面板玩家名上职业色用。
+                                -- 在这里（扫描时刻 token 有效）取好并持久化，避免渲染时 token 已失效
+                                -- by 武藤纯子酱 2026.10.28
+                                classFile = class,
                                 unitName = UnitName(unit) or "",
                                 debuffName = name,
                                 debuffIndex = i,
@@ -1435,6 +1439,21 @@ local DispelButtons = {}
 local DispelWindow = nil
 local DispelUpdateTimer = 0
 
+-- 玩家名职业色：优先用扫描时持久化的 classFile（渲染时 unit token 可能已失效），
+-- 缺失则当场补取一次，仍取不到就退回原来的灰白 by 武藤纯子酱 2026.10.28
+local function Dispel_UnitClassColor(entry)
+    local cf = entry.classFile
+    local rcc = cf and RAID_CLASS_COLORS and RAID_CLASS_COLORS[cf]
+    if not rcc and entry.unit and UnitClass and UnitExists(entry.unit) then
+        local _, c2 = UnitClass(entry.unit)
+        rcc = c2 and RAID_CLASS_COLORS and RAID_CLASS_COLORS[c2]
+    end
+    if rcc then
+        return rcc.r, rcc.g, rcc.b
+    end
+    return 0.9, 0.9, 0.9
+end
+
 function GoubayuHeal.Dispel_UpdateWindow()
     if not DispelWindow then
         return
@@ -1470,6 +1489,7 @@ function GoubayuHeal.Dispel_UpdateWindow()
             end
 
             btn.player:SetText(entry.unitName)
+            btn.player:SetTextColor(Dispel_UnitClassColor(entry))
 
             if btn.typeText then
                 local short = dispelTypeShort[entry.dtype]

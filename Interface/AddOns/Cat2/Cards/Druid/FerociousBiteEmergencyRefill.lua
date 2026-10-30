@@ -5,9 +5,9 @@ local card = {
     -- 界面中显示的卡片标题。
     name = "凶猛撕咬（紧急续杯）",
     -- 卡片标题下方显示的简短说明。
-    description = "流血即将消失时施放凶猛撕咬",
+    description = "扫击或撕扯即将消失时施放凶猛撕咬",
     -- 预留给后续详情面板或 Tooltip 的完整功能说明。
-    details = "流血即将消失时施放凶猛撕咬，这是个补救措施。需要SuperWoW模组，需要存在有效目标。会检查当前资源。成功执行时会阻断本轮后续卡片。",
+    details = "拥有5连击点，且目标身上已有的扫击或撕扯剩余时间不足3秒时，施放凶猛撕咬紧急续杯。需要SuperWoW模组，需要存在有效目标。尝试施放后会阻断本轮后续卡片。",
     -- 同一分类内按升序排列；建议留出间隙以便新增卡片。
     sort = 440.1,
     -- 仅能是 common、item、class 三种分类之一。
@@ -37,7 +37,9 @@ function card.Execute(context, step)
     end
 
     if player.targetCombo>4 then
-        if Cat2.GetRipDot() and not Cat2.GetRipDot("target", 3) then
+        local ripExpiring = Cat2.GetRipDot() and not Cat2.GetRipDot("target", 3)
+        local rakeExpiring = Cat2.GetRakeDot() and not Cat2.GetRakeDot("target", 3)
+        if ripExpiring or rakeExpiring then
     
             --print("凶猛撕咬（紧急续杯）")
             Cat2.Cast("凶猛撕咬")
