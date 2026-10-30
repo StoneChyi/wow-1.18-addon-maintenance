@@ -145,7 +145,7 @@ class IntegrationTests(unittest.TestCase):
         T=setmetatable({}, {__index=function(_,k) return k end})
         updates=0;C={unitframes={}};fields={}
         function refresh() updates=updates+1 end
-        U={energybar=refresh};pfUI={gui={dropdowns={combo_texture={},comboenergy_format={},comboenergy_align={}}}}
+        U={energybar=refresh};pfUI={gui={dropdowns={combo_texture={},comboenergy_format={},comboenergy_align={},resourcebar_colors={}}}}
         function CreateGUIEntry(parent,title,callback)
           assert(parent=='Unit Frames' and title=='Independent Resource Bar');callback()
         end

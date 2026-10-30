@@ -1390,8 +1390,11 @@ pfUI_translation["zhCN"] = {
   ["Health and Resource Bars"] = "生命与资源条",
   ["Import Existing ExtraResourceBars Settings"] = "首次导入现用设置",
   ["Enable Integrated Resource Bars Trial"] = "启用内置版本（试用）",
-  ["Match Player Frame Resource Colors"] = "资源颜色跟随玩家头像",
+  ["Use Unified Resource Colors"] = "使用统一资源配色",
   ["Edit Health and Resource Bars"] = "详细设置（兼容 /erb）",
   ["Restore Standalone Resource Bars"] = "结束试用，还原独立版",
+  ["Resource Color Scheme"] = "资源配色方案",
+  ["Existing Resource Colors"] = "原资源条配色（蓝/红/黄）",
+  ["Rendered Player Colors"] = "玩家头像实际配色",
 }
 

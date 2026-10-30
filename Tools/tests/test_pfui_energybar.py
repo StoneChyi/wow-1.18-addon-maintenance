@@ -148,6 +148,7 @@ UIParent=object('Frame','UIParent');UIParent.width=1920;UIParent.height=1080
 pfUI={font_default='Configured.ttf',uf={},energytick={},unlock=object('Frame','Unlock'),
   RegisterModule=function(self,name,versions,fn) self.loadedName=name;fn() end}
 pfUI.unlock.shown=false
+function pfUI:GetEnvironment() return _G end
 function pfUI.energytick:EnergyProgress() reads.phase=reads.phase+1;return sharedPhase end
 pfUI.uf.player=object('Frame','pfPlayer');pfUI.uf.player.height=40
 pfUI.combopoints={points={},UpdateConfig=function() comboRefreshes=(comboRefreshes or 0)+1 end}
@@ -196,7 +197,7 @@ end
 DEFAULTS = {
     "comboenergyshow": "0", "comboenergywidth": "200", "comboenergyheight": "12",
     "comboenergyoffx": "0", "comboenergyoffy": "278", "comboenergyshowtext": "1",
-    "comboenergyfontsize": "12", "comboenergytextformat": "0",
+    "comboenergyfontsize": "12", "comboenergytextformat": "0", "comboenergycolorstyle": "player",
     "comboenergytextalign": "center", "comboenergyshowtick": "1",
     "comboenergyallpower": "1", "comboenergyautocolor": "1",
     "comboenergyborder": "1", "comboenergysmooth": "1",
@@ -242,6 +243,7 @@ class Harness:
         self.lua.execute(api[api.index("function pfUI.api.UpdateMovable("):api.index("-- [ CreateShareListDialog ]")])
         self.lua.execute(api[api.index("function pfUI.api.strsplit("):api.index("-- [ isempty ]")])
         self.lua.execute("local color_cache={}\n" + api[api.index("function pfUI.api.GetStringColor("):api.index("-- [ rgbhex ]")])
+        self.lua.execute((ARGS.addons / "pfUI/api/resourcebar.lua").read_text(encoding="utf-8-sig"))
         self.lua.execute((ARGS.addons / "pfUI/modules/energybar.lua").read_text(encoding="utf-8-sig"))
 
     @property
@@ -293,12 +295,16 @@ class EnergyBar(unittest.TestCase):
                     h.advance(.15)
                     for text, owner in ((h.main_text(), h.frame),
                                         (h.mana_frame().text, h.mana_frame())):
+                        track = owner.track
                         self.assertEqual(text.justifyV, "MIDDLE")
                         self.assertEqual(text.justifyH, align.upper())
-                        self.assertEqual(text.point[5], 0)
-                        self.assertTrue(h.lua.eval('function(a,b) return a==b end')(text.point[2], owner))
-                        self.assertAlmostEqual(text.GetWidth(text), owner.GetWidth(owner) - 10)
-                        self.assertGreaterEqual(text.GetHeight(text), max(height, size + 4))
+                        self.assertEqual(text.point[4], 0)
+                        self.assertTrue(h.lua.eval('function(a,b) return a==b end')(text.point[2], track))
+                        self.assertTrue(h.lua.eval('function(a,b) return a==b end')(track.point[2], owner))
+                        self.assertAlmostEqual(track.GetWidth(track), owner.GetWidth(owner))
+                        self.assertAlmostEqual(track.GetHeight(track), owner.GetHeight(owner))
+                        self.assertAlmostEqual(text.GetWidth(text), track.GetWidth(track))
+                        self.assertGreaterEqual(text.GetHeight(text), max(height, text.font[2] + 4))
                         self.assertIsNotNone(text.font)
                     self.assertIsNone(h.frame.textshadow, "duplicate half-pixel text shadow remains")
         h.unchanged()

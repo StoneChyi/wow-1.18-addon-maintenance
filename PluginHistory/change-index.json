@@ -13,7 +13,7 @@
     "modified": 63
   },
   "addon_pages": 107,
-  "dated_records": 240,
+  "dated_records": 241,
   "addons": [
     {
       "addon": "!Libs",
@@ -3071,10 +3071,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "内置ERB生命与资源条兼容试用，并统一玩家头像配色",
+      "latest_record_title": "按实际填充轨道与字形墨迹居中，修正淡色偏紫默认",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 24,
+      "record_count": 25,
       "records": [
+        {
+          "id": "pfUI-20261030-07",
+          "date": "2026-10-30",
+          "title": "按实际填充轨道与字形墨迹居中，修正淡色偏紫默认",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261030-07"
+        },
         {
           "id": "pfUI-20261030-06",
           "date": "2026-10-30",

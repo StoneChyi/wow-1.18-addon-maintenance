@@ -136,7 +136,13 @@ pfUI:RegisterModule("resourcebars", "vanilla:tbc", function()
   end
 
   local function SetText(text, value)
-    if text.resourceText ~= value then text:SetText(value); text.resourceText = value end
+    if text.resourceText ~= value then
+      text:SetText(value)
+      text.resourceText = value
+      if text.resourceTrack then
+        pfUI.api.AlignResourceBarText(text, text.resourceTrack, text.resourceAlign, text.resourceFontSize)
+      end
+    end
   end
 
   local function SetAlpha(frame, value)
@@ -258,6 +264,7 @@ pfUI:RegisterModule("resourcebars", "vanilla:tbc", function()
     frame.background:SetFrameLevel(frame:GetFrameLevel())
     frame.background:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background"})
     frame.bar = frame:CreateTexture(nil, "ARTWORK")
+    frame.track = CreateFrame("Frame", nil, frame)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     frame.text:SetFontObject(GameFontNormalSmall or "GameFontNormalSmall")
     frame:SetScript("OnDragStart", function()
@@ -314,14 +321,15 @@ pfUI:RegisterModule("resourcebars", "vanilla:tbc", function()
       frame.bar:SetTexture(MEDIA .. "bar_" .. option.bar)
       SetVisible(frame.bar, option.bar ~= 0)
       frame.bar:SetHeight(math.max(.001, option.height - 5 + (option.border == 4 and 3 or 0)))
+      frame.track:ClearAllPoints()
+      frame.track:SetPoint(option.barResize, frame, option.barResize,
+        option.barResize == "LEFT" and offset or option.barResize == "RIGHT" and -offset or 0, 0)
+      frame.track:SetWidth(math.max(.001, option.width - 8 + (option.border == 4 and 5 or 0)))
+      frame.track:SetHeight(math.max(.001, option.height - 5 + (option.border == 4 and 3 or 0)))
       Font(frame.text, option.font, option.fontSize)
-      frame.text:ClearAllPoints()
-      frame.text:SetPoint(option.textAlign, frame, option.textAlign,
-        option.textAlign == "LEFT" and 5 or option.textAlign == "RIGHT" and -5 or 0, 0)
-      frame.text:SetJustifyH(option.textAlign)
-      frame.text:SetWidth(math.max(1, option.width - 10))
-      frame.text:SetHeight(math.max(option.height, option.fontSize + 4))
-      frame.text:SetJustifyV("MIDDLE")
+      frame.text.resourceTrack = frame.track
+      frame.text.resourceAlign, frame.text.resourceFontSize = option.textAlign, option.fontSize
+      pfUI.api.AlignResourceBarText(frame.text, frame.track, option.textAlign, option.fontSize)
       frame.resourceState.alpha = 1
       frame.resourceState.target = nil
       SetAlpha(frame, 1)
@@ -380,7 +388,7 @@ pfUI:RegisterModule("resourcebars", "vanilla:tbc", function()
           else color = option.color end
         else
           if DB().followcolors == nil or Flag(DB().followcolors) then
-            local provider = pfUI.api.GetPlayerResourceColor
+            local provider = pfUI.api.GetResourceBarColor
             if provider then
               local ok, r, g, b, a = pcall(provider, powerType)
               if ok and Number(r, nil) and Number(g, nil) and Number(b, nil) then color = {r, g, b, Number(a, 1)} end

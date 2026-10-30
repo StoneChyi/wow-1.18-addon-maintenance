@@ -164,6 +164,7 @@ class Harness:
         self.lua.execute(api[api.index("function pfUI.api.UpdateMovable("):api.index("-- [ CreateShareListDialog ]")])
         self.lua.execute(api[api.index("function pfUI.api.strsplit("):api.index("-- [ isempty ]")])
         self.lua.execute("local color_cache={}\n" + api[api.index("function pfUI.api.GetStringColor("):api.index("-- [ rgbhex ]")])
+        self.lua.execute((ARGS.addons / "pfUI/api/resourcebar.lua").read_text(encoding="utf-8-sig"))
         if legacy:
             self.load_legacy()
         if failed_font:
@@ -371,6 +372,10 @@ class ResourceBars(unittest.TestCase):
                 h.refresh()
                 expected = (180 - 8 + (5 if border == 4 else 0)) * .25
                 self.assertAlmostEqual(h.health.bar.GetWidth(h.health.bar), expected, delta=.002)
+                self.assertAlmostEqual(h.health.track.GetWidth(h.health.track), expected * 4)
+                self.assertEqual(h.health.track.GetHeight(h.health.track), h.health.bar.GetHeight(h.health.bar))
+                self.assertEqual(h.health.track.point[1], alignment)
+                self.assertTrue(h.lua.eval("function(a,b) return a==b end")(h.health.track.point[2], h.health))
                 self.assertEqual(h.health.bar.point[1], alignment)
                 self.assertEqual(h.health.bar.GetNumPoints(h.health.bar), 1)
                 for index, value in enumerate(expected_crop[alignment], 1):

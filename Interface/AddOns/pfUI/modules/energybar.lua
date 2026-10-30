@@ -45,6 +45,9 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     if object.energyText ~= value then
       object:SetText(value)
       object.energyText = value
+      if object.resourceTrack then
+        pfUI.api.AlignResourceBarText(object, object.resourceTrack, cfg.textAlign, cfg.fontSize)
+      end
     end
   end
 
@@ -100,7 +103,7 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
 
   local function PowerColor(powerType)
     powerType = powerType or 0
-    local r, g, b, a = pfUI.api.GetPlayerResourceColor(powerType)
+    local r, g, b, a = pfUI.api.GetResourceBarColor(powerType)
     state.powerColors = state.powerColors or {}
     local old = state.powerColors[powerType]
     if old and old[1] == r and old[2] == g and old[3] == b and old[4] == a then return old end
@@ -127,33 +130,23 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
   end
 
   local function TextAnchor(object, owner)
-    -- An explicit line box and MIDDLE alignment avoid inheriting template
-    -- baselines. Extra height prevents clipping when the font exceeds the bar.
-    object:SetWidth(math.max(1, owner:GetWidth() - 10))
-    object:SetHeight(math.max(owner:GetHeight(), cfg.fontSize + 4))
-    object:SetJustifyV("MIDDLE")
-    object:ClearAllPoints()
-    if cfg.textAlign == "left" then
-      object:SetJustifyH("LEFT")
-      object:SetPoint("LEFT", owner, "LEFT", 5, 0)
-    elseif cfg.textAlign == "right" then
-      object:SetJustifyH("RIGHT")
-      object:SetPoint("RIGHT", owner, "RIGHT", -5, 0)
-    else
-      object:SetJustifyH("CENTER")
-      object:SetPoint("CENTER", owner, "CENTER", 0, 0)
-    end
+    object.resourceTrack = owner.track
+    pfUI.api.AlignResourceBarText(object, owner.track, cfg.textAlign, cfg.fontSize)
   end
 
   local function Geometry()
     frame:SetWidth(cfg.width)
     frame:SetHeight(cfg.height)
+    frame.track:SetWidth(cfg.width)
+    frame.track:SetHeight(cfg.height)
     frame.fill:SetHeight(cfg.height)
     frame.spark:SetHeight(cfg.height + 8)
     frame.spark:SetWidth(cfg.height + 4)
     frame.sparkcore:SetHeight(cfg.height)
     frame.manaBar:SetWidth(cfg.width)
     frame.manaBar:SetHeight(cfg.manaHeight)
+    frame.manaBar.track:SetWidth(cfg.width)
+    frame.manaBar.track:SetHeight(cfg.manaHeight)
     frame.manaBar.fill:SetHeight(cfg.manaHeight)
     -- Refresh this frame's default before capturing posdata. The movable API
     -- then reapplies a saved position, if present; clearing that saved entry
@@ -191,6 +184,8 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     frame.bg:SetAllPoints(frame)
     frame.fill = frame:CreateTexture(nil, "ARTWORK")
     frame.fill:SetPoint("LEFT", frame, "LEFT", 0, 0)
+    frame.track = CreateFrame("Frame", nil, frame)
+    frame.track:SetPoint("CENTER", frame, "CENTER", 0, 0)
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     frame.edges = {}
     for i = 1, 4 do
@@ -234,6 +229,8 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     frame.manaBar.bg:SetTexture(0, 0, 0, 0.4)
     frame.manaBar.fill = frame.manaBar:CreateTexture(nil, "ARTWORK")
     frame.manaBar.fill:SetPoint("LEFT", frame.manaBar, "LEFT", 0, 0)
+    frame.manaBar.track = CreateFrame("Frame", nil, frame.manaBar)
+    frame.manaBar.track:SetPoint("CENTER", frame.manaBar, "CENTER", 0, 0)
     frame.manaBar.text = frame.manaBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   end
 

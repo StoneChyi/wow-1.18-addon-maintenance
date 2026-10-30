@@ -1295,6 +1295,15 @@ end
 function pfUI.api.GetPlayerResourceColor(powerType)
   local colors = C and C.unitframes or {}
   local player = pfUI.uf and pfUI.uf.player
+  -- Use the rendered color for the current power when the status bar exists.
+  local rawType = UnitPowerType("player")
+  local bar = player and player.power and player.power.bar
+  if rawType == powerType and bar and type(bar.GetStatusBarColor) == "function" then
+    local ok, r, g, b, a = pcall(bar.GetStatusBarColor, bar)
+    if ok and type(r) == "number" and type(g) == "number" and type(b) == "number"
+      and r == r and g == g and b == b and r >= 0 and r <= 1
+      and g >= 0 and g <= 1 and b >= 0 and b <= 1 then return r, g, b, tonumber(a) or 1 end
+  end
   local config = player and player.config or colors.player or {}
   local key
   if powerType == 0 then key = "manacolor"
@@ -1306,6 +1315,31 @@ function pfUI.api.GetPlayerResourceColor(powerType)
   if type(value) ~= "string" then return 0.5, 0.5, 0.5, 1 end
   local r, g, b, a = pfUI.api.GetStringColor(value)
   return tonumber(r) or 0.5, tonumber(g) or 0.5, tonumber(b) or 0.5, tonumber(a) or 1
+end
+
+-- [ GetResourceBarColor ]
+-- A clear resource palette defaults to the character's existing ERB choices.
+-- Avatar mode remains explicit: a pastel avatar theme can itself be purple.
+local resourceDefaults = {
+  [0] = {0.271, 0.467, 1, 1}, [1] = {1, 0, 0, 1},
+  [2] = {1, 0.5, 0.25, 1}, [3] = {1, 1, 0, 1},
+}
+local function ResourceColorChannel(color, index, fallback)
+  local n = type(color) == "table" and tonumber(color[index])
+  if n and n == n and n >= 0 and n <= 1 then return n end
+  return fallback
+end
+function pfUI.api.GetResourceBarColor(powerType)
+  if C.unitframes.comboenergycolorstyle == "player" then
+    return pfUI.api.GetPlayerResourceColor(powerType)
+  end
+  local fallback = resourceDefaults[powerType] or {0.5, 0.5, 0.5, 1}
+  local data = C.resourcebars and C.resourcebars.data or _G.ERB_options
+  local powers = data and data.erb_pp and data.erb_pp.powers
+  local key = powerType == 0 and "mana" or powerType == 1 and "rage" or powerType == 3 and "energy"
+  local color = powers and key and powers[key]
+  return ResourceColorChannel(color, 1, fallback[1]), ResourceColorChannel(color, 2, fallback[2]),
+    ResourceColorChannel(color, 3, fallback[3]), ResourceColorChannel(color, 4, fallback[4])
 end
 
 -- [ rgbhex ]

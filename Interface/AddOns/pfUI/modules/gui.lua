@@ -1104,6 +1104,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         "left:" .. T["Left"],
       },
       ["comboenergy_format"] = { "0:" .. T["Current"], "1:" .. T["Current / Maximum"], "2:" .. T["Percent"] },
+      ["resourcebar_colors"] = { "legacy:" .. T["Existing Resource Colors"], "player:" .. T["Rendered Player Colors"] },
       ["comboenergy_align"] = { "left:" .. T["Left"], "center:" .. T["Center"], "right:" .. T["Right"] },
       ["combo_style"] = {
         "pips:" .. T["Blocks"],
@@ -2348,6 +2349,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       CreateConfig(U["energybar"], T["Resource Bar Texture"], C.unitframes, "comboenergytexture", "dropdown", pfUI.gui.dropdowns.combo_texture)
       CreateConfig(U["energybar"], T["Resource Bar Color"], C.unitframes, "comboenergycolor", "color")
       CreateConfig(U["energybar"], T["Auto Power Color"], C.unitframes, "comboenergyautocolor", "checkbox")
+      CreateConfig(U["energybar"], T["Resource Color Scheme"], C.unitframes, "comboenergycolorstyle", "dropdown", pfUI.gui.dropdowns.resourcebar_colors)
       CreateConfig(U["energybar"], T["Resource Bar Background"], C.unitframes, "comboenergybgcolor", "color")
       CreateConfig(U["energybar"], T["Show Resource Bar Border"], C.unitframes, "comboenergyborder", "checkbox")
       CreateConfig(U["energybar"], T["Smooth Resource Bar"], C.unitframes, "comboenergysmooth", "checkbox")
@@ -2372,7 +2374,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         if pfUI.resourcebars then pfUI.resourcebars:ImportLegacy() end
       end)
       CreateConfig(U["resourcebars"], T["Enable Integrated Resource Bars Trial"], C.resourcebars, "enable", "checkbox")
-      CreateConfig(U["resourcebars"], T["Match Player Frame Resource Colors"], C.resourcebars, "followcolors", "checkbox")
+      CreateConfig(U["resourcebars"], T["Use Unified Resource Colors"], C.resourcebars, "followcolors", "checkbox")
       CreateConfig(nil, T["Edit Health and Resource Bars"], C.resourcebars, "enable", "button", function()
         if pfUI.resourcebars then pfUI.resourcebars:OpenConfig() end
       end)

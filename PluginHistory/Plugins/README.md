@@ -100,7 +100,7 @@
 | [OneBag](OneBag.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](OneBag.md#change-OneBag-20261030-02) |
 | [Outfitter](Outfitter.md) | 早期记录，日期待确认 |
 | [PallyPower](PallyPower.md) | 早期记录，日期待确认 |
-| [pfUI](pfUI.md) | [2026-10-30 · 内置ERB生命与资源条兼容试用，并统一玩家头像配色](pfUI.md#change-pfUI-20261030-06) |
+| [pfUI](pfUI.md) | [2026-10-30 · 按实际填充轨道与字形墨迹居中，修正淡色偏紫默认](pfUI.md#change-pfUI-20261030-07) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](pfUI-addonskinner.md#change-pfUI-addonskinner-20261030-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | 早期记录，日期待确认 |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](PizzaWorldBuffs.md#change-PizzaWorldBuffs-20261030-02) |
