@@ -27,10 +27,23 @@ end
 local function RepositionMerchantButtons()
     local vertSpacing = -16
     local horizSpacing = 12
+    local numMerchantItems = GetMerchantNumItems() or 0
+    local pageOffset = ((MerchantFrame.page or 1) - 1) * MERCHANT_ITEMS_PER_PAGE
     
     for i = 1, MERCHANT_ITEMS_PER_PAGE do
         local btn = _G["MerchantItem"..i]
         if btn then
+            local name
+            local index = pageOffset + i
+            if index <= numMerchantItems then
+                name = GetMerchantItemInfo(index)
+            end
+            -- The native merchant update hides parents 11/12 after updating their children.
+            if name and name ~= "" then
+                btn:Show()
+            else
+                btn:Hide()
+            end
             btn:SetHeight(37)
             
             -- 每个子页面的第一个物品（1, 11）
@@ -63,6 +76,7 @@ end
 local function RepositionBuybackButtons()
     local vertSpacing = -30
     local horizSpacing = 50
+    local numBuybackItems = GetNumBuybackItems() or 0
     
     for i = 1, MERCHANT_ITEMS_PER_PAGE do
         local btn = _G["MerchantItem"..i]
@@ -70,6 +84,15 @@ local function RepositionBuybackButtons()
             if i > 12 then
                 btn:Hide()
             else
+                local name
+                if i <= numBuybackItems then
+                    name = GetBuybackItemInfo(i)
+                end
+                if name and name ~= "" then
+                    btn:Show()
+                else
+                    btn:Hide()
+                end
                 btn:SetHeight(37)
                 
                 if i == 1 then

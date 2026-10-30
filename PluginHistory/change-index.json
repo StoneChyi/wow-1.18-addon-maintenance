@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 243,
+  "dated_records": 244,
   "addons": [
     {
       "addon": "!Libs",
@@ -3426,13 +3426,22 @@
       "addon": "pfUI_ExtendedMerchant",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI_ExtendedMerchant.md",
-      "purpose": "保留原商人更新显隐结果，修复空商品/回购格被布局强行显示。",
+      "purpose": "按实际商品/回购数据控制父槽显隐，恢复右侧首行并保留空槽隐藏。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "保留原更新显隐结果，修复空商品及回购格重新出现",
+      "latest_record_title": "恢复右侧首行有效商品，按实际数据控制商品与回购槽",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 1,
+      "record_count": 2,
       "records": [
+        {
+          "id": "pfUI_ExtendedMerchant-20261030-02",
+          "date": "2026-10-30",
+          "title": "恢复右侧首行有效商品，按实际数据控制商品与回购槽",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI_ExtendedMerchant-20261030-02"
+        },
         {
           "id": "pfUI_ExtendedMerchant-20261030-01",
           "date": "2026-10-30",

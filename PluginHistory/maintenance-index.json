@@ -2596,11 +2596,11 @@
       "addon": "pfUI_ExtendedMerchant",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI_ExtendedMerchant.md",
-      "purpose": "保留原商人更新显隐结果，修复空商品/回购格被布局强行显示。",
+      "purpose": "按实际商品/回购数据控制父槽显隐，恢复右侧首行并保留空槽隐藏。",
       "sources": [],
       "maintenance_files": ["Interface/AddOns/pfUI_ExtendedMerchant/pfUI_ExtendedMerchant.lua"],
       "tracked_files_at_reference": 3,
-      "pending": "本次空槽修复待游戏验收；早期个人修改归属仍不追认。",
+      "pending": "本次右侧首行与空槽修复待游戏验收；早期个人修改归属仍不追认。",
       "history_group": "modified"
     },
     {
