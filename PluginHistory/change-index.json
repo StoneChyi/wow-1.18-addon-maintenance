@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 242,
+  "dated_records": 243,
   "addons": [
     {
       "addon": "!Libs",
@@ -2363,13 +2363,22 @@
       "addon": "SpecialTalent",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/SpecialTalent.md",
-      "purpose": "修复天赋方案翻页、拖动和 ESC 关闭。",
+      "purpose": "修复天赋方案翻页、拖动和ESC关闭；反复开窗不再累积缩小按钮高度。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "保持个人版并暂缓不确定更新（未修改）",
-      "latest_game_acceptance": "不适用（说明或停用记录）",
-      "record_count": 2,
+      "latest_record_title": "防止反复打开天赋窗口累积缩小按钮高度",
+      "latest_game_acceptance": "待游戏验收",
+      "record_count": 3,
       "records": [
+        {
+          "id": "SpecialTalent-20261030-03",
+          "date": "2026-10-30",
+          "title": "防止反复打开天赋窗口累积缩小按钮高度",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-SpecialTalent-20261030-03"
+        },
         {
           "id": "SpecialTalent-20261030-02",
           "date": "2026-10-30",

@@ -389,6 +389,8 @@ function SpecialTalentFrame_OnLoad()
 	this:RegisterForDrag("LeftButton");
 end
 
+local SpecialTalentButtonHeightAdjusted = setmetatable({}, { __mode = "k" });
+
 function SpecialTalentFrame_OnShow()
 	-- Sunelegy修改：每次打开时恢复拖动后的位置，覆盖 ShowUIPanel 按 area 的默认定位。
 	if ( SpecialTalentFrameSaved and SpecialTalentFrameSaved.frameDragged == 1 and SpecialTalentFrameSaved.frameLeft and SpecialTalentFrameSaved.frameTop ) then
@@ -439,9 +441,14 @@ function SpecialTalentFrame_OnShow()
 
 		-- 循环美化所有按钮
 		for _, buttonName in ipairs(buttons) do
-			if _G[buttonName] then
-				SkinButton(_G[buttonName])
-				_G[buttonName]:SetHeight(_G[buttonName]:GetHeight() - 1)
+			local button = _G[buttonName];
+			if button then
+				SkinButton(button)
+				-- 同一按钮只微调一次高度，避免反复开窗持续缩小。
+				if not SpecialTalentButtonHeightAdjusted[button] then
+					button:SetHeight(button:GetHeight() - 1)
+					SpecialTalentButtonHeightAdjusted[button] = true;
+				end
 			end
 		end
 

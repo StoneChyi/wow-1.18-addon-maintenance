@@ -112,7 +112,7 @@
 | [S_ItemTip](S_ItemTip.md) | [2026-10-30 · 保持个人版并暂缓不确定更新（未修改）](S_ItemTip.md#change-S_ItemTip-20261030-02) |
 | [ShaguDPS](ShaguDPS.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](ShaguDPS.md#change-ShaguDPS-20261030-02) |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | [2026-10-27 · 修复单击误选最近目标并增加图标双击标记](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261027-01) |
-| [SpecialTalent](SpecialTalent.md) | [2026-10-30 · 保持个人版并暂缓不确定更新（未修改）](SpecialTalent.md#change-SpecialTalent-20261030-02) |
+| [SpecialTalent](SpecialTalent.md) | [2026-10-30 · 防止反复打开天赋窗口累积缩小按钮高度](SpecialTalent.md#change-SpecialTalent-20261030-03) |
 | [StatCompare](StatCompare.md) | [2026-10-30 · 保持个人版并暂缓不确定更新（未修改）](StatCompare.md#change-StatCompare-20261030-02) |
 | [STSMmayor](STSMmayor.md) | [2026-10-10 · 两行紧凑界面（2.4.11）](STSMmayor.md#change-STSMmayor-20261010-01) |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | [2026-10-18 · 合入 10 月 16 日包并保留个人功能（已部署）](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261018-02) |

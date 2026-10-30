@@ -1908,7 +1908,7 @@
       "addon": "SpecialTalent",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/SpecialTalent.md",
-      "purpose": "修复天赋方案翻页、拖动和 ESC 关闭。",
+      "purpose": "修复天赋方案翻页、拖动和ESC关闭；反复开窗不再累积缩小按钮高度。",
       "sources": [
         "Interface/AddOns/SpecialTalent/.workbuddy/memory/2026-08-21.md"
       ],
@@ -1917,7 +1917,7 @@
         "Interface/AddOns/SpecialTalent/SpecialTalentUI.xml"
       ],
       "tracked_files_at_reference": 10,
-      "pending": "",
+      "pending": "连续开关窗口的按钮外观待游戏验收；新应用器仍未合入。",
       "history_group": "modified"
     },
     {
