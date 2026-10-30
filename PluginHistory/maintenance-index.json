@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "compiled_on": "2026-10-09",
-  "updated_on": "2026-10-27",
+  "updated_on": "2026-10-30",
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "documented_history": 60,
-    "unconfirmed": 43,
+    "documented_history": 61,
+    "unconfirmed": 42,
     "snapshot_difference": 1,
     "related_skin_only": 1
   },
@@ -2594,14 +2594,14 @@
     },
     {
       "addon": "pfUI_ExtendedMerchant",
-      "status": "unconfirmed",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI_ExtendedMerchant.md",
-      "purpose": "等待确认是否有个人修改",
+      "purpose": "保留原商人更新显隐结果，修复空商品/回购格被布局强行显示。",
       "sources": [],
-      "maintenance_files": [],
+      "maintenance_files": ["Interface/AddOns/pfUI_ExtendedMerchant/pfUI_ExtendedMerchant.lua"],
       "tracked_files_at_reference": 3,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
-      "history_group": "unchanged"
+      "pending": "本次空槽修复待游戏验收；早期个人修改归属仍不追认。",
+      "history_group": "modified"
     },
     {
       "addon": "xNet",

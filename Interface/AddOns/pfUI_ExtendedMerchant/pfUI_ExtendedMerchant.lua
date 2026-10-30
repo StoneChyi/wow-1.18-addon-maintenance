@@ -31,7 +31,6 @@ local function RepositionMerchantButtons()
     for i = 1, MERCHANT_ITEMS_PER_PAGE do
         local btn = _G["MerchantItem"..i]
         if btn then
-            btn:Show()
             btn:SetHeight(37)
             
             -- 每个子页面的第一个物品（1, 11）
@@ -71,7 +70,6 @@ local function RepositionBuybackButtons()
             if i > 12 then
                 btn:Hide()
             else
-                btn:Show()
                 btn:SetHeight(37)
                 
                 if i == 1 then

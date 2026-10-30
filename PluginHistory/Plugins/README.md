@@ -6,7 +6,7 @@
 
 ## 一、没有变化的插件
 
-共 **44 个**。这里的“没有变化”仅指现有依据未确认本插件本体的版本迭代或文件修改，不宣称从未修改或等同官方原版。仅来源补充、未实施的核对、其他插件的皮肤适配不算本体修改；取得真实变化依据后移入第二类。
+共 **43 个**。这里的“没有变化”仅指现有依据未确认本插件本体的版本迭代或文件修改，不宣称从未修改或等同官方原版。仅来源补充、未实施的核对、其他插件的皮肤适配不算本体修改；取得真实变化依据后移入第二类。
 
 | 插件 / 组件 | 最近记录 |
 | --- | --- |
@@ -41,7 +41,6 @@
 | [pfQuest](pfQuest.md) | 暂无本体变化记录 |
 | [pfQuest-turtle](pfQuest-turtle.md) | 暂无本体变化记录 |
 | [pfUI-eliteoverlay](pfUI-eliteoverlay.md) | 暂无本体变化记录 |
-| [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | 暂无本体变化记录 |
 | [PlayTurtle](PlayTurtle.md) | 暂无本体变化记录 |
 | [QuickReply](QuickReply.md) | 暂无本体变化记录 |
 | [Rinse](Rinse.md) | 暂无本体变化记录 |
@@ -57,7 +56,7 @@
 
 ## 二、经过版本迭代或修改的插件
 
-共 **63 个**。包括版本更新、自行修改、新增、回退，以及有文件差异证据但作者未确认的历史；是否个人原创另按实际证据说明。
+共 **64 个**。包括版本更新、自行修改、新增、回退，以及有文件差异证据但作者未确认的历史；是否个人原创另按实际证据说明。
 
 每页以时间记录为主。只有确实存在的当前问题或已经提出的进一步优化方案才设相应章节；没有则不设。待游戏验收不自动等于存在故障。
 
@@ -103,6 +102,7 @@
 | [pfUI](pfUI.md) | [2026-10-30 · 按实际填充轨道与字形墨迹居中，修正淡色偏紫默认](pfUI.md#change-pfUI-20261030-07) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](pfUI-addonskinner.md#change-pfUI-addonskinner-20261030-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | 早期记录，日期待确认 |
+| [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-10-30 · 保留原更新显隐结果，修复空商品及回购格重新出现](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261030-01) |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](PizzaWorldBuffs.md#change-PizzaWorldBuffs-20261030-02) |
 | [PlayerLinkEnhance](PlayerLinkEnhance.md) | [2026-10-12 · 修复团队目标图标入口的错误对号](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261012-01) |
 | [QianKunBag](QianKunBag.md) | [2026-10-11 · 独立背包首版 0.1.0](QianKunBag.md#change-QianKunBag-20261011-01) |
