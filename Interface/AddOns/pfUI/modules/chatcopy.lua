@@ -232,7 +232,14 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
         -- 与上游算法一致：整行套频道色，并把行内的颜色复位 |r 也换成频道色，
         -- 这样"名字带色"的消息在复制框里整行仍保持同一个底色。
         local col  = ColorOf(r, g, b)
-        local body = col and (col .. string.gsub(msg, "|r", col)) or msg
+        local body = msg
+        if col then
+          -- Only an unpaired pipe starts a reset; paired pipes are literal text.
+          body = col .. string.gsub(msg, "(|+)r", function(pipes)
+            if math.mod(string.len(pipes), 2) == 0 then return pipes .. "r" end
+            return string.sub(pipes, 1, -2) .. col
+          end)
+        end
 
         -- 顺手记下两件"只有此刻查得到"的东西：
         --   · 时间戳：必须取**消息到达这一刻**的时钟（渲染时再取就成了当前时间，没意义）
@@ -261,7 +268,7 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
     end
   end
 
-  -- 纯文本化（/pfchatcopy format plain）：去掉颜色码、链接与贴图转义
+  -- 保留既有 YY 预处理；复制显示单独使用下面的 PlainCopyLine。
   local function Strip(s)
     s = string.gsub(s, "|c%x%x%x%x%x%x%x%x", "")
     s = string.gsub(s, "|r", "")
@@ -337,6 +344,12 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
 
   local function EscapePipes(s)
     return (string.gsub(s, "|", "||"))
+  end
+
+  -- Share the selection tokenizer, retaining escaped pipes until copy export.
+  local function PlainCopyLine(s)
+    local chars = Characters(s)
+    return EscapePipes(table.concat(chars))
   end
 
   -- 显式换行，让文字与拖选热区使用同一套排版。每个视觉行仅创建一个 FontString。
@@ -493,7 +506,7 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
 
     for k=1, n do
       local s = Decorate(hist[n - k + 1], memo)
-      if plain then s = Strip(s) end
+      if plain then s = PlainCopyLine(s) end
       out[k] = s
     end
     return out, n
@@ -725,7 +738,11 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
     -- ⚠️ 判据用 lineText 是否存在，不用"行数 > 0"：空窗口时行数组是空表，
     --    拼出来就是 ""，而**不能**退回 EditBox（那里可能还残留着别的内容）。
     f.Text = function()
-      if win.lineText and win.lineCount then return table.concat(win.lineText, "\n") end
+      if win.lineText and win.lineCount then
+        local text = table.concat(win.lineText, "\n")
+        if win.plainFormat then return (string.gsub(text, "||", "|")) end
+        return text
+      end
       return (win.edit:GetText() or "")
     end
 
@@ -908,6 +925,7 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
 
     win.lineText  = lines        -- 行文本：复制"全部/选中"都按索引从这里取，不再依赖 EditBox
     win.lineCount = n
+    win.plainFormat = pfUI.chatcopy.format == "plain"
     if y < 1 then y = n * 15 + 8 end
 
     win.content:SetHeight(y)

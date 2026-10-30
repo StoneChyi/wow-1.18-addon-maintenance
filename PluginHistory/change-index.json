@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 244,
+  "dated_records": 245,
   "addons": [
     {
       "addon": "!Libs",
@@ -3080,10 +3080,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "按实际填充轨道与字形墨迹居中，修正淡色偏紫默认",
+      "latest_record_title": "保护纯文本复制中的字面标记，保留字符拖选和YY识别",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 25,
+      "record_count": 26,
       "records": [
+        {
+          "id": "pfUI-20261030-08",
+          "date": "2026-10-30",
+          "title": "保护纯文本复制中的字面标记，保留字符拖选和YY识别",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261030-08"
+        },
         {
           "id": "pfUI-20261030-07",
           "date": "2026-10-30",

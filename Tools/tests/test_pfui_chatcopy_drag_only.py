@@ -48,7 +48,10 @@ function methods:SetText(v)
 end
 function methods:GetText() return self.text or '' end
 function methods:GetStringWidth()
-  local text = self:GetText():gsub('|c%x%x%x%x%x%x%x%x', ''):gsub('|r', ''):gsub('||', '|')
+  -- A client renders escaped pipes literally before interpreting markup.
+  -- Protect them here too, or measuring ||c11223344 would give zero width
+  -- to real visible characters and invalidate the drag-coordinate oracle.
+  local text = self:GetText():gsub('||', '\1'):gsub('|c%x%x%x%x%x%x%x%x', ''):gsub('|r', ''):gsub('\1', '|')
   local width = 0
   for c in text:gmatch('[%z\1-\127\194-\244][\128-\191]*') do
     width = width + (#c > 1 and 14 or c == ' ' and 4 or 7)
@@ -264,3 +267,188 @@ assert(w:SelectedText() == '首帧')
 assert(not w.drag and w.edit.focus)
 ''')
 print('PASS: Lua syntax; UTF-8, reverse and cross-message drag; wrapping/cache; clicks never select a message; Shift-click extends text; Copy All; clipboard/Ctrl+C; 12 YY formats; channel isolation/raid cleanup; empty windows; hyperlink/pipe/emoji/newline handling; first-frame font recovery; captured drag release')
+
+# These scenarios run the complete existing module and its real controls.
+# Expected display strings are independent fixtures, not calls to Strip or
+# Characters. The font mock still rejects uninitialized text and configured
+# SetFont remains forced to fail throughout all scenarios.
+lua.execute(r'''
+local w=pfChatCopyWindow
+local scenarios={}
+local function Scenario(name,fn)
+  fn()
+  table.insert(scenarios,name)
+end
+local function RGB(enabled)
+  pfUI.api.rgbhex=enabled and function(r,g,b)
+    return string.format('|cff%02x%02x%02x',math.floor(r*255+.5),math.floor(g*255+.5),math.floor(b*255+.5))
+  end or nil
+end
+local function OpenLines(format,messages,rgbMode)
+  SELECTED_CHAT_FRAME=ChatFrame2
+  -- Capture holds this original table in a closure: clear it in place.
+  while #ChatFrame2.pfHistory>0 do table.remove(ChatFrame2.pfHistory) end
+  pfUI_cache.chatcopy.time='0';pfUI_cache.chatcopy.class='0'
+  RGB(rgbMode>0)
+  for _,message in ipairs(messages) do
+    if rgbMode==2 then ChatFrame2:AddMessage(message,.8,.7,.6)
+    else ChatFrame2:AddMessage(message) end
+  end
+  SlashCmdList.PFCHATCOPY('format '..format)
+  SlashCmdList.PFCHATCOPY('show')
+  assert(w.mirror and w.fsFrame:IsShown(),'real visible text mirror disappeared')
+  assert(rejectConfiguredFonts,'configured-font failure coverage disabled')
+end
+local function Visible() return table.concat(w.characters) end
+local function CopyAll(expected)
+  local direct
+  SetClipboardText=function(text) direct=text end
+  fire(w.btnCopy,'OnClick')
+  assert(direct==expected,'direct Copy All mismatch: '..tostring(direct))
+  SetClipboardText=nil
+  fire(w.btnCopy,'OnClick')
+  assert(w.edit:GetText()==expected,'Ctrl+C Copy All mismatch')
+  assert(w.edit.focus and w.edit.alpha==0 and w.fsFrame:IsShown(),'Ctrl+C fallback changed visible selection mode')
+end
+local function Utf8(value)
+  local out={}
+  for char in string.gmatch(value,'[%z\1-\127\194-\244][\128-\191]*') do table.insert(out,char) end
+  return out
+end
+local function CursorBoundary(boundary)
+  for _,row in ipairs(w.rows) do
+    if boundary>=row.first-1 and boundary<=row.last then
+      local cell=boundary-(row.first-1)+1
+      cursorX=row.x[cell]
+      cursorY=w.content:GetTop()-row.y-3
+      return row.owner
+    end
+  end
+  error('missing real layout boundary '..boundary)
+end
+local function Drag(first,last,expected)
+  w.scroll:SetVerticalScroll(0)
+  local owner=CursorBoundary(first-1)
+  fire(owner,'OnMouseDown','LeftButton')
+  CursorBoundary(last)
+  fire(w,'OnUpdate',.04)
+  owner=CursorBoundary(last)
+  fire(owner,'OnMouseUp','LeftButton')
+  assert(w:SelectedText()==expected,'precise character drag mismatch: '..tostring(w:SelectedText()))
+  assert(w.edit:GetText()==expected,'drag Ctrl+C buffer mismatch')
+  assert(w.edit.focus and w.edit.alpha==0 and w.fsFrame:IsShown())
+  local direct
+  SetClipboardText=function(text) direct=text end
+  fire(w.btnCopySel,'OnClick')
+  assert(direct==expected,'direct selected-copy mismatch')
+  SetClipboardText=nil
+  fire(w.btnCopySel,'OnClick')
+  assert(w.edit:GetText()==expected and w.edit.focus,'selected Ctrl+C fallback mismatch')
+end
+
+Scenario('literal pipe markers stay visible and export once',function()
+  local encoded='字面 ||c11223344 ||r ||Hplayer:假人||h[假名]||h ||T假贴图||t 普通|||| 单独| 结束'
+  local expected='字面 |c11223344 |r |Hplayer:假人|h[假名]|h |T假贴图|t 普通|| 单独| 结束'
+  for mode=0,2 do
+    OpenLines('plain',{encoded},mode)
+    assert(Visible()==expected,'literal markers lost from actual visible characters (RGB mode '..mode..'): '..Visible())
+    assert(w:Text()==expected,'plain export differs from actual displayed text')
+    assert(w.lineText[1]==string.gsub(expected,'|','||'),'lineText must remain display-safe')
+    CopyAll(expected)
+  end
+end)
+
+Scenario('real colors links textures preserve UTF8 labels and newlines',function()
+  local encoded='|cffaabbcc中文😀|r |Hitem:123:0:0:0|h[治疗药水]|h |Hplayer:小明|h[小明]|h |TInterface\\Icons\\INV_Misc:16|t末尾\n第二行🙂'
+  local expected='中文😀 [治疗药水] [小明] 末尾\n第二行🙂'
+  for mode=0,2 do
+    OpenLines('plain',{encoded},mode)
+    assert(Visible()==expected,'real markup not removed while preserving its labels')
+    assert(w:Text()==expected)
+    CopyAll(expected)
+  end
+end)
+
+Scenario('channel reset parity preserves escaped pipes in both formats',function()
+  local encoded='真|r 双||r 四||||r 三|||r 终'
+  local expected='真 双|r 四||r 三| 终'
+  for mode=0,2 do
+    for _,format in ipairs({'all','plain'}) do
+      OpenLines(format,{encoded},mode)
+      assert(Visible()==expected,'channel capture damaged literal reset pipes ('..format..' RGB '..mode..'): '..Visible())
+      if format=='plain' then assert(w:Text()==expected);CopyAll(expected) end
+    end
+  end
+end)
+
+Scenario('all plain all roundtrip retains original rich history',function()
+  local encoded='|cff00ff00颜色|r ||c11223344 ||r |||| |Hitem:55|h[物品]|h\n中文😀'
+  local expected='颜色 |c11223344 |r || [物品]\n中文😀'
+  for mode=0,2 do
+    OpenLines('all',{encoded},mode)
+    local original=w:Text();local originalHistory=ChatFrame2.pfHistory[1].txt
+    assert(Visible()==expected)
+    CopyAll(original)
+    SlashCmdList.PFCHATCOPY('format plain')
+    assert(Visible()==expected and w:Text()==expected)
+    CopyAll(expected)
+    SlashCmdList.PFCHATCOPY('format all')
+    assert(Visible()==expected and w:Text()==original,'rich format was changed by roundtrip')
+    assert(ChatFrame2.pfHistory[1].txt==originalHistory,'format conversion modified captured history')
+    CopyAll(original)
+  end
+end)
+
+Scenario('long cross-line character selection copies literal markers exactly',function()
+  local encoded1='|cff00ff00起点|r：'..string.rep('中文||c11223344😀||r ',20)..'\n中间|Hplayer:小明|h[角色]|h'
+  local encoded2='尾段：||T字面贴图||t 与 |TInterface\\Icons\\INV_Misc:16|t终点'
+  local expected='起点：'..string.rep('中文|c11223344😀|r ',20)..'\n中间[角色]\n尾段：|T字面贴图|t 与 终点'
+  local characters=Utf8(expected)
+  local first,last=4,#characters-3
+  local subset=table.concat(characters,'',first,last)
+  for mode=0,2 do
+    for _,format in ipairs({'all','plain'}) do
+      OpenLines(format,{encoded1,encoded2},mode)
+      assert(Visible()==expected,'long visible text differs before selection')
+      assert(#w.rows>5,'long fixture must exercise wrapped visual lines')
+      Drag(first,last,subset)
+      assert(string.find(subset,'\n',1,true) and string.find(subset,'|c11223344',1,true),'fixture lost intended boundaries')
+      if format=='plain' then assert(w:Text()==expected);CopyAll(expected) end
+    end
+  end
+end)
+
+local yyCases={
+ {'YY123456','123456'},{'yy：123 456','123456'},{'YY频道号: 001 234','001234'},
+ {'来YY语音频道：987 654 集合','987654'},{'YY 123　456','123456'},
+ {'YY: 12\t34 56','123456'},{'YY:123 123 123','123123123'},{'yy等会再说，123456',nil},
+ {'happyYY12345',nil},{'YY 晚上8点集合',nil},{'YY123456，40人集合','123456'},
+ {'先yy聊天，然后 YY=654 321','654321'},
+}
+for _,format in ipairs({'all','plain'}) do
+  Scenario('YY formats source isolation and raid cleanup in '..format,function()
+    OpenLines(format,{'团队资料'},2)
+    for _,case in ipairs(yyCases) do
+      raidCount=0;dispatch('RAID_ROSTER_UPDATE');raidCount=20
+      dispatch('CHAT_MSG_RAID',case[1],'团长')
+      assert(w.btnYY.label:GetText()==(case[2] and 'YY: '..case[2] or 'No raid YY'),format..' YY '..case[1])
+    end
+    dispatch('CHAT_MSG_RAID_LEADER','YY:001 234','队长')
+    dispatch('CHAT_MSG_CHANNEL','YY:999999','广告')
+    dispatch('CHAT_MSG_GUILD','YY:888888','广告')
+    assert(w.btnYY.label:GetText()=='YY: 001234','non-raid source overwrote YY')
+    local copied
+    SetClipboardText=function(text) copied=text end
+    fire(w.btnYY,'OnClick');assert(copied=='001234')
+    SetClipboardText=nil;SlashCmdList.PFYY()
+    assert(w.edit:GetText()=='001234' and w.edit.focus and w.edit.alpha==0)
+    raidCount=0;dispatch('RAID_ROSTER_UPDATE')
+    assert(w.btnYY.label:GetText()=='No raid YY')
+    copied='unchanged';SetClipboardText=function(text) copied=text end
+    SlashCmdList.PFYY();assert(copied=='unchanged','leaving raid retained a stale YY target')
+    SetClipboardText=nil
+  end)
+end
+assert(#scenarios==7)
+print('PASS: 7 complete-window plain/all scenarios; literal-pipe/reset RGB matrix; real markup labels; roundtrip; long UTF8/emoji/wrapped/cross-message drag; direct and Ctrl+C copy; 24 YY format checks plus source isolation and raid cleanup')
+''')
