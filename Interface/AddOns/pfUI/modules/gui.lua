@@ -2367,6 +2367,20 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       CreateConfig(U["energybar"], T["Show Energy Tick Indicator"], C.unitframes, "comboenergyshowtick", "checkbox")
     end)
 
+    CreateGUIEntry(T["Unit Frames"], T["Health and Resource Bars"], function()
+      CreateConfig(nil, T["Import Existing ExtraResourceBars Settings"], C.resourcebars, "enable", "button", function()
+        if pfUI.resourcebars then pfUI.resourcebars:ImportLegacy() end
+      end)
+      CreateConfig(U["resourcebars"], T["Enable Integrated Resource Bars Trial"], C.resourcebars, "enable", "checkbox")
+      CreateConfig(U["resourcebars"], T["Match Player Frame Resource Colors"], C.resourcebars, "followcolors", "checkbox")
+      CreateConfig(nil, T["Edit Health and Resource Bars"], C.resourcebars, "enable", "button", function()
+        if pfUI.resourcebars then pfUI.resourcebars:OpenConfig() end
+      end)
+      CreateConfig(nil, T["Restore Standalone Resource Bars"], C.resourcebars, "enable", "button", function()
+        if pfUI.resourcebars then pfUI.resourcebars:StopTrial() end
+      end)
+    end)
+
     -- 距离显示（原 General 页「UnitXP Settings」整段 35 项拆成独立子页，做法同连击点）
     CreateGUIEntry(T["Unit Frames"], T["Distance Display"], function()
       CreateConfig(nil, T["Distance Display"], nil, nil, "header")

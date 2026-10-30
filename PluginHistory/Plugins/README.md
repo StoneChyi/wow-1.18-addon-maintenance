@@ -28,7 +28,7 @@
 | [Blizzard_TrainerUI](Blizzard_TrainerUI.md) | 暂无本体变化记录 |
 | [Cryolysis](Cryolysis.md) | 暂无本体变化记录 |
 | [Cursive](Cursive.md) | 暂无本体变化记录 |
-| [ExtraResourceBars](ExtraResourceBars.md) | 暂无本体变化记录 |
+| [ExtraResourceBars](ExtraResourceBars.md) | [2026-10-30 · pfUI内置兼容候选完成，独立版保留待验收](ExtraResourceBars.md#change-ExtraResourceBars-20261030-01) |
 | [FishingBuddy](FishingBuddy.md) | 暂无本体变化记录 |
 | [HolyHope](HolyHope.md) | 暂无本体变化记录 |
 | [Interact](Interact.md) | 暂无本体变化记录 |
@@ -100,7 +100,7 @@
 | [OneBag](OneBag.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](OneBag.md#change-OneBag-20261030-02) |
 | [Outfitter](Outfitter.md) | 早期记录，日期待确认 |
 | [PallyPower](PallyPower.md) | 早期记录，日期待确认 |
-| [pfUI](pfUI.md) | [2026-10-30 · 修正独立资源条文字居中和资源类型颜色](pfUI.md#change-pfUI-20261030-05) |
+| [pfUI](pfUI.md) | [2026-10-30 · 内置ERB生命与资源条兼容试用，并统一玩家头像配色](pfUI.md#change-pfUI-20261030-06) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](pfUI-addonskinner.md#change-pfUI-addonskinner-20261030-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | 早期记录，日期待确认 |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](PizzaWorldBuffs.md#change-PizzaWorldBuffs-20261030-02) |

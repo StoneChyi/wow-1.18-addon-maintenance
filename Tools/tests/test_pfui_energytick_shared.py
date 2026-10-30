@@ -122,15 +122,16 @@ class IntegrationTests(unittest.TestCase):
         block = source[begin:source.index('  -- Nampower Settings', begin)]
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute('''
-        C={unitframes={comboenergywidth='333'}};pfUI={}
+        C={unitframes={comboenergywidth='333'},resourcebars={}};pfUI={}
         function pfUI:UpdateConfig(section, subsection, key, value)
-          assert(section=='unitframes' and subsection==nil)
-          assert(string.find(key, '^comboenergy'))
+          assert((section=='unitframes' or section=='resourcebars') and subsection==nil)
+          if section=='unitframes' then assert(string.find(key, '^comboenergy')) end
           if C[section][key]==nil then C[section][key]=value end
         end
         ''')
         lua.execute(block)
         lua.execute("assert(C.unitframes.comboenergyshow=='0');assert(C.unitframes.comboenergywidth=='333')")
+        lua.execute("assert(C.resourcebars.enable=='0' and C.resourcebars.followcolors=='1')")
         lua.execute('assert(C.unitframes.bottomalign==nil and C.unitframes.comboenergyshift==nil)')
 
     def test_actual_settings_page_uses_complete_defaults_and_module_updater(self):
@@ -165,6 +166,37 @@ class IntegrationTests(unittest.TestCase):
                  ET.parse(ROOT / 'Interface/AddOns/pfUI/init/modules.xml').getroot()]
         self.assertEqual(paths.count('../modules/energybar.lua'), 1)
         self.assertGreater(paths.index('../modules/energybar.lua'), paths.index('../modules/energytick.lua'))
+
+    def test_legacy_trial_page_calls_the_correct_actions_and_is_loaded_once(self):
+        source = (ROOT / 'Interface/AddOns/pfUI/modules/gui.lua').read_text(encoding='utf-8')
+        begin = source.index('    CreateGUIEntry(T["Unit Frames"], T["Health and Resource Bars"]')
+        page = source[begin:source.index('\n    end)', begin)+len('\n    end)')]
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute('''
+        T=setmetatable({}, {__index=function(_,k) return k end})
+        C={resourcebars={enable='0',followcolors='1'}};calls={};fields={}
+        pfUI={resourcebars={}}
+        for _,key in ipairs({'ImportLegacy','OpenConfig','StopTrial'}) do
+          pfUI.resourcebars[key]=function() calls[key]=(calls[key] or 0)+1 end
+        end
+        U={resourcebars=function() calls.config=(calls.config or 0)+1 end}
+        function CreateGUIEntry(parent,title,fn)
+          assert(parent=='Unit Frames' and title=='Health and Resource Bars');fn()
+        end
+        function CreateConfig(updater,title,config,key,kind,action)
+          assert(config==C.resourcebars)
+          if kind=='button' then action()
+          else assert(kind=='checkbox' and updater==U.resourcebars);fields[key]=true;updater() end
+        end
+        ''')
+        lua.execute(page)
+        lua.execute('assert(calls.ImportLegacy==1 and calls.OpenConfig==1 and calls.StopTrial==1 and calls.config==2)')
+        self.assertEqual(set(lua.globals().fields.keys()), {'enable', 'followcolors'})
+        paths = [node.attrib.get('file', '').replace('\\', '/') for node in
+                 ET.parse(ROOT / 'Interface/AddOns/pfUI/init/modules.xml').getroot()]
+        for name in ('resourcebars.lua', 'resourcebars_gui.lua'):
+            self.assertEqual(paths.count('../modules/' + name), 1)
+        self.assertLess(paths.index('../modules/resourcebars.lua'), paths.index('../modules/resourcebars_gui.lua'))
 
 
 if __name__ == '__main__':

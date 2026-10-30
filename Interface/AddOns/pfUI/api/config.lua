@@ -364,6 +364,10 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("unitframes", nil,           "comboenergydruidmana", "0")
   pfUI:UpdateConfig("unitframes", nil,           "comboenergydruidmanaheight", "6")
 
+  -- ExtraResourceBars-compatible health/power display, opt-in until accepted.
+  pfUI:UpdateConfig("resourcebars", nil, "enable", "0")
+  pfUI:UpdateConfig("resourcebars", nil, "followcolors", "1")
+
   -- Nampower Settings
   pfUI:UpdateConfig("unitframes", nil,           "spellqueue",       "1")
   pfUI:UpdateConfig("unitframes", nil,           "spellqueuesize",   "24")

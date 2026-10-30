@@ -240,6 +240,8 @@ class Harness:
         self.lua.execute(api[api.index("function pfUI.api.LoadMovable("):api.index("-- [ Save Movable ]")])
         self.lua.execute("LoadMovable=pfUI.api.LoadMovable")
         self.lua.execute(api[api.index("function pfUI.api.UpdateMovable("):api.index("-- [ CreateShareListDialog ]")])
+        self.lua.execute(api[api.index("function pfUI.api.strsplit("):api.index("-- [ isempty ]")])
+        self.lua.execute("local color_cache={}\n" + api[api.index("function pfUI.api.GetStringColor("):api.index("-- [ rgbhex ]")])
         self.lua.execute((ARGS.addons / "pfUI/modules/energybar.lua").read_text(encoding="utf-8-sig"))
 
     @property
@@ -301,40 +303,66 @@ class EnergyBar(unittest.TestCase):
                     self.assertIsNone(h.frame.textshadow, "duplicate half-pixel text shadow remains")
         h.unchanged()
 
-    def test_automatic_resource_colors_ignore_the_avatar_pastel_theme(self):
+    def test_automatic_resource_colors_match_avatar_global_palette(self):
         h = Harness(enabled=True)
-        colors = {0: (0, 0, 1), 1: (1, 0, 0), 2: (1, .5, .25),
-                  3: (1, 1, 0), 4: (0, 1, 1)}
+        h.execute("C.unitframes.focuscolor='0.8,0.4,0.2,0.6'")
+        colors = {0: (.5, .5, 1, 1), 1: (1, 0, 0, 1), 2: (.8, .4, .2, .6),
+                  3: (1, 1, 0, 1), 4: (.5, .5, .5, 1)}
         old_mana = h.eval("C.unitframes.manacolor")
         for power, expected in colors.items():
             h.execute(f"powerType={power};resource=40;maximum=100")
             h.advance(.05)
-            self.assertEqual(tuple(h.fill().texture[i] for i in (1, 2, 3)), expected)
-            self.assertEqual(h.fill().texture[4], 1)
+            self.assertEqual(tuple(h.fill().texture[i] for i in (1, 2, 3, 4)), expected)
         self.assertEqual(h.eval("C.unitframes.manacolor"), old_mana)
         h.update(comboenergytexture="Media/Bar.tga")
         for power, expected in colors.items():
             h.execute(f"powerType={power}")
             h.advance(.05)
-            self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3)), expected)
+            self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3, 4)), expected)
         h.unchanged()
 
-    def test_native_palette_and_druid_mana_color_preserve_manual_main_color(self):
+    def test_live_avatar_colors_and_druid_mana_preserve_manual_main_color(self):
         h = Harness(enabled=True, druid=True, config={"comboenergydruidmana": "1"})
-        h.execute("ManaBarColor={[0]={r=.125,g=.25,b=.875},[3]={r=.9,g=.8,b=.1}}")
+        h.execute("""
+        C.unitframes.player={defcolor='0',manacolor='0.6,0.6,0.9,1'}
+        pfUI.uf.player.config={defcolor='0',manacolor='0.125,0.25,0.875,0.8',energycolor='0.9,0.8,0.1,0.6'}
+        ManaBarColor={[0]={r=0,g=0,b=1},[3]={r=1,g=1,b=0}}
+        """)
         h.update(comboenergytexture="Media/Bar.tga")
         h.advance(.15)
-        self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3)), (.9, .8, .1))
-        self.assertEqual(tuple(h.mana_frame().fill.color[i] for i in (1, 2, 3)), (.125, .25, .875))
+        self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3, 4)), (.9, .8, .1, .6))
+        self.assertEqual(tuple(h.mana_frame().fill.color[i] for i in (1, 2, 3, 4)), (.125, .25, .875, .8))
         h.update(comboenergyautocolor="0", comboenergycolor="0.2,0.4,0.6,0.7")
         h.advance(.15)
         self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3, 4)), (.2, .4, .6, .7))
-        self.assertEqual(tuple(h.mana_frame().fill.color[i] for i in (1, 2, 3)), (.125, .25, .875))
-        h.execute("PowerBarColor=ManaBarColor;ManaBarColor=nil")
+        self.assertEqual(tuple(h.mana_frame().fill.color[i] for i in (1, 2, 3, 4)), (.125, .25, .875, .8))
+        h.execute("pfUI.uf.player.config.manacolor='0.1,0.55,0.95,1'")
+        h.advance(.15)
+        self.assertEqual(tuple(h.mana_frame().fill.color[i] for i in (1, 2, 3, 4)), (.1, .55, .95, 1))
+        h.execute("pfUI.uf.player.config.defcolor='1'")
         h.update(comboenergyautocolor="1")
         h.advance(.15)
-        self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3)), (.9, .8, .1))
+        self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3, 4)), (1, 1, 0, 1))
         h.unchanged()
+
+    def test_avatar_palette_refreshes_without_resource_changes_and_falls_back_safely(self):
+        h = Harness(enabled=True)
+        h.advance(.05)
+        h.execute("C.unitframes.manacolor='0.1,0.45,0.8,0.9'")
+        h.advance(.05)
+        self.assertEqual(tuple(h.fill().texture[i] for i in (1, 2, 3, 4)), (.1, .45, .8, .9))
+        h.execute("""
+        pfUI.uf.player=nil
+        C.unitframes.player={defcolor='0',manacolor='0.25,0.65,0.95,1'}
+        """)
+        h.advance(.05)
+        self.assertEqual(tuple(h.fill().texture[i] for i in (1, 2, 3, 4)), (.25, .65, .95, 1))
+        h.execute("C.unitframes.player.defcolor='1'")
+        h.advance(.05)
+        self.assertEqual(tuple(h.fill().texture[i] for i in (1, 2, 3, 4)), (.1, .45, .8, .9))
+        h.execute("C.unitframes.manacolor=nil")
+        h.advance(.05)
+        self.assertEqual(tuple(h.fill().texture[i] for i in (1, 2, 3, 4)), (.5, .5, .5, 1))
 
     def test_font_mock_rejects_uninitialized_text(self):
         h = Harness()

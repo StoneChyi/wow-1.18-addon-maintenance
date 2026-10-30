@@ -13,7 +13,7 @@
     "modified": 63
   },
   "addon_pages": 107,
-  "dated_records": 238,
+  "dated_records": 240,
   "addons": [
     {
       "addon": "!Libs",
@@ -1364,11 +1364,21 @@
       "note": "PluginHistory/Plugins/ExtraResourceBars.md",
       "purpose": "等待确认是否有个人修改",
       "history_group": "unchanged",
-      "latest_record_date": null,
-      "latest_record_title": "早期历史汇总（日期待确认）",
-      "latest_game_acceptance": "见早期记录",
-      "record_count": 0,
-      "records": []
+      "latest_record_date": "2026-10-30",
+      "latest_record_title": "pfUI内置兼容候选完成，独立版保留待验收",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 1,
+      "records": [
+        {
+          "id": "ExtraResourceBars-20261030-01",
+          "date": "2026-10-30",
+          "title": "pfUI内置兼容候选完成，独立版保留待验收",
+          "kind": "范围确认",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-ExtraResourceBars-20261030-01"
+        }
+      ]
     },
     {
       "addon": "EzPoison",
@@ -3061,10 +3071,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-30",
-      "latest_record_title": "修正独立资源条文字居中和资源类型颜色",
+      "latest_record_title": "内置ERB生命与资源条兼容试用，并统一玩家头像配色",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 23,
+      "record_count": 24,
       "records": [
+        {
+          "id": "pfUI-20261030-06",
+          "date": "2026-10-30",
+          "title": "内置ERB生命与资源条兼容试用，并统一玩家头像配色",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261030-06"
+        },
         {
           "id": "pfUI-20261030-05",
           "date": "2026-10-30",

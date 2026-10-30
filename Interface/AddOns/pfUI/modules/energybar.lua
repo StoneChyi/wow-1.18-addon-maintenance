@@ -98,30 +98,32 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     end
   end
 
-  -- Automatic colors belong to the resource, not the avatar theme. Prefer
-  -- the client's numeric power palette and retain explicit classic fallbacks.
-  local POWER_COLORS = {
-    [0] = { 0, 0, 1, 1 }, -- mana
-    [1] = { 1, 0, 0, 1 }, -- rage
-    [2] = { 1, 0.5, 0.25, 1 }, -- focus
-    [3] = { 1, 1, 0, 1 }, -- energy
-    [4] = { 0, 1, 1, 1 }, -- happiness
-  }
-
   local function PowerColor(powerType)
-    local fallback = POWER_COLORS[powerType] or POWER_COLORS[0]
-    local palette = ManaBarColor or PowerBarColor
-    local color = type(palette) == "table" and palette[powerType]
-    if type(color) ~= "table" then return fallback end
-    return {
-      math.max(0, math.min(1, Number(color.r, fallback[1]))),
-      math.max(0, math.min(1, Number(color.g, fallback[2]))),
-      math.max(0, math.min(1, Number(color.b, fallback[3]))), 1,
-    }
+    powerType = powerType or 0
+    local r, g, b, a = pfUI.api.GetPlayerResourceColor(powerType)
+    state.powerColors = state.powerColors or {}
+    local old = state.powerColors[powerType]
+    if old and old[1] == r and old[2] == g and old[3] == b and old[4] == a then return old end
+    local color = { r, g, b, a }
+    state.powerColors[powerType] = color
+    return color
   end
 
   local function PaintPower(powerType)
-    Paint(frame.fill, cfg.autoColor and PowerColor(powerType or 0) or cfg.color)
+    local color = cfg.autoColor and PowerColor(powerType) or cfg.color
+    local last = state.paintColor
+    if not last or last[1] ~= color[1] or last[2] ~= color[2]
+      or last[3] ~= color[3] or last[4] ~= color[4] or state.paintTexture ~= cfg.texture then
+      Paint(frame.fill, color)
+      state.paintColor, state.paintTexture = color, cfg.texture
+    end
+    local mana = PowerColor(0)
+    local lastMana = state.paintManaColor
+    if not lastMana or lastMana[1] ~= mana[1] or lastMana[2] ~= mana[2]
+      or lastMana[3] ~= mana[3] or lastMana[4] ~= mana[4] or state.manaTexture ~= cfg.texture then
+      Paint(frame.manaBar.fill, mana)
+      state.paintManaColor, state.manaTexture = mana, cfg.texture
+    end
   end
 
   local function TextAnchor(object, owner)
@@ -172,7 +174,6 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     TextAnchor(frame.text, frame)
     TextAnchor(frame.manaBar.text, frame.manaBar)
     PaintPower(state.powerType)
-    Paint(frame.manaBar.fill, PowerColor(0))
     Show(frame.text, cfg.showText)
     Show(frame.manaBar.text, cfg.showText)
     if not cfg.showTick then Show(frame.tick, false) end
@@ -301,6 +302,7 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     end
     state.initialized, state.powerType, state.maximum, state.value = true, powerType, maximum, value
     Show(frame, true)
+    PaintPower(powerType)
     local width = frame:GetWidth()
     SetWidth(frame.fill, width * state.displayed / maximum)
     local label = ValueText(value, maximum)

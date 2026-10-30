@@ -1289,6 +1289,25 @@ function pfUI.api.GetStringColor(colorstr)
   return unpack(color_cache[colorstr])
 end
 
+-- [ GetPlayerResourceColor ]
+-- Match the player's unit-frame selection exactly, including per-frame colors.
+-- This avoids a separate palette drifting away from the active avatar theme.
+function pfUI.api.GetPlayerResourceColor(powerType)
+  local colors = C and C.unitframes or {}
+  local player = pfUI.uf and pfUI.uf.player
+  local config = player and player.config or colors.player or {}
+  local key
+  if powerType == 0 then key = "manacolor"
+  elseif powerType == 1 then key = "ragecolor"
+  elseif powerType == 2 then key = "focuscolor"
+  elseif powerType == 3 then key = "energycolor" end
+  if not key then return 0.5, 0.5, 0.5, 1 end
+  local value = config.defcolor == "0" and config[key] or colors[key]
+  if type(value) ~= "string" then return 0.5, 0.5, 0.5, 1 end
+  local r, g, b, a = pfUI.api.GetStringColor(value)
+  return tonumber(r) or 0.5, tonumber(g) or 0.5, tonumber(b) or 0.5, tonumber(a) or 1
+end
+
 -- [ rgbhex ]
 -- Returns color format from color info
 -- 'r'          [table | number]  color table or r color component

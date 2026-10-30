@@ -1387,5 +1387,11 @@ pfUI_translation["zhCN"] = {
   ["Show Energy Tick Indicator"] = "显示回能指示器",
   ["Current / Maximum"] = "当前值 / 最大值",
   ["Keep Visible In Combat"] = "战斗中保持显示",
+  ["Health and Resource Bars"] = "生命与资源条",
+  ["Import Existing ExtraResourceBars Settings"] = "首次导入现用设置",
+  ["Enable Integrated Resource Bars Trial"] = "启用内置版本（试用）",
+  ["Match Player Frame Resource Colors"] = "资源颜色跟随玩家头像",
+  ["Edit Health and Resource Bars"] = "详细设置（兼容 /erb）",
+  ["Restore Standalone Resource Bars"] = "结束试用，还原独立版",
 }
 

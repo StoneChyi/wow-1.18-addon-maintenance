@@ -75,6 +75,8 @@
   <Include file="..\modules\combatlogfix.lua"/>
   <Include file="..\modules\energytick.lua"/>
   <Include file="..\modules\energybar.lua"/>
+  <Include file="..\modules\resourcebars.lua"/>
+  <Include file="..\modules\resourcebars_gui.lua"/>
   <Include file="..\modules\totems.lua"/>
   <Include file="..\modules\macrotweak.lua"/>
   <Include file="..\modules\turtle-wow.lua"/>
