@@ -98,26 +98,48 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     end
   end
 
-  local function PaintPower(powerType)
-    local color = cfg.color
-    if cfg.autoColor then
-      if powerType == 1 then color = cfg.rageColor
-      elseif powerType == 3 then color = cfg.energyColor
-      else color = cfg.manaColor end
-    end
-    Paint(frame.fill, color)
+  -- Automatic colors belong to the resource, not the avatar theme. Prefer
+  -- the client's numeric power palette and retain explicit classic fallbacks.
+  local POWER_COLORS = {
+    [0] = { 0, 0, 1, 1 }, -- mana
+    [1] = { 1, 0, 0, 1 }, -- rage
+    [2] = { 1, 0.5, 0.25, 1 }, -- focus
+    [3] = { 1, 1, 0, 1 }, -- energy
+    [4] = { 0, 1, 1, 1 }, -- happiness
+  }
+
+  local function PowerColor(powerType)
+    local fallback = POWER_COLORS[powerType] or POWER_COLORS[0]
+    local palette = ManaBarColor or PowerBarColor
+    local color = type(palette) == "table" and palette[powerType]
+    if type(color) ~= "table" then return fallback end
+    return {
+      math.max(0, math.min(1, Number(color.r, fallback[1]))),
+      math.max(0, math.min(1, Number(color.g, fallback[2]))),
+      math.max(0, math.min(1, Number(color.b, fallback[3]))), 1,
+    }
   end
 
-  local function TextAnchor(object, owner, shadow)
-    local dx = shadow and 0.5 or 0
-    local dy = shadow and -0.5 or 0
+  local function PaintPower(powerType)
+    Paint(frame.fill, cfg.autoColor and PowerColor(powerType or 0) or cfg.color)
+  end
+
+  local function TextAnchor(object, owner)
+    -- An explicit line box and MIDDLE alignment avoid inheriting template
+    -- baselines. Extra height prevents clipping when the font exceeds the bar.
+    object:SetWidth(math.max(1, owner:GetWidth() - 10))
+    object:SetHeight(math.max(owner:GetHeight(), cfg.fontSize + 4))
+    object:SetJustifyV("MIDDLE")
     object:ClearAllPoints()
     if cfg.textAlign == "left" then
-      object:SetPoint("LEFT", owner, "LEFT", 5 + dx, dy)
+      object:SetJustifyH("LEFT")
+      object:SetPoint("LEFT", owner, "LEFT", 5, 0)
     elseif cfg.textAlign == "right" then
-      object:SetPoint("RIGHT", owner, "RIGHT", -5 + dx, dy)
+      object:SetJustifyH("RIGHT")
+      object:SetPoint("RIGHT", owner, "RIGHT", -5, 0)
     else
-      object:SetPoint("CENTER", owner, "CENTER", dx, dy)
+      object:SetJustifyH("CENTER")
+      object:SetPoint("CENTER", owner, "CENTER", 0, 0)
     end
   end
 
@@ -144,22 +166,18 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     frame.bg:SetTexture(cfg.background[1], cfg.background[2], cfg.background[3], cfg.background[4])
     for i = 1, table.getn(frame.edges) do Show(frame.edges[i], cfg.border) end
     Font(frame.text, cfg.fontSize)
-    Font(frame.textshadow, cfg.fontSize)
     Font(frame.manaBar.text, math.max(6, cfg.fontSize - 2))
     frame.text:SetTextColor(cfg.textColor[1], cfg.textColor[2], cfg.textColor[3], cfg.textColor[4])
-    frame.textshadow:SetTextColor(0, 0, 0, cfg.textColor[4])
     frame.manaBar.text:SetTextColor(1, 1, 1, 1)
     TextAnchor(frame.text, frame)
-    TextAnchor(frame.textshadow, frame, true)
     TextAnchor(frame.manaBar.text, frame.manaBar)
     PaintPower(state.powerType)
-    Paint(frame.manaBar.fill, cfg.manaColor)
+    Paint(frame.manaBar.fill, PowerColor(0))
     Show(frame.text, cfg.showText)
-    Show(frame.textshadow, cfg.showText)
     Show(frame.manaBar.text, cfg.showText)
     if not cfg.showTick then Show(frame.tick, false) end
     if not cfg.druidMana then Show(frame.manaBar, false) end
-    frame.text.energyText, frame.textshadow.energyText, frame.manaBar.text.energyText = nil, nil, nil
+    frame.text.energyText, frame.manaBar.text.energyText = nil, nil
   end
 
   local function CreateBar()
@@ -172,7 +190,6 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     frame.bg:SetAllPoints(frame)
     frame.fill = frame:CreateTexture(nil, "ARTWORK")
     frame.fill:SetPoint("LEFT", frame, "LEFT", 0, 0)
-    frame.textshadow = frame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
     frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     frame.edges = {}
     for i = 1, 4 do
@@ -288,7 +305,6 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     SetWidth(frame.fill, width * state.displayed / maximum)
     local label = ValueText(value, maximum)
     SetText(frame.text, label)
-    SetText(frame.textshadow, label)
     Mana(delta, powerType, width)
 
     local preview = pfUI.unlock and pfUI.unlock:IsShown()
@@ -377,9 +393,6 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
     cfg.color = Color(settings.comboenergycolor, 0.8, 0.77, 0.33, 1)
     cfg.background = Color(settings.comboenergybgcolor, 0, 0, 0, 0.4)
     cfg.textColor = Color(settings.comboenergytextcolor, 1, 1, 1, 1)
-    cfg.manaColor = Color(settings.manacolor, 0.5, 0.5, 1, 1)
-    cfg.rageColor = Color(settings.ragecolor, 1, 0.5, 0.5, 1)
-    cfg.energyColor = Color(settings.energycolor, 1, 1, 0.5, 1)
     cfg.druidMana = settings.comboenergydruidmana == "1"
     cfg.manaHeight = math.max(2, Number(settings.comboenergydruidmanaheight, 6))
     cfg.isDruid = cfg.druidMana and Druid() or false

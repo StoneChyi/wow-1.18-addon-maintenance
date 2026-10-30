@@ -281,6 +281,61 @@ class Harness:
 
 
 class EnergyBar(unittest.TestCase):
+    def test_text_line_boxes_are_vertically_centered_at_all_alignments(self):
+        h = Harness(enabled=True, druid=True, config={"comboenergydruidmana": "1"})
+        for height in (6, 12, 18, 32):
+            for size in (8, 12, 20):
+                for align in ("left", "center", "right"):
+                    h.update(comboenergyheight=str(height), comboenergyfontsize=str(size),
+                             comboenergydruidmanaheight=str(height), comboenergytextalign=align)
+                    h.advance(.15)
+                    for text, owner in ((h.main_text(), h.frame),
+                                        (h.mana_frame().text, h.mana_frame())):
+                        self.assertEqual(text.justifyV, "MIDDLE")
+                        self.assertEqual(text.justifyH, align.upper())
+                        self.assertEqual(text.point[5], 0)
+                        self.assertTrue(h.lua.eval('function(a,b) return a==b end')(text.point[2], owner))
+                        self.assertAlmostEqual(text.GetWidth(text), owner.GetWidth(owner) - 10)
+                        self.assertGreaterEqual(text.GetHeight(text), max(height, size + 4))
+                        self.assertIsNotNone(text.font)
+                    self.assertIsNone(h.frame.textshadow, "duplicate half-pixel text shadow remains")
+        h.unchanged()
+
+    def test_automatic_resource_colors_ignore_the_avatar_pastel_theme(self):
+        h = Harness(enabled=True)
+        colors = {0: (0, 0, 1), 1: (1, 0, 0), 2: (1, .5, .25),
+                  3: (1, 1, 0), 4: (0, 1, 1)}
+        old_mana = h.eval("C.unitframes.manacolor")
+        for power, expected in colors.items():
+            h.execute(f"powerType={power};resource=40;maximum=100")
+            h.advance(.05)
+            self.assertEqual(tuple(h.fill().texture[i] for i in (1, 2, 3)), expected)
+            self.assertEqual(h.fill().texture[4], 1)
+        self.assertEqual(h.eval("C.unitframes.manacolor"), old_mana)
+        h.update(comboenergytexture="Media/Bar.tga")
+        for power, expected in colors.items():
+            h.execute(f"powerType={power}")
+            h.advance(.05)
+            self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3)), expected)
+        h.unchanged()
+
+    def test_native_palette_and_druid_mana_color_preserve_manual_main_color(self):
+        h = Harness(enabled=True, druid=True, config={"comboenergydruidmana": "1"})
+        h.execute("ManaBarColor={[0]={r=.125,g=.25,b=.875},[3]={r=.9,g=.8,b=.1}}")
+        h.update(comboenergytexture="Media/Bar.tga")
+        h.advance(.15)
+        self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3)), (.9, .8, .1))
+        self.assertEqual(tuple(h.mana_frame().fill.color[i] for i in (1, 2, 3)), (.125, .25, .875))
+        h.update(comboenergyautocolor="0", comboenergycolor="0.2,0.4,0.6,0.7")
+        h.advance(.15)
+        self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3, 4)), (.2, .4, .6, .7))
+        self.assertEqual(tuple(h.mana_frame().fill.color[i] for i in (1, 2, 3)), (.125, .25, .875))
+        h.execute("PowerBarColor=ManaBarColor;ManaBarColor=nil")
+        h.update(comboenergyautocolor="1")
+        h.advance(.15)
+        self.assertEqual(tuple(h.fill().color[i] for i in (1, 2, 3)), (.9, .8, .1))
+        h.unchanged()
+
     def test_font_mock_rejects_uninitialized_text(self):
         h = Harness()
         with self.assertRaises(LuaError):
