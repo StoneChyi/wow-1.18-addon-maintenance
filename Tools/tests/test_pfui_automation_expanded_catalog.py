@@ -145,7 +145,7 @@ local function inspect(name)
  return optionCount,readbacks
 end
 local entries=h:NavigationEntries(true)
-assert(#entries==52)
+assert(#entries==51)
 local totalOptions,totalReadbacks=0,0
 for _,entry in ipairs(entries) do
  assert(entry.name~='Repair' and entry.name~='Sell')
@@ -158,7 +158,7 @@ for id,module in pairs(Automaton.modules) do
 end
 assert(coveredCount==55)
 assert(totalOptions==388 and totalReadbacks==257,'original option/readback coverage changed')
-for _,id in ipairs({'Group','StrangerDecline','Invite','invall','Stand','ShaguStance'}) do assert(coveredModules[id],'missing composed member '..id) end
+for _,id in ipairs({'Group','StrangerDecline','Invite','invall','Stand','ShaguStance','ItemLinkEnUS','pfQuestSendLink'}) do assert(coveredModules[id],'missing composed member '..id) end
 -- Warm every shape, then alternate all actual modules through one row pool.
 local warm=created
 for pass=1,3 do
@@ -172,7 +172,7 @@ for _,name in ipairs({'Tooltip','ExpBar','InterPlayerLink'}) do
  pfUI.automationIntegrations[id]={managed=true,title=id,OpenSettings=function()opened[id]=true end}
 end
 local managed=h:NavigationEntries(true);local shortcuts=0
-assert(#managed==52,'native settings links disappeared from module navigation')
+assert(#managed==51,'native settings links disappeared from module navigation')
 for _,entry in ipairs(managed) do if entry.native then
  shortcuts=shortcuts+1
  assert(not h:ModuleOptions(entry.name).module,'native engine settings duplicated')

@@ -15,11 +15,12 @@ pfUI:RegisterModule("automation", "vanilla", function()
   }
   -- Composed pages retain each engine's identity, callbacks and saved data.
   local combinedPages = {
+    ItemLinkEnUS = { title = "英文链接", members = { "ItemLinkEnUS", "pfQuestSendLink" }, labels = { "英文物品链接", "英文任务链接" } },
     Stand = { title = "骑乘与姿态", members = { "Stand", "ShaguStance" }, labels = { "额外站立提示", "施法前姿态策略" } },
     Group = { title = "邀请处理", members = { "Group", "StrangerDecline" }, labels = { "好友与公会邀请", "陌生邀请与黑白名单" } },
     Invite = { title = "邀请玩家", members = { "Invite", "invall" }, labels = { "关键词邀请与名单", "附近聊天邀请" } },
   }
-  local pageAliases = { StrangerDecline = "Group", invall = "Invite", ShaguStance = "Stand" }
+  local pageAliases = { StrangerDecline = "Group", invall = "Invite", ShaguStance = "Stand", pfQuestSendLink = "ItemLinkEnUS" }
   local dailyRanks = {}
   for i, name in ipairs(dailyOrder) do dailyRanks[name] = i end
   local attempts, startup = 0, true
@@ -291,6 +292,9 @@ pfUI:RegisterModule("automation", "vanilla", function()
           set = function(value) C.global.autodismount = value and "1" or "0" end }
         if not pfUI.autoshift then options.nativeMissing = Description("pfUI 自动姿态组件未加载：上方开关保存后随该组件生效；下方独立模块仍按原开关运行。", -14) end
       end
+      if name == "ItemLinkEnUS" then
+        options.policy = Description("保留两组独立开关。聊天输入框打开时，Alt 左键插入英文物品链接，Ctrl 左键点击任务标题插入英文任务链接；同时按 Shift 或缺少所需数据时保留原点击行为。", -20)
+      end
       if self:IsPageHidden(name) then options.hidden = Description("此页面已从模块列表隐藏，可在管理页恢复显示。", -10) end
       for i, member in ipairs(page.members) do
         local id, module = member, Automaton.modules[member]
@@ -318,6 +322,31 @@ pfUI:RegisterModule("automation", "vanilla", function()
     if module.moduledesc and module.moduledesc ~= "" then args.__pfui_description = Description(module.moduledesc, -10) end
     if Automaton:IsModuleHidden(name) then
       args.__pfui_hidden = Description("此模块已从列表隐藏，可在管理页恢复显示。", -9)
+    end
+    if name == "CleanChat" then
+      C.chat = C.chat or {}; C.chat.global = C.chat.global or {}; C.chat.text = C.chat.text or {}
+      args.__pfui_policy = Description("pfUI 聊天组件加载且统一管理开启时，外观、频道前缀、滚轮和时间戳由 pfUI 管理；原工具箱相关配置保留供独立运行。下方关键词、高亮、特殊通报与点击邀请继续使用原规则。", -20)
+      args.__pfui_repeat = { type = "toggle", name = "pfUI 重复聊天过滤", order = -19,
+        get = function() return C.chat.global.repeatfilter == "1" end,
+        set = function(value) C.chat.global.repeatfilter = value and "1" or "0" end }
+      args.__pfui_interval = { type = "range", name = "重复消息过滤间隔（秒）", order = -18, min = 0, max = 300, step = 1,
+        get = function() return tonumber(C.chat.global.repeatfilterinterval) or 20 end,
+        set = function(value) C.chat.global.repeatfilterinterval = tostring(value) end }
+      args.__pfui_exclude = { type = "text", name = "不做重复过滤的频道（逗号分隔）", order = -17,
+        get = function() return C.chat.global.repeatfilterexclude or "" end,
+        set = function(value) C.chat.global.repeatfilterexclude = value end }
+      args.__pfui_time = { type = "toggle", name = "pfUI 聊天时间戳", order = -16,
+        get = function() return C.chat.text.time == "1" end,
+        set = function(value) C.chat.text.time = value and "1" or "0" end }
+      args.__pfui_reload = Description("原 pfUI 时间格式、外观在聊天设置中调整；若对应组件已禁用，需启用组件后重载。隐藏此页不会停用过滤。", -15)
+    elseif name == "ErrClear" then
+      args.__pfui_policy = Description("下方为按原规则选择性过滤。pfUI 全隐藏只关闭原生红字错误显示，不会关闭站立/姿态监听，也不等于屏蔽所有插件主动弹出的提醒。", -20)
+      args.__pfui_hide = { type = "toggle", name = "pfUI 隐藏原生错误提示（重载生效）", order = -19,
+        get = function() return C.global.errors_hide == "1" end,
+        set = function(value) C.global.errors_hide = value and "1" or "0"; if pfUI.gui then pfUI.gui.settingChanged = true end end }
+      args.__pfui_line = { type = "toggle", name = "pfUI 错误提示单行显示（重载生效）", order = -18,
+        get = function() return C.global.errors_limit == "1" end,
+        set = function(value) C.global.errors_limit = value and "1" or "0"; if pfUI.gui then pfUI.gui.settingChanged = true end end }
     end
     if name == "LootBOP" and C.loot then
       args.__pfui_solo = { type = "toggle", name = "pfUI 单人拾取与绑定确认", order = -4,

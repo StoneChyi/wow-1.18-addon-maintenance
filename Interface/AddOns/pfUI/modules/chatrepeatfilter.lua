@@ -2,7 +2,8 @@
 --（在聊天设置里配置，间隔单位为秒，
 -- 另有逗号分隔的永不过滤频道列表）
 pfUI:RegisterModule("chatrepeatfilter", "vanilla:tbc", function()
-  if C.chat.global.repeatfilter ~= "1" then return end
+  local service = {}
+  pfUI.chatRepeatFilter = service
 
   -- 需要做重复判定的聊天消息事件
   local filtered = {
@@ -42,6 +43,7 @@ pfUI:RegisterModule("chatrepeatfilter", "vanilla:tbc", function()
   -- 记录每条消息最后显示的时间
   local shown = {}
   local lastpurge = 0
+  local wasEnabled
   local player
 
   -- 永不过滤的频道，以小写名称的查找表形式保存
@@ -70,7 +72,7 @@ pfUI:RegisterModule("chatrepeatfilter", "vanilla:tbc", function()
     -- 不过滤没有发送者的消息和玩家自己发的消息，
     -- 这样自己重复发布的内容（如广告）依然可见
     if not player then player = UnitName("player") end
-    if not msg or not sender or sender == player then return false end
+    if type(msg) ~= "string" or type(sender) ~= "string" or sender == "" or sender == player then return false end
 
     -- 设置界面里的改动无需重载即可生效
     if excluded_raw ~= C.chat.global.repeatfilterexclude then
@@ -82,7 +84,7 @@ pfUI:RegisterModule("chatrepeatfilter", "vanilla:tbc", function()
     if channel and excluded[string.lower(channel)] then return false end
 
     local interval = tonumber(C.chat.global.repeatfilterinterval) or 20
-    if interval <= 0 then return false end
+    if interval ~= interval or interval <= 0 or interval == 1 / 0 then return false end
 
     local now = GetTime()
 
@@ -109,19 +111,38 @@ pfUI:RegisterModule("chatrepeatfilter", "vanilla:tbc", function()
     return false
   end
 
-  -- 钩住全局聊天处理器。它会为每个显示该事件的聊天窗口各调用
-  -- 一次（this 就是窗口），所以重复判定必须按窗口进行：
-  -- 重复消息在每个窗口都被吞掉，而首条消息在所有窗口正常显示
-  local original = ChatFrame_OnEvent
-  _G.ChatFrame_OnEvent = function(event)
-    -- 吞掉配置间隔内的重复消息
-    if filtered[event] then
-      local frameid = this and this.GetID and this:GetID() or 0
-      if IsRepeat(frameid, event, arg1, arg2, arg9) then
-        return
-      end
+  local function Enabled()
+    local enabled = C.chat.global.repeatfilter == "1"
+    if enabled ~= wasEnabled then shown = {}; lastpurge = 0; wasEnabled = enabled end
+    return enabled
+  end
+  local function Pack(...) return arg end
+  -- Lua 5.0 unpack has no start/end parameters; retain holes and trailing nils.
+  local function ReturnResult(values, index)
+    if index <= values.n then return values[index], ReturnResult(values, index + 1) end
+  end
+  local contexts = {}
+  -- Both the native wrapper and CleanChat enter here. Only the outer call
+  -- evaluates the original event; nested formatting cannot count it twice.
+  function service:Run(frame, kind, handler)
+    local key = frame or self
+    if contexts[key] then return handler(kind) end
+    if Enabled() and filtered[kind] then
+      local frameid = frame and frame.GetID and frame:GetID() or 0
+      if IsRepeat(tostring(frameid), kind, arg1, arg2, arg9) then return end
     end
-
-    original(event)
+    contexts[key] = true
+    local result = Pack(pcall(handler, kind))
+    contexts[key] = nil
+    if not result[1] then error(result[2]) end
+    return ReturnResult(result, 2)
+  end
+  -- One notification decision per real event, separate from each display frame.
+  function service:ShouldNotify(kind, msg, sender, channel)
+    return not (Enabled() and filtered[kind] and IsRepeat("notify", kind, msg, sender, channel))
+  end
+  local original = ChatFrame_OnEvent
+  _G.ChatFrame_OnEvent = function(kind)
+    return service:Run(this, kind, original)
   end
 end)

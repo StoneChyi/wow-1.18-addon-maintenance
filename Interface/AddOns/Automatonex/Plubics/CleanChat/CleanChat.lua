@@ -1,11 +1,10 @@
+local Automaton_CleanChat
 
 local PURGE_INTERVAL             = 60 * 5; -- every 5 minutes remove names which are timed out.
 local nextPurgeCheck             = GetTime() + PURGE_INTERVAL;
 --local Gratuity = AceLibrary("Gratuity-2.0")
 local loc                        = GetLocale()
-local whoTimestamp               = 0;
 local HC_LEVEL_RANGE             = 5
-local HCFSpam                    = ''
 local strsub                     = string.sub
 local RANDOM_ROLL_RESULT = "(.+)掷出(%d+)（(%d+)%-(%d+)）"
 local EVENTS_EMOTES              = {
@@ -79,6 +78,7 @@ local SERVER_RESTART_COOLDOWN = 30 -- 服务器重启弹窗冷却（秒），避
 local lastServerRestartPopup = 0
 
 local function ShouldShowPopup(message)
+    if Automaton_CleanChat and Automaton_CleanChat.renderPass then return false end
     local currentTime = GetTime()
     if message == lastPopupMessage and (currentTime - lastPopupTime) < POPUP_COOLDOWN then
         return false
@@ -114,7 +114,7 @@ local function CleanChat_GetChannelKey(event, channelName)
 end
 
 
-local Automaton_CleanChat = Automaton:NewModule("CleanChat")
+Automaton_CleanChat = Automaton:NewModule("CleanChat")
 Automaton_CleanChat.modulename = "聊天增强"
 Automaton_CleanChat.moduledesc = "聊天增强，包含很多实用的功能，可以单独开启关闭。"
 Automaton_CleanChat.options = {
@@ -527,25 +527,50 @@ function Automaton_CleanChat:OnInitialize()
   Automaton:SetDisabledAsDefault(self, "CleanChat")
   self:RegisterOptions(self.options)
   self:RegisterStaticPopups()  -- 注册「清除全部关键字」的二次确认弹窗
-  self:HideButtons()      --隐藏无用按钮
-  self:SetupPrefix();     --频道缩写
-  self:SetupMouseWheel(); --初始化鼠标滚轮
-  -- 应用字号范围设置
-  self:ApplyChatFontHeights()
-  --移除无效缓存
-  --self:CacheRemoveOlderEntries();
-  --self._AddMessage = ChatFrame1.AddMessage
 end
 
+-- Event notices run once per native event, independently of the number of chat windows.
+local noticeEvents = { "CHAT_MSG_SYSTEM", "CHAT_MSG_LOOT", "CHAT_MSG_HARDCORE", "CHAT_MSG_CHANNEL",
+  "CHAT_MSG_YELL", "CHAT_MSG_SAY", "CHAT_MSG_GUILD", "CHAT_MSG_WHISPER", "CHAT_MSG_PARTY", "CHAT_MSG_PARTY_LEADER" }
+function Automaton_CleanChat:SetChatOwner(owner)
+  if self.chatOwner == owner then return end
+  self:RestoreVisuals()
+  self.chatOwner = owner
+  if self.runtimeActive and not owner then self:ApplyVisuals() end
+end
 function Automaton_CleanChat:OnEnable()
+  if self.runtimeActive then return end
+  self.runtimeActive = true
   self:Hook("ChatFrame_OnEvent")
-  self:RegisterEvent("VARIABLES_LOADED", "OnEvent")  -- 监听变量加载事件，确保小退后重新应用
-  self:ApplyChatFontHeights()             -- 再次应用，确保生效
+  self:Hook("SetItemRef")
+  for i = 1, NUM_CHAT_WINDOWS do
+    local frame = getglobal("ChatFrame" .. i)
+    if frame then self:Hook(frame, "AddMessage") end
+  end
+  if not self.noticeFrame then
+    self.noticeFrame = CreateFrame("Frame")
+    self.noticeFrame:SetScript("OnEvent", function()
+      if self.runtimeActive then self:NotifyEvent(event, arg1, arg2, arg9) end
+    end)
+  end
+  for _, kind in ipairs(noticeEvents) do
+    local known = kind == "CHAT_MSG_CHANNEL"
+    for _, events in pairs(ChatTypeGroup or {}) do
+      for _, registered in pairs(events) do if registered == kind then known = true; break end end
+      if known then break end
+    end
+    if known then self.noticeFrame:RegisterEvent(kind) end
+  end
+  if pfUI and pfUI.chat and pfUI.chat.SyncAutomation then pfUI.chat:SyncAutomation() end
+  if not self.chatOwner then self:ApplyVisuals() end
+  self:RegisterEvent("VARIABLES_LOADED", "OnEvent")
 end
-
 function Automaton_CleanChat:OnDisable()
+  self.runtimeActive = nil
   self:UnhookAll()
   self:UnregisterAllEvents()
+  if self.noticeFrame then self.noticeFrame:UnregisterAllEvents() end
+  self:RestoreVisuals()
 end
 
 -- ===== 「清除全部关键字」二次确认弹窗 =====
@@ -606,7 +631,7 @@ end
 
 -- 新增：事件处理
 function Automaton_CleanChat:OnEvent(event, ...)
-  if event == "VARIABLES_LOADED" then
+  if self.runtimeActive and not self.chatOwner and event == "VARIABLES_LOADED" then
     self:ApplyChatFontHeights()
   end
 end
@@ -653,15 +678,19 @@ end
 
 -- ===== 新增：应用聊天字号范围 =====
 function Automaton_CleanChat:ApplyChatFontHeights(str)
+    if not self.runtimeActive or self.chatOwner then return end
     if not str then str = self.db.profile.chatFontHeightsString end
     local nums = {}
-    for num in string.gmatch(str, "[^,]+") do
+    for num in string.gfind(str, "[^,]+") do
         local n = tonumber(num)
         if n then table.insert(nums, n) end
     end
     -- 使用 table.getn 替代 # 避免解析错误
     if table.getn(nums) > 0 then
+        self.visuals = self.visuals or {}
+        if not self.visuals.fontCaptured then self.visuals.fontBefore, self.visuals.fontCaptured = CHAT_FONT_HEIGHTS, true end
         CHAT_FONT_HEIGHTS = nums
+        self.visuals.fontApplied = nums
     else
         self:Print("无效的字号列表，请用英文逗号分隔数字")
     end
@@ -679,24 +708,6 @@ function Automaton_CleanChat:HideButtons()
 end
 
 
---  keep channels between editbox use
-for _, v in pairs(
-  {
-    ChatTypeInfo.SAY,
-    ChatTypeInfo.EMOTE,
-    ChatTypeInfo.YELL,
-    ChatTypeInfo.PARTY,
-    ChatTypeInfo.GUILD,
-    ChatTypeInfo.OFFICER,
-    ChatTypeInfo.RAID,
-    ChatTypeInfo.RAID_WARNING,
-    ChatTypeInfo.BATTLEGROUND,
-    ChatTypeInfo.WHISPER,
-    ChatTypeInfo.CHANNEL
-  }
-) do
-  v.sticky = 1
-end
 local function CleanChat_UnlinkMessage(linkmessage)
   local message = linkmessage;
   local links = { "quest:", "item:", "spell:" }
@@ -757,163 +768,151 @@ end
 -- function ChatFrame_OnHyperlinkShow(link, text, button)
 -- return HookChatFrame_OnHyperlinkShow(link, text, button);
 -- end
-local HookSetItemRef = SetItemRef
-function SetItemRef(link, text, button)
-  if (string.sub(link, 1, 3) == "inv") then
-    InviteByName(string.sub(link, 5));
-  elseif (string.sub(link, 1, 3) == "ezc") then
-    EasyCopyText:SetText("");
-    local txt = gsub(gsub(strsub(link, 5), "/2", "|"), "/1", "/")
-    EasyCopyText:SetText(txt);
-    EasyCopy:Show();
-  else
-    HookSetItemRef(link, text, button);
+function Automaton_CleanChat:HandleLink(link, text, button)
+  if not self.runtimeActive or type(link) ~= "string" then return false end
+  if string.sub(link, 1, 4) == "inv:" then
+    local name = string.sub(link, 5)
+    if name ~= "" then InviteByName(name) end
+    return true
+  elseif string.sub(link, 1, 4) == "ezc:" then
+    local txt = gsub(gsub(string.sub(link, 5), "/2", "|"), "/1", "/")
+    local copy = self.chatOwner and self.chatOwner.urlcopy
+    if copy and type(copy.CopyText) == "function" then
+      copy.CopyText(txt)
+      return true
+    end
+    if EasyCopyText and EasyCopy then
+      EasyCopyText:SetFontObject(ChatFontNormal)
+      EasyCopyText:SetText(txt)
+      EasyCopy:Show()
+      return true
+    end
   end
+  return false
 end
-
---local HookChatFrame_OnEvent = ChatFrame_OnEvent
-function Automaton_CleanChat:ChatFrame_OnEvent(event)
-  --聊天关键字高亮shaguchat
-  this.CleanChat_UnitName = arg2 ~= "" and arg2;
-  this.event = event;
-
-  -- 服务器重启倒计时弹窗（无需开关，冷却内只弹一次避免刷屏）
-  -- 仅匹配系统消息 CHAT_MSG_SYSTEM；频道广播（如 [服务器] 频道）不弹，避免普通频道聊天误触发
-  if arg1 and event == "CHAT_MSG_SYSTEM" and string.find(arg1, "重启") then
-    local now = GetTime()
-    if (now - lastServerRestartPopup) >= SERVER_RESTART_COOLDOWN then
-      lastServerRestartPopup = now
-      UIErrorsFrame:AddMessage(arg1, 1.0, 0.2, 0.2, 1.0, 5.0) -- 红色，持续 5 秒
-      PlaySound("FriendJoinGame")
-    end
-  end
-
-  -- 特殊事件处理（添加到这里）
-  if event == "CHAT_MSG_SYSTEM" and arg1 then
-    local msg = arg1
-    
-    -- 副本重置相关处理
-    if (string.find(msg, "已被重置")) and (GetNumRaidMembers()>0 or GetNumPartyMembers()>0) then
-        SendChatMessage('副本可以进了！','PARTY')
-    end
-    
-    if (string.find(msg, "该副本中仍有玩家")) and (GetNumRaidMembers()>0 or GetNumPartyMembers()>0) then
-        SendChatMessage('正在重置副本，请尽快出本！','PARTY')
-    end
-  end
-  
-  -- 处理战利品消息
-  if event == "CHAT_MSG_LOOT" and arg1 then
-    local msg = arg1
-    self:ProcessLootMessage(msg)
-    arg1 = self:ChatMsgLootRoll(arg1)
-  end
-  
-  -- if arg1 and strfind(arg1,"你的.*被抵抗") then
-  --   Print(arg1..event)
-  -- end
-  -- if arg9 == "YELL" and arg1 then
-  -- Print(arg9..arg1) end
-  if (CHANNELE_MSG_EVENT[event] and arg2 and arg1 and not (arg9 and string.lower(arg9) == "lft")) then
-    if self:FilterKeyworld(arg1, arg2) then return end
-    local selectedChannel = self.db.profile.keywordChannel or "all"
-    if selectedChannel == "all" or CleanChat_GetChannelKey(event, arg9) == selectedChannel then
-        arg1 = self:HighlightText(arg1)
-    end
-    arg1 = self:SpellLink(arg1)
-    self:HighlightSelfText(arg1, arg2)
-  end
-  if (event == "CHAT_MSG_SYSTEM") then
-  arg1 = self:LFT(arg1)
-  arg1 = self:AuxFilter(arg1)
-  arg1 = self:ChatMsgSystemHCMsg(arg1)
-  arg1 = self:ChatMsgSystemRoll(arg1)  -- 确保这一行存在
-  arg1 = self:CharacterDisplaying(arg1)
-  -- 交易消息弹窗提醒（新增）
-  self:PopupTradeMessage(arg1)
-  if not arg1 then return end
+function Automaton_CleanChat:SetItemRef(link, text, button)
+  if not self.chatOwner and self:HandleLink(link, text, button) then return end
+  return self.hooks.SetItemRef(link, text, button)
 end
-  if (event == "CHAT_MSG_LOOT") then
-    arg1 = self:ChatMsgLootRoll(arg1)
-    --dprint(msg..this.event)
+local function Pack(...) return arg end
+local function ReturnResult(result)
+  if not result[1] then error(result[2]) end
+  local function ReturnFrom(index)
+    if index > result.n then return end
+    return result[index], ReturnFrom(index + 1)
   end
-  --
-  -- Hook AddMessage
-  if not this.CleanChat_AddMessage_Org then
-    this.CleanChat_AddMessage_Org = this.AddMessage;
-    this.AddMessage = CleanChat_AddMessage;
+  return ReturnFrom(2)
+end
+function Automaton_CleanChat:WithContext(frame, kind, message, speaker, channel, render, callback)
+  local oldThis, oldArg1, oldArg2, oldArg9 = this, arg1, arg2, arg9
+  local oldRender, oldEvent = self.renderPass, frame.event
+  local oldName, oldChannel, oldShort = frame.CleanChat_UnitName, frame.CleanChat_Channelname, frame.CleanChatShort_Channelname
+  this, arg1, arg2, arg9 = frame, message, speaker, channel
+  self.renderPass, frame.event = render, kind
+  frame.CleanChat_UnitName = speaker ~= "" and speaker
+  frame.CleanChat_Channelname, frame.CleanChatShort_Channelname = nil, nil
+  local result = Pack(pcall(callback))
+  this, arg1, arg2, arg9 = oldThis, oldArg1, oldArg2, oldArg9
+  self.renderPass, frame.event = oldRender, oldEvent
+  frame.CleanChat_UnitName, frame.CleanChat_Channelname, frame.CleanChatShort_Channelname = oldName, oldChannel, oldShort
+  return ReturnResult(result)
+end
+function Automaton_CleanChat:TransformEvent(kind, message, speaker, channel)
+  if type(message) ~= "string" then return message end
+  if CHANNELE_MSG_EVENT[kind] and speaker and not (channel and string.lower(channel) == "lft") then
+    if self:FilterKeyworld(message, speaker) then return nil end
+    local selected = self.db.profile.keywordChannel or "all"
+    if selected == "all" or CleanChat_GetChannelKey(kind, channel) == selected then message = self:HighlightText(message) end
+    message = self:SpellLink(message)
+    if not self.renderPass then self:HighlightSelfText(message, speaker) end
   end
-  --Save event data
-  --this.msg = arg1;
-
-  ---@type string|nil
-  local strippedChannelName
-  if event == "CHAT_MSG_HARDCORE" then
-    strippedChannelName = "Hardcore"
-    if HCFSpam == arg1 then --or FilterOut(arg1) then
-      return false
-    end
-    
-    -- 使用配置的硬核频道颜色
-    local hcHex = RGBToHex(self.db.profile.hcColour)
-    -- 正文里物品/任务链接、关键词高亮都自带 |r，会把后续文字重置回白色基础色；
-    -- 在每个 |r 后补回硬核色 (参考 pfUI 对密语的处理 chat.lua:811)
-    local body = string.gsub(arg1, "|r", "|r|cff" .. hcHex)
-    local msg = "|cff" .. hcHex .. body .. "|r"  -- 只对消息内容应用颜色
-    local output = "|cff" .. hcHex .. "[核] |Hplayer:" .. arg2 .. "|h[" .. arg2 .. "]|h " .. msg
-
-    if self.db.profile.onoff then
-      arg1 = nil
-      --HCFSpam = arg1
-      return false
-    end
-    if self.db.profile.HCFFrame == 1 then
-      ChatFrame1:AddMessage(output)
-    elseif self.db.profile.HCFFrame == 2 then
-      ChatFrame2:AddMessage(output)
-    elseif self.db.profile.HCFFrame == 3 then
-      ChatFrame3:AddMessage(output)
-    elseif self.db.profile.HCFFrame == 4 then
-      ChatFrame4:AddMessage(output)
-    elseif self.db.profile.HCFFrame == 5 then
-      ChatFrame5:AddMessage(output)
-    elseif self.db.profile.HCFFrame == 6 then
-      ChatFrame6:AddMessage(output)
-    elseif self.db.profile.HCFFrame == 7 then
-      ChatFrame7:AddMessage(output)
-    elseif self.db.profile.HCFFrame == 8 then
-      ChatFrame8:AddMessage(output)
-    elseif self.db.profile.HCFFrame == 9 then
-      ChatFrame9:AddMessage(output)
-    end
-    HCFSpam = arg1
-    return false
-  elseif arg9 and event ~= "CHAT_MSG_CHANNEL_NOTICE" then
-    local _, _, mat = string.find(arg9, "([%aé]*)");
-    strippedChannelName = --[[---@type string]] mat
-  end
-
-  if strippedChannelName ~= nil then
-    if CLEANCHAT_CHANNELS[strippedChannelName] then
-      this.CleanChat_Channelname = firstToUpper(strippedChannelName);
-      this.CleanChatShort_Channelname = CLEANCHAT_CHANNELS[strippedChannelName]
-    elseif arg9 and arg9 ~= "" then
-      this.CleanChat_Channelname = arg9;
+  if kind == "CHAT_MSG_SYSTEM" then
+    message = self:LFT(message)
+    message = self:AuxFilter(message)
+    message = self:ChatMsgSystemHCMsg(message)
+    message = self:ChatMsgSystemRoll(message)
+    message = self:CharacterDisplaying(message)
+    if not self.renderPass then self:PopupTradeMessage(message) end
+  elseif kind == "CHAT_MSG_LOOT" then message = self:ChatMsgLootRoll(message) end
+  return message
+end
+function Automaton_CleanChat:NotifyEvent(kind, message, speaker, channel)
+  if not self.runtimeActive or type(message) ~= "string" then return end
+  local subscribed
+  for i = 1, NUM_CHAT_WINDOWS do
+    local frame = getglobal("ChatFrame" .. i)
+    if frame then
+      if kind == "CHAT_MSG_CHANNEL" then
+        for index, name in pairs(frame.channelList or {}) do
+          if (type(name) == "string" and type(channel) == "string" and string.upper(name) == string.upper(channel))
+            or (type(arg7) == "number" and arg7 > 0 and frame.zoneChannelList and frame.zoneChannelList[index] == arg7) then subscribed = true; break end
+        end
+      else
+        -- 1.12 has no Frame:IsEventRegistered. Native message groups are public.
+        -- Turtle's HARDCORE group is registered in this same messageTypeList.
+        for _, group in pairs(frame.messageTypeList or {}) do
+          for _, registered in pairs(ChatTypeGroup and ChatTypeGroup[group] or {}) do
+            if registered == kind then subscribed = true; break end
+          end
+          if subscribed then break end
+        end
+      end
+      if subscribed then break end
     end
   end
-  if event == "WHO_LIST_UPDATE" then
-    whoTimestamp = GetTime();
+  if not subscribed then return end
+  local repeatFilter = pfUI and pfUI.chatRepeatFilter
+  if repeatFilter and repeatFilter.ShouldNotify and not repeatFilter:ShouldNotify(kind, message, speaker, channel) then return end
+  self.noticeContext = self.noticeContext or {}
+  return self:WithContext(self.noticeContext, kind, message, speaker, channel, false, function()
+    if kind == "CHAT_MSG_SYSTEM" then
+      local now = GetTime()
+      if string.find(message, "重启", 1, true) and now - lastServerRestartPopup >= SERVER_RESTART_COOLDOWN then
+        lastServerRestartPopup = now
+        UIErrorsFrame:AddMessage(message, 1, .2, .2, 1, 5)
+        PlaySound("FriendJoinGame")
+      end
+      if GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0 then
+        if string.find(message, "已被重置", 1, true) then SendChatMessage('副本可以进了！', 'PARTY') end
+        if string.find(message, "该副本中仍有玩家", 1, true) then SendChatMessage('正在重置副本，请尽快出本！', 'PARTY') end
+      end
+    elseif kind == "CHAT_MSG_LOOT" then self:ProcessLootMessage(message) end
+    local transformed = self:TransformEvent(kind, message, speaker, channel)
+    if not transformed then return end
+    if kind == "CHAT_MSG_WHISPER" and self.db.profile.whispersound then
+      PlaySoundFile([[interface\Addons\Automatonex\Sound\3.mp3]])
+    elseif kind == "CHAT_MSG_HARDCORE" and not self.db.profile.onoff then
+      local target = getglobal("ChatFrame" .. tostring(self.db.profile.HCFFrame))
+      if target then
+        local hex = RGBToHex(self.db.profile.hcColour)
+        local body = string.gsub(transformed, "|r", "|r|cff" .. hex)
+        target:AddMessage("|cff" .. hex .. "[核] |Hplayer:" .. (speaker or "") .. "|h[" .. (speaker or "") .. "]|h |cff" .. hex .. body .. "|r")
+      end
+    end
+  end)
+end
+function Automaton_CleanChat:ChatFrame_OnEvent(kind)
+  local repeatFilter = pfUI and pfUI.chatRepeatFilter
+  if repeatFilter and repeatFilter.Run then
+    return repeatFilter:Run(this, kind, function(ev) return self:ProcessChatFrameEvent(ev) end)
   end
-  -- Call original handler, if not a who response to our latest sendwho request
-  if event and not (event == "CHAT_MSG_SYSTEM"
-        and GetTime() - whoTimestamp < 3
-        and (string.find(arg1, CLEANCHAT_CHATPATTERN1) or string.find(arg1, CLEANCHAT_WHO_RESULTS_PATTERN))) then
-    --return self.hooks.ChatFrame_OnEvent(event);
-  end
-  if (event == "CHAT_MSG_WHISPER") and self.db.profile.whispersound then
-    PlaySoundFile([[interface\Addons\Automatonex\Sound\3.mp3]])
-  end
-  self.hooks.ChatFrame_OnEvent(event);
+  return self:ProcessChatFrameEvent(kind)
+end
+function Automaton_CleanChat:ProcessChatFrameEvent(kind)
+  if not self.runtimeActive or type(kind) ~= "string" or string.sub(kind, 1, 9) ~= "CHAT_MSG_" then return self.hooks.ChatFrame_OnEvent(kind) end
+  local frame, message, speaker, channel = this, arg1, arg2, arg9
+  return self:WithContext(frame, kind, message, speaker, channel, true, function()
+    arg1 = self:TransformEvent(kind, message, speaker, channel)
+    if arg1 == nil or kind == "CHAT_MSG_HARDCORE" then return end
+    if channel and channel ~= "" then
+      local _, _, stripped = string.find(channel, "([%aé]*)")
+      if stripped and CLEANCHAT_CHANNELS[stripped] then
+        frame.CleanChat_Channelname = firstToUpper(stripped)
+        frame.CleanChatShort_Channelname = CLEANCHAT_CHANNELS[stripped]
+      else frame.CleanChat_Channelname = channel end
+    end
+    return self.hooks.ChatFrame_OnEvent(kind)
+  end)
 end
 
 function Automaton_CleanChat:CharacterDisplaying(t)
@@ -945,12 +944,13 @@ function Automaton_CleanChat:HighlightSelfText(msg, unit)
       and unit and unit ~= ""
       and unit ~= playerName
       and not EVENTS_EMOTES[this.event]
-      and (string.find(msg, playerName)) --not perfect atm
+      and type(msg) == "string" and type(playerName) == "string" and (string.find(msg, playerName, 1, true)) --not perfect atm
   then
     -- 使用UIErrorsFrame显示弹窗，与关键字弹窗保持一致
     -- 高亮消息中的玩家名字
     local hexColor = RGBToHex(self.db.profile.highlightColour)
-    local highlightedMsg = string.gsub(msg, playerName, "|cff" .. hexColor .. playerName .. "|r")
+    local pattern = string.gsub(playerName, "([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+    local highlightedMsg = string.gsub(msg, pattern, function() return "|cff" .. hexColor .. playerName .. "|r" end)
     local displayMsg = "|cffff8800[提到我]|r |cffffdd00" .. unit .. "|r: " .. highlightedMsg
     
     -- 检查是否应该显示弹窗
@@ -968,93 +968,54 @@ end
 
 -- ========== 修改3：HighlightText 增加 nil 检查，跳过空关键字 ==========
 function Automaton_CleanChat:HighlightText(msg)
-  if self.db.profile.HighlightText and self.db.profile.THighlightText and table.getn(self.db.profile.THighlightText) > 0 then
-    -- 使用配置的高亮颜色
-    local hexColor = RGBToHex(self.db.profile.highlightColour)
-    local keywordColor = "|cff" .. hexColor
-    local endColor = "|r"
-    local foundKeyword = false
-    local originalMsg = msg
-
-    -- 提前将关键字列表转换为小写，同时过滤掉 nil 或空字符串
-    local lowerKeywords = {}
-    for i = 1, table.getn(self.db.profile.THighlightText) do
-      local keyword = self.db.profile.THighlightText[i]
-      if keyword and keyword ~= "" then
-        lowerKeywords[table.getn(lowerKeywords) + 1] = string.lower(keyword)
-      end
-    end
-    if table.getn(lowerKeywords) == 0 then return msg end  -- 没有有效关键字则直接返回
-
-    -- 提前将消息转换为小写
-    local lowerMsg = string.lower(msg)
-
-    local parts = {}
-    local currentIndex = 1
-
-    -- 遍历所有关键字
-    for i = 1, table.getn(lowerKeywords) do
-      local lowerScan = lowerKeywords[i]
-      local startIndex, endIndex = string.find(lowerMsg, lowerScan, currentIndex)
-      while startIndex do
-        -- 标记找到了关键字
-        foundKeyword = true
-        
-        -- 提取关键字之前的部分
-        local before = string.sub(msg, currentIndex, startIndex - 1)
-        -- 提取关键字部分
-        local keyword = string.sub(msg, startIndex, endIndex)
-
-        -- 添加关键字之前的部分和带颜色的关键字到 parts 表中
-        parts[table.getn(parts) + 1] = before
-        parts[table.getn(parts) + 1] = keywordColor .. keyword .. endColor
-
-        -- 更新当前索引
-        currentIndex = endIndex + 1
-
-        -- 继续查找消息中是否还有其他匹配的关键字
-        startIndex, endIndex = string.find(lowerMsg, lowerScan, currentIndex)
-      end
-    end
-
-    -- 添加最后一部分消息
-    parts[table.getn(parts) + 1] = string.sub(msg, currentIndex)
-
-    -- 使用 table.concat 组合所有部分
-    msg = table.concat(parts)
-
-    -- 在找到关键字时显示屏幕提示
-    if foundKeyword and self.db.profile.showpopup then
-      -- 创建更明显的弹窗消息
-      local speaker = arg2 or "未知"
-      local highlightedMsg = originalMsg
-      
-      -- 高亮关键字（使用过滤后的列表）
-      for i = 1, table.getn(lowerKeywords) do
-        local lowerScan = lowerKeywords[i]
-        local startPos, endPos = string.find(string.lower(highlightedMsg), lowerScan)
-        while startPos do
-          local keyword = string.sub(highlightedMsg, startPos, endPos)
-          highlightedMsg = string.sub(highlightedMsg, 1, startPos-1) .. 
-                          keywordColor .. keyword .. "|r" .. 
-                          string.sub(highlightedMsg, endPos+1)
-          
-          -- 调整后续查找的起始位置，考虑添加的颜色代码长度
-          local offset = string.len(keywordColor) + string.len("|r")
-          startPos, endPos = string.find(string.lower(highlightedMsg), lowerScan, endPos + offset)
+  if type(msg) ~= "string" or not self.db.profile.HighlightText then return msg end
+  local keywords = self.db.profile.THighlightText or {}
+  local color = "|cff" .. RGBToHex(self.db.profile.highlightColour)
+  local found
+  local function HighlightPlain(text)
+    local lower, position, parts = string.lower(text), 1, {}
+    while position <= string.len(text) do
+      local first, last
+      for _, keyword in ipairs(keywords) do
+        if type(keyword) == "string" and keyword ~= "" then
+          local ok, begin, finish = pcall(string.find, lower, string.lower(keyword), position)
+          -- Preserve valid historical Lua patterns; malformed/empty matches cannot hang chat.
+          if ok and begin and finish >= begin and (not first or begin < first or (begin == first and finish > last)) then
+            first, last = begin, finish
+          end
         end
       end
-      
-      -- 使用更显眼的格式显示在屏幕中央
-      local fullMessage = "|cffff8800[关键字提醒]|r |cffffdd00" .. speaker .. "|r: " .. highlightedMsg
-      
-      -- 检查是否应该显示弹窗
-      if ShouldShowPopup(fullMessage) then
-          UIErrorsFrame:AddMessage(fullMessage, 1.0, 0.8, 0.0, 1.0, 5.0) -- 橙色，持续5秒
-          
-          -- 可选：添加音效提醒
-          PlaySound("FriendJoinGame");
-      end
+      if not first then table.insert(parts, string.sub(text, position)); break end
+      found = true
+      table.insert(parts, string.sub(text, position, first - 1))
+      table.insert(parts, color .. string.sub(text, first, last) .. "|r")
+      position = last + 1
+    end
+    return table.concat(parts)
+  end
+  local parts, position = {}, 1
+  while position <= string.len(msg) do
+    local pipe = string.find(msg, "|", position, true)
+    if not pipe then table.insert(parts, HighlightPlain(string.sub(msg, position))); break end
+    table.insert(parts, HighlightPlain(string.sub(msg, position, pipe - 1)))
+    local token, finish = string.sub(msg, pipe, pipe + 1), nil
+    if token == "|H" then
+      local close = string.find(msg, "|h", pipe + 2, true)
+      finish = close and close + 1 or string.len(msg)
+    elseif token == "|c" or token == "|C" then
+      local hex = string.sub(msg, pipe + 2, pipe + 9)
+      if string.len(hex) == 8 and not string.find(hex, "[^%x]") then finish = pipe + 9 end
+    elseif token == "||" or token == "|r" or token == "|R" or token == "|h" then finish = pipe + 1 end
+    finish = finish or pipe
+    table.insert(parts, string.sub(msg, pipe, finish))
+    position = finish + 1
+  end
+  msg = table.concat(parts)
+  if found and self.db.profile.showpopup and not self.renderPass then
+    local fullMessage = "|cffff8800[关键字提醒]|r |cffffdd00" .. (arg2 or "未知") .. "|r: " .. msg
+    if ShouldShowPopup(fullMessage) then
+      UIErrorsFrame:AddMessage(fullMessage, 1, .8, 0, 1, 5)
+      PlaySound("FriendJoinGame")
     end
   end
   return msg
@@ -1062,6 +1023,8 @@ end
 
 -- ========== 修改4：FilterKeyworld 增加 nil 检查 ==========
 function Automaton_CleanChat:FilterKeyworld(msg, unit)
+  if type(msg) ~= "string" then return false end
+  unit = unit or ""
   -- 修改：自身发出的信息不受屏蔽关键字影响
   if unit == playerName then
     return false
@@ -1073,8 +1036,9 @@ function Automaton_CleanChat:FilterKeyworld(msg, unit)
       texts = unit .. msg
     end
     for _, text in pairs(Automaton_CleanChat.db.profile.TFilterKeyworld) do
-      if text and text ~= "" and strfind(texts, text) then
-        return true
+      if type(text) == "string" and text ~= "" then
+        local ok, first = pcall(string.find, texts, text)
+        if ok and first then return true end
       end
     end
   end
@@ -1088,7 +1052,7 @@ function Automaton_CleanChat:ChatMsgSystemRoll(t)
     return t
   end
   
-  local who, roll, from, to = string.match(t, RANDOM_ROLL_RESULT)
+  local _, _, who, roll, from, to = string.find(t, RANDOM_ROLL_RESULT)
   if who == playerName then
     -- 使用配置的ROLL点颜色
     local rollHex = RGBToHex(self.db.profile.rollColour)
@@ -1117,7 +1081,7 @@ function Automaton_CleanChat:ProcessLootMessage(msg)
   -- 检查用户配置的物品列表
   if self.db.profile.lootCelebrationItems and table.getn(self.db.profile.lootCelebrationItems) > 0 then
     -- 从消息中提取实际拾取的物品名（物品链接 [名字] 中的完整名字）
-    local lootedName = string.match(msg, "%[(.-)%]")
+    local _, _, lootedName = string.find(msg, "%[(.-)%]")
 
     -- 检查是否是自己拾取
     if string.find(msg, "你获得了物品：", 1, true) or string.find(msg, "你得到了物品：", 1, true) then
@@ -1134,9 +1098,10 @@ function Automaton_CleanChat:ProcessLootMessage(msg)
     end
 
     -- 处理队友拾取（可选）
-    local playerNameFound, itemLink = string.match(msg, "(.+)拾取了物品：(.+)")
+    local _, _, playerNameFound, itemLink = string.find(msg, "(.+)拾取了物品：(.+)")
     if playerNameFound and itemLink and playerNameFound ~= UnitName("player") then
-      local mateLootedName = string.match(itemLink, "%[(.-)%]") or itemLink
+      local _, _, mateLootedName = string.find(itemLink, "%[(.-)%]")
+      mateLootedName = mateLootedName or itemLink
       for _, item in ipairs(self.db.profile.lootCelebrationItems) do
         if mateLootedName == item then
           DEFAULT_CHAT_FRAME:AddMessage(format("|cffffcc00[恭喜]|r |cff00ffff%s|r 获得了稀有物品: |cff00ff00%s|r！",
@@ -1200,7 +1165,7 @@ function Automaton_CleanChat:PopupTradeMessage(msg)
     if not self.db.profile.tradePopup then return end
     -- 匹配中文交易消息格式：玩家A 将 物品 交易给了 玩家B。
     local pattern = "(.+) 将 (.+) 交易给了 (.+)。"
-    local playerA, item, playerB = string.match(msg, pattern)
+    local _, _, playerA, item, playerB = string.find(msg, pattern)
     if playerA and item and playerB then
         -- 获取高亮颜色（十六进制）
         local hexColor = RGBToHex(self.db.profile.highlightColour)
@@ -1328,9 +1293,12 @@ end
 function Automaton_CleanChat:AuxFilter(t)
   local ahitem
   for _, str in pairs({ ERR_AUCTION_SOLD_S, ERR_AUCTION_EXPIRED_S, ERR_AUCTION_WON_S }) do
-    ahitem = string.match(t, str)
+    local pattern = string.gsub(str, "([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+    pattern = string.gsub(pattern, "%%%%s", "(.+)")
+    local _, _, item = string.find(t, "^" .. pattern .. "$")
+    ahitem = item
     if ahitem then
-      PlaySound("AuctionWindowOpen")
+      if not self.renderPass then PlaySound("AuctionWindowOpen") end
       return format(str, (Automaton and Automaton.ItemInfoLib and Automaton.ItemInfoLib.HexItemName and Automaton.ItemInfoLib:HexItemName(ahitem) or ahitem))
     end
   end
@@ -1412,36 +1380,37 @@ local function IsCombatLogEvent(event)
 end
 
 -- 无用消息屏蔽（使用修正后的 filter 变量）
-local function MessageFilter(msg)
-  for _, v in pairs(filter) do
-    if string.find(msg, v) then
-      EmptyReturn()
-      return false
-    end
+function Automaton_CleanChat:ShouldFilterDisplay(msg, frame)
+  if frame and (frame.pfCombatLog or IsCombatLogEvent(frame.event)) then return false end
+  if not self.runtimeActive or type(msg) ~= "string" then return false end
+  for _, value in pairs(filter) do
+    if string.find(msg, value, 1, true) then return true end
   end
-  return true
+  return false
+end
+local function MessageFilter(msg, frame)
+  return not Automaton_CleanChat:ShouldFilterDisplay(msg, frame)
 end
 
 -- ========== 修正2（续）：重写 CleanChat_AddMessage ==========
-function CleanChat_AddMessage(this, msg, r, g, b, id)
+function CleanChat_AddMessage(this, msg, r, g, b, id, extra)
+    local original = Automaton_CleanChat.hooks[this].AddMessage
     -- 1. 战斗日志事件：直接调用原始方法，跳过所有增强功能
-    if IsCombatLogEvent(this.event) then
+    if this.pfCombatLog or IsCombatLogEvent(this.event) then
         EmptyReturn()  -- 清理临时变量
-        if this.CleanChat_AddMessage_Org then
-            this:CleanChat_AddMessage_Org(msg, r, g, b, id)
-        end
-        return
+        return original(this, msg, r, g, b, id, extra)
     end
 
     -- 2. 非战斗日志事件，执行原有增强逻辑
-    if MessageFilter(msg) then
+    if not MessageFilter(msg, this) then return end
+    if true then
         local channelName = this.CleanChat_Channelname
         if channelName == nil then
             channelName = ""
         end
 
         -- 频道缩写
-        if msg and channelName ~= "" then
+        if not Automaton_CleanChat.chatOwner and msg and channelName ~= "" then
             if channelName == "Hardcore" then
                 -- 使用配置的硬核频道颜色
                 local hcHex = RGBToHex(Automaton_CleanChat.db.profile.hcColour)
@@ -1466,8 +1435,10 @@ function CleanChat_AddMessage(this, msg, r, g, b, id)
             if CleanChat_INVITEFOUND == nil then msg = string.gsub(msg, "%s+(INV)(.?)", CleanChat_ClickInvite, 1); end
             if CleanChat_INVITEFOUND == nil and CleanChat_CUSTOM_INV ~= nil then
                 for i = 0, table.getn(CleanChat_CUSTOM_INV) do
-                    if CleanChat_INVITEFOUND == nil then
-                        msg = string.gsub(msg, "%s+(" .. CleanChat_CUSTOM_INV[i] .. ")(.?)", CleanChat_ClickInvite, 1);
+                    local keyword = CleanChat_CUSTOM_INV[i]
+                    if CleanChat_INVITEFOUND == nil and type(keyword) == "string" and keyword ~= "" then
+                        local ok, changed = pcall(string.gsub, msg, "%s+(" .. keyword .. ")(.?)", CleanChat_ClickInvite, 1)
+                        if ok then msg = changed end
                     end
                 end
             end
@@ -1482,17 +1453,73 @@ function CleanChat_AddMessage(this, msg, r, g, b, id)
             nextPurgeCheck = GetTime() + PURGE_INTERVAL;
         end
 
-        msg = CleanChat_ChatAddTime(msg)
+        if not Automaton_CleanChat.chatOwner then msg = CleanChat_ChatAddTime(msg) end
     end
 
     -- 3. 最终调用原始方法显示消息
-    if this.CleanChat_AddMessage_Org then
-        this:CleanChat_AddMessage_Org(msg, r, g, b, id);
-    end
-    EmptyReturn()
+    return original(this, msg, r, g, b, id, extra)
 end
 
 -- 添加一个打印函数（如果不存在）
 function Automaton_CleanChat:Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage("|cff33ffcc[CleanChat]|r " .. msg)
+end
+
+-- Restore only values still owned by this module; later wrappers are not removed.
+function Automaton_CleanChat:ApplyVisuals()
+  if not self.runtimeActive or self.chatOwner then return end
+  if self.visuals and self.visuals.applied then return end
+  self.visuals = self.visuals or {}
+  local v = self.visuals
+  v.applied, v.prefix, v.sticky, v.wheel, v.buttons = true, {}, {}, {}, {}
+  local keys = { "CHAT_RAID_GET", "CHAT_PARTY_GET", "CHAT_OFFICER_GET", "CHAT_GUILD_GET", "CHAT_RAID_LEADER_GET",
+    "CHAT_RAID_WARNING_GET", "CHAT_BATTLEGROUND_GET", "CHAT_BATTLEGROUND_LEADER_GET" }
+  for _, key in ipairs(keys) do v.prefix[key] = { before = _G[key] } end
+  self:SetupPrefix()
+  for _, key in ipairs(keys) do v.prefix[key].applied = _G[key] end
+  for _, name in ipairs({ "SAY", "EMOTE", "YELL", "PARTY", "GUILD", "OFFICER", "RAID", "RAID_WARNING", "BATTLEGROUND", "WHISPER", "CHANNEL" }) do
+    local info = ChatTypeInfo[name]
+    if info then v.sticky[name] = { before = info.sticky }; info.sticky = 1 end
+  end
+  for i = 1, NUM_CHAT_WINDOWS do
+    local frame = getglobal("ChatFrame" .. i)
+    if frame then
+      self.wheelHooks = self.wheelHooks or {}
+      local state = self.wheelHooks[frame]
+      if not state then
+        local before = frame:GetScript("OnMouseWheel")
+        state = { before = before }
+        state.applied = function()
+          if self.runtimeActive and not self.chatOwner then return self:OnMouseWheel() end
+          if before then return before() end
+        end
+        self.wheelHooks[frame] = state
+      end
+      v.wheel[frame] = state
+      if frame:GetScript("OnMouseWheel") == state.before then frame:SetScript("OnMouseWheel", state.applied) end
+      frame:EnableMouseWheel(true)
+    end
+    for _, suffix in ipairs({ "DownButton", "UpButton" }) do
+      local button = getglobal("ChatFrame" .. i .. suffix)
+      if button then v.buttons[button] = button:IsShown() and true or false; button:Hide() end
+    end
+  end
+  self:ApplyChatFontHeights()
+end
+function Automaton_CleanChat:RestoreVisuals()
+  local v = self.visuals
+  if not v then return end
+  for key, state in pairs(v.prefix or {}) do if _G[key] == state.applied then _G[key] = state.before end end
+  for name, state in pairs(v.sticky or {}) do if ChatTypeInfo[name].sticky == 1 then ChatTypeInfo[name].sticky = state.before end end
+  for frame, state in pairs(v.wheel or {}) do if frame:GetScript("OnMouseWheel") == state.applied then frame:SetScript("OnMouseWheel", state.before) end end
+  if not (pfUI and pfUI.chat) then
+    for button, shown in pairs(v.buttons or {}) do if shown and not button:IsShown() then button:Show() end end
+  end
+  if v.fontCaptured and CHAT_FONT_HEIGHTS == v.fontApplied then CHAT_FONT_HEIGHTS = v.fontBefore end
+  self.visuals = nil
+end
+function Automaton_CleanChat:AddMessage(frame, message, r, g, b, id, extra)
+  local original = self.hooks[frame].AddMessage
+  if not self.runtimeActive or type(message) ~= "string" then return original(frame, message, r, g, b, id, extra) end
+  return CleanChat_AddMessage(frame, message, r, g, b, id, extra)
 end

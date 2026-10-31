@@ -1,4 +1,9 @@
 pfUI:RegisterModule("chat", "vanilla:tbc", function ()
+  -- Release prior standalone styling before native chat applies its own values.
+  local cleanBeforeChat = Automaton and Automaton.modules and Automaton.modules.CleanChat
+  if (not C.automation or C.automation.enabled ~= "0") and cleanBeforeChat and cleanBeforeChat.RestoreVisuals then
+    cleanBeforeChat:RestoreVisuals()
+  end
   -- 确保配置项存在
   C.chat = C.chat or {}
   C.chat.text = C.chat.text or {}
@@ -407,6 +412,8 @@ pfUI:RegisterModule("chat", "vanilla:tbc", function ()
   end
 
   function _G.SetItemRef(link, text, button)
+    local clean = Automaton and Automaton.modules and Automaton.modules.CleanChat
+    if clean and clean.chatOwner == pfUI.chat and clean.HandleLink and clean:HandleLink(link, text, button) then return end
     if pfUI.chatPlayerLinks:Handle(link, text, button) then return end
     if (strsub(link, 1, 3) == "url") then
       if string.len(link) > 4 and string.sub(link,1,4) == "url:" then
@@ -414,7 +421,7 @@ pfUI:RegisterModule("chat", "vanilla:tbc", function ()
       end
       return
     end
-    pfUI.chat.urlcopy.SetItemRef(link, text, button)
+    return pfUI.chat.urlcopy.SetItemRef(link, text, button)
   end
 
   pfUI.chat.right = CreateFrame("Frame", "pfChatRight", UIParent)
@@ -1051,8 +1058,18 @@ pfUI:RegisterModule("chat", "vanilla:tbc", function ()
     ["世界频道"] = "世界"
   }
 
+  local function UseNativeTimestamp(frame)
+    if C.chat.text.time ~= "1" then return false end
+    if frame.pfCombatLog then return true end
+    local clean = Automaton and Automaton.modules and Automaton.modules.CleanChat
+    return not (clean and clean.runtimeActive and not clean.chatOwner and clean.db
+      and clean.db.profile and clean.db.profile.ShowChatTime)
+  end
   local function AddMessage(frame, text, a1, a2, a3, a4, a5)
     if not text then return end
+    -- Filter before native history too, whichever addon installed its wrapper first.
+    local clean = Automaton and Automaton.modules and Automaton.modules.CleanChat
+    if clean and clean.ShouldFilterDisplay and clean:ShouldFilterDisplay(text, frame) then return end
 
     -- 自动 /who 静默拦截：仅在「自动查询进行中(pending)」或「刚收到响应的 1 秒尾巴
     -- (silentTail)」内吞掉 /who 系统消息，避免进入聊天框。手动 /who 查询从不置 pending，
@@ -1105,7 +1122,7 @@ pfUI:RegisterModule("chat", "vanilla:tbc", function ()
     -- skip chat parsing on combat log
     if frame.pfCombatLog then
       -- 战斗记录同样加时间戳（与普通聊天共用同一配置/格式）
-      if C.chat.text.time == "1" then
+      if UseNativeTimestamp(frame) then
         text = timecolorhex .. tleft .. date(C.chat.text.timeformat) .. tright .. "|r " .. text
       end
       return frame:HookAddMessage(text, a1, a2, a3, a4, a5)
@@ -1242,7 +1259,7 @@ pfUI:RegisterModule("chat", "vanilla:tbc", function ()
     end
 
     -- show timestamp in chat
-    if C.chat.text.time == "1" then
+    if UseNativeTimestamp(frame) then
       text = timecolorhex .. tleft .. date(C.chat.text.timeformat) .. tright .. "|r " .. text
     end
 
@@ -1284,6 +1301,18 @@ pfUI:RegisterModule("chat", "vanilla:tbc", function ()
       _G["ChatFrame"..i].AddMessage = AddMessage
     end
   end
+
+  -- CleanChat contributes filters and its own links; native chat owns layout.
+  function pfUI.chat:SyncAutomation(managed)
+    if managed ~= nil then self.automationManaged = managed end
+    if self.automationManaged == nil then self.automationManaged = not C.automation or C.automation.enabled ~= "0" end
+    local clean = Automaton and Automaton.modules and Automaton.modules.CleanChat
+    if clean and clean.SetChatOwner then clean:SetChatOwner(self.automationManaged and self or nil) end
+    return true
+  end
+  pfUI.automationIntegrations = pfUI.automationIntegrations or {}
+  pfUI.automationIntegrations.CleanChat = { Sync = function(_, managed) return pfUI.chat:SyncAutomation(managed) end }
+  pfUI.chat:SyncAutomation()
 
   -- Player clicks share the URL dispatcher above; no second SetItemRef hook.
 

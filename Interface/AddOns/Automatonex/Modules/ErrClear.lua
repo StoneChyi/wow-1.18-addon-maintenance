@@ -22,7 +22,7 @@ Automaton_ErrClear.options = {
 			add = {
 				type = "text",
 				name = "添加错误",
-				desc = "添加需要屏蔽的错误文本（精确匹配，区分大小写）",
+				desc = "添加需要屏蔽的错误文本（保留原 Lua 模式子串匹配，区分大小写；无效模式按字面匹配）",
 				order = 1,
 				usage = "<错误文本>",
 				get = false,
@@ -96,32 +96,49 @@ function Automaton_ErrClear:OnInitialize()
 end
 
 function Automaton_ErrClear:OnEnable()
+	if self.runtimeActive then return end
 	self:Hook(UIErrorsFrame, "AddMessage")
+	self.runtimeActive = true
 end
 
 function Automaton_ErrClear:OnDisable()
+	self.runtimeActive = nil
 	self:UnregisterAllEvents()
+	self:UnhookAll()
 end
 
 ------------------------------
 --      Error Filter        --
 ------------------------------
 
-function Automaton_ErrClear:AddMessage(f, message, a1, a2, a3, a4)
-	-- 先检查内置默认列表
-	for _, v in pairs(defaultErrList) do
-		if strfind(message, v) then
-			return  -- 屏蔽该错误
+-- Keep existing Lua-pattern substring rules. Malformed saved patterns are
+-- treated literally without changing their stored text or aborting display.
+local function Matches(message, rule)
+	if type(rule) ~= "string" then return false end
+	local ok, found = pcall(string.find, message, rule)
+	if ok then return found ~= nil end
+	return string.find(message, rule, 1, true) ~= nil
+end
+
+function Automaton_ErrClear:ShouldFilter(message)
+	if not self.runtimeActive or type(message) ~= "string" then return false end
+	for _, rule in pairs(defaultErrList) do
+		if Matches(message, rule) then return true end
+	end
+	local custom = self.db and self.db.char and self.db.char.customErrors
+	if type(custom) == "table" then
+		for _, rule in pairs(custom) do
+			if Matches(message, rule) then return true end
 		end
 	end
-	-- 再检查用户自定义列表
-	for _, v in pairs(self.db.char.customErrors) do
-		if strfind(message, v) then
-			return
-		end
-	end
-	-- 未匹配任何规则，正常显示
-	self.hooks[UIErrorsFrame].AddMessage(f, message, a1, a2, a3, a4)
+	return false
+end
+
+-- Match AceHook's legacy twenty-argument contract, including hold-time/extra
+-- arguments and all original return values. Never unregister gameplay events.
+function Automaton_ErrClear:AddMessage(f, message, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18)
+	if self:ShouldFilter(message) then return end
+	return self.hooks[UIErrorsFrame].AddMessage(f, message, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18)
 end
 
 ------------------------------
@@ -129,7 +146,7 @@ end
 ------------------------------
 
 function Automaton_ErrClear:NewError(errorText)
-	if not errorText or errorText == "" then
+	if type(errorText) ~= "string" or errorText == "" then
 		self:Print("错误文本不能为空")
 		return
 	end
@@ -138,6 +155,10 @@ function Automaton_ErrClear:NewError(errorText)
 end
 
 function Automaton_ErrClear:RemoveError(errorText)
+	if type(errorText) ~= "string" or errorText == "" then
+		self:Print("错误文本不能为空")
+		return
+	end
 	for k, v in pairs(self.db.char.customErrors) do
 		if v == errorText then
 			table.remove(self.db.char.customErrors, k)
@@ -155,7 +176,7 @@ function Automaton_ErrClear:ListErrors()
 	else
 		self:Print("当前自定义错误列表：")
 		for i, v in ipairs(self.db.char.customErrors) do
-			self:Print(string.format("%d. %s", i, v))
+			self:Print(string.format("%d. %s", i, tostring(v)))
 		end
 	end
 end

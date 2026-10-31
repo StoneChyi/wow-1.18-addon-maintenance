@@ -864,6 +864,9 @@ pfUI:RegisterModule("loot", "vanilla:tbc", function ()
     frame:SetPoint("TOP", pfUI.loot, "TOP", 4, (-border*2+22)-(id*22))
 
     frame:SetScript("OnClick", function()
+      local english = Automaton and Automaton.modules and Automaton.modules.ItemLinkEnUS
+      if english and english.WantsLink and english:WantsLink(arg1)
+        and english:InsertEnglish(GetLootSlotLink(this:GetID())) then return end
       if IsControlKeyDown() then
         DressUpItemLink(GetLootSlotLink(this:GetID()))
       elseif IsShiftKeyDown() then
