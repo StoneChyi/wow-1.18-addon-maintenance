@@ -87,9 +87,10 @@ do
     this = state.parent
     local oldDynamic = this.automationDynamic
     this.automationDynamic = true
-    local row = pfUI.gui.CreateConfig(function() end, "", { value = "" }, "value", widget, widget == "button" and function() end or {})
+    local ok, row = pcall(pfUI.gui.CreateConfig, function() end, "", { value = "" }, "value", widget, widget == "button" and function() end or {})
     this.automationDynamic = oldDynamic
     this = prior
+    if not ok then error(row) end
     row.state, row.widget = state, widget
     row:SetScript("OnEnter", function() Tooltip(row) end)
     row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
@@ -202,13 +203,14 @@ do
       row.caption:SetPoint("LEFT", row, "LEFT", 3 + depth*8, 0)
       row.caption:SetJustifyV("MIDDLE")
       row.caption:SetWidth(math.max(40,width - (widget == "dropdown" and 190 or widget == "checkbox" and 30 or widget == "header" and 10 or 120) - depth*8))
+      row.caption:SetHeight(0)
       row.caption:SetText(Caption(opt,key))
       row.caption:SetTextColor(widget == "header" and .2 or 1,1,widget == "header" and .8 or 1,1)
-      row:SetHeight(math.max(22,row.caption:GetStringHeight()+6))
+      row:SetHeight(math.max(22,row.caption:GetHeight()+6))
     end
     if widget == "header" then
       if kind == "description" then row.caption:SetTextColor(.7,.7,.7,1) end
-      row:SetHeight(math.max(kind == "description" and 24 or 32, row.caption:GetStringHeight()+8))
+      row:SetHeight(math.max(kind == "description" and 24 or 32, row.caption:GetHeight()+8))
     elseif widget == "text" then
       row.displayed = tostring(Get(opt) or "")
       row.input:SetText(row.displayed)
@@ -281,6 +283,7 @@ do
           if row.input.ClearFocus then row.input:ClearFocus() end
           if row.input.menuframe then row.input.menuframe:Hide() end
         end
+        row.committing = nil
         row:Hide()
       end
     end
@@ -293,7 +296,7 @@ do
     if state then CommitAll(state) end
     self:Clear(parent)
   end
-  function R:Render(parent,module,onChanged)
+  local function Render(self,parent,module,onChanged)
     if not parent or not parent.parent or not pfUI.gui or not pfUI.gui.CreateConfig then return false end
     local state = parent.automationOptionsState
     if not state then
@@ -323,4 +326,19 @@ do
     end
     if scroll.UpdateScrollState then scroll:UpdateScrollState() end
     return true
-  endend
+  end  function R:Render(parent,module,onChanged)
+    local prior = this
+    local ok, result = pcall(Render, self, parent, module, onChanged)
+    this = prior
+    if not ok then
+      -- Failed options must not leave the page permanently locked.
+      local state = parent and parent.automationOptionsState
+      if state then
+        pcall(self.Clear, self, parent)
+        state.building = nil
+      end
+      error(result)
+    end
+    return result
+  end
+end

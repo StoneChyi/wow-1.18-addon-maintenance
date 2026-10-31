@@ -22,7 +22,10 @@ function methods:SetParent(p) self.parent=p end
 function methods:SetWidth(v) self.width=v end
 function methods:GetWidth() return self.width end
 function methods:SetHeight(v) self.height=v end
-function methods:GetHeight() return self.height end
+function methods:GetHeight()
+ if self.kind=='FontString' then return math.max(12,math.ceil(#(self.text or '')/math.max(1,(self.width or 400)/7))*12) end
+ return self.height
+end
 function methods:SetPoint(...) self.point={...} end
 function methods:ClearAllPoints() self.point=nil end
 function methods:GetLeft() return 0 end
@@ -43,7 +46,7 @@ function methods:SetVerticalScroll(v) self.scroll=v end
 function methods:UpdateScrollState() end
 function methods:ClearFocus() fire(self,'OnEditFocusLost') end
 function methods:GetText() return self.text or '' end
-function methods:GetStringHeight() return math.max(12,math.ceil(#(self.text or '')/math.max(1,(self.width or 400)/7))*12) end
+-- WoW 1.12 has no FontString:GetStringHeight; do not mock it into existence.
 function methods:GetStringWidth() return #(self.text or '')*7 end
 function methods:GetFontString() return self.fontstring end
 function methods:CreateTexture() return obj('Texture',nil,self) end

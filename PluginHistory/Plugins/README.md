@@ -99,7 +99,7 @@
 | [OneBag](OneBag.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](OneBag.md#change-OneBag-20261030-02) |
 | [Outfitter](Outfitter.md) | 早期记录，日期待确认 |
 | [PallyPower](PallyPower.md) | 早期记录，日期待确认 |
-| [pfUI](pfUI.md) | [2026-10-31 · 以原生设置替代工具箱嵌入并修复背包银行勾选](pfUI.md#change-pfUI-20261031-03) |
+| [pfUI](pfUI.md) | [2026-10-31 · 修复自动化页旧客户端测高报错与连锁空白](pfUI.md#change-pfUI-20261031-04) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](pfUI-addonskinner.md#change-pfUI-addonskinner-20261030-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | 早期记录，日期待确认 |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-10-30 · 恢复右侧首行有效商品，按实际数据控制商品与回购槽](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261030-02) |

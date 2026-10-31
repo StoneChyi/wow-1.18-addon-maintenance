@@ -198,4 +198,43 @@ h:RefreshPage(h.merchant)
 assert(parent:GetHeight()<longHeight)
 assert(parent.parent:GetVerticalScroll()<=parent.parent:GetVerticalScrollRange(),'stale scroll offset on short list')
 ''')
+lua.execute(r'''
+local h=pfUI.automation
+local original=h.GeneralOptions
+-- The actual client lacks this method; all three pages must still render.
+assert(rowName('物品 ID').input.GetStringHeight==nil)
+for _,page in ipairs({h.general,h.all,h.merchant}) do
+ h:OpenPage(page);current(page)
+ assert(not h.rendering and not h.lastRenderError)
+ assert(#parent.automationOptionsState.visible>0)
+end
+h.GeneralOptions=function(self)
+ local options=original(self)
+ options.failed={type='text',name='Broken getter',order=99,get=function()error('injected getter failure')end}
+ return options
+end
+h:OpenPage(h.general);current(h.general)
+assert(h.lastRenderError and not h.rendering)
+assert(not parent.automationOptionsState.building)
+h:OpenVendor();current(h.merchant)
+assert(not h.lastRenderError and #parent.automationOptionsState.visible>0)
+h.GeneralOptions=original
+h:OpenPage(h.general);current(h.general)
+assert(not h.lastRenderError and #parent.automationOptionsState.visible>0)
+-- CreateConfig failure must also restore the temporary global this and marker.
+local create=pfUI.gui.CreateConfig
+h.GeneralOptions=function(self)
+ local options=original(self)
+ options.failed={type='color',name='New color',get=function()return 1,1,1,1 end}
+ return options
+end
+pfUI.gui.CreateConfig=function(...)error('injected constructor failure')end
+local sentinel={};this=sentinel
+h:RefreshPage(h.general)
+assert(this==sentinel and not parent.automationDynamic)
+assert(h.lastRenderError and not h.rendering and not parent.automationOptionsState.building)
+pfUI.gui.CreateConfig=create;h.GeneralOptions=original
+h:RefreshPage(h.general)
+assert(not h.lastRenderError and #parent.automationOptionsState.visible>0)
+''')
 print('pfUI automation pages: actual host/renderer/CreateConfig integration passed')

@@ -230,12 +230,22 @@ pfUI:RegisterModule("automation", "vanilla", function()
     local content, renderer = self.pages[page], pfUI.automationOptions
     if not content or not renderer or self.rendering then return end
     self.rendering = true
-    local options
-    if page == self.general then options = self:GeneralOptions()
-    elseif page == self.merchant then options = self:MerchantOptions()
-    else options = self:FeatureOptions() end
-    renderer:Render(content, { name = page, _options = options }, function() host:QueueRefresh() end)
+    local ok, reason = pcall(function()
+      local options
+      if page == self.general then options = self:GeneralOptions()
+      elseif page == self.merchant then options = self:MerchantOptions()
+      else options = self:FeatureOptions() end
+      renderer:Render(content, { name = page, _options = options }, function() host:QueueRefresh() end)
+    end)
     self.rendering = nil
+    if not ok then
+      if self.lastRenderError ~= tostring(reason) then
+        self:Print("自动化设置页加载失败（" .. page .. "）：" .. tostring(reason))
+      end
+      self.lastRenderError = tostring(reason)
+    else
+      self.lastRenderError = nil
+    end
   end
   function host:RefreshVisible()
     local group = pfUI.gui and pfUI.gui.frames[self.title]
