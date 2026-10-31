@@ -141,6 +141,15 @@ function A:ToggleMainWindow()
   if host then return host:Open() end
   return originalWindow(self)
 end
+-- Existing module links open their combined native page while managed.
+local originalSelect = A.SelectModule
+if originalSelect then
+  function A:SelectModule(name)
+    local host = ManagedHost()
+    if host and host.SelectModule then return host:SelectModule(name) end
+    return originalSelect(self, name)
+  end
+end
 local originalRefresh = A.RefreshModuleSettings
 if originalRefresh then
   function A:RefreshModuleSettings(name)

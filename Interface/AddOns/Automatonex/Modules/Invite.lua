@@ -14,13 +14,13 @@ L:RegisterTranslations("enUS", function()
 	return {
 		["Invite"] = "组队密语邀请",
 		["Accept from"] = "自定义邀请名单",
-		["Accept invites from these people"] = "接受指定人的邀请",
-		["Friends"] = "自动接受好友的邀请",
-		["Allow invite requests from players on your friends list"] = "允许来自好友列表中玩家的邀请请求",
-		["Guildmates"] = "自动接受工会的邀请",
-		["Allow invite requests from guildmates"] = "允许公会成员的邀请请求",
+		["Accept invites from these people"] = "允许向这些玩家发出邀请",
+		["Friends"] = "允许邀请好友",
+		["Allow invite requests from players on your friends list"] = "好友发送匹配关键字时，允许邀请对方入队。",
+		["Guildmates"] = "允许邀请公会成员",
+		["Allow invite requests from guildmates"] = "公会成员发送匹配关键字时，允许邀请对方入队。",
 		["Custom list"] = "自定义列表",
-		["Specify a custom list to accept from"] = "指定要接受邀请的自定义列表",
+		["Specify a custom list to accept from"] = "指定允许被邀请的玩家名单",
 		["List"] = "打印列表",
 		["Print all names in the custom list."] = "打印自定义列表中的所有名称。",
 		["Add Player"] = "添加玩家",
@@ -30,18 +30,18 @@ L:RegisterTranslations("enUS", function()
 		["Removes a player from the custom list."] = "从自定义列表中删除指定玩家。",
 		["Purge"] = "重置列表",
 		["Remove all names from the custom list."] = "从自定义列表中删除所有名称",
-		["Everyone"] = "允许任何人邀请",
-		["Allow invite requests from everyone"] = "允许所有人的组队邀请请求",
+		["Everyone"] = "允许邀请任何人",
+		["Allow invite requests from everyone"] = "任何玩家发送匹配关键字时都可被邀请；已启用的黑名单仍优先。",
 
 		["Options for sending out party invites."] = "自动邀请密语你关键字的玩家",
 		["Invite text"] = "关键字",
 		["The text users send to trigger an invite."] = "密语关键字",
 		["keyword invite"] = "关键字邀请",
-		["Ignore case"] = "模糊关键字",
-		["Disable case sensitivity for the invite text"] = "模糊关键字的匹配(不论大小写等)",
+		["Ignore case"] = "忽略关键字大小写",
+		["Disable case sensitivity for the invite text"] = "匹配关键字时不区分英文字母大小写。",
 
 		["Auto turn raid"] = "自动转为团队",
-		["Turn Raid when your team more than 5 person"] = "当小队人数超过5人时自动转换为团队",
+		["Turn Raid when your team more than 5 person"] = "小队已满且准备邀请下一位玩家时，先转换为团队。",
 		["Auto kick blacklist"] = "自动踢出黑名单玩家",
 		["Automatically kick blacklisted players from party/raid"] = "自动将黑名单中的玩家踢出队伍/团队",
 		["Kick interval"] = "检查间隔",
@@ -79,6 +79,39 @@ end)
 ----------------------------------
 
 local Automaton_Invite = Automaton:NewModule("Invite")
+-- One sender for keyword and nearby invitations. Policy remains with each
+-- module; only permission, capacity and duplicate dispatch are shared.
+local outgoing = { pending = {} }
+Automaton.outgoingInvites = outgoing
+function outgoing:HasAuthority()
+    local raid = GetNumRaidMembers()
+    if raid > 0 then
+        local player = UnitName("player")
+        for i = 1, raid do
+            local name, rank = GetRaidRosterInfo(i)
+            if name == player then return rank == 1 or rank == 2 end
+        end
+        return false
+    end
+    return GetNumPartyMembers() == 0 or UnitIsPartyLeader("player")
+end
+function outgoing:Send(player, autoRaid)
+    if type(player) ~= "string" or player == "" or player == UnitName("player") then return false, "invalid" end
+    if not self:HasAuthority() then return false, "authority" end
+    local raid, party = GetNumRaidMembers(), GetNumPartyMembers()
+    if raid >= 40 then return false, "raidfull" end
+    if raid == 0 and party >= 4 and not autoRaid then return false, "partyfull" end
+    local now, key = GetTime(), string.lower(player)
+    for name, sent in pairs(self.pending) do
+        if now-sent >= 1 or now < sent then self.pending[name] = nil end
+    end
+    if self.pending[key] then return false, "duplicate" end
+    self.pending[key] = now
+    if raid == 0 and party >= 4 then ConvertToRaid() end
+    InviteByName(player)
+    return true
+end
+
 Automaton_Invite.modulename = L["Invite"]
 Automaton_Invite.moduledesc = L["Options for sending out party invites."]
 Automaton_Invite.options = {
@@ -262,6 +295,7 @@ function Automaton_Invite:OnInitialize()
 end
 
 function Automaton_Invite:OnEnable()
+	self.outgoingEnabled = true
 	self:RegisterEvent("CHAT_MSG_WHISPER")
 	self:RegisterEvent("CHAT_MSG_GUILD")
 	
@@ -272,6 +306,7 @@ function Automaton_Invite:OnEnable()
 end
 
 function Automaton_Invite:OnDisable()
+	self.outgoingEnabled = nil
 	self:UnregisterAllEvents()
 	
 	-- 移除黑名单检查的OnUpdate脚本
@@ -473,25 +508,7 @@ end
 -- 判断玩家是否拥有邀请权限（队长或团队助理）
 -- 单人时拥有权限；小队中只有队长；团队中团长(rank=2)或助理(rank=1)拥有权限
 function Automaton_Invite:HasInviteAuthority()
-	-- 如果独自一人，拥有权限
-	if GetNumPartyMembers() == 0 and GetNumRaidMembers() == 0 then
-		return true
-	end
-	
-	-- 在团队中：团长(rank=2)或助理(rank=1)拥有权限
-	if GetNumRaidMembers() > 0 then
-		local name = UnitName("player")
-		for i = 1, GetNumRaidMembers() do
-			local raidName, rank = GetRaidRosterInfo(i)
-			if raidName == name then
-				return (rank == 1 or rank == 2)
-			end
-		end
-		return false
-	end
-	
-	-- 在小队中：队长拥有权限
-	return UnitIsPartyLeader("player")
+    return outgoing:HasAuthority()
 end
 
 function Automaton_Invite:CanInviteMorePlayers()
@@ -520,7 +537,7 @@ function Automaton_Invite:CanInviteMorePlayers()
 	else
 		-- 在小队中，检查是否满员（5人）
 		if numPartyMembers >= 4 then
-			-- 小队已满，但我们可以转为团队来邀请更多人
+			if not self.db.profile.autoRaid then return false, L[",Party is full."] end
 			return true, L["Converting to raid for 6th player"]
 		else
 			return true, "可以邀请"
@@ -528,58 +545,54 @@ function Automaton_Invite:CanInviteMorePlayers()
 	end
 end
 
-function Automaton_Invite:ProcessInviteRequest(text, from)
-	local keyword, msg
-	local player = from
-	local keyword = Automaton_Invite.db.profile.inviteString
-	local msg = text
-	if Automaton_Invite.db.profile.ignoreCase then
-		keyword = string.lower(keyword)
-		msg = string.lower(msg)
-	end
-	if string.find(msg, format("^%s$", keyword)) then
-		-- 检查是否可以邀请更多玩家
-		local canInvite, reason = self:CanInviteMorePlayers()
-		if not canInvite then
-			self:print(player .. reason)
-			return
-		end
-		
-		-- 如果需要转为团队（小队已满且不是团队）
-		local numPartyMembers = GetNumPartyMembers()
-		local numRaidMembers = GetNumRaidMembers()
-		if self.db.profile.autoRaid and numPartyMembers >= 4 and numRaidMembers == 0 then
-			self:ConvertToRaidIfNeeded()
-		end
-		
-		if not self.db.profile.anyone then
-			local acceptFrom = {}
-			if self.db.profile.guild then
-				GuildRoster()
-				for i = 1, GetNumGuildMembers() do
-					local name = GetGuildRosterInfo(i)
-					tinsert(acceptFrom, name)
-				end
-			end
-			if self.db.profile.friends then
-				for i = 1, GetNumFriends() do
-					local name = GetFriendInfo(i)
-					tinsert(acceptFrom, name)
-				end
-			end
-			if not (table.getn (self.db.profile.custom )  == 0) then
-				for k, v in pairs(self.db.profile.custom) do
-					tinsert(acceptFrom, v)
-				end
-			end
+function Automaton_Invite:IsSenderAllowed(from)
+    if type(from) ~= "string" or from == "" then return false end
+    if self.db.profile.kickBlacklist and self:GetAllBlacklist()[from] then return false end
+    local allowed = self.db.profile.anyone
+    if not allowed then
+        local player = string.lower(from)
+        if self.db.profile.guild then
+            GuildRoster()
+            for i = 1, GetNumGuildMembers() do
+                local name = GetGuildRosterInfo(i)
+                if name and string.lower(name) == player then allowed = true; break end
+            end
+        end
+        if not allowed and self.db.profile.friends then
+            for i = 1, GetNumFriends() do
+                local name = GetFriendInfo(i)
+                if name and string.lower(name) == player then allowed = true; break end
+            end
+        end
+        if not allowed then
+            for _, name in pairs(self.db.profile.custom) do
+                if string.lower(name) == player then allowed = true; break end
+            end
+        end
+    end
+    return allowed and true or false
+end
 
-			if foreachi(acceptFrom, function(i, v) if v == player then return true end end) then
-				InviteByName(player)
-			end
-		else
-			InviteByName(player)
-		end
-	end
+function Automaton_Invite:ProcessInviteRequest(text, from)
+    if type(text) ~= "string" or type(from) ~= "string" then return end
+    local keyword = self.db.profile.inviteString
+    if type(keyword) ~= "string" or keyword == "" then return end
+    local msg = text
+    if self.db.profile.ignoreCase then
+        keyword, msg = string.lower(keyword), string.lower(msg)
+    end
+    -- Keep the configured keyword's existing anchored Lua-pattern semantics.
+    local valid, matched = pcall(string.find, msg, "^" .. keyword .. "$")
+    if not valid or not matched then return end
+    local allowed = self:IsSenderAllowed(from)
+    -- Reject untrusted senders before any conversion or invite side effect.
+    if not allowed then return end
+    local canInvite, reason = self:CanInviteMorePlayers()
+    if not canInvite then self:print(from .. reason); return end
+    local converting = GetNumRaidMembers() == 0 and GetNumPartyMembers() >= 4
+    if outgoing:Send(from, self.db.profile.autoRaid) and converting then
+        self:print(L["Automatically converted to Raid"])
+    end
 end
 
 function Automaton_Invite:CHAT_MSG_WHISPER(text, from)

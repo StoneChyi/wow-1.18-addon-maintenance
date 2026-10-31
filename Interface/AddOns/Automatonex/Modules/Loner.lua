@@ -34,7 +34,7 @@ L:RegisterTranslations("enUS", function() return {
     
     -- 自定义列表相关
     ["Custom List"] = "自定义例外名单",
-    ["Accept invites from players in custom list even if they are not friends/guildmates."] = "接受自定义名单中玩家的邀请，即使他们不是好友或公会成员。",
+    ["Accept invites from players in custom list even if they are not friends/guildmates."] = "放行白名单邀请弹窗；陌生白名单玩家不会因此被自动接受。",
     ["Black List"] = "自定义黑名单",
     ["Decline invites from players in black list even if they are friends/guildmates."] = "拒绝黑名单中玩家的邀请，即使他们是好友或公会成员。",
     ["Add Player to White List"] = "添加玩家到例外名单",
@@ -90,11 +90,7 @@ Automaton_StrangerDecline.options = {
         get = function() return Automaton_StrangerDecline.db.profile.partyEnabled end,
         set = function(v) 
             Automaton_StrangerDecline.db.profile.partyEnabled = v
-            if v then
-                Automaton_StrangerDecline:RegisterEvent("PARTY_INVITE_REQUEST")
-            else
-                Automaton_StrangerDecline:UnregisterEvent("PARTY_INVITE_REQUEST")
-            end
+            Automaton.incomingInvites:Cancel()
         end,
     },
     guild = {
@@ -104,13 +100,6 @@ Automaton_StrangerDecline.options = {
         get = function() return Automaton_StrangerDecline.db.profile.guildEnabled end,
         set = function(v) 
             Automaton_StrangerDecline.db.profile.guildEnabled = v
-            if v then
-                Automaton_StrangerDecline:RegisterEvent("GUILD_INVITE_REQUEST")
-                Automaton_StrangerDecline:RegisterEvent("PETITION_SHOW")
-            else
-                Automaton_StrangerDecline:UnregisterEvent("GUILD_INVITE_REQUEST")
-                Automaton_StrangerDecline:UnregisterEvent("PETITION_SHOW")
-            end
         end,
     },
     enableBlackList = {
@@ -287,12 +276,13 @@ end
 
 function Automaton_StrangerDecline:OnEnable()
     -- 总是注册事件，让黑名单功能独立工作
-    self:RegisterEvent("PARTY_INVITE_REQUEST")
+    Automaton.incomingInvites:Enable("StrangerDecline", true)
     self:RegisterEvent("GUILD_INVITE_REQUEST")
     self:RegisterEvent("PETITION_SHOW")
 end
 
 function Automaton_StrangerDecline:OnDisable()
+    Automaton.incomingInvites:Enable("StrangerDecline", false)
     self:UnregisterAllEvents()
 end
 
@@ -573,63 +563,18 @@ function Automaton_StrangerDecline:CheckKeywordMatch(name)
 end
 
 -- 事件处理函数
-function Automaton_StrangerDecline:PARTY_INVITE_REQUEST()
-    local inviter = arg1
-    
-    -- 检查黑名单（最高优先级，独立于其他设置）
-    if inviter and self:IsInBlackList(inviter) then
-        -- 检查是否是关键字匹配
-        local matchedKeyword = self:CheckKeywordMatch(inviter)
-        
-        if matchedKeyword then
-            DeclineGroup()
-            StaticPopup_Hide("PARTY_INVITE")
-            C_Timer.After(0.5, function()
-                self:print("|cffFF0000" .. string.format(L["Declining invite from blacklisted player: %s"], inviter) .. 
-                          " |cff888888(" .. string.format(L["Keyword matching: %s"], matchedKeyword) .. ")|r")
-            end)
-        else
-            DeclineGroup()
-            StaticPopup_Hide("PARTY_INVITE")
-            C_Timer.After(0.5, function()
-                self:print("|cffFF0000" .. string.format(L["Declining invite from blacklisted player: %s"], inviter) .. "|r")
-            end)
-        end
-        return
-    end
-    
-    -- 检查白名单
-    if inviter and self:IsInWhiteList(inviter) then
-        return -- 在白名单中，允许邀请
-    end
-    
-    -- 如果临时禁用，直接返回（允许邀请）
-    if self.isDisabled then
-        return
-    end
-    
-    -- 如果"拒绝陌生人组队邀请"功能未启用，允许邀请
-    if not self.db.profile.partyEnabled then
-        return
-    end
-    
-    -- 检查是否是好友
-    if inviter and self:IsFriend(inviter) then
-        return -- 是好友，允许邀请
-    end
-    
-    -- 检查是否是公会成员
-    if inviter and self:IsGuildMember(inviter) then
-        return -- 是公会成员，允许邀请
-    end
-    
-    -- 既不在白名单也不是好友也不是公会成员，拒绝邀请
-    if inviter then
-        DeclineGroup()
-        StaticPopup_Hide("PARTY_INVITE")
-        C_Timer.After(0.5, function()
-            self:print("|cffFFFF00" .. string.format(L["Declining party invite from %s (not friend/guild member)..."], inviter) .. "|r")
-        end)
+function Automaton_StrangerDecline:PARTY_INVITE_REQUEST(from)
+    Automaton.incomingInvites:Request(from or arg1)
+end
+
+function Automaton_StrangerDecline:PrintPartyDecline(inviter, reason)
+    if reason == "blacklist" then
+        local keyword = self:CheckKeywordMatch(inviter)
+        local text = "|cffFF0000" .. string.format(L["Declining invite from blacklisted player: %s"], inviter)
+        if keyword then text = text .. " |cff888888(" .. string.format(L["Keyword matching: %s"], keyword) .. ")" end
+        self:print(text .. "|r")
+    else
+        self:print("|cffFFFF00" .. string.format(L["Declining party invite from %s (not friend/guild member)..."], inviter) .. "|r")
     end
 end
 
@@ -644,16 +589,16 @@ function Automaton_StrangerDecline:GUILD_INVITE_REQUEST()
         if matchedKeyword then
             DeclineGuild()
             StaticPopup_Hide("GUILD_INVITE")
-            C_Timer.After(0.5, function()
+            self:ScheduleEvent(function()
                 self:print("|cffFF0000" .. string.format(L["Declining invite from blacklisted player: %s"], inviter) .. 
                           " |cff888888(" .. string.format(L["Keyword matching: %s"], matchedKeyword) .. ")|r")
-            end)
+            end, 0.5)
         else
             DeclineGuild()
             StaticPopup_Hide("GUILD_INVITE")
-            C_Timer.After(0.5, function()
+            self:ScheduleEvent(function()
                 self:print("|cffFF0000" .. string.format(L["Declining invite from blacklisted player: %s"], inviter) .. "|r")
-            end)
+            end, 0.5)
         end
         return
     end
@@ -682,9 +627,9 @@ function Automaton_StrangerDecline:GUILD_INVITE_REQUEST()
     if inviter then
         DeclineGuild()
         StaticPopup_Hide("GUILD_INVITE")
-        C_Timer.After(0.5, function()
+        self:ScheduleEvent(function()
             self:print("|cffFFFF00" .. string.format(L["Declining guild invite from %s (not friend)..."], inviter) .. "|r")
-        end)
+        end, 0.5)
     end
 end
 
@@ -705,9 +650,9 @@ function Automaton_StrangerDecline:PETITION_SHOW()
         -- 检查黑名单设置，如果启用则取消
         if self.db.profile.enableBlackList then
             ClosePetition()
-            C_Timer.After(0.5, function()
+            self:ScheduleEvent(function()
                 self:print("|cffFFFF00" .. L["Canceling petition..."] .. "|r")
-            end)
+            end, 0.5)
         end
         return
     end
@@ -719,15 +664,15 @@ function Automaton_StrangerDecline:PETITION_SHOW()
         
         if matchedKeyword then
             ClosePetition()
-            C_Timer.After(0.5, function()
+            self:ScheduleEvent(function()
                 self:print("|cffFF0000" .. string.format(L["Declining invite from blacklisted player: %s"], inviter) .. 
                           " |cff888888(" .. string.format(L["Keyword matching: %s"], matchedKeyword) .. ")|r")
-            end)
+            end, 0.5)
         else
             ClosePetition()
-            C_Timer.After(0.5, function()
+            self:ScheduleEvent(function()
                 self:print("|cffFF0000" .. string.format(L["Declining invite from blacklisted player: %s"], inviter) .. "|r")
-            end)
+            end, 0.5)
         end
         return
     end
@@ -754,7 +699,7 @@ function Automaton_StrangerDecline:PETITION_SHOW()
     
     -- 不在白名单也不是好友，取消
     ClosePetition()
-    C_Timer.After(0.5, function()
+    self:ScheduleEvent(function()
         self:print("|cffFFFF00" .. L["Canceling petition..."] .. "|r")
-    end)
+    end, 0.5)
 end

@@ -86,11 +86,21 @@ local function get(opt)
  if opt.passValue~=nil then return opt.get(opt.passValue) end
  return opt.get()
 end
+local coveredModules={}
 local function inspect(name)
- local module=Automaton.modules[name]
  local options=h:ModuleOptions(name)
- assert(options.module.moduleName==name)
- for key,opt in pairs(module._options) do assert(options.module.args[key]==opt,'original option identity lost') end
+ local originals={}
+ for _,group in pairs(options) do
+  if group.type=='group' and group.moduleName then
+   local id=group.moduleName
+   local module=assert(Automaton.modules[id],'unknown original module '..id)
+   assert(not originals[id],'duplicate original module '..id)
+   originals[id]=module
+   coveredModules[id]=true
+   for key,opt in pairs(module._options) do assert(group.args[key]==opt,'original option identity lost '..id..':'..key) end
+  end
+ end
+ assert(next(originals),'page has no original modules '..name)
  assert(R:Render(parent,{_options=options}))
  local expected,optionCount={},0
  local function walk(args)
@@ -103,7 +113,7 @@ local function inspect(name)
    end
   end end
  end
- walk(module._options)
+ for _,module in pairs(originals) do walk(module._options) end
  local actual,readbacks={},0
  for _,row in ipairs(rows()) do
   actual[row.option]=(actual[row.option]or 0)+1
@@ -127,13 +137,19 @@ local function inspect(name)
  return optionCount,readbacks
 end
 local entries=h:NavigationEntries(true)
-assert(#entries==55)
+assert(#entries==53)
 local totalOptions,totalReadbacks=0,0
 for _,entry in ipairs(entries) do
  assert(entry.name~='Repair' and entry.name~='Sell')
  local opts,reads=inspect(entry.name)
  totalOptions=totalOptions+opts;totalReadbacks=totalReadbacks+reads
 end
+local coveredCount=0
+for id,module in pairs(Automaton.modules) do
+ if id~='Repair' and id~='Sell' then assert(coveredModules[id],'missing original module '..id);coveredCount=coveredCount+1 end
+end
+assert(coveredCount==55)
+for _,id in ipairs({'Group','StrangerDecline','Invite','invall'}) do assert(coveredModules[id],'missing composed member '..id) end
 -- Warm every shape, then alternate all actual modules through one row pool.
 local warm=created
 for pass=1,3 do
@@ -147,7 +163,7 @@ for _,name in ipairs({'Tooltip','ExpBar','InterPlayerLink'}) do
  pfUI.automationIntegrations[id]={managed=true,title=id,OpenSettings=function()opened[id]=true end}
 end
 local managed=h:NavigationEntries(true);local shortcuts=0
-assert(#managed==55,'native settings links disappeared from module navigation')
+assert(#managed==53,'native settings links disappeared from module navigation')
 for _,entry in ipairs(managed) do if entry.native then
  shortcuts=shortcuts+1
  assert(not h:ModuleOptions(entry.name).module,'native engine settings duplicated')
@@ -157,7 +173,7 @@ assert(shortcuts==3);unchanged()
 local management=h:GeneralOptions();assert(R:Render(parent,{_options=management}));unchanged()
 local managedWarm=created
 assert(R:Render(parent,{_options=h:GeneralOptions()}));assert(created==managedWarm)
-report={module_pages=#entries,original_options=totalOptions,original_value_readbacks=totalReadbacks,
+report={module_pages=#entries,original_modules=coveredCount,original_options=totalOptions,original_value_readbacks=totalReadbacks,
  native_shortcuts=shortcuts,shared_detail_passes=3,created_objects=created}
 ''')
     report = dict(lua.globals().report.items())

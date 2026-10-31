@@ -412,4 +412,22 @@ assert(h.pages[h.general].options.nav_Tooltip,"all-hidden state lost its recover
 h.pages[h.general].options.nav_Tooltip.args.visible.set(true)
 h:Open();assert(h.activePage==h.detail and h.selectedModule=="Tooltip")
 ''',True)
+check(r'''
+local h=pfUI.automation;h:Sync()
+for _,id in ipairs({'Group','StrangerDecline','Invite','invall'}) do
+ Automaton.modules[id]={name=id,modulename=id,_options={info={type='description',name=id}}}
+end
+assert(Automaton:SelectModule('StrangerDecline'))
+assert(h.selectedModule=='Group' and h.pages[h.detail].options.StrangerDecline)
+assert(Automaton:SelectModule('invall'))
+assert(h.selectedModule=='Invite' and h.pages[h.detail].options.invall)
+pfUI.automationOptions.rejectPending=true
+assert(Automaton:SelectModule('StrangerDecline')==false)
+assert(h.selectedModule=='Invite' and Automaton.selectedModule=='Invite')
+pfUI.automationOptions.rejectPending=nil
+C.automation.enabled='0';h:Sync()
+Automaton:SelectModule('StrangerDecline')
+assert(Automaton.selectedModule=='StrangerDecline' and h.selectedModule=='Invite')
+''',True)
+
 print(f"pfUI automation host: {checks} native navigation/lifecycle scenarios passed")

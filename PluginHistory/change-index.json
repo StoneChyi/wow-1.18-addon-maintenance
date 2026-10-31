@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 261,
+  "dated_records": 263,
   "addons": [
     {
       "addon": "!Libs",
@@ -272,10 +272,19 @@
       "purpose": "完善模块配置、物品监控及与其他界面的协作。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "将提示数据、经验统计和角色链接交接给pfUI原生流程",
+      "latest_record_title": "统一组队邀请决策与发送并保留原模块配置",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 10,
+      "record_count": 11,
       "records": [
+        {
+          "id": "Automatonex-20261031-04",
+          "date": "2026-10-31",
+          "title": "统一组队邀请决策与发送并保留原模块配置",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-Automatonex-20261031-04"
+        },
         {
           "id": "Automatonex-20261031-03",
           "date": "2026-10-31",
@@ -3125,10 +3134,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "按具体模块导航并集中管理顺序与隐藏",
+      "latest_record_title": "将邀请功能收拢为两个原生组合页",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 37,
+      "record_count": 38,
       "records": [
+        {
+          "id": "pfUI-20261031-12",
+          "date": "2026-10-31",
+          "title": "将邀请功能收拢为两个原生组合页",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261031-12"
+        },
         {
           "id": "pfUI-20261031-11",
           "date": "2026-10-31",
