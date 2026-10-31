@@ -236,14 +236,31 @@ local p=h.pages[h.all]
 h:SelectModule("Tooltip")
 assert(C.automation.selected=="Tooltip" and Automaton.db.char.lastModule=="Tooltip" and Automaton.selectedModule=="Tooltip")
 h:Open();p=h.pages[h.all]
-local list=h:ModuleList(false);assert(list[#list].name=="Tooltip")
-p.options.module_Tooltip.args.__pfui_order.buttons[1].func();p.onChanged();h.Tick()
-local moved=h:ModuleList(false);assert(moved[#moved-1].name=="Tooltip")
-assert(p.options.module_Tooltip.order<p.options.module_InterPlayerLink.order)
-assert(Automaton.db.char.moduleOrder[#Automaton.db.char.moduleOrder]=="Sell")
-p.options.module_ExpBar.args.__pfui_order.buttons[2].func();p.onChanged();h.Tick()
-local again=h:ModuleList(false);assert(again[2].name=="ExpBar" and again[1].name=="Tooltip")
-assert(p.options.module_Tooltip.order<p.options.module_ExpBar.order)
+local legacy={"Tooltip","Sell","ExpBar","InterPlayerLink","Repair"}
+Automaton.db.char.moduleOrder=legacy
+local list=h:ModuleList(false)
+assert(list[1].name=="ExpBar" and list[2].name=="Tooltip" and list[3].name=="InterPlayerLink")
+assert(p.options.sort.get()=="category")
+for _,entry in ipairs(list) do assert(not p.options["module_"..entry.name].args.__pfui_order) end
+assert(h.MoveModule==nil)
+edit(p,"sort","name")
+list=h:ModuleList(false)
+assert(list[1].name=="ExpBar" and list[2].name=="InterPlayerLink" and list[3].name=="Tooltip")
+Automaton:ToggleModuleActive("ExpBar",false)
+edit(p,"sort","enabled")
+list=h:ModuleList(false)
+assert(list[1].name=="Tooltip" and list[2].name=="InterPlayerLink" and list[3].name=="ExpBar")
+h:OpenPage("任务与升级");p=h.pages["任务与升级"]
+assert(p.options.sort.get()=="enabled" and p.options.module_ExpBar)
+edit(p,"sort","name")
+h:Open();p=h.pages[h.all]
+assert(p.options.sort.get()=="name" and C.automation.sort=="name")
+Automaton.modules.Tooltip.modulename="Same";Automaton.modules.InterPlayerLink.modulename="Same"
+list=h:ModuleList(false)
+assert(list[2].name=="InterPlayerLink" and list[3].name=="Tooltip","equal labels need deterministic ID order")
+assert(Automaton.db.char.moduleOrder==legacy and table.concat(legacy,",")=="Tooltip,Sell,ExpBar,InterPlayerLink,Repair")
+C.automation.sort="obsolete";h:RefreshPage(h.all)
+assert(p.options.sort.get()=="category","unsupported sort must show a valid default")
 ''',True)
 check(r'''
 local h=pfUI.automation;h:Sync();h:OpenVendor();local p=h.pages[h.merchant]
@@ -345,8 +362,10 @@ assert(Automaton.db.char.disabledModules.Tooltip==nil,"fusion altered legacy int
 Automaton:ToggleModuleActive("Tooltip",false);assert(not Automaton:IsModuleActive("Tooltip"))
 assert(AutomatonPfUIBridge:SavedActive("Tooltip"))
 Automaton.db.char.moduleOrder={"Tooltip","ExpBar","InterPlayerLink"}
-h:MoveModule("ExpBar",1)
-assert(Automaton.db.char.moduleOrder[3]=="Tooltip","reordering dropped integrated fallback entry")
+local stored=Automaton.db.char.moduleOrder
+C.automation.sort="name";h:ModuleList(false)
+assert(Automaton.db.char.moduleOrder==stored and table.concat(stored,",")=="Tooltip,ExpBar,InterPlayerLink",
+ "presentation sort altered integrated fallback entries")
 local o=h:GeneralOptions();assert(o.native_Tooltip)
 C.automation.enabled="0";assert(h:Sync());assert(not component.managed)
 assert(Automaton:IsModuleActive("Tooltip"),"fallback did not restore original intent")

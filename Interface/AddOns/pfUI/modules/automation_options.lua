@@ -49,6 +49,7 @@ do
       GameTooltip:AddLine(tostring(opt.min or "") .. " - " .. tostring(opt.max or "") .. " / " .. tostring(opt.step or 1), .7,.7,.7,1)
     end
     GameTooltip:Show()
+    R.tooltipRow = row
   end
   local function CanEdit(row)
     return row.option and not row.disabled and not row.state.building
@@ -94,7 +95,15 @@ do
   end
   local function CommitAll(state)
     for _, candidate in ipairs(state.visible or {}) do
-      if candidate.widget == "text" and not Commit(candidate, false) then return false end
+      if candidate.widget == "text" and not Commit(candidate, false) then
+        -- A draft can be outside the viewport. Reveal a rejected input so it
+        -- can be corrected instead of silently blocking controls elsewhere.
+        local scroll = state.parent.parent
+        scroll:SetVerticalScroll(math.max(0, math.min(candidate.automationOffset or 0, scroll:GetVerticalScrollRange())))
+        R:UpdateViewport(state.parent)
+        if scroll.UpdateScrollState then scroll:UpdateScrollState() end
+        return false
+      end
     end
     return true
   end
@@ -108,8 +117,18 @@ do
     this = prior
     if not ok then error(row) end
     row.state, row.widget = state, widget
-    row:SetScript("OnEnter", function() Tooltip(row) end)
-    row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    -- Native settings poll mouse focus on every row each frame. Expanded pages
+    -- use enter/leave events instead, including for rows outside the viewport.
+    row:SetScript("OnUpdate", nil)
+    row:SetScript("OnEnter", function()
+      if row.tex then row.tex:Show() end
+      Tooltip(row)
+    end)
+    row:SetScript("OnLeave", function()
+      if row.tex then row.tex:Hide() end
+      if GameTooltip then GameTooltip:Hide() end
+      if R.tooltipRow == row then R.tooltipRow = nil end
+    end)
     row:EnableMouse(true)
     row:SetScript("OnHide", function()
       if row.input and row.input.menuframe then row.input.menuframe:Hide() end
@@ -137,9 +156,9 @@ do
         if not row.suppressFocus then Commit(row, true) end
       end)
     elseif widget == "checkbox" then
-      row.input:SetScript("OnShow", function()
-        if row.option then row.input:SetChecked(Get(row.option) and 1 or nil) end
-      end)
+      -- Render supplies the saved value. Scrolling a row into view must not
+      -- call module getters or rebind settings.
+      row.input:SetScript("OnShow", nil)
       row.input:SetScript("OnClick", function()
         if CanEdit(row) and CommitAll(state) then
           Run(state, function() Set(row.option, row.input:GetChecked() and true or false) end)
@@ -186,7 +205,7 @@ do
         ColorPickerFrame.opacityFunc = ColorPickerFrame.func
         ColorPickerFrame.cancelFunc = function() Apply(r,g,b,a) end
         ColorPickerFrame:SetFrameStrata("DIALOG")
-        R.colorOwner = state
+        R.colorOwner, R.colorRow = state, row
         ShowUIPanel(ColorPickerFrame)
       end)
     end
@@ -296,9 +315,10 @@ do
         if row.disabled then control.button:Disable() else control.button:Enable() end
       end
     end
-    row:Show()
+    row:Hide()
+    row.automationHeight = row:GetHeight()
     table.insert(state.visible,row)
-    state.y = state.y + row:GetHeight() + 2
+    state.y = state.y + row.automationHeight + 2
     if kind == "group" then
       for _, button in ipairs(opt.buttons or {}) do
         Add(state, { type = "execute", name = button.name, desc = button.tip, func = button.func }, "", depth+1,row.disabled)
@@ -306,12 +326,88 @@ do
       for _, entry in ipairs(Ordered(opt.args)) do Add(state,entry.opt,entry.key,depth+1,row.disabled) end
     end
   end
+  local function HideRow(row)
+    -- Keep unfinished text in its original EditBox. Moving it out of view is
+    -- not an edit submission; CommitAll still visits these logical rows.
+    row.suppressFocus = true
+    if row.input and row.input.ClearFocus then row.input:ClearFocus() end
+    row:Hide()
+    row.suppressFocus = nil
+    if row.tex then row.tex:Hide() end
+    if R.tooltipRow == row then
+      if GameTooltip then GameTooltip:Hide() end
+      R.tooltipRow = nil
+    end
+    if R.colorRow == row then
+      HideUIPanel(ColorPickerFrame)
+      R.colorOwner, R.colorRow = nil, nil
+    end
+  end
+  function R:UpdateViewport(parent)
+    local state = parent.automationOptionsState
+    if not state or not state.visible or state.building or state.updatingViewport then return end
+    local scroll, rows = parent.parent, state.visible
+    local top, height = scroll:GetVerticalScroll(), scroll:GetHeight()
+    if state.viewportTop == top and state.viewportHeight == height then return end
+    state.updatingViewport = true
+    state.viewportTop, state.viewportHeight = top, height
+    local count = table.getn(rows)
+    -- Binary search measured rows; wheel work depends on the small viewport,
+    -- not on the total number of settings. A margin avoids edge flicker.
+    local low, high = 1, count + 1
+    while low < high do
+      local mid = math.floor((low + high)/2)
+      local row = rows[mid]
+      if row.automationOffset + row.automationHeight < top - 48 then low = mid + 1 else high = mid end
+    end
+    local first = low
+    low, high = first, count + 1
+    while low < high do
+      local mid = math.floor((low + high)/2)
+      if rows[mid].automationOffset <= top + height + 48 then low = mid + 1 else high = mid end
+    end
+    local last = low - 1
+    for i = state.shownFirst or 1, state.shownLast or 0 do
+      if i < first or i > last then HideRow(rows[i]) end
+    end
+    for i = first, last do
+      if not state.shownFirst or i < state.shownFirst or i > state.shownLast then rows[i]:Show() end
+    end
+    state.shownFirst, state.shownLast = first, last
+    state.updatingViewport = nil
+  end
+  local function InstallViewport(parent)
+    local scroll = parent.parent
+    -- CreateScrollChild's per-frame scrollbar synchronization is unnecessary:
+    -- the native wheel/slider and the range-change event already update it.
+    parent:SetScript("OnUpdate", nil)
+    local vertical, range = scroll:GetScript("OnVerticalScroll"), scroll:GetScript("OnScrollRangeChanged")
+    scroll:SetScript("OnVerticalScroll", function()
+      if vertical then vertical() end
+      R:UpdateViewport(parent)
+    end)
+    scroll:SetScript("OnScrollRangeChanged", function()
+      if range then range() end
+      if scroll.UpdateScrollState then scroll:UpdateScrollState() end
+      R:UpdateViewport(parent)
+    end)
+    local size = scroll:GetScript("OnSizeChanged")
+    scroll:SetScript("OnSizeChanged", function()
+      if size then size() end
+      if scroll.UpdateScrollState then scroll:UpdateScrollState() end
+      R:UpdateViewport(parent)
+    end)
+  end
   function R:Clear(parent)
     local state = parent.automationOptionsState
     if not state then return end
+    if R.tooltipRow and R.tooltipRow.state == state then
+      if GameTooltip then GameTooltip:Hide() end
+      R.tooltipRow = nil
+    end
     if R.colorOwner == state then
       HideUIPanel(ColorPickerFrame)
-      R.colorOwner = nil
+      R.colorOwner, R.colorRow = nil, nil
     end
     state.building = true
     for _, rows in pairs(state.pool) do
@@ -325,6 +421,8 @@ do
       end
     end
     state.visible = {}
+    state.shownFirst, state.shownLast = nil, nil
+    state.viewportTop, state.viewportHeight = nil, nil
     state.building = nil
     parent.objectCount = state.base
   end
@@ -340,6 +438,7 @@ do
     if not state then
       state = { parent=parent, pool={}, base=parent.objectCount or -1 }
       parent.automationOptionsState = state
+      InstallViewport(parent)
       -- Native scroll children start with SetAllPoints; keep only top anchors
       -- so the measured content height controls the scroll range.
       parent:ClearAllPoints()
@@ -363,6 +462,7 @@ do
       scroll:SetVerticalScroll(math.max(0,math.min(scroll:GetVerticalScroll(),scroll:GetVerticalScrollRange())))
     end
     if scroll.UpdateScrollState then scroll:UpdateScrollState() end
+    self:UpdateViewport(parent)
     return true
   end  function R:Render(parent,module,onChanged)
     local prior = this

@@ -91,6 +91,7 @@ class PersistenceTests(unittest.TestCase):
         lua = pages_runtime()
         lua.execute(r'''
 local h=pfUI.automation
+Automaton.db.char.moduleOrder={'Tooltip','Repair','QuestAutomation','Sell'}
 h:Sync();h:OpenVendor();current(h.merchant)
 rowName('自动修理').input:SetChecked(1);click(rowName('自动修理'));tick()
 rowName('自动售卖灰色和指定物品').input:SetChecked(1);click(rowName('自动售卖灰色和指定物品'));tick()
@@ -107,10 +108,10 @@ rowName('Enabled Tooltip').input:SetChecked(nil);click(rowName('Enabled Tooltip'
 assert(rowName('Enabled QuestAutomation').input:GetChecked(),'toggling one group disabled another')
 rowName('Text Tooltip').input:SetText('Saved profile value')
 rowName('Text QuestAutomation').input:SetText('Separate quest value')
-local ordering=moduleRow('Tooltip','__pfui_order')
-ordering.option.buttons[1].func();h:QueueRefresh();tick()
+pick('功能排序','名称顺序')
 assert(values.Tooltip=='Saved profile value' and values.QuestAutomation=='Separate quest value')
-assert(Automaton.db.char.moduleOrder[1]=='Tooltip')
+assert(C.automation.sort=='name')
+assert(table.concat(Automaton.db.char.moduleOrder,',')=='Tooltip,Repair,QuestAutomation,Sell')
 h:OpenPage(h.general);current(h.general)
 rowName('在 pfUI 中管理自动化').input:SetChecked(nil);click(rowName('在 pfUI 中管理自动化'));tick()
 saved={config=C,automaton=Automaton.db,values=values}
@@ -136,8 +137,15 @@ assert(not rowName('Enabled Tooltip').input:GetChecked())
 assert(rowName('Enabled QuestAutomation').input:GetChecked())
 assert(rowName('Text Tooltip').input:GetText()=='Saved profile value')
 assert(rowName('Text QuestAutomation').input:GetText()=='Separate quest value')
-assert(Automaton.db.char.moduleOrder[1]=='Tooltip')
-local groups=h:ModuleList(false);assert(groups[1].name=='Tooltip')
+assert(table.concat(Automaton.db.char.moduleOrder,',')=='Tooltip,Repair,QuestAutomation,Sell')
+assert(C.automation.sort=='name' and rowName('功能排序').option.get()=='name')
+local groups=h:ModuleList(false);assert(groups[1].name=='QuestAutomation')
+for _,row in ipairs(parent.automationOptionsState.visible) do
+ assert(row.option.name~='菜单顺序' and row.option.name~='上移' and row.option.name~='下移')
+end
+h:OpenPage('任务与升级');current('任务与升级')
+assert(rowName('功能排序').option.get()=='name','sort choice was not shared across categories')
+h:Open();current(h.all)
 pick('显示范围','菜单隐藏')
 assert(rowName('Text Tooltip').input:GetText()=='Saved profile value')
 for _,row in ipairs(parent.automationOptionsState.visible) do

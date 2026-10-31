@@ -99,7 +99,7 @@
 | [OneBag](OneBag.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](OneBag.md#change-OneBag-20261030-02) |
 | [Outfitter](Outfitter.md) | 早期记录，日期待确认 |
 | [PallyPower](PallyPower.md) | 早期记录，日期待确认 |
-| [pfUI](pfUI.md) | [2026-10-31 · 将分类内功能直接按组展开](pfUI.md#change-pfUI-20261031-08) |
+| [pfUI](pfUI.md) | [2026-10-31 · 优化自动化长页滚动并统一排序](pfUI.md#change-pfUI-20261031-09) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](pfUI-addonskinner.md#change-pfUI-addonskinner-20261030-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | 早期记录，日期待确认 |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-10-30 · 恢复右侧首行有效商品，按实际数据控制商品与回购槽](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261030-02) |

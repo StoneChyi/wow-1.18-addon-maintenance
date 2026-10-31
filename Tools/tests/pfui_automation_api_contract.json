@@ -2041,6 +2041,11 @@
       "file": "Interface/AddOns/pfUI/modules/automation.lua",
       "method": "UpdateScrollState",
       "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetScript",
+      "classification": "native_or_helper"
     }
   ],
   "globals": {
@@ -3163,5 +3168,14 @@
         "pfUI widget instance"
       ]
     }
-  ]
+  ],
+  "automation_scroll_events": {
+    "events": [
+      "OnVerticalScroll",
+      "OnScrollRangeChanged",
+      "OnSizeChanged"
+    ],
+    "receiver": "ScrollFrame",
+    "evidence": "Local WoW.exe script strings; pfUI/modules/addons.lua uses scroll events; bundled Waterfall/aux use OnSizeChanged. Runtime behavior is covered by eventful offline mocks, not live-client acceptance."
+  }
 }

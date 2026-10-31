@@ -18,6 +18,7 @@ pfUI:RegisterModule("automation", "vanilla", function()
     table.insert(host.pageOrder, title)
   end
   table.insert(host.pageOrder, host.merchant)
+  local categoryRank = { quest = 1, combat = 2, merchant = 3, interface = 4, party = 5, misc = 6 }
   local categoryMap = {}
   local categoryNames = {
     merchant = "AutoNeed AutoOpenBag Discard LootBOP MailTo MasterLootRemind Purchases SendRollItem ShiQu sTrade",
@@ -103,10 +104,14 @@ pfUI:RegisterModule("automation", "vanilla", function()
       end
     end
   end
+  function host:SortMode()
+    local mode = self:Config().sort
+    if mode == "name" or mode == "enabled" then return mode end
+    return "category"
+  end
   function host:ModuleList(filtered, category)
-    local list, ranks = {}, {}
+    local list, mode = {}, self:SortMode()
     if not self:IsReady() then return list end
-    for i, name in ipairs(Automaton.db.char.moduleOrder or {}) do ranks[name] = i end
     category = category or "all"
     local filter = FeatureState(category)
     local query = string.lower(filter.query)
@@ -124,41 +129,21 @@ pfUI:RegisterModule("automation", "vanilla", function()
               or (filter.visibility == "hidden" and hidden)
               or (filter.visibility == "enabled" and Automaton:IsModuleActive(name)))
         end
-        if show then table.insert(list, { name = name, module = module }) end
+        if show then
+          table.insert(list, { name = name, module = module,
+            label = string.lower(module.modulename or name),
+            rank = categoryRank[categoryMap[name] or "misc"],
+            active = mode == "enabled" and Automaton:IsModuleActive(name) and true or false })
+        end
       end
     end
     table.sort(list, function(a,b)
-      local ar, br = ranks[a.name], ranks[b.name]
-      if ar and br and ar ~= br then return ar < br end
-      if ar and not br then return true end
-      if br and not ar then return false end
+      if mode == "enabled" and a.active ~= b.active then return a.active end
+      if mode ~= "name" and a.rank ~= b.rank then return a.rank < b.rank end
+      if a.label ~= b.label then return a.label < b.label end
       return a.name < b.name
     end)
     return list
-  end
-  function host:MoveModule(name, delta)
-    local list = self:ModuleList(false)
-    for i, entry in ipairs(list) do
-      local nextIndex = i + delta
-      if entry.name == name and nextIndex > 0 and nextIndex <= table.getn(list) then
-        list[i], list[nextIndex] = list[nextIndex], list[i]
-        local order = {}
-        for _, item in ipairs(list) do table.insert(order, item.name) end
-        -- Merchant modules still exist in the independent fallback list.
-        for _, prior in ipairs(Automaton.db.char.moduleOrder or {}) do
-          local found
-          for _, current in ipairs(order) do if current == prior then found = true; break end end
-          if not found then table.insert(order, prior) end
-        end
-        for _, name in ipairs({ "Repair", "Sell" }) do
-          local found
-          for _, current in ipairs(order) do if current == name then found = true; break end end
-          if not found then table.insert(order, name) end
-        end
-        Automaton.db.char.moduleOrder = order
-        return
-      end
-    end
   end
   function host:GeneralOptions()
     local options = {
@@ -207,6 +192,11 @@ pfUI:RegisterModule("automation", "vanilla", function()
     local options = {
       query = { type = "text", name = "搜索功能", order = 1, get = function() return filter.query end,
         set = function(value) filter.query = value end, desc = "按名称或说明搜索，按回车应用。" },
+      sort = { type = "text", name = "功能排序", order = 2,
+        validate = { category = "按功能分类", name = "名称顺序", enabled = "已启用优先" },
+        get = function() return host:SortMode() end,
+        set = function(value) host:Config().sort = value end,
+        desc = "应用于全部功能和各分类；不会修改独立工具箱原有菜单顺序。" },
       visibility = { type = "text", name = "显示范围", order = 3,
         validate = { all = "全部（含隐藏）", shown = "菜单可见", hidden = "菜单隐藏", enabled = "已启用" },
         get = function() return filter.visibility end, set = function(value) filter.visibility = value end },
@@ -232,10 +222,6 @@ pfUI:RegisterModule("automation", "vanilla", function()
           Automaton.db.char.hiddenModules = Automaton.db.char.hiddenModules or {}
           Automaton.db.char.hiddenModules[name] = not value or nil
         end }
-      args.__pfui_order = { type = "group", name = "菜单顺序", order = 100001, args = {}, buttons = {
-        { name = "上移", func = function() host:MoveModule(name, -1) end },
-        { name = "下移", func = function() host:MoveModule(name, 1) end },
-      } }
       options["module_" .. name] = { type = "group", name = module.modulename or name,
         moduleName = name, order = 10 + index, args = args }
     end
