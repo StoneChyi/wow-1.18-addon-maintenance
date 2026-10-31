@@ -1,0 +1,6127 @@
+{
+  "source_ref": "66c2e6189d647974a8870396956f19209b75e5cc",
+  "requested_module_ref": "HEAD",
+  "gui_renderer_source": "working-tree",
+  "modules": [
+    {
+      "file": "Modules\\KeepOnline.lua",
+      "sha256": "1ecb778b26eb4f922b1adce37324130da12928d0c1ebf1428c9af5ee6399df44",
+      "modules": [
+        {
+          "name": "KeepOnline",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Filter.lua",
+      "sha256": "08de53eb25dfeb5261b39be91e6688c97c9d5fef58f2129604b479059885dc01",
+      "modules": [
+        {
+          "name": "Filter",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Follow.lua",
+      "sha256": "9994fc1ed9534c1d64ad742a605e863411e405a9d808587fd610309fe8d27d96",
+      "modules": [
+        {
+          "name": "follow",
+          "options": [
+            {
+              "path": "/触发设置",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/触发设置/keyword",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/触发设置/case",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/回复设置",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/回复设置/Reply",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "group",
+              "name": "触发设置"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "follow text"
+            },
+            {
+              "readback": "true",
+              "name": "Ignore case",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "回复设置"
+            },
+            {
+              "readback": "false",
+              "name": "收到跟随指令后密语回复",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Group.lua",
+      "sha256": "75f758412b3c5b6fe88f2ae39565e03ed8d82ee505987a80f702ecde5ed3822e",
+      "modules": [
+        {
+          "name": "Group",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/decline",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/delay",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/who",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Who",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "Decline",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "Delay",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Invite.lua",
+      "sha256": "6ab57967f82a203c462979e9e5e26a5b1f01f7c3b9e95bb1729fe1857eebde24",
+      "modules": [
+        {
+          "name": "Invite",
+          "options": [
+            {
+              "path": "/isguild",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/debugBlacklist",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/autoRaid",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/kickInterval",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/inviteString",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/ignoreCase",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/accept",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/accept/friends",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/accept/anyone",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/accept/guild",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/accept/custom",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/accept/custom/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/accept/custom/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/accept/custom/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/accept/custom/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/kickBlacklist",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/blacklistSource",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Ignore case",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "支持工会频道",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Invite text"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "Accept from"
+            },
+            {
+              "readback": "true",
+              "name": "Everyone",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Friends",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Guildmates",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "Custom list"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Add Player"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Remove Player"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "List"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "Purge"
+            },
+            {
+              "readback": "false",
+              "name": "Auto turn raid",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Auto kick blacklist",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "60",
+              "name": "Kick interval",
+              "status": "callback/readback pass",
+              "expected": "60",
+              "type": "range"
+            },
+            {
+              "readback": "Both",
+              "name": "Blacklist source",
+              "status": "callback/readback pass",
+              "expected": "Both",
+              "type": "text"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "Debug blacklist"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Loner.lua",
+      "sha256": "eacd5a89011b8366ba9cda30c7b60667f4e54e9e7980d734c76b441bced19a66",
+      "modules": [
+        {
+          "name": "StrangerDecline",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/party",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/guild",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enableBlackList",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/custom",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/custom/blackList",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/custom/blackList/addKeyword",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/custom/blackList/purgeBlack",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/custom/blackList/addBlack",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/custom/blackList/listBlack",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/custom/blackList/removeBlack",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/custom/blackList/removeKeyword",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/custom/whiteList",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/custom/whiteList/removeWhite",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/custom/whiteList/purgeWhite",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/custom/whiteList/addWhite",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/custom/whiteList/listWhite",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/enableKeywordMatch",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enableWhiteList",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enable Black List",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enable White List",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enable Keyword Match",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "Custom List"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "Custom List"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Add Player to White List"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Remove Player from White List"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "List White List"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "Purge White List"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "Black List"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Add Player to Black List"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Remove Player from Black List"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Add Keyword to Black List"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Remove Keyword from Black List"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "List Black List"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "Purge Black List"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "GuildInvites",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "PartyInvites",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\LootBOP.lua",
+      "sha256": "bbfba7f149472e2d89eaa866e3af07ebfdf165b0e703532209d34708fa2333c7",
+      "modules": [
+        {
+          "name": "LootBOP",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/confirmInGroup",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "true",
+              "name": "Confirm in party/raid",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Plates.lua",
+      "sha256": "88dd61174b410e3503818b87bde22d74ef54e8125f6847f9d4039b1e71f3cc69",
+      "modules": [
+        {
+          "name": "Plates",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/hidePlayerNameInInstance",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/addCurrentZone",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/customHideZones",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/showNameplatesInCombat",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/hidePlayerNameInCity",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "true",
+              "name": "Hide player name in city",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "Hide player name in instance",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "Show name plates in combat",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "Add current zone to hide list"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "Custom hide zones"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Purchases.lua",
+      "sha256": "bb38ea90b0adf535b89f61c0c51eb164254548a716a74b56801f1cdc364a55f6",
+      "modules": [
+        {
+          "name": "Purchases",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/original",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/original/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/original/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/original/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/original/quantity",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/original/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/category2",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/category2/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/category2/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/category2/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/category2/quantity",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/category2/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/category1",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/category1/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/category1/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/category1/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/category1/quantity",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/category1/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "group",
+              "name": "自动购买材料"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加物品ID：(回车确认，一次添加一个)"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "移除物品ID(按回车确认，一次添加一个)"
+            },
+            {
+              "readback": "300",
+              "name": "数量",
+              "status": "callback/readback pass",
+              "expected": "300",
+              "type": "range"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "打印全部列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空列表"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "自动购买材料1"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加物品ID：(回车确认，一次添加一个)"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "移除物品ID(按回车确认，一次添加一个)"
+            },
+            {
+              "readback": "300",
+              "name": "数量",
+              "status": "callback/readback pass",
+              "expected": "300",
+              "type": "range"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "打印全部列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空列表"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "自动购买材料2"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加物品ID：(回车确认，一次添加一个)"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "移除物品ID(按回车确认，一次添加一个)"
+            },
+            {
+              "readback": "300",
+              "name": "数量",
+              "status": "callback/readback pass",
+              "expected": "300",
+              "type": "range"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "打印全部列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空列表"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Queue.lua",
+      "sha256": "f97bd3709b159621aacec34bd7ab182a9661292b94c83ac9753c8b2248bca861",
+      "modules": [
+        {
+          "name": "Queue",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/delay",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/join",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Delay",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "Join",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Ready.lua",
+      "sha256": "ce2597466c15051f920583119e0c12687d9b574010ebbe6de776491e0d1bba35",
+      "modules": [
+        {
+          "name": "Ready",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Release.lua",
+      "sha256": "f47bdf934420923b22c411d90401ddb7b7eea4b0ebfce5a661520c90ae33882b",
+      "modules": [
+        {
+          "name": "Release",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Repair.lua",
+      "sha256": "5024f975114dc2d0876ce7eb1beae41c0afdafe991e9da92bd01cbc4300b4c50",
+      "modules": [
+        {
+          "name": "Repair",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Rez.lua",
+      "sha256": "548a3d080ab91ad3ede1f2f65d0baed4cfc263f58f707443b1a5da895f38b348",
+      "modules": [
+        {
+          "name": "Rez",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/persist",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/delayTime",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/delay",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/ignoreBattleRes",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "true",
+              "name": "Persist",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "Delay",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "100",
+              "name": "Delay Time",
+              "status": "callback/readback pass",
+              "expected": "100",
+              "type": "range"
+            },
+            {
+              "readback": "true",
+              "name": "Ignore Battle Resurrections",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Sell.lua",
+      "sha256": "b1237ee7c2b46bfcdb4fc14a6566db5e05591195b19807cbac65fab707c4906a",
+      "modules": [
+        {
+          "name": "Sell",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/custom",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/custom/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/custom/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/custom/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/custom/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/ignore",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/ignore/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/ignore/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/ignore/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/ignore/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "group",
+              "name": "总是售卖"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "增加物品ID"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "删除物品ID"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清除"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "忽略"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "增加物品ID"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "删除物品ID"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清除"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Stand.lua",
+      "sha256": "1ec5419eee7d077ec2b137695ad5aef6869f26e39b0ab6ff9865d6b87fa9034c",
+      "modules": [
+        {
+          "name": "Stand",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Wuss.lua",
+      "sha256": "47edc7e41a10ab3a4412b8f5844b3e12394d13fb679b805297a45fd657bedbe0",
+      "modules": [
+        {
+          "name": "Wuss",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\CancelBuff.lua",
+      "sha256": "ee64dbbf888e4547932d3a8679853e8e6b6f4bd09364a65756dcb4abdddd20b8",
+      "modules": [
+        {
+          "name": "CancelBuff",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/ignore",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/ignore/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/ignore/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/ignore/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/ignore/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "Add buff"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Add buff"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "Remove buff"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "List"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "Purge"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Lern2Spell.lua",
+      "sha256": "05d2684193039492939f3193da3fee41fdeac71f38611fbdf21d04802b217751",
+      "modules": [
+        {
+          "name": "Lern2Spell",
+          "options": [
+            {
+              "path": "/upgradeSpells",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/markKnown",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "技能更新",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "已学物品标记",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\AlertCombat.lua",
+      "sha256": "2d0e14c166a41bf449b74a8b70edbe61399b1daaf73543822662f05590c66453",
+      "modules": [
+        {
+          "name": "AlertCombat",
+          "options": [
+            {
+              "path": "/aggroAutoFade",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enablePetAlert",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enableDeathAlert",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/header2",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enableSound",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enableFriendlyTargetAlert",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enablePetHappiness",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enableAggroAlert",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/aggroSound",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/header1",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/aggroCooldown",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "header",
+              "name": "战斗提示"
+            },
+            {
+              "readback": "true",
+              "name": "进入战斗提示音",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "死亡娱乐消息",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "宠物血量预警",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "宠物快乐值预警",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "仇恨预警"
+            },
+            {
+              "readback": "true",
+              "name": "仇恨预警（需Superwow模组）",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "自动渐隐术",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "60",
+              "name": "预警冷却(秒)",
+              "status": "callback/readback pass",
+              "expected": "60",
+              "type": "range"
+            },
+            {
+              "readback": "false",
+              "name": "预警提示音",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "友方盯梢提醒",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\QuestAnnouncer.lua",
+      "sha256": "75301f3e5a10dda51f10e3e1ffdd2e2e79eea9fc0b6dfff763b67d9ef23f47b7",
+      "modules": [
+        {
+          "name": "QuestAnnouncer",
+          "options": [
+            {
+              "path": "/soloAnnounce",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "单人时也通报",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Trainer.lua",
+      "sha256": "53346e2f0fafd8aedea00b161d067f12093789a471513b8a93ad2093c4b26dd8",
+      "modules": [
+        {
+          "name": "Trainer",
+          "init_error": "[string \"<python>\"]:4304: attempt to call method 'RegisterEvent' (a nil value)",
+          "options_recovery": "declared options registered after unrelated init boundary",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Tooltip.lua",
+      "sha256": "c8c950529ccde70ff58eeb44ed409dc57a5c2be2e9bcd71d77307508e188a685",
+      "modules": [
+        {
+          "name": "Tooltip",
+          "options": [
+            {
+              "path": "/showReputation",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/header3",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/showPetHappiness",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/cursorScale",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/showitemid",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/header1",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/showWishInfo",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showResistance",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showImpression",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showspellid",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/header2",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showPetFood",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showFrameName",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/hideInCombat",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showDamageAndSpeed",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showPetExp",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showgather",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/headerpet",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "header",
+              "name": "物品信息"
+            },
+            {
+              "readback": "false",
+              "name": "显示物品ID",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "采集等级",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "显示法术ID",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "目标信息"
+            },
+            {
+              "readback": "true",
+              "name": "目标护甲和抗性",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "目标伤害和攻速",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "显示目标声望",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "显示玩家许愿信息",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "显示玩家印象",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "宠物信息（自己的宠物）"
+            },
+            {
+              "readback": "false",
+              "name": "宠物快乐度",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "宠物食物需求",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "宠物经验",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "界面行为"
+            },
+            {
+              "readback": "4",
+              "name": "鼠标大小",
+              "status": "callback/readback pass",
+              "expected": "4",
+              "type": "range"
+            },
+            {
+              "readback": "true",
+              "name": "战斗中隐藏提示",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "框架显示",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\pfQuestSendLink.lua",
+      "sha256": "a1ddc1bde8db301d9d1184b8f876e7fef7b59bba228f467fa5729a8603e542d7",
+      "modules": [
+        {
+          "name": "pfQuestSendLink",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\ClearCache.lua",
+      "sha256": "33c4e3f5affaff4c2068f00c5bbd5da91559eb3c18f5f3c659ef00618c5618cc",
+      "modules": [
+        {
+          "name": "ClearCache",
+          "options": [
+            {
+              "path": "/optmem",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "25",
+              "name": "Delay Time",
+              "status": "callback/readback pass",
+              "expected": "25",
+              "type": "range"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\SelfName.lua",
+      "sha256": "f889b7cabf4412469868adaa442feaa9f362adf1f72aa809cd631cb9bb93aa1b",
+      "modules": [
+        {
+          "name": "SelfName",
+          "options": [
+            {
+              "path": "/showname",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "玩家名字"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\ErrClear.lua",
+      "sha256": "9e422af9f99edaecc2e79cd255ad007b6cb2b658cd0c06267220fe5498c72618",
+      "modules": [
+        {
+          "name": "ErrClear",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/ignore",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/ignore/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/ignore/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/ignore/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/ignore/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "自定义错误管理"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加错误"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "删除错误"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空全部"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Superwow.lua",
+      "scenario": "SuperWoW present",
+      "sha256": "63ef0419ddd28a4e67e97e33b378402fb3bd19ddf04ed86ce28b785fddaafc5d",
+      "modules": [
+        {
+          "name": "Superwow",
+          "options": [
+            {
+              "path": "/shiftloot",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/chatbubbles",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/chatbubbles/togglesay",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/chatbubbles/togglebgbubbles",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/chatbubbles/chatbubblerange",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/chatbubbles/togglecreaturebubbles",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/chatbubbles/togglepartybubbles",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/chatbubbles/togglewhisperbubbles",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/chatbubbles/toggleraidbubbles",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/nameplates",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/nameplates/nameplaterange",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/nameplates/nameplatemotion",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/autoopen",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/uncappedsounds",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/healingtext",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/header2",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/backgroundsound",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/autoopen_custom",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/autoopen_custom/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/autoopen_custom/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/autoopen_custom/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/autoopen_custom/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/LootSparkle",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/fov",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/SelectionCircleStyle",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/clickthrough",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/header1",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/autoloot",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "header",
+              "name": "拾取"
+            },
+            {
+              "readback": "false",
+              "name": "自动拾取",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "按Shift键开启手动拾取",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "点击穿透尸体",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "自动开蚌壳和箱子",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "自定义自动开启列表"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加物品（ID）"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "移除物品（ID）"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "打印列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空列表"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "画面与音效"
+            },
+            {
+              "readback": "3.14",
+              "name": "视野范围（需要重载）",
+              "status": "callback/readback pass",
+              "expected": "3.14",
+              "type": "range"
+            },
+            {
+              "readback": "true",
+              "name": "背景声音",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "无限制声音",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "战利品闪光效果",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "4",
+              "name": "选择目标脚下光圈样式",
+              "status": "callback/readback pass",
+              "expected": "4",
+              "type": "range"
+            },
+            {
+              "readback": "false",
+              "name": "浮动治疗文字",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "姓名板设置"
+            },
+            {
+              "readback": "80",
+              "name": "姓名板距离",
+              "status": "callback/readback pass",
+              "expected": "80",
+              "type": "range"
+            },
+            {
+              "readback": "3",
+              "name": "姓名板运动方式",
+              "status": "callback/readback pass",
+              "expected": "3",
+              "type": "range"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "聊天气泡设置"
+            },
+            {
+              "readback": "200",
+              "name": "聊天气泡距离",
+              "status": "callback/readback pass",
+              "expected": "200",
+              "type": "range"
+            },
+            {
+              "readback": "false",
+              "name": "说/喊话聊天气泡",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "小队聊天气泡",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "团队聊天气泡",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "战场聊天气泡",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "私聊聊天气泡",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "生物聊天气泡",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\CancelTiger.lua",
+      "scenario": "Hunter",
+      "sha256": "f5b5bd87a3cafdb35ec720a00964becef9b6caa23ca35009cfc2a402ec31f99d",
+      "modules": [
+        {
+          "name": "CancelTiger",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/checkparty",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "监测队友和队友宠物",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\NewLevelFrame.lua",
+      "sha256": "6f712aceb114ffed9a0fa8e7d2b90abd20b30e64a0d8959df483da26f962af29",
+      "modules": [
+        {
+          "name": "NewLevelFrame",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\sTrade.lua",
+      "sha256": "60383e54a37c43fae2ae8c94f3bb85d3776ac9d9eda235fcc0dbceb610de201b",
+      "modules": [
+        {
+          "name": "sTrade",
+          "options": [
+            {
+              "path": "/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "显示金币交易记录"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Discard.lua",
+      "sha256": "e9b81247ad53f70c7f58d0063aa5a8b61380975f8fc77631df5ab051e74eb24d",
+      "modules": [
+        {
+          "name": "Discard",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/discard",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/discard/printEnabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/discard/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/discard/soulShardGroup",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/discard/soulShardGroup/soulShardEnabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/discard/soulShardGroup/soulShardLimit",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/discard/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/discard/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/discard/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "group",
+              "name": "自动丢弃列表"
+            },
+            {
+              "readback": "false",
+              "name": "启用丢弃提示",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加物品（ID）"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "移除物品（ID）"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "灵魂碎片自动管理"
+            },
+            {
+              "readback": "true",
+              "name": "启用灵魂碎片管理",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "84",
+              "name": "灵魂碎片保留数量",
+              "status": "callback/readback pass",
+              "expected": "84",
+              "type": "range"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "打印列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空列表"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\AutoShout.lua",
+      "sha256": "4e60777cd579a18754bb314c6fb4e5c9ae62d98462230b29e38476c4b091d6f7",
+      "modules": [
+        {
+          "name": "AutoShout",
+          "options": [
+            {
+              "path": "/message",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/autoReply",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/autoReply/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/autoReply/message",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/autoReply/inCombat",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/channel",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/interval",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/items/item3",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/items/item3/container3",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items/item3/slot3",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items/item5",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/items/item5/container5",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items/item5/slot5",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items/item2",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/items/item2/container2",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items/item2/slot2",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items/item4",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/items/item4/slot4",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items/item4/container4",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items/item1",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/items/item1/container1",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/items/item1/slot1",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/shoutEnabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/inCombat",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "true",
+              "name": "启用自动喊话",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "消息内容"
+            },
+            {
+              "readback": "300",
+              "name": "间隔时间(秒)",
+              "status": "callback/readback pass",
+              "expected": "300",
+              "type": "range"
+            },
+            {
+              "readback": "party",
+              "name": "目标频道",
+              "status": "callback/readback pass",
+              "expected": "party",
+              "type": "text"
+            },
+            {
+              "readback": "true",
+              "name": "战斗中喊话",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "物品列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "物品1"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "物品2"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "物品3"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "物品4"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "物品5"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "物品1"
+            },
+            {
+              "readback": "10",
+              "name": "容器ID",
+              "status": "callback/readback pass",
+              "expected": "10",
+              "type": "range"
+            },
+            {
+              "readback": "36",
+              "name": "物品槽位",
+              "status": "callback/readback pass",
+              "expected": "36",
+              "type": "range"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "物品2"
+            },
+            {
+              "readback": "10",
+              "name": "容器ID",
+              "status": "callback/readback pass",
+              "expected": "10",
+              "type": "range"
+            },
+            {
+              "readback": "36",
+              "name": "物品槽位",
+              "status": "callback/readback pass",
+              "expected": "36",
+              "type": "range"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "物品3"
+            },
+            {
+              "readback": "10",
+              "name": "容器ID",
+              "status": "callback/readback pass",
+              "expected": "10",
+              "type": "range"
+            },
+            {
+              "readback": "36",
+              "name": "物品槽位",
+              "status": "callback/readback pass",
+              "expected": "36",
+              "type": "range"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "物品4"
+            },
+            {
+              "readback": "10",
+              "name": "容器ID",
+              "status": "callback/readback pass",
+              "expected": "10",
+              "type": "range"
+            },
+            {
+              "readback": "36",
+              "name": "物品槽位",
+              "status": "callback/readback pass",
+              "expected": "36",
+              "type": "range"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "物品5"
+            },
+            {
+              "readback": "10",
+              "name": "容器ID",
+              "status": "callback/readback pass",
+              "expected": "10",
+              "type": "range"
+            },
+            {
+              "readback": "36",
+              "name": "物品槽位",
+              "status": "callback/readback pass",
+              "expected": "36",
+              "type": "range"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "自动回复"
+            },
+            {
+              "readback": "true",
+              "name": "启用自动回复",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "回复内容"
+            },
+            {
+              "readback": "true",
+              "name": "战斗中回复",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Unlock.lua",
+      "sha256": "0055358686e5cc48ffbc8d0b5d5c6ca1a365ed1634f623bb4d3a33d243637a4e",
+      "modules": [
+        {
+          "name": "Unlock",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/tradeFrameButton",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/rightClick",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "右键开锁",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "交易界面按钮",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\1invall.lua",
+      "sha256": "ca7f51194f9a910bae1cb3e65581c5000498e17e4b3d4896ee41d4e1feb9d02d",
+      "modules": [
+        {
+          "name": "invall",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\AutoOpenBag.lua",
+      "sha256": "03604b82b9a3311004a1e31b89793428d7e1adfdb369f382e4a5052d4c2ce51d",
+      "modules": [
+        {
+          "name": "AutoOpenBag",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\RandomMount.lua",
+      "sha256": "1a617273e17cfe8155e18fd5c1f0ebaed893b5e07d62d1fe98e438135fbd85f0",
+      "modules": [
+        {
+          "name": "RandomMount",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/excludeMountList",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/customMountList",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/customMountAdd",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/excludeMountAdd",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/listMounts",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/separator1",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/excludeMountRemove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/separator2",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/customMountClear",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/customMountsEnable",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/excludeMountClear",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "true",
+              "name": "启用自定义坐骑",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "列出所有可用坐骑"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "自定义坐骑管理（通过名称）"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加自定义坐骑"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "查看自定义坐骑列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清除所有自定义坐骑"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "移除坐骑管理（黑名单）"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "移除坐骑（加入黑名单）"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "恢复坐骑（移出黑名单）"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "查看已移除的坐骑列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空移除列表"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\ExpBar.lua",
+      "sha256": "afd1633f8fb82cf8be54cff6819ba3736b0357a70926f5b62e72487d155adb4c",
+      "modules": [
+        {
+          "name": "ExpBar",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\DrunkTracker.lua",
+      "sha256": "2d864f8ef2d2b7b52c234c895e3acc2d83ea1e46f5c361df8039fb25ef413f45",
+      "modules": [
+        {
+          "name": "DrunkTracker",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\TSTargetMark.lua",
+      "sha256": "a82e320e839de3e56a5e870b3dabc882c911a5df579a69613396ffd36978e57f",
+      "modules": [
+        {
+          "name": "TSTargetMark",
+          "options": [
+            {
+              "path": "/floatSmooth",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/selfHighlightEnabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/header3",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/specialMode",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/offsetX",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/arrowSize",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/header1",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/floatSpeed",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/selfHighlightOffsetY",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/header2",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/facingColorEnabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/selfHighlightOffsetX",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/selfHighlightSize",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/floatAmplitude",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/offsetY",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/floatEnabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/arrowStyle",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "header",
+              "name": "箭头外观"
+            },
+            {
+              "readback": "true",
+              "name": "特别模式",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "100",
+              "name": "箭头大小",
+              "status": "callback/readback pass",
+              "expected": "100",
+              "type": "range"
+            },
+            {
+              "readback": "25",
+              "name": "箭头样式",
+              "status": "callback/readback pass",
+              "expected": "25",
+              "type": "range"
+            },
+            {
+              "readback": "50",
+              "name": "X轴偏移",
+              "status": "callback/readback pass",
+              "expected": "50",
+              "type": "range"
+            },
+            {
+              "readback": "50",
+              "name": "Y轴偏移",
+              "status": "callback/readback pass",
+              "expected": "50",
+              "type": "range"
+            },
+            {
+              "readback": "false",
+              "name": "启用朝向颜色",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "浮动动画"
+            },
+            {
+              "readback": "true",
+              "name": "启用浮动动画",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "10",
+              "name": "浮动速度",
+              "status": "callback/readback pass",
+              "expected": "10",
+              "type": "range"
+            },
+            {
+              "readback": "30",
+              "name": "浮动幅度",
+              "status": "callback/readback pass",
+              "expected": "30",
+              "type": "range"
+            },
+            {
+              "readback": "false",
+              "name": "平滑动画",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "自身高亮"
+            },
+            {
+              "readback": "true",
+              "name": "启用自身高亮",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "400",
+              "name": "高亮图标大小",
+              "status": "callback/readback pass",
+              "expected": "400",
+              "type": "range"
+            },
+            {
+              "readback": "500",
+              "name": "高亮图标X偏移",
+              "status": "callback/readback pass",
+              "expected": "500",
+              "type": "range"
+            },
+            {
+              "readback": "500",
+              "name": "高亮图标Y偏移",
+              "status": "callback/readback pass",
+              "expected": "500",
+              "type": "range"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\shiqu.lua",
+      "sha256": "6748f56555f7f264d14d09a5a6c16d718754ff2824f4269e0b32aaa9335ea780",
+      "modules": [
+        {
+          "name": "ShiQu",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/announceEnable",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/permissionCheck",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "权限检测",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "启用物品通报",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\QuestAutomation.lua",
+      "sha256": "5a8b9760319dcda512c9245292284333529e1ee396306341fc65e8ad9ff0c0b3",
+      "modules": [
+        {
+          "name": "QuestAutomation",
+          "options": [
+            {
+              "path": "/acceptQuests",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/skipGossip",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/customQuestRemove",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/skipGossipBlacklistRemove",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/customQuestAdd",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/skipGossipBlacklistList",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/customQuestRemoveName",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/skipGossipBlacklistHeader",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/completeQuests",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/basicHeader",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/customQuestsHeader",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/skipGossipBlacklistAdd",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/customQuestList",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/customQuestClear",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/useCustomQuests",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/acceptSharedQuests",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/customQuestAddReward",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/customQuestAddName",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/skipGossipBlacklistClear",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/skipGossipBlacklistRemoveName",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/skipGossipBlacklistAddName",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "header",
+              "name": "基础功能"
+            },
+            {
+              "readback": "false",
+              "name": "自动接取任务",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "自动完成任务",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "自动接受共享任务",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "跳过闲聊",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "跳过闲聊黑名单"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "NPC名称"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "添加NPC"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "要移除的NPC名称"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "移除NPC"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "列出黑名单"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空黑名单"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "自定义任务管理"
+            },
+            {
+              "readback": "true",
+              "name": "自定义任务模式",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "任务名称或关键字，输入后回车，并点击添加"
+            },
+            {
+              "readback": "4",
+              "name": "奖励选择 (1-4)",
+              "status": "callback/readback pass",
+              "expected": "4",
+              "type": "range"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "添加任务"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "要移除的任务名称（精确匹配）"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "移除任务"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "列出任务"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清除全部"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\QuestItemBar.lua",
+      "sha256": "9968e359d1e9ffc333cbb69bc6afad865b5ddf1e54d261be6612660b9a8140cd",
+      "modules": [
+        {
+          "name": "QuestItemBar",
+          "options": [
+            {
+              "path": "/perRow",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/lockPosition",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/buttonSize",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/monitoredHeader",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/resetPosition",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/monitoredAdd",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/showQuestItems",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/monitoredClear",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/monitoredList",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/showMonitoredItems",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/monitoredRemove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "48",
+              "name": "按钮大小",
+              "status": "callback/readback pass",
+              "expected": "48",
+              "type": "range"
+            },
+            {
+              "readback": "20",
+              "name": "每排按钮数",
+              "status": "callback/readback pass",
+              "expected": "20",
+              "type": "range"
+            },
+            {
+              "readback": "true",
+              "name": "锁定位置",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "重置位置"
+            },
+            {
+              "readback": "false",
+              "name": "显示任务物品",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "物品监控"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加监控物品"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "移除监控物品"
+            },
+            {
+              "readback": "false",
+              "name": "显示监控物品",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "列出监控物品"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空监控物品"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\AutoNeed.lua",
+      "sha256": "934762dbaec6fe16e446fac5b3c8d8a8011d463dc20991f66051f39416ba2a86",
+      "modules": [
+        {
+          "name": "AutoNeed",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/自定义物品管理",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/自定义物品管理/custom_item_remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/自定义物品管理/custom_item_add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/自定义物品管理/rolltype",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/自定义物品管理/custom_item_clear",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/自定义物品管理/custom_item_list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/安其拉废墟/神殿",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/安其拉废墟/神殿/enable",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/安其拉废墟/神殿/mount",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/安其拉废墟/神殿/idol",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/安其拉废墟/神殿/beetle",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/纳克萨玛斯",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/纳克萨玛斯/leather",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/纳克萨玛斯/cloth",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/纳克萨玛斯/enable",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/纳克萨玛斯/plate",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/纳克萨玛斯/mail",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/纳克萨玛斯/frozenrune",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/separator1",
+              "action": false,
+              "set": false,
+              "type": "header",
+              "get": false
+            },
+            {
+              "path": "/祖尔格拉布",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/祖尔格拉布/enable",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/祖尔格拉布/gems",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/祖尔格拉布/coins",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/按品质自动需求",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/按品质自动需求/enable",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/按品质自动需求/green",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/按品质自动需求/blue",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/按品质自动需求/purple",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/熔火之心",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/熔火之心/lavacore",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/熔火之心/fierycore",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/熔火之心/earthessence",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/熔火之心/enable",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/熔火之心/fireessence",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/熔火之心/sulfuron",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/卡拉赞",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/卡拉赞/enable",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/卡拉赞/overloaded",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/卡拉赞/arcane",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/杂项/item_20381",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项/enable",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/杂项/item_4500",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项/item_7082",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项/item_51217",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项/item_50203",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项/item_12843",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项/item_12662",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项/item_61198",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项/item_61199",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            },
+            {
+              "path": "/杂项/item_61197",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "status": "display",
+              "type": "group",
+              "name": "按品质自动需求"
+            },
+            {
+              "readback": "true",
+              "name": "模组开关",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "不选择",
+              "name": "紫装需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "蓝装需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "绿装需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "自定义物品管理"
+            },
+            {
+              "readback": "不选择",
+              "name": "默认需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加自定义物品"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "移除自定义物品"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "查看自定义物品列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清除所有自定义物品"
+            },
+            {
+              "status": "display",
+              "type": "header",
+              "name": "物品分类设置"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "杂项"
+            },
+            {
+              "readback": "true",
+              "name": "开启杂项",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "不选择",
+              "name": "旅行者背包",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "幻化币",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "堕落者的天灾石",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "褪色的梦境碎片",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "小型梦境碎片",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "明亮梦境碎片",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "梦幻龙鳞",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "恶魔符文",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "腐化之沙",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "空气精华",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "卡拉赞"
+            },
+            {
+              "readback": "true",
+              "name": "开启",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "不选择",
+              "name": "奥术精华需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "过载魔法能量需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "祖尔格拉布"
+            },
+            {
+              "readback": "true",
+              "name": "开启",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "不选择",
+              "name": "硬币需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "宝石需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "安其拉废墟/神殿"
+            },
+            {
+              "readback": "true",
+              "name": "开启",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "不选择",
+              "name": "甲虫需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "雕像需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "虫子坐骑需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "熔火之心"
+            },
+            {
+              "readback": "true",
+              "name": "开启",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "不选择",
+              "name": "熔岩之核需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "炽热之核需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "大地精华需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "火焰精华需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "萨弗隆铁锭需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "纳克萨玛斯"
+            },
+            {
+              "readback": "true",
+              "name": "开启",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "不选择",
+              "name": "布衣碎片需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "皮甲碎片需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "锁甲碎片需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "板甲碎片需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "不选择",
+              "name": "冰冻符文需求类型",
+              "status": "callback/readback pass",
+              "expected": "不选择",
+              "type": "text"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\S_ItemLinktoenUS.lua",
+      "sha256": "55752f31e84f2abcb28cb5a877508334de3d51d388b2c0cdc519be08a360f516",
+      "modules": [
+        {
+          "name": "ItemLinkEnUS",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\AutoDB.lua",
+      "sha256": "abbafecbe36a2fac7e6412a58193da965fc94be5eee452e38bf91620f51c9285",
+      "modules": [
+        {
+          "name": "AutoDB",
+          "init_error": "[string \"<python>\"]:564: attempt to call method 'SetMovable' (a nil value)",
+          "options_recovery": "real CreateOptions after unrelated init boundary",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showTimer",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/statsGroup",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/statsGroup/resetStats",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/statsGroup/showStats",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/confirmFlights",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/announceETA",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "true",
+              "name": "确认飞行",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "飞行计时器",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "通告到站",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "飞行统计"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "显示统计"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "重置数据"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\ProcDoc.lua",
+      "sha256": "de4cfa9f8cdc719728c0093afc0f11d25231ebaa4fdaafa621e950039497e370",
+      "modules": [
+        {
+          "name": "ProcDoc",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/sound",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/disableTimers",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Mute All Proc Sounds",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "Disable Timers",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\MasterLootRemind.lua",
+      "sha256": "d825d2654c26f6519ede240aa2dd7a2c5f877ed7f99776b15e5ce0668fc478ae",
+      "modules": [
+        {
+          "name": "MasterLootRemind",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/IgnoreList",
+              "action": false,
+              "set": false,
+              "type": "group",
+              "get": false
+            },
+            {
+              "path": "/IgnoreList/purge",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/IgnoreList/remove",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/IgnoreList/add",
+              "action": false,
+              "set": true,
+              "type": "text",
+              "get": false
+            },
+            {
+              "path": "/IgnoreList/list",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/ResetLoot",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/BossCombat",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/GroupType",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "3",
+              "name": "队伍类型",
+              "status": "callback/readback pass",
+              "expected": "3",
+              "type": "range"
+            },
+            {
+              "readback": "false",
+              "name": "首领战斗",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "重置拾取",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "display",
+              "type": "group",
+              "name": "忽略列表"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "打印列表"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "添加首领（名称）"
+            },
+            {
+              "status": "text routing only; command side effects not executed",
+              "type": "text",
+              "name": "移除首领（名称）"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "清空列表"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\InterPlayerLink.lua",
+      "sha256": "8812beaeb1ef81fbbdffd299048752415ef75c607d80633e5420178e35661a98",
+      "modules": [
+        {
+          "name": "InterPlayerLink",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Summon.lua",
+      "sha256": "b972c3e7204ee9a7f8676539ea58f74f80fd7e65c2404c81f97cb6d9836a127d",
+      "modules": [
+        {
+          "name": "Summon",
+          "options": [
+            {
+              "path": "/combatDelay",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/combatDelayTime",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/delayTime",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            },
+            {
+              "path": "/quiet",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/delay",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Delay",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "100",
+              "name": "Delay Time",
+              "status": "callback/readback pass",
+              "expected": "100",
+              "type": "range"
+            },
+            {
+              "readback": "false",
+              "name": "Combat Delay",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "30",
+              "name": "Combat Delay Time",
+              "status": "callback/readback pass",
+              "expected": "30",
+              "type": "range"
+            },
+            {
+              "readback": "true",
+              "name": "Be Quiet!",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\Boomtime.lua",
+      "sha256": "348d2009819ee5fb61ac7158a7a0650d5dc645fe4f018ee16e257faaff353012",
+      "modules": [
+        {
+          "name": "Boomtime",
+          "init_error": "[string \"<python>\"]:97: attempt to index field 'FLAT' (a nil value)",
+          "options_recovery": "real GetOptions after unrelated init boundary",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\KneelToQueen.lua",
+      "sha256": "b3d54b3a29b5f03dfc5c0c9a0edc251ba4c701888da1ef4e46cac4cfc7a4dc55",
+      "modules": [
+        {
+          "name": "KneelToQueen",
+          "init_error": "[string \"<python>\"]:175: attempt to call method 'SetBackdropColor' (a nil value)",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/debugMode",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "true",
+              "name": "调试模式",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\jtlk.lua",
+      "sha256": "c4aa1ea81b9b1075ec0c311547dd07398d3f82717455098fbc5d9fab3da492aa",
+      "modules": [
+        {
+          "name": "LegionShackles",
+          "init_error": "[string \"<python>\"]:174: attempt to call method 'SetBackdropColor' (a nil value)",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/debugMode",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "true",
+              "name": "调试模式",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\WorldBuffs.lua",
+      "sha256": "f1ca85ffedb2c59c8f72e6fff669f813ea0b0d535d2f68643c064c068d237fc0",
+      "modules": [
+        {
+          "name": "WorldBuffs",
+          "options": [
+            {
+              "path": "/showhotel",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/autoLogout",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showbar",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/autoExit",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/sound",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/guild",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "播放提示音",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "倒计时提醒",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "公会通告",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "显示炉石按钮",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "自动登出",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "true",
+              "name": "自动退出游戏",
+              "status": "callback/readback pass",
+              "expected": "true",
+              "type": "toggle"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\RangeController.lua",
+      "sha256": "63741c5b60ead7b270a79bef09232fe020491dfc59dd926c99c40f10af17dd7d",
+      "modules": [
+        {
+          "name": "RangeController",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/applyRange",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            },
+            {
+              "path": "/rangeValue",
+              "action": false,
+              "set": true,
+              "type": "range",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "200",
+              "name": "范围值",
+              "status": "callback/readback pass",
+              "expected": "200",
+              "type": "range"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "应用范围"
+            },
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\CDSafe.lua",
+      "sha256": "6c7c9c48442dd69e9cc39cc260a3821bc2b1fc4ba713b4738f5f586664da4b71",
+      "modules": [
+        {
+          "name": "CDSafe",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            },
+            {
+              "path": "/showPanel",
+              "action": true,
+              "set": false,
+              "type": "execute",
+              "get": false
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            },
+            {
+              "status": "action routing only; gameplay not executed",
+              "type": "execute",
+              "name": "打开状态面板"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    },
+    {
+      "file": "Modules\\ShaguStance.lua",
+      "sha256": "f2c9c693236dd031c40620d9db935a8c961451afd6715a0909d541d65ef6f458",
+      "modules": [
+        {
+          "name": "ShaguStance",
+          "options": [
+            {
+              "path": "/enabled",
+              "action": false,
+              "set": true,
+              "type": "toggle",
+              "get": true
+            }
+          ],
+          "render": "pass",
+          "interaction": [
+            {
+              "readback": "false",
+              "name": "Enabled",
+              "status": "callback/readback pass",
+              "expected": "false",
+              "type": "toggle"
+            }
+          ],
+          "redraw_readback": "pass"
+        }
+      ]
+    }
+  ]
+}

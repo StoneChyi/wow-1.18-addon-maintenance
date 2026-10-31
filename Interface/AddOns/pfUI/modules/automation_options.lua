@@ -53,34 +53,50 @@ do
   local function CanEdit(row)
     return row.option and not row.disabled and not row.state.building
   end
-  local function Commit(row, notify)
-    if not CanEdit(row) or row.committing then return end
+  local function Run(state, action)
+    local ok, result = pcall(action)
+    if not ok then
+      R.lastError = tostring(result)
+      if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff33ffccpfUI|r 设置未完成：" .. R.lastError) end
+      return false, result
+    end
+    R.lastError = nil
+    return true, result
+  end
+  local function CommitValue(row)
     local opt, input = row.option, row.input
     local value = input:GetText()
     if value == row.displayed then return end
     if opt.type == "range" or opt.type == "number" then
       value = tonumber(value)
       if not value or value ~= value or value == math.huge or value == -math.huge then
-        row.displayed = tostring(Get(opt) or ""); input:SetText(row.displayed); return
+        error(Caption(opt) .. "：请输入有效数字。")
       end
       if opt.step and opt.step > 0 then value = math.floor(value / opt.step + .5) * opt.step end
       value = math.floor(value * 1000 + .5) / 1000
       if opt.min then value = math.max(opt.min, value) end
       if opt.max then value = math.min(opt.max, value) end
     elseif type(opt.validate) == "function" and not opt.validate(value) then
-      row.displayed = tostring(Get(opt) or ""); input:SetText(row.displayed); return
+      error(Caption(opt) .. "：输入未通过验证。")
     end
-    row.committing = true
     if tostring(Get(opt) or "") ~= tostring(value) then Set(opt, value) end
     row.displayed = tostring(Get(opt) or "")
     input:SetText(row.displayed)
+
+  end
+  local function Commit(row, notify)
+    if not CanEdit(row) or row.committing then return true end
+    row.committing = true
+    local ok = Run(row.state, function() CommitValue(row) end)
     row.committing = nil
-    if notify then Notify(row.state) end
+    if ok and notify then Notify(row.state) end
+    return ok
   end
   local function CommitAll(state)
-    for _, candidate in ipairs(state.visible) do
-      if candidate.widget == "text" then Commit(candidate, false) end
+    for _, candidate in ipairs(state.visible or {}) do
+      if candidate.widget == "text" and not Commit(candidate, false) then return false end
     end
+    return true
   end
   local function NewRow(state, widget)
     local prior = this
@@ -88,7 +104,7 @@ do
     local oldDynamic = this.automationDynamic
     this.automationDynamic = true
     local ok, row = pcall(pfUI.gui.CreateConfig, function() end, "", { value = "" }, "value", widget, widget == "button" and function() end or {})
-    this.automationDynamic = oldDynamic
+    state.parent.automationDynamic = oldDynamic
     this = prior
     if not ok then error(row) end
     row.state, row.widget = state, widget
@@ -103,16 +119,18 @@ do
       row.input:SetScript("OnTextChanged", nil)
       row.input:SetScript("OnEnterPressed", function()
         row.suppressFocus = true
-        Commit(row, false)
-        row.input:ClearFocus()
+        local ok = Commit(row, false)
+        if ok then row.input:ClearFocus() end
         row.suppressFocus = nil
-        Notify(state)
+        if ok then Notify(state) end
       end)
       row.input:SetScript("OnEscapePressed", function()
         row.suppressFocus = true
-        row.displayed = tostring(Get(row.option) or "")
-        row.input:SetText(row.displayed)
-        row.input:ClearFocus()
+        Run(state, function()
+          row.displayed = tostring(Get(row.option) or "")
+          row.input:SetText(row.displayed)
+          row.input:ClearFocus()
+        end)
         row.suppressFocus = nil
       end)
       row.input:SetScript("OnEditFocusLost", function()
@@ -123,13 +141,20 @@ do
         if row.option then row.input:SetChecked(Get(row.option) and 1 or nil) end
       end)
       row.input:SetScript("OnClick", function()
-        if CanEdit(row) then CommitAll(state); Set(row.option, row.input:GetChecked() and true or false); Notify(state) end
+        if CanEdit(row) and CommitAll(state) then
+          Run(state, function() Set(row.option, row.input:GetChecked() and true or false) end)
+          Notify(state)
+        end
+        -- Native buttons toggle before OnClick; restore the saved value when
+        -- a pending edit or setter prevents this action from being saved.
+        local ok, saved = pcall(Get, row.option)
+        if ok then row.input:SetChecked(saved and 1 or nil) end
       end)
     elseif widget == "button" then
       row.button:SetScript("OnClick", function()
         if not CanEdit(row) then return end
-        CommitAll(state)
-        if row.option.func then row.option.func() end
+        if not CommitAll(state) then return end
+        if row.option.func and not Run(state, row.option.func) then return end
         -- Group actions can insert item placeholders into a captured edit box.
         -- Save that edit before rebuilding dynamic module lists.
         CommitAll(state)
@@ -138,19 +163,21 @@ do
     elseif widget == "color" then
       row.color:SetScript("OnClick", function()
         if not CanEdit(row) then return end
-        CommitAll(state)
+        if not CommitAll(state) then return end
         local opt = row.option
         local r,g,b,a = Get(opt)
         r,g,b,a = r or 1,g or 1,b or 1,a or 1
         local function Apply(cr,cg,cb,ca)
-          if opt.set then opt.set(cr,cg,cb,ca) end
+          if opt.set and not Run(state, function() opt.set(cr,cg,cb,ca) end) then return end
           row.color.prev:SetTexture(cr,cg,cb,ca)
         end
         -- SetColorRGB can fire an old callback: clear it while initializing.
-        ColorPickerFrame.func, ColorPickerFrame.opacityFunc = nil, nil
+        ColorPickerFrame.func, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = nil, nil, nil
+        HideUIPanel(ColorPickerFrame)
         ColorPickerFrame.hasOpacity = opt.hasAlpha and 1 or nil
         ColorPickerFrame.opacity = 1-a
         ColorPickerFrame:SetColorRGB(r,g,b)
+        OpacitySliderFrame:SetValue(1-a)
         ColorPickerFrame.func = function()
           local cr,cg,cb = ColorPickerFrame:GetColorRGB()
           local ca = opt.hasAlpha and (1-OpacitySliderFrame:GetValue()) or a
@@ -222,7 +249,12 @@ do
         for i, choice in ipairs(Choices(row.option)) do
           local v = choice.value
           table.insert(menu, { text = choice.text, func = function()
-            if CanEdit(row) then CommitAll(state); Set(row.option, v); Notify(state) end
+            if CanEdit(row) and CommitAll(state) then
+              Run(state, function() Set(row.option, v) end); Notify(state)
+            end
+            row.input.current, row.input.id = nil, nil
+            local ok = pcall(row.input.UpdateMenu, row.input)
+            if ok then row.input:SetSelection(row.input.current) end
           end })
           if current == v then row.input.current = i end
         end
@@ -249,6 +281,10 @@ do
       elseif row.actionLabel then row.actionLabel:Hide() end
     end
     local control = row.input or row.button or row.color
+    if widget == "text" then
+      if row.disabled then row.input:ClearFocus() end
+      row.input:EnableKeyboard(not row.disabled)
+    end
     if control then
       control:EnableMouse(not row.disabled)
       if control.Disable and control.Enable then
@@ -273,7 +309,7 @@ do
     local state = parent.automationOptionsState
     if not state then return end
     if R.colorOwner == state then
-      ColorPickerFrame:Hide()
+      HideUIPanel(ColorPickerFrame)
       R.colorOwner = nil
     end
     state.building = true
@@ -283,7 +319,7 @@ do
           if row.input.ClearFocus then row.input:ClearFocus() end
           if row.input.menuframe then row.input.menuframe:Hide() end
         end
-        row.committing = nil
+        row.committing, row.suppressFocus = nil, nil
         row:Hide()
       end
     end
@@ -293,8 +329,9 @@ do
   end
   function R:Suspend(parent)
     local state = parent.automationOptionsState
-    if state then CommitAll(state) end
+    local ok = not state or CommitAll(state)
     self:Clear(parent)
+    return ok
   end
   local function Render(self,parent,module,onChanged)
     if not parent or not parent.parent or not pfUI.gui or not pfUI.gui.CreateConfig then return false end
@@ -310,7 +347,7 @@ do
     end
     -- Only changed drafts are committed: untouched stale controls must never
     -- overwrite a setting that another page or module has just updated.
-    if state.visible then CommitAll(state) end
+    if state.visible and not CommitAll(state) then return false end
     self:Clear(parent)
     state.module, state.changed = module, onChanged
     state.used, state.visible, state.building = {}, {}, true

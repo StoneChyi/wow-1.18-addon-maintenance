@@ -1,0 +1,3152 @@
+{
+  "scope": "Automation renderer/host and actual shared CreateConfig/dropdown/scroll construction paths; not the entire addon gameplay API",
+  "limitations": "Static inventory and strict mocks do not replace live 1.12.1 validation. Old Blizzard source is mirrored original code, not current Classic API. Every future new call must be reviewed, not automatically whitelisted.",
+  "source_archive": "https://github.com/MOUZU/Blizzard-WoW-Interface/tree/master/1.12.1/FrameXML",
+  "confirmed_absent": [
+    "FontString.GetStringHeight"
+  ],
+  "classes": {
+    "Region": [
+      "ClearAllPoints",
+      "GetHeight",
+      "GetWidth",
+      "GetLeft",
+      "GetRight",
+      "SetPoint",
+      "SetAllPoints",
+      "SetHeight",
+      "SetWidth",
+      "SetAlpha",
+      "Show",
+      "Hide",
+      "IsShown",
+      "IsVisible",
+      "GetParent",
+      "GetScale",
+      "SetScale",
+      "GetBottom",
+      "GetTop",
+      "GetEffectiveScale"
+    ],
+    "Frame": [
+      "SetScript",
+      "GetScript",
+      "EnableMouse",
+      "EnableKeyboard",
+      "EnableMouseWheel",
+      "CreateFontString",
+      "CreateTexture",
+      "SetFrameStrata",
+      "SetFrameLevel",
+      "GetFrameLevel",
+      "SetParent",
+      "SetBackdrop",
+      "SetBackdropBorderColor",
+      "RegisterEvent",
+      "SetMovable",
+      "RegisterForDrag",
+      "StopMovingOrSizing",
+      "StartMoving"
+    ],
+    "FontString": [
+      "GetStringWidth",
+      "SetFont",
+      "SetFontObject",
+      "SetTextColor",
+      "SetJustifyH",
+      "SetJustifyV",
+      "GetText",
+      "SetText"
+    ],
+    "EditBox": [
+      "GetStringWidth",
+      "SetFont",
+      "SetFontObject",
+      "SetTextColor",
+      "SetJustifyH",
+      "SetJustifyV",
+      "GetText",
+      "SetText",
+      "ClearFocus",
+      "SetAutoFocus",
+      "SetTextInsets",
+      "Insert",
+      "GetCursorPosition",
+      "SetCursorPosition"
+    ],
+    "Button": [
+      "SetText",
+      "GetText",
+      "SetTextColor",
+      "GetFontString",
+      "Enable",
+      "Disable",
+      "IsEnabled",
+      "Click",
+      "SetNormalTexture",
+      "SetPushedTexture",
+      "SetHighlightTexture"
+    ],
+    "CheckButton": [
+      "GetChecked",
+      "SetChecked"
+    ],
+    "Texture": [
+      "SetTexture",
+      "SetVertexColor",
+      "SetTexCoord",
+      "SetGradientAlpha"
+    ],
+    "ScrollFrame": [
+      "GetVerticalScroll",
+      "GetVerticalScrollRange",
+      "SetVerticalScroll",
+      "UpdateScrollChildRect",
+      "SetScrollChild"
+    ],
+    "ColorSelect": [
+      "SetColorRGB",
+      "GetColorRGB"
+    ],
+    "Slider": [
+      "GetValue",
+      "SetValue",
+      "SetMinMaxValues",
+      "GetMinMaxValues",
+      "SetValueStep",
+      "SetOrientation",
+      "SetThumbTexture",
+      "GetThumbTexture"
+    ],
+    "GameTooltip": [
+      "SetOwner",
+      "SetText",
+      "AddLine"
+    ]
+  },
+  "parents": {
+    "Frame": "Region",
+    "FontString": "Region",
+    "Texture": "Region",
+    "EditBox": "Frame",
+    "Button": "Frame",
+    "CheckButton": "Button",
+    "ScrollFrame": "Frame",
+    "ColorSelect": "Frame",
+    "Slider": "Frame",
+    "GameTooltip": "Frame"
+  },
+  "lua_helpers": [
+    "SetMenu",
+    "SetSelection",
+    "UpdateMenu",
+    "HideMenu",
+    "ToggleMenu",
+    "ShowMenu",
+    "LayoutMenu",
+    "CreateMenuEntry",
+    "GetSelection",
+    "SetSelectionByText",
+    "UpdateScrollState",
+    "Scroll",
+    "GetMenu"
+  ],
+  "methods": {
+    "ClearAllPoints": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetHeight": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior",
+      "preconditions": "FontString has a valid font, constrained width, and automatic height (SetHeight(0)) before measuring; drawing can still require client layout."
+    },
+    "GetWidth": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetLeft": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetRight": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetPoint": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetAllPoints": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetHeight": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetWidth": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetAlpha": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "Show": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "Hide": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "IsShown": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "IsVisible": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetParent": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetScale": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetScale": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetScript": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetScript": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "EnableMouse": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "EnableKeyboard": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "Frame method used by native pfUI gui.lua to disable editing of controlled numeric fields",
+        "archived 1.12.1 FrameXML/ColorPickerFrame.xml ColorSelect enableKeyboard=true"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior",
+      "preconditions": "On EditBox also ClearFocus when disabling, because disabling mouse does not remove existing keyboard focus. Restore keyboard acceptance when reused as enabled."
+    },
+    "EnableMouseWheel": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "CreateFontString": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "CreateTexture": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetFrameStrata": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetFrameLevel": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetFrameLevel": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetParent": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetBackdrop": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetBackdropBorderColor": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "RegisterEvent": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetMovable": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "RegisterForDrag": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "StopMovingOrSizing": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "StartMoving": {
+      "objects": [
+        "Frame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetStringWidth": {
+      "objects": [
+        "FontString",
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetFont": {
+      "objects": [
+        "FontString",
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetFontObject": {
+      "objects": [
+        "FontString",
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetTextColor": {
+      "objects": [
+        "FontString",
+        "EditBox",
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetJustifyH": {
+      "objects": [
+        "FontString",
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetJustifyV": {
+      "objects": [
+        "FontString",
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetText": {
+      "objects": [
+        "FontString",
+        "EditBox",
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetText": {
+      "objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior",
+      "preconditions": "FontString and EditBox font initialized by valid template or FontObject before first SetText, even when SetFont fails."
+    },
+    "ClearFocus": {
+      "objects": [
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetAutoFocus": {
+      "objects": [
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetTextInsets": {
+      "objects": [
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "Insert": {
+      "objects": [
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetCursorPosition": {
+      "objects": [
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetCursorPosition": {
+      "objects": [
+        "EditBox"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetFontString": {
+      "objects": [
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "Enable": {
+      "objects": [
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "Disable": {
+      "objects": [
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior",
+      "preconditions": "Button/CheckButton available; EditBox Enable/Disable are NOT assumed in 1.12. Guard capability and explicitly clear focus/disable keyboard if absent."
+    },
+    "IsEnabled": {
+      "objects": [
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "Click": {
+      "objects": [
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetNormalTexture": {
+      "objects": [
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetPushedTexture": {
+      "objects": [
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetHighlightTexture": {
+      "objects": [
+        "Button"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetChecked": {
+      "objects": [
+        "CheckButton"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetChecked": {
+      "objects": [
+        "CheckButton"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetTexture": {
+      "objects": [
+        "Texture"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetVertexColor": {
+      "objects": [
+        "Texture"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetTexCoord": {
+      "objects": [
+        "Texture"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetGradientAlpha": {
+      "objects": [
+        "Texture"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetVerticalScroll": {
+      "objects": [
+        "ScrollFrame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetVerticalScrollRange": {
+      "objects": [
+        "ScrollFrame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetVerticalScroll": {
+      "objects": [
+        "ScrollFrame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "UpdateScrollChildRect": {
+      "objects": [
+        "ScrollFrame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior",
+      "preconditions": "Optional guarded capability; GetVerticalScrollRange is authoritative after layout."
+    },
+    "SetScrollChild": {
+      "objects": [
+        "ScrollFrame"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetColorRGB": {
+      "objects": [
+        "ColorSelect"
+      ],
+      "kind": "native",
+      "evidence": [
+        "https://raw.githubusercontent.com/MOUZU/Blizzard-WoW-Interface/master/1.12.1/FrameXML/ColorPickerFrame.xml",
+        "existing ColorSelect calls in Interface/AddOns/pfUI/modules/gui.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetColorRGB": {
+      "objects": [
+        "ColorSelect"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetValue": {
+      "objects": [
+        "Slider"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior",
+      "preconditions": "OpacitySliderFrame exists in the archived 1.12.1 ColorPicker XML; it stores transparency, so alpha=1-value."
+    },
+    "SetValue": {
+      "objects": [
+        "Slider"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetMinMaxValues": {
+      "objects": [
+        "Slider"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetMinMaxValues": {
+      "objects": [
+        "Slider"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetValueStep": {
+      "objects": [
+        "Slider"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetOrientation": {
+      "objects": [
+        "Slider"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetThumbTexture": {
+      "objects": [
+        "Slider"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "GetThumbTexture": {
+      "objects": [
+        "Slider"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetOwner": {
+      "objects": [
+        "GameTooltip"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "AddLine": {
+      "objects": [
+        "GameTooltip"
+      ],
+      "kind": "native",
+      "evidence": [
+        "existing pfUI legacy implementation: Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "API surface is intentionally narrow; local usages alone do not prove client behavior"
+    },
+    "SetMenu": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "SetSelection": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "UpdateMenu": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "HideMenu": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "ToggleMenu": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "ShowMenu": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "LayoutMenu": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "CreateMenuEntry": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "GetSelection": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "SetSelectionByText": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "UpdateScrollState": {
+      "objects": [
+        "pfUI widget instance"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua"
+      ],
+      "validation": "Defined by the addon; not a client-provided method"
+    },
+    "GetBottom": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua: ShowMenu"
+      ],
+      "preconditions": "Coordinates may be nil before layout; fallback available in native dropdown."
+    },
+    "GetTop": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua: ShowMenu"
+      ],
+      "preconditions": "Coordinates may be nil before layout; fallback available in native dropdown."
+    },
+    "GetEffectiveScale": {
+      "objects": [
+        "Region"
+      ],
+      "kind": "native",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua: ShowMenu"
+      ],
+      "preconditions": "Coordinates may be nil before layout; fallback available in native dropdown."
+    },
+    "Scroll": {
+      "objects": [
+        "pfUI ScrollFrame"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua: CreateScrollFrame"
+      ]
+    },
+    "GetMenu": {
+      "objects": [
+        "pfUI dropdown Button"
+      ],
+      "kind": "lua_helper",
+      "evidence": [
+        "Interface/AddOns/pfUI/api/ui-widgets.lua: handlers"
+      ]
+    }
+  },
+  "calls": [
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "AddLine",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "AddMessage",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "Clear",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "ClearAllPoints",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "ClearFocus",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "CreateFontString",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "Disable",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "Enable",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "EnableMouse",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetChecked",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetColorRGB",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetFontString",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetHeight",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetLeft",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetRight",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetStringWidth",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetText",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetValue",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetVerticalScroll",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetVerticalScrollRange",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetWidth",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "Hide",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "Render",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetAlpha",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetChecked",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetColorRGB",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetFrameStrata",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetHeight",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetJustifyH",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetJustifyV",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetOwner",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetPoint",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetScript",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetSelection",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetText",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetTextColor",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetValue",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetVerticalScroll",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "SetWidth",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "Show",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "Suspend",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "UpdateMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "UpdateScrollChildRect",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "UpdateScrollState",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Acquire",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "AddMessage",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "ApplyModuleScope",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "BuildGUI",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Click",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Config",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "EditRule",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "FeatureOptions",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "GeneralOptions",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "GetModuleScope",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "GetRules",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "GetScript",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Hide",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "IsEnabled",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "IsModuleActive",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "IsModuleHidden",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "IsReady",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "IsShown",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "MerchantOptions",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "ModuleList",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "MoveModule",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Open",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "OpenPage",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "OpenSettings",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "OpenVendor",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Print",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "QueueRefresh",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "RefreshPage",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "RefreshVisible",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "RegisterEvent",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "RegisterModule",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Release",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Render",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "SelectModule",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "SetRule",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "SetScript",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Show",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "ShowGUI",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Suspend",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Sync",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "ToggleMainWindow",
+      "classification": "addon_method"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "ClearFocus",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "Click",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "CreateFontString",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "CreateTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "EnableMouse",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "GetChecked",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "GetColorRGB",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "GetFontString",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "GetLeft",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "GetParent",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "GetRight",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "GetSelection",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "GetText",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "GetValue",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "Hide",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "HideMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "IsEnabled",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "IsShown",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetAllPoints",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetAlpha",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetAutoFocus",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetBackdrop",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetBackdropBorderColor",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetChecked",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetColorRGB",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetFont",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetFontObject",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetFrameStrata",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetHeight",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetHighlightTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetJustifyH",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetJustifyV",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetNormalTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetParent",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetPoint",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetPushedTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetScript",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetSelection",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetText",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetTextColor",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetTextInsets",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "SetWidth",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/gui.lua",
+      "method": "UpdateMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "ClearAllPoints",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "CreateFontString",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "CreateMenuEntry",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "CreateTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "EnableMouseWheel",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetBottom",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetEffectiveScale",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetFrameLevel",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetHeight",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetParent",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetThumbTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetTop",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetValue",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetVerticalScroll",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "GetVerticalScrollRange",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "Hide",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "HideMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "IsShown",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "LayoutMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "Scroll",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetAllPoints",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetBackdropBorderColor",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetFont",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetFontObject",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetFrameLevel",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetFrameStrata",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetHeight",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetJustifyH",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetMinMaxValues",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetOrientation",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetPoint",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetScript",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetScrollChild",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetSelection",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetText",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetThumbTexture",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetValue",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetVertexColor",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetVerticalScroll",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "SetWidth",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "Show",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "ShowMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "ToggleMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "UpdateMenu",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/api/ui-widgets.lua",
+      "method": "UpdateScrollState",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "EnableKeyboard",
+      "classification": "native_or_helper"
+    }
+  ],
+  "globals": {
+    "CreateFrame": {
+      "signature": "CreateFrame(frameType, optionalName, optionalParent, optionalTemplate)",
+      "precondition": "Templates must exist in the old client; anonymous controls avoid global collisions",
+      "evidence": "existing pfUI gui.lua CreateConfig"
+    },
+    "GetTime": {
+      "signature": "GetTime() -> seconds",
+      "evidence": "existing pfUI addon event timers"
+    },
+    "GetItemInfo": {
+      "signature": "GetItemInfo(itemID) -> localized name or nil, followed by legacy tuple",
+      "precondition": "Names may be absent until cached; never infer item quality from newer-client tuple positions",
+      "evidence": "existing pfUI autovendor.lua"
+    },
+    "ShowUIPanel": {
+      "signature": "ShowUIPanel(frame)",
+      "evidence": "https://github.com/MOUZU/Blizzard-WoW-Interface/tree/master/1.12.1/FrameXML/UIParent.lua"
+    },
+    "HideUIPanel": {
+      "signature": "HideUIPanel(frame)",
+      "evidence": "https://github.com/MOUZU/Blizzard-WoW-Interface/tree/master/1.12.1/FrameXML/ColorPickerFrame.xml",
+      "precondition": "Color picker OK/cancel hide the panel before executing callbacks; initialize opacity when replacing a visible picker"
+    }
+  },
+  "direct_callsites": [
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 26,
+      "receiver": "host",
+      "method": "IsEnabled",
+      "declaring_objects": [
+        "Lua automation host"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 34,
+      "receiver": "self",
+      "method": "IsEnabled",
+      "declaring_objects": [
+        "Lua automation host"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 38,
+      "receiver": "self",
+      "method": "IsEnabled",
+      "declaring_objects": [
+        "Lua automation host"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 43,
+      "receiver": "Automaton.mainFrame",
+      "method": "Hide",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 48,
+      "receiver": "self.driver",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 51,
+      "receiver": "self",
+      "method": "IsEnabled",
+      "declaring_objects": [
+        "Lua automation host"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 51,
+      "receiver": "Automaton.mainFrame",
+      "method": "Hide",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 55,
+      "receiver": "pfUI.gui",
+      "method": "Show",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 57,
+      "receiver": "parent",
+      "method": "Click",
+      "declaring_objects": [
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 133,
+      "receiver": "host",
+      "method": "IsEnabled",
+      "declaring_objects": [
+        "Lua automation host"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 149,
+      "receiver": "self",
+      "method": "IsEnabled",
+      "declaring_objects": [
+        "Lua automation host"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 168,
+      "receiver": "self",
+      "method": "IsEnabled",
+      "declaring_objects": [
+        "Lua automation host"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 284,
+      "receiver": "tab.area",
+      "method": "IsShown",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 297,
+      "receiver": "area",
+      "method": "GetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 297,
+      "receiver": "area",
+      "method": "GetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 298,
+      "receiver": "area",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 302,
+      "receiver": "area",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 321,
+      "receiver": "driver",
+      "method": "RegisterEvent",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 322,
+      "receiver": "driver",
+      "method": "RegisterEvent",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 323,
+      "receiver": "driver",
+      "method": "RegisterEvent",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 324,
+      "receiver": "driver",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 339,
+      "receiver": "driver",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "line_at_audit": 343,
+      "receiver": "driver",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 44,
+      "receiver": "GameTooltip",
+      "method": "SetOwner",
+      "declaring_objects": [
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 45,
+      "receiver": "GameTooltip",
+      "method": "SetText",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 46,
+      "receiver": "GameTooltip",
+      "method": "AddLine",
+      "declaring_objects": [
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 47,
+      "receiver": "GameTooltip",
+      "method": "AddLine",
+      "declaring_objects": [
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 49,
+      "receiver": "GameTooltip",
+      "method": "AddLine",
+      "declaring_objects": [
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 51,
+      "receiver": "GameTooltip",
+      "method": "Show",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 68,
+      "receiver": "input",
+      "method": "GetText",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 84,
+      "receiver": "input",
+      "method": "SetText",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 111,
+      "receiver": "row",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 112,
+      "receiver": "row",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 112,
+      "receiver": "GameTooltip",
+      "method": "Hide",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 113,
+      "receiver": "row",
+      "method": "EnableMouse",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 114,
+      "receiver": "row",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 115,
+      "receiver": "row.input.menuframe",
+      "method": "Hide",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 119,
+      "receiver": "row.input",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 120,
+      "receiver": "row.input",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 123,
+      "receiver": "row.input",
+      "method": "ClearFocus",
+      "declaring_objects": [
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 127,
+      "receiver": "row.input",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 131,
+      "receiver": "row.input",
+      "method": "SetText",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 132,
+      "receiver": "row.input",
+      "method": "ClearFocus",
+      "declaring_objects": [
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 136,
+      "receiver": "row.input",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 140,
+      "receiver": "row.input",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 141,
+      "receiver": "row.input",
+      "method": "SetChecked",
+      "declaring_objects": [
+        "CheckButton"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 143,
+      "receiver": "row.input",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 145,
+      "receiver": "row.input",
+      "method": "GetChecked",
+      "declaring_objects": [
+        "CheckButton"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 151,
+      "receiver": "row.input",
+      "method": "SetChecked",
+      "declaring_objects": [
+        "CheckButton"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 154,
+      "receiver": "row.button",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 164,
+      "receiver": "row.color",
+      "method": "SetScript",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 172,
+      "receiver": "row.color.prev",
+      "method": "SetTexture",
+      "declaring_objects": [
+        "Texture"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 179,
+      "receiver": "ColorPickerFrame",
+      "method": "SetColorRGB",
+      "declaring_objects": [
+        "ColorSelect"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 180,
+      "receiver": "OpacitySliderFrame",
+      "method": "SetValue",
+      "declaring_objects": [
+        "Slider"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 182,
+      "receiver": "ColorPickerFrame",
+      "method": "GetColorRGB",
+      "declaring_objects": [
+        "ColorSelect"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 183,
+      "receiver": "OpacitySliderFrame",
+      "method": "GetValue",
+      "declaring_objects": [
+        "Slider"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 188,
+      "receiver": "ColorPickerFrame",
+      "method": "SetFrameStrata",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 221,
+      "receiver": "row",
+      "method": "ClearAllPoints",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 222,
+      "receiver": "row",
+      "method": "SetPoint",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 223,
+      "receiver": "state.parent.parent",
+      "method": "GetRight",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 223,
+      "receiver": "state.parent.parent",
+      "method": "GetLeft",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 224,
+      "receiver": "row",
+      "method": "SetWidth",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 225,
+      "receiver": "row",
+      "method": "SetHeight",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 226,
+      "receiver": "row",
+      "method": "SetAlpha",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 227,
+      "receiver": "row",
+      "method": "EnableMouse",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 229,
+      "receiver": "row.caption",
+      "method": "ClearAllPoints",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 230,
+      "receiver": "row.caption",
+      "method": "SetPoint",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 231,
+      "receiver": "row.caption",
+      "method": "SetJustifyV",
+      "declaring_objects": [
+        "FontString",
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 232,
+      "receiver": "row.caption",
+      "method": "SetWidth",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 233,
+      "receiver": "row.caption",
+      "method": "SetHeight",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 234,
+      "receiver": "row.caption",
+      "method": "SetText",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 235,
+      "receiver": "row.caption",
+      "method": "SetTextColor",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 236,
+      "receiver": "row",
+      "method": "SetHeight",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 236,
+      "receiver": "row.caption",
+      "method": "GetHeight",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 239,
+      "receiver": "row.caption",
+      "method": "SetTextColor",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 240,
+      "receiver": "row",
+      "method": "SetHeight",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 240,
+      "receiver": "row.caption",
+      "method": "GetHeight",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 243,
+      "receiver": "row.input",
+      "method": "SetText",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 245,
+      "receiver": "row.input",
+      "method": "SetChecked",
+      "declaring_objects": [
+        "CheckButton"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 247,
+      "receiver": "row.input",
+      "method": "SetMenu",
+      "declaring_objects": [
+        "pfUI widget instance"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 257,
+      "receiver": "row.input",
+      "method": "SetSelection",
+      "declaring_objects": [
+        "pfUI widget instance"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 264,
+      "receiver": "row.input",
+      "method": "UpdateMenu",
+      "declaring_objects": [
+        "pfUI widget instance"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 265,
+      "receiver": "row.input",
+      "method": "SetSelection",
+      "declaring_objects": [
+        "pfUI widget instance"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 266,
+      "receiver": "row.input.text",
+      "method": "SetText",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 269,
+      "receiver": "row.color.prev",
+      "method": "SetTexture",
+      "declaring_objects": [
+        "Texture"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 271,
+      "receiver": "row.button",
+      "method": "SetText",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 272,
+      "receiver": "row.button",
+      "method": "SetWidth",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 272,
+      "receiver": "row.button",
+      "method": "GetFontString",
+      "declaring_objects": [
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 275,
+      "receiver": "row",
+      "method": "CreateFontString",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 276,
+      "receiver": "row.actionLabel",
+      "method": "SetPoint",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 277,
+      "receiver": "row.actionLabel",
+      "method": "SetJustifyH",
+      "declaring_objects": [
+        "FontString",
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 279,
+      "receiver": "row.actionLabel",
+      "method": "SetWidth",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 279,
+      "receiver": "row.button",
+      "method": "GetWidth",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 280,
+      "receiver": "row.actionLabel",
+      "method": "SetText",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 280,
+      "receiver": "row.actionLabel",
+      "method": "Show",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 281,
+      "receiver": "row.actionLabel",
+      "method": "Hide",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 285,
+      "receiver": "row.input",
+      "method": "ClearFocus",
+      "declaring_objects": [
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 286,
+      "receiver": "row.input",
+      "method": "EnableKeyboard",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 289,
+      "receiver": "control",
+      "method": "EnableMouse",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 291,
+      "receiver": "control",
+      "method": "Disable",
+      "declaring_objects": [
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 291,
+      "receiver": "control",
+      "method": "Enable",
+      "declaring_objects": [
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 294,
+      "receiver": "control.button",
+      "method": "EnableMouse",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 295,
+      "receiver": "control.button",
+      "method": "Disable",
+      "declaring_objects": [
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 295,
+      "receiver": "control.button",
+      "method": "Enable",
+      "declaring_objects": [
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 298,
+      "receiver": "row",
+      "method": "Show",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 300,
+      "receiver": "row",
+      "method": "GetHeight",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 319,
+      "receiver": "row.input",
+      "method": "ClearFocus",
+      "declaring_objects": [
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 320,
+      "receiver": "row.input.menuframe",
+      "method": "Hide",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 323,
+      "receiver": "row",
+      "method": "Hide",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 344,
+      "receiver": "parent",
+      "method": "ClearAllPoints",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 345,
+      "receiver": "parent",
+      "method": "SetPoint",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 346,
+      "receiver": "parent",
+      "method": "SetPoint",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 358,
+      "receiver": "parent",
+      "method": "SetHeight",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 360,
+      "receiver": "scroll",
+      "method": "UpdateScrollChildRect",
+      "declaring_objects": [
+        "ScrollFrame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 362,
+      "receiver": "scroll",
+      "method": "SetVerticalScroll",
+      "declaring_objects": [
+        "ScrollFrame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 362,
+      "receiver": "scroll",
+      "method": "GetVerticalScroll",
+      "declaring_objects": [
+        "ScrollFrame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 362,
+      "receiver": "scroll",
+      "method": "GetVerticalScrollRange",
+      "declaring_objects": [
+        "ScrollFrame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "line_at_audit": 364,
+      "receiver": "scroll",
+      "method": "UpdateScrollState",
+      "declaring_objects": [
+        "pfUI widget instance"
+      ]
+    }
+  ]
+}

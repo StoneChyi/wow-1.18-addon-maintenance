@@ -7,11 +7,11 @@ pfUI:RegisterModule("automation", "vanilla", function()
     party = "组队与社交", combat = "战斗与移动", interface = "界面与提示", misc = "其他便利功能" }
   local categoryMap = {}
   local categoryNames = {
-    merchant = "AutoNeed AutoOpenBag Discard LootBOP MailTo MasterLootRemind Purchases SendRollItem shiqu sTrade",
+    merchant = "AutoNeed AutoOpenBag Discard LootBOP MailTo MasterLootRemind Purchases SendRollItem ShiQu sTrade",
     quest = "ExpBar NewLevelFrame QuestAnnouncer QuestAutomation QuestItemBar Trainer",
-    party = "1invall AutoShout Follow Group InterPlayerLink Invite Loner pfQuestSendLink Queue Ready Summon Xguild",
+    party = "invall AutoShout follow Group InterPlayerLink Invite StrangerDecline pfQuestSendLink Queue Ready Summon Xguild",
     combat = "AlertCombat CancelBuff CancelTiger CDSafe Dismount KneelToQueen PicoPoisons ProcDoc RandomMount Range RangeController Release Rez ShaguStance Stand TSTargetMark WorldBuffs Wuss",
-    interface = "Boomtime ErrClear Filter HideActionBarEndCaps Lern2Spell OmniCC Plates S_ActionCount S_ItemLinktoenUS SelfName Tooltip",
+    interface = "Boomtime ErrClear Filter HideActionBarEndCaps Lern2Spell OmniCC Plates S_ActionCount ItemLinkEnUS SelfName Tooltip",
   }
   for category, names in pairs(categoryNames) do
     for name in string.gfind(names, "%S+") do categoryMap[name] = category end

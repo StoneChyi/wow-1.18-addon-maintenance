@@ -36,6 +36,7 @@ function methods:IsShown() return self.shown end
 function methods:SetChecked(v) self.checked=v end
 function methods:GetChecked() return self.checked end
 function methods:EnableMouse(v) self.mouse=v end
+function methods:EnableKeyboard(v) self.keyboard=v end
 function methods:Enable() self.enabled=true end
 function methods:Disable() self.enabled=false end
 function methods:IsEnabled() return self.enabled~=false end
@@ -94,8 +95,9 @@ GameTooltip=obj('Frame');GameTooltip.SetOwner=function()end;GameTooltip.AddLine=
 ColorPickerFrame=obj('Frame')
 function ColorPickerFrame:SetColorRGB(r,g,b) self.rgb={r,g,b} end
 function ColorPickerFrame:GetColorRGB() return unpack(self.rgb) end
-OpacitySliderFrame={GetValue=function()return opacity or 0 end}
+OpacitySliderFrame={GetValue=function()return opacity or 0 end,SetValue=function(self,v)opacity=v end}
 function ShowUIPanel(f) f:Show() end
+function HideUIPanel(f) f:Hide() end
 parent=obj('Frame',nil,obj('Frame'));parent.parent=parent:GetParent()
 function rows() return parent.automationOptionsState.visible end
 function rowNamed(name)
@@ -167,6 +169,7 @@ def main():
  edit(rowNamed('Range'),'23');assert(values.number==20)
  edit(rowNamed('Range'),'7');assert(values.number==5)
  before=sets;edit(rowNamed('Range'),'not-number');assert(sets==before and values.number==5)
+ assert(rowNamed('Range').input:GetText()=='not-number');fire(rowNamed('Range').input,'OnEscapePressed')
  choose(rowNamed('Dropdown'),'Two');assert(values.pick=='key:two')
  choose(rowNamed('Dropdown'),'One: exact');assert(values.pick=='key:one')
  click(rowNamed('Color'));ColorPickerFrame:SetColorRGB(.8,.7,.6);opacity=.7;ColorPickerFrame.func()

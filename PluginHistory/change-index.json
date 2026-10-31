@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 252,
+  "dated_records": 253,
   "addons": [
     {
       "addon": "!Libs",
@@ -3107,10 +3107,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "修复自动化页旧客户端测高报错与连锁空白",
+      "latest_record_title": "自动化三页全量接口与保存路径审查",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 30,
+      "record_count": 31,
       "records": [
+        {
+          "id": "pfUI-20261031-05",
+          "date": "2026-10-31",
+          "title": "自动化三页全量接口与保存路径审查",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261031-05"
+        },
         {
           "id": "pfUI-20261031-04",
           "date": "2026-10-31",
