@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 249,
+  "dated_records": 251,
   "addons": [
     {
       "addon": "!Libs",
@@ -272,10 +272,19 @@
       "purpose": "完善模块配置、物品监控及与其他界面的协作。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "接入pfUI统一管理并释放重复商人执行",
+      "latest_record_title": "移除旧窗口嵌入并接入pfUI原生选项",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 8,
+      "record_count": 9,
       "records": [
+        {
+          "id": "Automatonex-20261031-02",
+          "date": "2026-10-31",
+          "title": "移除旧窗口嵌入并接入pfUI原生选项",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-Automatonex-20261031-02"
+        },
         {
           "id": "Automatonex-20261031-01",
           "date": "2026-10-31",
@@ -3098,10 +3107,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "内嵌自动化工具箱并统一商人服务",
+      "latest_record_title": "以原生设置替代工具箱嵌入并修复背包银行勾选",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 28,
+      "record_count": 29,
       "records": [
+        {
+          "id": "pfUI-20261031-03",
+          "date": "2026-10-31",
+          "title": "以原生设置替代工具箱嵌入并修复背包银行勾选",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261031-03"
+        },
         {
           "id": "pfUI-20261031-02",
           "date": "2026-10-31",

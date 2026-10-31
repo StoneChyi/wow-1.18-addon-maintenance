@@ -84,5 +84,6 @@
   <Include file="..\modules\nampower.lua"/>
   <Include file="..\modules\unitxp.lua"/>
   <Include file="..\modules\bgscore.lua"/>
+  <Include file="..\modules\automation_options.lua"/>
   <Include file="..\modules\automation.lua"/>
 </Ui>

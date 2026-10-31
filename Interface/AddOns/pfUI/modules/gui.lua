@@ -104,7 +104,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       frame:SetPoint("TOPLEFT", this, "TOPLEFT", 5, (this.objectCount*-23)-5)
 
       -- populate search index
-      if caption and this and this.GetParent and widget ~= "button" and widget ~= "header" then
+      if caption and this and not this.automationDynamic and this.GetParent and widget ~= "button" and widget ~= "header" then
         local id = tostring(frame)
 
         searchDB[id] = searchDB[id] or { }
@@ -136,7 +136,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         end
 
         -- caption
-        frame.caption = frame:CreateFontString("Status", "LOW", "GameFontWhite")
+        frame.caption = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         frame.caption:SetFont(pfUI.font_default, C.global.font_size)
         frame.caption:SetPoint("LEFT", frame, "LEFT", 3, 1)
         frame.caption:SetJustifyH("LEFT")
@@ -341,16 +341,23 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         frame.input:SetHeight(14)
         frame.input:SetPoint("RIGHT" , -5, 1)
         frame.input:SetScript("OnClick", function ()
-          if this:GetChecked() then
-            this:GetParent().category[this:GetParent().config] = "1"
-          else
-            this:GetParent().category[this:GetParent().config] = "0"
-          end
-
+          frame.category[frame.config] = frame.input:GetChecked() and "1" or "0"
           if ufunc then ufunc() else pfUI.gui.settingChanged = true end
         end)
 
-        if category[config] == "1" then frame.input:SetChecked() end
+        -- Another page can edit the same setting (for example merchant service).
+        -- Re-read it on every visit instead of keeping the first checkbox state.
+        local function SyncChecked()
+          frame.input:SetChecked(frame.category[frame.config] == "1" and 1 or nil)
+        end
+        frame.input:SetScript("OnShow", SyncChecked)
+        SyncChecked()
+
+        -- The caption is part of the control, not just the tiny 14px check box.
+        frame:EnableMouse(true)
+        frame:SetScript("OnMouseUp", function()
+          if arg1 == "LeftButton" and frame.input:IsEnabled() then frame.input:Click() end
+        end)
 
         -- hide shadows on wrong stratas
         if frame.input.backdrop_shadow then
@@ -363,6 +370,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         frame.input = CreateDropDownButton(nil, frame)
         frame.input:SetBackdrop(nil)
         frame.input.menuframe:SetParent(pfUI.gui)
+        frame.input:SetScript("OnHide", function() frame.input:HideMenu() end)
 
         frame.input:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
         frame.input:SetWidth(180)
@@ -437,6 +445,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         frame.input = CreateDropDownButton(nil, frame)
         frame.input:SetBackdrop(nil)
         frame.input.menuframe:SetParent(pfUI.gui)
+        frame.input:SetScript("OnHide", function() frame.input:HideMenu() end)
         frame.input:SetPoint("RIGHT", frame.add, "LEFT", -2, 0)
         frame.input:SetWidth(140)
         frame.input:SetMenu(function()
@@ -2710,7 +2719,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
       CreateConfig(nil, T["Hide Chat When Bags Are Opened"], C.appearance.bags, "hidechat", "checkbox")
       CreateConfig(nil, T["Bagslots Per Row"], C.appearance.bags, "bagrowlength")
       CreateConfig(nil, T["Bankslots Per Row"], C.appearance.bags, "bankrowlength")
-      CreateConfig(nil, T["Enable Full-Text Search"], C.appearance.bags, "fulltext")
+      CreateConfig(nil, T["Enable Full-Text Search"], C.appearance.bags, "fulltext", "checkbox")
       CreateConfig(nil, T["Item Slot Size"], C.appearance.bags, "icon_size")
       CreateConfig(nil, T["Auto Sell Grey Items"], C.global, "autosell", "checkbox")
       CreateConfig(nil, T["Auto Repair Items"], C.global, "autorepair", "checkbox")

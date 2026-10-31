@@ -7,7 +7,7 @@ AutomatonPfUIBridge = B
 local function Name(module) return type(module) == "table" and module.name or module end
 local flags = { Repair = "autorepair", Sell = "autosell" }
 local originalActive, originalToggle = A.IsModuleActive, A.ToggleModuleActive
-local originalWindow, originalCreate = A.ToggleMainWindow, A.CreateMainWindow
+local originalWindow = A.ToggleMainWindow
 
 function B:Vendor()
   return pfUI and pfUI.autovendor
@@ -117,94 +117,43 @@ function B:Release()
     end
   end
   self.active = nil
-  self:Detach()
   self.host = nil
 end
 
-function B:Attach(parent)
-  if not parent or not A.mainFrame then return end
-  local f = A.mainFrame
-  if not f.pfuiHostState then
-    local state = { parent = f:GetParent(), scale = f:GetScale(), strata = f:GetFrameStrata(), points = {},
-      dragStart = f:GetScript("OnDragStart"), dragStop = f:GetScript("OnDragStop"), key = f:GetScript("OnKeyDown") }
-    local okLeft, left = pcall(function() return f:GetLeft() end)
-    local okBottom, bottom = pcall(function() return f:GetBottom() end)
-    if okLeft and type(left) == "number" and okBottom and type(bottom) == "number" then state.left = left; state.bottom = bottom end
-    for i = 1, f:GetNumPoints() do state.points[i] = { f:GetPoint(i) } end
-    f.pfuiHostState = state
-  end
-  f:Hide()
-  f:SetParent(parent)
-  f:ClearAllPoints()
-  f:SetPoint("TOPLEFT", parent, "TOPLEFT", 2, -2)
-  f:SetScale(1)
-  f:SetFrameStrata("DIALOG")
-  f:SetScript("OnDragStart", nil)
-  f:SetScript("OnDragStop", nil)
-  f:SetScript("OnKeyDown", function() if arg1 == "ESCAPE" and pfUI and pfUI.gui then pfUI.gui:Hide() end end)
-  if f.closeBtn then f.closeBtn:Hide() end
-  if f.zoomOutBtn then f.zoomOutBtn:Hide() end
-  if f.zoomInBtn then f.zoomInBtn:Hide() end
-  if f.titleBg then f.titleBg:Hide() end
-  if f.titleText then f.titleText:Hide() end
-  f:Show()
-  A:PopulateModuleList()
-  if A.selectedModule then A:SelectModule(A.selectedModule) end
-end
-function B:Detach()
-  local f = A.mainFrame
-  local state = f and f.pfuiHostState
-  if not state then return end
-  f:Hide()
-  f:SetParent(state.parent)
-  f:ClearAllPoints()
-  local positioned
-  if state.parent == UIParent and state.left and state.bottom then
-    positioned = pcall(function() f:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", state.left, state.bottom) end)
-  else
-    for _, point in ipairs(state.points) do
-      if type(point[1]) == "string" and point[2] and type(point[3]) == "string" and type(point[4]) == "number" and type(point[5]) == "number" then
-        positioned = pcall(function() f:SetPoint(unpack(point)) end) or positioned
-      end
-    end
-  end
-  if not positioned then f:SetPoint("CENTER", UIParent, "CENTER", 0, 0) end
-  f:SetScale(state.scale)
-  f:SetFrameStrata(state.strata)
-  f:SetScript("OnDragStart", state.dragStart)
-  f:SetScript("OnDragStop", state.dragStop)
-  f:SetScript("OnKeyDown", state.key)
-  if f.closeBtn then f.closeBtn:Show() end
-  if f.zoomOutBtn then f.zoomOutBtn:Show() end
-  if f.zoomInBtn then f.zoomInBtn:Show() end
-  if f.titleBg then f.titleBg:Show() end
-  if f.titleText then f.titleText:Show() end
-  f.pfuiHostState = nil
-end
-function A:CreateMainWindow()
-  originalCreate(self)
-  if B.host and B.host.content then B:Attach(B.host.content) end
+-- Commands and dynamic option updates use native pfUI pages. The independent
+-- window stays untouched (same parent, anchors and scale) for a later fallback.
+local function ManagedHost()
+  local host = B.host or (pfUI and pfUI.automation)
+  if host and host:IsEnabled() then return host end
 end
 function A:ToggleMainWindow()
-  if B.host and B.host:IsEnabled() then return B.host:Open() end
+  local host = ManagedHost()
+  if host then return host:Open() end
   return originalWindow(self)
 end
--- Zoom reconstructs the original window. The embedded layout owns its size.
-local oldScale, oldRebuild = A.SetUIScale, A.RebuildMainWindow
-if oldScale then
-  function A:SetUIScale(scale)
-    if B.host and B.host.content then return end
-    return oldScale(self, scale)
+local originalRefresh = A.RefreshModuleSettings
+if originalRefresh then
+  function A:RefreshModuleSettings(name)
+    local host = ManagedHost()
+    if host then
+      host:QueueRefresh()
+      if not self.mainFrame or not self.mainFrame:IsShown() then return end
+    end
+    return originalRefresh(self, name)
   end
 end
-if oldRebuild then
-  function A:RebuildMainWindow()
-    local saved = self.mainFrame and self.mainFrame.pfuiHostState
-    if saved then B:Detach(); self.mainFrame:Show() end
-    local result = oldRebuild(self)
-    if B.host and B.host.content then
-      if saved and self.mainFrame then self.mainFrame.pfuiHostState = saved end
-      B:Attach(B.host.content)
+local originalOptions = A.modulePrototype and A.modulePrototype.RegisterOptions
+if originalOptions then
+  function A.modulePrototype:RegisterOptions(options)
+    local result = originalOptions(self, options)
+    local host = ManagedHost()
+    if host then
+      if B.leases[self.name] then
+        B.originals[self.name].options = self._options
+        B.originals[self.name].order = self._optionOrder
+        B:Acquire(host)
+      end
+      host:QueueRefresh()
     end
     return result
   end

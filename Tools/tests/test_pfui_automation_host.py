@@ -1,4 +1,4 @@
-"""pfUI Automaton hosting, ownership and strict-font UI regression checks."""
+"""Native pfUI navigation, original option persistence and merchant ownership checks."""
 from pathlib import Path
 import sys
 ROOT = Path(__file__).resolve().parents[2]
@@ -36,6 +36,7 @@ function methods:GetBottom() if self.badCoords then return nil end;return 60 end
 function methods:Show() local was=self.shown;self.shown=true;if not was then invoke(self,"OnShow") end end
 function methods:Hide() local was=self.shown;self.shown=false;if was then invoke(self,"OnHide") end end
 function methods:IsShown() return self.shown end
+function methods:IsVisible() return self.shown and (not self.parent or self.parent:IsVisible()) end
 function methods:SetJustifyH() end
 function methods:SetJustifyV() end
 function methods:GetStringHeight() return math.max(20,#(self.text or "")/40*16) end
@@ -58,8 +59,17 @@ controls={}
 pfUI={gui=obj("Frame","pfConfigGUI",UIParent)}
 pfUI.gui.frames={}
 function pfUI:RegisterModule(name,version,fn) fn() end
-function pfUI.gui.CreateConfig(update,caption,category,key,widget,values)
- controls[caption]={update=update,category=category,key=key,widget=widget,values=values}
+pfUI.automationOptions={}
+function pfUI.automationOptions:Suspend() end
+function pfUI.automationOptions:Render(parent,module,changed)
+ parent.options=module._options;parent.onChanged=changed;parent.renders=(parent.renders or 0)+1
+end
+-- Navigation/ownership tests use an observable renderer seam. The companion
+-- test_pfui_automation_options.py executes the real renderer and native GUI.
+function edit(parent,key,value)
+ local option=parent.options[key];assert(option, "missing control "..key)
+ if option.set then option.set(value) elseif option.func then option.func() end
+ parent.onChanged();pfUI.automation.Tick()
 end
 function pfUI.gui.CreateGUIEntry(parent,title,populate)
  local groups=pfUI.gui.frames
@@ -86,13 +96,18 @@ function pfUI.autovendor:SetLegacyFallback(v)
 end
 function pfUI.autovendor:GetRules() return rules end
 function pfUI.autovendor:SetRule(k,id,name) rules[k][tostring(id)]=name;return true end
-Automaton={db={char={disabledModules={},hiddenModules={}},profile={moduleScope="char"}},modules={},selectedModule="Sell"}
+Automaton={modulePrototype={},db={char={disabledModules={},hiddenModules={}},profile={moduleScope="char"}},modules={},selectedModule="Sell"}
 for _,name in ipairs({"Repair","Sell","ExpBar","Tooltip","InterPlayerLink"}) do
- local m={name=name,running=true,enableCount=0,disableCount=0,db={profile={}},_options={old=true},_optionOrder={{key="old",data={}}}}
+ local m={name=name,running=true,enableCount=0,disableCount=0,db={profile={}},_options={old={type="description",name="Legacy option"}},_optionOrder={{key="old",data={}}}}
  function m:OnEnable() self.running=true;self.enableCount=self.enableCount+1 end
  function m:OnDisable() self.running=false;self.disableCount=self.disableCount+1 end
  Automaton.modules[name]=m
 end
+function Automaton.modulePrototype:RegisterOptions(options)
+ self._options=options;self._optionOrder={}
+ for key,data in pairs(options) do table.insert(self._optionOrder,{key=key,data=data}) end
+end
+function Automaton:RefreshModuleSettings() self.legacyRefresh=(self.legacyRefresh or 0)+1 end
 function Automaton:GetModuleScope() return self.db.profile.moduleScope end
 function Automaton:GetRawDisabledTable(create)
  if not self.rawDisabled and create then self.rawDisabled={} end;return self.rawDisabled
@@ -132,6 +147,7 @@ def runtime(host=False):
     return lua
 
 checks=0
+
 def check(body, host=False):
     global checks
     lua=runtime(host)
@@ -167,57 +183,106 @@ Automaton.modules.Sell._optionOrder=nil;local B=AutomatonPfUIBridge
 assert(not B:Acquire({Config=function() return C.automation end}));assert(Automaton.modules.Sell.running)
 ''')
 check(r'''
-local B=AutomatonPfUIBridge;local parent=CreateFrame("Frame",nil,UIParent)
-local host={content=parent,Config=function() return C.automation end,IsEnabled=function() return true end}
-assert(B:Acquire(host));Automaton:CreateMainWindow()
-local f=Automaton.mainFrame;assert(f:GetParent()==parent and f:GetScale()==1 and not f.closeBtn:IsShown())
-Automaton:SetUIScale(.2);assert(f:GetScale()==1)
-Automaton:RebuildMainWindow();assert(Automaton.mainFrame:GetParent()==parent)
-B:Release();f=Automaton.mainFrame;assert(f:GetParent()==UIParent and f:GetScale()==.9 and f.closeBtn:IsShown())
-assert(f.points[1][1]=="BOTTOMLEFT" and f.points[1][4]==40)
-''')
+local h=pfUI.automation;Automaton:CreateMainWindow();local f=Automaton.mainFrame
+f:Show();h:Sync();Automaton:ToggleMainWindow()
+assert(h.pages[h.all] and not f:IsShown())
+assert(f:GetParent()==UIParent and f:GetScale()==.9 and f.closeBtn:IsShown())
+assert(pfUI.gui:GetWidth()==720 and pfUI.gui:GetHeight()==480 and pfUI.gui:GetScale()==1)
+C.automation.enabled="0";h:Sync();Automaton:ToggleMainWindow()
+assert(Automaton.independentOpens==1 and f:IsShown() and f:GetParent()==UIParent)
+C.automation.enabled="1";h:Sync();assert(not f:IsShown())
+assert(AutomatonPfUIBridge.Attach==nil and AutomatonPfUIBridge.Detach==nil)
+''',True)
 check(r'''
-local B=AutomatonPfUIBridge;Automaton:CreateMainWindow();local f=Automaton.mainFrame
-f.badPoints=true;f.badCoords=true;B:Attach(CreateFrame("Frame",nil,UIParent));B:Detach()
-assert(f.points[1][1]=="CENTER" and f:GetParent()==UIParent)
-''')
+local h=pfUI.automation;h:Sync();h:OpenPage(h.general)
+local p=h.pages[h.general]
+assert(p.options.enabled.get())
+edit(p,"scope","account");assert(Automaton:GetModuleScope()=="account")
+edit(p,"scope","char");assert(Automaton:GetModuleScope()=="char")
+edit(p,"enabled",false);assert(not h:IsEnabled() and fallback)
+edit(p,"open");assert(Automaton.independentOpens==1)
+edit(p,"enabled",true);assert(h:IsEnabled() and not fallback)
+''',True)
 check(r'''
-local h=pfUI.automation;h:Sync();Automaton:ToggleMainWindow()
-assert(h.content and Automaton.mainFrame:GetParent()==h.content)
-assert(pfUI.gui:GetWidth()==1040 and pfUI.gui:GetScale()<=776/1040)
-h:OpenVendor();assert(h.summary and h.summary.font)
-local edit=controls["物品 ID"];edit.category[edit.key]="123"
-controls["加入保留名单"].values();assert(rules.ignore["123"])
-controls["移出保留名单"].values();assert(rules.ignore["123"]==nil)
-for i=1,500 do rules.custom[tostring(i)]=string.rep("长名称",12) end
-h:RefreshSummary();assert(h.summary:GetParent():GetHeight()>650)
-C.automation.enabled="0";h:Sync();assert(h.placeholder:IsShown() and Automaton.mainFrame:GetParent()==UIParent)
-C.automation.enabled="1";h:Sync();assert(not h.placeholder:IsShown() and Automaton.mainFrame:GetParent()==h.content)
-h:RestoreSize();assert(pfUI.gui:GetWidth()==720 and pfUI.gui:GetScale()==1)
-''', True)
+local h=pfUI.automation;h:Sync();h:Open()
+local p=h.pages[h.all]
+assert(p.options.module.args==Automaton.modules[C.automation.selected]._options)
+edit(p,"query","Tooltip")
+assert(C.automation.selected=="Tooltip" and p.options.module.args==Automaton.modules.Tooltip._options)
+edit(p,"visible",false);assert(Automaton.db.char.hiddenModules.Tooltip)
+edit(p,"visibility","hidden");assert(C.automation.selected=="Tooltip")
+edit(p,"query","does-not-exist");assert(p.options.empty and not p.options.module)
+edit(p,"query","");edit(p,"visibility","all");edit(p,"category","quest")
+assert(C.automation.selected=="ExpBar")
+assert(not p.options.selected.validate.Repair and not p.options.selected.validate.Sell)
+h:SelectModule("Sell");assert(h.pages[h.merchant])
+''',True)
 check(r'''
-local h=pfUI.automation;h:OpenVendor();h:Sync()
-assert(not Automaton.modules.Sell.running)
-local before=Automaton.db.char.disabledModules
-Automaton.modules.Sell._options.enabled.set(false)
-assert(C.global.autosell=="0" and Automaton.db.char.disabledModules==before)
-assert(Automaton.modules.Sell._optionOrder[2].data==Automaton.modules.Sell._options.pfui)
-''', True)
+local h=pfUI.automation;h:Sync();h:Open()
+local p=h.pages[h.all]
+edit(p,"selected","Tooltip")
+assert(Automaton.db.char.lastModule=="Tooltip" and Automaton.selectedModule=="Tooltip")
+local list=h:ModuleList(false);assert(list[#list].name=="Tooltip")
+p.options.order.buttons[1].func();p.onChanged();h.Tick()
+local moved=h:ModuleList(false);assert(moved[#moved-1].name=="Tooltip")
+assert(Automaton.db.char.moduleOrder[#Automaton.db.char.moduleOrder]=="Sell")
+''',True)
+check(r'''
+local h=pfUI.automation;h:Sync();h:OpenVendor();local p=h.pages[h.merchant]
+edit(p,"item","123");edit(p,"addKeep");assert(rules.ignore["123"])
+edit(p,"addSell");assert(rules.custom["123"])
+assert(p.options.ignore.args["123"].buttonText=="移除")
+p.options.ignore.args["123"].func();p.onChanged();h.Tick()
+assert(not rules.ignore["123"] and rules.custom["123"])
+edit(p,"removeSell");assert(not rules.custom["123"])
+edit(p,"item","invalid");edit(p,"addSell");assert(next(rules.custom)==nil)
+edit(p,"sell",false);assert(C.global.autosell=="0" and not Automaton.modules.Sell.running)
+for i=1,500 do rules.custom[tostring(i)]="Long item "..i end
+h:RefreshPage(h.merchant);local count=0
+for _ in pairs(p.options.custom.args) do count=count+1 end
+assert(count==500 and pfUI.gui:GetWidth()==720)
+''',True)
+check(r'''
+local h=pfUI.automation;h:Sync();h:Open();local p=h.pages[h.all]
+edit(p,"selected","Tooltip");local before=p.renders
+Automaton.modulePrototype.RegisterOptions(Automaton.modules.Tooltip,{new={type="toggle",name="New setting"}})
+assert(h.refreshPending);h.Tick()
+assert(p.renders>before and p.options.module.args.new)
+Automaton:RefreshModuleSettings("Tooltip");h.Tick()
+assert(not Automaton.legacyRefresh)
+''',True)
+check(r'''
+local h=pfUI.automation;h:Sync()
+local module=Automaton.modules.Sell
+Automaton.modulePrototype.RegisterOptions(module,{updated={type="description",name="New legacy options"}})
+assert(module._options.pfui and not module._options.updated)
+C.automation.enabled="0";h:Sync()
+assert(module._options.updated and module.running)
+''',True)
 check(r'''
 local gui=pfUI.gui;pfUI.gui=nil
 function pfUI:ShowGUI() self.gui=gui;gui:Show();return true end
 assert(loadstring(hostSource))()
 local h=pfUI.automation;assert(h:Sync() and not h.guiReady)
 Automaton:ToggleMainWindow()
-assert(h.guiReady and h.content and Automaton.mainFrame:GetParent()==h.content)
+assert(h.guiReady and h.pages[h.all] and not Automaton.mainFrame)
 ''')
 check(r'''
+local h=pfUI.automation;local renderer=pfUI.automationOptions
+pfUI.automationOptions=nil;h.guiReady=nil
+h:Open();assert(h.pendingPage==h.all)
+pfUI.automationOptions=renderer;h:BuildGUI()
+assert(h.guiReady and h.pendingPage==nil and h.pages[h.all])
+''',True)
+check(r'''
 local h=pfUI.automation;h:Sync();h:Open()
-local area=pfUI.gui.frames[h.title].area
-assert(pfUI.gui:GetWidth()==1040)
-invoke(area,"OnHide");assert(pfUI.gui:GetWidth()==720 and pfUI.gui:GetScale()==1)
-invoke(area,"OnShow");assert(pfUI.gui:GetWidth()==1040 and pfUI.gui:GetScale()<1)
-''', True)
+for i=1,100 do h:OpenVendor();h:Open();h:OpenPage(h.general) end
+assert(pfUI.gui:GetWidth()==720 and pfUI.gui:GetScale()==1)
+local count=0
+for _,v in pairs(pfUI.gui.frames[h.title]) do if type(v)=="table" and v.content then count=count+1 end end
+assert(count==3,"unbounded tab creation")
+h.Tick();assert(h.driver:GetScript("OnUpdate")==nil,"idle polling")
+''',True)
 check(r'''
 local B=AutomatonPfUIBridge;local host={Config=function() return C.automation end}
 Automaton.db.char.disabledModules.Sell=true;Automaton.modules.Sell.running=false
@@ -240,4 +305,4 @@ lua.execute("local sellTimer={junk={1,2},timeSinceLast=5,Hide=function(self) sel
             "local function stop(self) "+body+" end; stop(module); "
             "assert(module.stopped and sellTimer.hidden and #sellTimer.junk==0 and sellTimer.timeSinceLast==0)")
 checks+=1
-print(f"pfUI automation host: {checks} lifecycle/UI scenarios passed (strict fonts; SetFont fails)")
+print(f"pfUI automation host: {checks} native navigation/lifecycle scenarios passed")
