@@ -1,10 +1,23 @@
 -- Native pfUI settings; the Automaton engine and its saved data remain intact.
 pfUI:RegisterModule("automation", "vanilla", function()
-  local host = { title = "自动化", general = "管理", all = "功能设置", merchant = "商人服务", pages = {} }
+  local host = { title = "自动化", general = "管理", all = "全部功能", merchant = "商人服务", pages = {}, categoryPages = {} }
   pfUI.automation = host
-  local input = { query = "", category = "all", visibility = "all", item = "" }
+  local input = { item = "" }
+  local filters = {}
+  local function FeatureState(category)
+    category = category or "all"
+    filters[category] = filters[category] or { query = "", visibility = "all" }
+    return filters[category]
+  end
   local categories = { all = "全部功能", merchant = "物品与交易", quest = "任务与升级",
     party = "组队与社交", combat = "战斗与移动", interface = "界面与提示", misc = "其他便利功能" }
+  host.pageOrder = { host.general }
+  for _, category in ipairs({ "all", "quest", "combat", "merchant", "interface", "party", "misc" }) do
+    local title = categories[category]
+    host.categoryPages[title] = category
+    table.insert(host.pageOrder, title)
+  end
+  table.insert(host.pageOrder, host.merchant)
   local categoryMap = {}
   local categoryNames = {
     merchant = "AutoNeed AutoOpenBag Discard LootBOP MailTo MasterLootRemind Purchases SendRollItem ShiQu sTrade",
@@ -70,13 +83,21 @@ pfUI:RegisterModule("automation", "vanilla", function()
       Automaton.selectedModule = name
       Automaton.db.char.lastModule = name
     end
-    self:Open()
+    local category = categoryMap[name] or "misc"
+    local filter = FeatureState(category)
+    filter.query, filter.visibility = "", "all"
+    local db = self:Config()
+    db.selectedByCategory = db.selectedByCategory or {}
+    db.selectedByCategory[category] = name
+    self:OpenPage(categories[category])
   end
-  function host:ModuleList(filtered)
+  function host:ModuleList(filtered, category)
     local list, ranks = {}, {}
     if not self:IsReady() then return list end
     for i, name in ipairs(Automaton.db.char.moduleOrder or {}) do ranks[name] = i end
-    local query = string.lower(input.query)
+    category = category or "all"
+    local filter = FeatureState(category)
+    local query = string.lower(filter.query)
     for name, module in pairs(Automaton.modules) do
       local integration = pfUI.automationIntegrations and pfUI.automationIntegrations[name]
       local integrated = integration and (integration.managed or integration.active)
@@ -85,11 +106,11 @@ pfUI:RegisterModule("automation", "vanilla", function()
         if filtered then
           local text = string.lower(name .. " " .. (module.modulename or "") .. " " .. (module.moduledesc or ""))
           local hidden = Automaton:IsModuleHidden(name)
-          show = (input.category == "all" or (categoryMap[name] or "misc") == input.category)
+          show = (category == "all" or (categoryMap[name] or "misc") == category)
             and (query == "" or string.find(text, query, 1, true))
-            and (input.visibility == "all" or (input.visibility == "shown" and not hidden)
-              or (input.visibility == "hidden" and hidden)
-              or (input.visibility == "enabled" and Automaton:IsModuleActive(name)))
+            and (filter.visibility == "all" or (filter.visibility == "shown" and not hidden)
+              or (filter.visibility == "hidden" and hidden)
+              or (filter.visibility == "enabled" and Automaton:IsModuleActive(name)))
         end
         if show then table.insert(list, { name = name, module = module }) end
       end
@@ -140,8 +161,8 @@ pfUI:RegisterModule("automation", "vanilla", function()
         get = function() return Automaton:GetModuleScope() end,
         set = function(value) Automaton:ApplyModuleScope(value) end,
         desc = "切换时保留当前模块开关状态。修理与售卖使用 pfUI 自己的配置。" }
-      options.visibility = Description("菜单隐藏只影响显示，不会停用功能。在功能设置中可以查看隐藏模块。", 4)
-      options.features = { type = "execute", name = "功能设置", order = 5, func = function() host:Open() end }
+      options.visibility = Description("菜单隐藏只影响显示，不会停用功能。在各分类页中可以查看隐藏模块。", 4)
+      options.features = { type = "execute", name = host.all, order = 5, func = function() host:Open() end }
       options.vendor = { type = "execute", name = "商人服务", order = 6, func = function() host:OpenVendor() end }
     else
       options.missing = Description("Automatonex 尚未加载。请在角色插件列表中保留启用 Automatonex。", 3)
@@ -163,35 +184,38 @@ pfUI:RegisterModule("automation", "vanilla", function()
     end
     return options
   end
-  function host:FeatureOptions()
+  function host:FeatureOptions(category)
+    category = category or "all"
+    local filter = FeatureState(category)
     if not self:IsReady() then return { missing = Description("等待 Automatonex 完成加载。") } end
     if not self:IsEnabled() then
       return { disabled = Description("请先在管理页面开启“在 pfUI 中管理自动化”。"),
         manage = { type = "execute", name = "打开管理设置", order = 2, func = function() host:OpenPage(host.general) end } }
     end
     local options = {
-      query = { type = "text", name = "搜索功能", order = 1, get = function() return input.query end,
-        set = function(value) input.query = value end, desc = "按名称或说明搜索，按回车应用。" },
-      category = { type = "text", name = "功能分类", order = 2, validate = categories,
-        get = function() return input.category end, set = function(value) input.category = value end },
+      query = { type = "text", name = "搜索功能", order = 1, get = function() return filter.query end,
+        set = function(value) filter.query = value end, desc = "按名称或说明搜索，按回车应用。" },
       visibility = { type = "text", name = "显示范围", order = 3,
         validate = { all = "全部（含隐藏）", shown = "菜单可见", hidden = "菜单隐藏", enabled = "已启用" },
-        get = function() return input.visibility end, set = function(value) input.visibility = value end },
+        get = function() return filter.visibility end, set = function(value) filter.visibility = value end },
     }
-    local list, choices = self:ModuleList(true), {}
+    local list, choices = self:ModuleList(true, category), {}
     for i, entry in ipairs(list) do
       local state = Automaton:IsModuleActive(entry.name) and "开启" or "关闭"
       choices[entry.name] = string.format("%02d  %s · %s", i, entry.module.modulename or entry.name, state)
     end
     if table.getn(list) == 0 then options.empty = Description("没有符合条件的模块。修理和售卖请使用商人服务页面。", 4); return options end
-    local selected = self:Config().selected or Automaton.db.char.lastModule
+    local db = self:Config()
+    db.selectedByCategory = db.selectedByCategory or {}
+    local selected = db.selectedByCategory[category] or db.selected or Automaton.db.char.lastModule
     if not choices[selected] then selected = list[1].name end
-    self:Config().selected = selected
+    db.selected = selected
+    db.selectedByCategory[category] = selected
     local module = Automaton.modules[selected]
     Automaton.selectedModule = selected
     options.selected = { type = "text", name = "选择功能", order = 4, validate = choices,
-      get = function() return host:Config().selected end,
-      set = function(value) host:Config().selected = value; Automaton.selectedModule = value; Automaton.db.char.lastModule = value end }
+      get = function() return db.selectedByCategory[category] end,
+      set = function(value) db.selectedByCategory[category] = value; db.selected = value; Automaton.selectedModule = value; Automaton.db.char.lastModule = value end }
     options.description = Description(module.moduledesc or "", 5)
     options.visible = { type = "toggle", name = "在常用菜单中显示", order = 6,
       desc = "隐藏不代表停用；显示范围选择“全部”或“菜单隐藏”可再次找到。",
@@ -263,7 +287,7 @@ pfUI:RegisterModule("automation", "vanilla", function()
       local options
       if page == self.general then options = self:GeneralOptions()
       elseif page == self.merchant then options = self:MerchantOptions()
-      else options = self:FeatureOptions() end
+      else options = self:FeatureOptions(self.categoryPages[page]) end
       renderer:Render(content, { name = page, _options = options }, function() host:QueueRefresh() end)
     end)
     self.rendering = nil
@@ -287,7 +311,7 @@ pfUI:RegisterModule("automation", "vanilla", function()
   function host:BuildGUI()
     if self.guiReady or not pfUI.gui or not pfUI.gui.CreateGUIEntry or not pfUI.automationOptions then return end
     local gui = pfUI.gui
-    for _, title in ipairs({ self.general, self.all, self.merchant }) do
+    for _, title in ipairs(self.pageOrder) do
       local page = title
       gui.CreateGUIEntry(self.title, page, function()
         host.pages[page] = this

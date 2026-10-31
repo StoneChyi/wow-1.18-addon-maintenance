@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 256,
+  "dated_records": 257,
   "addons": [
     {
       "addon": "!Libs",
@@ -3125,10 +3125,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "合并提示、经验统计和角色链接的实际执行流程",
+      "latest_record_title": "将自动化功能分类移至左侧二级菜单",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 32,
+      "record_count": 33,
       "records": [
+        {
+          "id": "pfUI-20261031-07",
+          "date": "2026-10-31",
+          "title": "将自动化功能分类移至左侧二级菜单",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261031-07"
+        },
         {
           "id": "pfUI-20261031-06",
           "date": "2026-10-31",

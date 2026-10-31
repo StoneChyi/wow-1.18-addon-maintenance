@@ -237,4 +237,52 @@ pfUI.gui.CreateConfig=create;h.GeneralOptions=original
 h:RefreshPage(h.general)
 assert(not h.lastRenderError and #parent.automationOptionsState.visible>0)
 ''')
+lua.execute(r'''
+local h=pfUI.automation
+local group=pfUI.gui.frames[h.title]
+local expected={'管理','全部功能','任务与升级','战斗与移动','物品与交易','界面与提示','组队与社交','其他便利功能','商人服务'}
+assert(#h.pageOrder==#expected)
+for i,title in ipairs(expected) do assert(h.pageOrder[i]==title and group[title]) end
+assert(not group['功能设置'],'old category dropdown page remains')
+local cases={
+ {'任务与升级','QuestAutomation'},{'战斗与移动','RandomMount'},
+ {'物品与交易','AutoNeed'},{'界面与提示','Tooltip'},
+ {'组队与社交','AutoShout'},{'其他便利功能','ClearCache'},
+}
+for _,item in ipairs(cases) do
+ local name=item[2]
+ if not Automaton.modules[name] then
+  Automaton.modules[name]={name=name,modulename=name,_options={info={type='description',name='Info '..name}}}
+ end
+end
+for _,item in ipairs(cases) do
+ -- Actual submenu click path, not just directly asking the host to render.
+ group[item[1]]:Click();current(item[1])
+ assert(not h.lastRenderError)
+ assert(not pcall(rowName,'功能分类'))
+ local menu=rowName('选择功能').input.menu
+ assert(#menu==1 and string.find(menu[1].text,item[2],1,true))
+end
+-- Filters and module selection belong to their category, not a global dropdown.
+group['界面与提示']:Click();current('界面与提示')
+rowName('搜索功能').input:SetText('no-result');fire(rowName('搜索功能').input,'OnEnterPressed');tick()
+assert(not pcall(rowName,'选择功能'))
+group['任务与升级']:Click();current('任务与升级')
+assert(rowName('搜索功能').input:GetText()=='')
+assert(rowName('Text QuestAutomation'))
+rowName('Text QuestAutomation').input:SetText('saved while changing category')
+group['战斗与移动']:Click();current('战斗与移动')
+assert(values.QuestAutomation=='saved while changing category')
+group['界面与提示']:Click();current('界面与提示')
+assert(rowName('搜索功能').input:GetText()=='no-result')
+h:SelectModule('Tooltip');current('界面与提示')
+assert(group['界面与提示'].area:IsShown() and rowName('搜索功能').input:GetText()=='')
+assert(rowName('Text Tooltip'))
+-- Warm all nine views, then ensure ordinary navigation never rebuilds controls.
+for _,title in ipairs(expected) do group[title]:Click() end
+local before=created
+for i=1,10 do for _,title in ipairs(expected) do group[title]:Click() end end
+assert(created==before,'category navigation leaked controls')
+assert(not h.lastRenderError)
+''')
 print('pfUI automation pages: actual host/renderer/CreateConfig integration passed')

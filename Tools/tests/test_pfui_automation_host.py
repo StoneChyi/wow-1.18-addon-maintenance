@@ -212,7 +212,8 @@ assert(C.automation.selected=="Tooltip" and p.options.module.args==Automaton.mod
 edit(p,"visible",false);assert(Automaton.db.char.hiddenModules.Tooltip)
 edit(p,"visibility","hidden");assert(C.automation.selected=="Tooltip")
 edit(p,"query","does-not-exist");assert(p.options.empty and not p.options.module)
-edit(p,"query","");edit(p,"visibility","all");edit(p,"category","quest")
+edit(p,"query","");edit(p,"visibility","all");h:OpenPage("任务与升级");p=h.pages["任务与升级"]
+assert(not p.options.category)
 assert(C.automation.selected=="ExpBar")
 assert(not p.options.selected.validate.Repair and not p.options.selected.validate.Sell)
 h:SelectModule("Sell");assert(h.pages[h.merchant])
@@ -280,7 +281,7 @@ for i=1,100 do h:OpenVendor();h:Open();h:OpenPage(h.general) end
 assert(pfUI.gui:GetWidth()==720 and pfUI.gui:GetScale()==1)
 local count=0
 for _,v in pairs(pfUI.gui.frames[h.title]) do if type(v)=="table" and v.content then count=count+1 end end
-assert(count==3,"unbounded tab creation")
+assert(count==9,"unbounded tab creation")
 h.Tick();assert(h.driver:GetScript("OnUpdate")==nil,"idle polling")
 ''',True)
 check(r'''
