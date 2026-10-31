@@ -1133,6 +1133,354 @@
   },
   "calls": [
     {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "AddLine",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "ClearFocus",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "CreateFontString",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "CreateTexture",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "EnableMouseWheel",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "GetBottom",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "GetEffectiveScale",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "GetHeight",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "GetStringWidth",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "FontString",
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "GetText",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "GetThumbTexture",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Slider"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "GetTop",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "GetValue",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Slider"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "Hide",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "OpenPage",
+      "classification": "addon_method",
+      "declaring_objects": [
+        "pfUI helper"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SelectModule",
+      "classification": "addon_method",
+      "declaring_objects": [
+        "pfUI helper"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetAllPoints",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetAutoFocus",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetFont",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "FontString",
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetFontObject",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "FontString",
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetGradientAlpha",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Texture"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetHeight",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetJustifyH",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "FontString",
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetJustifyV",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "FontString",
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetMinMaxValues",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Slider"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetOrientation",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Slider"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetOwner",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetPoint",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetScript",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Frame"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetText",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button",
+        "GameTooltip"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetTextColor",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "FontString",
+        "EditBox",
+        "Button"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetTextInsets",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "EditBox"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetTexture",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Texture"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetThumbTexture",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Slider"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetValue",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Slider"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "SetWidth",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_navigation.lua",
+      "method": "Show",
+      "classification": "native_or_helper",
+      "declaring_objects": [
+        "Region"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Attach",
+      "classification": "addon_method",
+      "declaring_objects": [
+        "pfUI helper"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "CommitPending",
+      "classification": "addon_method",
+      "declaring_objects": [
+        "pfUI helper"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "EnsureVisible",
+      "classification": "addon_method",
+      "declaring_objects": [
+        "pfUI helper"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "Update",
+      "classification": "addon_method",
+      "declaring_objects": [
+        "pfUI helper"
+      ]
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "UpdateViewport",
+      "classification": "addon_method",
+      "declaring_objects": [
+        "pfUI helper"
+      ]
+    },
+    {
       "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
       "method": "AddLine",
       "classification": "native_or_helper"

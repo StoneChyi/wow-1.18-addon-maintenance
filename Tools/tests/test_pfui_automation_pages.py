@@ -153,36 +153,31 @@ for _,row in ipairs(parent.automationOptionsState.visible) do
  if row.option.buttonText=='移除' and string.find(row.option.name,'123',1,true) then remove=row;break end
 end
 assert(remove);click(remove);tick();assert(not rules.ignore['123'] and rules.custom['123'])
--- Dropdown reuse and deferred rebuild must not submit old values to new modules.
-h:Open();current(h.all);assert(rowName('Text Tooltip') and rowName('Text QuestAutomation'))
+-- A shared details pane must commit the old module before rebinding its rows.
+h:SelectModule('Tooltip');current(h.detail)
+assert(rowName('Text Tooltip') and not pcall(rowName,'Text QuestAutomation'))
 rowName('Text Tooltip').input:SetText('edited tooltip')
-fire(rowName('Text Tooltip').input,'OnEditFocusLost');tick()
+h:SelectModule('QuestAutomation');current(h.detail)
 assert(values.Tooltip=='edited tooltip' and values.QuestAutomation=='original quest')
 assert(#setLog==1 and setLog[1]=='Tooltip:edited tooltip')
-local editrow=rowName('Text QuestAutomation')
-fire(editrow.input,'OnEditFocusLost');tick()
+fire(rowName('Text QuestAutomation').input,'OnEditFocusLost');tick()
 assert(#setLog==1,'focus loss wrote a rebound row to the wrong module')
-rowName('搜索功能').input:SetText('Tooltip');fire(rowName('搜索功能').input,'OnEnterPressed');tick()
-assert(rowName('Text Tooltip') and not pcall(rowName,'Text QuestAutomation'))
-rowName('搜索功能').input:SetText('nothing-matches');fire(rowName('搜索功能').input,'OnEnterPressed');tick()
-assert(not pcall(rowName,'Text Tooltip'))
-rowName('搜索功能').input:SetText('');fire(rowName('搜索功能').input,'OnEnterPressed');tick()
--- Warm all pages and both option layouts before measuring repeated reuse.
-h:OpenPage(h.general);h:Open();h:OpenVendor();current(h.merchant)
+-- Warm both module shapes and all three native areas, then ensure reuse.
+h:OpenPage(h.general);h:SelectModule('Tooltip');h:SelectModule('QuestAutomation');h:OpenVendor();current(h.merchant)
 local before=created
-for i=1,40 do h:Open();h:OpenPage(h.general);h:OpenVendor() end
-assert(created==before,'native page switches leaked new controls')
+for i=1,40 do h:SelectModule('Tooltip');h:SelectModule('QuestAutomation');h:OpenPage(h.general);h:OpenVendor() end
+assert(created==before,'shared module/page switches leaked new controls')
 assert(pfUI.gui:GetWidth()==720 and pfUI.gui:GetHeight()==480)
 assert(next(nativeSearchDB)==nil,'dynamic row references leaked into global search')
--- Native dropdowns are parented to the GUI, so switching pages must close them.
-h:Open();current(h.all);assert(rowName('Text Tooltip') and rowName('Text QuestAutomation'))
+-- Management dropdowns must close on module navigation and GUI close.
+h:OpenPage(h.general);current(h.general)
 local menu=rowName('显示范围').input.menuframe
 menu:Show();assert(menu:IsShown())
+h:SelectModule('Tooltip');current(h.detail);assert(not menu:IsShown())
 rowName('Text Tooltip').input:SetText('saved on page leave')
 h:OpenVendor();current(h.merchant)
-assert(not menu:IsShown(),'automation dropdown covered another settings page')
 assert(values.Tooltip=='saved on page leave','page leave discarded pending edit')
-h:Open();current(h.all);menu=rowName('显示范围').input.menuframe;menu:Show()
+h:OpenPage(h.general);current(h.general);menu=rowName('显示范围').input.menuframe;menu:Show()
 pfUI.gui:Hide();assert(not menu:IsShown(),'closing native GUI left detached dropdown visible')
 h:OpenVendor();current(h.merchant)
 -- Large rule lists must expand content, then shrink without stale entries.
@@ -240,83 +235,53 @@ assert(not h.lastRenderError and #parent.automationOptionsState.visible>0)
 lua.execute(r'''
 local h=pfUI.automation
 local group=pfUI.gui.frames[h.title]
-local expected={'管理','全部功能','任务与升级','战斗与移动','物品与交易','界面与提示','组队与社交','其他便利功能','商人服务'}
-assert(#h.pageOrder==#expected)
-for i,title in ipairs(expected) do assert(h.pageOrder[i]==title and group[title]) end
-assert(not group['功能设置'],'old category dropdown page remains')
-local cases={
- {'任务与升级','QuestAutomation'},{'战斗与移动','RandomMount'},
- {'物品与交易','AutoNeed'},{'界面与提示','Tooltip'},
- {'组队与社交','AutoShout'},{'其他便利功能','ClearCache'},
-}
-for _,item in ipairs(cases) do
- local name=item[2]
- if not Automaton.modules[name] then
-  Automaton.modules[name]={name=name,modulename=name,_options={info={type='description',name='Info '..name}}}
- end
-end
-for _,item in ipairs(cases) do
- -- Actual submenu click path, not just directly asking the host to render.
- group[item[1]]:Click();current(item[1])
- assert(not h.lastRenderError)
- assert(not pcall(rowName,'功能分类'))
- assert(rowName(item[2]).option.moduleName==item[2])
- assert(not pcall(rowName,'选择功能'))
-end
--- Filters and module selection belong to their category, not a global dropdown.
-group['界面与提示']:Click();current('界面与提示')
-rowName('搜索功能').input:SetText('no-result');fire(rowName('搜索功能').input,'OnEnterPressed');tick()
-assert(not pcall(rowName,'选择功能'))
-group['任务与升级']:Click();current('任务与升级')
-assert(rowName('搜索功能').input:GetText()=='')
-assert(rowName('Text QuestAutomation'))
-rowName('Text QuestAutomation').input:SetText('saved while changing category')
-group['战斗与移动']:Click();current('战斗与移动')
-assert(values.QuestAutomation=='saved while changing category')
-group['界面与提示']:Click();current('界面与提示')
-assert(rowName('搜索功能').input:GetText()=='no-result')
-h:SelectModule('Tooltip');current('界面与提示')
-assert(group['界面与提示'].area:IsShown() and rowName('搜索功能').input:GetText()=='')
-assert(rowName('Text Tooltip'))
--- Warm all nine views, then ensure ordinary navigation never rebuilds controls.
-for _,title in ipairs(expected) do group[title]:Click() end
-local before=created
-for i=1,10 do for _,title in ipairs(expected) do group[title]:Click() end end
-assert(created==before,'category navigation leaked controls')
-assert(not h.lastRenderError)
-''')
-lua.execute(r'''
-local h=pfUI.automation
+assert(#h.pageOrder==3 and group[h.general] and group[h.merchant] and group[h.detail])
+assert(not group['全部功能'] and not group['任务与升级'],'category tabs remain')
 local enabled=false
 local otherValue='before'
-Automaton.modules.QuestItemBar={name='QuestItemBar',modulename='Quest items',_options={
+local number=3
+Automaton.modules.QuestItemBar={name='QuestItemBar',modulename='Shared label',_options={
  enabled={type='toggle',name='Quest bar enabled',order=1,get=function()return enabled end,set=function(v)enabled=v end},
  text={type='text',name='Quest bar text',order=2,get=function()return otherValue end,set=function(v)otherValue=v end},
+ number={type='number',name='Quest bar number',order=3,get=function()return number end,set=function(v)number=v end},
 }}
-h:OpenPage('任务与升级');current('任务与升级')
-assert(rowName('Text QuestAutomation') and rowName('Quest bar text'))
-assert(not pcall(rowName,'选择功能'))
-assert(rowName('Quest items').option.moduleName=='QuestItemBar')
-local untouched=values.QuestAutomation
-rowName('Quest bar enabled').input:SetChecked(1);click(rowName('Quest bar enabled'));tick()
-assert(enabled and values.QuestAutomation==untouched)
-rowName('Text QuestAutomation').input:SetText('first group saved')
-rowName('Quest bar text').input:SetText('second group saved')
-h:OpenVendor()
-assert(values.QuestAutomation=='first group saved' and otherValue=='second group saved')
-h:OpenPage('任务与升级');current('任务与升级')
-assert(rowName('Text QuestAutomation').input:GetText()=='first group saved')
-assert(rowName('Quest bar text').input:GetText()=='second group saved')
-assert(not Automaton.modules.QuestItemBar._options.__pfui_visible,'page controls polluted original options')
-assert(rowName('Quest bar text').option==Automaton.modules.QuestItemBar._options.text)
--- Search removes whole groups while retaining their saved configuration.
-rowName('搜索功能').input:SetText('QuestItemBar');fire(rowName('搜索功能').input,'OnEnterPressed');tick()
+Automaton.modules.QuestAutomation.modulename='Shared label'
+h:SelectModule('QuestItemBar');current(h.detail)
 assert(rowName('Quest bar text') and not pcall(rowName,'Text QuestAutomation'))
-h:SelectModule('QuestAutomation');current('任务与升级')
-assert(rowName('Text QuestAutomation') and rowName('Quest bar text'))
-h:SelectModule('QuestItemBar');current('任务与升级')
-local offset=rowName('Quest items').automationOffset
-assert(offset>0)
-assert(parent.parent:GetVerticalScroll()==math.min(offset,parent.parent:GetVerticalScrollRange()))
+assert(rowName('Quest bar text').option==Automaton.modules.QuestItemBar._options.text)
+assert(not Automaton.modules.QuestItemBar._options.__pfui_description)
+rowName('Quest bar text').input:SetText('bar saved')
+rowName('Quest bar number').input:SetText('invalid')
+assert(h:SelectModule('QuestAutomation')==false)
+assert(h.selectedModule=='QuestItemBar' and h.activePage==h.detail)
+assert(rowName('Quest bar number').input:GetText()=='invalid' and number==3)
+assert(h:OpenVendor()==false and h.activePage==h.detail)
+assert(h:SetModuleHidden('QuestItemBar',true)==false and not Automaton:IsModuleHidden('QuestItemBar'))
+rowName('Quest bar number').input:SetText('4')
+assert(h:SelectModule('QuestAutomation'));current(h.detail)
+assert(otherValue=='bar saved' and number==4)
+assert(h.selectedModule=='QuestAutomation' and rowName('Text QuestAutomation'))
+rowName('Text QuestAutomation').input:SetText('hide saves draft')
+assert(h:SetModuleHidden('QuestAutomation',true));tick();current(h.general)
+assert(values.QuestAutomation=='hide saves draft' and h.activePage==h.general)
+assert(Automaton:IsModuleActive('QuestAutomation'),'hide disabled a gameplay module')
+local found=false
+for _,entry in ipairs(h:NavigationEntries(false)) do assert(entry.name~='QuestAutomation') end
+for _,entry in ipairs(h:NavigationEntries(true)) do if entry.name=='QuestAutomation' then found=true end end
+assert(found)
+-- Even hidden modules can be opened from management without unhiding them.
+local opts=h:GeneralOptions();opts.nav_QuestAutomation.args.open.func();current(h.detail)
+assert(rowName('Text QuestAutomation') and Automaton:IsModuleHidden('QuestAutomation'))
+h:OpenPage(h.general);current(h.general)
+opts=h:GeneralOptions();opts.nav_QuestAutomation.args.visible.set(true);tick()
+assert(not Automaton:IsModuleHidden('QuestAutomation'))
+rowName('查找模块').input:SetText('QuestItemBar');fire(rowName('查找模块').input,'OnEnterPressed');tick()
+opts=h:GeneralOptions();assert(opts.nav_QuestItemBar and not opts.nav_QuestAutomation)
+rowName('查找模块').input:SetText('');fire(rowName('查找模块').input,'OnEnterPressed');tick()
+h:SelectModule('QuestItemBar');h:SelectModule('QuestAutomation');h:OpenPage(h.general)
+local before=created
+for i=1,30 do h:SelectModule('QuestItemBar');h:SelectModule('QuestAutomation');h:OpenPage(h.general) end
+assert(created==before,'direct module navigation leaked controls')
+assert(not h.lastRenderError)
 ''')
-print('pfUI automation pages: actual host/renderer/CreateConfig integration passed')
+print('pfUI automation pages: actual shared details/management/merchant controls and navigation saves passed')

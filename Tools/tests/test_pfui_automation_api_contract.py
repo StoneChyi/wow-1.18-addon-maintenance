@@ -16,7 +16,7 @@ from test_pfui_automation_options import MOCK
 contract = json.loads((Path(__file__).with_name('pfui_automation_api_contract.json')).read_text(encoding='utf8'))
 # New client calls cannot silently pass because the permissive old mock happens
 # to expose them. Addon methods declared in the file remain outside this API list.
-for relative in ('Interface/AddOns/pfUI/modules/automation.lua', 'Interface/AddOns/pfUI/modules/automation_options.lua'):
+for relative in ('Interface/AddOns/pfUI/modules/automation.lua', 'Interface/AddOns/pfUI/modules/automation_options.lua', 'Interface/AddOns/pfUI/modules/automation_navigation.lua'):
     source = (ROOT / relative).read_text(encoding='utf8')
     reviewed = {entry['method'] for entry in contract['calls'] if entry['file'] == relative}
     declared = set(re.findall(r'function\s+[\w.]+:(\w+)\(', source))

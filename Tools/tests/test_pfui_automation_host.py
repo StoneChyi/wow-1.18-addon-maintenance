@@ -43,6 +43,8 @@ function methods:GetStringHeight() return math.max(20,#(self.text or "")/40*16) 
 function methods:RegisterEvent(e) self.events=self.events or {};self.events[e]=true end
 function methods:SetMovable() end
 function methods:Click() invoke(self,"OnClick") end
+function methods:SetVerticalScroll(value) self.scroll=value end
+function methods:UpdateScrollState() self.scrollUpdates=(self.scrollUpdates or 0)+1 end
 fontInstall(methods,obj)
 -- Force configurable font loading to fail. Template/FontObject initialization
 -- still has to precede every FontString SetText in the actual host source.
@@ -61,6 +63,7 @@ pfUI.gui.frames={}
 function pfUI:RegisterModule(name,version,fn) fn() end
 pfUI.automationOptions={}
 function pfUI.automationOptions:Suspend() end
+function pfUI.automationOptions:CommitPending(parent) self.commitCalls=(self.commitCalls or 0)+1;return not self.rejectPending end
 function pfUI.automationOptions:Render(parent,module,changed)
  parent.options=module._options;parent.onChanged=changed;parent.renders=(parent.renders or 0)+1
 end
@@ -78,7 +81,7 @@ function pfUI.gui.CreateGUIEntry(parent,title,populate)
   g:SetScript("OnClick",function() g.area:Show() end);groups[parent]=g
  end
  local g=groups[parent];local tab=obj("Button",nil,g.area);tab.area=obj("Frame",nil,g.area)
- tab.content=obj("Frame",nil,tab.area)
+ tab.content=obj("Frame",nil,tab.area);tab.content.parent=tab.area
  tab:SetScript("OnClick",function()
   for k,v in pairs(g) do if type(v)=="table" and v.area and v~=tab then v.area:Hide() end end
   tab.area:Show()
@@ -204,63 +207,68 @@ edit(p,"open");assert(Automaton.independentOpens==1)
 edit(p,"enabled",true);assert(h:IsEnabled() and not fallback)
 ''',True)
 check(r'''
-local h=pfUI.automation;h:Sync();h:Open()
-local p=h.pages[h.all]
-assert(not p.options.selected and not p.options.module)
-local selected=C.automation.selected
-for _,name in ipairs({"ExpBar","Tooltip","InterPlayerLink"}) do
- local group=p.options["module_"..name]
- assert(group.moduleName==name and group.args~=Automaton.modules[name]._options)
- assert(group.args.old==Automaton.modules[name]._options.old)
- assert(not Automaton.modules[name]._options.__pfui_visible,"host controls leaked into engine options")
-end
-edit(p,"query","Tooltip")
-assert(p.options.module_Tooltip and not p.options.module_ExpBar)
-local toggle=p.options.module_Tooltip.args.__pfui_visible
-assert(toggle.get());toggle.set(false);p.onChanged();h.Tick()
+local h=pfUI.automation;h:Sync();h:SelectModule("Tooltip")
+local p=h.pages[h.detail]
+assert(p.options.module.moduleName=="Tooltip")
+assert(p.options.module.args~=Automaton.modules.Tooltip._options)
+assert(p.options.module.args.old==Automaton.modules.Tooltip._options.old)
+assert(not Automaton.modules.Tooltip._options.__pfui_visible,"host controls leaked into engine options")
+assert(not p.options.module_ExpBar and not p.options.selected,"detail still contains an all-module selector")
+local legacyActive=Automaton:IsModuleActive("Tooltip")
+h:SetModuleHidden("Tooltip",true)
+assert(h.activePage==h.general,"hiding the current module did not return to management")
 assert(Automaton.db.char.hiddenModules.Tooltip and not Automaton.db.char.hiddenModules.ExpBar)
-edit(p,"visibility","hidden");assert(p.options.module_Tooltip)
-edit(p,"query","does-not-exist");assert(p.options.empty and not p.options.module_Tooltip)
-edit(p,"query","");edit(p,"visibility","shown")
-assert(not p.options.module_Tooltip and p.options.module_ExpBar and p.options.module_InterPlayerLink)
-edit(p,"visibility","all");h:OpenPage("任务与升级");p=h.pages["任务与升级"]
-assert(not p.options.category and not p.options.selected)
-assert(p.options.module_ExpBar and not p.options.module_Tooltip)
-assert(C.automation.selected==selected,"rendering silently rewrote legacy selection")
-assert(not p.options.module_Repair and not p.options.module_Sell)
-h:SelectModule("Sell");assert(h.pages[h.merchant])
+assert(Automaton:IsModuleActive("Tooltip")==legacyActive and Automaton.modules.Tooltip.running)
+local shown=h:NavigationEntries(false)
+for _,entry in ipairs(shown) do assert(entry.name~="Tooltip" and entry.name~="Repair" and entry.name~="Sell") end
+local all=h:NavigationEntries(true);assert(#all==3)
+local management=h:GeneralOptions()
+assert(management.nav_Tooltip and not management.nav_Tooltip.args.visible.get())
+management.nav_Tooltip.args.visible.set(true)
+assert(not Automaton.db.char.hiddenModules.Tooltip)
+h:SelectModule("Tooltip");assert(h.selectedModule=="Tooltip" and h.activePage==h.detail)
+h:OpenPage(h.general);p=h.pages[h.general]
+edit(p,"query","Tooltip");assert(p.options.nav_Tooltip and not p.options.nav_ExpBar)
+edit(p,"query","does-not-exist");assert(not p.options.nav_Tooltip and not p.options.nav_ExpBar)
+edit(p,"query","")
+h:SetModuleHidden("Tooltip",true);h:RefreshPage(h.general)
+edit(p,"visibility","hidden");assert(p.options.nav_Tooltip and not p.options.nav_ExpBar)
+edit(p,"visibility","shown");assert(not p.options.nav_Tooltip and p.options.nav_ExpBar)
+edit(p,"visibility","all");assert(p.options.nav_Tooltip and p.options.nav_ExpBar)
+h:SelectModule("Sell");assert(h.pages[h.merchant] and h.activePage==h.merchant)
 ''',True)
 check(r'''
-local h=pfUI.automation;h:Sync();h:Open()
-local p=h.pages[h.all]
-h:SelectModule("Tooltip")
+local h=pfUI.automation;h:Sync();h:SelectModule("Tooltip")
 assert(C.automation.selected=="Tooltip" and Automaton.db.char.lastModule=="Tooltip" and Automaton.selectedModule=="Tooltip")
-h:Open();p=h.pages[h.all]
 local legacy={"Tooltip","Sell","ExpBar","InterPlayerLink","Repair"}
 Automaton.db.char.moduleOrder=legacy
-local list=h:ModuleList(false)
-assert(list[1].name=="ExpBar" and list[2].name=="Tooltip" and list[3].name=="InterPlayerLink")
-assert(p.options.sort.get()=="category")
-for _,entry in ipairs(list) do assert(not p.options["module_"..entry.name].args.__pfui_order) end
-assert(h.MoveModule==nil)
-edit(p,"sort","name")
-list=h:ModuleList(false)
+h:OpenPage(h.general);local p=h.pages[h.general]
+assert(p.options.navSort.get()=="daily")
+edit(p,"navSort","name")
+local list=h:NavigationEntries(true)
 assert(list[1].name=="ExpBar" and list[2].name=="InterPlayerLink" and list[3].name=="Tooltip")
+h:MoveModule("Tooltip",1)
+assert(C.automation.navSort=="custom" and C.automation.navOrder[1]=="Tooltip")
+list=h:NavigationEntries(true);assert(list[1].name=="Tooltip")
+h:SetModuleHidden("ExpBar",true)
+list=h:NavigationEntries(false);assert(#list==2 and list[1].name=="Tooltip")
+h:MoveModule("InterPlayerLink",1)
+list=h:NavigationEntries(true);assert(list[1].name=="InterPlayerLink" and list[2].name=="Tooltip" and list[3].name=="ExpBar")
+h:SetModuleHidden("ExpBar",false)
+list=h:NavigationEntries(false);assert(#list==3 and list[3].name=="ExpBar")
+h:RefreshPage(h.general);p=h.pages[h.general]
 Automaton:ToggleModuleActive("ExpBar",false)
-edit(p,"sort","enabled")
-list=h:ModuleList(false)
-assert(list[1].name=="Tooltip" and list[2].name=="InterPlayerLink" and list[3].name=="ExpBar")
-h:OpenPage("任务与升级");p=h.pages["任务与升级"]
-assert(p.options.sort.get()=="enabled" and p.options.module_ExpBar)
-edit(p,"sort","name")
-h:Open();p=h.pages[h.all]
-assert(p.options.sort.get()=="name" and C.automation.sort=="name")
+edit(p,"navSort","enabled")
+list=h:NavigationEntries(true);assert(list[3].name=="ExpBar")
+edit(p,"navSort","name")
 Automaton.modules.Tooltip.modulename="Same";Automaton.modules.InterPlayerLink.modulename="Same"
-list=h:ModuleList(false)
+list=h:NavigationEntries(true)
 assert(list[2].name=="InterPlayerLink" and list[3].name=="Tooltip","equal labels need deterministic ID order")
+h:SelectModule("InterPlayerLink");assert(h.pages[h.detail].options.module.moduleName=="InterPlayerLink")
+h:SelectModule("Tooltip");assert(h.pages[h.detail].options.module.moduleName=="Tooltip")
 assert(Automaton.db.char.moduleOrder==legacy and table.concat(legacy,",")=="Tooltip,Sell,ExpBar,InterPlayerLink,Repair")
-C.automation.sort="obsolete";h:RefreshPage(h.all)
-assert(p.options.sort.get()=="category","unsupported sort must show a valid default")
+C.automation.navSort="obsolete";h:RefreshPage(h.general)
+assert(p.options.navSort.get()=="daily","unsupported sort must show a valid default")
 ''',True)
 check(r'''
 local h=pfUI.automation;h:Sync();h:OpenVendor();local p=h.pages[h.merchant]
@@ -278,17 +286,17 @@ for _ in pairs(p.options.custom.args) do count=count+1 end
 assert(count==500 and pfUI.gui:GetWidth()==720)
 ''',True)
 check(r'''
-local h=pfUI.automation;h:Sync();h:Open();local p=h.pages[h.all]
+local h=pfUI.automation;h:Sync();h:SelectModule("Tooltip");local p=h.pages[h.detail]
 local before=p.renders;local value=false
 local option={type="toggle",name="New setting",get=function()return value end,set=function(v)value=v end}
 Automaton.modulePrototype.RegisterOptions(Automaton.modules.Tooltip,{new=option})
 assert(h.refreshPending);h.Tick()
-assert(p.renders>before and p.options.module_Tooltip.args.new==option)
-assert(not p.options.module_Tooltip.args.old and p.options.module_ExpBar.args.old)
-p.options.module_Tooltip.args.new.set(true);p.onChanged();h.Tick()
-assert(value and p.options.module_Tooltip.args.new.get())
-assert(p.options.module_ExpBar.args.old==Automaton.modules.ExpBar._options.old)
-Automaton:RefreshModuleSettings("Tooltip");h.Tick()
+assert(p.renders>before and p.options.module.args.new==option)
+assert(not p.options.module.args.old and Automaton.modules.ExpBar._options.old)
+p.options.module.args.new.set(true);p.onChanged();h.Tick()
+assert(value and p.options.module.args.new.get())
+h:SelectModule("ExpBar");assert(p.options.module.args.old==Automaton.modules.ExpBar._options.old)
+Automaton:RefreshModuleSettings("ExpBar");h.Tick()
 assert(not Automaton.legacyRefresh)
 ''',True)
 check(r'''
@@ -320,7 +328,7 @@ for i=1,100 do h:OpenVendor();h:Open();h:OpenPage(h.general) end
 assert(pfUI.gui:GetWidth()==720 and pfUI.gui:GetScale()==1)
 local count=0
 for _,v in pairs(pfUI.gui.frames[h.title]) do if type(v)=="table" and v.content then count=count+1 end end
-assert(count==9,"unbounded tab creation")
+assert(count==3,"unbounded tab creation")
 h.Tick();assert(h.driver:GetScript("OnUpdate")==nil,"idle polling")
 ''',True)
 check(r'''
@@ -355,7 +363,9 @@ function component:SetEnabled(v)self.enabled=v end
 function component:OpenSettings()self.opened=true end
 assert(not h:Sync(),"merchant readiness must not skip unfinished fusion")
 component.ready=true;assert(h:Sync())
-for _,entry in ipairs(h:ModuleList(false))do assert(entry.name~="Tooltip")end
+local found
+for _,entry in ipairs(h:NavigationEntries(true))do if entry.name=="Tooltip" then found=entry end end
+assert(found and found.native,"native fusion is missing from discoverable module entries")
 h:SelectModule("Tooltip");assert(component.opened)
 Automaton:ToggleModuleActive("Tooltip",true);assert(Automaton:IsModuleActive("Tooltip"))
 assert(Automaton.db.char.disabledModules.Tooltip==nil,"fusion altered legacy intent")
@@ -363,11 +373,43 @@ Automaton:ToggleModuleActive("Tooltip",false);assert(not Automaton:IsModuleActiv
 assert(AutomatonPfUIBridge:SavedActive("Tooltip"))
 Automaton.db.char.moduleOrder={"Tooltip","ExpBar","InterPlayerLink"}
 local stored=Automaton.db.char.moduleOrder
-C.automation.sort="name";h:ModuleList(false)
+h:MoveModule("Tooltip",1)
 assert(Automaton.db.char.moduleOrder==stored and table.concat(stored,",")=="Tooltip,ExpBar,InterPlayerLink",
  "presentation sort altered integrated fallback entries")
-local o=h:GeneralOptions();assert(o.native_Tooltip)
+local o=h:GeneralOptions();assert(o.nav_Tooltip and o.nav_Tooltip.args.open)
 C.automation.enabled="0";assert(h:Sync());assert(not component.managed)
 assert(Automaton:IsModuleActive("Tooltip"),"fallback did not restore original intent")
+''',True)
+check(r'''
+local h=pfUI.automation;h:Sync();h:SelectModule("Tooltip")
+local oldOptions=h.pages[h.detail].options
+local renderer=pfUI.automationOptions
+renderer.rejectPending=true
+h:SelectModule("ExpBar")
+assert(h.selectedModule=="Tooltip" and h.activePage==h.detail and h.pages[h.detail].options==oldOptions)
+h:OpenVendor();assert(h.activePage==h.detail)
+h:SetModuleHidden("Tooltip",true)
+assert(not Automaton.db.char.hiddenModules.Tooltip and h.activePage==h.detail)
+renderer.rejectPending=false
+h:SelectModule("ExpBar");assert(h.selectedModule=="ExpBar" and h.pages[h.detail].options.module.moduleName=="ExpBar")
+assert(renderer.commitCalls and renderer.commitCalls>0)
+''',True)
+check(r'''
+local h=pfUI.automation;h:Sync();h:OpenPage(h.general)
+local p=h.pages[h.general]
+h:SetModuleHidden("Tooltip",true);h:MoveModule("InterPlayerLink",1)
+local hidden=Automaton.db.char.hiddenModules
+local order=C.automation.navOrder
+edit(p,"scope","account")
+assert(Automaton.db.char.hiddenModules==hidden and hidden.Tooltip)
+assert(C.automation.navOrder==order and order[1]=="InterPlayerLink")
+edit(p,"scope","char")
+assert(Automaton.db.char.hiddenModules==hidden and hidden.Tooltip)
+assert(C.automation.navOrder==order and order[1]=="InterPlayerLink")
+for _,name in ipairs({"ExpBar","Tooltip","InterPlayerLink"}) do h:SetModuleHidden(name,true) end
+h:Open();assert(h.activePage==h.general)
+assert(h.pages[h.general].options.nav_Tooltip,"all-hidden state lost its recovery controls")
+h.pages[h.general].options.nav_Tooltip.args.visible.set(true)
+h:Open();assert(h.activePage==h.detail and h.selectedModule=="Tooltip")
 ''',True)
 print(f"pfUI automation host: {checks} native navigation/lifecycle scenarios passed")

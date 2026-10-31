@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 260,
+  "dated_records": 261,
   "addons": [
     {
       "addon": "!Libs",
@@ -3125,10 +3125,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "修复自动化设置视口缩放导致底部固定空白",
+      "latest_record_title": "按具体模块导航并集中管理顺序与隐藏",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 36,
+      "record_count": 37,
       "records": [
+        {
+          "id": "pfUI-20261031-11",
+          "date": "2026-10-31",
+          "title": "按具体模块导航并集中管理顺序与隐藏",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261031-11"
+        },
         {
           "id": "pfUI-20261031-10",
           "date": "2026-10-31",

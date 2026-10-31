@@ -87,5 +87,6 @@
   <Include file="..\modules\bgscore.lua"/>
   <Include file="..\modules\automation_options.lua"/>
   <Include file="..\modules\tooltip_extensions.lua"/>
+  <Include file="..\modules\automation_navigation.lua"/>
   <Include file="..\modules\automation.lua"/>
 </Ui>

@@ -1,35 +1,20 @@
 -- Native pfUI settings; the Automaton engine and its saved data remain intact.
 pfUI:RegisterModule("automation", "vanilla", function()
-  local host = { title = "自动化", general = "管理", all = "全部功能", merchant = "商人服务", pages = {}, categoryPages = {} }
+  local host = { title = "自动化", general = "管理", detail = "模块设置", merchant = "商人服务", pages = {} }
   pfUI.automation = host
-  local input = { item = "" }
-  local filters = {}
-  local function FeatureState(category)
-    category = category or "all"
-    filters[category] = filters[category] or { query = "", visibility = "all" }
-    return filters[category]
-  end
-  local categories = { all = "全部功能", merchant = "物品与交易", quest = "任务与升级",
-    party = "组队与社交", combat = "战斗与移动", interface = "界面与提示", misc = "其他便利功能" }
-  host.pageOrder = { host.general }
-  for _, category in ipairs({ "all", "quest", "combat", "merchant", "interface", "party", "misc" }) do
-    local title = categories[category]
-    host.categoryPages[title] = category
-    table.insert(host.pageOrder, title)
-  end
-  table.insert(host.pageOrder, host.merchant)
-  local categoryRank = { quest = 1, combat = 2, merchant = 3, interface = 4, party = 5, misc = 6 }
-  local categoryMap = {}
-  local categoryNames = {
-    merchant = "AutoNeed AutoOpenBag Discard LootBOP MailTo MasterLootRemind Purchases SendRollItem ShiQu sTrade",
-    quest = "ExpBar NewLevelFrame QuestAnnouncer QuestAutomation QuestItemBar Trainer",
-    party = "invall AutoShout follow Group InterPlayerLink Invite StrangerDecline pfQuestSendLink Queue Ready Summon Xguild",
-    combat = "AlertCombat CancelBuff CancelTiger CDSafe Dismount KneelToQueen PicoPoisons ProcDoc RandomMount Range RangeController Release Rez ShaguStance Stand TSTargetMark WorldBuffs Wuss",
-    interface = "Boomtime ErrClear Filter HideActionBarEndCaps Lern2Spell OmniCC Plates S_ActionCount ItemLinkEnUS SelfName Tooltip",
+  host.all = host.detail -- existing toolbox commands still use Open().
+  host.pageOrder = { host.general, host.merchant, host.detail }
+  local input = { item = "", query = "", visibility = "all" }
+  local dailyOrder = {
+    "Superwow", "QuestAutomation", "AutoNeed", "MasterLootRemind", "CDSafe",
+    "Summon", "RandomMount", "QuestItemBar", "CleanChat", "Tooltip",
+    "TSTargetMark", "CancelBuff", "Lern2Spell", "Group", "Invite", "Ready",
+    "Rez", "AutoShout", "sTrade", "LootBOP", "AutoOpenBag", "Purchases",
+    "ShiQu", "MailTo", "Release", "Dismount", "follow", "Trainer", "WorldBuffs",
+    "AlertCombat", "Range", "RangeController", "QuestAnnouncer", "ExpBar", "InterPlayerLink",
   }
-  for category, names in pairs(categoryNames) do
-    for name in string.gfind(names, "%S+") do categoryMap[name] = category end
-  end
+  local dailyRanks = {}
+  for i, name in ipairs(dailyOrder) do dailyRanks[name] = i end
   local attempts, startup = 0, true
   local function Description(text, order) return { type = "description", name = text, order = order or 1 } end
   function host:Config()
@@ -61,96 +46,135 @@ pfUI:RegisterModule("automation", "vanilla", function()
     self.refreshPending = true
     if self.driver then self.driver:SetScript("OnUpdate", host.Tick) end
   end
+  function host:CanLeave()
+    local renderer, content = pfUI.automationOptions, self.pages[self.activePage or ""]
+    return not content or not renderer or not renderer.CommitPending or renderer:CommitPending(content)
+  end
+  function host:UpdateNavigation()
+    if self.guiReady and pfUI.automationNavigation then
+      local selected = self.activePage == self.detail and self.selectedModule or self.activePage
+      pfUI.automationNavigation:Update(self, self:NavigationEntries(false), selected)
+    end
+  end
   function host:OpenPage(page)
+    if not self:CanLeave() then return false end
     if self:IsEnabled() and Automaton and Automaton.mainFrame then Automaton.mainFrame:Hide() end
     if not pfUI.gui and pfUI.ShowGUI then pfUI:ShowGUI() end
     self:BuildGUI()
-    if not pfUI.gui or not self.guiReady then self.pendingPage = page; return end
+    if not pfUI.gui or not self.guiReady then self.pendingPage = page; return false end
+    local group = pfUI.gui.frames[self.title]
+    if not group or not group[page] then return false end
+    self.activePage = page
     pfUI.gui:Show()
-    local parent = pfUI.gui.frames[self.title]
-    if parent then parent:Click(); if parent[page] then parent[page]:Click() end end
+    group:Click(); group[page]:Click()
     self:RefreshPage(page)
+    return true
   end
-  function host:Open() self:OpenPage(self.all) end
-  function host:OpenVendor() self:OpenPage(self.merchant) end
+  function host:Open()
+    local selected = self.selectedModule or self:Config().selected
+    for _, entry in ipairs(self:NavigationEntries(false)) do
+      if entry.name == selected then return self:SelectModule(selected) end
+    end
+    local entries = self:NavigationEntries(false)
+    if entries[1] then return self:SelectModule(entries[1].name) end
+    return self:OpenPage(self.general)
+  end
+  function host:OpenVendor() return self:OpenPage(self.merchant) end
   function host:SelectModule(name)
+    if not self:CanLeave() then return false end
+    if name == "Repair" or name == "Sell" then return self:OpenVendor() end
     local integration = pfUI.automationIntegrations and pfUI.automationIntegrations[name]
     if integration and (integration.managed or integration.active) and integration.OpenSettings then
-      return integration:OpenSettings()
+      integration:OpenSettings()
+      return true
     end
-    if name == "Repair" or name == "Sell" then self:OpenVendor(); return end
-    self:Config().selected = name
-    if self:IsReady() then
-      Automaton.selectedModule = name
-      Automaton.db.char.lastModule = name
+    if not self:IsReady() or not Automaton.modules[name] or not Automaton.modules[name]._options then
+      return self:OpenPage(self.general)
     end
-    local category = categoryMap[name] or "misc"
-    local filter = FeatureState(category)
-    filter.query, filter.visibility = "", "all"
-    local db = self:Config()
-    db.selectedByCategory = db.selectedByCategory or {}
-    db.selectedByCategory[category] = name
-    self:OpenPage(categories[category])
-    local content = self.pages[categories[category]]
-    local state = content and content.automationOptionsState
-    if state then
-      for _, row in ipairs(state.visible) do
-        if row.option.moduleName == name then
-          local scroll = content.parent
-          scroll:SetVerticalScroll(math.max(0, math.min(row.automationOffset or 0, scroll:GetVerticalScrollRange())))
-          if scroll.UpdateScrollState then scroll:UpdateScrollState() end
-          break
-        end
-      end
+    local changed = self.selectedModule ~= name
+    self.selectedModule, self:Config().selected = name, name
+    Automaton.selectedModule, Automaton.db.char.lastModule = name, name
+    if not self:OpenPage(self.detail) then return false end
+    local content = self.pages[self.detail]
+    if changed and content then
+      local scroll = content.parent
+      scroll:SetVerticalScroll(0)
+      if scroll.UpdateScrollState then scroll:UpdateScrollState() end
+      if pfUI.automationOptions.UpdateViewport then pfUI.automationOptions:UpdateViewport(content) end
     end
+    if pfUI.automationNavigation and pfUI.automationNavigation.EnsureVisible then
+      pfUI.automationNavigation:EnsureVisible(self, name)
+    end
+    return true
   end
   function host:SortMode()
-    local mode = self:Config().sort
-    if mode == "name" or mode == "enabled" then return mode end
-    return "category"
+    local mode = self:Config().navSort
+    if mode == "custom" or mode == "name" or mode == "enabled" then return mode end
+    return "daily"
   end
-  function host:ModuleList(filtered, category)
-    local list, mode = {}, self:SortMode()
-    if not self:IsReady() then return list end
-    category = category or "all"
-    local filter = FeatureState(category)
-    local query = string.lower(filter.query)
+  function host:NavigationEntries(includeHidden)
+    local entries, ranks, mode = {}, {}, self:SortMode()
+    if not self:IsReady() then return entries end
+    for i, name in ipairs(self:Config().navOrder or {}) do if not ranks[name] then ranks[name] = i end end
     for name, module in pairs(Automaton.modules) do
       local integration = pfUI.automationIntegrations and pfUI.automationIntegrations[name]
-      local integrated = integration and (integration.managed or integration.active)
-      if type(module._options) == "table" and not integrated and name ~= "Repair" and name ~= "Sell" then
-        local show = true
-        if filtered then
-          local text = string.lower(name .. " " .. (module.modulename or "") .. " " .. (module.moduledesc or ""))
-          local hidden = Automaton:IsModuleHidden(name)
-          show = (category == "all" or (categoryMap[name] or "misc") == category)
-            and (query == "" or string.find(text, query, 1, true))
-            and (filter.visibility == "all" or (filter.visibility == "shown" and not hidden)
-              or (filter.visibility == "hidden" and hidden)
-              or (filter.visibility == "enabled" and Automaton:IsModuleActive(name)))
-        end
-        if show then
-          table.insert(list, { name = name, module = module,
-            label = string.lower(module.modulename or name),
-            rank = categoryRank[categoryMap[name] or "misc"],
-            active = mode == "enabled" and Automaton:IsModuleActive(name) and true or false })
-        end
+      local native = integration and (integration.managed or integration.active) and integration.OpenSettings
+      if (type(module._options) == "table" or native) and name ~= "Repair" and name ~= "Sell"
+        and (includeHidden or not Automaton:IsModuleHidden(name)) then
+        local label = native and integration.title or module.modulename or name
+        table.insert(entries, { name = name, module = module, label = label,
+          description = module.moduledesc or "", native = native and true or false,
+          rank = dailyRanks[name] or 1000, custom = ranks[name] or 10000,
+          active = mode == "enabled" and Automaton:IsModuleActive(name) and true or false })
       end
     end
-    table.sort(list, function(a,b)
+    table.sort(entries, function(a,b)
+      if mode == "custom" and a.custom ~= b.custom then return a.custom < b.custom end
       if mode == "enabled" and a.active ~= b.active then return a.active end
       if mode ~= "name" and a.rank ~= b.rank then return a.rank < b.rank end
-      if a.label ~= b.label then return a.label < b.label end
+      local al, bl = string.lower(a.label), string.lower(b.label)
+      if al ~= bl then return al < bl end
       return a.name < b.name
     end)
-    return list
+    return entries
+  end
+  function host:NavigationPosition(name)
+    for i, entry in ipairs(self:NavigationEntries(true)) do if entry.name == name then return i end end
+    return 1
+  end
+  function host:MoveModule(name, position)
+    local entries, order, found = self:NavigationEntries(true), {}, nil
+    for _, entry in ipairs(entries) do
+      if entry.name == name then found = true else table.insert(order, entry.name) end
+    end
+    if not found then return end
+    position = math.max(1, math.min(table.getn(entries), math.floor(tonumber(position) or 1)))
+    table.insert(order, position, name)
+    -- Keep unavailable modules at the tail so a temporarily missing module does
+    -- not lose its saved identity. Independent toolbox ordering is untouched.
+    for _, prior in ipairs(self:Config().navOrder or {}) do
+      local exists
+      for _, current in ipairs(order) do if prior == current then exists = true; break end end
+      if not exists then table.insert(order, prior) end
+    end
+    self:Config().navOrder, self:Config().navSort = order, "custom"
+    self:QueueRefresh()
+  end
+  function host:SetModuleHidden(name, hidden)
+    if not self:CanLeave() then return false end
+    if not self:IsReady() or not Automaton.modules[name] then return false end
+    Automaton.db.char.hiddenModules = Automaton.db.char.hiddenModules or {}
+    Automaton.db.char.hiddenModules[name] = hidden and true or nil
+    if hidden and self.selectedModule == name and self.activePage == self.detail then self:OpenPage(self.general) end
+    self:QueueRefresh()
+    return true
   end
   function host:GeneralOptions()
     local options = {
       enabled = { type = "toggle", name = "在 pfUI 中管理自动化", order = 1,
         get = function() return host:IsEnabled() end,
         set = function(value) host:Config().enabled = value and "1" or "0"; host:Sync() end },
-      intro = Description("功能开关和详细选项使用 pfUI 的设置控件。原有模块配置继续保留。", 2),
+      intro = Description("左侧点击模块名称直接设置；在这里管理模块顺序及显示。隐藏只影响入口，功能开关保持原状。", 2),
     }
     if self:IsReady() then
       options.scope = { type = "text", name = "模块开关保存范围", order = 3,
@@ -158,74 +182,64 @@ pfUI:RegisterModule("automation", "vanilla", function()
         get = function() return Automaton:GetModuleScope() end,
         set = function(value) Automaton:ApplyModuleScope(value) end,
         desc = "切换时保留当前模块开关状态。修理与售卖使用 pfUI 自己的配置。" }
-      options.visibility = Description("菜单隐藏只影响显示，不会停用功能。在各分类页中可以查看隐藏模块。", 4)
-      options.features = { type = "execute", name = host.all, order = 5, func = function() host:Open() end }
-      options.vendor = { type = "execute", name = "商人服务", order = 6, func = function() host:OpenVendor() end }
-    else
-      options.missing = Description("Automatonex 尚未加载。请在角色插件列表中保留启用 Automatonex。", 3)
-    end
+      options.navSort = { type = "text", name = "模块排序", order = 10,
+        validate = { daily = "日常优先", custom = "自定义顺序", name = "名称顺序", enabled = "已启用优先" },
+        get = function() return host:SortMode() end,
+        set = function(value) host:Config().navSort = value end }
+      options.query = { type = "text", name = "查找模块", order = 11,
+        get = function() return input.query end, set = function(value) input.query = value end }
+      options.visibility = { type = "text", name = "显示范围", order = 12,
+        validate = { all = "全部（含隐藏）", shown = "列表可见", hidden = "列表隐藏" },
+        get = function() return input.visibility end, set = function(value) input.visibility = value end }
+      options.orderHelp = Description("修改排列位置会切换为自定义顺序，按回车保存。位置按完整模块列表计算，隐藏模块也保留位置。", 13)
+      local entries, query = self:NavigationEntries(true), string.lower(input.query)
+      local count = table.getn(entries)
+      for i, entry in ipairs(entries) do
+        local name = entry.name
+        local hidden = Automaton:IsModuleHidden(name)
+        local text = string.lower(name .. " " .. entry.label .. " " .. entry.description)
+        if (query == "" or string.find(text, query, 1, true))
+          and (input.visibility == "all" or (input.visibility == "hidden" and hidden) or (input.visibility == "shown" and not hidden)) then
+          options["nav_" .. name] = { type = "group", name = entry.label, moduleName = name, order = 20+i, args = {
+            visible = { type = "toggle", name = "在模块列表和常用菜单中显示", order = 1,
+              get = function() return not Automaton:IsModuleHidden(name) end,
+              set = function(value) host:SetModuleHidden(name, not value) end },
+            position = { type = "range", name = "排列位置", order = 2, min = 1, max = count, step = 1,
+              get = function() return host:NavigationPosition(name) end,
+              set = function(value) host:MoveModule(name, value) end },
+            open = { type = "execute", name = entry.native and "打开原生设置" or "打开模块设置", order = 3,
+              func = function() host:SelectModule(name) end },
+          } }
+        end
+      end
+    else options.missing = Description("Automatonex 尚未加载。请在角色插件列表中保留启用 Automatonex。", 3) end
     if not self:IsEnabled() then
       options.fallback = Description("统一管理已关闭。工具箱恢复原来的商人开关；新售卖名单仍保留在 pfUI。", 7)
       options.open = { type = "execute", name = "打开独立工具箱", order = 8,
         func = function() if Automaton then Automaton:ToggleMainWindow() end end }
     end
-    local names = {}
-    for name, integration in pairs(pfUI.automationIntegrations or {}) do
-      if (integration.managed or integration.active) and integration.OpenSettings then table.insert(names, name) end
-    end
-    table.sort(names)
-    for i, name in ipairs(names) do
-      local integration = pfUI.automationIntegrations[name]
-      options["native_" .. name] = { type = "execute", name = integration.title or name, order = 10+i,
-        desc = "已经合入 pfUI 对应功能，在原生页面设置。", func = function() integration:OpenSettings() end }
-    end
     return options
   end
-  function host:FeatureOptions(category)
-    category = category or "all"
-    local filter = FeatureState(category)
+  function host:ModuleOptions(name)
     if not self:IsReady() then return { missing = Description("等待 Automatonex 完成加载。") } end
     if not self:IsEnabled() then
       return { disabled = Description("请先在管理页面开启“在 pfUI 中管理自动化”。"),
         manage = { type = "execute", name = "打开管理设置", order = 2, func = function() host:OpenPage(host.general) end } }
     end
-    local options = {
-      query = { type = "text", name = "搜索功能", order = 1, get = function() return filter.query end,
-        set = function(value) filter.query = value end, desc = "按名称或说明搜索，按回车应用。" },
-      sort = { type = "text", name = "功能排序", order = 2,
-        validate = { category = "按功能分类", name = "名称顺序", enabled = "已启用优先" },
-        get = function() return host:SortMode() end,
-        set = function(value) host:Config().sort = value end,
-        desc = "应用于全部功能和各分类；不会修改独立工具箱原有菜单顺序。" },
-      visibility = { type = "text", name = "显示范围", order = 3,
-        validate = { all = "全部（含隐藏）", shown = "菜单可见", hidden = "菜单隐藏", enabled = "已启用" },
-        get = function() return filter.visibility end, set = function(value) filter.visibility = value end },
-    }
-    local list = self:ModuleList(true, category)
-    if table.getn(list) == 0 then
-      options.empty = Description("没有符合条件的模块。修理和售卖请使用商人服务页面。", 4)
-      return options
+    local integration = name and pfUI.automationIntegrations and pfUI.automationIntegrations[name]
+    if integration and (integration.managed or integration.active) and integration.OpenSettings then
+      return { native = Description("此模块已合入 pfUI 原生设置。"),
+        open = { type = "execute", name = "打开原生设置", order = 2, func = function() host:SelectModule(name) end } }
     end
-    for index, entry in ipairs(list) do
-      local name, module = entry.name, entry.module
-      -- Keep the original option objects/callbacks. Only the page grouping is
-      -- new; never copy stored settings or inject controls into module._options.
-      local args = {}
-      for key, option in pairs(module._options) do args[key] = option end
-      if module.moduledesc and module.moduledesc ~= "" then
-        args.__pfui_description = Description(module.moduledesc, -10)
-      end
-      args.__pfui_visible = { type = "toggle", name = "在常用菜单中显示", order = 100000,
-        desc = "隐藏不代表停用；显示范围选择“全部”或“菜单隐藏”可再次找到。",
-        get = function() return not Automaton:IsModuleHidden(name) end,
-        set = function(value)
-          Automaton.db.char.hiddenModules = Automaton.db.char.hiddenModules or {}
-          Automaton.db.char.hiddenModules[name] = not value or nil
-        end }
-      options["module_" .. name] = { type = "group", name = module.modulename or name,
-        moduleName = name, order = 10 + index, args = args }
+    local module = name and Automaton.modules[name]
+    if not module or not module._options then return { empty = Description("请从左侧选择模块。") } end
+    local args = {}
+    for key, option in pairs(module._options) do args[key] = option end
+    if module.moduledesc and module.moduledesc ~= "" then args.__pfui_description = Description(module.moduledesc, -10) end
+    if Automaton:IsModuleHidden(name) then
+      args.__pfui_hidden = Description("此模块已从列表隐藏，可在管理页恢复显示。", -9)
     end
-    return options
+    return { module = { type = "group", name = module.modulename or name, moduleName = name, order = 1, args = args } }
   end
   function host:EditRule(kind, remove, selectedId)
     local vendor = pfUI.autovendor
@@ -283,7 +297,7 @@ pfUI:RegisterModule("automation", "vanilla", function()
       local options
       if page == self.general then options = self:GeneralOptions()
       elseif page == self.merchant then options = self:MerchantOptions()
-      else options = self:FeatureOptions(self.categoryPages[page]) end
+      else options = self:ModuleOptions(self.selectedModule) end
       renderer:Render(content, { name = page, _options = options }, function() host:QueueRefresh() end)
     end)
     self.rendering = nil
@@ -295,10 +309,12 @@ pfUI:RegisterModule("automation", "vanilla", function()
     else
       self.lastRenderError = nil
     end
+    self:UpdateNavigation()
   end
   function host:RefreshVisible()
     local group = pfUI.gui and pfUI.gui.frames[self.title]
     if not group then return end
+    self:UpdateNavigation()
     for page in pairs(self.pages) do
       local tab = group[page]
       if tab and tab.area:IsShown() then self:RefreshPage(page) end
@@ -316,6 +332,7 @@ pfUI:RegisterModule("automation", "vanilla", function()
       local area = gui.frames[self.title][page].area
       local onShow, onHide = area:GetScript("OnShow"), area:GetScript("OnHide")
       area:SetScript("OnShow", function()
+        host.activePage = page
         if onShow then onShow() end
         host:RefreshPage(page)
       end)
@@ -326,6 +343,8 @@ pfUI:RegisterModule("automation", "vanilla", function()
       end)
     end
     self.guiReady = true
+    if pfUI.automationNavigation then pfUI.automationNavigation:Attach(self, gui.frames[self.title]) end
+    self:UpdateNavigation()
     if self.pendingPage then local page = self.pendingPage; self.pendingPage = nil; self:OpenPage(page) end
   end
   local showGUI = pfUI.ShowGUI

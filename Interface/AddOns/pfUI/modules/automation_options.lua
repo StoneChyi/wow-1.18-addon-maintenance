@@ -438,6 +438,10 @@ do
     state.building = nil
     parent.objectCount = state.base
   end
+  function R:CommitPending(parent)
+    local state = parent and parent.automationOptionsState
+    return not state or CommitAll(state)
+  end
   function R:Suspend(parent)
     local state = parent.automationOptionsState
     local ok = not state or CommitAll(state)
