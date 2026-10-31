@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 246,
+  "dated_records": 247,
   "addons": [
     {
       "addon": "!Libs",
@@ -109,11 +109,20 @@
       "note": "PluginHistory/Plugins/AdvancedTradeSkillWindow2.md",
       "purpose": "只合入制作数量短缓存和材料/任务失效，缓存键补专业，递归 Visited 分支绕过缓存；原制作队列、列表渲染、预建和字体行为保持。真实 Lua 5.0 编译通过，既有 1then 语句未改。",
       "history_group": "modified",
-      "latest_record_date": "2026-10-30",
-      "latest_record_title": "保留个人核心合入 10 月 29 日明确增量（已部署）",
-      "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "latest_record_date": "2026-10-31",
+      "latest_record_title": "验证测宽缓存失效边界，未通过部署门槛而保持个人版",
+      "latest_game_acceptance": "不适用（说明或停用记录）",
+      "record_count": 3,
       "records": [
+        {
+          "id": "AdvancedTradeSkillWindow2-20261031-01",
+          "date": "2026-10-31",
+          "title": "验证测宽缓存失效边界，未通过部署门槛而保持个人版",
+          "kind": "差异核对",
+          "game_acceptance": "不适用（说明或停用记录）",
+          "commits": [],
+          "anchor": "change-AdvancedTradeSkillWindow2-20261031-01"
+        },
         {
           "id": "AdvancedTradeSkillWindow2-20261030-02",
           "date": "2026-10-30",

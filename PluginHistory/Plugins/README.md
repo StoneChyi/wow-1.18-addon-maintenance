@@ -64,7 +64,7 @@
 | --- | --- |
 | [!Libs](!Libs.md) | [2026-10-18 · 合入 10 月 16 日包并保留个人功能（已部署）](!Libs.md#change-!Libs-20261018-02) |
 | [ActionBarProfiles](ActionBarProfiles.md) | 早期记录，日期待确认 |
-| [AdvancedTradeSkillWindow2](AdvancedTradeSkillWindow2.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](AdvancedTradeSkillWindow2.md#change-AdvancedTradeSkillWindow2-20261030-02) |
+| [AdvancedTradeSkillWindow2](AdvancedTradeSkillWindow2.md) | [2026-10-31 · 验证测宽缓存失效边界，未通过部署门槛而保持个人版](AdvancedTradeSkillWindow2.md#change-AdvancedTradeSkillWindow2-20261031-01) |
 | [Atlas](Atlas.md) | 早期记录，日期待确认 |
 | [AtlasLoot](AtlasLoot.md) | 早期记录，日期待确认 |
 | [AtlasQuest](AtlasQuest.md) | [2026-10-25 · 10 月 24 日原包三版本差异核对（未部署）](AtlasQuest.md#change-AtlasQuest-20261025-01) |
