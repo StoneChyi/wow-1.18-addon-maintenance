@@ -69,7 +69,7 @@
 | [AtlasLoot](AtlasLoot.md) | 早期记录，日期待确认 |
 | [AtlasQuest](AtlasQuest.md) | [2026-10-25 · 10 月 24 日原包三版本差异核对（未部署）](AtlasQuest.md#change-AtlasQuest-20261025-01) |
 | [AutoMarker](AutoMarker.md) | [2026-10-25 · 10 月 24 日原包三版本差异核对（未部署）](AutoMarker.md#change-AutoMarker-20261025-01) |
-| [Automatonex](Automatonex.md) | [2026-10-31 · 统一组队邀请决策与发送并保留原模块配置](Automatonex.md#change-Automatonex-20261031-04) |
+| [Automatonex](Automatonex.md) | [2026-10-31 · 统一拾取绑定确认并修复掷骰与SuperWoW拾取生命周期](Automatonex.md#change-Automatonex-20261031-05) |
 | [aux-addon](aux-addon.md) | [2026-10-25 · 10 月 24 日原包三版本差异核对（未部署）](aux-addon.md#change-aux-addon-20261025-01) |
 | [Bagshui](Bagshui.md) | [2026-10-11 · 重构转入独立 QianKunBag，原插件保留](Bagshui.md#change-Bagshui-20261011-15) |
 | [BetterCharacterStats](BetterCharacterStats.md) | [2026-10-25 · 合入共享属性与本次确认的剩余新包更新](BetterCharacterStats.md#change-BetterCharacterStats-20261025-03) |
@@ -99,7 +99,7 @@
 | [OneBag](OneBag.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](OneBag.md#change-OneBag-20261030-02) |
 | [Outfitter](Outfitter.md) | 早期记录，日期待确认 |
 | [PallyPower](PallyPower.md) | 早期记录，日期待确认 |
-| [pfUI](pfUI.md) | [2026-10-31 · 将邀请功能收拢为两个原生组合页](pfUI.md#change-pfUI-20261031-12) |
+| [pfUI](pfUI.md) | [2026-10-31 · 统一拾取确认执行并尊重SuperWoW手动与Shift模式](pfUI.md#change-pfUI-20261031-13) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](pfUI-addonskinner.md#change-pfUI-addonskinner-20261030-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | 早期记录，日期待确认 |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-10-30 · 恢复右侧首行有效商品，按实际数据控制商品与回购槽](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261030-02) |

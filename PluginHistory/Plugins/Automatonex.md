@@ -12,6 +12,8 @@
 
 ## 当前维护摘要
 
+2026-10-31 第二部分拾取优化：LootBOP托管时交由pfUI确认，独立回退保留；AutoNeed按原任务校验确认，SuperWoW停用清理轮询并保护Shift模式。43项专项离线回归及Lua5.0编译通过；本轮客户端未运行，待游戏验收。
+
 2026-10-31 第一部分组队优化完成：接收邀请统一黑白名单优先级及延迟失效，发出邀请共用权限/容量/去重；四个模块原配置与独立开关保留，pfUI收拢为两个设置页。离线行为回归通过，当前客户端页面复核通过，真实组队动作待用户验收。
 
 2026-10-31 Tooltip 改为 pfUI 共享提示的数据提供者；ExpBar 与 InterPlayerLink 在托管时停止重复事件／挂接，独有功能、原存档及独立回退保留。待游戏验收。
@@ -28,6 +30,24 @@
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-Automatonex-20261031-05"></a>
+
+### 2026-10-31｜统一拾取绑定确认并修复掷骰与SuperWoW拾取生命周期
+
+- 记录编号：`Automatonex-20261031-05`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：LootBOP与pfUI单人确认重叠；绑定/掷骰固定点击Popup1可能误点；SuperWoW停用未撤轮询，pfUI扫尸体绕过Shift模式。
+- 修改内容：LootBOP用运行标记与pfUI交接监听，原独立/组队规则和DB保留；按槽/link/会话/实际原生弹窗确认，手动隐藏、清槽、关闭、新会话、停用及交接使旧任务失效。独立回退改用已有AceEvent，不再造弹窗或依赖C_Timer。
+- 掷骰：AutoNeed按roll ID/type/link/当前规则/剩余时间排队，复核来源后ConfirmLootRoll，监听取消和世界切换；手动隐藏使任务失效，不触碰其他弹窗。31个四选项、默认/个人名单、CheckItem原字节保留。
+- SuperWoW：显式运行态，仅成功读写SetAutoloot才接管；停用清轮询且条件恢复原值，停用编辑只保存，模式切换复用框体、键态变化才写入。三模式方向保留，修正Shift文案并说明quickloot反转。
+- 主要文件：Modules/LootBOP.lua、AutoNeed.lua、Superwow.lua；新增test_pfui_loot_confirmation.py、test_automaton_loot_rolls.py、test_automaton_superwow_loot.py，关联pfUI宿主测试。
+- 检查结果：绑定18项、掷骰15项、SuperWoW10项、宿主21项及持久化7项通过；目录原选项覆盖未丢失，五个关联生产Lua文件原生5.0.3编译通过。记录的反例验证与界面读写见实施清单。
+- 未确认与方案：本轮客户端未运行，真实拾取/掷骰及quickloot方向待验收；第三方延迟/改造弹窗失去身份时留手动。ShiQu与MasterLootRemind未改，强制分配的目标/本人重复风险另列后续独立修复。未手工写WTF或包含DLL改动。
+- 关联：[pfUI](pfUI.md#change-pfUI-20261031-13)、[逐项内容、原因及后续方案](../Research/自动化逐步优化与验收-20261031.md)。
 
 <a id="change-Automatonex-20261031-04"></a>
 

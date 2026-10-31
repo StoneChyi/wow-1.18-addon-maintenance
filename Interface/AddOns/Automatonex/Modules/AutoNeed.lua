@@ -656,16 +656,27 @@ function Automaton_AutoNeed:OnInitialize()
     end
 end
 
+function Automaton_AutoNeed:ResetRollQueue()
+    self.rollGeneration = (self.rollGeneration or 0) + 1
+    self:CancelScheduledEvent("Automaton_AutoNeedConfirm")
+    self:CancelScheduledEvent("Automaton_AutoNeedNext")
+    self.pendingRolls, self.seenRolls = {}, {}
+    self.currentRoll, self.isRolling = nil, false
+end
+
 function Automaton_AutoNeed:OnEnable()
-	self:RegisterEvent("START_LOOT_ROLL");
+    self:ResetRollQueue()
+    self.rollEnabled = true
+    self:RegisterEvent("START_LOOT_ROLL")
+    self:RegisterEvent("CANCEL_LOOT_ROLL")
+    self:RegisterEvent("PLAYER_LEAVING_WORLD", "ResetRollQueue")
 end
 
 function Automaton_AutoNeed:OnDisable()
-    self.rollGeneration = (self.rollGeneration or 0) + 1
-    self.pendingRolls = {}
-    self.isRolling = false
-	self:UnhookAll()
-	self:UnregisterAllEvents()
+    self.rollEnabled = nil
+    self:ResetRollQueue()
+    self:UnhookAll()
+    self:UnregisterAllEvents()
 end
 
 local function PrintLog(msg, itemid)
@@ -817,41 +828,102 @@ function Automaton_AutoNeed:CheckItem(itemid)
     return nil -- 没有匹配项
 end
 
+-- Each task is bound to the original roll, item, selected rule and lifecycle.
+-- 1.12 UIParent stores roll ID/type in CONFIRM_LOOT_ROLL.data/data2.
+function Automaton_AutoNeed:IsCurrentRoll(task)
+    if not self.rollEnabled or task.cancelled or self.currentRoll ~= task
+        or task.generation ~= self.rollGeneration then return false end
+    if GetLootRollItemLink(task.id) ~= task.link then return false end
+    local left = GetLootRollTimeLeft(task.id)
+    if type(left) ~= "number" or left <= 0 then return false end
+    local ok, choice = pcall(self.CheckItem, self, task.itemID)
+    return ok and choice == task.rolltype
+end
+
+function Automaton_AutoNeed:CANCEL_LOOT_ROLL(id)
+    if self.currentRoll and self.currentRoll.id == id then self.currentRoll.cancelled = true end
+    for i = table.getn(self.pendingRolls or {}), 1, -1 do
+        if self.pendingRolls[i].id == id then table.remove(self.pendingRolls, i) end
+    end
+    if self.seenRolls then self.seenRolls[id] = nil end
+end
+
 function Automaton_AutoNeed:START_LOOT_ROLL(id)
+    if not self.rollEnabled or type(id) ~= "number" then return end
     local link = GetLootRollItemLink(id)
     local _, _, itemID = string.find(link or "", "item:(%d+):")
     if not itemID then return end
+    self.seenRolls = self.seenRolls or {}
+    if self.seenRolls[id] == link then return end
     local ok, choice = pcall(self.CheckItem, self, tonumber(itemID))
-    if not ok or choice == nil or choice == -1 then return end
-    if choice ~= 0 and choice ~= 1 and choice ~= 2 then return end
+    if not ok or (choice ~= 0 and choice ~= 1 and choice ~= 2) then return end
+    self.seenRolls[id] = link
     self.pendingRolls = self.pendingRolls or {}
-    table.insert(self.pendingRolls, {id=id, rolltype=choice})
+    table.insert(self.pendingRolls, { id = id, itemID = tonumber(itemID), link = link,
+        rolltype = choice, generation = self.rollGeneration })
     self:ProcessQueue()
 end
 
+function Automaton_AutoNeed:WatchRollPopups()
+    for i = 1, (STATICPOPUP_NUMDIALOGS or 4) do
+        local popup = _G["StaticPopup" .. i]
+        if popup and not popup.automatonRollWatcher then
+            popup.automatonRollWatcher = true
+            local onHide = popup:GetScript("OnHide")
+            popup:SetScript("OnHide", function(...)
+                local task = Automaton_AutoNeed.currentRoll
+                if task and task.sent and popup.which == "CONFIRM_LOOT_ROLL"
+                    and popup.data == task.id and popup.data2 == task.rolltype then
+                    task.cancelled = true
+                end
+                if onHide then return onHide(unpack(arg)) end
+            end)
+        end
+    end
+end
+
 function Automaton_AutoNeed:ProcessQueue()
-    if self.isRolling then return end
+    if self.isRolling or not self.rollEnabled then return end
     self.pendingRolls = self.pendingRolls or {}
     local task = table.remove(self.pendingRolls, 1)
     if not task then return end
-    self.isRolling = true
-    local generation = self.rollGeneration or 0
+    self.currentRoll, self.isRolling = task, true
     local function Finish()
-        if (self.rollGeneration or 0) ~= generation then return end
-        self.isRolling = false
+        if self.currentRoll ~= task or task.generation ~= self.rollGeneration then return end
+        self.currentRoll, self.isRolling = nil, false
         self:ProcessQueue()
     end
+    if not self:IsCurrentRoll(task) then Finish(); return end
+    self:WatchRollPopups()
     local ok = pcall(RollOnLoot, task.id, task.rolltype)
+    task.sent = true
+    if self.currentRoll ~= task or task.generation ~= self.rollGeneration then return end
     if ok and (task.rolltype == 1 or task.rolltype == 2) then
-        C_Timer.After(0.01, function()
-            if (self.rollGeneration or 0) ~= generation then return end
-            if StaticPopup1 and StaticPopup1:IsVisible() and StaticPopup1.which == "CONFIRM_LOOT_ROLL" then
-                StaticPopup1Button1:Click()
+        self:ScheduleEvent("Automaton_AutoNeedConfirm", function()
+            if self.currentRoll ~= task or task.generation ~= self.rollGeneration then return end
+            if self:IsCurrentRoll(task) then
+                for i = 1, (STATICPOPUP_NUMDIALOGS or 4) do
+                    local popup = _G["StaticPopup" .. i]
+                    if popup and popup:IsShown() and popup.which == "CONFIRM_LOOT_ROLL"
+                        and popup.data == task.id and popup.data2 == task.rolltype then
+                        local accepted = pcall(ConfirmLootRoll, task.id, task.rolltype)
+                        -- Confirmation may dispatch native events synchronously.
+                        -- Never hide another dialog that reused this frame meanwhile.
+                        if accepted and self.currentRoll == task and not task.cancelled
+                            and task.generation == self.rollGeneration
+                            and popup.which == "CONFIRM_LOOT_ROLL"
+                            and popup.data == task.id and popup.data2 == task.rolltype then popup:Hide() end
+                        break
+                    end
+                end
             end
-            C_Timer.After(0.15, Finish)
-        end)
+            -- No matching popup means manual handling, not a guessed button.
+            if self.currentRoll == task and task.generation == self.rollGeneration then
+                self:ScheduleEvent("Automaton_AutoNeedNext", Finish, .15)
+            end
+        end, .05)
     else
-        C_Timer.After(0.1, Finish)
+        self:ScheduleEvent("Automaton_AutoNeedNext", Finish, .1)
     end
 end
 

@@ -310,6 +310,16 @@ pfUI:RegisterModule("automation", "vanilla", function()
     if Automaton:IsModuleHidden(name) then
       args.__pfui_hidden = Description("此模块已从列表隐藏，可在管理页恢复显示。", -9)
     end
+    if name == "LootBOP" and C.loot then
+      args.__pfui_solo = { type = "toggle", name = "pfUI 单人拾取与绑定确认", order = -4,
+        desc = "使用原 pfUI 拾取设置；SuperWoW 接管时只负责确认，不覆盖其手动或 Shift 模式。",
+        get = function() return C.loot.autopickup == "1" end,
+        set = function(value)
+          C.loot.autopickup = value and "1" or "0"
+          if pfUI.loot and pfUI.loot.CancelBindConfirmations then pfUI.loot:CancelBindConfirmations() end
+        end }
+      args.__pfui_policy = Description("单人确认：pfUI 单人选项或下方模块任一启用即生效。组队确认：必须启用下方模块并勾选队伍/团队选项。掷骰仍由自动需求独立控制，不会因此自动分配装备。", -3)
+    end
     return { module = { type = "group", name = module.modulename or name, moduleName = name, order = 1, args = args } }
   end
   function host:EditRule(kind, remove, selectedId)

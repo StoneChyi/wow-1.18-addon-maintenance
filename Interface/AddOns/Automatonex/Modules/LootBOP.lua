@@ -11,10 +11,10 @@ local L = AceLibrary("AceLocale-2.2"):new("Automaton_LootBOP")
 ----------------------------
 
 L:RegisterTranslations("enUS", function() return {
-	["LootBOP"] = "团队拾取确认",
-	["Ignore BOP confirm message"] = "自动确认装绑物品的拾取",
+	["LootBOP"] = "拾取绑定确认",
+	["Ignore BOP confirm message"] = "自动确认拾取后绑定物品；保留独立的队伍/团队开关",
 	["Confirm in party/raid"] = "队伍/团队中也自动确认",
-	["Also auto-confirm BOP loot when in a party or raid"] = "在小队或团队中拾取装绑物品时也自动确认",
+	["Also auto-confirm BOP loot when in a party or raid"] = "在小队或团队中也确认拾取后绑定物品；不会自动选择需求、贪婪或分配给玩家",
 } end)
 
 
@@ -33,7 +33,11 @@ Automaton_LootBOP.options = {
 		desc = L["Also auto-confirm BOP loot when in a party or raid"],
 		order = 1,
 		get = function() return Automaton_LootBOP.db.profile.confirmInGroup end,
-		set = function(v) Automaton_LootBOP.db.profile.confirmInGroup = v end,
+		set = function(v)
+            Automaton_LootBOP.db.profile.confirmInGroup = v
+            Automaton_LootBOP:CancelBindConfirmations()
+            if Automaton_LootBOP.bindOwner then Automaton_LootBOP.bindOwner:CancelBindConfirmations() end
+        end,
 	},
 }
 
@@ -52,42 +56,103 @@ function Automaton_LootBOP:OnInitialize()
 	self:RegisterOptions(self.options)
 end
 
+-- The native pfUI owner and the independent module share the saved policy.
+-- Runtime flags do not depend on Core writing disabledModules after callbacks.
+function Automaton_LootBOP:CancelBindConfirmations()
+    self.bindGeneration = (self.bindGeneration or 0) + 1
+    for slot in pairs(self.bindPending or {}) do
+        self:CancelScheduledEvent("Automaton_LootBind" .. slot)
+    end
+    self.bindPending = {}
+end
+
+function Automaton_LootBOP:SetPfUILootOwner(owner)
+    if self.bindOwner == owner then return end
+    self:CancelBindConfirmations()
+    self.bindOwner = owner
+    self:UpdateBindEvents()
+end
+
+function Automaton_LootBOP:UpdateBindEvents()
+    self:UnregisterAllEvents()
+    if self.bindActive and not self.bindOwner then
+        self:RegisterEvent("LOOT_BIND_CONFIRM")
+        self:RegisterEvent("LOOT_OPENED", "CancelBindConfirmations")
+        self:RegisterEvent("LOOT_CLOSED", "CancelBindConfirmations")
+        self:RegisterEvent("PLAYER_LEAVING_WORLD", "CancelBindConfirmations")
+        self:RegisterEvent("LOOT_SLOT_CLEARED")
+    end
+end
+
 function Automaton_LootBOP:OnEnable()
-	self:RegisterEvent("LOOT_BIND_CONFIRM")
+    self.bindActive = true
+    self:CancelBindConfirmations()
+    local owner = pfUI and pfUI.loot
+    if owner and owner.SyncBindOwnership then owner:SyncBindOwnership() end
+    self:UpdateBindEvents()
 end
 
 function Automaton_LootBOP:OnDisable()
-	self:UnregisterAllEvents()
+    self.bindActive = nil
+    self:CancelBindConfirmations()
+    self:UnregisterAllEvents()
+    if self.bindOwner then self.bindOwner:CancelBindConfirmations() end
 end
 
-------------------------------
---      Event Handlers      --
-------------------------------
+function Automaton_LootBOP:LOOT_SLOT_CLEARED(slot)
+    if self.bindPending then self.bindPending[slot] = nil end
+    self:CancelScheduledEvent("Automaton_LootBind" .. tostring(slot))
+end
+
+function Automaton_LootBOP:CanConfirmBind()
+    return self.bindActive and not self.bindOwner and
+        (self.db.profile.confirmInGroup or (GetNumPartyMembers() == 0 and GetNumRaidMembers() == 0))
+end
 
 function Automaton_LootBOP:LOOT_BIND_CONFIRM(slot)
-	-- 在队伍/团队中，只有勾选了"队伍/团队中也自动确认"才自动确认
-	local inGroup = GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0
-	if inGroup and not self.db.profile.confirmInGroup then
-		return
-	end
-
-	-- 防重入：正在自动确认时忽略后续触发，避免连续多件 BoP 竞态
-	if self.confirming then
-		return
-	end
-
-	self.confirming = true
-	self:Debug("Looting...")
-
-	-- 参考 AutoNeed 的异步 + pcall 保护，延迟一点再操作弹窗，避开客户端弹窗尚未就绪的时序
-	C_Timer.After(0.01, function()
-		pcall(function()
-			local dialog = StaticPopup_Show("LOOT_BIND")
-			if dialog then
-				dialog.data = slot
-				StaticPopup1Button1:Click()
-			end
-		end)
-		self.confirming = false
-	end)
+    if not self:CanConfirmBind() or type(slot) ~= "number" or slot < 1 or slot ~= math.floor(slot) then return end
+    local link = GetLootSlotLink(slot)
+    if not link then return end
+    self.bindPending = self.bindPending or {}
+    if self.bindPending[slot] then
+      if self.bindPending[slot].executing then self.bindPending[slot].reentered = true end
+      return
+    end
+    local receiver = self
+    for i = 1, (STATICPOPUP_NUMDIALOGS or 4) do
+      local dialog = _G["StaticPopup" .. i]
+      if dialog and not dialog.automatonBindWatch then
+        dialog.automatonBindWatch = true
+        local onHide = dialog:GetScript("OnHide")
+        dialog:SetScript("OnHide", function(...)
+          if dialog.which == "LOOT_BIND" and receiver.bindPending then
+            local task = receiver.bindPending[dialog.data]
+            if task and not task.executing then receiver.bindPending[dialog.data] = nil end
+          end
+          if onHide then return onHide(unpack(arg)) end
+        end)
+      end
+    end
+    local pending = { link = link, generation = self.bindGeneration }
+    self.bindPending[slot] = pending
+    self:ScheduleEvent("Automaton_LootBind" .. slot, function()
+        if self.bindPending[slot] ~= pending then return end
+        if pending.generation ~= self.bindGeneration or not self:CanConfirmBind()
+            or GetLootSlotLink(slot) ~= pending.link then self.bindPending[slot] = nil; return end
+        -- UIParent sets LOOT_BIND.data to the native slot (WoW 1.12.1).
+        -- Never create an approval popup or click an unrelated first popup.
+        for i = 1, (STATICPOPUP_NUMDIALOGS or 4) do
+            local dialog = _G["StaticPopup" .. i]
+            if dialog and dialog:IsShown() and dialog.which == "LOOT_BIND" and dialog.data == slot then
+                pending.executing = true
+                local ok, err = pcall(LootSlot, slot)
+                if ok and pending.generation == self.bindGeneration and not pending.reentered and (not self.bindPending[slot] or self.bindPending[slot] == pending)
+                  and dialog:IsShown() and dialog.which == "LOOT_BIND" and dialog.data == slot then dialog:Hide() end
+                if self.bindPending[slot] == pending then self.bindPending[slot] = nil end
+                if not ok then geterrorhandler()(err) end
+                return
+            end
+        end
+        self.bindPending[slot] = nil
+    end, 0.05)
 end

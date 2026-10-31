@@ -430,4 +430,58 @@ Automaton:SelectModule('StrangerDecline')
 assert(Automaton.selectedModule=='StrangerDecline' and h.selectedModule=='Invite')
 ''',True)
 
+# The loot shortcut edits the original pfUI config, not the module's saved
+# enable flag. Load real LootBOP options so their identity and callbacks matter.
+lua=runtime(True)
+lua.execute(r'''
+C.loot={autopickup="0"};local config=C.loot
+lootConfig=config
+pfUI.loot={cancelled=0,bindPending={old=true}}
+function pfUI.loot:CancelBindConfirmations()self.cancelled=self.cancelled+1;self.bindPending={}end
+function AceLibrary()
+ return {new=function()return setmetatable({RegisterTranslations=function()end},{__index=function(_,key)return key end})end}
+end
+function Automaton:NewModule(name)
+ local module=setmetatable({name=name},{__index=self.modulePrototype})
+ function module:CancelScheduledEvent()end
+ self.modules[name]=module;return module
+end
+function Automaton:AcquireDBNamespace(name)
+ self.lootSaved=self.lootSaved or {profile={confirmInGroup=false}};return self.lootSaved
+end
+function Automaton:RegisterDefaults(name,scope,values)
+ for key,value in pairs(values)do if self.lootSaved[scope][key]==nil then self.lootSaved[scope][key]=value end end
+end
+function Automaton:SetDisabledAsDefault(module,name)
+ module.defaultDisabled=true;self.db.char.disabledModules[name]=true
+end
+''')
+lua.execute((ROOT/"Interface/AddOns/Automatonex/Modules/LootBOP.lua").read_text(encoding="utf8"))
+lua.execute(r'''
+local module=Automaton.modules.LootBOP;module:OnInitialize()
+local original=module._options.confirmInGroup
+local profile=module.db.profile
+local h=pfUI.automation
+local options=h:ModuleOptions("LootBOP").module.args
+assert(options.confirmInGroup==original and options.__pfui_solo.type=="toggle")
+assert(not options.__pfui_solo.get() and Automaton.db.char.disabledModules.LootBOP)
+options.__pfui_solo.set(true)
+assert(C.loot==lootConfig and C.loot.autopickup=="1" and options.__pfui_solo.get())
+assert(not next(pfUI.loot.bindPending) and pfUI.loot.cancelled==1)
+assert(Automaton.db.char.disabledModules.LootBOP and not original.get())
+original.set(true);assert(profile.confirmInGroup and module.db.profile==profile)
+Automaton:ApplyModuleScope("account")
+assert(Automaton.rawDisabled.LootBOP and Automaton:GetModuleScope()=="account")
+options=h:ModuleOptions("LootBOP").module.args
+assert(options.confirmInGroup==original and options.__pfui_solo.get())
+pfUI.loot.bindPending={second=true};options.__pfui_solo.set(false)
+assert(C.loot.autopickup=="0" and not next(pfUI.loot.bindPending) and pfUI.loot.cancelled==2)
+assert(Automaton.rawDisabled.LootBOP and profile.confirmInGroup)
+Automaton:ApplyModuleScope("char")
+options=h:ModuleOptions("LootBOP").module.args
+assert(Automaton.db.char.disabledModules.LootBOP and module.db.profile==profile)
+assert(options.confirmInGroup==original and original.get() and not options.__pfui_solo.get())
+''')
+checks+=1
+
 print(f"pfUI automation host: {checks} native navigation/lifecycle scenarios passed")

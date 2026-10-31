@@ -68,6 +68,7 @@ Automaton.db={char={hiddenModules={}},profile={moduleScope='char'}}
 function Automaton:IsModuleHidden(name)return self.db.char.hiddenModules[name]end
 function Automaton:GetModuleScope()return self.db.profile.moduleScope end
 C.automation={enabled='1',selected='legacy selection'}
+C.loot={autopickup='1'}
 ''')
     lua.execute((ROOT / 'Interface/AddOns/pfUI/modules/automation.lua').read_text(encoding='utf-8-sig'))
     lua.execute(r'''
@@ -131,6 +132,14 @@ local function inspect(name)
    else error('unverified getter widget '..row.widget) end
    readbacks=readbacks+1
   end
+ end
+ if name=='LootBOP' then
+  local opt=options.module.args.__pfui_solo
+  assert(opt and actual[opt]==1,'shared native solo toggle not rendered')
+  assert(actual[options.module.args.__pfui_policy]==1,'loot policy explanation not rendered')
+  for _,row in ipairs(rows()) do if row.option==opt then
+   assert(row.widget=='checkbox' and row.input:GetChecked(),'native solo checkbox readback failed')
+  end end
  end
  for opt,count in pairs(expected) do assert(actual[opt]==count,'missing option '..name..':'..tostring(opt.name)) end
  unchanged()

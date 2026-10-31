@@ -10,6 +10,7 @@ pfUI:RegisterModule("loot", "vanilla:tbc", function ()
   pfUI.loot:RegisterEvent("OPEN_MASTER_LOOT_LIST")
   pfUI.loot:RegisterEvent("UPDATE_MASTER_LOOT_LIST")
   pfUI.loot:RegisterEvent("LOOT_BIND_CONFIRM")
+  pfUI.loot:RegisterEvent("PLAYER_LEAVING_WORLD")
 
   pfUI.loot:SetWidth(160+border*2)
   pfUI.loot:SetHeight(160+border*2)
@@ -758,8 +759,95 @@ pfUI:RegisterModule("loot", "vanilla:tbc", function ()
     end
   end
 
-  local function AutoBind(arg1)
+  -- BEGIN AUTOMATION LOOT CONFIRMATION
+  function pfUI.loot:CancelBindConfirmations()
+    self.bindGeneration = (self.bindGeneration or 0) + 1
+    self.bindPending = {}
   end
+  function pfUI.loot:SyncBindOwnership(managed)
+    if managed == nil then managed = not C.automation or C.automation.enabled ~= "0" end
+    local module = Automaton and Automaton.modules and Automaton.modules.LootBOP
+    if self.bindManaged ~= managed then self:CancelBindConfirmations() end
+    self.bindManaged = managed
+    if module and module.SetPfUILootOwner then module:SetPfUILootOwner(managed and self or nil) end
+    return true
+  end
+  function pfUI.loot:ShouldConfirmBind()
+    local module = Automaton and Automaton.modules and Automaton.modules.LootBOP
+    local grouped = GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0
+    if module and module.bindActive then
+      if not self.bindManaged then return false end -- independent owner
+      if not grouped or module.db.profile.confirmInGroup then return true end
+    end
+    return not grouped and C.loot.autopickup == "1"
+  end
+  function pfUI.loot:QueueBindConfirmation(slot)
+    if not self:ShouldConfirmBind() or type(slot) ~= "number" or slot < 1 or slot ~= math.floor(slot) then return end
+    local link = GetLootSlotLink(slot)
+    if not link then return end
+    self.bindPending = self.bindPending or {}
+    if self.bindPending[slot] then
+      if self.bindPending[slot].executing then self.bindPending[slot].reentered = true end
+      return
+    end
+    local receiver = self
+    for i = 1, (STATICPOPUP_NUMDIALOGS or 4) do
+      local dialog = _G["StaticPopup" .. i]
+      if dialog and not dialog.pfBindWatch then
+        dialog.pfBindWatch = true
+        local onHide = dialog:GetScript("OnHide")
+        dialog:SetScript("OnHide", function(...)
+          if dialog.which == "LOOT_BIND" and receiver.bindPending then
+            local task = receiver.bindPending[dialog.data]
+            if task and not task.executing then receiver.bindPending[dialog.data] = nil end
+          end
+          if onHide then return onHide(unpack(arg)) end
+        end)
+      end
+    end
+    local pending = { link = link, generation = self.bindGeneration }
+    self.bindPending[slot] = pending
+    QueueFunction(function()
+      if self.bindPending[slot] ~= pending then return end
+      if pending.generation ~= self.bindGeneration or not self:ShouldConfirmBind()
+        or GetLootSlotLink(slot) ~= pending.link then self.bindPending[slot] = nil; return end
+      for i = 1, (STATICPOPUP_NUMDIALOGS or 4) do
+        local dialog = _G["StaticPopup" .. i]
+        if dialog and dialog:IsShown() and dialog.which == "LOOT_BIND" and dialog.data == slot then
+          local confirm = pfUI.client <= 12000 and LootSlot or ConfirmLootSlot
+          pending.executing = true
+          local ok, err = pcall(confirm, slot)
+          if ok and pending.generation == self.bindGeneration and not pending.reentered and (not self.bindPending[slot] or self.bindPending[slot] == pending)
+            and dialog:IsShown() and dialog.which == "LOOT_BIND" and dialog.data == slot then dialog:Hide() end
+          if self.bindPending[slot] == pending then self.bindPending[slot] = nil end
+          if not ok then geterrorhandler()(err) end
+          return
+        end
+      end
+      self.bindPending[slot] = nil
+    end)
+  end
+  function pfUI.loot:HandleBindEvent(ev, slot)
+    if ev == "LOOT_OPENED" or ev == "LOOT_CLOSED" or ev == "PLAYER_LEAVING_WORLD" then
+      self:CancelBindConfirmations()
+    elseif ev == "LOOT_SLOT_CLEARED" then
+      if self.bindPending then self.bindPending[slot] = nil end
+    elseif ev == "LOOT_BIND_CONFIRM" then self:QueueBindConfirmation(slot) end
+  end
+  function pfUI.loot:ShouldCollectSoloLoot()
+    local superwow = Automaton and Automaton.modules and Automaton.modules.Superwow
+    -- SuperWoW owns its original three modes, including quickloot inversion.
+    -- With no such owner, Shift remains the manual override for this loop.
+    return C.loot.autopickup == "1" and pfUI.client <= 11200
+      and GetNumPartyMembers() == 0 and GetNumRaidMembers() == 0
+      and not (superwow and superwow.autolootManaged) and not IsShiftKeyDown()
+  end
+  pfUI.automationIntegrations = pfUI.automationIntegrations or {}
+  pfUI.automationIntegrations.LootBOP = {
+    Sync = function(_, managed) return pfUI.loot:SyncBindOwnership(managed) end,
+  }
+  pfUI.loot:SyncBindOwnership()
+  -- END AUTOMATION LOOT CONFIRMATION
 
   local function CloseOnClick()
     local lootbind = StaticPopup_FindVisible("LOOT_BIND")
@@ -873,6 +961,7 @@ pfUI:RegisterModule("loot", "vanilla:tbc", function ()
   end
 
   pfUI.loot:SetScript("OnHide", function()
+    pfUI.loot:CancelBindConfirmations()
     StaticPopup_Hide("CONFIRM_LOOT_DISTRIBUTION")
     CloseLoot()
     -- 隐藏通报按钮
@@ -880,6 +969,7 @@ pfUI:RegisterModule("loot", "vanilla:tbc", function ()
   end)
 
   pfUI.loot:SetScript("OnEvent", function()
+    pfUI.loot:HandleBindEvent(event, arg1)
     if event == "OPEN_MASTER_LOOT_LIST" then
       ToggleDropDownMenu(1, nil, GroupLootDropDown, pfUI.loot.slots[pfUI.loot.selectedSlot], 0, 0)
     end
@@ -954,23 +1044,8 @@ pfUI:RegisterModule("loot", "vanilla:tbc", function ()
       end
     end
 
-    -- auto accept BoP loot in solo mode
-    if C.loot.autopickup == "1" and GetNumPartyMembers() == 0 and GetNumRaidMembers() == 0 then
-      if event == "LOOT_BIND_CONFIRM" then
-        local slot = arg1
-        QueueFunction(function()
-          if pfUI.client <= 12000 then
-            LootSlot(slot)
-          elseif pfUI.client <= 20400 then
-            ConfirmLootSlot(slot)
-          end
-          StaticPopup_Hide("LOOT_BIND")
-        end)
-      elseif event == "LOOT_OPENED" and pfUI.client <= 11200 then
-        for i=1,GetNumLootItems() do
-          LootSlot(i)
-        end
-      end
+    if event == "LOOT_OPENED" and pfUI.loot:ShouldCollectSoloLoot() then
+      for i = 1, GetNumLootItems() do LootSlot(i) end
     end
   end)
 

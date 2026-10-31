@@ -301,8 +301,8 @@ Automaton_Superwow.options = {
     },
     shiftloot = {
         type = "toggle",
-        name = L["Shift to toggle on"].."手动拾取",
-        desc = "按住Shift拾取物品，不按shift就自动拾取。\n如果非必要建议开启自动拾取模式。",
+        name = "按 Shift 切换自动拾取",
+        desc = "按住 Shift 时启用 SuperWoW 自动拾取，松开时关闭；登录器或 Vanilla Tweaks 的 quickloot 可能反转实际效果。",
         order = 12,
         get = function() return Automaton_Superwow.db.profile.shiftloot end,
         set = function(v)
@@ -698,6 +698,7 @@ function Automaton_Superwow:OnEnable()
 
     AutoOpenRebuildCustom()
 
+    self.autolootActive = true
     self:TurnOnAutoloot()
 
     if self.db.profile.autoopen then
@@ -716,26 +717,67 @@ function Automaton_Superwow:OnEnable()
 end
 
 function Automaton_Superwow:OnDisable()
+    self.autolootActive = nil
+    self:StopAutoloot()
     self:UnregisterAllEvents()
 end
 
 ------------------------------
 --      Event Handlers      --
 ------------------------------
+-- SetAutoloot() is the SuperWoW getter; do not invent a CVar or reverse
+-- the existing Shift policy to compensate for optional quickloot patches.
+local function ReadAutoloot()
+    if type(SetAutoloot) ~= "function" then return nil end
+    local ok, value = pcall(SetAutoloot)
+    if not ok then return nil end
+    if value == true or value == 1 then return 1 end
+    if value == false or value == 0 then return 0 end
+end
+
+function Automaton_Superwow:StopAutoloot()
+    if self.f then self.f:SetScript("OnUpdate", nil); self.f:Hide() end
+    self.autolootManaged = nil
+    -- Restore only a value we still own. Another addon may have changed it.
+    if self.autolootPrevious ~= nil and self.autolootLast ~= nil
+        and ReadAutoloot() == self.autolootLast then
+        pcall(SetAutoloot, self.autolootPrevious)
+    end
+    self.autolootPrevious, self.autolootLast = nil, nil
+end
+
+function Automaton_Superwow:ApplyAutoloot(value)
+    if not self.autolootActive then return false end
+    if self.autolootLast == value then return self.autolootManaged end
+    self.autolootLast = value
+    local ok = type(SetAutoloot) == "function" and pcall(SetAutoloot, value)
+    if not ok or ReadAutoloot() ~= value then
+        self:StopAutoloot()
+        return false
+    end
+    self.autolootManaged = true
+    return true
+end
+
 function Automaton_Superwow:TurnOnAutoloot()
-    if self.f then
-        self.f:SetScript("OnUpdate", nil)
-        self.f = nil
+    if self.f then self.f:SetScript("OnUpdate", nil); self.f:Hide() end
+    -- Core saves disabledModules after the lifecycle callback. Use runtime
+    -- state so editing settings on a disabled module cannot acquire control.
+    if not self.autolootActive then return end
+    if self.autolootPrevious == nil then
+        self.autolootPrevious = ReadAutoloot()
+        if self.autolootPrevious == nil then self:StopAutoloot(); return end
     end
     if self.db.profile.shiftloot then
-        self.f = CreateFrame("Frame")
+        if not self:ApplyAutoloot(IsShiftKeyDown() and 1 or 0) then return end
+        if not self.f then self.f = CreateFrame("Frame") end
+        local module = self
         self.f:SetScript("OnUpdate", function()
-            if IsShiftKeyDown() then SetAutoloot(1) else SetAutoloot(0) end
+            module:ApplyAutoloot(IsShiftKeyDown() and 1 or 0)
         end)
-    elseif self.db.profile.autoloot then
-        SetAutoloot(1)
+        self.f:Show()
     else
-        SetAutoloot(0)
+        self:ApplyAutoloot(self.db.profile.autoloot and 1 or 0)
     end
 end
 
