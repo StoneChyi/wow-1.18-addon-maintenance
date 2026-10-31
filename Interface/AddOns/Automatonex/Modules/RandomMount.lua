@@ -329,6 +329,59 @@ local function ChooseRandomMount(mounts)
     return mounts[index]
 end
 
+-- IsCurrentAction describes an action toggle (including auto attack), not a cast.
+-- Keep one event-only observer for the historical always-available manual command,
+-- including while the module's menu toggle is disabled. No spell is cast here.
+local castObserver
+local function ValidDuration(value)
+    return type(value) == "number" and value > 0 and value < 1 / 0
+end
+local function InitializeCastObserver()
+    if castObserver then return end
+    castObserver = CreateFrame("Frame")
+    Automaton_RandomMount.castObserver = castObserver
+    for _, name in ipairs({ "SPELLCAST_START", "SPELLCAST_STOP", "SPELLCAST_FAILED",
+        "SPELLCAST_INTERRUPTED", "SPELLCAST_DELAYED", "SPELLCAST_CHANNEL_START",
+        "SPELLCAST_CHANNEL_UPDATE", "SPELLCAST_CHANNEL_STOP", "PLAYER_ENTERING_WORLD",
+        "PLAYER_LEAVING_WORLD" }) do castObserver:RegisterEvent(name) end
+    castObserver:SetScript("OnEvent", function()
+        if event == "SPELLCAST_START" then
+            castObserver.mode = ValidDuration(arg2) and "cast" or nil
+            castObserver.untilTime = castObserver.mode and (GetTime() + arg2 / 1000) or nil
+        elseif event == "SPELLCAST_CHANNEL_START" then
+            castObserver.mode = ValidDuration(arg1) and "channel" or nil
+            castObserver.untilTime = castObserver.mode and (GetTime() + arg1 / 1000) or nil
+        elseif event == "SPELLCAST_DELAYED" and castObserver.mode == "cast" then
+            if ValidDuration(arg1) then castObserver.untilTime = castObserver.untilTime + arg1 / 1000 end
+        elseif event == "SPELLCAST_CHANNEL_UPDATE" and castObserver.mode == "channel" then
+            if ValidDuration(arg1) then castObserver.untilTime = GetTime() + arg1 / 1000
+            else castObserver.mode, castObserver.untilTime = nil, nil end
+        elseif (event == "SPELLCAST_STOP" or event == "SPELLCAST_FAILED" or event == "SPELLCAST_INTERRUPTED")
+            and castObserver.mode == "cast" then
+            castObserver.mode, castObserver.untilTime = nil, nil
+        elseif event == "SPELLCAST_CHANNEL_STOP" and castObserver.mode == "channel" then
+            castObserver.mode, castObserver.untilTime = nil, nil
+        elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_LEAVING_WORLD" then
+            castObserver.mode, castObserver.untilTime = nil, nil
+        end
+    end)
+end
+local function IsPlayerCasting()
+    -- Native extensions and pfUI may provide these APIs; neither is required.
+    for _, name in ipairs({ "UnitCastingInfo", "UnitChannelInfo" }) do
+        local query = _G[name]
+        if type(query) == "function" then
+            local ok, spell = pcall(query, "player")
+            if ok and spell then return true end
+        end
+    end
+    if castObserver and castObserver.untilTime then
+        if GetTime() < castObserver.untilTime then return true end
+        castObserver.mode, castObserver.untilTime = nil, nil
+    end
+    return false
+end
+
 -- 随机选择坐骑并释放
 local function RandomMount()
     if UnitAffectingCombat("player") then
@@ -336,11 +389,8 @@ local function RandomMount()
         return
     end
     
-    if UnitCastingInfo and UnitCastingInfo("player") then
-        DebugMessage("施法中无法召唤坐骑！")
-        return
-    elseif IsCurrentAction(1) or IsCurrentAction(2) or IsCurrentAction(3) or IsCurrentAction(4) then
-        DebugMessage("施法中无法召唤坐骑！")
+    if IsPlayerCasting() then
+        DebugMessage("施法或引导中无法召唤坐骑！")
         return
     end
     
@@ -669,6 +719,7 @@ Automaton_RandomMount.options = {
 ------------------------------
 
 function Automaton_RandomMount:OnInitialize()
+    InitializeCastObserver()
     self.db = Automaton:AcquireDBNamespace("RandomMount")
     -- 注册 profile 默认值（模块禁用状态，跨角色）
     Automaton:RegisterDefaults("RandomMount", "profile", {

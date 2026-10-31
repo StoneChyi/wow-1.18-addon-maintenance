@@ -10,15 +10,16 @@ pfUI:RegisterModule("automation", "vanilla", function()
     "Summon", "RandomMount", "QuestItemBar", "CleanChat", "Tooltip",
     "TSTargetMark", "CancelBuff", "Lern2Spell", "Group", "Invite", "Ready",
     "Rez", "AutoShout", "sTrade", "LootBOP", "AutoOpenBag", "Purchases",
-    "ShiQu", "MailTo", "Release", "Dismount", "follow", "Trainer", "WorldBuffs",
+    "ShiQu", "MailTo", "Release", "Stand", "Dismount", "follow", "Trainer", "WorldBuffs",
     "AlertCombat", "Range", "RangeController", "QuestAnnouncer", "ExpBar", "InterPlayerLink",
   }
   -- Composed pages retain each engine's identity, callbacks and saved data.
   local combinedPages = {
+    Stand = { title = "骑乘与姿态", members = { "Stand", "ShaguStance" }, labels = { "额外站立提示", "施法前姿态策略" } },
     Group = { title = "邀请处理", members = { "Group", "StrangerDecline" }, labels = { "好友与公会邀请", "陌生邀请与黑白名单" } },
     Invite = { title = "邀请玩家", members = { "Invite", "invall" }, labels = { "关键词邀请与名单", "附近聊天邀请" } },
   }
-  local pageAliases = { StrangerDecline = "Group", invall = "Invite" }
+  local pageAliases = { StrangerDecline = "Group", invall = "Invite", ShaguStance = "Stand" }
   local dailyRanks = {}
   for i, name in ipairs(dailyOrder) do dailyRanks[name] = i end
   local attempts, startup = 0, true
@@ -282,6 +283,14 @@ pfUI:RegisterModule("automation", "vanilla", function()
       local options = { policy = Description(name == "Group"
         and "各组开关独立生效。启用的黑名单优先拒绝；白名单放行弹窗，好友与公会自动接受仍由对应开关控制。"
         or "各组开关独立生效。关键词邀请启用时，附近聊天的密语邀请共用其名单；相同目标短时间内只发送一次邀请。", -20) }
+      if name == "Stand" then
+        options.policy = Description("pfUI 保留基础施法站立和受阻退形态。下方站立模块补充攻击、拾取和飞行点提示；姿态模块启用时负责施法前策略，停用则恢复 pfUI 的错误驱动切换。随机坐骑仍在独立页面设置。", -20)
+        options.pfuiDismount = { type = "toggle", name = "pfUI 自动下马", order = -15,
+          desc = "与 pfUI 原设置共用开关；只控制受阻时取消坐骑，不关闭站立或形态处理。",
+          get = function() return C.global.autodismount ~= "0" end,
+          set = function(value) C.global.autodismount = value and "1" or "0" end }
+        if not pfUI.autoshift then options.nativeMissing = Description("pfUI 自动姿态组件未加载：上方开关保存后随该组件生效；下方独立模块仍按原开关运行。", -14) end
+      end
       if self:IsPageHidden(name) then options.hidden = Description("此页面已从模块列表隐藏，可在管理页恢复显示。", -10) end
       for i, member in ipairs(page.members) do
         local id, module = member, Automaton.modules[member]

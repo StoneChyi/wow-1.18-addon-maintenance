@@ -189,6 +189,27 @@ def runtime():
  lua.execute((ROOT/'Interface/AddOns/pfUI/modules/automation_options.lua').read_text(encoding='utf-8-sig'))
  return lua
 
+def initialize_module(lua, name, module):
+ # RandomMount's always-available manual command owns a native event observer.
+ # Model this interface only for its initialization, preserving the catalog's
+ # declared unrelated Trainer window boundary and recording every subscription.
+ if not module.OnInitialize:
+  return
+ if name != 'RandomMount':
+  module.OnInitialize(module)
+  return
+ methods=lua.eval('getmetatable(parent).__index')
+ previous=methods.RegisterEvent
+ methods.RegisterEvent=lua.eval("function(self,event) assert(type(event)=='string');self.events=self.events or {};self.events[event]=true end")
+ try:
+  module.OnInitialize(module)
+  if module.castObserver is not None:
+   assert module.castObserver.events['SPELLCAST_START']
+   assert module.castObserver.events['SPELLCAST_CHANNEL_START']
+ finally:
+  methods.RegisterEvent=previous
+
+
 def main():
  parser=argparse.ArgumentParser(description=__doc__)
  parser.add_argument('--module-ref',help='Read only the TOC and Automaton module sources from this Git commit; GUI/renderer remain working-tree code.')
@@ -215,7 +236,7 @@ def main():
   for name,m in modules:
    item={'name':name};entry['modules'].append(item)
    try:
-    if m.OnInitialize:m.OnInitialize(m)
+    initialize_module(lua,name,m)
    except Exception as e:item['init_error']=str(e).split('stack traceback')[0].strip()
    if m._options is None:
     if m.CreateOptions:

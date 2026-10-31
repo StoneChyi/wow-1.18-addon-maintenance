@@ -6,7 +6,7 @@ No user SavedVariables are read or changed; this is not live-client acceptance.
 """
 import json
 
-from test_pfui_automation_catalog import ROOT, runtime
+from test_pfui_automation_catalog import ROOT, runtime, initialize_module
 
 
 EXPECTED_BOUNDARIES = {
@@ -36,8 +36,7 @@ def main():
             if name in before:
                 continue
             try:
-                if module.OnInitialize:
-                    module.OnInitialize(module)
+                initialize_module(lua, name, module)
             except Exception as error:
                 message = str(error).split('stack traceback')[0].strip()
                 assert name in EXPECTED_BOUNDARIES and EXPECTED_BOUNDARIES[name] in message, (
@@ -146,7 +145,7 @@ local function inspect(name)
  return optionCount,readbacks
 end
 local entries=h:NavigationEntries(true)
-assert(#entries==53)
+assert(#entries==52)
 local totalOptions,totalReadbacks=0,0
 for _,entry in ipairs(entries) do
  assert(entry.name~='Repair' and entry.name~='Sell')
@@ -158,7 +157,8 @@ for id,module in pairs(Automaton.modules) do
  if id~='Repair' and id~='Sell' then assert(coveredModules[id],'missing original module '..id);coveredCount=coveredCount+1 end
 end
 assert(coveredCount==55)
-for _,id in ipairs({'Group','StrangerDecline','Invite','invall'}) do assert(coveredModules[id],'missing composed member '..id) end
+assert(totalOptions==388 and totalReadbacks==257,'original option/readback coverage changed')
+for _,id in ipairs({'Group','StrangerDecline','Invite','invall','Stand','ShaguStance'}) do assert(coveredModules[id],'missing composed member '..id) end
 -- Warm every shape, then alternate all actual modules through one row pool.
 local warm=created
 for pass=1,3 do
@@ -172,7 +172,7 @@ for _,name in ipairs({'Tooltip','ExpBar','InterPlayerLink'}) do
  pfUI.automationIntegrations[id]={managed=true,title=id,OpenSettings=function()opened[id]=true end}
 end
 local managed=h:NavigationEntries(true);local shortcuts=0
-assert(#managed==53,'native settings links disappeared from module navigation')
+assert(#managed==52,'native settings links disappeared from module navigation')
 for _,entry in ipairs(managed) do if entry.native then
  shortcuts=shortcuts+1
  assert(not h:ModuleOptions(entry.name).module,'native engine settings duplicated')

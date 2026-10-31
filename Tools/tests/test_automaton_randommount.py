@@ -51,6 +51,11 @@ end
 function UnitAffectingCombat() return combat end
 function UnitCastingInfo() return casting end
 function IsCurrentAction() return false end
+function GetTime() return 0 end
+function CreateFrame(kind)
+    assert(kind=='Frame')
+    return {RegisterEvent=function() end, SetScript=function() end}
+end
 function GetRealZoneText() return zone end
 function random(count) return count end
 function containsLog(text)

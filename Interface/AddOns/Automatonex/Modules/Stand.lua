@@ -39,29 +39,45 @@ function Automaton_Stand:OnInitialize()
 	self:RegisterOptions(self.options)
 end
 
+-- Runtime ownership never changes the saved module preference.
+function Automaton_Stand:UpdateMovementEvents()
+    self:UnregisterAllEvents()
+    if self.runtimeActive and not self.movementOwner then
+        self:RegisterEvent("UI_ERROR_MESSAGE")
+        self:RegisterEvent("UI_INFO_MESSAGE", "UI_ERROR_MESSAGE")
+    end
+end
+function Automaton_Stand:SetMovementOwner(owner)
+    if self.movementOwner == owner then return end
+    self.movementOwner = owner
+    self.lastMessage, self.lastStand = nil, nil
+    self:UpdateMovementEvents()
+end
 function Automaton_Stand:OnEnable()
-	self:RegisterEvent("UI_ERROR_MESSAGE")
-	self:RegisterEvent("UI_INFO_MESSAGE","UI_ERROR_MESSAGE")
+    self.runtimeActive = true
+    if pfUI and pfUI.autoshift and pfUI.autoshift.SyncOwnership then pfUI.autoshift:SyncOwnership() end
+    self:UpdateMovementEvents()
 end
-
 function Automaton_Stand:OnDisable()
-	self:UnregisterAllEvents()
+    self.runtimeActive = nil
+    self.lastMessage, self.lastStand = nil, nil
+    self:UnregisterAllEvents()
+    if pfUI and pfUI.autoshift and pfUI.autoshift.SyncOwnership then pfUI.autoshift:SyncOwnership() end
 end
-
-------------------------------
---      Event Handlers      --
-------------------------------
-
-local messages = {
-	[SPELL_FAILED_NOT_STANDING] = true,
-	[ERR_CANTATTACK_NOTSTANDING] = true,
-	[ERR_LOOT_NOTSTANDING] = true,
-	[ERR_TAXINOTSTANDING] = true,
-}
-
+function Automaton_Stand:HandlesMessage(msg)
+    return type(msg) == "string" and (msg == SPELL_FAILED_NOT_STANDING
+        or msg == ERR_CANTATTACK_NOTSTANDING or msg == ERR_LOOT_NOTSTANDING or msg == ERR_TAXINOTSTANDING)
+end
+function Automaton_Stand:HandleError(msg)
+    if not self.runtimeActive or not self:HandlesMessage(msg) then return false end
+    local now = GetTime()
+    if self.lastMessage == msg and self.lastStand and now - self.lastStand < .2 then return true end
+    self.lastMessage, self.lastStand = msg, now
+    UIErrorsFrame:Clear()
+    -- Unlike SitOrStand, the explicit emote cannot toggle back to sitting.
+    DoEmote("stand")
+    return true
+end
 function Automaton_Stand:UI_ERROR_MESSAGE(msg)
-	if messages[msg] then
-		UIErrorsFrame:Clear()
-		DoEmote("stand")
-	end
+    return self:HandleError(msg)
 end

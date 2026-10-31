@@ -1,8 +1,19 @@
 pfUI:RegisterModule("autoshift", "vanilla", function ()
   pfUI.autoshift = CreateFrame("Frame")
-  pfUI.autoshift:RegisterEvent("UI_ERROR_MESSAGE")
+  local driver = pfUI.autoshift
+  driver:RegisterEvent("UI_ERROR_MESSAGE")
+  driver:RegisterEvent("UI_INFO_MESSAGE")
+  driver:RegisterEvent("ADDON_LOADED")
+  driver:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-  pfUI.autoshift.scanString = string.gsub(SPELL_FAILED_ONLY_SHAPESHIFT, "%%s", "(.+)")
+  local function ErrorPattern(template)
+    if type(template) ~= "string" then return "^$" end
+    local first, last = string.find(template, "%s", 1, true)
+    if not first then return "^$" end
+    local function Escape(text) return string.gsub(text, "([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1") end
+    return "^" .. Escape(string.sub(template, 1, first - 1)) .. "(.+)" .. Escape(string.sub(template, last + 1)) .. "$"
+  end
+  pfUI.autoshift.scanString = ErrorPattern(SPELL_FAILED_ONLY_SHAPESHIFT)
   pfUI.autoshift.mounts = {
     -- deDE
     "^Erhöht Tempo um (.+)%%",
@@ -57,66 +68,93 @@ pfUI:RegisterModule("autoshift", "vanilla", function ()
 
   pfUI.autoshift.scanner = libtipscan:GetScanner("dismount")
 
-  pfUI.autoshift:SetScript("OnEvent", function()
-    -- switch stance if required
-    for stances in string.gfind(arg1, pfUI.autoshift.scanString) do
-      for _, stance in pairs({ strsplit(",", stances)}) do
-        CastSpellByName(string.gsub(stance,"^%s*(.-)%s*$", "%1"))
+  local function Module(name)
+    return Automaton and Automaton.modules and Automaton.modules[name]
+  end
+  function driver:SyncOwnership(managed)
+    if managed ~= nil then self.managed = managed end
+    if self.managed == nil then self.managed = not C.automation or C.automation.enabled ~= "0" end
+    for _, name in ipairs({ "Stand", "ShaguStance" }) do
+      local module = Module(name)
+      if module and module.SetMovementOwner then module:SetMovementOwner(self.managed and self or nil) end
+    end
+    return true
+  end
+  pfUI.automationIntegrations = pfUI.automationIntegrations or {}
+  for _, name in ipairs({ "Stand", "ShaguStance" }) do
+    pfUI.automationIntegrations[name] = { Sync = function(_, managed) return driver:SyncOwnership(managed) end }
+  end
+
+  function driver:Stand(msg)
+    local now = GetTime()
+    if self.lastStandMessage == msg and self.lastStandTime and now - self.lastStandTime < .2 then return end
+    self.lastStandMessage, self.lastStandTime = msg, now
+    DoEmote("stand")
+  end
+  function driver:SwitchRequiredStance(msg)
+    local _, _, names = string.find(msg, self.scanString)
+    if not names then return false end
+    -- Alternatives in the error are choices, not a list of spells to cast.
+    local allowed, candidate = {}, nil
+    for name in string.gfind(names, "[^,]+") do
+      name = string.gsub(name, "^%s*(.-)%s*$", "%1")
+      if name == "豹形态" then name = "猎豹形态" end
+      allowed[name] = true
+    end
+    for i = 1, GetNumShapeshiftForms() do
+      local _, known, active, castable = GetShapeshiftFormInfo(i)
+      if allowed[known] then
+        if active and active ~= 0 then return true end
+        if not candidate and castable and castable ~= 0 then candidate = known end
       end
     end
-
-    -- check if we need to stand up
-    if arg1 == SPELL_FAILED_NOT_STANDING then
-      SitOrStand()
-      return
+    if candidate then CastSpellByName(candidate) end
+    return true
+  end
+  function driver:HandleEvent(kind, msg)
+    if kind == "ADDON_LOADED" or kind == "PLAYER_ENTERING_WORLD" then self:SyncOwnership(); return end
+    if (kind ~= "UI_ERROR_MESSAGE" and kind ~= "UI_INFO_MESSAGE") or type(msg) ~= "string" then return end
+    local stand, stance = Module("Stand"), Module("ShaguStance")
+    if stand and stand.runtimeActive and stand:HandlesMessage(msg) then
+      if stand.movementOwner == self then stand:HandleError(msg) end
+      return -- independent Stand owns this message when hosting is off
     end
+    if kind == "UI_INFO_MESSAGE" then return end
+    if msg == SPELL_FAILED_NOT_STANDING then self:Stand(msg); return end
+    if stance and stance.runtimeActive then
+      if stance.movementOwner == self then stance:HandleError(msg) end
+      -- Its error fallback runs on the next matching user action.
+      if string.find(msg, self.scanString) then return end
+    elseif self:SwitchRequiredStance(msg) then return end
 
-    -- delay shapeshift cancel
-    local CancelLater = nil
-
-    -- auto dismount can be toggled in the settings (Settings -> General)
-    local dismount = C.global.autodismount ~= "0"
-
-    -- scan through buffs and cancel shapeshift/mount
-    for id, errorstring in pairs(pfUI.autoshift.errors) do
-      if arg1 == errorstring then
-        -- dont's cancel form when clicking on npcs while in combat
-        if arg1 == ERR_CANT_INTERACT_SHAPESHIFTED and UnitAffectingCombat("player") then
-          return
-        end
-
-        for i=0,31,1 do
-          -- detect mounts based on tooltip text
-          pfUI.autoshift.scanner:SetPlayerBuff(i)
-          for _, str in pairs(pfUI.autoshift.mounts) do
-            if dismount and pfUI.autoshift.scanner:Find(str) then
-              CancelPlayerBuff(i)
-              return
+    for _, errorstring in pairs(self.errors) do
+      if msg == errorstring then
+        -- Clicking an NPC in combat must never cancel a combat form.
+        if msg == ERR_CANT_INTERACT_SHAPESHIFTED and UnitAffectingCombat("player") then return end
+        local later
+        local dismount = C.global.autodismount ~= "0"
+        for i = 0, 31 do
+          local texture = GetPlayerBuffTexture(i)
+          if texture then
+            if dismount then
+              self.scanner:SetPlayerBuff(i)
+              for _, pattern in ipairs(self.mounts) do
+                if self.scanner:Find(pattern) then CancelPlayerBuff(i); return end
+              end
             end
-          end
-
-          -- detect shapeshift based on texture
-          local buff = GetPlayerBuffTexture(i)
-          if buff then
-            for id, bufftype in pairs(pfUI.autoshift.shapeshifts) do
-              if string.find(string.lower(buff), bufftype, 1) then
-                if string.find(string.lower(buff), "spell_shadow_shadowform", 1) then
-                  -- only cancel shadow form if no other buff was hindering casting
-                  CancelLater = i
-                else
-                  CancelPlayerBuff(i)
-                  return
-                end
+            for _, icon in ipairs(self.shapeshifts) do
+              if string.find(string.lower(texture), icon, 1, true) then
+                if icon == "spell_shadow_shadowform" then later = i
+                else CancelPlayerBuff(i); return end
               end
             end
           end
         end
-
-        -- if nothing else was found, cancel shadowform
-        if CancelLater then
-          CancelPlayerBuff(CancelLater)
-        end
+        if later then CancelPlayerBuff(later) end
+        return
       end
     end
-  end)
+  end
+  driver:SetScript("OnEvent", function() driver:HandleEvent(event, arg1) end)
+  driver:SyncOwnership()
 end)
