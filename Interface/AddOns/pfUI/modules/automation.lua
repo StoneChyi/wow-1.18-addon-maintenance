@@ -90,6 +90,18 @@ pfUI:RegisterModule("automation", "vanilla", function()
     db.selectedByCategory = db.selectedByCategory or {}
     db.selectedByCategory[category] = name
     self:OpenPage(categories[category])
+    local content = self.pages[categories[category]]
+    local state = content and content.automationOptionsState
+    if state then
+      for _, row in ipairs(state.visible) do
+        if row.option.moduleName == name then
+          local scroll = content.parent
+          scroll:SetVerticalScroll(math.max(0, math.min(row.automationOffset or 0, scroll:GetVerticalScrollRange())))
+          if scroll.UpdateScrollState then scroll:UpdateScrollState() end
+          break
+        end
+      end
+    end
   end
   function host:ModuleList(filtered, category)
     local list, ranks = {}, {}
@@ -199,36 +211,34 @@ pfUI:RegisterModule("automation", "vanilla", function()
         validate = { all = "全部（含隐藏）", shown = "菜单可见", hidden = "菜单隐藏", enabled = "已启用" },
         get = function() return filter.visibility end, set = function(value) filter.visibility = value end },
     }
-    local list, choices = self:ModuleList(true, category), {}
-    for i, entry in ipairs(list) do
-      local state = Automaton:IsModuleActive(entry.name) and "开启" or "关闭"
-      choices[entry.name] = string.format("%02d  %s · %s", i, entry.module.modulename or entry.name, state)
+    local list = self:ModuleList(true, category)
+    if table.getn(list) == 0 then
+      options.empty = Description("没有符合条件的模块。修理和售卖请使用商人服务页面。", 4)
+      return options
     end
-    if table.getn(list) == 0 then options.empty = Description("没有符合条件的模块。修理和售卖请使用商人服务页面。", 4); return options end
-    local db = self:Config()
-    db.selectedByCategory = db.selectedByCategory or {}
-    local selected = db.selectedByCategory[category] or db.selected or Automaton.db.char.lastModule
-    if not choices[selected] then selected = list[1].name end
-    db.selected = selected
-    db.selectedByCategory[category] = selected
-    local module = Automaton.modules[selected]
-    Automaton.selectedModule = selected
-    options.selected = { type = "text", name = "选择功能", order = 4, validate = choices,
-      get = function() return db.selectedByCategory[category] end,
-      set = function(value) db.selectedByCategory[category] = value; db.selected = value; Automaton.selectedModule = value; Automaton.db.char.lastModule = value end }
-    options.description = Description(module.moduledesc or "", 5)
-    options.visible = { type = "toggle", name = "在常用菜单中显示", order = 6,
-      desc = "隐藏不代表停用；显示范围选择“全部”或“菜单隐藏”可再次找到。",
-      get = function() return not Automaton:IsModuleHidden(selected) end,
-      set = function(value)
-        Automaton.db.char.hiddenModules = Automaton.db.char.hiddenModules or {}
-        Automaton.db.char.hiddenModules[selected] = not value or nil
-      end }
-    options.order = { type = "group", name = "菜单顺序", order = 7, args = {}, buttons = {
-      { name = "上移", func = function() host:MoveModule(selected, -1) end },
-      { name = "下移", func = function() host:MoveModule(selected, 1) end },
-    } }
-    options.module = { type = "group", name = module.modulename or selected, order = 8, args = module._options }
+    for index, entry in ipairs(list) do
+      local name, module = entry.name, entry.module
+      -- Keep the original option objects/callbacks. Only the page grouping is
+      -- new; never copy stored settings or inject controls into module._options.
+      local args = {}
+      for key, option in pairs(module._options) do args[key] = option end
+      if module.moduledesc and module.moduledesc ~= "" then
+        args.__pfui_description = Description(module.moduledesc, -10)
+      end
+      args.__pfui_visible = { type = "toggle", name = "在常用菜单中显示", order = 100000,
+        desc = "隐藏不代表停用；显示范围选择“全部”或“菜单隐藏”可再次找到。",
+        get = function() return not Automaton:IsModuleHidden(name) end,
+        set = function(value)
+          Automaton.db.char.hiddenModules = Automaton.db.char.hiddenModules or {}
+          Automaton.db.char.hiddenModules[name] = not value or nil
+        end }
+      args.__pfui_order = { type = "group", name = "菜单顺序", order = 100001, args = {}, buttons = {
+        { name = "上移", func = function() host:MoveModule(name, -1) end },
+        { name = "下移", func = function() host:MoveModule(name, 1) end },
+      } }
+      options["module_" .. name] = { type = "group", name = module.modulename or name,
+        moduleName = name, order = 10 + index, args = args }
+    end
     return options
   end
   function host:EditRule(kind, remove, selectedId)

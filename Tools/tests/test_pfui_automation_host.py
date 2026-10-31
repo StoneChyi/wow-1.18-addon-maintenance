@@ -206,27 +206,44 @@ edit(p,"enabled",true);assert(h:IsEnabled() and not fallback)
 check(r'''
 local h=pfUI.automation;h:Sync();h:Open()
 local p=h.pages[h.all]
-assert(p.options.module.args==Automaton.modules[C.automation.selected]._options)
+assert(not p.options.selected and not p.options.module)
+local selected=C.automation.selected
+for _,name in ipairs({"ExpBar","Tooltip","InterPlayerLink"}) do
+ local group=p.options["module_"..name]
+ assert(group.moduleName==name and group.args~=Automaton.modules[name]._options)
+ assert(group.args.old==Automaton.modules[name]._options.old)
+ assert(not Automaton.modules[name]._options.__pfui_visible,"host controls leaked into engine options")
+end
 edit(p,"query","Tooltip")
-assert(C.automation.selected=="Tooltip" and p.options.module.args==Automaton.modules.Tooltip._options)
-edit(p,"visible",false);assert(Automaton.db.char.hiddenModules.Tooltip)
-edit(p,"visibility","hidden");assert(C.automation.selected=="Tooltip")
-edit(p,"query","does-not-exist");assert(p.options.empty and not p.options.module)
-edit(p,"query","");edit(p,"visibility","all");h:OpenPage("任务与升级");p=h.pages["任务与升级"]
-assert(not p.options.category)
-assert(C.automation.selected=="ExpBar")
-assert(not p.options.selected.validate.Repair and not p.options.selected.validate.Sell)
+assert(p.options.module_Tooltip and not p.options.module_ExpBar)
+local toggle=p.options.module_Tooltip.args.__pfui_visible
+assert(toggle.get());toggle.set(false);p.onChanged();h.Tick()
+assert(Automaton.db.char.hiddenModules.Tooltip and not Automaton.db.char.hiddenModules.ExpBar)
+edit(p,"visibility","hidden");assert(p.options.module_Tooltip)
+edit(p,"query","does-not-exist");assert(p.options.empty and not p.options.module_Tooltip)
+edit(p,"query","");edit(p,"visibility","shown")
+assert(not p.options.module_Tooltip and p.options.module_ExpBar and p.options.module_InterPlayerLink)
+edit(p,"visibility","all");h:OpenPage("任务与升级");p=h.pages["任务与升级"]
+assert(not p.options.category and not p.options.selected)
+assert(p.options.module_ExpBar and not p.options.module_Tooltip)
+assert(C.automation.selected==selected,"rendering silently rewrote legacy selection")
+assert(not p.options.module_Repair and not p.options.module_Sell)
 h:SelectModule("Sell");assert(h.pages[h.merchant])
 ''',True)
 check(r'''
 local h=pfUI.automation;h:Sync();h:Open()
 local p=h.pages[h.all]
-edit(p,"selected","Tooltip")
-assert(Automaton.db.char.lastModule=="Tooltip" and Automaton.selectedModule=="Tooltip")
+h:SelectModule("Tooltip")
+assert(C.automation.selected=="Tooltip" and Automaton.db.char.lastModule=="Tooltip" and Automaton.selectedModule=="Tooltip")
+h:Open();p=h.pages[h.all]
 local list=h:ModuleList(false);assert(list[#list].name=="Tooltip")
-p.options.order.buttons[1].func();p.onChanged();h.Tick()
+p.options.module_Tooltip.args.__pfui_order.buttons[1].func();p.onChanged();h.Tick()
 local moved=h:ModuleList(false);assert(moved[#moved-1].name=="Tooltip")
+assert(p.options.module_Tooltip.order<p.options.module_InterPlayerLink.order)
 assert(Automaton.db.char.moduleOrder[#Automaton.db.char.moduleOrder]=="Sell")
+p.options.module_ExpBar.args.__pfui_order.buttons[2].func();p.onChanged();h.Tick()
+local again=h:ModuleList(false);assert(again[2].name=="ExpBar" and again[1].name=="Tooltip")
+assert(p.options.module_Tooltip.order<p.options.module_ExpBar.order)
 ''',True)
 check(r'''
 local h=pfUI.automation;h:Sync();h:OpenVendor();local p=h.pages[h.merchant]
@@ -245,10 +262,15 @@ assert(count==500 and pfUI.gui:GetWidth()==720)
 ''',True)
 check(r'''
 local h=pfUI.automation;h:Sync();h:Open();local p=h.pages[h.all]
-edit(p,"selected","Tooltip");local before=p.renders
-Automaton.modulePrototype.RegisterOptions(Automaton.modules.Tooltip,{new={type="toggle",name="New setting"}})
+local before=p.renders;local value=false
+local option={type="toggle",name="New setting",get=function()return value end,set=function(v)value=v end}
+Automaton.modulePrototype.RegisterOptions(Automaton.modules.Tooltip,{new=option})
 assert(h.refreshPending);h.Tick()
-assert(p.renders>before and p.options.module.args.new)
+assert(p.renders>before and p.options.module_Tooltip.args.new==option)
+assert(not p.options.module_Tooltip.args.old and p.options.module_ExpBar.args.old)
+p.options.module_Tooltip.args.new.set(true);p.onChanged();h.Tick()
+assert(value and p.options.module_Tooltip.args.new.get())
+assert(p.options.module_ExpBar.args.old==Automaton.modules.ExpBar._options.old)
 Automaton:RefreshModuleSettings("Tooltip");h.Tick()
 assert(not Automaton.legacyRefresh)
 ''',True)

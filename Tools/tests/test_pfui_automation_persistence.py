@@ -55,6 +55,18 @@ def pages_runtime(saved=None):
     namespace = {'__file__': str(path)}
     exec(compile(setup, str(path), 'exec'), namespace)
     lua = namespace['lua']
+    lua.execute(r'''
+function moduleRow(moduleName, key)
+ local visible=parent.automationOptionsState.visible
+ for _,heading in ipairs(visible) do
+  if heading.option.moduleName==moduleName then
+   local option=heading.option.args[key]
+   for _,row in ipairs(visible) do if row.option==option then return row end end
+  end
+ end
+ error('missing module control '..moduleName..':'..key)
+end
+''')
     # Exercise the actual storage implementation rather than the page fixture's
     # simplified SetRule. Merchant event dispatch is tested separately.
     vendor = (ROOT / 'Interface/AddOns/pfUI/modules/autovendor.lua').read_text(encoding='utf-8-sig')
@@ -86,10 +98,19 @@ rowName('物品 ID').input:SetText('123');click(rowName('加入保留名单'));t
 rowName('物品 ID').input:SetText('456');click(rowName('加入售卖名单'));tick()
 rowName('物品 ID').input:SetText('789');click(rowName('加入保留名单'));tick()
 click(rowName('移出保留名单'));tick()
-h:Open();current(h.all);pick('选择功能','Tooltip')
-rowName('在常用菜单中显示').input:SetChecked(nil);click(rowName('在常用菜单中显示'));tick()
+h:SelectModule('Tooltip');h:Open();current(h.all)
+assert(rowName('Text Tooltip') and rowName('Text QuestAutomation'))
+moduleRow('Tooltip','__pfui_visible').input:SetChecked(nil);click(moduleRow('Tooltip','__pfui_visible'));tick()
+assert(not moduleRow('Tooltip','__pfui_visible').input:GetChecked())
+assert(moduleRow('QuestAutomation','__pfui_visible').input:GetChecked(),'hiding one group hid another')
 rowName('Enabled Tooltip').input:SetChecked(nil);click(rowName('Enabled Tooltip'));tick()
+assert(rowName('Enabled QuestAutomation').input:GetChecked(),'toggling one group disabled another')
 rowName('Text Tooltip').input:SetText('Saved profile value')
+rowName('Text QuestAutomation').input:SetText('Separate quest value')
+local ordering=moduleRow('Tooltip','__pfui_order')
+ordering.option.buttons[1].func();h:QueueRefresh();tick()
+assert(values.Tooltip=='Saved profile value' and values.QuestAutomation=='Separate quest value')
+assert(Automaton.db.char.moduleOrder[1]=='Tooltip')
 h:OpenPage(h.general);current(h.general)
 rowName('在 pfUI 中管理自动化').input:SetChecked(nil);click(rowName('在 pfUI 中管理自动化'));tick()
 saved={config=C,automaton=Automaton.db,values=values}
@@ -108,10 +129,21 @@ assert(rowName('自动修理').input:GetChecked() and rowName('自动售卖灰�
 h:OpenPage(h.general);current(h.general)
 rowName('在 pfUI 中管理自动化').input:SetChecked(1);click(rowName('在 pfUI 中管理自动化'));tick()
 h:Open();current(h.all)
-assert(C.automation.selected=='Tooltip')
-assert(not rowName('在常用菜单中显示').input:GetChecked())
+assert(C.automation.selected=='Tooltip' and Automaton.db.char.lastModule=='Tooltip')
+assert(not moduleRow('Tooltip','__pfui_visible').input:GetChecked())
+assert(moduleRow('QuestAutomation','__pfui_visible').input:GetChecked())
 assert(not rowName('Enabled Tooltip').input:GetChecked())
+assert(rowName('Enabled QuestAutomation').input:GetChecked())
 assert(rowName('Text Tooltip').input:GetText()=='Saved profile value')
+assert(rowName('Text QuestAutomation').input:GetText()=='Separate quest value')
+assert(Automaton.db.char.moduleOrder[1]=='Tooltip')
+local groups=h:ModuleList(false);assert(groups[1].name=='Tooltip')
+pick('显示范围','菜单隐藏')
+assert(rowName('Text Tooltip').input:GetText()=='Saved profile value')
+for _,row in ipairs(parent.automationOptionsState.visible) do
+ assert(row.option.name~='Text QuestAutomation','hidden filter leaked an unrelated group')
+ assert(row.option.name~='选择功能','single-module selector returned after reload')
+end
 ''')
 
     def test_real_module_settings_survive_fresh_vm_reload(self):

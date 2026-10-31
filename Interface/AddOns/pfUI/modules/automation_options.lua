@@ -218,6 +218,7 @@ do
     state.pool[widget] = state.pool[widget] or {}
     local row = state.pool[widget][state.used[widget]] or NewRow(state, widget)
     row.option, row.disabled = opt, parentDisabled or Value(opt.disabled)
+    row.automationOffset = state.y
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", state.parent, "TOPLEFT", 5, -state.y)
     local width = math.max(180, state.parent.parent:GetRight()-state.parent.parent:GetLeft()-20)

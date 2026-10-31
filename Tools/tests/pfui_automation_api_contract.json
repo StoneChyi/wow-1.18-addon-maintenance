@@ -2026,6 +2026,21 @@
       "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
       "method": "EnableKeyboard",
       "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "SetVerticalScroll",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "GetVerticalScrollRange",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "UpdateScrollState",
+      "classification": "native_or_helper"
     }
   ],
   "globals": {
