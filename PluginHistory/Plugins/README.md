@@ -69,7 +69,7 @@
 | [AtlasLoot](AtlasLoot.md) | 早期记录，日期待确认 |
 | [AtlasQuest](AtlasQuest.md) | [2026-10-25 · 10 月 24 日原包三版本差异核对（未部署）](AtlasQuest.md#change-AtlasQuest-20261025-01) |
 | [AutoMarker](AutoMarker.md) | [2026-10-25 · 10 月 24 日原包三版本差异核对（未部署）](AutoMarker.md#change-AutoMarker-20261025-01) |
-| [Automatonex](Automatonex.md) | [2026-10-31 · 移除旧窗口嵌入并接入pfUI原生选项](Automatonex.md#change-Automatonex-20261031-02) |
+| [Automatonex](Automatonex.md) | [2026-10-31 · 将提示数据、经验统计和角色链接交接给pfUI原生流程](Automatonex.md#change-Automatonex-20261031-03) |
 | [aux-addon](aux-addon.md) | [2026-10-25 · 10 月 24 日原包三版本差异核对（未部署）](aux-addon.md#change-aux-addon-20261025-01) |
 | [Bagshui](Bagshui.md) | [2026-10-11 · 重构转入独立 QianKunBag，原插件保留](Bagshui.md#change-Bagshui-20261011-15) |
 | [BetterCharacterStats](BetterCharacterStats.md) | [2026-10-25 · 合入共享属性与本次确认的剩余新包更新](BetterCharacterStats.md#change-BetterCharacterStats-20261025-03) |
@@ -99,12 +99,12 @@
 | [OneBag](OneBag.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](OneBag.md#change-OneBag-20261030-02) |
 | [Outfitter](Outfitter.md) | 早期记录，日期待确认 |
 | [PallyPower](PallyPower.md) | 早期记录，日期待确认 |
-| [pfUI](pfUI.md) | [2026-10-31 · 自动化三页全量接口与保存路径审查](pfUI.md#change-pfUI-20261031-05) |
+| [pfUI](pfUI.md) | [2026-10-31 · 合并提示、经验统计和角色链接的实际执行流程](pfUI.md#change-pfUI-20261031-06) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](pfUI-addonskinner.md#change-pfUI-addonskinner-20261030-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | 早期记录，日期待确认 |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-10-30 · 恢复右侧首行有效商品，按实际数据控制商品与回购槽](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261030-02) |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | [2026-10-30 · 保留个人核心合入 10 月 29 日明确增量（已部署）](PizzaWorldBuffs.md#change-PizzaWorldBuffs-20261030-02) |
-| [PlayerLinkEnhance](PlayerLinkEnhance.md) | [2026-10-12 · 修复团队目标图标入口的错误对号](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261012-01) |
+| [PlayerLinkEnhance](PlayerLinkEnhance.md) | [2026-10-31 · 与pfUI共享角色链接点击动作并保留菜单能力](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261031-01) |
 | [QianKunBag](QianKunBag.md) | [2026-10-11 · 独立背包首版 0.1.0](QianKunBag.md#change-QianKunBag-20261011-01) |
 | [QuickHeal](QuickHeal.md) | [2026-10-10 · 同步内置 HealComm 预估清理修复](QuickHeal.md#change-QuickHeal-20261010-01) |
 | [RaidCheck](RaidCheck.md) | [2026-10-12 · 迁入 10 月 10 日包（已部署）](RaidCheck.md#change-RaidCheck-20261012-01) |

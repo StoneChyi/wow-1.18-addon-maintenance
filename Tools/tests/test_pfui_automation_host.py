@@ -305,4 +305,27 @@ lua.execute("local sellTimer={junk={1,2},timeSinceLast=5,Hide=function(self) sel
             "local function stop(self) "+body+" end; stop(module); "
             "assert(module.stopped and sellTimer.hidden and #sellTimer.junk==0 and sellTimer.timeSinceLast==0)")
 checks+=1
+check(r'''
+local h=pfUI.automation
+local component={title="原生测试",ready=false}
+pfUI.automationIntegrations={Tooltip=component}
+function component:Sync(enabled) self.managed=enabled;self.calls=(self.calls or 0)+1;return self.ready end
+function component:GetEnabled()return self.enabled end
+function component:SetEnabled(v)self.enabled=v end
+function component:OpenSettings()self.opened=true end
+assert(not h:Sync(),"merchant readiness must not skip unfinished fusion")
+component.ready=true;assert(h:Sync())
+for _,entry in ipairs(h:ModuleList(false))do assert(entry.name~="Tooltip")end
+h:SelectModule("Tooltip");assert(component.opened)
+Automaton:ToggleModuleActive("Tooltip",true);assert(Automaton:IsModuleActive("Tooltip"))
+assert(Automaton.db.char.disabledModules.Tooltip==nil,"fusion altered legacy intent")
+Automaton:ToggleModuleActive("Tooltip",false);assert(not Automaton:IsModuleActive("Tooltip"))
+assert(AutomatonPfUIBridge:SavedActive("Tooltip"))
+Automaton.db.char.moduleOrder={"Tooltip","ExpBar","InterPlayerLink"}
+h:MoveModule("ExpBar",1)
+assert(Automaton.db.char.moduleOrder[3]=="Tooltip","reordering dropped integrated fallback entry")
+local o=h:GeneralOptions();assert(o.native_Tooltip)
+C.automation.enabled="0";assert(h:Sync());assert(not component.managed)
+assert(Automaton:IsModuleActive("Tooltip"),"fallback did not restore original intent")
+''',True)
 print(f"pfUI automation host: {checks} native navigation/lifecycle scenarios passed")

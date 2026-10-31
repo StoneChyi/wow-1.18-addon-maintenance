@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 253,
+  "dated_records": 256,
   "addons": [
     {
       "addon": "!Libs",
@@ -272,10 +272,19 @@
       "purpose": "完善模块配置、物品监控及与其他界面的协作。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "移除旧窗口嵌入并接入pfUI原生选项",
+      "latest_record_title": "将提示数据、经验统计和角色链接交接给pfUI原生流程",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 9,
+      "record_count": 10,
       "records": [
+        {
+          "id": "Automatonex-20261031-03",
+          "date": "2026-10-31",
+          "title": "将提示数据、经验统计和角色链接交接给pfUI原生流程",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-Automatonex-20261031-03"
+        },
         {
           "id": "Automatonex-20261031-02",
           "date": "2026-10-31",
@@ -1914,11 +1923,20 @@
       "note": "PluginHistory/Plugins/PlayerLinkEnhance.md",
       "purpose": "保持头像菜单紧凑分组，修复团队目标图标入口误勾选。",
       "history_group": "modified",
-      "latest_record_date": "2026-10-12",
-      "latest_record_title": "修复团队目标图标入口的错误对号",
+      "latest_record_date": "2026-10-31",
+      "latest_record_title": "与pfUI共享角色链接点击动作并保留菜单能力",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 1,
+      "record_count": 2,
       "records": [
+        {
+          "id": "PlayerLinkEnhance-20261031-01",
+          "date": "2026-10-31",
+          "title": "与pfUI共享角色链接点击动作并保留菜单能力",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-PlayerLinkEnhance-20261031-01"
+        },
         {
           "id": "PlayerLinkEnhance-20261012-01",
           "date": "2026-10-12",
@@ -3107,10 +3125,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "自动化三页全量接口与保存路径审查",
+      "latest_record_title": "合并提示、经验统计和角色链接的实际执行流程",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 31,
+      "record_count": 32,
       "records": [
+        {
+          "id": "pfUI-20261031-06",
+          "date": "2026-10-31",
+          "title": "合并提示、经验统计和角色链接的实际执行流程",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261031-06"
+        },
         {
           "id": "pfUI-20261031-05",
           "date": "2026-10-31",

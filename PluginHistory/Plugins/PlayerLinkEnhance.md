@@ -12,11 +12,29 @@
 
 ## 当前维护摘要
 
+2026-10-31 角色链接点击委托pfUI统一处理，保留邀请弹窗填名、Who、Ctrl目标、Alt取名、右键菜单与私聊；pfUI不运行时使用原路径。待游戏验收。
+
 保持头像菜单紧凑分组，修复团队目标图标入口误勾选。
 
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-PlayerLinkEnhance-20261031-01"></a>
+
+### 2026-10-31｜与pfUI共享角色链接点击动作并保留菜单能力
+
+- 记录编号：`PlayerLinkEnhance-20261031-01`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：pfUI、InterPlayerLink和本插件均处理SetItemRef，当前角色启用组合存在同功能拦截，并可能让聊天插入抢占好友／邀请弹窗填名。
+- 修改内容：ple_SetItemRef优先调用pfUI共享角色动作处理器；处理器完整保留原独有分支，Shift先尝试好友／忽略／公会／团队弹窗，再处理聊天链接或Who，且统一去除角色链接的行号后缀。pfUI未加载／未就绪时回到原逻辑，非角色链接继续原调用链。
+- 保留范围：原头像右键菜单、权限判断、紧凑分组、助理／分配者操作及其他业务代码不改；没有停用整个插件。
+- 涉及文件：`Interface/AddOns/PlayerLinkEnhance/PlayerLinkEnhance.lua`；关联pfUI `chat_playerlinks.lua`、`chat.lua`及Automaton InterPlayerLink。
+- 检查结果：10项新角色链接融合测试通过，覆盖两种加载顺序、4类弹窗优先、中文名和后缀、单次插入、各修饰键动作、配置迁移与独立回退；既有菜单10组和归档回归通过，生产Lua5.0编译通过。尚未游戏验收。
+- 关联：[pfUI](pfUI.md)、[Automatonex](Automatonex.md)、[融合测试](../../Tools/tests/test_pfui_playerlinks_fusion.py)、[菜单回归](../../Tools/tests/test_playerlink_menu_checks.py)。
 
 <a id="change-PlayerLinkEnhance-20261012-01"></a>
 

@@ -40,6 +40,10 @@ function A:IsModuleActive(module)
   if B.leases[name] then
     return pfUI_config and pfUI_config.global and pfUI_config.global[flags[name]] == "1"
   end
+  local integration = pfUI and pfUI.automationIntegrations and pfUI.automationIntegrations[name]
+  if integration and (integration.managed or integration.active) and integration.GetEnabled then
+    return integration:GetEnabled()
+  end
   return originalActive(self, module)
 end
 function A:ToggleModuleActive(module, state)
@@ -48,6 +52,12 @@ function A:ToggleModuleActive(module, state)
     if state == nil then state = not self:IsModuleActive(module) end
     pfUI_config.global[flags[name]] = state and "1" or "0"
     B:Stop(name)
+    return state
+  end
+  local integration = pfUI and pfUI.automationIntegrations and pfUI.automationIntegrations[name]
+  if integration and (integration.managed or integration.active) and integration.GetEnabled and integration.SetEnabled then
+    if state == nil then state = not integration:GetEnabled() end
+    integration:SetEnabled(state)
     return state
   end
   return originalToggle(self, module, state)

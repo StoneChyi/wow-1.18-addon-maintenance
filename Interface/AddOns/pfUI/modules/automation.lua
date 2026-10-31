@@ -29,6 +29,10 @@ pfUI:RegisterModule("automation", "vanilla", function()
   end
   function host:IsReady() return Automaton and Automaton.db and Automaton.db.char and Automaton.modules end
   function host:Sync()
+    local integrationsReady = true
+    for _, integration in pairs(pfUI.automationIntegrations or {}) do
+      if integration.Sync and integration:Sync(self:IsEnabled()) == false then integrationsReady = false end
+    end
     local bridge = _G.AutomatonPfUIBridge
     if not bridge then return false end
     if not self:IsEnabled() then
@@ -37,7 +41,7 @@ pfUI:RegisterModule("automation", "vanilla", function()
     end
     local ready = bridge:Acquire(self)
     if Automaton and Automaton.mainFrame then Automaton.mainFrame:Hide() end
-    return ready
+    return ready and integrationsReady
   end
   function host:QueueRefresh()
     self.refreshPending = true
@@ -56,6 +60,10 @@ pfUI:RegisterModule("automation", "vanilla", function()
   function host:Open() self:OpenPage(self.all) end
   function host:OpenVendor() self:OpenPage(self.merchant) end
   function host:SelectModule(name)
+    local integration = pfUI.automationIntegrations and pfUI.automationIntegrations[name]
+    if integration and (integration.managed or integration.active) and integration.OpenSettings then
+      return integration:OpenSettings()
+    end
     if name == "Repair" or name == "Sell" then self:OpenVendor(); return end
     self:Config().selected = name
     if self:IsReady() then
@@ -70,7 +78,9 @@ pfUI:RegisterModule("automation", "vanilla", function()
     for i, name in ipairs(Automaton.db.char.moduleOrder or {}) do ranks[name] = i end
     local query = string.lower(input.query)
     for name, module in pairs(Automaton.modules) do
-      if type(module._options) == "table" and name ~= "Repair" and name ~= "Sell" then
+      local integration = pfUI.automationIntegrations and pfUI.automationIntegrations[name]
+      local integrated = integration and (integration.managed or integration.active)
+      if type(module._options) == "table" and not integrated and name ~= "Repair" and name ~= "Sell" then
         local show = true
         if filtered then
           local text = string.lower(name .. " " .. (module.modulename or "") .. " " .. (module.moduledesc or ""))
@@ -102,7 +112,16 @@ pfUI:RegisterModule("automation", "vanilla", function()
         local order = {}
         for _, item in ipairs(list) do table.insert(order, item.name) end
         -- Merchant modules still exist in the independent fallback list.
-        table.insert(order, "Repair"); table.insert(order, "Sell")
+        for _, prior in ipairs(Automaton.db.char.moduleOrder or {}) do
+          local found
+          for _, current in ipairs(order) do if current == prior then found = true; break end end
+          if not found then table.insert(order, prior) end
+        end
+        for _, name in ipairs({ "Repair", "Sell" }) do
+          local found
+          for _, current in ipairs(order) do if current == name then found = true; break end end
+          if not found then table.insert(order, name) end
+        end
         Automaton.db.char.moduleOrder = order
         return
       end
@@ -131,6 +150,16 @@ pfUI:RegisterModule("automation", "vanilla", function()
       options.fallback = Description("统一管理已关闭。工具箱恢复原来的商人开关；新售卖名单仍保留在 pfUI。", 7)
       options.open = { type = "execute", name = "打开独立工具箱", order = 8,
         func = function() if Automaton then Automaton:ToggleMainWindow() end end }
+    end
+    local names = {}
+    for name, integration in pairs(pfUI.automationIntegrations or {}) do
+      if (integration.managed or integration.active) and integration.OpenSettings then table.insert(names, name) end
+    end
+    table.sort(names)
+    for i, name in ipairs(names) do
+      local integration = pfUI.automationIntegrations[name]
+      options["native_" .. name] = { type = "execute", name = integration.title or name, order = 10+i,
+        desc = "已经合入 pfUI 对应功能，在原生页面设置。", func = function() integration:OpenSettings() end }
     end
     return options
   end

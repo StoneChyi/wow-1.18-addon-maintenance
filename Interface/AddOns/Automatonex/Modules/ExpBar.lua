@@ -66,6 +66,8 @@ function Automaton_ExpBar:OnInitialize()
 end
 
 function Automaton_ExpBar:OnEnable()
+    local managed = pfUI and pfUI.automationIntegrations and pfUI.automationIntegrations.ExpBar
+    if managed and managed:IsManaged() then self:OnDisable(); return end
     if not expContainer then
         self:CreateExpBar()
     end
@@ -229,6 +231,8 @@ function Automaton_ExpBar:SavePosition()
 end
 
 function Automaton_ExpBar:ResetPosition()
+    local managed = pfUI and pfUI.automationIntegrations and pfUI.automationIntegrations.ExpBar
+    if managed and managed:IsManaged() then pfUI.xpbar:ResetPosition(); return end
     self.db.profile.position = {
         point = "TOP",
         relativePoint = "TOP",

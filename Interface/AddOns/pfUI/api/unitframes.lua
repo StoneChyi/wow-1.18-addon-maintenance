@@ -2235,7 +2235,8 @@ function pfUI.uf.OnEnter()
   if this.hoverglow and (this.config.hoverglow == nil or this.config.hoverglow == "1") then
     this.hoverglow:Show()
   end
-  if this.config.showtooltip == "0" then return end
+  if this.config.showtooltip == "0" and not (pfUI.tooltip and pfUI.tooltip.ForceUnitTooltip
+    and pfUI.tooltip:ForceUnitTooltip()) then return end
   GameTooltip_SetDefaultAnchor(GameTooltip, this)
   GameTooltip:SetUnit(this.label .. this.id)
   GameTooltip:Show()

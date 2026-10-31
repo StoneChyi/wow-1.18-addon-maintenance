@@ -6,6 +6,7 @@
   <Include file="..\modules\actionbar.lua"/>
   <Include file="..\modules\gryphons.lua"/>
   <Include file="..\modules\hunterbar.lua"/>
+  <Include file="..\modules\chat_playerlinks.lua"/>
   <Include file="..\modules\chat.lua"/>
   <Include file="..\modules\chatrepeatfilter.lua"/>
   <Include file="..\modules\whisperproxy.lua"/>
@@ -85,5 +86,6 @@
   <Include file="..\modules\unitxp.lua"/>
   <Include file="..\modules\bgscore.lua"/>
   <Include file="..\modules\automation_options.lua"/>
+  <Include file="..\modules\tooltip_extensions.lua"/>
   <Include file="..\modules\automation.lua"/>
 </Ui>

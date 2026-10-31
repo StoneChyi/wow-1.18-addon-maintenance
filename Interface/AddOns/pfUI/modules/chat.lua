@@ -400,12 +400,14 @@ pfUI:RegisterModule("chat", "vanilla:tbc", function ()
   end)
 
   pfUI.chat.urlcopy.SetItemRef = SetItemRef
+  pfUI.chatPlayerLinks.ready = true
   pfUI.chat.urlcopy.CopyText = function(text)
     pfUI.chat.urlcopy.text:SetText(text)
     pfUI.chat.urlcopy:Show()
   end
 
   function _G.SetItemRef(link, text, button)
+    if pfUI.chatPlayerLinks:Handle(link, text, button) then return end
     if (strsub(link, 1, 3) == "url") then
       if string.len(link) > 4 and string.sub(link,1,4) == "url:" then
         pfUI.chat.urlcopy.CopyText(string.sub(link,5, string.len(link)))
@@ -1283,25 +1285,7 @@ pfUI:RegisterModule("chat", "vanilla:tbc", function ()
     end
   end
 
-  -- create playerlinks on shift-click
-  if C.chat.text.playerlinks == "1" then
-    local pfHookSetItemRef = SetItemRef
-    _G.SetItemRef = function(link, text, button)
-      if ( strsub(link, 1, 6) == "player" ) then
-        local name = strsub(link, 8)
-        if ( name and (strlen(name) > 0) ) then
-          local name, _ = strsplit(":", name)
-          name = gsub(name, "([^%s]*)%s+([^%s]*)%s+([^%s]*)", "%3")
-          name = gsub(name, "([^%s]*)%s+([^%s]*)", "%2")
-          if IsShiftKeyDown() and ChatFrameEditBox:IsVisible() then
-            ChatFrameEditBox:Insert("|cffffffff|Hplayer:"..name.."|h["..name.."]|h|r")
-            return
-          end
-        end
-      end
-      pfHookSetItemRef(link, text, button)
-    end
-  end
+  -- Player clicks share the URL dispatcher above; no second SetItemRef hook.
 
   -- ===== 新增：手动对齐斜杠命令 =====
   SLASH_PFALIGNCHAT1 = "/alignchat"

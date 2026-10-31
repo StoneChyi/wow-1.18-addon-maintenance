@@ -26,6 +26,7 @@ function Automaton_InterPlayerLink:OnInitialize()
 end
 
 function Automaton_InterPlayerLink:OnEnable()
+    if pfUI and pfUI.chatPlayerLinks and pfUI.chatPlayerLinks.managed then return end
     self:Hook("SetItemRef")
 end
 
@@ -42,7 +43,8 @@ function Automaton_InterPlayerLink:SetItemRef(link, text, button)
     if playerlink then
         local name = strsub(link, 8)
         if (name and (strlen(name) > 0)) then
-            name = string.match(name, "([^:]+)")
+            local _, _, playerName = string.find(name, "([^:]+)")
+            name = playerName or name
             name = gsub(name, "([^%s]*)%s+([^%s]*)%s+([^%s]*)", "%3")
             name = gsub(name, "([^%s]*)%s+([^%s]*)", "%2")
             if IsShiftKeyDown() and ChatFrameEditBox:IsVisible() then

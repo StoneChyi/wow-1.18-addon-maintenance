@@ -85,7 +85,8 @@ pfUI:RegisterModule("tooltip", "vanilla", function ()
       -- ⛔ 1.12 引擎只给 OnUpdate 传一个参数 elapsed ⇒ 不能写 function(self, elapsed)
       --   （self 会吃掉 elapsed，self:GetFacing() 变成对数字取索引、每帧报错）。
       --   按注意事项第 10 条：直接引用闭包里已创建的 frame 对象 modelFrame，不用 self。
-      modelFrame:SetScript("OnUpdate", function(elapsed)
+      modelFrame:SetScript("OnUpdate", function(first, second)
+        local elapsed = type(first) == "number" and first or tonumber(second) or tonumber(arg1) or 0
         elapsed = elapsed or 0.016
         modelLastUpdate = modelLastUpdate + elapsed
         if modelLastUpdate >= 0.016 then
@@ -225,6 +226,10 @@ pfUI:RegisterModule("tooltip", "vanilla", function ()
 
   local units = { "mouseover", "player", "pet", "target", "party", "partypet", "raid", "raidpet" }
   function pfUI.tooltip:GetUnit()
+    if libtooltip.kind then
+      if libtooltip.kind == "SetUnit" and libtooltip.unit and UnitExists(libtooltip.unit) then return libtooltip.unit end
+      return "none"
+    end
     pfUI.tooltip.unit = "none"
 
     for i, unit in pairs(units) do
@@ -528,10 +533,18 @@ pfUI:RegisterModule("tooltip", "vanilla", function ()
   end
 
   function pfUI.tooltip:Update()
+      if libtooltip.setting or self.updating then return end
+      self.updating = true
+      local ok, err = pcall(self.UpdateContent, self)
+      self.updating = nil
+      if not ok then error(err) end
+  end
+  function pfUI.tooltip:UpdateContent()
+      if self.ShouldHideContent and self:ShouldHideContent() then GameTooltip:Hide();return end
       local unit = pfUI.tooltip:GetUnit()
       if unit == "none" then
         -- process item tooltips
-        if C.tooltip.itemid == "1" and libtooltip:GetItemID() then
+        if C.tooltip.itemid == "1" and libtooltip:GetItemID() and not (self.ItemIDHandledElsewhere and self:ItemIDHandledElsewhere()) then
           GameTooltip:AddLine(T["ItemID"] .. ": " .. libtooltip:GetItemID(), .25,.5,1)
           GameTooltip:Show()
         end
@@ -565,6 +578,7 @@ pfUI:RegisterModule("tooltip", "vanilla", function ()
             GameTooltipTextLeft1:SetText(text .. labelText)
           end
         end
+        if self.RenderExtension then self:RenderExtension(nil) end
         -- 隐藏模型（非玩家单位）
         HideModel()
         -- 非单位提示（物品 / 招牌 / 信箱…）：收起能量条并让生命条贴回提示框
@@ -647,6 +661,7 @@ pfUI:RegisterModule("tooltip", "vanilla", function ()
       -- 能量条：显隐 + 数值（逻辑抽到 UpdateBars，供 OnUpdate 的内容签名守门复用）
       pfUI.tooltip:UpdateBars(unit)
 
+      if self.RenderExtension then self:RenderExtension(unit) end
       -- 显示 3D 模型（人物像）
       ShowModelForUnit(unit)
 
@@ -658,10 +673,11 @@ pfUI:RegisterModule("tooltip", "vanilla", function ()
   -- 第一行文本的"签名"：它一变，就说明提示框内容已被换掉，需要重新确认能量条的归属
   local lastTipSig
   -- ⛔ 1.12 OnUpdate 只有一个参数 elapsed，不能写 function(self, elapsed)
-  --  （self=elapsed、elapsed=nil）。原链调用改为只透传 elapsed（与引擎行为一致）。
-  GameTooltip:SetScript("OnUpdate", function(elapsed)
+  -- 兼容旧版elapsed与适配层(frame,elapsed)，原链按收到的参数透传。
+  GameTooltip:SetScript("OnUpdate", function(first, second)
+    local elapsed = type(first) == "number" and first or tonumber(second) or tonumber(arg1) or 0
     if originalOnUpdate then
-      originalOnUpdate(elapsed)
+      originalOnUpdate(first, second)
     end
     OnTooltipUpdate()
 

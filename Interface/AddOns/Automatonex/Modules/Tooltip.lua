@@ -177,6 +177,7 @@ function Automaton_Tooltip:OnInitialize()
         showPetExp = true,
         cursorScale = 1.0,  -- 默认光标大小
         hideInCombat = false, -- 战斗隐藏提示默认关闭
+        forceUnitTooltip = true,
         showFrameName = false, -- 框架显示默认关闭
     })
     Automaton:SetDisabledAsDefault(self, "Automaton_Tooltip")
@@ -191,271 +192,46 @@ function Automaton_Tooltip:OnInitialize()
     end
 
     -- 初始化战斗隐藏提示相关
-    self:InitCombatHideTooltip()
+    -- Event and rendering ownership is installed only when the module is enabled.
 end
 
 ------------------------------
 --      战斗隐藏提示核心逻辑      --
 ------------------------------
 function Automaton_Tooltip:ShouldHideTooltip()
-    -- 未启用战斗隐藏功能 或 非战斗状态 → 不隐藏
-    if not self.db.profile.hideInCombat or inCombat == 0 then
-        return nil
-    end
-
-    -- 按住Shift → 不隐藏
-    if IsShiftKeyDown() then
-        return nil
-    end
-
-    -- 满足隐藏条件
-    return 1
+    return self.active and self.db.profile.hideInCombat and inCombat == 1 and not IsShiftKeyDown()
 end
-
 function Automaton_Tooltip:HideTooltipIfNeeded()
-    if self:ShouldHideTooltip() then
-        GameTooltip:Hide()
-        return 1
+    if self:ShouldHideTooltip() then GameTooltip:Hide();return true end
+end
+function Automaton_Tooltip:PLAYER_REGEN_DISABLED() inCombat=1;self:HideTooltipIfNeeded() end
+function Automaton_Tooltip:PLAYER_REGEN_ENABLED() inCombat=0 end
+function Automaton_Tooltip:MODIFIER_STATE_CHANGED()
+    if inCombat==1 and self.db.profile.hideInCombat and (arg1=="LSHIFT" or arg1=="RSHIFT") then
+        if not IsShiftKeyDown() then GameTooltip:Hide()
+        elseif UnitExists("mouseover") then GameTooltip:SetUnit("mouseover") end
     end
 end
-
-function Automaton_Tooltip:HookTooltipMethod(methodName)
-    local original = GameTooltip[methodName]
-
-    if type(original) ~= "function" then
-        return
-    end
-
-    GameTooltip[methodName] = function(...)
-        if self:HideTooltipIfNeeded() then
-            return
-        end
-
-        -- Lua 5.0: unpack(arg) 遇 nil 截断，用 arg.n 完整透传（含中间 nil）
-        local ok, r1, r2, r3 = pcall(original, unpack(arg, 1, arg.n or 0))
-        if not ok then
-            -- 引擎拒绝该调用（如 SetAction(nil)）：打出真正调用者的栈，不再抛错误弹窗
-            if DEFAULT_CHAT_FRAME then
-                DEFAULT_CHAT_FRAME:AddMessage("|cffff5555AUTTIP|r " .. tostring(methodName) .. " blocked: " .. tostring(r1))
-                DEFAULT_CHAT_FRAME:AddMessage("|cffff5555AUTTIP STK|r " .. tostring(debugstack(2, 12, 300)))
-            end
-            return
-        end
-        return r1, r2, r3
-    end
-end
-
-function Automaton_Tooltip:InitCombatHideTooltip()
-    -- Hook OnShow 脚本
-    local originalOnShow = GameTooltip:GetScript("OnShow")
-    GameTooltip:SetScript("OnShow", function()
-        if self:HideTooltipIfNeeded() then
-            return
-        end
-
-        if originalOnShow then
-            originalOnShow()
-        end
-    end)
-
-    -- Hook 所有Tooltip方法
-    self:HookTooltipMethod("SetUnit")
-    self:HookTooltipMethod("SetAction")
-    self:HookTooltipMethod("SetBagItem")
-    self:HookTooltipMethod("SetInventoryItem")
-    self:HookTooltipMethod("SetLootItem")
-    self:HookTooltipMethod("SetLootRollItem")
-    self:HookTooltipMethod("SetMerchantItem")
-    self:HookTooltipMethod("SetPetAction")
-    self:HookTooltipMethod("SetQuestItem")
-    self:HookTooltipMethod("SetQuestLogItem")
-    self:HookTooltipMethod("SetShapeshift")
-    self:HookTooltipMethod("SetSpell")
-    self:HookTooltipMethod("SetTrackingSpell")
-    self:HookTooltipMethod("SetTradeSkillItem")
-    self:HookTooltipMethod("SetTradePlayerItem")
-    self:HookTooltipMethod("SetTradeTargetItem")
-
-    -- 注册战斗相关事件
+function Automaton_Tooltip:OnEnable()
+    self.active = true
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
-    self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
     self:RegisterEvent("MODIFIER_STATE_CHANGED")
-end
-
-------------------------------
---      战斗事件处理      --
-------------------------------
-function Automaton_Tooltip:PLAYER_REGEN_DISABLED()
-    inCombat = 1
-    self:HideTooltipIfNeeded()
-end
-
-function Automaton_Tooltip:PLAYER_REGEN_ENABLED()
-    inCombat = 0
-end
-
-function Automaton_Tooltip:UPDATE_MOUSEOVER_UNIT()
-    -- 增强已由 GameTooltip.SetUnit 钩子处理，此处调用以确保鼠标悬停时也生效
-    self:EnhanceUnitTooltip("mouseover")
-    -- 战斗中检查是否需要隐藏
-    self:HideTooltipIfNeeded()
-end
-
-function Automaton_Tooltip:MODIFIER_STATE_CHANGED()
-    if inCombat == 1 and self.db.profile.hideInCombat then
-        if arg1 == "LSHIFT" or arg1 == "RSHIFT" then
-            if arg2 == 0 then
-                GameTooltip:Hide()
-            elseif UnitExists("mouseover") then
-                GameTooltip:SetUnit("mouseover")
-            end
-        end
-    end
-end
-
-function Automaton_Tooltip:OnEnable()
-    self:HookScript(self.f, "OnShow")
-    self:HookScript(self.f, "OnHide")
-    self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-    
-    -- 钩子法术相关提示函数
-    self:HookSpellTooltipFunctions()
-
-    -- 钩住 GameTooltip.SetUnit 以便在所有框架上显示增强信息
-    local oldSetUnit = GameTooltip.SetUnit
-    function GameTooltip.SetUnit(self, unit)
-        oldSetUnit(self, unit)
-        -- 模块已启用时才增强 (检查 disabled 标志)
-        if Automaton_Tooltip.db and not Automaton_Tooltip.db.profile.disabled then
-            Automaton_Tooltip:EnhanceUnitTooltip(unit)
-        end
-    end
-    Automaton_Tooltip.oldSetUnit = oldSetUnit
-
-    -- 强制PFUI框架显示tooltip
-    -- ⚠ 1.12 修正（2026-09-07）：WoW 1.12 脚本回调不传 self（帧在全局 this 里）。
-    -- 旧写法 function(self) if not self then return end 的 self 恒为 nil，被引擎
-    -- 调用时直接 return，整个 OnEnter（tooltip/hoverglow/SetMouseoverUnit）全部
-    -- 失效。触发路径：运行时改 raidlayout → pfUI 每帧 UpdateConfig 末尾的
-    -- EnableScripts() 会把"当时的" pfUI.uf.OnEnter（即本包装版）重新 SetScript
-    -- 到团队框上 → 悬停团队框 tooltip 消失。/reload 时团队框先于本模块 OnEnable
-    -- 创建，注册的是原版 OnEnter，所以只有运行时路径坏、/rl 能恢复。
-    -- 修复：改为无参形式，通过全局 this 取帧；其余逻辑不变。
-    if pfUI and pfUI.uf and pfUI.uf.OnEnter then
-        local oldOnEnter = pfUI.uf.OnEnter
-        pfUI.uf.OnEnter = function()
-            oldOnEnter()                         -- 原函数内部读全局 this
-            if this and this.label and type(this.config) == "table" and this.config.showtooltip == "0" then
-                GameTooltip_SetDefaultAnchor(GameTooltip, this)
-                GameTooltip:SetUnit(this.label .. this.id)
-                GameTooltip:Show()
-            end
-        end
-        self.savedOnEnter = oldOnEnter
-    end
-
-    -- 应用光标大小
-    if SetCursorScale then
-        SetCursorScale(self.db.profile.cursorScale or 1.0)
-    end
-
-    -- 框架显示：按配置启动/停止焦点轮询
+    if UnitAffectingCombat and UnitAffectingCombat("player") then inCombat=1 else inCombat=0 end
+    if not self.pfUIManaged then self:InstallStandaloneHooks() end
+    if SetCursorScale then SetCursorScale(self.db.profile.cursorScale or 1) end
     self:UpdateFrameWatcher()
 end
-
 function Automaton_Tooltip:OnDisable()
-    -- 恢复 GameTooltip.SetUnit 原函数
-    if Automaton_Tooltip.oldSetUnit then
-        GameTooltip.SetUnit = Automaton_Tooltip.oldSetUnit
-        Automaton_Tooltip.oldSetUnit = nil
-    end
-
-    -- 恢复 PFUI OnEnter 原函数
-    if self.savedOnEnter then
-        pfUI.uf.OnEnter = self.savedOnEnter
-        self.savedOnEnter = nil
-    end
-
-    self.f:Hide()
-    self:UnhookAll()
+    self.active = nil
     self:UnregisterAllEvents()
-
-    -- 停止框架显示轮询
-    if self.frameWatcher then
-        self.frameWatcher.lastFocus = nil
-        self.frameWatcher:Hide()
-    end
-
-    -- 恢复光标大小为默认值（可选）
-    if SetCursorScale then
-        SetCursorScale(1.0)
-    end
+    if self.frameWatcher then self.frameWatcher:Hide();self.frameWatcher.lastFocus=nil end
+    if SetCursorScale then SetCursorScale(1) end
 end
-
--- 钩子法术相关提示函数
-function Automaton_Tooltip:HookSpellTooltipFunctions()
-    -- 检查 SuperWoW 是否加载（必需依赖）
-    if not GetPlayerBuffID then
-        -- 可选：若选项已开启，自动关闭并提示
-        if self.db and self.db.profile and self.db.profile.showspellid then
-            self.db.profile.showspellid = false
-            -- 如果有打印函数可输出提示，例如：
-            -- Automaton:Print("|cffff0000[Tooltip]|r 未检测到 SuperWoW，法术ID显示功能已禁用。")
-        end
-        return
-    end
-    -- 处理玩家BUFF
-    local HookSetPlayerBuff = GameTooltip.SetPlayerBuff
-    function GameTooltip.SetPlayerBuff(self, index)
-        HookSetPlayerBuff(self, index)
-        if Automaton_Tooltip.db.profile.showspellid then
-            local spellId = GetPlayerBuffID(index)
-            if spellId then
-                GameTooltip:AddDoubleLine("法术ID：", spellId)
-                GameTooltip:Show()
-            end
-        end
-    end
-
-    -- 处理玩家DEBUFF
-    local HookSetPlayerDebuff = GameTooltip.SetPlayerDebuff
-    function GameTooltip.SetPlayerDebuff(self, index)
-        HookSetPlayerDebuff(self, index)
-        if Automaton_Tooltip.db.profile.showspellid then
-            local _, _, _, spellId = UnitDebuff("player", index)
-            if spellId then
-                GameTooltip:AddDoubleLine("法术ID：", spellId)
-                GameTooltip:Show()
-            end
-        end
-    end
-
-    -- 处理单位BUFF
-    local HookSetUnitBuff = GameTooltip.SetUnitBuff
-    function GameTooltip.SetUnitBuff(self, unit, index)
-        HookSetUnitBuff(self, unit, index)
-        if Automaton_Tooltip.db.profile.showspellid then
-            local _, _, _, _, _, _, spellId = UnitBuff(unit, index)
-            if spellId then
-                GameTooltip:AddDoubleLine("法术ID：", spellId)
-                GameTooltip:Show()
-            end
-        end
-    end
-
-    -- 处理单位DEBUFF
-    local HookSetUnitDebuff = GameTooltip.SetUnitDebuff
-    function GameTooltip.SetUnitDebuff(self, unit, index)
-        HookSetUnitDebuff(self, unit, index)
-        if Automaton_Tooltip.db.profile.showspellid then
-            local _, _, _, _, _, _, spellId = UnitDebuff(unit, index)
-            if spellId then
-                GameTooltip:AddDoubleLine("法术ID：", spellId)
-                GameTooltip:Show()
-            end
-        end
-    end
+function Automaton_Tooltip:SetPfUIManaged(enabled)
+    self.pfUIManaged = enabled and true or nil
+    if self.f then self.f:Hide() end
+    if not enabled and self.active then self:InstallStandaloneHooks() end
 end
 
 -- 检查物品是否在愿望列表中
@@ -480,22 +256,6 @@ function Automaton_Tooltip:IsItemInWishList(itemId)
     return false
 end
 
-function Automaton_Tooltip:OnHide(object)
-    GameTooltip.itemLink = nil
-    GameTooltip.itemCount = nil
-    self.hooks[self.f]["OnHide"](self.f, object)
-end
-
-function Automaton_Tooltip:OnShow(object)
-    if self:FormatItemTooltip(GameTooltip) then
-        return
-    else
-        self.hooks[self.f]["OnShow"](self.f, object)
-        if UnitExists("mouseover") then return end
-        self:ShowObj()
-    end
-end
-
 -- 框架显示：轮询 GetMouseFocus()，焦点变化时在聊天框输出框架名称
 -- 等价于宏 /run local f = GetMouseFocus() if f and f.GetName then local n = f:GetName() print(n or "无名对象") end
 -- 不依赖 tooltip 是否弹出（很多插件按钮不触发提示框），无名对象也照常显示
@@ -515,12 +275,13 @@ function Automaton_Tooltip:PrintFrameName(f)
 end
 
 function Automaton_Tooltip:UpdateFrameWatcher()
-    if self.db.profile.showFrameName then
+    if self.active and self.db.profile.showFrameName then
         if not self.frameWatcher then
             self.frameWatcher = CreateFrame("Frame", "AutomatonTooltipFrameWatcher", UIParent)
             self.frameWatcher.elapsed = 0
             self.frameWatcher:SetScript("OnUpdate", function()
-                this.elapsed = this.elapsed + arg1
+                local elapsed = type(arg1) == "number" and arg1 or 0
+                this.elapsed = this.elapsed + elapsed
                 if this.elapsed < 0.2 then return end
                 this.elapsed = 0
                 local f = GetMouseFocus()
@@ -845,7 +606,7 @@ function Automaton_Tooltip:FormatItemTooltip(tooltip)
     if not tooltip.itemLink then return end
 
     tooltip.itemCount = IsShiftKeyDown() and tooltip.itemCount or 1
-    local _, _, itemId = strfind(tooltip.itemLink, ".*item:(%d+):[%d:]+|h%[(.+)%]|h|.*")
+    local _, _, itemId = strfind(tooltip.itemLink, "item:(%d+)")
     if not itemId then return end
 
     local showing = false
@@ -868,62 +629,64 @@ function Automaton_Tooltip:FormatItemTooltip(tooltip)
     return showing
 end
 
--- 钩子函数，用于获取物品链接
-local HookSetHyperlink = GameTooltip.SetHyperlink
-function GameTooltip.SetHyperlink(self, itemstring)
-    if not itemstring then return end
-    local name, linkstr, quality = GetItemInfo(itemstring)
-    if name then
-        local hex = select(4, GetItemQualityColor(quality))
-        GameTooltip.itemLink = hex .. '|H' .. itemstring .. '|h[' .. name .. ']|h' .. FONT_COLOR_CODE_CLOSE
-        
-        -- 替换原有的物品数量获取方式：通过遍历背包获取数量
-        local itemCount = 0
-        -- 遍历所有背包容器（0-4为背包，5-11为银行，这里只算背包）
-        for container = 0, 4 do
-            -- 遍历容器内所有槽位
-            for slot = 1, GetContainerNumSlots(container) do
-                local itemLink = GetContainerItemLink(container, slot)
-                if itemLink and itemLink == linkstr then
-                    -- 获取该槽位的物品数量并累加
-                    local count = select(2, GetContainerItemInfo(container, slot))
-                    itemCount = itemCount + (count or 0)
-                end
-            end
-        end
-        GameTooltip.itemCount = itemCount
+-- Standalone fallback is installed once. Wrappers remain inert when pfUI owns
+-- content, so re-enabling never multiplies hooks or unhooks another addon.
+function Automaton_Tooltip:InstallStandaloneHooks()
+    if self.standaloneInstalled then return end
+    self.standaloneInstalled = true
+    local provider = self
+    local tip = GameTooltip
+    local function Pack(...) return arg end
+    local function UnpackRange(values, first, last)
+      if first <= last then return values[first], UnpackRange(values, first+1, last) end
     end
-    return HookSetHyperlink(self, itemstring)
+    local readers = {
+      SetHyperlink=function(a) return a end,
+      SetBagItem=function(a,b) return GetContainerItemLink(a,b) end,
+      SetInventoryItem=function(a,b) return GetInventoryItemLink(a,b) end,
+      SetQuestItem=function(a,b) return GetQuestItemLink(a,b) end,
+      SetQuestLogItem=function(a,b) return GetQuestLogItemLink(a,b) end,
+      SetLootItem=function(a) return GetLootSlotLink(a) end,
+    }
+    local methods={"SetUnit","SetHyperlink","SetBagItem","SetInventoryItem","SetQuestItem","SetQuestLogItem","SetLootItem",
+      "SetAction","SetLootRollItem","SetMerchantItem","SetPetAction","SetShapeshift","SetSpell","SetTrackingSpell",
+      "SetTradeSkillItem","SetTradePlayerItem","SetTradeTargetItem","SetPlayerBuff","SetPlayerDebuff","SetUnitBuff","SetUnitDebuff"}
+    local function Install(method)
+      local original=tip[method]
+      if type(original)~="function" then return end
+      tip[method]=function(...)
+        if not provider.active or provider.pfUIManaged or provider.setting then return original(UnpackRange(arg,1,arg.n)) end
+        if provider:HideTooltipIfNeeded() then return end
+        provider.setting=true
+        tip.itemLink=nil
+        if readers[method] then tip.itemLink=readers[method](arg[2],arg[3]) end
+        local result=Pack(pcall(original,UnpackRange(arg,1,arg.n)))
+        provider.setting=nil
+        if not result[1] then error(result[2]) end
+        local data=pfUI and pfUI.api and pfUI.api.libtooltip
+        if data then tip.itemLink=data:GetItemLink() end
+        if method=="SetUnit" then provider:EnhanceUnitTooltip(arg[2])
+        elseif tip.itemLink then provider:FormatItemTooltip(tip)
+        else provider:AddSpellID(method,arg[2],arg[3]) end
+        return UnpackRange(result,2,result.n)
+      end
+    end
+    for _,method in ipairs(methods) do Install(method) end
+    local oldShow=tip:GetScript("OnShow")
+    tip:SetScript("OnShow",function()
+      if oldShow then oldShow() end
+      if provider.active and not provider.pfUIManaged and not provider.setting then
+        if provider:HideTooltipIfNeeded() then return end
+        if not UnitExists("mouseover") then provider:ShowObj() end
+      end
+    end)
 end
-
-local HookSetBagItem = GameTooltip.SetBagItem
-function GameTooltip.SetBagItem(self, container, slot)
-    GameTooltip.itemLink = GetContainerItemLink(container, slot)
-    _, GameTooltip.itemCount = GetContainerItemInfo(container, slot)
-    return HookSetBagItem(self, container, slot)
-end
-
-local HookSetQuestLogItem = GameTooltip.SetQuestLogItem
-function GameTooltip.SetQuestLogItem(self, itemType, index)
-    GameTooltip.itemLink = GetQuestLogItemLink(itemType, index)
-    if not GameTooltip.itemLink then return end
-    return HookSetQuestLogItem(self, itemType, index)
-end
-
-local HookSetQuestItem = GameTooltip.SetQuestItem
-function GameTooltip.SetQuestItem(self, itemType, index)
-    GameTooltip.itemLink = GetQuestItemLink(itemType, index)
-    return HookSetQuestItem(self, itemType, index)
-end
-
-local HookSetLootItem = GameTooltip.SetLootItem
-function GameTooltip.SetLootItem(self, slot)
-    GameTooltip.itemLink = GetLootSlotLink(slot)
-    HookSetLootItem(self, slot)
-end
-
-local HookSetInventoryItem = GameTooltip.SetInventoryItem
-function GameTooltip.SetInventoryItem(self, unit, slot)
-    GameTooltip.itemLink = GetInventoryItemLink(unit, slot)
-    return HookSetInventoryItem(self, unit, slot)
+function Automaton_Tooltip:AddSpellID(method,a,b)
+    if not self.db.profile.showspellid then return end
+    local id
+    if method=="SetPlayerBuff" and GetPlayerBuffID then id=GetPlayerBuffID(a)
+    elseif method=="SetPlayerDebuff" then local _,_,_,spell=UnitDebuff("player",a);id=spell
+    elseif method=="SetUnitBuff" then local _,_,_,_,_,_,spell=UnitBuff(a,b);id=spell
+    elseif method=="SetUnitDebuff" then local _,_,_,_,_,_,spell=UnitDebuff(a,b);id=spell end
+    if id then GameTooltip:AddDoubleLine("法术ID：",id);GameTooltip:Show() end
 end

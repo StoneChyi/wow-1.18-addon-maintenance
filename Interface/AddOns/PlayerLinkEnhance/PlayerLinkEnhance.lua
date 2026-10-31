@@ -308,6 +308,7 @@ function ple_unitpopup()
 end
 
 function ple_SetItemRef(link, text, button)
+    if pfUI and pfUI.chatPlayerLinks and pfUI.chatPlayerLinks:Handle(link, text, button) then return end
     if (strsub(link, 1, 6) == "player") then
         local name = strsub(link, 8);
         if (name and (strlen(name) > 0)) then
