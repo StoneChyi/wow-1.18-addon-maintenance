@@ -77,6 +77,8 @@ Modules\ShaguStance.lua
 
 Plubics\CleanChat\CleanChat.xml
 
+PfUIBridge.lua
+
 
 
 

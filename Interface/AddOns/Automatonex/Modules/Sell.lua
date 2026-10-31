@@ -130,6 +130,7 @@ Automaton_Sell.options = {
 
 local VERSION = 2  -- 当前模块数据版本
 local showmoney, income_sell  -- 记录本次售卖前后金钱变化
+local sellTimer -- also owned by OnDisable during pfUI handoff
 
 function Automaton_Sell:OnInitialize()
 	self.db = Automaton:AcquireDBNamespace("Sell")
@@ -181,13 +182,18 @@ end
 
 function Automaton_Sell:OnDisable()
 	self:UnregisterAllEvents()
+	if sellTimer then
+		sellTimer:Hide()
+		sellTimer.junk = {}
+		sellTimer.timeSinceLast = 0
+	end
 end
 
 ------------------------------
 --      Event Handlers      --
 ------------------------------
 
-local sellTimer = CreateFrame("Frame") -- 解决N服端快速卖垃圾掉线的问题
+sellTimer = CreateFrame("Frame") -- 解决N服端快速卖垃圾掉线的问题
 sellTimer.timeSinceLast = 0
 sellTimer:Hide()
 sellTimer:SetScript("OnUpdate", function() 

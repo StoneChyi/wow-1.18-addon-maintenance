@@ -1620,6 +1620,7 @@ function Automaton:CreateMainWindow()
     -- 主题切换时重刷配色用（骨架控件不重建，只重新上色）
     f.outerBorder = border
     f.titleBg = titleBg
+    f.titleText = title
     f.clearBtn = clearBtn
 
     self.mainFrame = f
