@@ -204,8 +204,13 @@ sellTimer:SetScript("OnUpdate", function()
         local count = table.getn(sellTimer.junk)
         if count > 0 then
             local bag, slot = sellTimer.junk[count][1], sellTimer.junk[count][2]
-            PickupContainerItem(bag,slot)
-            MerchantItemButton_OnClick("LeftButton");
+            local _, _, locked = GetContainerItemInfo(bag, slot)
+            if locked or CursorHasItem() then return end
+            -- Recheck late restock protection after both MERCHANT_SHOW handlers.
+            if Automaton_Sell:ProcessLink(GetContainerItemLink(bag, slot)) > 0 then
+                PickupContainerItem(bag,slot)
+                MerchantItemButton_OnClick("LeftButton");
+            end
             table.remove(sellTimer.junk,count)
         else
             sellTimer:Hide()
@@ -213,11 +218,16 @@ sellTimer:SetScript("OnUpdate", function()
     end
 end)
 
+-- Expose only queue state for the merchant coordinator; saved rules stay here.
+function Automaton_Sell:IsSelling()
+    return sellTimer and sellTimer:IsShown()
+end
+
 function Automaton_Sell:MERCHANT_SHOW()
 	sellTimer.junk = {}
 	for bag = 0, 4 do
 		if GetContainerNumSlots(bag) > 0 then
-			for slot = 0, GetContainerNumSlots(bag) do
+			for slot = 1, GetContainerNumSlots(bag) do
 				local texture, itemCount, locked, quality = GetContainerItemInfo(bag, slot)
 				if (quality == 0) or (quality == -1) then
 					local linkcolor = self:ProcessLink(GetContainerItemLink(bag, slot))
@@ -242,7 +252,9 @@ function Automaton_Sell:ProcessLink(link)
     end
 
     -- 提取物品ID（使用显式函数调用避免冒号语法）
-    local itemId = string.match(link, "item:(%d+):")
+    local _, _, itemId = string.find(link, "item:(%d+):")
+    local restock = Automaton.modules and Automaton.modules.Purchases
+    if itemId and restock and restock.IsRestockProtected and restock:IsRestockProtected(itemId) then return 0 end
     if itemId then
         -- 检查忽略列表
         if self.db.profile.ignore[itemId] then
@@ -255,7 +267,7 @@ function Automaton_Sell:ProcessLink(link)
     end
 
     -- 从链接中提取颜色判断是否为灰色
-    for color, name in string.gmatch(link, "(|c%x+)|Hitem:.+|h%[(.-)%]|h|r") do
+    for color, name in string.gfind(link, "(|c%x+)|Hitem:.+|h%[(.-)%]|h|r") do
         if color == ITEM_QUALITY_COLORS[0].hex then
             return 1
         end

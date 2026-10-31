@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 265,
+  "dated_records": 267,
   "addons": [
     {
       "addon": "!Libs",
@@ -272,10 +272,19 @@
       "purpose": "完善模块配置、物品监控及与其他界面的协作。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "统一拾取绑定确认并修复掷骰与SuperWoW拾取生命周期",
+      "latest_record_title": "统一商人补货与批量购买并保留原配置",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 12,
+      "record_count": 13,
       "records": [
+        {
+          "id": "Automatonex-20261031-06",
+          "date": "2026-10-31",
+          "title": "统一商人补货与批量购买并保留原配置",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-Automatonex-20261031-06"
+        },
         {
           "id": "Automatonex-20261031-05",
           "date": "2026-10-31",
@@ -3143,10 +3152,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-10-31",
-      "latest_record_title": "统一拾取确认执行并尊重SuperWoW手动与Shift模式",
+      "latest_record_title": "统一商人补货与批量购买并保留原配置",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 39,
+      "record_count": 40,
       "records": [
+        {
+          "id": "pfUI-20261031-14",
+          "date": "2026-10-31",
+          "title": "统一商人补货与批量购买并保留原配置",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261031-14"
+        },
         {
           "id": "pfUI-20261031-13",
           "date": "2026-10-31",

@@ -1,4 +1,4 @@
--- pfUI owns merchant actions; Automatonex remains a read-only migration source.
+-- pfUI coordinates merchant services; original restock preferences stay in Automatonex.
 pfUI:RegisterModule("autovendor", "vanilla:tbc", function ()
   local rawborder, border = GetBorderSize()
   local bpad = rawborder > 1 and border - GetPerfectPixel() or GetPerfectPixel()
@@ -46,6 +46,7 @@ pfUI:RegisterModule("autovendor", "vanilla:tbc", function ()
     self.legacyFallback = fallback and true or false
     self.ownershipGranted = not fallback and self.ready == true
     if fallback and self.frame then self.frame:Hide() end
+    if self.SyncRestockOwnership then self:SyncRestockOwnership() end
     if not fallback and self.Resume then self:Resume() end
     return self.ownershipGranted
   end
@@ -112,11 +113,35 @@ pfUI:RegisterModule("autovendor", "vanilla:tbc", function ()
     return self.ready == true
   end
 
+  -- Restock keeps its original module state and three character-keyed lists.
+  function module:SyncRestockOwnership(managed)
+    if managed ~= nil then self.restockManaged = managed end
+    if self.restockManaged == nil then self.restockManaged = not C.automation or C.automation.enabled ~= "0" end
+    local restock = Automaton and Automaton.modules and Automaton.modules.Purchases
+    if restock and restock.SetMerchantOwner then
+      restock:SetMerchantOwner(self.restockManaged and self:CanExecute() and self or nil)
+    end
+    return true
+  end
+  function module:ProtectPurchase(link)
+    local _, _, raw = string.find(link or "", "item:(%d+):")
+    local id = ItemID(raw)
+    self.purchaseProtected = self.purchaseProtected or {}
+    if id then self.purchaseProtected[id] = true end
+  end
+  pfUI.automationIntegrations = pfUI.automationIntegrations or {}
+  pfUI.automationIntegrations.Purchases = {
+    Sync = function(_, managed) return module:SyncRestockOwnership(managed) end,
+  }
+
   local function CanSell(link, quality)
     if type(link) ~= "string" or type(quality) ~= "number" or quality < 0 then return false end
     local _, _, rawID = string.find(link, "item:(%d+):")
     local id = ItemID(rawID)
     if not id then return false end
+    if module.purchaseProtected and module.purchaseProtected[id] then return false end
+    local restock = Automaton and Automaton.modules and Automaton.modules.Purchases
+    if restock and restock.IsRestockProtected and restock:IsRestockProtected(id) then return false end
     local db = module:GetRules()
     if db.ignore[id] or db.ignore[tonumber(id)] then return false end
     if db.custom[id] or db.custom[tonumber(id)] then return true end
@@ -154,7 +179,10 @@ pfUI:RegisterModule("autovendor", "vanilla:tbc", function ()
         DEFAULT_CHAT_FRAME:AddMessage(GetLocale and GetLocale() == "zhCN" and "没有足够的金币修理。" or T["Not enough money to repair."])
         return
       end
+      local pending = { money = GetMoney(), cost = cost }
+      module.repairPending = pending
       RepairAllItems()
+      if module.repairPending == pending and GetMoney() <= pending.money - cost then module.repairPending = nil end
       DEFAULT_CHAT_FRAME:AddMessage(T["Your items have been repaired for"] .. " " .. CreateGoldString(cost))
     end
   end
@@ -199,12 +227,41 @@ pfUI:RegisterModule("autovendor", "vanilla:tbc", function ()
     end
   end)
 
+  function module:IsSelling()
+    if not autovendor.merchant or not MerchantOpen() then return false end
+    local seller = Automaton and Automaton.modules and Automaton.modules.Sell
+    if not self:CanExecute() and seller and seller.IsSelling and seller:IsSelling() then return true end
+    if self.repairPending then
+      if GetMoney() <= self.repairPending.money - self.repairPending.cost then
+        self.repairPending = nil
+        self:Resume()
+      else return true end
+    end
+    if autovendor:IsShown() then return true end
+    -- A dispatched sale whose bag slot is still unchanged has not settled.
+    for key, fingerprint in pairs(processed) do
+      local _, _, bag, slot = string.find(key, "^(%d+):(%d+)$")
+      bag, slot = tonumber(bag), tonumber(slot)
+      local link = GetContainerItemLink(bag, slot)
+      local _, count = GetContainerItemInfo(bag, slot)
+      if link and count and link .. ":" .. count == fingerprint then return true end
+    end
+    return false
+  end
+
   function module:Resume()
     if not self:CanExecute() or not autovendor.merchant or not MerchantOpen() then return end
     if C.global.autorepair == "1" and not autovendor.repairAttempted then
       autovendor.repairAttempted = true
       RepairItems()
     end
+    if self.repairPending then
+      if GetMoney() > self.repairPending.money - self.repairPending.cost then return end
+      self.repairPending = nil
+    end
+    local restock = Automaton and Automaton.modules and Automaton.modules.Purchases
+    local bulk = pfUI.buyemall
+    if (restock and restock.IsPurchasePending and restock:IsPurchasePending()) or (bulk and bulk.IsBusy and bulk:IsBusy()) then return end
     if C.global.autosell == "1" then
       local bag, slot, link, fingerprint, waiting = FindItem()
       if bag or waiting then
@@ -224,13 +281,19 @@ pfUI:RegisterModule("autovendor", "vanilla:tbc", function ()
       autovendor.merchant = nil
       autovendor:Hide()
       processed = {}
+      module.purchaseProtected, module.repairPending = {}, nil
+      local restock = Automaton and Automaton.modules and Automaton.modules.Purchases
+      if restock and restock.merchantOwner == module then restock:MERCHANT_CLOSED() end
     elseif event == "MERCHANT_SHOW" then
       module:ImportLegacyRules()
       if not autovendor.merchant then
         processed = {}
+        module.purchaseProtected, module.repairPending = {}, nil
         autovendor.merchant = true
         autovendor.repairAttempted = nil
       end
+      local restock = Automaton and Automaton.modules and Automaton.modules.Purchases
+      if restock and restock.merchantOwner == module then restock:MERCHANT_SHOW() end
       module:Resume()
       if C.global.autosell == "1" then
         autovendor.button:Hide()
@@ -244,6 +307,8 @@ pfUI:RegisterModule("autovendor", "vanilla:tbc", function ()
       else
         autovendor.button:SetPoint("RIGHT", MerchantBuyBackItemItemButton, "LEFT", -14, 0)
       end
+    elseif event == "PLAYER_MONEY" and autovendor.merchant and MerchantOpen() then
+      module:Resume()
     elseif event == "BAG_UPDATE" and autovendor.merchant and MerchantOpen()
       and C.global.autosell == "1" and FindItem() then
       module:Resume()
@@ -259,7 +324,7 @@ pfUI:RegisterModule("autovendor", "vanilla:tbc", function ()
   autovendor.button:SetScript("OnEnter", function()
     GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
     GameTooltip:SetText(T["Sell Grey Items"])
-    GameTooltip:AddLine(GetLocale and GetLocale() == "zhCN" and "包括自定义售卖名单；保留忽略名单中的物品。"
+    GameTooltip:AddLine(GetLocale and GetLocale() == "zhCN" and "包括自定义售卖名单；保留忽略名单、本次补货目标和刚购买的物品。"
       or T["Includes your custom sale list; ignored items are kept."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
@@ -291,7 +356,7 @@ pfUI:RegisterModule("autovendor", "vanilla:tbc", function ()
     end
     originalUpdate()
   end
-  for _, name in ipairs({"MERCHANT_SHOW", "MERCHANT_CLOSED", "MERCHANT_UPDATE", "BAG_UPDATE",
+  for _, name in ipairs({"MERCHANT_SHOW", "MERCHANT_CLOSED", "MERCHANT_UPDATE", "BAG_UPDATE", "PLAYER_MONEY",
     "ADDON_LOADED", "PLAYER_ENTERING_WORLD"}) do autovendor:RegisterEvent(name) end
   module.eventsReady = true
   module:ImportLegacyRules()

@@ -101,7 +101,7 @@ pfUI:RegisterModule("automation", "vanilla", function()
   function host:SelectModule(name)
     if not self:CanLeave() then return false end
     name = self:ResolvePage(name)
-    if name == "Repair" or name == "Sell" then return self:OpenVendor() end
+    if name == "Repair" or name == "Sell" or name == "Purchases" then return self:OpenVendor() end
     local integration = pfUI.automationIntegrations and pfUI.automationIntegrations[name]
     if integration and (integration.managed or integration.active) and integration.OpenSettings then
       integration:OpenSettings()
@@ -341,7 +341,7 @@ pfUI:RegisterModule("automation", "vanilla", function()
       sell = { type = "toggle", name = "自动售卖灰色和指定物品", order = 2,
         get = function() return C.global.autosell == "1" end,
         set = function(value) C.global.autosell = value and "1" or "0" end },
-      explain = Description("保留名单优先于自定义售卖。只输入明确需要处理的物品 ID。", 3),
+      explain = Description("保留名单优先于自定义售卖；本次补货目标和刚购买物品暂时保留。只输入明确需要处理的物品 ID。", 3),
       item = { type = "text", name = "物品 ID", order = 4, get = function() return input.item end,
         set = function(value) input.item = value end },
       addKeep = { type = "execute", name = "加入保留名单", order = 5, func = function() host:EditRule("ignore", false) end },
@@ -349,6 +349,17 @@ pfUI:RegisterModule("automation", "vanilla", function()
       addSell = { type = "execute", name = "加入售卖名单", order = 7, func = function() host:EditRule("custom", false) end },
       removeSell = { type = "execute", name = "移出售卖名单", order = 8, func = function() host:EditRule("custom", true) end },
     }
+    options.bulk = { type = "toggle", name = "Shift 点击批量购买", order = 11,
+      get = function() return C.global.buyemall == "1" end,
+      set = function(value)
+        C.global.buyemall = value and "1" or "0"
+        if not value and pfUI.buyemall and pfUI.buyemall.CancelPurchases then pfUI.buyemall:CancelPurchases() end
+      end }
+    options.buyHelp = Description("自动补货按三组原名单的最高目标持有量补足；每份包含多件时按整份购买。打开手动批量购买后，本次商人会话停止自动补货。", 12)
+    local restock = Automaton and Automaton.modules and Automaton.modules.Purchases
+    if restock and restock._options then
+      options.restock = { type = "group", name = "自动补货", moduleName = "Purchases", order = 13, args = restock._options }
+    end
     local bridge, vendor = _G.AutomatonPfUIBridge, pfUI.autovendor
     if bridge and not bridge.active then
       options.state = Description("工具箱商人服务尚未交接，原工具箱按原设置运行。", 0)

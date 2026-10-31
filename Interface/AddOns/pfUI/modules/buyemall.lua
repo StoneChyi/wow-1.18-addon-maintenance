@@ -6,6 +6,9 @@
 pfUI:RegisterModule("buyemall", "vanilla", function()
   -- 当前购买会话的状态数据
   local st = { typing = 0 }
+  local module = {}
+  pfUI.buyemall = module
+  local session, selection = 0, 0
 
   ---------------------------------------------------------------
   -- 界面(对照 BuyEmAll.xml 的 BuyEmAllFrame 重建,外观走 pfUI backdrop)
@@ -77,7 +80,7 @@ pfUI:RegisterModule("buyemall", "vanilla", function()
     btn:SetWidth(width)
     btn:SetHeight(height)
     SkinButton(btn)
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontWhite")
+    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     btn.text:SetAllPoints(btn)
     btn.text:SetText(label)
     return btn
@@ -154,6 +157,7 @@ pfUI:RegisterModule("buyemall", "vanilla", function()
     end
     return false
   end
+  local NORMAL_BAG = { "Bag", "Container", "背包", "容器" }
   local AMMO_POUCH = { "Ammo Pouch", "弹药袋" }
   local QUIVER     = { "Quiver", "箭袋" }
   local HERB_BAG   = { "Herb Bag", "草药袋" }
@@ -167,9 +171,9 @@ pfUI:RegisterModule("buyemall", "vanilla", function()
     local returns = { freeSpace = 0, specialSpace = 0 }
     local partialSpaces = {}
     local itemID, name, itemSubType, stackSize = GetItemInfoSafe(itemLink)
-    if not stackSize or not name then
+    if type(stackSize) ~= "number" or stackSize < 1 or stackSize ~= floor(stackSize) or not name then
       -- 物品数据未缓存,放弃计算(调用方会得到可买上限 0,本次 Shift 点击不弹窗)
-      return 0, 0, 1
+      return 0, 0, nil
     end
 
     for theBag = 0, 4 do
@@ -180,10 +184,12 @@ pfUI:RegisterModule("buyemall", "vanilla", function()
         if (eqAny(bagSubType, AMMO_POUCH) and eqAny(itemSubType, BULLET)) or
            (eqAny(bagSubType, QUIVER) and eqAny(itemSubType, ARROW)) then
           which = "specialSpace"
-        elseif eqAny(bagSubType, AMMO_POUCH) or eqAny(bagSubType, QUIVER) or
-               eqAny(bagSubType, HERB_BAG) and not IsSpecialBagItem("herb", itemID) or
-               eqAny(bagSubType, ENCH_BAG) and not IsSpecialBagItem("enchanting", itemID) then
-          doBag = false
+        elseif eqAny(bagSubType, HERB_BAG) and IsSpecialBagItem("herb", itemID) then
+          which = "specialSpace"
+        elseif eqAny(bagSubType, ENCH_BAG) and IsSpecialBagItem("enchanting", itemID) then
+          which = "specialSpace"
+        elseif not eqAny(bagSubType, NORMAL_BAG) then
+          doBag = false -- unknown/unloaded/special bag: do not guess capacity
         end
       end
 
@@ -193,9 +199,11 @@ pfUI:RegisterModule("buyemall", "vanilla", function()
           local link = GetContainerItemLink(theBag, theSlot)
           if not link then
             returns[which] = returns[which] + stackSize
-          elseif string.find(link, "["..name.."]", 1, true) then
-            local _, itemCount = GetContainerItemInfo(theBag, theSlot)
-            returns[which] = returns[which] + stackSize - itemCount
+          elseif GetItemInfoSafe(link) == itemID then
+            local _, itemCount, locked = GetContainerItemInfo(theBag, theSlot)
+            itemCount = tonumber(itemCount) or stackSize
+            if locked then itemCount = stackSize end
+            returns[which] = returns[which] + math.max(0, stackSize - itemCount)
             -- 记录每个未满堆叠的剩余空间(按背包扫描顺序,与客户端堆叠填充顺序一致)
             if itemCount > 0 and itemCount < stackSize then
               table.insert(partialSpaces, stackSize - itemCount)
@@ -270,99 +278,206 @@ pfUI:RegisterModule("buyemall", "vanilla", function()
     UpdateDisplay()
   end
 
-  -- 购买请求泵:逐帧派发 BuyMerchantItem(每 0.05 秒一笔)
-  -- ⛔ 两个约束:1) 同一帧内连发多笔购买会丢数量(实测买 100 缺 10);
-  -- 2) OnUpdate 不会在隐藏 frame 上触发,而 DoPurchase 会先 Hide 弹窗,
-  --    所以泵用独立的无贴图 frame 承载(无贴图 = 屏幕上不可见,但 OnUpdate 正常跑)
-  local purchaseQueue, queueItem, purchaseCooldown = nil, nil, 0
-  _G.PFBUYEMALL_LOG = _G.PFBUYEMALL_LOG or {}
+  -- One manual transaction owns an immutable offer and a merchant session.
+  local purchase, confirmation, settlement, uncertain
+  local servicesPaused
   local pump = CreateFrame("Frame", "pfBuyEmAllPump", UIParent)
-  pump:SetScript("OnUpdate", function()
-    if not purchaseQueue then return end
-    purchaseCooldown = purchaseCooldown - arg1
-    if purchaseCooldown > 0 then return end
-    purchaseCooldown = 0.05
-    -- 商人窗口已关,剩余请求作废
-    if not MerchantFrame:IsVisible() then purchaseQueue = nil return end
-    local n = table.remove(purchaseQueue, 1)
-    if table.getn(purchaseQueue) == 0 then purchaseQueue = nil end
-    if n then
-      BuyMerchantItem(queueItem, n)
-      -- 诊断日志(上限 200 条):/run pfBuyEmAllDumpLog() 查看实际发出的每笔请求
-      if table.getn(_G.PFBUYEMALL_LOG) > 200 then _G.PFBUYEMALL_LOG = {} end
-      table.insert(_G.PFBUYEMALL_LOG, "buy "..queueItem.." x"..n)
-    end
-  end)
-  _G.pfBuyEmAllDumpLog = function()
-    for _, line in ipairs(_G.PFBUYEMALL_LOG) do
-      DEFAULT_CHAT_FRAME:AddMessage(line)
-    end
+  pump:Hide()
+  _G.PFBUYEMALL_LOG = _G.PFBUYEMALL_LOG or {}
+  local function StopRestock()
+    servicesPaused = true
+    pump:Show()
+    local mod = Automaton and Automaton.modules and Automaton.modules.Purchases
+    if mod and mod.CancelRestock then mod:CancelRestock("manual") end
   end
-
-  -- 实际购买;amount 必须是商人组的整数倍(组>1 时);生成请求队列交由 pump 逐帧派发
-  local function DoPurchase(amount)
-    -- 上一批请求还没发完,忽略本次购买(防队列被覆盖导致丢数量)
-    if purchaseQueue then return end
-    frame:Hide()
-
-    local queue = {}
-    queueItem = st.itemIndex
-    if st.preset > 1 then
-      for i = 1, amount / st.preset do
-        table.insert(queue, 1)
-      end
-    else
-      local remaining = amount
-      -- ⛔ 本客户端 BuyMerchantItem 一次买 N 个,若客户端选中的堆叠剩余空间 < N,
-      -- 多余数量会被吞掉(实测:背包有一组 10/20 的水晶瓶,买 100 只到手 90)。
-      -- 未满堆叠逐个买 1 补满(1 恒 <= 任意剩余空间,不依赖客户端的堆叠选择顺序);
-      -- 补满后再按整堆叠买,零头最后买(此时已无未满堆叠,任意数量安全)。
-      if st.partialSpaces and remaining > 0 then
-        for i = 1, table.getn(st.partialSpaces) do
-          for _ = 1, st.partialSpaces[i] do
-            table.insert(queue, 1)
-            remaining = remaining - 1
-            if remaining <= 0 then break end
-          end
-          if remaining <= 0 then break end
+  local function Notice(message)
+    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff33ffccpfUI|r " .. message) end
+  end
+  function module:GetCapacity(link)
+    local normal, special, stack, partial = FreeBagSpace(link)
+    return normal + special, stack, partial
+  end
+  function module:IsBusy()
+    return frame:IsShown() or confirmation ~= nil or purchase ~= nil or settlement ~= nil or uncertain == true
+  end
+  function module:CancelPurchases(reason)
+    purchase, confirmation = nil, nil
+    -- A sent request cannot be recalled. Keep watching its receipt even after
+    -- closing the merchant, so a new automatic session cannot buy it again.
+    if settlement or servicesPaused then pump:Show() else pump:Hide() end
+    StaticPopup_Hide("PFUI_BUYEMALL_CONFIRM")
+    if reason then Notice(reason) end
+  end
+  local function BagCount(link)
+    local _, _, id = string.find(link or "", "item:(%d+):")
+    local count = 0
+    for bag = 0, 4 do
+      for slot = 1, GetContainerNumSlots(bag) do
+        local _, _, current = string.find(GetContainerItemLink(bag, slot) or "", "item:(%d+):")
+        if current == id then
+          local _, n = GetContainerItemInfo(bag, slot)
+          count = count + (tonumber(n) or 0)
         end
       end
-      while remaining >= st.stack do
-        table.insert(queue, st.stack)
-        remaining = remaining - st.stack
+    end
+    return count
+  end
+  function module:RefreshSettlement()
+    local receipt = settlement
+    if not receipt then return end
+    if BagCount(receipt.link) >= receipt.count + receipt.units
+      and (receipt.cost == 0 or GetMoney() <= receipt.money - receipt.cost) then
+      settlement = nil
+      -- The previous merchant may have closed before this item arrived.
+      if pfUI.autovendor and pfUI.autovendor.ProtectPurchase then pfUI.autovendor:ProtectPurchase(receipt.link) end
+      if purchase and purchase.waiting == receipt then
+        purchase.remaining = purchase.remaining - receipt.units
+        purchase.waiting = nil
+        if purchase.remaining <= 0 then self:CancelPurchases() end
       end
-      if remaining > 0 then
-        table.insert(queue, remaining)
+    elseif GetTime() - receipt.started >= 3 then
+      settlement = nil
+      uncertain = true
+      self:CancelPurchases("未确认上一笔购买结果，已停止后续购买；请检查背包后关闭并重新打开商人。")
+    end
+  end
+  function module:CanStartRestock()
+    self:RefreshSettlement()
+    if uncertain then return false, "uncertain" end
+    if settlement then return false, "pending" end
+    return true
+  end
+  local function OfferValid(request)
+    if request.session ~= session or C.global.buyemall ~= "1"
+      or not MerchantFrame:IsVisible() or MerchantFrame.selectedTab ~= 1 then return false end
+    if GetMerchantItemLink(request.index) ~= request.link then return false end
+    local name, _, price, preset, available, _, extended = GetMerchantItemInfo(request.index)
+    return name == request.name and price == request.price and preset == request.preset
+      and (extended == nil or extended == false or extended == 0), available
+  end
+  local function Snapshot(amount)
+    return { index = st.itemIndex, name = st.itemName, link = st.itemLink,
+      price = st.price, preset = st.preset, amount = amount,
+      session = session, selection = selection }
+  end
+  local function CanBuy(request, units)
+    local valid, available = OfferValid(request)
+    if not valid or units <= 0 or mod(units, request.preset) ~= 0 then return false end
+    local fit = module:GetCapacity(request.link)
+    if fit < units or GetMoney() < units / request.preset * request.price then return false end
+    return available == -1 or (type(available) == "number" and available >= units / request.preset)
+  end
+  pump:SetScript("OnUpdate", function()
+    module:RefreshSettlement()
+    local task = purchase
+    if not task then
+      if not settlement then
+        pump:Hide()
+        if servicesPaused and not module:IsBusy() then
+          -- Wake once after all UI/receipts release the merchant. Never call
+          -- Resume from IsBusy/CanStartRestock or receipt inspection itself.
+          servicesPaused = nil
+          if pfUI.autovendor and pfUI.autovendor.Resume then pfUI.autovendor:Resume() end
+        end
+      end
+      return
+    end
+    if not OfferValid(task) then module:CancelPurchases("商品或商人已改变，剩余批量购买已取消。"); return end
+    if uncertain then module:CancelPurchases(); return end
+    if settlement then return end
+    if GetTime() < (task.nextSend or 0) then return end
+    if pfUI.autovendor and pfUI.autovendor.IsSelling and pfUI.autovendor:IsSelling() then return end
+    local restock = Automaton and Automaton.modules and Automaton.modules.Purchases
+    if restock and restock.CanStartManualPurchase then
+      local ready, reason = restock:CanStartManualPurchase()
+      if not ready then
+        if reason == "uncertain" then module:CancelPurchases("补货结果尚未确定，请关闭商人并检查背包后重试。") end
+        return
       end
     end
-    purchaseQueue = queue
-    purchaseCooldown = 0
+    local fit, stack, partial = module:GetCapacity(task.link)
+    if type(fit) ~= "number" or type(stack) ~= "number" or stack < 1 then
+      module:CancelPurchases("物品堆叠或背包信息暂不可用，已停止后续购买。")
+      return
+    end
+    local units = task.preset
+    if task.preset == 1 then
+      units = math.min(task.remaining, stack)
+      -- Preserve the client's partial-stack workaround, recalculated each send.
+      if partial and table.getn(partial) > 0 then units = 1 end
+    end
+    if type(GetMerchantItemMaxStack) == "function" then
+      local limit = GetMerchantItemMaxStack(task.index)
+      if type(limit) ~= "number" or limit < 1 then module:CancelPurchases("商人购买上限无法确认，已停止后续购买。"); return end
+      units = math.min(units, floor(limit) * task.preset)
+    end
+    if not CanBuy(task, units) then
+      module:CancelPurchases("金钱、库存或背包空间已变化，剩余批量购买已停止。")
+      return
+    end
+    StopRestock()
+    if pfUI.autovendor and pfUI.autovendor.ProtectPurchase then pfUI.autovendor:ProtectPurchase(task.link) end
+    settlement = { link = task.link, units = units, count = BagCount(task.link), money = GetMoney(),
+      cost = units / task.preset * task.price, started = GetTime() }
+    task.waiting = settlement
+    task.nextSend = GetTime() + .05
+    local ok, err = pcall(BuyMerchantItem, task.index, units / task.preset)
+    if not ok then module:CancelPurchases("购买请求失败，已停止后续购买。"); geterrorhandler()(err); return end
+    if table.getn(_G.PFBUYEMALL_LOG) >= 200 then table.remove(_G.PFBUYEMALL_LOG, 1) end
+    table.insert(_G.PFBUYEMALL_LOG, "buy " .. task.index .. " x" .. units / task.preset)
+  end)
+  pump:RegisterEvent("MERCHANT_SHOW")
+  pump:RegisterEvent("MERCHANT_CLOSED")
+  pump:RegisterEvent("PLAYER_LEAVING_WORLD")
+  pump:SetScript("OnEvent", function()
+    if event ~= "MERCHANT_SHOW" and not settlement then uncertain = nil end
+    session = session + 1
+    module:CancelPurchases()
+    frame:Hide()
+  end)
+  _G.pfBuyEmAllDumpLog = function()
+    for _, line in ipairs(_G.PFBUYEMALL_LOG) do DEFAULT_CHAT_FRAME:AddMessage(line) end
   end
-
+  local function DoPurchase(request)
+    if purchase or not module:CanStartRestock() or type(request) ~= "table" or request.selection ~= selection
+      or not CanBuy(request, request.amount) then
+      module:CancelPurchases("购买条件已变化，请重新选择数量。")
+      return
+    end
+    confirmation = nil
+    frame:Hide()
+    request.remaining = request.amount
+    purchase = request
+    StopRestock()
+    pump:Show()
+  end
   StaticPopupDialogs["PFUI_BUYEMALL_CONFIRM"] = {
     text = T["Are you sure you want to buy\n %d × %s?"],
-    button1 = YES,
-    button2 = NO,
-    OnAccept = function(amount) DoPurchase(amount) end,
-    timeout = 0,
-    hideOnEscape = 1,
+    button1 = YES, button2 = NO,
+    OnAccept = function(request)
+      if request and request == confirmation then DoPurchase(request) end
+    end,
+    OnCancel = function() confirmation = nil end,
+    OnHide = function() confirmation = nil end,
+    timeout = 0, hideOnEscape = 1,
   }
-
-  -- 购买数量超过一整组时先弹确认框
-  local function DoConfirmation(amount)
-    StaticPopup_Show("PFUI_BUYEMALL_CONFIRM", amount, st.itemName, amount)
-  end
-
   local function VerifyPurchase(amount)
-    amount = amount or st.split
-    if amount > 0 then
-      amount = ceil(amount / st.preset) * st.preset
-      if amount > st.stack and amount > st.defaultStack then
-        DoConfirmation(amount)
-      else
-        DoPurchase(amount)
+    amount = tonumber(amount or st.split)
+    if not amount or amount ~= amount or amount <= 0 or purchase then return end
+    amount = math.min(ceil(amount / st.preset) * st.preset, floor(st.max / st.preset) * st.preset)
+    if amount <= 0 then return end
+    local request = Snapshot(amount)
+    if not CanBuy(request, amount) then Notice("购买条件已变化，请重新选择数量。"); return end
+    if amount > st.stack and amount > st.defaultStack then
+      confirmation = nil
+      StaticPopup_Hide("PFUI_BUYEMALL_CONFIRM")
+      local popup = StaticPopup_Show("PFUI_BUYEMALL_CONFIRM", amount, st.itemName)
+      if popup then
+        -- 1.12 StaticPopup_Show has no data argument; assign it explicitly.
+        confirmation = request
+        popup.data = request
       end
-    end
+    else DoPurchase(request) end
   end
 
   -- 初始化并显示购买窗口,锚定在被点击的物品按钮上
@@ -506,11 +621,16 @@ pfUI:RegisterModule("buyemall", "vanilla", function()
   frame:SetScript("OnShow", function() this:EnableKeyboard(true) end)
   frame:SetScript("OnHide", function()
     this:EnableKeyboard(false)
+    confirmation = nil
     StaticPopup_Hide("PFUI_BUYEMALL_CONFIRM")
+    if servicesPaused then pump:Show() end
   end)
 
   -- 商人窗口关闭时一并关闭购买窗口(pfUI HookScript 为链式安全版)
   HookScript(MerchantFrame, "OnHide", function()
+    if not settlement then uncertain = nil end
+    session = session + 1
+    module:CancelPurchases()
     frame:Hide()
   end)
 
@@ -529,19 +649,28 @@ pfUI:RegisterModule("buyemall", "vanilla", function()
           and not ignoreModifiers
           and not (ChatFrameEditBox and ChatFrameEditBox:IsVisible() and button == "LeftButton") then
 
+        if purchase then Notice("上一笔批量购买尚未结束，请稍候。"); return end
+        StopRestock()
+        confirmation = nil
+        StaticPopup_Hide("PFUI_BUYEMALL_CONFIRM")
+        frame:Hide()
+        selection = selection + 1
         local itemButton = this
         st.itemIndex = itemButton:GetID()
+        st.itemLink = GetMerchantItemLink(st.itemIndex)
 
         local name, texture, price, quantity, numAvailable = GetMerchantItemInfo(st.itemIndex)
-        st.preset = quantity or 1
-        st.price = price or 0
+        if not name or not st.itemLink or type(quantity) ~= "number" or quantity < 1
+          or quantity ~= floor(quantity) or type(price) ~= "number" or price < 0 then return end
+        st.preset = quantity
+        st.price = price
         st.itemName = name
         st.available = numAvailable
 
         local bagMax, specialMax, stack, partialSpaces = FreeBagSpace(GetMerchantItemLink(st.itemIndex))
         st.stack = stack
         st.partialSpaces = partialSpaces
-        st.fit = floor(bagMax / st.preset) * st.preset + specialMax
+        st.fit = floor((bagMax + specialMax) / st.preset) * st.preset
         if st.price > 0 then
           st.afford = floor(GetMoney() / st.price) * st.preset
         else
@@ -567,6 +696,12 @@ pfUI:RegisterModule("buyemall", "vanilla", function()
         SetStackClick()
         OpenFrame(itemButton)
       else
+        -- A normal manual merchant action supersedes the queued bulk order.
+        if purchase and MerchantFrame.selectedTab == 1 and not IsControlKeyDown()
+          and not (ChatFrameEditBox and ChatFrameEditBox:IsVisible() and button == "LeftButton") then
+          if settlement then uncertain = true end
+          module:CancelPurchases("手动商人操作已取消剩余批量购买。")
+        end
         origMerchantItemButton_OnClick(button, ignoreModifiers)
       end
     end
