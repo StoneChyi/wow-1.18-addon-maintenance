@@ -522,14 +522,32 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
     return false
   end
 
+  -- Keep the full requested text; readback checks the Ctrl+C buffer, not the OS clipboard.
+  local function SetCopyBuffer(text)
+    win.copyOriginal = text
+    win.edit:SetText(text)
+    if type(win.edit.GetText) ~= "function" then return end
+    local ok, actual = pcall(win.edit.GetText, win.edit)
+    if not ok or type(actual) ~= "string" then return end
+    -- Clients may normalize line endings without losing any content.
+    local expected = string.gsub(string.gsub(text, "\r\n", "\n"), "\r", "\n")
+    actual = string.gsub(string.gsub(actual, "\r\n", "\n"), "\r", "\n")
+    if actual == expected then return end
+    if string.len(actual) < string.len(expected)
+      and string.sub(expected, 1, string.len(actual)) == actual then
+      return "Copy buffer incomplete: select less text and retry"
+    end
+    return "Copy buffer differs: select again and retry"
+  end
+
   local function PrepareCopy(text)
     if CopyText(text) then return true end
     -- 保留可见文字与蓝色选区，只让透明 EditBox 接受 Ctrl+C，避开原生灰块。
     win.edit:SetAlpha(win.mirror == false and (win.lineCount or 0) > 0 and 1 or 0)
-    win.edit:SetText(text)
+    local warning = SetCopyBuffer(text)
     win.edit:SetFocus()
     win.edit:HighlightText(0)
-    return false
+    return false, warning
   end
 
   -- ==========================================================================
@@ -643,10 +661,11 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
       if text then
         -- 拖完即可按 Ctrl+C；有剪贴板扩展时也仍等用户点击复制，避免覆盖剪贴板。
         win.edit:SetAlpha(0)
-        win.edit:SetText(text)
+        local warning = SetCopyBuffer(text)
         win.edit:SetFocus()
         win.edit:HighlightText(0)
-        win.count:SetText(T["Text selected: Ctrl+C or Copy Selected"])
+        win.count:SetText(warning and ("|cffff8888" .. T[warning] .. "|r")
+          or T["Text selected: Ctrl+C or Copy Selected"])
       end
     end
 
@@ -770,13 +789,15 @@ pfUI:RegisterModule("chatcopy", "vanilla:tbc", function ()
       end
 
       -- 首选剪贴板 API：不选、不聚焦，连一丝灰块都不会出现
-      if PrepareCopy(text) then
+      local copied, warning = PrepareCopy(text)
+      if copied then
         win.count:SetText("|cff88ff88" .. T["Copied"] .. " " .. string.len(text) .. " " .. T["chars"] .. "|r")
         return
       end
 
       -- 没有剪贴板扩展时，透明 EditBox 已准备好，只需用户按 Ctrl+C。
-      win.count:SetText("|cffffd100" .. T["Selected: press Ctrl+C"] .. "|r")
+      win.count:SetText(warning and ("|cffff8888" .. T[warning] .. "|r")
+        or ("|cffffd100" .. T["Selected: press Ctrl+C"] .. "|r"))
     end
 
     f.btnCopy = Button(T["Copy All"], 12, 76, function()

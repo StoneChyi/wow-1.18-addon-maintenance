@@ -452,3 +452,182 @@ end
 assert(#scenarios==7)
 print('PASS: 7 complete-window plain/all scenarios; literal-pipe/reset RGB matrix; real markup labels; roundtrip; long UTF8/emoji/wrapped/cross-message drag; direct and Ctrl+C copy; 24 YY format checks plus source isolation and raid cleanup')
 ''')
+
+# The second maintenance step only checks the fallback EditBox buffer. These
+# are per-instance engine faults; no clipboard contents are read or modified.
+lua.execute(r'''
+local w=pfChatCopyWindow
+local rawSetText,rawGetText=w.edit.SetText,w.edit.GetText
+local rawMeta=getmetatable(w.edit)
+local incomplete='Copy buffer incomplete: select less text and retry'
+local differs='Copy buffer differs: select again and retry'
+local scenarios={}
+local function Restore()
+  setmetatable(w.edit,rawMeta)
+  w.edit.SetText=nil;w.edit.GetText=nil
+  SetClipboardText=nil
+end
+local function Scenario(name,fn)
+  Restore();fn();Restore();table.insert(scenarios,name)
+end
+local function Warning(key)
+  assert(string.find(w.count:GetText(),key,1,true),'missing integrity warning '..key..': '..w.count:GetText())
+end
+local function NoWarning()
+  assert(not string.find(w.count:GetText(),'Copy buffer',1,true),'stale or false integrity warning: '..w.count:GetText())
+end
+local function OpenText(text)
+  Restore()
+  SELECTED_CHAT_FRAME=ChatFrame2
+  while #ChatFrame2.pfHistory>0 do table.remove(ChatFrame2.pfHistory) end
+  pfUI_cache.chatcopy.time='0';pfUI_cache.chatcopy.class='0'
+  ChatFrame2:AddMessage(text)
+  SlashCmdList.PFCHATCOPY('format plain');SlashCmdList.PFCHATCOPY('show')
+  assert(w:Text()==text and table.concat(w.characters)==text,'integrity fixture display differs before copy')
+end
+local function Truncate(bytes)
+  w.edit.SetText=function(self,text) rawSetText(self,string.sub(text,1,bytes)) end
+end
+local function FallbackState(original)
+  assert(w.copyOriginal==original,'complete original was lost to fallback buffer')
+  assert(w.edit.focus and w.edit.alpha==0 and w.fsFrame:IsShown(),'fallback focus/visible mirror changed')
+  assert(w.edit.highlight and w.edit.highlight[1]==0,'fallback text was not selected')
+end
+local longText='起点中文🙂 '..string.rep('长复制内容 abc 0123456789 ',200)..'\n末行中文完成'
+
+Scenario('Copy All detects strict prefix and interrupted UTF8 bytes',function()
+  local text='A中文🙂 '..longText
+  OpenText(text)
+  for _,limit in ipairs({0,5,12,math.floor(string.len(text)/2)}) do
+    Truncate(limit)
+    fire(w.btnCopy,'OnClick')
+    Warning(incomplete);FallbackState(text)
+    assert(rawGetText(w.edit)==string.sub(text,1,limit),'engine truncation fixture did not apply')
+    assert(w:Text()==text and table.concat(w.characters)==text,'truncation altered visible history')
+  end
+  Restore();fire(w.btnCopy,'OnClick');NoWarning();FallbackState(text)
+  assert(rawGetText(w.edit)==text and string.find(w.count:GetText(),'Selected: press Ctrl+C',1,true))
+end)
+
+Scenario('nonprefix equal shorter and longer readbacks are differences',function()
+  local text='完整中文 buffer 123456'
+  OpenText(text)
+  for _,replacement in ipairs({string.rep('X',string.len(text)),text..'extra','not-a-prefix'}) do
+    w.edit.GetText=function() return replacement end
+    fire(w.btnCopy,'OnClick')
+    Warning(differs);FallbackState(text)
+    assert(not string.find(w.count:GetText(),incomplete,1,true),'different data misclassified as a prefix')
+  end
+  Restore();fire(w.btnCopy,'OnClick');NoWarning();FallbackState(text)
+end)
+
+Scenario('long complete and CRLF CR normalization are accepted',function()
+  OpenText(longText)
+  fire(w.btnCopy,'OnClick');NoWarning();FallbackState(longText)
+  assert(rawGetText(w.edit)==longText and string.len(longText)>4096,'long complete fixture is too short')
+  local variants={
+    {'第一行\r\n第二行\r第三行\n结束','第一行\n第二行\n第三行\n结束'},
+    {'第一行\n第二行\n结束','第一行\r\n第二行\r结束'},
+  }
+  for _,pair in ipairs(variants) do
+    OpenText(pair[1]);w.edit.GetText=function() return pair[2] end
+    fire(w.btnCopy,'OnClick');NoWarning();FallbackState(pair[1])
+  end
+end)
+
+Scenario('missing throwing and nonstring GetText never claim truncation',function()
+  local text='完整待复制中文'
+  for _,mode in ipairs({'missing','throw','number','nil'}) do
+    OpenText(text)
+    if mode=='missing' then
+      setmetatable(w.edit,{__index=function(frame,key)
+        if key=='GetText' then return nil end
+        return rawMeta.__index[key]
+      end})
+    elseif mode=='throw' then w.edit.GetText=function() error('readback unavailable') end
+    elseif mode=='number' then w.edit.GetText=function() return 17 end
+    else w.edit.GetText=function() return nil end end
+    fire(w.btnCopy,'OnClick');NoWarning();FallbackState(text)
+    assert(string.find(w.count:GetText(),'Selected: press Ctrl+C',1,true),'unknown readback suppressed normal guidance')
+  end
+end)
+
+Scenario('direct clipboard success bypasses buffer and errors fall back',function()
+  local text='直接复制中文🙂'
+  OpenText(text);w.edit:ClearFocus()
+  local writes,reads,received=0,0
+  w.edit.SetText=function() writes=writes+1;error('direct copy touched fallback SetText') end
+  w.edit.GetText=function() reads=reads+1;error('direct copy touched fallback GetText') end
+  SetClipboardText=function(value) received=value end
+  fire(w.btnCopy,'OnClick')
+  assert(received==text and writes==0 and reads==0 and not w.edit.focus,'direct clipboard lost priority')
+  NoWarning();assert(string.find(w.count:GetText(),'Copied',1,true))
+  -- Preserve existing pcall semantics: an API returning false without throwing
+  -- is still treated as a completed API call, with no buffer fallback.
+  SetClipboardText=function(value) received=value;return false end
+  fire(w.btnCopy,'OnClick');assert(writes==0 and reads==0);NoWarning()
+  Restore();local attempts=0;Truncate(3)
+  SetClipboardText=function() attempts=attempts+1;error('clipboard extension unavailable') end
+  fire(w.btnCopy,'OnClick')
+  assert(attempts==1);Warning(incomplete);FallbackState(text)
+end)
+
+local function CursorBoundary(boundary)
+  for _,row in ipairs(w.rows) do
+    if boundary>=row.first-1 and boundary<=row.last then
+      cursorX=row.x[boundary-row.first+2]
+      cursorY=w.content:GetTop()-row.y-3
+      return row.owner
+    end
+  end
+  error('missing drag boundary '..boundary)
+end
+local function Drag(first,last)
+  w.scroll:SetVerticalScroll(0)
+  local owner=CursorBoundary(first-1)
+  fire(owner,'OnMouseDown','LeftButton');CursorBoundary(last)
+  fire(w,'OnUpdate',.04);owner=CursorBoundary(last)
+  fire(owner,'OnMouseUp','LeftButton')
+end
+Scenario('drag and selected-copy preserve original and never autocopy',function()
+  OpenText(longText)
+  local characters={}
+  for char in string.gmatch(longText,'[%z\1-\127\194-\244][\128-\191]*') do table.insert(characters,char) end
+  local first,last=4,#characters-2
+  local selected=table.concat(characters,'',first,last)
+  local calls=0
+  SetClipboardText=function() calls=calls+1 end
+  Truncate(5);Drag(first,last)
+  assert(calls==0,'mouse drag unexpectedly copied to the system clipboard')
+  assert(w:SelectedText()==selected and w:Text()==longText)
+  Warning(incomplete);FallbackState(selected)
+  local direct
+  SetClipboardText=function(text) direct=text end
+  fire(w.btnCopySel,'OnClick');assert(direct==selected);NoWarning()
+  Restore();w.edit.GetText=function() return 'changed selection' end
+  fire(w.btnCopySel,'OnClick');Warning(differs);FallbackState(selected)
+  Restore();fire(w.btnCopySel,'OnClick');NoWarning();FallbackState(selected)
+  assert(rawGetText(w.edit)==selected)
+  -- A fresh, fully accepted drag replaces the earlier warning naturally.
+  Drag(first,last);NoWarning();FallbackState(selected)
+  assert(string.find(w.count:GetText(),'Text selected: Ctrl+C or Copy Selected',1,true))
+end)
+
+Scenario('YY button and slash use same fallback checks and recover',function()
+  OpenText('YY完整性检查')
+  raidCount=20;dispatch('CHAT_MSG_RAID','YY频道：001 234 567','团长')
+  assert(w.btnYY.label:GetText()=='YY: 001234567')
+  Truncate(3);fire(w.btnYY,'OnClick');Warning(incomplete);FallbackState('001234567')
+  Restore();w.edit.GetText=function() return 'X01234567' end
+  SlashCmdList.PFYY();Warning(differs);FallbackState('001234567')
+  Restore();SlashCmdList.PFYY();NoWarning();FallbackState('001234567')
+  assert(rawGetText(w.edit)=='001234567')
+  local copied
+  SetClipboardText=function(text) copied=text end
+  fire(w.btnYY,'OnClick');assert(copied=='001234567');NoWarning()
+  raidCount=0;dispatch('RAID_ROSTER_UPDATE');Restore()
+end)
+
+assert(#scenarios==7)
+print('PASS: 7 fallback-buffer integrity scenarios; UTF8-byte prefix truncation; differing readback; newline normalization; missing/throwing/nonstring GetText; full long text; clipboard priority/error fallback; precise drag/selected/YY original retention, focus and warning recovery')
+''')

@@ -18,6 +18,8 @@ pfUI_translation["zhCN"] = {
   ["Selected"] = "已选",
   ["Drag to select text"] = "拖动选取文字，按 Ctrl+C 复制",
   ["Text selected: Ctrl+C or Copy Selected"] = "已选取文字：按 Ctrl+C 或点复制选中",
+  ["Copy buffer incomplete: select less text and retry"] = "复制内容不完整，请缩小选区后重试",
+  ["Copy buffer differs: select again and retry"] = "复制内容与原文不一致，请重新选取后重试",
   ["No raid YY"] = "暂无团队YY",
   
   ["3D World Unit Font"] = "3D世界单位字体",
