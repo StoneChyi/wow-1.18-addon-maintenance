@@ -347,7 +347,19 @@ do
     local state = parent.automationOptionsState
     if not state or not state.visible or state.building or state.updatingViewport then return end
     local scroll, rows = parent.parent, state.visible
-    local top, height = scroll:GetVerticalScroll(), scroll:GetHeight()
+    local top = scroll:GetVerticalScroll()
+    -- Vanilla reports the height of this double-anchored frame in scaled
+    -- units, unlike explicitly sized rows. Edge coordinates share the rows'
+    -- logical units: at scale .75, GetHeight() is 310.5 but the edges span 414.
+    local upper, lower = scroll:GetTop(), scroll:GetBottom()
+    local height
+    if upper and lower and upper > lower then
+      height = upper - lower
+    else
+      -- Edges may be unresolved while a page is being attached or hidden.
+      local scale = scroll:GetEffectiveScale()
+      height = scroll:GetHeight() / (scale and scale > 0 and scale or 1)
+    end
     if state.viewportTop == top and state.viewportHeight == height then return end
     state.updatingViewport = true
     state.viewportTop, state.viewportHeight = top, height

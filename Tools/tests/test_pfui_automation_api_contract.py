@@ -53,7 +53,7 @@ function obj(kind,name,parent) return typed(create(kind,name,parent)) end
 local fontCreate=methods.CreateFontString
 function methods:CreateFontString(...) return typed(fontCreate(self,unpack(arg))) end
 function methods:GetBottom() return self.bottom or 400 end
-function methods:GetTop() return self.top or 800 end
+function methods:GetTop() return self.top or (self.kind=="ScrollFrame" and self:GetBottom()+self.height) or 800 end
 function methods:GetEffectiveScale() return 1 end
 function methods:GetFrameLevel() return self.level or 1 end
 function methods:SetFrameLevel(v) assert(type(v)=='number');self.level=v end

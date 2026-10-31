@@ -2046,6 +2046,21 @@
       "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
       "method": "GetScript",
       "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetTop",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetBottom",
+      "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
+      "method": "GetEffectiveScale",
+      "classification": "native_or_helper"
     }
   ],
   "globals": {
@@ -3177,5 +3192,6 @@
     ],
     "receiver": "ScrollFrame",
     "evidence": "Local WoW.exe script strings; pfUI/modules/addons.lua uses scroll events; bundled Waterfall/aux use OnSizeChanged. Runtime behavior is covered by eventful offline mocks, not live-client acceptance."
-  }
+  },
+  "automation_viewport_geometry": "Live client 2026-10-31: anchored ScrollFrame GetHeight=310.49997, GetEffectiveScale=.75, GetTop=834.99999, GetBottom=421.00000. Use edge span 414 logical units against explicit row offsets; scaled height fallback only when edges are unresolved."
 }

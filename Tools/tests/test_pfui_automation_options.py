@@ -28,6 +28,9 @@ function methods:GetHeight()
 end
 function methods:SetPoint(...) self.point={...} end
 function methods:ClearAllPoints() self.point=nil end
+function methods:GetTop() return (self.bottom or 0) + self.height end
+function methods:GetBottom() return self.bottom or 0 end
+function methods:GetEffectiveScale() return self.scale or (self.parent and self.parent:GetEffectiveScale()) or 1 end
 function methods:GetLeft() return 0 end
 function methods:GetRight() return 440 end
 function methods:Show() self.shown=true end

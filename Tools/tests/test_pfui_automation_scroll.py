@@ -57,15 +57,40 @@ function methods:SetFocus() self.focused=true;fire(self,'OnEditFocusGained') end
 function methods:ClearFocus()
  if self.focused then self.focused=false;fire(self,'OnEditFocusLost') end
 end
-function methods:GetBottom() return 0 end
-function methods:GetTop() return 800 end
-function methods:GetEffectiveScale() return 1 end
+-- Legacy anchored containers report a scaled height, whereas explicit row
+-- heights remain local layout units. clipHeight is independent ground truth
+-- for the viewport's actual logical clipping rectangle, never read via GetHeight.
+local getHeight=methods.GetHeight
+function methods:GetHeight()
+ if self.viewportAnchored then return self.clipHeight*self:GetEffectiveScale() end
+ return getHeight(self)
+end
+function methods:GetBottom()
+ if self.viewportAnchored then
+  if self.clipGeometry=='missing' then return nil end
+  if self.clipGeometry=='degenerate' then return self.clipTop or 800 end
+  return (self.clipTop or 800)-self.clipHeight
+ end
+ return 0
+end
+function methods:GetTop()
+ if self.viewportAnchored then
+  if self.clipGeometry=='missing' then return nil end
+  return self.clipTop or 800
+ end
+ return 800
+end
+function methods:GetEffectiveScale()
+ return (self.scale or 1)*(self.parent and self.parent:GetEffectiveScale() or 1)
+end
 function methods:GetFrameLevel() return self.level or 1 end
 function methods:SetFrameLevel(v) self.level=v end
 function methods:EnableMouseWheel(v) self.wheel=v end
 function methods:SetVertexColor(...) self.vertex=arg end
 function methods:SetScrollChild(child) self.content=child end
-function methods:GetVerticalScrollRange() return math.max(0,(self.content and self.content:GetHeight() or 0)-self:GetHeight()) end
+function methods:GetVerticalScrollRange()
+ return math.max(0,(self.content and self.content:GetHeight() or 0)-(self.clipHeight or self.height))
+end
 function methods:UpdateScrollChildRect() fire(self,'OnScrollRangeChanged',0,self:GetVerticalScrollRange()) end
 function methods:SetVerticalScroll(v)
  v=math.max(0,math.min(v,self:GetVerticalScrollRange()))
@@ -85,6 +110,7 @@ function methods:GetValue() return self.value or 0 end
 local setHeight=methods.SetHeight
 function methods:SetHeight(value)
  local changed=self.height~=value;setHeight(self,value)
+ if self.viewportAnchored then self.clipHeight=value end
  if changed then
   fire(self,'OnSizeChanged',self:GetWidth(),value)
   if self.parent and self.parent.content==self then self.parent:UpdateScrollChildRect() end
@@ -106,7 +132,7 @@ OpacitySliderFrame=obj('Slider');ColorPickerFrame:Hide()
     dropdown = widgets[widgets.index('do -- dropdown'):widgets.index('function pfUI.api.CreateTabChild')]
     scroll = widgets[widgets.index('function pfUI.api.CreateScrollFrame'):widgets.index('function pfUI.api.CreateTextBox')]
     lua.execute(dropdown + scroll)
-    lua.execute("CreateDropDownButton=pfUI.api.CreateDropDownButton;parent=pfUI.api.CreateScrollChild(nil,pfUI.api.CreateScrollFrame(nil,pfUI.gui));parent.parent=parent:GetParent();parent.parent:SetHeight(240)")
+    lua.execute("CreateDropDownButton=pfUI.api.CreateDropDownButton;parent=pfUI.api.CreateScrollChild(nil,pfUI.api.CreateScrollFrame(nil,pfUI.gui));parent.parent=parent:GetParent();parent.parent.viewportAnchored=true;parent.parent:SetHeight(240)")
     gui = (ROOT / 'Interface/AddOns/pfUI/modules/gui.lua').read_text(encoding='utf-8-sig')
     start = gui.index('    function EntryUpdate(')
     lua.execute('local searchDB={}\n' + gui[start:gui.index('    local TabFrameOnMouseDown', start)] + '\npfUI.gui.CreateConfig=CreateConfig')
@@ -147,11 +173,13 @@ assert(parent:GetScript('OnUpdate')==nil,'scroll child still polls every frame')
 for _,row in ipairs(state.visible) do assert(row:GetScript('OnUpdate')==nil,'row still polls mouse focus every frame') end
 local maximumShown=0
 local function checkViewport()
- local top,height=scroll:GetVerticalScroll(),scroll:GetHeight()
+ -- Expectations use the clipping model, not the same GetHeight path whose
+ -- unit mismatch caused the bottom gap in the live screenshot.
+ local top,height=scroll:GetVerticalScroll(),scroll.clipHeight
  local shown=0
  for _,row in ipairs(state.visible) do
   local expected=row.automationOffset+row.automationHeight>=top-48 and row.automationOffset<=top+height+48
-  assert(row:IsShown()==expected,'wrong clipped visibility for '..row.option.name)
+  assert(row:IsShown()==expected,'wrong clipped visibility for '..row.option.name..' at scale '..scroll:GetEffectiveScale()..', clip '..height..', reported '..scroll:GetHeight())
   if row:IsShown() then shown=shown+1 end
  end
  maximumShown=math.max(maximumShown,shown)
@@ -255,7 +283,60 @@ invalid.input:SetText('701');fire(invalid.input,'OnEnterPressed')
 assert(saved.field700==701 and not R.lastError)
 scroll.slider:SetValue(0);assert(toggle:IsShown());toggle.input:SetChecked(1);fire(toggle.input,'OnClick')
 assert(saved.enabled,'corrected hidden draft still blocked later actions')
+-- Screenshot regression: a 440-unit anchored viewport at scale 0.75 reports
+-- 330 via GetHeight. Using 330 directly prematurely hides bottom rows even
+-- though they lie inside the independent 440-unit clipping rectangle.
+local scales={.75,.65,1,1.25}
+local scaledOperations=0
+for _,scale in ipairs(scales) do
+ UIParent.scale=scale
+ scroll.clipTop=900
+ scroll:SetHeight(440)
+ fire(scroll,'OnSizeChanged',scroll:GetWidth(),scroll:GetHeight())
+ scroll:UpdateScrollChildRect()
+ scroll.slider:SetValue(0);checkViewport()
+ assert(scroll:GetHeight()==440*scale,'anchored height scaling was not modeled')
+ assert(scroll:GetTop()==900 and scroll:GetBottom()==460,'independent clipping bounds were not modeled')
+ assert(rowNamed('Text'):GetHeight()==rowNamed('Text').automationHeight,'explicit row height was accidentally scaled')
+ local draft='scaled draft '..tostring(scale)
+ local edit=rowNamed('Text').input
+ edit:SetFocus();edit:SetText(draft)
+ local prior=saved.text
+ local metrics=snapshot()
+ -- Native slider paths cover head/middle/tail and large reverse jumps.
+ for _,fraction in ipairs({.5,1,.01,.9,.2,0}) do
+  local rowOps=calls.rowOps
+  scroll.slider:SetValue(scroll:GetVerticalScrollRange()*fraction)
+  checkViewport();unchanged(metrics)
+  assert(calls.rowOps-rowOps<80,'scaled jump scanned all row visibility')
+  scaledOperations=scaledOperations+1
+ end
+ for _,delta in ipairs({-100000,100000,-4,2}) do
+  fire(scroll,'OnMouseWheel',delta);checkViewport();unchanged(metrics)
+  scaledOperations=scaledOperations+1
+ end
+ -- Moving the viewport origin must not be mistaken for a content offset.
+ scroll.clipTop=1300
+ fire(scroll,'OnSizeChanged',scroll:GetWidth(),scroll:GetHeight())
+ checkViewport();unchanged(metrics)
+ assert(scroll:GetTop()==1300 and scroll:GetBottom()==860)
+ -- Some layout frames report unavailable/transient bounds. Fallback height
+ -- must still be in row units, not the old scaled GetHeight units.
+ for _,geometry in ipairs({'missing','degenerate'}) do
+  scroll.clipGeometry=geometry
+  fire(scroll,'OnSizeChanged',scroll:GetWidth(),scroll:GetHeight())
+  checkViewport();unchanged(metrics)
+ end
+ scroll.clipGeometry=nil
+ fire(scroll,'OnSizeChanged',scroll:GetWidth(),scroll:GetHeight())
+ checkViewport();unchanged(metrics)
+ assert(saved.text==prior and edit:GetText()==draft,'scaled scrolling lost or submitted draft')
+ scroll.slider:SetValue(scroll:GetVerticalScrollRange());checkViewport();unchanged(metrics)
+ assert(R:Suspend(parent));assert(saved.text==draft,'scaled hidden draft was not saved on close')
+ assert(R:Render(parent,module,changed));checkViewport()
+end
 report={logical_rows=1004,scroll_operations=operations,maximum_shown_rows=maximumShown,
+ scales_checked=#scales,scaled_scroll_operations=scaledOperations,clip_geometry_cases=#scales*4,
  focus_loss_events=calls.lost,scroll_events=calls.vertical,range_events=calls.range,
  verified='real native EntryUpdate, wheel, slider and renderer; simulated focus and geometry; no live FPS claim'}
 ''')
