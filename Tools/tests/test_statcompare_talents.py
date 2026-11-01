@@ -282,6 +282,65 @@ assert(sends[2][4]=='SideTarget' and SendAddonMessage==SavedSend)
 Feed('INSTalentShow','Peer');assert(table.getn(sends)>0 and ActiveUpdates()==0)
 Feed('OTHER_MESSAGE','Peer');assert(delivered[table.getn(delivered)][1]=='OTHER_MESSAGE')
 ''')
+    case('END with tail fields is classified before tree index and completes native publish', '''
+OpenTarget()
+for tree=1,3 do Feed(Tab(tree));for i=1,2 do Feed(Info(tree,i)) end end
+Feed('INSTalentEND;1;')
+assert(renders==1 and SCInspectTalents.diagnostics.state=='complete' and ActiveUpdates()==0)
+assert(delivered[table.getn(delivered)][1]=='INSTalentEND;')
+''')
+    case('END with an empty tail completes a validated three-tree snapshot', '''
+OpenTarget()
+for tree=1,3 do Feed(Tab(tree));for i=1,2 do Feed(Info(tree,i)) end end
+Feed('INSTalentEND;;');assert(renders==1 and table.getn(notices)==0)
+''')
+    case('extension controls with or without tree-shaped fields cannot abort an active request', '''
+OpenTarget();Feed('INSTalentExtension;1;');Feed('INSTalentExtension;no-tree;')
+assert(ActiveUpdates()==1 and InspectTalentsFrame:IsShown() and table.getn(notices)==0)
+local d=SCInspectTalents.diagnostics
+assert(d.ignored==2 and table.getn(d.types)==1 and d.types[1]=='INSTalentExtension')
+Complete();assert(renders==1 and d.tabs==3 and d.nodes==6)
+''')
+    case('wrong-sender extensions remain ignored without affecting session diagnostics', '''
+OpenTarget();Feed('INSTalentExtension;1;','Other')
+assert(SCInspectTalents.diagnostics.ignored==0 and ActiveUpdates()==1)
+Complete();assert(renders==1)
+''')
+    case('peer requests with optional fields still use native peer response', '''
+Feed('INSTalentShow;1;','Peer')
+assert(table.getn(sends)>0 and ActiveUpdates()==0 and Requests()==0)
+''')
+    case('completed wire stream allows deliberate refresh after a short quiet period', '''
+OpenTarget();Complete();control=true;clock=3;SCInspectTalents.Request()
+assert(Requests()==2 and ActiveUpdates()==1)
+Complete();assert(renders>=2 and SCInspectTalents.diagnostics.state=='complete' and ActiveUpdates()==0)
+''')
+    case('incomplete END permits retry after quiet period without full timeout lockout', '''
+OpenTarget();Feed(Tab(1));Feed('INSTalentEND;1;')
+assert(SCInspectTalents.diagnostics.state=='failed' and ActiveUpdates()==0)
+clock=3;OpenTarget();assert(Requests()==2)
+Complete();assert(renders==1)
+''')
+    case('drained canceled response cannot reopen UI and shortens retry wait only after END', '''
+OpenTarget();InspectFrame_ShowSubFrame('InspectPaperDollFrame')
+Feed('INSTalentEND;1;');assert(renders==0 and ActiveUpdates()==0)
+clock=3;SCInspectTalents.Open();assert(Requests()==2)
+Complete();assert(renders==1)
+''')
+    case('repeated cooldown clicks produce a throttled countdown instead of chat spam', '''
+OpenTarget();InspectFrame_ShowSubFrame('InspectPaperDollFrame')
+for i=1,8 do SCInspectTalents.Open() end
+assert(Requests()==1 and table.getn(notices)==1)
+clock=3;SCInspectTalents.Open();assert(table.getn(notices)==2)
+''')
+    case('manual diagnostics are bounded, do not query and exclude raw packet contents', '''
+OpenTarget()
+for i=1,20 do Feed('INSTalentExtension'..i..';1;PrivatePayload') end
+local d=SCInspectTalents.diagnostics;assert(d.ignored==20 and table.getn(d.types)==6)
+SCInspectTalents.ShowDiagnostics();assert(Requests()==1)
+for _,line in ipairs(notices) do assert(not string.find(line,'PrivatePayload',1,true)) end
+Complete();assert(renders==1)
+''')
     for name, payload in [
         ('tree zero', 'INSTalentTabInfo;0;tree;3;2'),
         ('tree outside three', 'INSTalentTabInfo;4;tree;3;2'),

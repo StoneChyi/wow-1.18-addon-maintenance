@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-02",
+  "user_evidence": "Screenshot: unknown talent message then repeated request quarantine notices; no actual protocol token captured",
+  "confirmed_defects": [
+    "Exact END comparison rejects valid native-compatible tail fields",
+    "Unknown extension messages abort pending session and leave full quarantine"
+  ],
+  "unconfirmed": "The screenshot does not establish which unknown token was actually received",
+  "validation": {
+    "talent_groups": 52,
+    "modes": [
+      "actual extracted native parser",
+      "independent contract"
+    ],
+    "panel_checks": 36,
+    "lua50_modified_files": 2,
+    "lua50_standard_field_split": "actual interpreter passed"
+  },
+  "runtime_changes": [
+    "END token classification",
+    "ignore bounded extension tokens without abort",
+    "2-second settle after END, retain canceled-stream quarantine until END or deadline",
+    "throttled wait countdown",
+    "manual /statc talentstatus; no full packets/player names stored"
+  ],
+  "game_acceptance": "pending user retest; no game input performed in this follow-up"
+}

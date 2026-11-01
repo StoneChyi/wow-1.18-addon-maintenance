@@ -113,7 +113,7 @@
 | [ShaguDPS](ShaguDPS.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](ShaguDPS.md#change-ShaguDPS-20261102-01) |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261102-01) |
 | [SpecialTalent](SpecialTalent.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SpecialTalent.md#change-SpecialTalent-20261102-01) |
-| [StatCompare](StatCompare.md) | [2026-11-02 · 天赋新入口、切目标取消与完整回复后发布](StatCompare.md#change-StatCompare-20261102-02) |
+| [StatCompare](StatCompare.md) | [2026-11-02 · 修正未知消息误终止、结束包兼容与重试等待](StatCompare.md#change-StatCompare-20261102-03) |
 | [STSMmayor](STSMmayor.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](STSMmayor.md#change-STSMmayor-20261102-01) |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261102-01) |
 | [SuperMacro](SuperMacro.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SuperMacro.md#change-SuperMacro-20261102-01) |

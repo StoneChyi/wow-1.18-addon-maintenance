@@ -734,7 +734,9 @@ function STATCOMPARE_SlashCmdHandler(msg)
 	local CLOSE = FONT_COLOR_CODE_CLOSE;
 	local NORMAL = NORMAL_FONT_COLOR_CODE;
 
-	if msg == "perf" then
+	if msg == "talentstatus" then
+		if SCInspectTalents then SCInspectTalents.ShowDiagnostics() end
+	elseif msg == "perf" then
 		SCProfileNextCharacterOpen()
 	elseif msg == "layout auto" or msg == "layout free" then
 		SCSetPanelLayoutMode(msg == "layout auto" and "auto" or "free")

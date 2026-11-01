@@ -3,7 +3,9 @@
 SCInspectTalents = { enabled = false, timeout = 12, cacheTime = 30 }
 local S = SCInspectTalents
 local pending, completed, timer, originals
+local draining
 local recent = {}
+S.diagnostics = { state = "idle", tabs = 0, nodes = 0, ignored = 0, types = {} }
 local function Now() return GetTime() end
 local function Notice(text)
     if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff80c8e7天赋观察：|r" .. text) end
@@ -26,6 +28,10 @@ local function Visible()
 end
 local function StopTimer() if timer then timer:SetScript("OnUpdate", nil) end end
 function S.Cancel()
+    if pending then
+        draining = { name = pending.name, deadline = pending.deadline + 2 }
+        S.diagnostics.state = "canceled"
+    end
     pending = nil
     StopTimer()
     if TWTalentFrame then TWTalentFrame:Hide() end
@@ -42,6 +48,7 @@ end
 local function Fail(text)
     completed = nil
     ClosePage()
+    S.diagnostics.state, S.diagnostics.reason = "failed", text
     Notice(text)
 end
 local function Fields(message)
@@ -92,6 +99,7 @@ local function Publish(record)
     end
     if not pcall(Deliver) then Fail("天赋数据无法显示，请稍后重新查询。"); return end
     completed = { name = record.name, class = record.class, key = record.key, time = Now() }
+    S.diagnostics.state = "complete"
     pending = nil
     StopTimer()
     if S.status then S.status:Hide() end
@@ -114,11 +122,16 @@ function S.Request()
     if pending and Matches(pending) then return end
     if completed and Matches(completed) and Now() - completed.time < S.cacheTime
         and not (IsControlKeyDown and IsControlKeyDown()) then
+        S.diagnostics.state = "cached"
         TWTalentFrame:Show(); return
     end
     if recent[name] and recent[name] > Now() then
         if completed and Matches(completed) then TWTalentFrame:Show() else ClosePage() end
-        Notice("上一请求尚在等待期，请稍后重新点击天赋页。"); return
+        if not S.lastWaitNotice or Now() - S.lastWaitNotice >= 2 then
+            Notice("上一查询尚在收尾，请 " .. math.ceil(recent[name] - Now()) .. " 秒后重试。")
+            S.lastWaitNotice = Now()
+        end
+        return
     end
     S.Cancel()
     for who, deadline in pairs(recent) do if deadline <= Now() then recent[who] = nil end end
@@ -133,6 +146,8 @@ function S.Request()
         tabs = {}, talents = { {}, {}, {} } }
     recent[name] = record.deadline + 2
     pending = record
+    S.diagnostics = { state = "waiting", tabs = 0, nodes = 0, ignored = 0, types = {} }
+    S.lastWaitNotice = nil
     if not S.status then
         S.status = InspectTalentsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         S.status:SetPoint("CENTER", InspectTalentsFrame, "CENTER", -10, 0)
@@ -155,13 +170,34 @@ local function Message(native, message, sender)
     if type(message) ~= "string" or not string.find(message, "INSTalent", 1, true) then
         return native(message, sender)
     end
-    -- Preserve the native response to another player's legitimate request.
-    if message == "INSTalentShow" then return native(message, sender) end
+    local delimiter = string.find(message, ";", 1, true)
+    local kind = delimiter and string.sub(message, 1, delimiter - 1) or message
+    -- Native handlers accept optional tail fields; classify the token before
+    -- reading a tree index (END and extension controls have no tree contract).
+    if kind == "INSTalentShow" then return native("INSTalentShow", sender) end
+    if kind == "INSTalentEND" and draining and sender == draining.name
+        and Now() <= draining.deadline and (not pending or sender ~= pending.name) then
+        recent[sender], draining = Now() + 2, nil
+        return
+    end
     local record = pending
     if not record or sender ~= record.name or not Visible() or not Matches(record) then return end
     if Now() >= record.deadline then Fail("查询超时，请稍后重试。"); return end
+    if kind ~= "INSTalentEND" and kind ~= "INSTalentTabInfo" and kind ~= "INSTalentInfo" then
+        local d = S.diagnostics
+        d.ignored = d.ignored + 1
+        -- Keep protocol tokens only, never talent names or complete packets.
+        local token = string.sub(kind, 1, 48)
+        token = string.gsub(token, "[^%w_]", function(c) return string.format("\\x%02X", string.byte(c)) end)
+        local seen = false
+        for _, value in ipairs(d.types) do if value == token then seen = true end end
+        if not seen and table.getn(d.types) < 6 then table.insert(d.types, token) end
+        return
+    end
+    S.diagnostics.lastType = kind
     if string.len(message) > 2048 then Fail("收到无效天赋数据，请重新查询。"); return end
-    if message == "INSTalentEND;" then
+    if kind == "INSTalentEND" then
+        recent[sender] = Now() + 2
         if Ready(record) then Publish(record)
         else Fail("天赋数据未收齐，请稍后重新查询。") end
         return
@@ -169,11 +205,12 @@ local function Message(native, message, sender)
     local f = Fields(message)
     local tree = Integer(f[2], 1, 3)
     if not tree then Fail("收到无效天赋树数据。"); return end
-    if f[1] == "INSTalentTabInfo" then
+    if kind == "INSTalentTabInfo" then
         local points, count = Integer(f[4], 0, 100), Integer(f[5], 0, 20)
         if not points or not count then Fail("收到无效天赋页数据。"); return end
+        if not record.tabs[tree] then S.diagnostics.tabs = S.diagnostics.tabs + 1 end
         record.tabs[tree] = { points = points, count = count, message = message }
-    elseif f[1] == "INSTalentInfo" then
+    elseif kind == "INSTalentInfo" then
         local i = Integer(f[3], 1, 20)
         local tier, column = Integer(f[5], 1, 8), Integer(f[6], 1, 4)
         local rank, maximum = Integer(f[7], 0, 10), Integer(f[8], 1, 10)
@@ -184,8 +221,17 @@ local function Message(native, message, sender)
             or (f[9] ~= "0" and f[9] ~= "1") or (f[12] ~= "-1" and f[12] ~= "1") then
             Fail("收到不完整或不兼容的天赋数据。"); return
         end
+        if not record.talents[tree][i] then S.diagnostics.nodes = S.diagnostics.nodes + 1 end
         record.talents[tree][i] = { rank = rank, message = message }
-    else Fail("收到未知天赋消息，请更新客户端后重试。") end
+    end
+end
+function S.ShowDiagnostics()
+    local d = S.diagnostics
+    Notice("模块=" .. tostring(S.enabled) .. "；状态=" .. d.state .. "；天赋树=" .. d.tabs
+        .. "/3；节点=" .. d.nodes .. "；忽略扩展=" .. d.ignored
+        .. "；最后数据类型=" .. (d.lastType or "无"))
+    if table.getn(d.types) > 0 then Notice("扩展类型：" .. table.concat(d.types, ", ")) end
+    if d.reason then Notice("上次停止原因：" .. d.reason) end
 end
 function S.Open()
     if not S.enabled then return end

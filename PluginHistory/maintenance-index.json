@@ -1972,7 +1972,7 @@
         "Interface/AddOns/StatCompare/TALENT_INSPECT.md"
       ],
       "tracked_files_at_reference": 25,
-      "pending": "42组天赋专项、36项层级及头像/共享法命回归、3改动文件真实Lua5.0检查通过；真实通信/排版/鼠标操作待游戏验收，协议无请求ID的同名迟到边界保留。",
+      "pending": "用户反馈首/再次天赋查看只显示背景，截图确认未知消息误终止；已修正协议类型/END尾字段与收尾等待，52组双模式、36项层级及2个改动Lua真实5.0检查通过；实际未知类型与游戏显示仍待用户复测，可用/statc talentstatus诊断。",
       "last_package_update": {
         "date": "2026-10-25",
         "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
