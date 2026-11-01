@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 336,
+  "dated_records": 337,
   "addons": [
     {
       "addon": "!Libs",
@@ -3621,13 +3621,22 @@
       "addon": "hyx",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/hyx.md",
-      "purpose": "净界驱散 PureDispel 2.1.0；pfUI双区独立滚动、自定义高度/180–600宽度、空区留白及按需调试，保留名单、团本规则和旧配置。",
+      "purpose": "净界驱散 PureDispel 2.1.0；pfUI双区独立滚轮、无翻页箭头、自定义高度/180–600宽度、空区留白及按需调试，保留名单、团本规则和旧配置。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "2.1.0：高度、窄窗口、空区留白与按需调试",
+      "latest_record_title": "取消上下区翻页箭头",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "record_count": 3,
       "records": [
+        {
+          "id": "hyx-20261102-03",
+          "date": "2026-11-02",
+          "title": "取消上下区翻页箭头",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-hyx-20261102-03"
+        },
         {
           "id": "hyx-20261102-02",
           "date": "2026-11-02",

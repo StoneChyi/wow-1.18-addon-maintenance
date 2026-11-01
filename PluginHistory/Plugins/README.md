@@ -92,7 +92,7 @@
 | [Flyout](Flyout.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Flyout.md#change-Flyout-20261102-01) |
 | [GoubayuHeal](GoubayuHeal.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](GoubayuHeal.md#change-GoubayuHeal-20261102-01) |
 | [HideOutdoorWorldState](HideOutdoorWorldState.md) | [2026-10-10 · 用户确认主动删除并停用](HideOutdoorWorldState.md#change-HideOutdoorWorldState-20261010-01) |
-| [hyx](hyx.md) | [2026-11-02 · 2.1.0：高度、窄窗口、空区留白与按需调试](hyx.md#change-hyx-20261102-02) |
+| [hyx](hyx.md) | [2026-11-02 · 取消上下区翻页箭头](hyx.md#change-hyx-20261102-03) |
 | [Meeting](Meeting.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Meeting.md#change-Meeting-20261102-01) |
 | [MySlash](MySlash.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](MySlash.md#change-MySlash-20261102-01) |
 | [NotGrid](NotGrid.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](NotGrid.md#change-NotGrid-20261102-01) |
