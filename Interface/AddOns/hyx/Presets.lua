@@ -12,8 +12,8 @@ P.Options = {
     priority = {
         { key="none", label="不使用优先预设", hint="保留手工优先和队伍原顺序" },
         { key="smart", label="智能团队", hint="坦克优先，其次治疗，最后其他队员" },
-        { key="tanks", label="坦克优先", hint="按独立职责识别结果匹配坦克" },
-        { key="healers", label="治疗优先", hint="按独立职责识别结果匹配治疗" },
+        { key="tanks", label="坦克优先", hint="按统一职责识别结果匹配坦克" },
+        { key="healers", label="治疗优先", hint="按统一职责识别结果匹配治疗" },
         { key="mana", label="有蓝职业优先", hint="按法力职业匹配，变形中的德鲁伊也包括在内" },
         { key="melee", label="近战优先", hint="近战职责优先，坦克也归入近战组" },
         { key="ranged", label="远程输出优先", hint="远程输出优先，不包括治疗" },
@@ -102,8 +102,13 @@ local function Role(member)
         return D.Roles.Get(member.name)
     end
 end
+local function Kind(info)
+    if not info then return "UNKNOWN" end
+    if info.role == "DAMAGER" then return info.style or "UNKNOWN" end
+    return info.role or "UNKNOWN"
+end
 local function PriorityGroup(member, config, role)
-    local key, kind = config.priority, role and role.role or "UNKNOWN"
+    local key, kind = config.priority, Kind(role)
     if key == "smart" then return kind == "TANK" and 0 or kind == "HEALER" and 1 or 2 end
     local match = key == "tanks" and kind == "TANK" or key == "healers" and kind == "HEALER"
         or key == "mana" and mana[member.class]
@@ -117,9 +122,9 @@ local function AutoIgnored(member, config, role)
     if config.ignore == "outsideGroup" then return P.ownGroup and member.subgroup and member.subgroup ~= P.ownGroup end
     if config.ignore == "nonMana" then return member.class == "WARRIOR" or member.class == "ROGUE" end
     if not role or role.confidence ~= "high" or role.provisional then return false end
-    return config.ignore == "melee" and role.role == "MELEE"
-        or config.ignore == "ranged" and role.role == "RANGED"
-        or config.ignore == "damage" and (role.role == "MELEE" or role.role == "RANGED")
+    return config.ignore == "melee" and Kind(role) == "MELEE"
+        or config.ignore == "ranged" and Kind(role) == "RANGED"
+        or config.ignore == "damage" and (Kind(role) == "MELEE" or Kind(role) == "RANGED")
 end
 function P.GetPolicy(name)
     local state, scope = D.GetManualPolicy(name)
@@ -168,7 +173,7 @@ function P.UpdateRoster(roster)
             if member.state == "priority" then summary.priorityCount = summary.priorityCount + 1
             elseif member.state == "ignore" then summary.ignoredCount = summary.ignoredCount + 1 end
         end
-        local key = roleKeys[role and role.role or "UNKNOWN"] or "unknown"
+        local key = roleKeys[Kind(role)] or "unknown"
         summary.roles[key] = summary.roles[key] + 1
         member.rank = config.selfFirst and member.self and 0 or manual == "priority" and 1
             or 2 + PriorityGroup(member, config, role)

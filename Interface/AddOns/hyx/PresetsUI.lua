@@ -4,7 +4,7 @@
 local D = XinDispel
 local U = D.UI
 local Panel, Text, Button = U.CreatePanel, U.CreateText, U.CreateButton
-local roleNames = { TANK = "坦克", HEALER = "治疗", MELEE = "近战", RANGED = "远程", UNKNOWN = "未确认" }
+local roleNames = { DAMAGER = "输出", TANK = "坦克", HEALER = "治疗", MELEE = "近战", RANGED = "远程", UNKNOWN = "未确认" }
 local confidenceNames = { high = "高", medium = "中", low = "低", unknown = "未确认", confirmed = "已确认" }
 local sourceNames = {
     manual = "本队修正", talent = "天赋", talents = "天赋", inspect = "天赋查询",
@@ -73,7 +73,7 @@ function U.AddPresetTooltip(name)
         if maxHealth and maxHealth > 0 then
             GameTooltip:AddLine("血量上限：" .. math.floor(maxHealth), .7, .7, .7)
         end
-        if info.queryState and (info.role == "UNKNOWN" or info.provisional) then
+        if info.queryState and (not info.role or info.role == "UNKNOWN" or info.provisional) then
             GameTooltip:AddLine(queryNames[info.queryState] or "职责尚待确认", .8, .75, .6)
         end
     else
@@ -200,14 +200,10 @@ function U.OpenPresets()
             U.RefreshPresets()
         end)
         panel.identify:SetPoint("TOPLEFT", panel, "TOPLEFT", 17, -345)
-        Tooltip(panel.identify, "重新识别当前队友", "独立请求天赋并更新血量上限缓存；没有可靠回包的队友会保留为未确认。")
-        panel.validate = Button(panel, "短时承伤校验", 196, 23, function()
-            local ok, reason = D.Roles.StartValidation()
-            Notify(ok == false and (reason or "暂时无法校验") or reason or "已启动短时承伤校验；结果只作临时参考。")
-            U.RefreshPresets()
-        end)
-        panel.validate:SetPoint("LEFT", panel.identify, "RIGHT", 10, 0)
-        Tooltip(panel.validate, "短时承伤校验", "手动开启有限时长的承伤观察；只校验临时倾向，不读取当前生命值，也不覆盖可靠天赋或手动职责。")
+        Tooltip(panel.identify, "重新识别当前队友", "使用统一查询队列刷新队友天赋；不完整或无可靠回包的队友保留为未确认。")
+        panel.manageRoles = Button(panel, "统一职责管理", 196, 23, function() U.OpenRoleEditor() end)
+        panel.manageRoles:SetPoint("LEFT", panel.identify, "RIGHT", 10, 0)
+        Tooltip(panel.manageRoles, "团队职责", "在pfUI统一管理本队职责，所有关联插件共享修正结果。")
         panel.reset = Button(panel, "恢复默认", 190, 23, function()
             local ok, reason = D.Presets.Reset()
             Notify(ok == false and (reason or "无法恢复默认") or "已恢复默认预设；保留手动名单。")
@@ -229,43 +225,13 @@ function U.OpenPresets()
     U.presets:Show(); U.RefreshPresets()
 end
 
-local function Member(name)
-    if not name or name == "" then return false end
-    for _, player in ipairs(D.GetRoster()) do if player.name == name then return true end end
-    return false
-end
-
 function U.OpenRoleEditor(name)
-    if not D.Roles or not Member(name) then Notify("目标不在当前队伍，无法设置本队职责"); return end
     if U.menu then U.menu:Hide() end
-    if not U.roleEditor then
-        local panel = Panel("PureDispelRoleEditor", "本队职责修正", 280, 255, true)
-        U.roleEditor = panel
-        panel.name = Text(panel, "", 12); panel.name:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -41)
-        panel.hint = Text(panel, "只作用于本队；确认离队后清除。", 10)
-        panel.hint:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 16, 12)
-        panel.hint:SetWidth(248); panel.hint:SetHeight(28); panel.hint:SetTextColor(.7, .7, .7)
-        panel.buttons = {}
-        for i, item in ipairs({ { "TANK", "坦克" }, { "HEALER", "治疗" }, { "MELEE", "近战" }, { "RANGED", "远程" }, { "AUTO", "恢复自动识别" } }) do
-            local role = item[1]
-            local row = Button(panel, item[2], 248, 24, function()
-                local target = panel.targetName
-                if not Member(target) then panel:Hide(); Notify("目标已离队，取消职责修正"); return end
-                local value
-                if role ~= "AUTO" then value = role end
-                local ok, reason = D.Roles.SetManual(target, value)
-                panel:Hide()
-                Notify(ok == false and (reason or "无法修正职责") or target .. (value and "：本队职责已设为" .. roleNames[value] or "：已恢复自动识别"))
-                Update()
-            end)
-            row:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -64 - (i - 1) * 28)
-            panel.buttons[role] = row
-        end
+    if pfUI and type(pfUI.OpenTeamRoles) == "function" then
+        pfUI:OpenTeamRoles(name)
+    else
+        Notify("请启用pfUI团队职责模块；统一识别仍可在后台运行。")
     end
-    U.roleEditor.targetName = name
-    local info = RoleInfo(name)
-    U.roleEditor.name:SetText(name .. " · " .. (info and roleNames[info.role] or "未确认"))
-    U.roleEditor:Show()
 end
 
 -- Reuse the engine's change notification; do not introduce a UI update loop.

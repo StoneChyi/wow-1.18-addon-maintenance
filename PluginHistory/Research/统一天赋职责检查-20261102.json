@@ -1,0 +1,120 @@
+{
+  "date": "2026-11-02",
+  "scope": "offline only; no live client/server/performance acceptance",
+  "suites": [
+    {
+      "args": [
+        "Tools/tests/test_shared_team_roles.py"
+      ],
+      "ok": true,
+      "output": "test_all_canonical_classes_and_melee_ranged_dimension (__main__.SharedRolesTests.test_all_canonical_classes_and_melee_ranged_dimension) ... ok\r\ntest_ambiguous_talents_do_not_become_confirmed_tanks_or_non_tanks (__main__.SharedRolesTests.test_ambiguous_talents_do_not_become_confirmed_tanks_or_non_tanks) ... ok\r\ntest_canceled_inspect_does_not_cancel_other_subscriber_or_open_native_ui (__main__.SharedRolesTests.test_canceled_inspect_does_not_cancel_other_subscriber_or_open_native_ui) ... ok\r\ntest_combat_pauses_new_requests_keeps_valid_snapshot_then_expires (__main__.SharedRolesTests.test_combat_pauses_new_requests_keeps_valid_snapshot_then_expires) ... ok\r\ntest_extension_diagnostics_are_bounded_and_keep_no_payload (__main__.SharedRolesTests.test_extension_diagnostics_are_bounded_and_keep_no_payload) ... ok\r\ntest_identity_change_rejects_old_sender_and_drops_manual_roles (__main__.SharedRolesTests.test_identity_change_rejects_old_sender_and_drops_manual_roles) ... ok\r\ntest_idle_cache_expiry_sweep_has_no_unit_api_polling (__main__.SharedRolesTests.test_idle_cache_expiry_sweep_has_no_unit_api_polling) ... ok\r\ntest_incomplete_or_conflicting_packets_never_publish (__main__.SharedRolesTests.test_incomplete_or_conflicting_packets_never_publish) ... ok\r\ntest_leaving_group_clears_self_override_before_next_team (__main__.SharedRolesTests.test_leaving_group_clears_self_override_before_next_team) ... ok\r\ntest_manual_cache_reuse_and_force_isolation (__main__.SharedRolesTests.test_manual_cache_reuse_and_force_isolation) ... ok\r\ntest_no_consumer_has_no_driver_or_packets_and_loads_once (__main__.SharedRolesTests.test_no_consumer_has_no_driver_or_packets_and_loads_once) ... ok\r\ntest_offline_member_recovers_on_connection_event (__main__.SharedRolesTests.test_offline_member_recovers_on_connection_event) ... ok\r\ntest_oversize_invalid_and_spoofed_packets_are_rejected (__main__.SharedRolesTests.test_oversize_invalid_and_spoofed_packets_are_rejected) ... ok\r\ntest_read_self_failure_finishes_callback_instead_of_hanging (__main__.SharedRolesTests.test_read_self_failure_finishes_callback_instead_of_hanging) ... ok\r\ntest_reinstalling_native_guard_preserves_original_handler_without_recursion (__main__.SharedRolesTests.test_reinstalling_native_guard_preserves_original_handler_without_recursion) ... ok\r\ntest_repeated_acquire_and_peek_do_not_poll_unit_apis (__main__.SharedRolesTests.test_repeated_acquire_and_peek_do_not_poll_unit_apis) ... ok\r\ntest_repeated_observe_target_replacement_keeps_queue_bounded (__main__.SharedRolesTests.test_repeated_observe_target_replacement_keeps_queue_bounded) ... ok\r\ntest_single_pending_merges_subscribers_and_validates_tab_prefix (__main__.SharedRolesTests.test_single_pending_merges_subscribers_and_validates_tab_prefix) ... ok\r\ntest_three_failures_pause_queue_then_allow_later_work (__main__.SharedRolesTests.test_three_failures_pause_queue_then_allow_later_work) ... ok\r\ntest_timeout_skips_member_and_circuit_is_bounded (__main__.SharedRolesTests.test_timeout_skips_member_and_circuit_is_bounded) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 20 tests in 0.057s\r\n\r\nOK\r\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_teamroles_ui.py"
+      ],
+      "ok": true,
+      "output": "test_actual_shared_service_corrections_and_owner_lifecycle (__main__.TeamRoleUITests.test_actual_shared_service_corrections_and_owner_lifecycle) ... ok\r\ntest_all_corrections_write_only_the_shared_selected_member (__main__.TeamRoleUITests.test_all_corrections_write_only_the_shared_selected_member) ... ok\r\ntest_close_only_releases_the_window_owner_and_escape_is_registered (__main__.TeamRoleUITests.test_close_only_releases_the_window_owner_and_escape_is_registered) ... ok\r\ntest_member_replacement_between_press_release_and_action_cannot_modify_other_player (__main__.TeamRoleUITests.test_member_replacement_between_press_release_and_action_cannot_modify_other_player) ... ok\r\ntest_missing_font_paths_keep_real_template_font_on_every_text (__main__.TeamRoleUITests.test_missing_font_paths_keep_real_template_font_on_every_text) ... ok\r\ntest_missing_service_can_open_close_and_reports_unavailable (__main__.TeamRoleUITests.test_missing_service_can_open_close_and_reports_unavailable) ... ok\r\ntest_module_registration_is_lazy_and_has_no_sampling_driver (__main__.TeamRoleUITests.test_module_registration_is_lazy_and_has_no_sampling_driver) ... ok\r\ntest_new_member_notifications_update_only_while_window_is_visible (__main__.TeamRoleUITests.test_new_member_notifications_update_only_while_window_is_visible) ... ok\r\ntest_pfui_background_border_alpha_are_independent_of_text (__main__.TeamRoleUITests.test_pfui_background_border_alpha_are_independent_of_text) ... ok\r\ntest_unknown_members_sort_first_without_modifying_the_shared_roster (__main__.TeamRoleUITests.test_unknown_members_sort_first_without_modifying_the_shared_roster) ... ok\r\ntest_window_reuses_twelve_rows_and_scrolls_all_forty_members (__main__.TeamRoleUITests.test_window_reuses_twelve_rows_and_scrolls_all_forty_members) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 11 tests in 0.044s\r\n\r\nOK\r\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_puredispel.py"
+      ],
+      "ok": true,
+      "output": "PASS strict font mock rejects uninitialized and failed font paths\r\nPASS all nine classes match learned friendly dispel abilities\r\nPASS English names and highest learned rank\r\nPASS 40-person roster keeps all candidates in two dense lists\r\nPASS hidden engine performs no aura, distance or tooltip scanning\r\nPASS policy actions are reversible, full-ignore blocks priority\r\nPASS both ignore meanings, complete-block on unsupported aura type\r\nPASS pet range uses pet origin and pet loss invalidates capability\r\nPASS stale entries, changed auras and newly ignored names cannot cast\r\nPASS original raid data extracted without edits\r\nPASS full new load chain has initialized fonts with missing pfUI font\r\nPASS native skin fallback loads without pfUI\r\nPASS 20 reusable target rows, fixed simultaneous regions, independent wheel\r\nPASS empty upper section leaves lower section anchored and visible\r\nPASS scrolling preserves top visible person when an earlier target disappears\r\nPASS row refresh between press and release cancels wrong-target cast\r\nPASS right click menu sets ignore, recovery and one-step undo\r\nPASS menu action cannot apply to a stale actual aura before next scan\r\nPASS compatibility right click cast and middle-click targeting\r\nPASS background and border alpha do not fade text or icons\r\nPASS settings, manager, rules and raid manual are lazy singletons; fonts valid\r\nPASS small screen and largest font preserve both visible regions\r\nPASS unchanged scans do not recreate UI or repeatedly set row content\r\nPASS team rules persist normal roster changes and party-to-raid transitions\r\nPASS confirmed leaving a group clears only temporary rules, even hidden\r\nPASS long cooldown, GCD, mana and failing DLL reasons remain accurate\r\nPASS stock fallback casts on selected unit then restores target\r\nPASS temporary policies belong to character and realm, legacy long-term rules remain\r\nPASS empty team rules cannot resurrect an old group policy through undo\r\nPASS menu click-away is shared, closes cleanly, and no ordinary cast is triggered\r\nPASS manual supports missing height API and direct raid selection\r\nPASS hovered aura tooltip is refreshed and dismissed with its hidden row\r\nPASS chat-bar shortcut opens new settings and toggles whole window\r\nPASS legacy rows, positions, long-term policies and raid rules migrate intact\r\nPASS unavailable identity delays temporary-policy binding and then resolves safely\r\nPASS all SetFont paths may fail while built-in font objects remain valid\r\nPASS same icon does not cache the wrong debuff identity, missing names fail closed\r\nPASS explicit window height is applied and keeps fixed regions under roster changes\r\nPASS height clamps to screen and always retains both independent scrolling regions\r\nPASS width supports 180 through 600 without overlapping narrow header or footer controls\r\nPASS layout settings expose height and wider width range, reset height and keep page controls exclusive\r\nPASS empty combat regions have no placeholder FontString or text\r\nPASS debug report is manual and allocates no active sampling or extra scanning\r\nPASS debug panel fonts, copy selection, close linkage and singleton refresh\r\nPASS debug logs are bounded, memory-only and exclude names and unknown reasons\r\n45 behavior groups passed; actual Lua 5.0 syntax passed for 11 loaded files. Live game QA still required.\r\nPLAYER_LOGIN 事件开始\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_puredispel_presets.py"
+      ],
+      "ok": true,
+      "output": "test_auto_ignored_manager_row_opens_preset_and_can_restore_everyone (__main__.PresetIntegrationTests.test_auto_ignored_manager_row_opens_preset_and_can_restore_everyone) ... ok\r\ntest_banned_auras_and_expired_casts_still_block_casting (__main__.PresetIntegrationTests.test_banned_auras_and_expired_casts_still_block_casting) ... ok\r\ntest_defaults_are_inert_and_role_detection_starts_disabled (__main__.PresetIntegrationTests.test_defaults_are_inert_and_role_detection_starts_disabled) ... ok\r\ntest_each_priority_selection_immediately_changes_grouping_and_order (__main__.PresetIntegrationTests.test_each_priority_selection_immediately_changes_grouping_and_order) ... ok\r\ntest_filters_use_confirmed_roles_and_unknowns_stay_available (__main__.PresetIntegrationTests.test_filters_use_confirmed_roles_and_unknowns_stay_available) ... ok\r\ntest_hidden_dispel_window_does_not_stop_shared_identification (__main__.PresetIntegrationTests.test_hidden_dispel_window_does_not_stop_shared_identification) ... ok\r\ntest_invalid_selections_do_not_mutate_the_current_config (__main__.PresetIntegrationTests.test_invalid_selections_do_not_mutate_the_current_config) ... ok\r\ntest_low_confidence_or_provisional_roles_cannot_hide_players (__main__.PresetIntegrationTests.test_low_confidence_or_provisional_roles_cannot_hide_players) ... ok\r\ntest_manual_ignore_always_wins_over_priority_and_reset (__main__.PresetIntegrationTests.test_manual_ignore_always_wins_over_priority_and_reset) ... ok\r\ntest_manually_prioritized_players_can_be_rescued_from_auto_filter (__main__.PresetIntegrationTests.test_manually_prioritized_players_can_be_rescued_from_auto_filter) ... ok\r\ntest_options_are_complete_and_have_user_labels (__main__.PresetIntegrationTests.test_options_are_complete_and_have_user_labels) ... ok\r\ntest_own_group_filter_is_dynamic_and_unknown_group_is_preserved (__main__.PresetIntegrationTests.test_own_group_filter_is_dynamic_and_unknown_group_is_preserved) ... ok\r\ntest_picker_hide_releases_blocker_and_reuse_has_no_stale_options (__main__.PresetIntegrationTests.test_picker_hide_releases_blocker_and_reuse_has_no_stale_options) ... ok\r\ntest_preset_selection_does_not_write_per_person_rules (__main__.PresetIntegrationTests.test_preset_selection_does_not_write_per_person_rules) ... ok\r\ntest_role_and_roster_changes_recompute_without_resaving_the_preset (__main__.PresetIntegrationTests.test_role_and_roster_changes_recompute_without_resaving_the_preset) ... ok\r\ntest_role_correction_undo_restores_exactly_once (__main__.PresetIntegrationTests.test_role_correction_undo_restores_exactly_once) ... ok\r\ntest_self_first_is_independent_from_the_selected_priority (__main__.PresetIntegrationTests.test_self_first_is_independent_from_the_selected_priority) ... ok\r\ntest_shared_roles_never_read_other_plugins_private_lists_or_current_health (__main__.PresetIntegrationTests.test_shared_roles_never_read_other_plugins_private_lists_or_current_health) ... ok\r\ntest_single_undo_reverts_a_preset_and_reset_is_one_atomic_change (__main__.PresetIntegrationTests.test_single_undo_reverts_a_preset_and_reset_is_one_atomic_change) ... ok\r\ntest_summary_and_reason_explain_automatic_policy_and_recovery (__main__.PresetIntegrationTests.test_summary_and_reason_explain_automatic_policy_and_recovery) ... ok\r\ntest_ui_is_lazy_reused_and_choosing_option_is_immediate (__main__.PresetIntegrationTests.test_ui_is_lazy_reused_and_choosing_option_is_immediate) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 21 tests in 0.177s\r\n\r\nOK\r\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_puredispel_roles.py"
+      ],
+      "ok": true,
+      "output": "test_damage_role_and_combat_style_are_separate (__main__.SharedRoleAdapter.test_damage_role_and_combat_style_are_separate) ... ok\r\ntest_hiding_one_consumer_does_not_cancel_others (__main__.SharedRoleAdapter.test_hiding_one_consumer_does_not_cancel_others) ... ok\r\ntest_old_saved_overrides_are_not_imported (__main__.SharedRoleAdapter.test_old_saved_overrides_are_not_imported) ... ok\r\ntest_one_cache_and_one_data_table (__main__.SharedRoleAdapter.test_one_cache_and_one_data_table) ... ok\r\ntest_peek_rejects_wrong_identity_and_expired_facts (__main__.SharedRoleAdapter.test_peek_rejects_wrong_identity_and_expired_facts) ... ok\r\ntest_shared_changes_recompute_dispel_without_private_role_polling (__main__.SharedRoleAdapter.test_shared_changes_recompute_dispel_without_private_role_polling) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 6 tests in 0.039s\r\n\r\nOK\r\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_team_roles.py"
+      ],
+      "ok": true,
+      "output": "test_absent_provider_has_three_state_semantics (__main__.BridgeTests.test_absent_provider_has_three_state_semantics) ... ok\r\ntest_confirmed_tank_healer_damage_and_unknown_are_distinct (__main__.BridgeTests.test_confirmed_tank_healer_damage_and_unknown_are_distinct) ... ok\r\ntest_invalid_orders_and_missing_units_never_become_targets (__main__.BridgeTests.test_invalid_orders_and_missing_units_never_become_targets) ... ok\r\ntest_multiple_loads_are_idempotent_and_warnings_are_user_triggered (__main__.BridgeTests.test_multiple_loads_are_idempotent_and_warnings_are_user_triggered) ... ok\r\ntest_provider_replacement_and_data_changes_do_not_leave_stale_roles (__main__.BridgeTests.test_provider_replacement_and_data_changes_do_not_leave_stale_roles) ... ok\r\ntest_provider_version_and_failure_are_not_role_facts (__main__.BridgeTests.test_provider_version_and_failure_are_not_role_facts) ... ok\r\ntest_toc_consumers_load_the_same_bridge_first (__main__.BridgeTests.test_toc_consumers_load_the_same_bridge_first) ... ok\r\ntest_goubayu_member_name_retains_template_font_when_file_font_fails (__main__.HealingConsumerTests.test_goubayu_member_name_retains_template_font_when_file_font_fails) ... ok\r\ntest_no_legacy_role_storage_consumers_remain (__main__.HealingConsumerTests.test_no_legacy_role_storage_consumers_remain) ... ok\r\ntest_one_actual_service_drives_all_three_consumers (__main__.HealingConsumerTests.test_one_actual_service_drives_all_three_consumers) ... ok\r\ntest_quickheal_complete_core_with_native_lua50 (__main__.HealingConsumerTests.test_quickheal_complete_core_with_native_lua50) ... ok\r\ntest_quickheal_retired_xml_and_skin_references_are_gone (__main__.HealingConsumerTests.test_quickheal_retired_xml_and_skin_references_are_gone) ... ok\r\ntest_legacy_lists_and_private_messages_do_not_supply_roles (__main__.NotGridTests.test_legacy_lists_and_private_messages_do_not_supply_roles) ... ok\r\ntest_live_threat_tank_flags_remain_independent_of_assigned_roles (__main__.NotGridTests.test_live_threat_tank_flags_remain_independent_of_assigned_roles) ... ok\r\ntest_retired_windows_and_role_layout_options_are_removed (__main__.NotGridTests.test_retired_windows_and_role_layout_options_are_removed) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 15 tests in 0.071s\r\n\r\nOK\r\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_goubayu_team_roles.py"
+      ],
+      "ok": true,
+      "output": "GoubayuHeal: stale roles inert, shared tank order, rescue parity, manual focus, invalid focus and strict no-target guards passed.\r\nGoubayuHeal actual GetPriority: unknown/old-role neutral, shared primary/secondary tank weighting, known non-tank neutral passed.\r\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_notgrid_incoming_heals.py"
+      ],
+      "ok": true,
+      "output": "PASS: 106 behavior groups; full current libraries/core; English/Chinese; actual AceEvent scheduler\r\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_statcompare_shared_roles.py"
+      ],
+      "ok": true,
+      "output": "Native compatibility mode: actual extracted client parser\r\nPASS disabled adapter owns no traffic, cache or timer\r\nPASS strict fonts reject missing initialization and preserve valid templates\r\nPASS manual inspection requests shared broker once with priority and no private send\r\nPASS only complete shared result initializes and replays native cache\r\nPASS background and raw replies do not reach native display path\r\nPASS peer requests with framing and tail fields use original response\r\nPASS one shared cache supplies reopen without own talent copy or query\r\nPASS Ctrl refresh bypasses UI freshness through shared broker\r\nPASS cache older than UI freshness requests broker again\r\nPASS missing shared service fails safely instead of private fallback\r\nPASS broker rejection and timeout leave no private timer or native changes\r\nPASS native initializer restores global sender on errors\r\nPASS native replay retains unrelated synchronous messages\r\nPASS closing page cancels only inspection owner and rejects retained callback\r\nPASS closing parent cannot reopen on late result\r\nPASS target change cancels without native auto inspection or replacement query\r\nPASS identity checks reject silent target changes without waiting for a timer\r\nPASS new ticket rejects same-player completion from canceled UI subscription\r\nPASS completed A canceled B then cached A displays correct native class\r\nPASS shared records incompatible with native layout never publish\r\nPASS missing native module and class definitions prevent query\r\nPASS diagnostics read shared counters without request or private packet data\r\nPASS repeated enabling restores owned hooks without frame growth\r\nPASS later third party hooks remain installed after disable\r\nPASS adapter has no independent wire queue, quarantine or update timer\r\nPASS real broker and adapter send once, validate TAB/END extensions, replay once\r\nPASS real background and inspection same member share queue and cache\r\nPASS real canceled subscriber does not stop cache completion or reopen page\r\nPASS real passive core guard survives disabled display adapter\r\nPASS real timeout and wrong target never publish partial native state\r\nPASS actual Lua 5.0 syntax\r\n30 shared-observation groups passed. Live game QA remains required.\r\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_statcompare_shared_roles.py",
+        "--contract-only"
+      ],
+      "ok": true,
+      "output": "Native compatibility mode: independent native contract (no game source available)\r\nPASS disabled adapter owns no traffic, cache or timer\r\nPASS strict fonts reject missing initialization and preserve valid templates\r\nPASS manual inspection requests shared broker once with priority and no private send\r\nPASS only complete shared result initializes and replays native cache\r\nPASS background and raw replies do not reach native display path\r\nPASS peer requests with framing and tail fields use original response\r\nPASS one shared cache supplies reopen without own talent copy or query\r\nPASS Ctrl refresh bypasses UI freshness through shared broker\r\nPASS cache older than UI freshness requests broker again\r\nPASS missing shared service fails safely instead of private fallback\r\nPASS broker rejection and timeout leave no private timer or native changes\r\nPASS native initializer restores global sender on errors\r\nPASS native replay retains unrelated synchronous messages\r\nPASS closing page cancels only inspection owner and rejects retained callback\r\nPASS closing parent cannot reopen on late result\r\nPASS target change cancels without native auto inspection or replacement query\r\nPASS identity checks reject silent target changes without waiting for a timer\r\nPASS new ticket rejects same-player completion from canceled UI subscription\r\nPASS completed A canceled B then cached A displays correct native class\r\nPASS shared records incompatible with native layout never publish\r\nPASS missing native module and class definitions prevent query\r\nPASS diagnostics read shared counters without request or private packet data\r\nPASS repeated enabling restores owned hooks without frame growth\r\nPASS later third party hooks remain installed after disable\r\nPASS adapter has no independent wire queue, quarantine or update timer\r\nPASS real broker and adapter send once, validate TAB/END extensions, replay once\r\nPASS real background and inspection same member share queue and cache\r\nPASS real canceled subscriber does not stop cache completion or reopen page\r\nPASS real passive core guard survives disabled display adapter\r\nPASS real timeout and wrong target never publish partial native state\r\nPASS actual Lua 5.0 syntax\r\n30 shared-observation groups passed. Live game QA remains required.\r\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_statcompare_panel_strata.py"
+      ],
+      "ok": true,
+      "output": "PASS: 36 actual StatCompare layer/lifecycle checks; full Lua 5.1 syntax passed, no live game validation\n"
+    },
+    {
+      "args": [
+        "Tools/tests/test_shared_stats_integration.py"
+      ],
+      "ok": true,
+      "output": "PASS: separate self/target portrait retries, cache-hit preservation, hide/identity/missing-unit cancellation, bounded completion and lost-texture recovery\r\nPASS: force-calculation state restored after success/error, generic spell hit unchanged and Suppression limited to optional Affliction hit\r\nPASS: personal WushuangLoot 1.6 UI/strict fonts, original mask/3-frame tick, no SkinTick, missing/legacy DLL dispatch and settings reopen\r\n"
+    }
+  ],
+  "build": {
+    "lua50_files": [
+      "Interface/AddOns/GoubayuHeal/GoubayuHeal.lua",
+      "Interface/AddOns/NotGrid/core.lua",
+      "Interface/AddOns/QuickHeal/QuickHeal.lua",
+      "Interface/AddOns/StatCompare/SCInspectTalents.lua",
+      "Interface/AddOns/hyx/Debug.lua",
+      "Interface/AddOns/hyx/Presets.lua",
+      "Interface/AddOns/hyx/PresetsUI.lua",
+      "Interface/AddOns/hyx/RoleDetection.lua",
+      "Interface/AddOns/hyx/RoleTalentData.lua",
+      "Interface/AddOns/hyx/XinDispel.lua",
+      "Interface/AddOns/!Libs/SC_TeamRoleData.lua",
+      "Interface/AddOns/!Libs/SC_TeamRoleService.lua",
+      "Interface/AddOns/pfUI/modules/teamroles.lua"
+    ],
+    "compile_count": 13,
+    "toc_addons": [
+      "!Libs",
+      "pfUI",
+      "hyx",
+      "StatCompare",
+      "NotGrid",
+      "QuickHeal",
+      "GoubayuHeal"
+    ],
+    "encoding": "BOM and existing line endings preserved",
+    "data": "original table and license retained"
+  }
+}

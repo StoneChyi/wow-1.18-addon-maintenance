@@ -7,7 +7,9 @@
 ## Notes-zhCN: |CFFFFFF00 NotGrid |R|N 美化团队血条框架|N|CFFFFFFFF命令：|R/ng 或 /notgrid | Personal edition: StoneChyi & Codex
 ## DefaultState: 
 ## SavedVariablesPerCharacter: NotGridOptions
+..\!Libs\SC_TeamRoleData.lua
 ..\!Libs\SC_TeamRoles.lua
+..\!Libs\SC_TeamRoleService.lua
 localization.lua
 core.lua
 frames.lua

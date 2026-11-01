@@ -1,5 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Include file="..\modules\gui.lua"/>
+  <Include file="..\modules\teamroles.lua"/>
   <Include file="..\modules\unlock.lua"/>
   <Include file="..\modules\hoverbind.lua"/>
   <Include file="..\modules\updatenotify.lua"/>

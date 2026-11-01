@@ -25,6 +25,8 @@ def world(ui=True, pfui=True, setup='', bad_font=False, chatbar=False):
         lua.execute("failedFontPaths['test-pf-font.ttf']=true")
     if setup:
         lua.execute(setup)
+    for shared in ('SC_TeamRoleData.lua', 'SC_TeamRoles.lua', 'SC_TeamRoleService.lua'):
+        lua.execute((ROOT / 'Interface/AddOns/!Libs' / shared).read_text(encoding='utf-8-sig'))
     files = ['XinDispel.lua', 'RaidData.lua', 'RoleTalentData.lua', 'RoleDetection.lua', 'Presets.lua']
     if ui:
         files.extend(['PureDispelUI.lua', 'PresetsUI.lua', 'Debug.lua'])
@@ -147,7 +149,7 @@ assert(XinRaidManualDB['祖尔格拉布'] and XinRaidManualDB['纳克萨玛斯']
     assert (ADDON / 'RaidData.lua').read_bytes().endswith(data)
     toc = (ADDON / 'hyx.toc').read_text(encoding='utf-8-sig')
     entries = [x.strip() for x in toc.splitlines() if x.strip() and not x.startswith('#')]
-    assert entries == ['XinDispel.lua', 'RaidData.lua', 'RoleTalentData.lua', 'RoleDetection.lua', 'Presets.lua', 'PureDispelUI.lua', 'PresetsUI.lua', 'Debug.lua']
+    assert entries == ['..\\!Libs\\SC_TeamRoleData.lua', '..\\!Libs\\SC_TeamRoles.lua', '..\\!Libs\\SC_TeamRoleService.lua', 'XinDispel.lua', 'RaidData.lua', 'RoleTalentData.lua', 'RoleDetection.lua', 'Presets.lua', 'PureDispelUI.lua', 'PresetsUI.lua', 'Debug.lua']
     check('full new load chain has initialized fonts with missing pfUI font', '''
 assert(XinDispel.UI)
 for _,obj in ipairs(objects) do if obj.kind=='FontString' then assert(obj.font,'FontString lacks a font') end end
@@ -442,7 +444,7 @@ local drivers=0;for _,o in ipairs(objects) do if o.scripts.OnUpdate then drivers
 assert(drivers==1)
 ResetCalls();local scans=D.GetMetrics().scanCycles
 local s=B.Snapshot();local text=B.Report()
-assert(s.version=='2.2.0' and string.find(text,'StoneChyi & Codex',1,true))
+assert(s.version=='2.3.0' and string.find(text,'StoneChyi & Codex',1,true))
 assert(not calls.aura and not calls.tooltip and not calls.distance and table.getn(casts)==0)
 assert(D.GetMetrics().scanCycles==scans)
 ''')

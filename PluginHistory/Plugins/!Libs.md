@@ -12,6 +12,8 @@
 
 ## 当前维护摘要
 
+2026-11-02：现有共享库统一提供天赋查询和职责缓存，pfUI及各消费插件共用一份结果。
+
 2026-11-02：共享职责接口已预留，真实提供者尚未部署；缺数据的职责限定操作停止，其他治疗照常。
 
 2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-!Libs-20261102-01)。
@@ -25,6 +27,21 @@
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-!Libs-20261102-03"></a>
+
+### 2026-11-02｜整合唯一天赋队列、职责缓存与识别服务
+
+- 记录编号：`!Libs-20261102-03`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户确认将天赋查询与职责缓存整合进现有共享库和pfUI，使净界及三个插件共用，减少重复维护和手动操作。
+- 修改内容：新增共享服务、九职业数据及许可；实现SC_TeamRolesProvider v1、单请求队列/缓存/完整校验/战斗快照/临时修正/顺位与原生消息保护，无私有名单、窗口、CVar或长期承伤监听。 维护署名StoneChyi & Codex、原作者及许可保留。
+- 涉及文件：[!Libs.toc](../../Interface/AddOns/!Libs/!Libs.toc)、[SC_TeamRoles.md](../../Interface/AddOns/!Libs/SC_TeamRoles.md)、[SC_TeamRoleData-LICENSE.txt](../../Interface/AddOns/!Libs/SC_TeamRoleData-LICENSE.txt)、[SC_TeamRoleData.lua](../../Interface/AddOns/!Libs/SC_TeamRoleData.lua)、[SC_TeamRoleService.lua](../../Interface/AddOns/!Libs/SC_TeamRoleService.lua)。
+- 检查结果：共享核心20项、pfUI11项、净界45组/预设21项/适配6项、桥与治疗15项、GoubayuHeal两组、HealComm/NotGrid106组、观察30组双模式、面板36项及共享属性回归通过；本轮13个Lua实际Lua5.0、XML/七TOC路径与编码/署名校验通过。[联合记录](../Research/统一天赋职责服务-20261102.md)。
+- 未确认事项：未做本轮游戏验收；自动推测不等于实际分工，混合天赋和协议异常保留未知；同名迟到回复的协议限制仍存在，不声称实际资源降幅。
 
 <a id="change-!Libs-20261102-02"></a>
 

@@ -815,6 +815,7 @@ end
 
 -- Called when the mod is loaded
 function QuickHeal_OnLoad()
+    if SC_TeamRolesService then SC_TeamRolesService:Acquire("QuickHeal") end
     this:RegisterEvent("VARIABLES_LOADED");
     QuickHealConfig:RegisterEvent("SPELLCAST_STOP"); -- For detecting spellcast stop
     QuickHealConfig:RegisterEvent("SPELLCAST_FAILED"); -- For detecting spellcast stop

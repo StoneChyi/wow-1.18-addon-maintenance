@@ -9,6 +9,9 @@
 ## SavedVariables: pfUI_profiles, pfUI_addon_profiles, pfUI_cache, pfUI_throttle, pfUI_playerDB
 ## SavedVariablesPerCharacter: pfUI_config, pfUI_init
 
+..\!Libs\SC_TeamRoleData.lua
+..\!Libs\SC_TeamRoles.lua
+..\!Libs\SC_TeamRoleService.lua
 pfUI.lua
 
 init\env.xml

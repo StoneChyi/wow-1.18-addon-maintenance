@@ -97,7 +97,7 @@
       "addon": "!Libs",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/!Libs.md",
-      "purpose": "共享职责接口已预留，真实提供者尚未部署；缺数据的职责限定操作停止，其他治疗照常。",
+      "purpose": "共享库统一提供天赋查询、职责缓存和识别，所有关联插件共用一份结果。",
       "sources": [
         "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua.20260918125911.bak",
         "PluginHistory/Research/插件更新实施-20261012.md",
@@ -108,10 +108,13 @@
         "Interface/AddOns/!Libs/HealComm-1.0/HealComm-1.0.lua",
         "Interface/AddOns/!Libs/!Libs.toc",
         "Interface/AddOns/!Libs/SC_TeamRoles.lua",
-        "Interface/AddOns/!Libs/SC_TeamRoles.md"
+        "Interface/AddOns/!Libs/SC_TeamRoles.md",
+        "Interface/AddOns/!Libs/SC_TeamRoleData-LICENSE.txt",
+        "Interface/AddOns/!Libs/SC_TeamRoleData.lua",
+        "Interface/AddOns/!Libs/SC_TeamRoleService.lua"
       ],
       "tracked_files_at_reference": 93,
-      "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。 既有待确认事项：真实团队通讯与其他插件验收待补充；原词库差异归属仍待确认。",
+      "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；该阶段只读桥已由本次共享provider接续。 既有待确认事项：真实团队通讯与其他插件验收待补充；原词库差异归属仍待确认。",
       "last_package_update": {
         "date": "2026-10-18",
         "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
@@ -1324,7 +1327,7 @@
       "addon": "GoubayuHeal",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/GoubayuHeal.md",
-      "purpose": "独立MT分工与角色持久化已撤除；坦克策略接共享接口，临时治疗对象与职责分离。",
+      "purpose": "GoubayuHeal坦克加权与救急使用共享缓存，保留治疗方案和临时对象。",
       "sources": [
         "PluginHistory/Research/插件更新实施-20261012.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
@@ -1342,7 +1345,7 @@
         "Interface/AddOns/GoubayuHeal/GoubayuHeal.toc"
       ],
       "tracked_files_at_reference": 12,
-      "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。 既有待确认事项：是否曾修改、修改内容及更新时需要保留的行为。",
+      "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；该阶段只读桥已由本次共享provider接续。 既有待确认事项：是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
         "date": "2026-10-30",
         "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
@@ -1509,7 +1512,7 @@
       "addon": "NotGrid",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/NotGrid.md",
-      "purpose": "独立职责管理已撤除；保留治疗预估、血条和实时仇恨，后续职责只读共享接口。",
+      "purpose": "NotGrid消费统一职责数据，保留血条、治疗预估与实时仇恨。",
       "sources": [],
       "maintenance_files": [
         "Interface/AddOns/NotGrid/core.lua",
@@ -1520,7 +1523,7 @@
         "Interface/AddOns/NotGrid/options.lua"
       ],
       "tracked_files_at_reference": 22,
-      "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。 既有待确认事项：团队实测待确认；2026-10-10 前的个人修改归属仍待补充。",
+      "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；该阶段只读桥已由本次共享provider接续。 既有待确认事项：团队实测待确认；2026-10-10 前的个人修改归属仍待补充。",
       "history_group": "modified"
     },
     {
@@ -1667,7 +1670,7 @@
       "addon": "QuickHeal",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/QuickHeal.md",
-      "purpose": "独立职责名单与TWA已撤除；普通治疗保留，职责限定宏无有效共享数据时不执行。",
+      "purpose": "QuickHeal职责筛选共用自动识别，未知不当作非坦克，普通治疗保留。",
       "sources": [],
       "maintenance_files": [
         "Interface/AddOns/QuickHeal/libs/HealComm-1.0/HealComm-1.0.lua",
@@ -1682,7 +1685,7 @@
         "Interface/AddOns/QuickHeal/localization.en.lua"
       ],
       "tracked_files_at_reference": 25,
-      "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。 既有待确认事项：真实团队通讯与完整选人流程待验收；此前个人修改归属待补充。",
+      "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；该阶段只读桥已由本次共享provider接续。 既有待确认事项：真实团队通讯与完整选人流程待验收；此前个人修改归属待补充。",
       "history_group": "modified"
     },
     {
@@ -1953,7 +1956,7 @@
       "addon": "StatCompare",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/StatCompare.md",
-      "purpose": "让属性比较面板与角色/观察窗口协调。 天赋观察适配新协议、完整会话校验与切目标取消。",
+      "purpose": "StatCompare观察与团队识别共用唯一查询及缓存，后台结果不会打开天赋页。",
       "sources": [
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
@@ -1972,7 +1975,7 @@
         "Interface/AddOns/StatCompare/TALENT_INSPECT.md"
       ],
       "tracked_files_at_reference": 25,
-      "pending": "用户诊断截图确认0x09前导制表符使三种正常天赋消息被全部忽略，已规范化协议头前空白；57组双模式（含合成59条TAB包）与实际Lua5.0检查通过，实际游戏显示待用户复测。",
+      "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：用户诊断截图确认0x09前导制表符使三种正常天赋消息被全部忽略，已规范化协议头前空白；57组双模式（含合成59条TAB包）与实际Lua5.0检查通过，实际游戏显示待用户复测。",
       "last_package_update": {
         "date": "2026-10-25",
         "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
@@ -2346,7 +2349,7 @@
       "addon": "hyx",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/hyx.md",
-      "purpose": "净界驱散 PureDispel 2.2.0；动态优先/忽略预设、独立新入口天赋与最大生命职责识别、按需8秒承伤校验；保留pfUI双区、独立滚轮和原名单。",
+      "purpose": "净界驱散2.3.0与三个插件共用职责缓存，优先忽略规则只影响驱散。",
       "sources": [
         "PluginHistory/Evidence/reports/hyx-全职业驱散与滚轮列表-20261008.md",
         "PluginHistory/Evidence/CodexBackups/hyx/20261008-155425/hyx.lua",
@@ -2369,7 +2372,7 @@
         "Interface/AddOns/hyx/PresetsUI.lua"
       ],
       "tracked_files_at_reference": 3,
-      "pending": "45组原回归、21项预设、27项职责专项及8个加载文件真实Lua5.0语法检查通过；真实服务器天赋回包/身份/结构、静默观察、实际排版、承伤事件和资源表现待游戏验收；自动天赋缓存不跨重载，同角色离线换队与洗天赋需复核。",
+      "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：45组原回归、21项预设、27项职责专项及8个加载文件真实Lua5.0语法检查通过；真实服务器天赋回包/身份/结构、静默观察、实际排版、承伤事件和资源表现待游戏验收；自动天赋缓存不跨重载，同角色离线换队与洗天赋需复核。",
       "history_group": "modified"
     },
     {
@@ -2431,7 +2434,7 @@
       "addon": "pfUI",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI.md",
-      "purpose": "整合个人界面、监控和旧客户端兼容修改。",
+      "purpose": "pfUI提供唯一团队职责管理页，角色与顺位直接使用共享服务。",
       "sources": [
         "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-15.md",
         "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-16.md",
@@ -2536,10 +2539,11 @@
         "Interface/AddOns/pfUI/pfUI-tbc.toc",
         "Interface/AddOns/pfUI/pfUI.toc",
         "Interface/AddOns/pfUI/modules/unitxp.lua",
-        "Interface/AddOns/pfUI/skins/blizzard/inspect.lua"
+        "Interface/AddOns/pfUI/skins/blizzard/inspect.lua",
+        "Interface/AddOns/pfUI/modules/teamroles.lua"
       ],
       "tracked_files_at_reference": 277,
-      "pending": "修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。",
+      "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。",
       "last_package_update": {
         "date": "2026-10-30",
         "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",

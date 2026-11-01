@@ -12,6 +12,8 @@
 
 ## 当前维护摘要
 
+2026-11-02：净界驱散2.3.0与三个插件共用职责缓存，优先忽略规则只影响驱散。
+
 2026-11-02：2.2.0新增动态优先/忽略预设与独立新入口天赋查询；以天赋和最大生命值判断职责，承伤仅按需8秒校验。无当前血量判断、无其他插件职责联动；手工职责同队重载保留，确认离队清理。
 
 2026-11-02：移除上下区翻页箭头，范围提示右对齐；保留两区独立滚轮和Shift首尾跳转。
@@ -25,6 +27,21 @@
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-hyx-20261102-05"></a>
+
+### 2026-11-02｜2.3.0：职责迁入共享服务与统一pfUI管理
+
+- 记录编号：`hyx-20261102-05`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户确认将天赋查询和职责缓存整合进现有共享库和pfUI，减少重复查询与手动维护。
+- 修改内容：旧独立查询器和数据表改为共享服务薄适配/别名，移除最大生命与承伤观察及独立编辑窗口；预设区分职责与近远程，过期/未确认不用于自动忽略。关闭净界不取消其他需求，修正入口转到同一个pfUI窗口；旧xinDB职责修正不再消费。 维护署名StoneChyi & Codex、原作者和许可保留。
+- 涉及文件：[Debug.lua](../../Interface/AddOns/hyx/Debug.lua)、[Presets.lua](../../Interface/AddOns/hyx/Presets.lua)、[PresetsUI.lua](../../Interface/AddOns/hyx/PresetsUI.lua)、[README.md](../../Interface/AddOns/hyx/README.md)、[RoleDetection.lua](../../Interface/AddOns/hyx/RoleDetection.lua)、[RoleTalentData.lua](../../Interface/AddOns/hyx/RoleTalentData.lua)、[XinDispel.lua](../../Interface/AddOns/hyx/XinDispel.lua)、[hyx.toc](../../Interface/AddOns/hyx/hyx.toc)。
+- 检查结果：共享核心20项、pfUI11项、净界45组/预设21项/适配6项、桥与治疗15项、GoubayuHeal两组、HealComm/NotGrid106组、观察30组双模式、面板36项和共享属性回归通过；本轮13个Lua实际Lua5.0、XML/七TOC路径与编码/署名通过。[联合记录](../Research/统一天赋职责服务-20261102.md)。
+- 未确认事项：本轮未游戏验收；混合天赋和协议异常保留未知，识别不等于实际任务分工；同名迟到包的协议限制仍存在，不声称实际资源降幅。
 
 <a id="change-hyx-20261102-04"></a>
 

@@ -111,13 +111,14 @@ SC_TeamRoles:WarnUnavailable('GoubayuHeal');assert(table.getn(messages)==2)
 ''')
 
     def test_toc_consumers_load_the_same_bridge_first(self):
-        for addon in ('NotGrid', 'QuickHeal', 'GoubayuHeal', '!Libs'):
+        for addon in ('NotGrid', 'QuickHeal', 'GoubayuHeal', '!Libs', 'hyx', 'StatCompare', 'pfUI'):
             toc = ADDONS / addon / (addon + '.toc')
             entries = [s.strip() for s in toc.read_text(encoding='utf-8-sig').splitlines()
                        if s.strip() and not s.lstrip().startswith('#')]
-            path = (toc.parent / entries[0].replace('\\', '/')).resolve()
-            self.assertEqual(path, (ADDONS / '!Libs/SC_TeamRoles.lua').resolve())
-            self.assertTrue(path.is_file())
+            for index, name in enumerate(('SC_TeamRoleData.lua', 'SC_TeamRoles.lua', 'SC_TeamRoleService.lua')):
+                path = (toc.parent / entries[index].replace('\\', '/')).resolve()
+                self.assertEqual(path, (ADDONS / '!Libs' / name).resolve())
+                self.assertTrue(path.is_file())
 
 
 class NotGridTests(unittest.TestCase):
@@ -156,6 +157,36 @@ assert(NotGrid:GetUnitThreatPercent('raid1')==100)
 
 
 class HealingConsumerTests(unittest.TestCase):
+    def test_one_actual_service_drives_all_three_consumers(self):
+        mock = (ROOT / 'Tools/tests/qh_team_roles_mock.lua').read_bytes()
+        prelude = (ROOT / 'Tools/tests/qh_team_roles_cases.lua').read_text(encoding='utf-8')
+        prelude = prelude[prelude.index('QHV={'):prelude.index('QH_NoticeRoleListRemoved();')]
+        gou = (ADDONS / 'GoubayuHeal/GoubayuHeal.lua').read_text(encoding='utf-8-sig')
+        start = gou.index('function GoubayuHeal.IsMT(')
+        ismt = gou[start:gou.index('\nend\n', start)+5]
+        mock += b'\nSlashCmdList={}\nfunction CreateFrame() return {SetScript=function()end,RegisterEvent=function()end,UnregisterEvent=function()end} end\n'
+        parts = [mock] + [(ADDONS / '!Libs' / name).read_bytes() for name in
+                         ('SC_TeamRoleData.lua', 'SC_TeamRoles.lua', 'SC_TeamRoleService.lua')]
+        parts += [(ADDONS / 'QuickHeal/QuickHeal.lua').read_bytes(),
+                  (ADDONS / 'NotGrid/core.lua').read_bytes(),
+                  prelude.encode('utf-8'), b'GoubayuHeal={}\n', ismt.encode('utf-8'), b'''
+local S=SC_TeamRolesService;S:Acquire('QuickHeal')
+assert(S:SetOverride('raid1','TANK'));assert(S:SetOverride('raid2','HEALER'))
+assert(NotGrid:GetUnitRole('raid1')=='TANK' and GoubayuHeal.IsMT('raid1'))
+assert(FindWhoToHeal('mt')=='raid1' and FindWhoToHeal('nonmt')=='raid2')
+assert(S:SetOverride('raid1','DAMAGER','MELEE'))
+assert(NotGrid:GetUnitRole('raid1')=='DAMAGER' and not GoubayuHeal.IsMT('raid1'))
+units.raid1.hp=100;assert(FindWhoToHeal('nonmt')=='raid1')
+assert(SC_TeamRoles:IsTank('raid3')==nil)
+print('PASS real shared provider: QH, NotGrid and GoubayuHeal observe same changes')
+''']
+        script = ROOT / 'PluginHistory/staging/teamroles-three-current.lua'
+        script.write_bytes(b'\n'.join(parts))
+        vm = ROOT / 'PluginHistory/staging/lua503-validation/win64/lua50.exe'
+        result = subprocess.run([str(vm), str(script)], capture_output=True, cwd=ROOT)
+        self.assertEqual(result.returncode, 0, result.stderr.decode('utf-8', errors='replace'))
+        self.assertIn(b'PASS real shared provider', result.stdout)
+
     def test_quickheal_complete_core_with_native_lua50(self):
         # Keep private selection functions in their original lexical scope.
         parts = [ROOT / 'Tools/tests/qh_team_roles_mock.lua',

@@ -64,6 +64,7 @@ HELPERS = r'''
 P=XinDispel.Presets;R=XinDispel.Roles
 assert(type(P)=='table' and type(R)=='table','Preset and role modules must be loaded')
 function KnownRoles()
+ SC_TeamRolesService:Acquire("preset-fixture")
  for name,role in pairs({Tank='TANK',Healer='HEALER',Melee='MELEE',Ranged='RANGED',Caster='RANGED',TankTwo='TANK'}) do
   local ok,reason=R.SetManual(name,role);assert(ok,reason)
  end
@@ -104,6 +105,8 @@ def world(ui=False, setup="", bad_font=False):
     lua.execute(FIXTURE)
     if setup:
         lua.execute(setup)
+    for shared in ('SC_TeamRoleData.lua', 'SC_TeamRoles.lua', 'SC_TeamRoleService.lua'):
+        lua.execute((ROOT / 'Interface/AddOns/!Libs' / shared).read_text(encoding='utf-8-sig'))
     files = ["XinDispel.lua", "RaidData.lua", "RoleTalentData.lua", "RoleDetection.lua", "Presets.lua"]
     if ui:
         files.extend(["PureDispelUI.lua", "PresetsUI.lua", "Debug.lua"])
@@ -122,28 +125,29 @@ class PresetIntegrationTests(unittest.TestCase):
 
     def test_role_correction_undo_restores_exactly_once(self):
         self.run_lua(r'''
-assert(R.SetManual('Tank','TANK'));XinDispel.InvalidateUndo()
+SC_TeamRolesService:Acquire('preset-fixture');assert(R.SetManual('Tank','TANK'));XinDispel.InvalidateUndo()
 assert(R.SetManual('Tank','HEALER'));assert(XinDispel.CanUndo())
 assert(XinDispel.Undo());assert(R.Get('Tank').role=='TANK')
 assert(not XinDispel.CanUndo(),'Undo must not record another role operation')
 assert(not XinDispel.Undo())
 ''')
 
-    def test_saved_hidden_window_cannot_start_manual_identification(self):
+    def test_hidden_dispel_window_does_not_stop_shared_identification(self):
         self.run_lua(r'''
 assert(xinDB.listsVisible==false and R.visible==false)
-local ok=R.Refresh();assert(ok==false)
+SC_TeamRolesService:Acquire('QuickHeal')
+local ok=R.Refresh();assert(ok==true)
 local before=R.GetDiagnostics()
 for i=1,20 do Tick(1) end
-local after=R.GetDiagnostics()
-assert(after.requests==before.requests and after.maxHealthReads==before.maxHealthReads)
+assert(SC_TeamRolesService:IsReady() and R.visible==false)
+assert(R.Get('Tank'))
 ''', setup="xinDB={listsVisible=false}", ui=True)
 
     def test_defaults_are_inert_and_role_detection_starts_disabled(self):
         self.run_lua(r'''
 local c=P.GetConfig()
 assert(c.priority=='none' and c.ignore=='none' and c.selfFirst==true)
-local info=R.Get('Tank');assert(not info or info.role=='UNKNOWN')
+local info=R.Get('Tank');assert(not info or info.role==nil or info.role=='UNKNOWN')
 ResetCalls();for i=1,20 do Tick(.3) end
 assert(not calls.maxHealth,'Disabled role detection must not sample health')
 assert(not calls.powerType,'Disabled roles/presets must not poll power types')
@@ -210,6 +214,7 @@ SetPreset('ignore','none');assert(FindEntry('Melee') and FindEntry('Ranged'))
 KnownRoles()
 SetPreset('ignore','melee')
 local unknown,hybrid=R.Get('Unknown'),R.Get('Hybrid');assert(unknown and hybrid)
+unknown.time,hybrid.time=now,now
 unknown.role,unknown.confidence,unknown.provisional,unknown.source='MELEE','medium',false,'fixture'
 hybrid.role,hybrid.confidence,hybrid.provisional,hybrid.source='MELEE','high',true,'fixture'
 XinDispel.MarkDirty()
@@ -289,7 +294,7 @@ assert(R.SetManual('Healer','RANGED'));XinDispel.MarkDirty();assert(not FindEntr
 assert(R.SetManual('Healer','HEALER'));XinDispel.MarkDirty();assert(FindEntry('Healer'))
 AddUnit('raid11','NewMelee','Magic');units.raid11.class='ROGUE';units.raid11.powerType=3;units.raid11.group=2
 raidCount=11;FireEvent('RAID_ROSTER_UPDATE');Tick(.3)
-assert(R.SetManual('NewMelee','MELEE'));XinDispel.MarkDirty()
+FireEvent('RAID_ROSTER_UPDATE');assert(R.SetManual('NewMelee','MELEE'));XinDispel.MarkDirty()
 ExpectPolicy('NewMelee','ignore');assert(not FindEntry('NewMelee'))
 ''')
 
@@ -305,7 +310,7 @@ units.raid2.guid='new-person';units.raid2.name='Replacement'
 ok=XinDispel.Cast(stale);assert(not ok and table.getn(casts)==0)
 ''')
 
-    def test_no_external_role_provider_or_current_health_dependency(self):
+    def test_shared_roles_never_read_other_plugins_private_lists_or_current_health(self):
         self.run_lua(r'''
 KnownRoles()
 for _,option in ipairs(P.Options.priority) do SetPreset('priority',option.key) end
@@ -313,7 +318,7 @@ for _,option in ipairs(P.Options.ignore) do SetPreset('ignore',option.key) end
 XinDispel.MarkDirty();assert(P.GetSummary())
 ''', setup=r'''
 local trap=setmetatable({}, {__index=function() error('External addon role state accessed') end})
-SC_TeamRoles=trap;QuickHeal=trap;NotGrid=trap;StatCompare=trap
+QuickHeal=trap;NotGrid=trap;StatCompare=trap
 ''')
 
     def test_invalid_selections_do_not_mutate_the_current_config(self):
@@ -338,9 +343,8 @@ assert(P.GetConfig().priority=='tanks' and Position('Tank')<Position('Melee'))
 local count=table.getn(objects)
 for i=1,5 do panel:Hide();U.OpenPresets() end
 assert(U.presets==panel and table.getn(objects)==count,'Reopening leaked UI objects')
-U.OpenRoleEditor('Unknown');local editor=U.roleEditor;assert(editor)
-Press(editor.buttons.HEALER)
-assert(R.Get('Unknown').role=='HEALER')
+local opened;pfUI.OpenTeamRoles=function(self,name) opened=name end
+U.OpenRoleEditor('Unknown');assert(opened=='Unknown' and U.roleEditor==nil)
 ''', ui=True, bad_font=True)
 
     def test_picker_hide_releases_blocker_and_reuse_has_no_stale_options(self):

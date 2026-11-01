@@ -13,19 +13,28 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 347,
+  "dated_records": 354,
   "addons": [
     {
       "addon": "!Libs",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/!Libs.md",
-      "purpose": "共享职责接口已预留，真实提供者尚未部署；缺数据的职责限定操作停止，其他治疗照常。",
+      "purpose": "共享库统一提供天赋查询、职责缓存和识别，所有关联插件共用一份结果。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "新增被动统一职责查询桥",
+      "latest_record_title": "整合唯一天赋队列、职责缓存与识别服务",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 7,
+      "record_count": 8,
       "records": [
+        {
+          "id": "!Libs-20261102-03",
+          "date": "2026-11-02",
+          "title": "整合唯一天赋队列、职责缓存与识别服务",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-!Libs-20261102-03"
+        },
         {
           "id": "!Libs-20261102-02",
           "date": "2026-11-02",
@@ -1784,13 +1793,22 @@
       "addon": "GoubayuHeal",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/GoubayuHeal.md",
-      "purpose": "独立MT分工与角色持久化已撤除；坦克策略接共享接口，临时治疗对象与职责分离。",
+      "purpose": "GoubayuHeal坦克加权与救急使用共享缓存，保留治疗方案和临时对象。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "撤除团队职责分配，分离临时治疗对象",
+      "latest_record_title": "接通统一职责识别与缓存",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 9,
+      "record_count": 10,
       "records": [
+        {
+          "id": "GoubayuHeal-20261102-03",
+          "date": "2026-11-02",
+          "title": "接通统一职责识别与缓存",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-GoubayuHeal-20261102-03"
+        },
         {
           "id": "GoubayuHeal-20261102-02",
           "date": "2026-11-02",
@@ -2110,13 +2128,22 @@
       "addon": "NotGrid",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/NotGrid.md",
-      "purpose": "独立职责管理已撤除；保留治疗预估、血条和实时仇恨，后续职责只读共享接口。",
+      "purpose": "NotGrid消费统一职责数据，保留血条、治疗预估与实时仇恨。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "撤除独立职责分工并保留血条与仇恨",
+      "latest_record_title": "启用时申请共享职责数据",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 3,
+      "record_count": 4,
       "records": [
+        {
+          "id": "NotGrid-20261102-03",
+          "date": "2026-11-02",
+          "title": "启用时申请共享职责数据",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-NotGrid-20261102-03"
+        },
         {
           "id": "NotGrid-20261102-02",
           "date": "2026-11-02",
@@ -2352,13 +2379,22 @@
       "addon": "QuickHeal",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/QuickHeal.md",
-      "purpose": "独立职责名单与TWA已撤除；普通治疗保留，职责限定宏无有效共享数据时不执行。",
+      "purpose": "QuickHeal职责筛选共用自动识别，未知不当作非坦克，普通治疗保留。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "撤除独立职责名单与TWA，保护旧宏范围",
+      "latest_record_title": "接通自动统一职责服务",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 3,
+      "record_count": 4,
       "records": [
+        {
+          "id": "QuickHeal-20261102-03",
+          "date": "2026-11-02",
+          "title": "接通自动统一职责服务",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-QuickHeal-20261102-03"
+        },
         {
           "id": "QuickHeal-20261102-02",
           "date": "2026-11-02",
@@ -2948,13 +2984,22 @@
       "addon": "StatCompare",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/StatCompare.md",
-      "purpose": "让属性比较面板与角色/观察窗口协调。 天赋观察适配新协议、完整会话校验与切目标取消。",
+      "purpose": "StatCompare观察与团队识别共用唯一查询及缓存，后台结果不会打开天赋页。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "兼容实机天赋消息头的制表符前缀",
+      "latest_record_title": "天赋观察改用统一队列与缓存",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 11,
+      "record_count": 12,
       "records": [
+        {
+          "id": "StatCompare-20261102-05",
+          "date": "2026-11-02",
+          "title": "天赋观察改用统一队列与缓存",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-StatCompare-20261102-05"
+        },
         {
           "id": "StatCompare-20261102-04",
           "date": "2026-11-02",
@@ -3684,13 +3729,22 @@
       "addon": "hyx",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/hyx.md",
-      "purpose": "净界驱散 PureDispel 2.2.0；动态优先/忽略预设、独立新入口天赋与最大生命职责识别、按需8秒承伤校验；保留pfUI双区、独立滚轮和原名单。",
+      "purpose": "净界驱散2.3.0与三个插件共用职责缓存，优先忽略规则只影响驱散。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "2.2.0：独立职责识别与优先、忽略预设",
+      "latest_record_title": "2.3.0：职责迁入共享服务与统一pfUI管理",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 4,
+      "record_count": 5,
       "records": [
+        {
+          "id": "hyx-20261102-05",
+          "date": "2026-11-02",
+          "title": "2.3.0：职责迁入共享服务与统一pfUI管理",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-hyx-20261102-05"
+        },
         {
           "id": "hyx-20261102-04",
           "date": "2026-11-02",
@@ -3793,13 +3847,22 @@
       "addon": "pfUI",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI.md",
-      "purpose": "整合个人界面、监控和旧客户端兼容修改。",
+      "purpose": "pfUI提供唯一团队职责管理页，角色与顺位直接使用共享服务。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "移除皮肤层重复天赋查询，配合StatCompare目标会话",
+      "latest_record_title": "增加统一团队职责管理入口",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 44,
+      "record_count": 45,
       "records": [
+        {
+          "id": "pfUI-20261102-03",
+          "date": "2026-11-02",
+          "title": "增加统一团队职责管理入口",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261102-03"
+        },
         {
           "id": "pfUI-20261102-02",
           "date": "2026-11-02",

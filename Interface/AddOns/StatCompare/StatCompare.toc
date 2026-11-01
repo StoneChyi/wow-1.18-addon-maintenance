@@ -10,6 +10,9 @@
 ## OptionalDeps: BetterCharacterStats
 ## SavedVariables: StatCompare_SaveVar, StatCompare_Info
 ## SavedVariablesPerCharacter: StatCompare_Player
+..\!Libs\SC_TeamRoleData.lua
+..\!Libs\SC_TeamRoles.lua
+..\!Libs\SC_TeamRoleService.lua
 Localization_zhCN.lua
 Localization_enUS.lua
 Localization.lua

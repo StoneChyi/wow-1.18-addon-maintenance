@@ -14,7 +14,9 @@
 ## X-Credits: Maus & Co. (Updating, localizing libraries)
 ## X-Website: https://vk.com/wowruru
 
+SC_TeamRoleData.lua
 SC_TeamRoles.lua
+SC_TeamRoleService.lua
 !MyLib\api\api.xml
 !MyLib\libs\libs.xml
 

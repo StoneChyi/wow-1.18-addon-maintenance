@@ -62,7 +62,7 @@
 
 | 插件 / 组件 | 最近记录 |
 | --- | --- |
-| [!Libs](!Libs.md) | [2026-11-02 · 新增被动统一职责查询桥](!Libs.md#change-!Libs-20261102-02) |
+| [!Libs](!Libs.md) | [2026-11-02 · 整合唯一天赋队列、职责缓存与识别服务](!Libs.md#change-!Libs-20261102-03) |
 | [ActionBarProfiles](ActionBarProfiles.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](ActionBarProfiles.md#change-ActionBarProfiles-20261102-01) |
 | [AdvancedTradeSkillWindow2](AdvancedTradeSkillWindow2.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](AdvancedTradeSkillWindow2.md#change-AdvancedTradeSkillWindow2-20261102-01) |
 | [Atlas](Atlas.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Atlas.md#change-Atlas-20261102-01) |
@@ -90,30 +90,30 @@
 | [EavesDrop](EavesDrop.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](EavesDrop.md#change-EavesDrop-20261102-01) |
 | [EzPoison](EzPoison.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](EzPoison.md#change-EzPoison-20261102-01) |
 | [Flyout](Flyout.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Flyout.md#change-Flyout-20261102-01) |
-| [GoubayuHeal](GoubayuHeal.md) | [2026-11-02 · 撤除团队职责分配，分离临时治疗对象](GoubayuHeal.md#change-GoubayuHeal-20261102-02) |
+| [GoubayuHeal](GoubayuHeal.md) | [2026-11-02 · 接通统一职责识别与缓存](GoubayuHeal.md#change-GoubayuHeal-20261102-03) |
 | [HideOutdoorWorldState](HideOutdoorWorldState.md) | [2026-10-10 · 用户确认主动删除并停用](HideOutdoorWorldState.md#change-HideOutdoorWorldState-20261010-01) |
-| [hyx](hyx.md) | [2026-11-02 · 2.2.0：独立职责识别与优先、忽略预设](hyx.md#change-hyx-20261102-04) |
+| [hyx](hyx.md) | [2026-11-02 · 2.3.0：职责迁入共享服务与统一pfUI管理](hyx.md#change-hyx-20261102-05) |
 | [Meeting](Meeting.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Meeting.md#change-Meeting-20261102-01) |
 | [MySlash](MySlash.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](MySlash.md#change-MySlash-20261102-01) |
-| [NotGrid](NotGrid.md) | [2026-11-02 · 撤除独立职责分工并保留血条与仇恨](NotGrid.md#change-NotGrid-20261102-02) |
+| [NotGrid](NotGrid.md) | [2026-11-02 · 启用时申请共享职责数据](NotGrid.md#change-NotGrid-20261102-03) |
 | [OneBag](OneBag.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](OneBag.md#change-OneBag-20261102-01) |
 | [Outfitter](Outfitter.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Outfitter.md#change-Outfitter-20261102-01) |
 | [PallyPower](PallyPower.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PallyPower.md#change-PallyPower-20261102-01) |
-| [pfUI](pfUI.md) | [2026-11-02 · 移除皮肤层重复天赋查询，配合StatCompare目标会话](pfUI.md#change-pfUI-20261102-02) |
+| [pfUI](pfUI.md) | [2026-11-02 · 增加统一团队职责管理入口](pfUI.md#change-pfUI-20261102-03) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-11-02 · 清理QuickHeal退役职责窗口的皮肤引用](pfUI-addonskinner.md#change-pfUI-addonskinner-20261102-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI-CustomMedia.md#change-pfUI-CustomMedia-20261102-01) |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261102-01) |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PizzaWorldBuffs.md#change-PizzaWorldBuffs-20261102-01) |
 | [PlayerLinkEnhance](PlayerLinkEnhance.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261102-01) |
 | [QianKunBag](QianKunBag.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](QianKunBag.md#change-QianKunBag-20261102-01) |
-| [QuickHeal](QuickHeal.md) | [2026-11-02 · 撤除独立职责名单与TWA，保护旧宏范围](QuickHeal.md#change-QuickHeal-20261102-02) |
+| [QuickHeal](QuickHeal.md) | [2026-11-02 · 接通自动统一职责服务](QuickHeal.md#change-QuickHeal-20261102-03) |
 | [RaidCheck](RaidCheck.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](RaidCheck.md#change-RaidCheck-20261102-01) |
 | [S_ChatBar](S_ChatBar.md) | [2026-11-02 · 驱散入口适配净界驱散2.0](S_ChatBar.md#change-S_ChatBar-20261102-02) |
 | [S_ItemTip](S_ItemTip.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](S_ItemTip.md#change-S_ItemTip-20261102-01) |
 | [ShaguDPS](ShaguDPS.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](ShaguDPS.md#change-ShaguDPS-20261102-01) |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261102-01) |
 | [SpecialTalent](SpecialTalent.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SpecialTalent.md#change-SpecialTalent-20261102-01) |
-| [StatCompare](StatCompare.md) | [2026-11-02 · 兼容实机天赋消息头的制表符前缀](StatCompare.md#change-StatCompare-20261102-04) |
+| [StatCompare](StatCompare.md) | [2026-11-02 · 天赋观察改用统一队列与缓存](StatCompare.md#change-StatCompare-20261102-05) |
 | [STSMmayor](STSMmayor.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](STSMmayor.md#change-STSMmayor-20261102-01) |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261102-01) |
 | [SuperMacro](SuperMacro.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SuperMacro.md#change-SuperMacro-20261102-01) |

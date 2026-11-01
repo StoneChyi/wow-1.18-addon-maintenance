@@ -293,6 +293,7 @@ function NotGrid:UpdateAllThreatBorders()
 end
 
 function NotGrid:OnEnable()
+    if SC_TeamRolesService then SC_TeamRolesService:Acquire("NotGrid") end
     self.o = NotGridOptions
     self:SetDefaultOptions()
     self:DoDropDown()
@@ -1138,4 +1139,8 @@ function NotGrid:EnableAutohide(frame, timeout)
             this.activeTo = GetTime() + timeout
         end
     end)
+end
+
+function NotGrid:OnDisable()
+    if SC_TeamRolesService then SC_TeamRolesService:Release("NotGrid") end
 end

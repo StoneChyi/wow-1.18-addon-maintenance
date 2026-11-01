@@ -9207,6 +9207,7 @@ end
 -- ============================================================
 
 function GoubayuHeal.OnLoad()
+    if SC_TeamRolesService then SC_TeamRolesService:Acquire("GoubayuHeal") end
     GoubayuHeal.healing = {}
     GoubayuHeal.item_heal_bonus_cache = {}
 
