@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |CFFEE7600[DPS统计]|RDPSMateXInsights
-## Notes: Actual absorbs, successful spell casts and action timelines for DPSMateX.
+## Notes: Actual absorbs, successful spell casts and action timelines for DPSMateX. | Personal edition: StoneChyi & Codex
 ## Title-zhCN: |CFFEE7600[DPS统计]|RDPSMateX 精确统计扩展
-## Notes-zhCN: 治疗与实际吸收、成功施放、动作回放及详细数据界面。
+## Notes-zhCN: 治疗与实际吸收、成功施放、动作回放及详细数据界面。 | Personal edition: StoneChyi & Codex
 ## Version: 1.0.3
 ## Dependencies: DPSMateX
 ## SavedVariablesPerCharacter: DPSMateXInsightsDB

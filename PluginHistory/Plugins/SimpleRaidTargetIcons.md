@@ -12,11 +12,28 @@
 
 ## 当前维护摘要
 
+2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-SimpleRaidTargetIcons-20261102-01)。
+
 完善标记条生命显示、团队工具和透明图标；单击仅定位对应标记，找不到时保留当前目标，双击八种团队图标可给当前目标设置或取消标记（单击等待约 0.3 秒以区分双击）。保留右键 / Ctrl+左键快捷标记、Ctrl+右键拖动、直接清标与队外玩家本地标记。
 
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-SimpleRaidTargetIcons-20261102-01"></a>
+
+### 2026-11-02｜补记个人版维护署名，保留原作者与许可
+
+- 记录编号：`SimpleRaidTargetIcons-20261102-01`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户确认以 `StoneChyi & Codex` 统一标识现有个人版与后续插件维护。
+- 修改内容：根 TOC 新增 `X-Maintained-By` 和限定个人修改范围的 `X-Maintenance-Scope`；现有 Notes／本地化 Notes 保留原文并追加可见维护署名，无 Notes 时新增。原作者、版权、许可证和早期修改归属继续按既有证据保留。本条只记录当日 metadata 维护，不代表重新实现早期功能。
+- 涉及文件：[SimpleRaidTargetIcons.toc](../../Interface/AddOns/SimpleRaidTargetIcons/SimpleRaidTargetIcons.toc)。
+- 检查结果：9 项署名字节与幂等检查通过；本插件 TOC 与操作前 Git 字节的预期增量编辑完全一致，加载文件与顺序、BOM、既有编码和行尾保留；未进行游戏内插件列表显示验收。
+- 关联说明：[统一维护署名规范](../MaintenanceAttribution.md)、[本次补记清单](../Research/插件维护署名-20261102.json)。
 
 <a id="change-SimpleRaidTargetIcons-20261027-01"></a>
 

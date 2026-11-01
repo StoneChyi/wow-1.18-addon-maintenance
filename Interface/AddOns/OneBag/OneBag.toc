@@ -1,6 +1,8 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: OneBag
-## Notes: One bag to rule them all, and in the darkness bind them.
+## Notes: One bag to rule them all, and in the darkness bind them. | Personal edition: StoneChyi & Codex
 ## Title-zhCN:OneBag 背包整合
 ## Title: |CFF33AAFF[背包]|ROneBag背包整合
 ## X-Category: Inventory

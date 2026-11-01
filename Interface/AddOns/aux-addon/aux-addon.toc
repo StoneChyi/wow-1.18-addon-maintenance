@@ -1,10 +1,12 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Author: 阿拉正经 shirsig 
 ## OptionalDeps: ShaguTweaks
 ## Title: aux
-## Notes: Auction House replacement
+## Notes: Auction House replacement | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] Aux拍卖行插件 [1.04]
-## Notes-zhCN: |CFF00CD00Aux-Addon|R|N更快捷的比较商品价格，上架商品。
+## Notes-zhCN: |CFF00CD00Aux-Addon|R|N更快捷的比较商品价格，上架商品。 | Personal edition: StoneChyi & Codex
 ## SavedVariables: aux
 
 libs\package.lua

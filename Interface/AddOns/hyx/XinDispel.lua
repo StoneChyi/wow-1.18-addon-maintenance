@@ -1,22 +1,26 @@
--- hyx dispel engine: WoW 1.12 / Lua 5.0 compatible.
--- UI ideas from Decursive; implementation uses local 1.12 APIs, no retail code.
-XinDispel = { spells = {}, ready = false, dirty = true }
+-- PureDispel / 净界驱散: personal modifications maintained by StoneChyi & Codex.
+-- Based on hyx by hyx; original authorship and applicable licenses retained.
+-- WoW 1.12 / Lua 5.0 engine. UI lives in PureDispelUI.lua.
+XinDispel = { ready = false, dirty = true, spellsDirty = true, spells = {},
+    entries = { ready = {}, blocked = {} },
+    metrics = { scanCycles = 0, tooltipReads = 0, rangeChecks = 0, notifications = 0 } }
 local D = XinDispel
-local types = { "Magic", "Curse", "Poison", "Disease" }
-local colors = {
-    Magic = { "魔法", 0.2, 0.6, 1 }, Curse = { "诅咒", 0.65, 0.2, 1 },
-    Poison = { "中毒", 0, 0.8, 0 }, Disease = { "疾病", 0.8, 0.5, 0 }
+D.Types = {
+    Magic = { name = "魔法", r = .2, g = .6, b = 1 },
+    Curse = { name = "诅咒", r = .65, g = .2, b = 1 },
+    Poison = { name = "中毒", r = 0, g = .8, b = 0 },
+    Disease = { name = "疾病", r = .8, g = .5, b = 0 }
 }
-local classNames = {
-    WARRIOR = "战士", ROGUE = "盗贼", PRIEST = "牧师", DRUID = "小德",
-    PALADIN = "骑士", HUNTER = "猎人", MAGE = "法师", WARLOCK = "术士", SHAMAN = "萨满"
+D.ClassColors = {
+    MAGE = { r = .41, g = .80, b = .94 }, HUNTER = { r = .67, g = .83, b = .45 },
+    ROGUE = { r = 1, g = .96, b = .41 }, WARRIOR = { r = .78, g = .61, b = .43 },
+    PRIEST = { r = 1, g = 1, b = 1 }, WARLOCK = { r = .58, g = .51, b = .79 },
+    PALADIN = { r = .96, g = .55, b = .73 }, DRUID = { r = 1, g = .49, b = .04 },
+    SHAMAN = { r = 0, g = .44, b = .87 }
 }
-local classColors = {
-    MAGE = { .41, .80, .94 }, HUNTER = { .67, .83, .45 }, ROGUE = { 1, .96, .41 },
-    WARRIOR = { .78, .61, .43 }, PRIEST = { 1, 1, 1 }, WARLOCK = { .58, .51, .79 },
-    PALADIN = { .96, .55, .73 }, DRUID = { 1, .49, .04 }, SHAMAN = { 0, .44, .87 }
-}
--- Each inner table is one spell, with names for supported client locales.
+local typeOrder = { "Magic", "Curse", "Poison", "Disease" }
+local classNames = { WARRIOR = "战士", ROGUE = "盗贼", PRIEST = "牧师", DRUID = "小德",
+    PALADIN = "骑士", HUNTER = "猎人", MAGE = "法师", WARLOCK = "术士", SHAMAN = "萨满" }
 local cleanse = { "清洁术", "淨化術", "Cleanse" }
 local purify = { "纯净术", "純淨術", "Purify" }
 local curePoison = { "消毒术", "消毒術", "Cure Poison" }
@@ -33,88 +37,215 @@ local spellRules = {
 }
 local scanner = CreateFrame("GameTooltip", "XinTooltipScanner", nil, "GameTooltipTemplate")
 scanner:SetOwner(WorldFrame, "ANCHOR_NONE")
+local driver = CreateFrame("Frame", "PureDispelEngine", UIParent)
+D.driver = driver
+local roster, rosterPool, rosterNames, ordered = {}, {}, {}, {}
+local entryPool, spellPool, known = {}, {}, {}
+local rawTokens = { "player" }
+for i = 1, 4 do rawTokens[1 + i] = "party" .. i end
+for i = 1, 40 do rawTokens[5 + i] = "raid" .. i end
+local castAura, scratchAura = {}, {}
+local initializedDB, fullBlockRules, rulesDirty, revision = nil, false, true, 0
+local elapsed, awaySince, settleUntil = 0, nil, 0
+local undoRecord
 
-local function Truth(value) return value ~= nil and value ~= false and value ~= 0 end
-local function Say(message) DEFAULT_CHAT_FRAME:AddMessage("|cff80cfff欣|r " .. message) end
+local function Clear(t) for k in pairs(t) do t[k] = nil end end
+local function TrimArray(t, n) for i = table.getn(t), n + 1, -1 do t[i] = nil end end
+local function Truth(v) return v ~= nil and v ~= false and v ~= 0 end
+local function Clock() return GetTime and GetTime() or 0 end
+local function CleanName(name)
+    if type(name) ~= "string" then return nil end
+    name = string.gsub(name, "^%s*(.-)%s*$", "%1")
+    if name == "" or string.len(name) > 100 or string.find(name, "|", 1, true) then return nil end
+    return name
+end
+local function KnownIdentity(value)
+    local name = CleanName(value)
+    if not name or name == UNKNOWNOBJECT or name == UNKNOWN or name == "Unknown"
+        or name == "UNKNOWN" or name == "未知" or name == "未知目标" then return nil end
+    return name
+end
+local function EnsureTeamOwner(force)
+    if D.teamOwnerReady and not force then return true, false end
+    local name = KnownIdentity(UnitName("player"))
+    local realm
+    if not name then D.teamOwnerReady = false; return false, false end
+    if type(GetRealmName) == "function" then
+        local ok, value = pcall(GetRealmName)
+        realm = ok and KnownIdentity(value) or nil
+        if not realm then D.teamOwnerReady = false; return false, false end
+    end
+    local owner = realm and (realm .. "::" .. name) or name
+    local changed = not D.teamOwnerReady
+    if xinDB.teamOwner and xinDB.teamOwner ~= owner then
+        -- SavedVariables is account-wide. Only temporary rules/context belong
+        -- to this character; permanent lists retain the existing shared scope.
+        Clear(xinDB.teamRules); Clear(xinDB.teamContext)
+        undoRecord, awaySince, settleUntil = nil, nil, Clock() + 4
+        D.spellsDirty = true
+        changed = true
+    end
+    xinDB.teamOwner, D.teamOwnerReady = owner, true
+    if changed then D.dirty = true end
+    return true, changed
+end
+function D.Notify(message)
+    if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff80cfff净界驱散|r " .. tostring(message))
+    end
+end
 local function SafeXP(command, source, unit)
     if type(UnitXP) ~= "function" then return nil end
     local ok, value = pcall(UnitXP, command, source, unit)
     if ok then return value end
     return nil
 end
+local function Identity(unit, name)
+    local exists, guid = UnitExists(unit)
+    if exists and type(guid) == "string" and guid ~= "" then return guid end
+    return name
+end
+D.Identity = Identity
 
-function D.RefreshSpells()
-    D.spells = {}
-    local _, class = UnitClass("player")
-    local rules = spellRules[class] or {}
-    local pet = class == "WARLOCK"
-    local book = pet and (BOOKTYPE_PET or "pet") or (BOOKTYPE_SPELL or "spell")
-    if pet and (not UnitExists("pet") or UnitIsDeadOrGhost("pet")) then D.dirty = false; return end
-    local known = {}
-    -- Pet spell books must be scanned separately from player talent tabs.
-    for slot = 1, 1024 do
-        local name = GetSpellName(slot, book)
-        if not name then break end
-        known[name] = slot -- last slot is the highest learned rank
-    end
-    for dispelType, candidates in pairs(rules) do
-        for _, names in ipairs(candidates) do
-            for _, name in ipairs(names) do
-                if known[name] then
-                    D.spells[dispelType] = { name = name, slot = known[name], book = book, pet = pet, range = 30 }
-                    break
-                end
-            end
-            if D.spells[dispelType] then break end
+function D.GetPolicy(name)
+    local db = xinDB or {}
+    local team = D.teamOwnerReady and db.teamRules and db.teamRules[name]
+    if team == "ignore" then return "ignore", "team" end
+    if db.BlackList and db.BlackList[name] then return "ignore", "longterm" end
+    if team == "priority" then return "priority", "team" end
+    if db.PriorityList and db.PriorityList[name] then return "priority", "longterm" end
+    return "normal", "none"
+end
+
+local function RebuildRoster()
+    Clear(rosterNames)
+    local raidCount = math.min(GetNumRaidMembers(), 40)
+    local count = raidCount > 0 and raidCount or math.min(GetNumPartyMembers(), 4) + 1
+    local tokenStart = raidCount > 0 and 5 or 0
+    local n = 0
+    for i = 1, count do
+        local unit = rawTokens[tokenStart + i]
+        local name = UnitName(unit)
+        if name and UnitExists(unit) then
+            n = n + 1
+            local item = rosterPool[n]
+            if not item then item = {}; rosterPool[n] = item end
+            local _, class = UnitClass(unit)
+            item.name, item.unit, item.class = name, unit, class
+            item.key = Identity(unit, name)
+            item.self = Truth(UnitIsUnit("player", unit))
+            item.state, item.scope = D.GetPolicy(name)
+            item.rank = item.self and 0 or item.state == "priority" and 1 or 2
+            item.eligible = Truth(UnitIsConnected(unit)) and not Truth(UnitIsDeadOrGhost(unit))
+                and Truth(UnitIsFriend("player", unit)) and not Truth(UnitCanAttack("player", unit))
+            roster[n], rosterNames[name] = item, unit
         end
     end
-    D.dirty = false
+    TrimArray(roster, n)
+    return roster
+end
+function D.GetRoster()
+    if not D.ready then D.Init() end
+    return RebuildRoster()
 end
 
-local function IgnoreLevel(name, unit)
+local function RebuildRuleFlags()
+    fullBlockRules = false
+    for _, level in pairs(xinDB.IgnoreList) do
+        if level == 2 then fullBlockRules = true; break end
+    end
+    if not fullBlockRules then
+        for _, rule in pairs(xinDB.RaidSettings) do
+            if type(rule) == "table" and rule.ignoreType == 2 then fullBlockRules = true; break end
+        end
+    end
+    rulesDirty = false
+end
+function D.GetRuleLevel(name, unit)
     local db = xinDB or {}
     local level = db.IgnoreList and db.IgnoreList[name]
-    if level and level ~= 0 then return level end
+    if level and level ~= 0 then return level, "custom" end
     local rule = db.RaidSettings and db.RaidSettings[name]
-    if rule then
+    if type(rule) == "table" then
         local _, class = UnitClass(unit)
-        if rule.ignoreClasses and rule.ignoreClasses[classNames[class]] then return 1 end
-        return rule.ignoreType or 0
+        if rule.ignoreClasses and rule.ignoreClasses[classNames[class]] then return 1, "raid-class" end
+        return rule.ignoreType or 0, "raid"
     end
-    return 0
+    return 0, "none"
 end
 
--- Examine every aura, even types this class cannot remove: a full-block rule
--- must keep the unit blocked after switching classes as well.
-function D.FindDebuff(unit)
-    local candidate
+function D.RefreshSpells()
+    Clear(known); Clear(D.spells)
+    local _, class = UnitClass("player")
+    local pet = class == "WARLOCK"
+    local book = pet and (BOOKTYPE_PET or "pet") or (BOOKTYPE_SPELL or "spell")
+    D.playerClass = class
+    D.petReady = not pet or (Truth(UnitExists("pet")) and not Truth(UnitIsDeadOrGhost("pet")))
+    if D.petReady then
+        for slot = 1, 1024 do
+            local name = GetSpellName(slot, book)
+            if not name then break end
+            known[name] = slot
+        end
+        for dispelType, candidates in pairs(spellRules[class] or {}) do
+            for _, names in ipairs(candidates) do
+                for _, name in ipairs(names) do
+                    if known[name] then
+                        local spell = spellPool[dispelType]
+                        if not spell then spell = {}; spellPool[dispelType] = spell end
+                        spell.name, spell.slot, spell.book = name, known[name], book
+                        spell.pet, spell.range = pet, 30
+                        D.spells[dispelType] = spell
+                        break
+                    end
+                end
+                if D.spells[dispelType] then break end
+            end
+        end
+    end
+    D.spellsDirty = false
+end
+
+function D.FindDebuff(unit, output)
+    if not D.ready then D.Init() end
+    if rulesDirty then RebuildRuleFlags() end
+    local candidate = output or scratchAura
+    local found = false
     for index = 1, 16 do
         local texture, stacks, dispelType = UnitDebuff(unit, index)
         if not texture then break end
-        scanner:ClearLines()
-        scanner:SetUnitDebuff(unit, index)
-        local name = XinTooltipScannerTextLeft1:GetText() or "未知状态"
-        local level = IgnoreLevel(name, unit)
-        if level == 2 then return nil end
-        if level ~= 1 and D.spells[dispelType] and not candidate then
-            candidate = { index = index, texture = texture, stacks = stacks or 0,
-                type = dispelType, name = name, spell = D.spells[dispelType] }
+        if fullBlockRules or D.spells[dispelType] then
+            D.metrics.tooltipReads = D.metrics.tooltipReads + 1
+            scanner:ClearLines(); scanner:SetUnitDebuff(unit, index)
+            local text = XinTooltipScannerTextLeft1 and XinTooltipScannerTextLeft1:GetText()
+            -- A missing tooltip name cannot safely satisfy name-based ignore
+            -- rules. Retry next scan instead of recommending an unknown aura.
+            if not text or text == "" then return nil end
+            local name = text
+            local level = D.GetRuleLevel(name, unit)
+            if level == 2 then return nil end
+            if not found and level ~= 1 and D.spells[dispelType] then
+                candidate.index, candidate.texture, candidate.stacks = index, texture, stacks or 0
+                candidate.type, candidate.name, candidate.nameStr = dispelType, name, name
+                candidate.spell = D.spells[dispelType]
+                found = true
+                -- No whole-unit block rule: later aura names cannot change the
+                -- first valid candidate, so avoid unnecessary tooltip work.
+                if not fullBlockRules then break end
+            end
         end
     end
-    return candidate
-end
-
-local function Eligible(unit)
-    return UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit)
-        and UnitIsFriend("player", unit) and not UnitCanAttack("player", unit)
+    if found then return candidate end
+    return nil
 end
 
 function D.Availability(unit, spell)
+    if not spell then return false, "技能不可用" end
+    D.metrics.rangeChecks = D.metrics.rangeChecks + 1
     local source = spell.pet and "pet" or "player"
-    if spell.pet and (not UnitExists("pet") or UnitIsDeadOrGhost("pet")) then return false, "宠物不可用" end
+    if spell.pet and (not UnitExists("pet") or Truth(UnitIsDeadOrGhost("pet"))) then return false, "宠物不可用" end
     local inRange
-    if UnitIsUnit(source, unit) then
-        inRange = true
+    if UnitIsUnit(source, unit) then inRange = true
     elseif not spell.pet and type(IsSpellInRange) == "function" then
         local ok, result = pcall(IsSpellInRange, spell.name, unit)
         if ok and (result == 0 or result == 1) then inRange = result == 1 end
@@ -129,287 +260,266 @@ function D.Availability(unit, spell)
         if sight ~= nil and not Truth(sight) then return false, "视野之外" end
     end
     if inRange == nil then return false, "距离未知" end
-    if UnitIsDeadOrGhost("player") then return false, "你已死亡" end
-    local start, duration, enabled = GetSpellCooldown(spell.slot, spell.book)
-    if enabled == 0 then return false, "技能不可用" end
-    -- Keep rows in place during the short global cooldown so rapid click/queue
-    -- play does not empty and refill both lists after every successful cleanse.
-    if start and duration and duration > 1.5 and start + duration > GetTime() then return false, "冷却中" end
-    -- Optional Nampower API; stock 1.12 has no IsSpellUsable.
+    if Truth(UnitIsDeadOrGhost("player")) then return false, "你已死亡" end
+    local ok, start, duration, enabled = pcall(GetSpellCooldown, spell.slot, spell.book)
+    if not ok or enabled == 0 then return false, "技能不可用" end
+    if start and duration and duration > 1.5 and start + duration > Clock() then return false, "冷却中" end
     if not spell.pet and type(IsSpellUsable) == "function" then
-        local ok, usable, oom = pcall(IsSpellUsable, spell.name)
-        if ok and Truth(oom) then return false, "法力不足" end
-        if ok and usable ~= nil and not Truth(usable) then return false, "技能不可用" end
+        local usableOK, usable, oom = pcall(IsSpellUsable, spell.name)
+        if usableOK and Truth(oom) then return false, "法力不足" end
+        if usableOK and usable ~= nil and not Truth(usable) then return false, "技能不可用" end
     end
     return true, ""
 end
 
-local function ViewLimit(anchor)
-    local value = xinDB and xinDB[anchor.limitKey] or 5
-    return math.max(3, math.min(10, math.floor(tonumber(value) or 5)))
-end
-
-function D.Render(anchor)
-    local entries, limit = anchor.entries, ViewLimit(anchor)
-    local total = table.getn(entries)
-    anchor.offset = math.max(0, math.min(anchor.offset, math.max(0, total - limit)))
-    for i = 1, 40 do
-        local row, entry = anchor.rows[i], entries[anchor.offset + i]
-        if i <= limit and entry then
-            row.entry = entry
-            row.targetUnit, row.debuffIndex = entry.unit, entry.debuff.index
-            row.icon:SetTexture(entry.debuff.texture)
-            local c = classColors[entry.class] or { 1, 1, 1 }
-            row.playerName:SetTextColor(c[1], c[2], c[3])
-            row.playerName:SetText(entry.name .. (entry.reason ~= "" and " |cffff6666(" .. entry.reason .. ")|r" or ""))
-            local t = colors[entry.debuff.type]
-            row.debuffName:SetText(entry.debuff.name .. "(" .. t[1] .. ")")
-            row.debuffName:SetTextColor(t[2], t[3], t[4])
-            row:SetAlpha(entry.available and 1 or .55)
-            row:Show()
-        else
-            row.entry, row.targetUnit, row.debuffIndex = nil, nil, nil
-            row:Hide()
+local function TeamState()
+    if not D.ready then return end
+    local ownerReady, ownerChanged = EnsureTeamOwner(false)
+    if not ownerReady then return end
+    if ownerChanged and D.OnChanged then D.OnChanged(true) end
+    local grouped = GetNumRaidMembers() > 0 or GetNumPartyMembers() > 0
+    if grouped then xinDB.teamContext.hadGroup = true; awaySince = nil
+    elseif xinDB.teamContext.hadGroup and Clock() >= settleUntil then
+        if not awaySince then awaySince = Clock() end
+        if Clock() - awaySince >= 3 then
+            local hadRules, hadUndo = next(xinDB.teamRules) ~= nil, undoRecord ~= nil
+            -- Even an empty current table can have an undo snapshot containing
+            -- the previous group's ignore. Never let Undo resurrect it later.
+            undoRecord = nil
+            if hadRules or hadUndo then
+                Clear(xinDB.teamRules)
+                D.dirty, rulesDirty = true, true
+                if D.OnChanged then D.OnChanged(true) end
+            end
+            xinDB.teamContext.hadGroup = false; awaySince = nil
         end
     end
-    anchor.wheelArea:SetHeight(math.max(1, math.min(total, limit) * 32))
-    if total > limit then
-        anchor.pageText:SetText((anchor.offset + 1) .. "-" .. math.min(total, anchor.offset + limit) .. "/" .. total .. "  滚轮浏览")
-        anchor.pageText:Show()
-    else anchor.pageText:Hide() end
+end
+local function NotifyChange(force)
+    if D.OnChanged then
+        D.metrics.notifications = D.metrics.notifications + 1
+        D.OnChanged(force)
+    end
 end
 
-local function Scroll(anchor, delta)
-    if not delta or delta == 0 then return end
-    anchor.offset = anchor.offset + (delta > 0 and -1 or 1)
-    D.Render(anchor)
-    GameTooltip:Hide()
-end
-
-local function Tooltip(row)
-    local entry = row.entry
-    if not entry then return end
-    GameTooltip:SetOwner(row, "ANCHOR_CURSOR")
-    if UnitName(entry.unit) == entry.name then GameTooltip:SetUnitDebuff(entry.unit, entry.debuff.index) end
-    GameTooltip:AddLine("左键/右键驱散：" .. entry.debuff.spell.name, 1, 1, 1)
-    GameTooltip:AddLine("中键选中目标；滚轮浏览；Shift+滚轮回到首尾", .7, .8, 1)
-    if entry.reason ~= "" then GameTooltip:AddLine(entry.reason, 1, .3, .3) end
-    GameTooltip:Show()
-end
-
-function D.Click(row, button)
-    local entry = row.entry
-    local pressed = row.pressedEntry
-    row.pressedEntry = nil
-    if pressed and (not entry or pressed.name ~= entry.name or pressed.debuff.name ~= entry.debuff.name) then return end
-    if not entry or UnitName(entry.unit) ~= entry.name or not Eligible(entry.unit) then return end
-    if button == "MiddleButton" then TargetUnit(entry.unit); return end
-    -- Recheck the actual unit, filters, spell book and aura at click time.
+function D.Init()
+    if type(xinDB) ~= "table" then xinDB = {} end
+    if initializedDB == xinDB and D.ready then EnsureTeamOwner(true); return end
+    local defaults = { maxInRange = 6, maxOutRange = 3, listsVisible = true, locked = true,
+        width = 290, rowHeight = 34, followPfUI = true, backgroundAlpha = .75,
+        borderAlpha = .85, fontSize = 12, rightClickDispel = false }
+    for key, value in pairs(defaults) do if xinDB[key] == nil then xinDB[key] = value end end
+    if type(xinDB.PriorityList) ~= "table" then xinDB.PriorityList = type(PriorityList) == "table" and PriorityList or {} end
+    if type(xinDB.BlackList) ~= "table" then xinDB.BlackList = type(BlackList) == "table" and BlackList or {} end
+    if type(xinDB.teamRules) ~= "table" then xinDB.teamRules = {} end
+    if type(xinDB.teamContext) ~= "table" then xinDB.teamContext = {} end
+    if type(xinDB.IgnoreList) ~= "table" then xinDB.IgnoreList = { ["冰柱"] = 1 } end
+    if type(xinDB.RaidSettings) ~= "table" then xinDB.RaidSettings = {} end
+    PriorityList, BlackList = xinDB.PriorityList, xinDB.BlackList
+    D.teamOwnerReady = false
+    EnsureTeamOwner(true)
+    initializedDB, D.ready, D.dirty, D.spellsDirty, rulesDirty = xinDB, true, true, true, true
+    settleUntil, awaySince = Clock() + 4, nil
     D.RefreshSpells()
-    if BlackList and BlackList[entry.name] then return end
-    local aura = D.FindDebuff(entry.unit)
-    if not aura or aura.name ~= entry.debuff.name or aura.type ~= entry.debuff.type then return end
-    local available, reason = D.Availability(entry.unit, aura.spell)
-    if not available then Say(reason); return end
-    if SpellIsTargeting and SpellIsTargeting() then Say("请先完成或取消当前的选取目标操作"); return end
-    if SUPERWOW_VERSION then
-        CastSpellByName(aura.spell.name, entry.unit)
-    else
-        -- Stock 1.12 fallback. CastSpell's third argument suppresses auto-selfcast;
-        -- explicitly resolve a targeting cursor before restoring the old target.
-        local hadTarget = UnitExists("target")
-        local sameTarget = UnitIsUnit("target", entry.unit)
-        if not sameTarget then TargetUnit(entry.unit) end
-        CastSpell(aura.spell.slot, aura.spell.book, false)
-        if SpellIsTargeting and SpellIsTargeting() then
-            SpellTargetUnit(entry.unit)
-            if SpellIsTargeting() then SpellStopTargeting() end
-        end
-        if not sameTarget then
-            if hadTarget then TargetLastTarget() else ClearTarget() end
-        end
+    if D.OnReady then D.OnReady() end
+    if D.OnVisibility then D.OnVisibility(xinDB.listsVisible ~= false) end
+end
+function D.MarkDirty()
+    D.dirty, rulesDirty = true, true
+    if D.ready and not D.updating then
+        if xinDB.listsVisible ~= false then D.Update(true) else NotifyChange(true) end
     end
 end
-
-local function CreateAnchor(name, title, x, limitKey)
-    local anchor = CreateFrame("Frame", name, UIParent)
-    anchor:SetWidth(200); anchor:SetHeight(24); anchor:SetPoint("CENTER", x, 0)
-    anchor.limitKey, anchor.offset, anchor.entries, anchor.rows = limitKey, 0, {}, {}
-    anchor:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", tile = true, tileSize = 16,
-        edgeSize = 16, insets = { left = 4, right = 4, top = 4, bottom = 4 } })
-    anchor.title = anchor:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    anchor.title:SetPoint("LEFT", anchor, "LEFT", 10, 0); anchor.title:SetText(title)
-    anchor.title:SetTextColor(1, 1, 1)
-    anchor.hideBtn = CreateFrame("Button", nil, anchor, "UIPanelButtonTemplate")
-    anchor.hideBtn:SetWidth(40); anchor.hideBtn:SetHeight(18)
-    anchor.hideBtn:SetPoint("RIGHT", anchor, "RIGHT", -4, 0); anchor.hideBtn:SetText("隐藏")
-    anchor:SetMovable(true); anchor:RegisterForDrag("LeftButton")
-    anchor:SetScript("OnDragStart", function() this:StartMoving() end)
-    anchor:SetScript("OnDragStop", function()
-        this:StopMovingOrSizing()
-        if xinDB then
-            local point, relative, relativePoint, px, py = this:GetPoint()
-            xinDB.positions = xinDB.positions or {}
-            xinDB.positions[this:GetName()] = { point, relativePoint, px, py }
-        end
-    end)
-    function anchor:Lock()
-        self:EnableMouse(false); self:SetBackdropColor(0, 0, 0, 0); self:SetBackdropBorderColor(0, 0, 0, 0)
-        self.title:Hide(); self.hideBtn:Hide()
-    end
-    function anchor:Unlock()
-        self:EnableMouse(true); self:SetBackdropColor(0, 0, 0, .8); self:SetBackdropBorderColor(.6, .6, .6, 1)
-        self.title:Show(); self.hideBtn:Show()
-    end
-    anchor.hideBtn:SetScript("OnClick", function() anchor:Lock() end)
-    -- Separate mouse surface keeps scrolling working when the anchor is locked.
-    anchor.wheelArea = CreateFrame("Frame", nil, anchor)
-    anchor.wheelArea:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 5, -2)
-    anchor.wheelArea:SetWidth(240); anchor.wheelArea:SetHeight(1)
-    anchor.wheelArea:EnableMouseWheel(true)
-    local function OnWheel()
-        if IsShiftKeyDown() then anchor.offset = arg1 > 0 and 0 or table.getn(anchor.entries); D.Render(anchor)
-        else Scroll(anchor, arg1) end
-        GameTooltip:Hide()
-    end
-    anchor.wheelArea:SetScript("OnMouseWheel", OnWheel)
-    anchor:EnableMouseWheel(true); anchor:SetScript("OnMouseWheel", OnWheel)
-    anchor.pageText = anchor:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    anchor.pageText:SetPoint("TOPLEFT", anchor.wheelArea, "BOTTOMLEFT", 0, -2)
-    anchor.pageText:SetTextColor(.7, .8, 1); anchor.pageText:Hide()
-    for i = 1, 40 do
-        local row = CreateFrame("Button", nil, anchor.wheelArea)
-        row:SetWidth(240); row:SetHeight(32)
-        row:SetPoint("TOPLEFT", anchor.wheelArea, "TOPLEFT", 0, -(i - 1) * 32)
-        row.icon = row:CreateTexture(nil, "ARTWORK")
-        row.icon:SetWidth(28); row.icon:SetHeight(28); row.icon:SetPoint("LEFT", row, "LEFT", 0, 0)
-        row.playerName = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.playerName:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 8, 0); row.playerName:SetWidth(200)
-        row.playerName:SetJustifyH("LEFT")
-        row.debuffName = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.debuffName:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 8, 2); row.debuffName:SetWidth(200)
-        row.debuffName:SetJustifyH("LEFT")
-        row:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
-        row:SetScript("OnMouseDown", function() this.pressedEntry = this.entry end)
-        row:SetScript("OnClick", function() D.Click(this, arg1) end)
-        row:SetScript("OnEnter", function() Tooltip(this) end)
-        row:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        row:EnableMouseWheel(true); row:SetScript("OnMouseWheel", OnWheel)
-        row:Hide(); anchor.rows[i] = row
-    end
-    anchor:Lock()
-    return anchor, anchor.rows
-end
-
-XinMainFrame_InRange, XinRows_InRange = CreateAnchor("XinMainFrame_InRange", "锚点(可驱散)", -240, "maxInRange")
-XinMainFrame_OutRange, XinRows_OutRange = CreateAnchor("XinMainFrame_OutRange", "锚点(不可驱散)", 20, "maxOutRange")
-
 function D.SetListsVisible(visible)
-    xinDB = xinDB or {}
+    if type(xinDB) ~= "table" then xinDB = {} end
     xinDB.listsVisible = visible and true or false
-    for _, anchor in ipairs({ XinMainFrame_InRange, XinMainFrame_OutRange }) do
-        if xinDB.listsVisible then anchor:Show() else anchor:Hide() end
+    if D.OnVisibility then D.OnVisibility(xinDB.listsVisible) end
+    if D.ready and xinDB.listsVisible then D.Update(true) end
+end
+function D.ToggleLists() D.SetListsVisible(not (xinDB and xinDB.listsVisible ~= false)) end
+
+function D.Update(force)
+    if not D.ready or D.updating then return end
+    TeamState()
+    if xinDB.listsVisible == false then return end
+    D.updating = true
+    -- Pet resurrection need not change the player's spell book. Detect it
+    -- cheaply so losing the pet cannot leave its cleansing spell cached away.
+    if D.playerClass == "WARLOCK" then
+        local petReady = Truth(UnitExists("pet")) and not Truth(UnitIsDeadOrGhost("pet"))
+        if petReady ~= D.petReady then D.spellsDirty = true end
     end
-end
-
-function D.ToggleLists()
-    D.SetListsVisible(not (XinMainFrame_InRange:IsShown() or XinMainFrame_OutRange:IsShown()))
-    if xinDB.listsVisible then UpdateXinList() end
-end
-
-local function Publish(anchor, entries)
-    -- Preserve the top visible person when entries above disappear while scrolled.
-    if anchor.offset > 0 then
-        local old = anchor.entries[anchor.offset + 1]
-        if old then
-            for i, entry in ipairs(entries) do
-                if entry.name == old.name then anchor.offset = i - 1; break end
+    if D.spellsDirty then D.RefreshSpells(); force = true end
+    if rulesDirty then RebuildRuleFlags() end
+    D.metrics.scanCycles = D.metrics.scanCycles + 1
+    local changed = force or D.dirty
+    local inCount, outCount = 0, 0
+    if next(D.spells) then
+        RebuildRoster()
+        local n = 0
+        for rank = 0, 2 do
+            for _, item in ipairs(roster) do
+                if item.rank == rank and item.eligible and item.state ~= "ignore" then n = n + 1; ordered[n] = item end
+            end
+        end
+        TrimArray(ordered, n)
+        for _, item in ipairs(ordered) do
+            local entry = entryPool[item.unit]
+            if not entry then entry = { debuff = {} }; entryPool[item.unit] = entry end
+            local aura = entry.debuff
+            local oldIndex, oldTexture, oldStacks, oldType, oldAuraName = aura.index, aura.texture, aura.stacks, aura.type, aura.name
+            local oldSpellName = aura.spell and aura.spell.name
+            local found = D.FindDebuff(item.unit, aura)
+            if found then
+                local available, reason = D.Availability(item.unit, aura.spell)
+                if entry.name ~= item.name or entry.key ~= item.key or entry.class ~= item.class
+                    or entry.available ~= available or entry.reason ~= reason or entry.policy ~= item.state
+                    or oldIndex ~= aura.index or oldTexture ~= aura.texture or oldStacks ~= aura.stacks
+                    or oldType ~= aura.type or oldAuraName ~= aura.name or oldSpellName ~= aura.spell.name then changed = true end
+                entry.unit, entry.name, entry.class, entry.key = item.unit, item.name, item.class, item.key
+                entry.available, entry.reason, entry.policy, entry.scope = available, reason, item.state, item.scope
+                if available then
+                    inCount = inCount + 1
+                    if D.entries.ready[inCount] ~= entry then changed = true end
+                    D.entries.ready[inCount] = entry
+                else
+                    outCount = outCount + 1
+                    if D.entries.blocked[outCount] ~= entry then changed = true end
+                    D.entries.blocked[outCount] = entry
+                end
             end
         end
     end
-    anchor.entries = entries
-    D.Render(anchor)
+    if table.getn(D.entries.ready) ~= inCount or table.getn(D.entries.blocked) ~= outCount then changed = true end
+    TrimArray(D.entries.ready, inCount); TrimArray(D.entries.blocked, outCount)
+    D.dirty, D.updating = false, false
+    if changed then revision = revision + 1; D.revision = revision; NotifyChange(force) end
+end
+UpdateXinList = function() D.Update(true) end
+
+local function PolicyChanged() D.MarkDirty() end
+function D.SetPolicy(name, state, scope)
+    if not D.ready then D.Init() end
+    name = CleanName(name)
+    if not name then return false, "请输入有效的角色名字" end
+    if state ~= "normal" and state ~= "priority" and state ~= "ignore" then return false, "未知名单规则" end
+    scope = scope or "team"
+    if scope ~= "team" and scope ~= "longterm" then return false, "未知作用范围" end
+    if scope == "team" and not EnsureTeamOwner(false) then return false, "角色或服务器信息尚未就绪，请稍后再试" end
+    if state == "priority" then
+        local existing = D.GetPolicy(name)
+        if existing == "ignore" then return false, "请先在忽略名单恢复此人，再设为优先" end
+    end
+    undoRecord = { kind = "policy", name = name, team = xinDB.teamRules[name], priority = PriorityList[name], ignored = BlackList[name] }
+    if scope == "team" then xinDB.teamRules[name] = state ~= "normal" and state or nil
+    else PriorityList[name] = state == "priority" and true or nil; BlackList[name] = state == "ignore" and true or nil end
+    PolicyChanged()
+    return true
+end
+function D.ClearPolicy(name, scope) return D.SetPolicy(name, "normal", scope) end
+function D.ListPolicies(kind)
+    if not D.ready then D.Init() end
+    RebuildRoster()
+    local list = {}
+    for name, state in pairs(xinDB.teamRules) do
+        if D.teamOwnerReady and (state == "priority" or state == "ignore") and (not kind or kind == state) then
+            table.insert(list, { name = name, state = state, scope = "team", current = rosterNames[name] ~= nil })
+        end
+    end
+    for name, enabled in pairs(PriorityList) do
+        if enabled and (not kind or kind == "priority") then table.insert(list, { name = name, state = "priority", scope = "longterm", current = rosterNames[name] ~= nil }) end
+    end
+    for name, enabled in pairs(BlackList) do
+        if enabled and (not kind or kind == "ignore") then table.insert(list, { name = name, state = "ignore", scope = "longterm", current = rosterNames[name] ~= nil }) end
+    end
+    table.sort(list, function(a, b) if a.name ~= b.name then return a.name < b.name end; return a.scope < b.scope end)
+    return list
+end
+function D.Undo()
+    if not undoRecord then return false, "没有可以撤销的操作" end
+    local saved = undoRecord; undoRecord = nil
+    if saved.kind == "policy" then
+        xinDB.teamRules[saved.name] = saved.team
+        PriorityList[saved.name], BlackList[saved.name] = saved.priority, saved.ignored
+    elseif saved.kind == "rule" then xinDB.IgnoreList[saved.name] = saved.level end
+    PolicyChanged()
+    return true
+end
+function D.CanUndo() return undoRecord ~= nil end
+function D.SetIgnoreRule(name, level)
+    if not D.ready then D.Init() end
+    name = CleanName(name)
+    if not name then return false, "请输入有效的减益名称" end
+    if level ~= 0 and level ~= 1 and level ~= 2 then return false, "未知减益规则" end
+    undoRecord = { kind = "rule", name = name, level = xinDB.IgnoreList[name] }
+    xinDB.IgnoreList[name] = level ~= 0 and level or nil
+    PolicyChanged()
+    return true
+end
+function D.GetIgnoreRules()
+    if not D.ready then D.Init() end
+    local list = {}
+    for name, level in pairs(xinDB.IgnoreList) do table.insert(list, { name = name, level = level, source = "custom" }) end
+    for name, rule in pairs(xinDB.RaidSettings) do
+        if type(rule) == "table" and (rule.ignoreType or (rule.ignoreClasses and next(rule.ignoreClasses))) then
+            table.insert(list, { name = name, level = rule.ignoreType or 0, source = "raid", classes = rule.ignoreClasses })
+        end
+    end
+    table.sort(list, function(a, b) if a.name ~= b.name then return a.name < b.name end; return a.source < b.source end)
+    return list
 end
 
-function UpdateXinList()
-    if not D.ready then return end
-    if D.dirty then D.RefreshSpells() end
-    if not next(D.spells) then
-        Publish(XinMainFrame_InRange, {})
-        Publish(XinMainFrame_OutRange, {})
-        return
-    end
-    local raw, ordered, priority, normal = {}, {}, {}, {}
-    local raidCount, partyCount = GetNumRaidMembers(), GetNumPartyMembers()
-    if raidCount > 0 then
-        for i = 1, raidCount do table.insert(raw, "raid" .. i) end
+function D.Cast(entry)
+    if not entry or not entry.debuff then return false, "目标已更新" end
+    local unit, name, key = entry.unit, entry.name, entry.key
+    local expectedName, expectedType = entry.debuff.name, entry.debuff.type
+    if not unit or UnitName(unit) ~= name or (key and Identity(unit, name) ~= key)
+        or not UnitExists(unit) or not Truth(UnitIsConnected(unit)) or Truth(UnitIsDeadOrGhost(unit))
+        or not Truth(UnitIsFriend("player", unit)) or Truth(UnitCanAttack("player", unit)) then return false, "目标已更新" end
+    if D.GetPolicy(name) == "ignore" then return false, "此目标已忽略" end
+    D.RefreshSpells(); RebuildRuleFlags()
+    local aura = D.FindDebuff(unit, castAura)
+    if not aura or aura.name ~= expectedName or aura.type ~= expectedType then return false, "减益已变化" end
+    local available, reason = D.Availability(unit, aura.spell)
+    if not available then return false, reason end
+    if SpellIsTargeting and Truth(SpellIsTargeting()) then return false, "请先完成或取消当前的选取目标操作" end
+    if SUPERWOW_VERSION then CastSpellByName(aura.spell.name, unit)
     else
-        table.insert(raw, "player")
-        for i = 1, partyCount do table.insert(raw, "party" .. i) end
-    end
-    local selfUnit
-    for _, unit in ipairs(raw) do
-        local name = UnitName(unit)
-        if name and not (BlackList and BlackList[name]) and Eligible(unit) then
-            if UnitIsUnit("player", unit) then selfUnit = unit
-            elseif PriorityList and PriorityList[name] then table.insert(priority, unit)
-            else table.insert(normal, unit) end
+        local hadTarget, sameTarget = UnitExists("target"), UnitIsUnit("target", unit)
+        if not sameTarget then TargetUnit(unit) end
+        CastSpell(aura.spell.slot, aura.spell.book, false)
+        if SpellIsTargeting and Truth(SpellIsTargeting()) then
+            SpellTargetUnit(unit)
+            if Truth(SpellIsTargeting()) then SpellStopTargeting() end
         end
+        if not sameTarget then if hadTarget then TargetLastTarget() else ClearTarget() end end
     end
-    if selfUnit then table.insert(ordered, selfUnit) end
-    for _, unit in ipairs(priority) do table.insert(ordered, unit) end
-    for _, unit in ipairs(normal) do table.insert(ordered, unit) end
-    local inEntries, outEntries = {}, {}
-    for _, unit in ipairs(ordered) do
-        local aura = D.FindDebuff(unit)
-        if aura then
-            local available, reason = D.Availability(unit, aura.spell)
-            local _, class = UnitClass(unit)
-            local entry = { unit = unit, name = UnitName(unit), class = class, debuff = aura, available = available, reason = reason }
-            if available then table.insert(inEntries, entry)
-            elseif xinDB.enableOutRange ~= false then table.insert(outEntries, entry) end
-        end
-    end
-    Publish(XinMainFrame_InRange, inEntries)
-    Publish(XinMainFrame_OutRange, outEntries)
+    return true
 end
-
-local events = CreateFrame("Frame")
-events:RegisterEvent("VARIABLES_LOADED"); events:RegisterEvent("SPELLS_CHANGED")
-events:RegisterEvent("LEARNED_SPELL_IN_TAB"); events:RegisterEvent("UNIT_PET")
-events:RegisterEvent("PET_BAR_UPDATE"); events:RegisterEvent("PLAYER_ENTERING_WORLD")
-events:RegisterEvent("PLAYER_LOGOUT")
-events:SetScript("OnEvent", function()
-    if event == "VARIABLES_LOADED" then
-        xinDB = xinDB or {}
-        xinDB.PriorityList = xinDB.PriorityList or {}; xinDB.BlackList = xinDB.BlackList or {}
-        PriorityList, BlackList = xinDB.PriorityList, xinDB.BlackList
-        for _, anchor in ipairs({ XinMainFrame_InRange, XinMainFrame_OutRange }) do
-            local pos = xinDB.positions and xinDB.positions[anchor:GetName()]
-            if pos then anchor:ClearAllPoints(); anchor:SetPoint(pos[1], UIParent, pos[2], pos[3], pos[4]) end
-        end
-        D.ready = true
-        D.SetListsVisible(xinDB.listsVisible ~= false)
-    elseif event == "PLAYER_LOGOUT" then
-        if xinDB then xinDB.PriorityList, xinDB.BlackList = PriorityList, BlackList end
-    end
-    D.dirty = true
-end)
-local elapsed = 0
-events:SetScript("OnUpdate", function()
-    elapsed = elapsed + arg1
-    if elapsed >= .25 then elapsed = 0; UpdateXinList() end
-end)
-
+function D.GetMetrics() return D.metrics end
 function D.Status()
+    if not D.ready then D.Init() end
     D.RefreshSpells()
     local found = {}
-    for _, dispelType in ipairs(types) do
-        if D.spells[dispelType] then table.insert(found, colors[dispelType][1] .. "=" .. D.spells[dispelType].name) end
+    for _, dispelType in ipairs(typeOrder) do
+        if D.spells[dispelType] then table.insert(found, D.Types[dispelType].name .. "=" .. D.spells[dispelType].name) end
     end
-    Say(table.getn(found) > 0 and table.concat(found, "，") or "当前角色/宠物没有已学习的友方驱散技能")
-    Say("UnitXP接口=" .. (type(UnitXP) == "function" and "存在" or "未加载") ..
-        "，定向施法=" .. (SUPERWOW_VERSION and "SuperWoW" or "原版选中后还原") ..
-        "，两列支持滚轮浏览")
+    D.Notify(table.getn(found) > 0 and table.concat(found, "，") or "当前角色/宠物没有已学习的友方驱散技能")
+    D.Notify("UnitXP=" .. (type(UnitXP) == "function" and "接口存在" or "未加载") ..
+        "；定向施法=" .. (SUPERWOW_VERSION and "SuperWoW" or "选中后还原") ..
+        "；扫描=" .. D.metrics.scanCycles .. "；减益读名=" .. D.metrics.tooltipReads)
 end
+
+for _, eventName in ipairs({ "VARIABLES_LOADED", "PLAYER_ENTERING_WORLD", "SPELLS_CHANGED",
+    "LEARNED_SPELL_IN_TAB", "UNIT_PET", "PET_BAR_UPDATE", "PARTY_MEMBERS_CHANGED", "RAID_ROSTER_UPDATE" }) do driver:RegisterEvent(eventName) end
+driver:SetScript("OnEvent", function()
+    if event == "VARIABLES_LOADED" or event == "PLAYER_ENTERING_WORLD" then
+        D.Init()
+        if event == "PLAYER_ENTERING_WORLD" then settleUntil, awaySince = Clock() + 4, nil end
+    elseif event == "SPELLS_CHANGED" or event == "LEARNED_SPELL_IN_TAB" or event == "UNIT_PET" or event == "PET_BAR_UPDATE" then D.spellsDirty, D.dirty = true, true
+    else D.dirty = true; TeamState() end
+end)
+driver:SetScript("OnUpdate", function()
+    elapsed = elapsed + arg1
+    if elapsed >= .25 then elapsed = 0; if D.ready then D.Update(false) end end
+end)

@@ -1,7 +1,9 @@
 ﻿## X-MrBCat-Version: 2025-09-02 07:38:04
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Interface: 11200
 ## Title-zhCN:|CFF33AAFF[辅助]|R世界buff跟踪计时
-## Notes-zhCN: 显示龙头BUff计时器和暗影马戏团位置。
+## Notes-zhCN: 显示龙头BUff计时器和暗影马戏团位置。 | Personal edition: StoneChyi & Codex
 ## Author: Pizzahawaii
 ## Version: 1.6.11
 ## SavedVariablesPerCharacter: PWB_config, PWB_timers, PWB_dmf

@@ -110,7 +110,24 @@ def note_path(name):
     return path.as_posix()
 
 
-def checkpoint(addons, runtime, message, notes=()):
+def support_path(name):
+    """Accept explicitly reviewed maintenance tools and the root policy only."""
+    path = PurePosixPath(name)
+    if ("\\" in name or ":" in name or path.is_absolute() or ".." in path.parts
+            or any(part.lower() == ".git" for part in path.parts)):
+        raise RuntimeError("Invalid maintenance support path.")
+    if name != "AGENTS.md" and (len(path.parts) < 2 or path.parts[0] != "Tools"
+            or path.suffix not in {".py", ".lua", ".json", ".md", ".txt"}):
+        raise RuntimeError("Support files must be AGENTS.md or explicit Tools files.")
+    resolved = (ROOT / name).resolve()
+    if not resolved.is_relative_to(ROOT.resolve()) or not resolved.is_file():
+        raise RuntimeError("Unknown maintenance support file: " + name)
+    if path.parts[0] == "Tools" and not resolved.is_relative_to((ROOT / "Tools").resolve()):
+        raise RuntimeError("Support file resolves outside Tools.")
+    return path.as_posix()
+
+
+def checkpoint(addons, runtime, message, notes=(), support=(), check_notes=False):
     if git("diff", "--cached", "--name-only", "-z"):
         raise RuntimeError("Staging area is not empty; review it before recording this task.")
     scopes = []
@@ -131,6 +148,7 @@ def checkpoint(addons, runtime, message, notes=()):
     # Validate every document before staging anything. This permits a single
     # atomic implementation + notes commit while retaining the empty-index guard.
     scopes.extend(note_path(name) for name in notes)
+    scopes.extend(support_path(name) for name in support)
     if not scopes:
         raise RuntimeError("Specify --addon, --runtime or --note; no unscoped commits.")
     # Explicit file paths flatten embedded repositories without touching their
@@ -148,6 +166,12 @@ def checkpoint(addons, runtime, message, notes=()):
     if not git("diff", "--cached", "--name-only", "-z"):
         print("No changes in the selected plugins, runtime files or maintenance notes.")
         return 0
+    if check_notes:
+        # Newly added modules are now visible to the Git-aware coverage check.
+        for script, arguments in (("plugin_history.py", ["check"]), ("check_plugin_notes.py", [])):
+            result = subprocess.run([sys.executable, str(ROOT / "Tools" / script), *arguments], cwd=ROOT)
+            if result.returncode:
+                raise RuntimeError("Maintenance validation failed; reviewed files remain staged for inspection.")
     # Commit messages should include purpose and actual validation results.
     git("-c", "commit.gpgSign=false", "commit", "-m", message)
     print(git("log", "-1", "--format=%h %s").decode("utf-8").strip())
@@ -165,6 +189,8 @@ def main():
     save.add_argument("--runtime", action="append", default=[])
     save.add_argument("--note", action="append", default=[],
                       help="Explicit PluginHistory maintenance document; repeat for reviewed indexes/reports.")
+    save.add_argument("--support", action="append", default=[], help="Explicit Tools file or AGENTS.md; never a directory.")
+    save.add_argument("--check-notes", action="store_true", help="Check generated history and coverage after staging, before commit.")
     save.add_argument("--message", required=True)
     args = parser.parse_args()
     if args.command == "status":
@@ -172,7 +198,7 @@ def main():
         return 0
     if args.command == "verify":
         return verify(args.ref)
-    return checkpoint(args.addon, args.runtime, args.message, args.note)
+    return checkpoint(args.addon, args.runtime, args.message, args.note, args.support, args.check_notes)
 
 
 if __name__ == "__main__":

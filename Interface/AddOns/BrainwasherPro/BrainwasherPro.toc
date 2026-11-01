@@ -1,6 +1,8 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 天赋备注图形版
-## Notes: 天赋备注图形版
+## Notes: 天赋备注图形版 | Personal edition: StoneChyi & Codex
 ## Author: Horyoshi
 ## Version: 1.0
 ## SavedVariablesPerCharacter: BrainwasherProDB

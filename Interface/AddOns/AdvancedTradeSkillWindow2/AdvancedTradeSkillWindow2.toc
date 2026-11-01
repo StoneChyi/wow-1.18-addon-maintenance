@@ -1,6 +1,8 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title-zhCN: |CFF00CD00[商业]|R 扩展商业制作面板
-## Notes-zhCN: AdvancedTradeSkillWindow 2 扩展默认制作界面，使之显示更多的信息，并提供过滤功能等;|N改进整合了乌龟服专业技能窗口。
+## Notes-zhCN: AdvancedTradeSkillWindow 2 扩展默认制作界面，使之显示更多的信息，并提供过滤功能等;|N改进整合了乌龟服专业技能窗口。 | Personal edition: StoneChyi & Codex
 ## Version: 2026.8.22
 ## SavedVariables: ATSW_Characters, ATSW_Profession, ATSW_SelectedRecipe, ATSW_SortBy, ATSW_SearchString, ATSW_SubClassFilter, ATSW_InvSlotFilter, ATSW_ScrollOffset, ATSW_PreviousRecipes, ATSW_Tasks, ATSW_TimeCost, ATSW_NecessaryReagents, ATSW_ContractedCategories, ATSW_Amount, ATSW_Bags, ATSW_Bank, ATSW_Merchant, ATSW_Options, ATSW_CustomCategories, ATSW_CSOpenCategory, ATSW_CSSelected, ATSW_Attributes, ATSW_Debug, ATSW_FramePosition
 

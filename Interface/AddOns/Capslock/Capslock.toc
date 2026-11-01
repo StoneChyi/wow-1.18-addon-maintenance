@@ -1,6 +1,8 @@
 ## Titl: Capslock
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title-zhCN:|cffFF4500[职业]|r[|cff8570c2术士|R] 拉人助手
-## Notes-zhCN:队友在队伍中或者密语“求拉”，自动加入队列，输入命令打开队列按照顺序拉人。 |N命令：/caps 
+## Notes-zhCN:队友在队伍中或者密语“求拉”，自动加入队列，输入命令打开队列按照顺序拉人。 |N命令：/caps  | Personal edition: StoneChyi & Codex
 ## X-Repple: 术士
 ## Version: 0.3.1
 ## Author: Mimma @ VanillaGaming.org

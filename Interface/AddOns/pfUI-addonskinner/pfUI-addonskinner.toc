@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title:|CFFDD66DD[界面]|RpfUI|cffaaaaaa [第三方材质包]
 ## Title-zhCN: |CFFDD66DD[界面]|RpfUI|cffaaaaaa [第三方材质包]
 ## Author: dein0s and RoadBlock
-## Notes: External module for |cff33ffccpf|cffffffffUI
+## Notes: External module for |cff33ffccpf|cffffffffUI | Personal edition: StoneChyi & Codex
 ## Version: 0.4
 ## Dependencies: pfUI
 ## X-LocalName: 皮肤扩展

@@ -1,7 +1,9 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title:  线条型冷却监视
 ## Title-zhCN: |CFF33AAFF[辅助]|R线条型冷却监视
-## Notes-zhCN:|CFF33AAFFcooline，按住 Shift 拖动；右键点击 开启/关闭 闪烁提示
+## Notes-zhCN:|CFF33AAFFcooline，按住 Shift 拖动；右键点击 开启/关闭 闪烁提示 | Personal edition: StoneChyi & Codex
 ## SavedVariablesPerCharacter: cooline_settings CoolineZMDDB
 
 settings.lua

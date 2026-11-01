@@ -1,6 +1,8 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: 斯坦索姆镇长-盾牌耐久检测自动换盾插件
-## Notes: 请将备用盾牌放在背包前8个格子中，使用/STSM命令 开启/关闭，支持interact和无双交互两种模组
+## Notes: 请将备用盾牌放在背包前8个格子中，使用/STSM命令 开启/关闭，支持interact和无双交互两种模组 | Personal edition: StoneChyi & Codex
 ## Author: jimmy
 ## Version: 2.4.11
 ## OptionalDeps: pfUI

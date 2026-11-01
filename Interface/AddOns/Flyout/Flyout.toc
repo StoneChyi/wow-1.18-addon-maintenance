@@ -1,7 +1,9 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |cff777777Flyout
 ## Author: luskanek
-## Notes: 允许在动作条上创建弹出菜单按钮
+## Notes: 允许在动作条上创建弹出菜单按钮 | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 动作条菜单
 ## Version: 1.1
 ## SavedVariablesPerCharacter: Flyout_Config

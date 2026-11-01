@@ -1,11 +1,13 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 
 ## X-Revision: 30139
 ## X-Fork: Golden
 ## Title: |cff33ffcc[团队工具]|RBOSS技能预警|cffff1450[2.0.0]|R
-## Notes:|CFFDD66DDBigWigs|R 预警并提示BOSS技能
+## Notes:|CFFDD66DDBigWigs|R 预警并提示BOSS技能 | Personal edition: StoneChyi & Codex
 ## Title-zhCN: |cff33ffcc[团队工具]|RBOSS技能预警|cffff1450[2.0.0]|R
-## Notes-zhCN:|CFFDD66DDBigWigs|R 预警并提示BOSS技能
+## Notes-zhCN:|CFFDD66DDBigWigs|R 预警并提示BOSS技能 | Personal edition: StoneChyi & Codex
 ## Author: Elesion, Relar, Balake, Pepopo, Bethy, Tekkub Stoutwrithe, Ammo, Shyva, Rabbit, LYQ, Dorann, Hosq & Others
 ## Version: 2.0.0
 ## X-Website: https://github.com/ElesionWoW/BigWigs

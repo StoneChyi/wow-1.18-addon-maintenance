@@ -1,15 +1,17 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |CFF33AAFF[辅助]|R副本地图 |cffff1450[1.14.3]|R
 ## Title-zhCN: |CFF33AAFF[辅助]|R副本地图 |cffff1450[1.14.3]|R
-## Notes: |CFF33AAFFAtlas |R副本地图 
-## Notes-zhCN: |CFF33AAFFAtlas |R副本地图
-## Notes: Instance map browser.
-## Notes-deDE: Instanzkarten-Browser.
-## Notes-frFR: Navigateur de cartes d'instances.
-## Notes-zhTW: 副本地圖集, 瀏覽各副本、戰場地圖以及飛行地圖
-## Notes-zhCN: 副本地图浏览器
-## Notes-esES: Navegador de Mapas de Mazmorras.
-## Notes-ruRU: Обозреватель подземелий.
+## Notes: |CFF33AAFFAtlas |R副本地图  | Personal edition: StoneChyi & Codex
+## Notes-zhCN: |CFF33AAFFAtlas |R副本地图 | Personal edition: StoneChyi & Codex
+## Notes: Instance map browser. | Personal edition: StoneChyi & Codex
+## Notes-deDE: Instanzkarten-Browser. | Personal edition: StoneChyi & Codex
+## Notes-frFR: Navigateur de cartes d'instances. | Personal edition: StoneChyi & Codex
+## Notes-zhTW: 副本地圖集, 瀏覽各副本、戰場地圖以及飛行地圖 | Personal edition: StoneChyi & Codex
+## Notes-zhCN: 副本地图浏览器 | Personal edition: StoneChyi & Codex
+## Notes-esES: Navegador de Mapas de Mazmorras. | Personal edition: StoneChyi & Codex
+## Notes-ruRU: Обозреватель подземелий. | Personal edition: StoneChyi & Codex
 ## Version: 1.14.3
 ## X-Date: 22.01.2024
 ## Author: Shahopriest, Sunelegy, 吊儿啷当

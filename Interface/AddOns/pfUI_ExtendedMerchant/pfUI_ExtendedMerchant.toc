@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |cff33ffccpf|cffffffffUI|r Extended Merchant
 ## Title-zhCN: |CFFDD66DD[界面]|RpfUI|cffaaaaaa [拓展商人界面]
-## Notes: Extends the merchant interface to show all items on one page with pfUI skin
-## Notes-zhCN: 扩展商人界面，在一页显示所有商品，使用pfUI皮肤
+## Notes: Extends the merchant interface to show all items on one page with pfUI skin | Personal edition: StoneChyi & Codex
+## Notes-zhCN: 扩展商人界面，在一页显示所有商品，使用pfUI皮肤 | Personal edition: StoneChyi & Codex
 ## Author: Custom
 ## Version: 1.0
 ## RequiredDeps: pfUI

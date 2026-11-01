@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: Bagshui
-## Notes: |cffdb4e97Feng shui for your bags|r|nAll-in-one autosorting inventory replacement
+## Notes: |cffdb4e97Feng shui for your bags|r|nAll-in-one autosorting inventory replacement | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 乾坤袋
-## Notes-zhCN: 自带离线银行等功能的一体化自动分拣背包插件。
+## Notes-zhCN: 自带离线银行等功能的一体化自动分拣背包插件。 | Personal edition: StoneChyi & Codex
 ## Author: veechs
 ## Version: 1.5.15
 ## OptionalDeps: AtlasLoot, ItemRack, Outfitter, pfUI

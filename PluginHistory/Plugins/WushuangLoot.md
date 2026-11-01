@@ -12,11 +12,28 @@
 
 ## 当前维护摘要
 
+2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-WushuangLoot-20261102-01)。
+
 2026-10-30 仅合入英文命令、小地图未布局保护与角度记忆；仍为个人 1.6，旧 DLL/皮肤、分类及三帧驱动保持，不恢复剥皮/SkinTick/圆图和外部助手 ini。 [本轮记录](#change-WushuangLoot-20261030-02)。
 
 已按用户要求恢复本次更新前保存的个人使用版 1.6，并配套恢复旧 wsloot.dll 与旧无双 pfUI 皮肤。撤回 1.7 剥皮、每帧 SkinTick、白名单与本次圆形贴图变更；8 个插件文件与更新前提交逐字节相同。启动体验和游戏功能待用户实测。
 
 ## 逐次修改记录
+
+<a id="change-WushuangLoot-20261102-01"></a>
+
+### 2026-11-02｜补记个人版维护署名，保留原作者与许可
+
+- 记录编号：`WushuangLoot-20261102-01`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户确认以 `StoneChyi & Codex` 统一标识现有个人版与后续插件维护。
+- 修改内容：根 TOC 新增 `X-Maintained-By` 和限定个人修改范围的 `X-Maintenance-Scope`；现有 Notes／本地化 Notes 保留原文并追加可见维护署名，无 Notes 时新增。原作者、版权、许可证和早期修改归属继续按既有证据保留。本条只记录当日 metadata 维护，不代表重新实现早期功能。
+- 涉及文件：[WushuangLoot.toc](../../Interface/AddOns/WushuangLoot/WushuangLoot.toc)。
+- 检查结果：9 项署名字节与幂等检查通过；本插件 TOC 与操作前 Git 字节的预期增量编辑完全一致，加载文件与顺序、BOM、既有编码和行尾保留；未进行游戏内插件列表显示验收。
+- 关联说明：[统一维护署名规范](../MaintenanceAttribution.md)、[本次补记清单](../Research/插件维护署名-20261102.json)。
 
 <a id="change-WushuangLoot-20261030-02"></a>
 

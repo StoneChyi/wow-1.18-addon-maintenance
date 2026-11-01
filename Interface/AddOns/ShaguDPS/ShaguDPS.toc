@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |cffffcc00Shagu|cffffffffDPS
-## Notes: A simple and lightweight DPS and damage meter.
+## Notes: A simple and lightweight DPS and damage meter. | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|CFFEE7600[DPS统计]|RShaguDPS统计
-## Notes-zhCN:Shagu制作的轻量化DPS统计工具。
+## Notes-zhCN:Shagu制作的轻量化DPS统计工具。 | Personal edition: StoneChyi & Codex
 ## Author: Shagu汉化、武藤纯子酱
 ## Version: 5.0.0
 ## OptionalDeps: pfUI

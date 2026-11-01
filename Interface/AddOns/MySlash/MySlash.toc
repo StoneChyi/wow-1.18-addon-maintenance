@@ -1,8 +1,10 @@
 ﻿## Interface:11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title:|cffFF4500[C]|R[可选] 插件命令控制台
 ## Title-zhCN: |cffFF4500[C]|R[可选] 插件命令控制台
-## Notes: 单体插件快速设置命令的控制台。|N命令：/cj
-## Notes-zhCN: 单体插件快速设置命令的控制台。|N命令：/cj
+## Notes: 单体插件快速设置命令的控制台。|N命令：/cj | Personal edition: StoneChyi & Codex
+## Notes-zhCN: 单体插件快速设置命令的控制台。|N命令：/cj | Personal edition: StoneChyi & Codex
 ## Author:原六魔包, 1.12 modify by 狗血编剧男
 ## Version:1.0
 ## X-Repple: 辅助

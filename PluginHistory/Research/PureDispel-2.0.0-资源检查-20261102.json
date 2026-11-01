@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-02",
+  "baseline_revision": "ca121f6e",
+  "scenario": "40 friendly units, 8 dispellable Magic auras each; 30 in range, 10 out; 6+3 visible rows; no ignored rules; 100 unchanged scans",
+  "baseline_loading": "Old engine and its two list pools only; old settings UI excluded",
+  "new_loading": "New engine, original raid reference data, new main UI; lazy settings contents unopened",
+  "old": {
+    "target_row_buttons": 80,
+    "iterations": 100,
+    "api_calls": {
+      "aura": 36000,
+      "tooltip": 32000,
+      "text": 2000,
+      "texture": 900,
+      "point": 0,
+      "show": 1100,
+      "hide": 7100,
+      "distance": 4000,
+      "sight": 3000
+    }
+  },
+  "new": {
+    "target_row_buttons": 20,
+    "iterations": 100,
+    "api_calls": {
+      "aura": 4000,
+      "tooltip": 4000,
+      "text": 0,
+      "texture": 0,
+      "point": 0,
+      "show": 0,
+      "hide": 0,
+      "distance": 4000,
+      "sight": 3000
+    }
+  },
+  "limits": "Lua 5.1 API mock; operation counts only. Not a measurement of live CPU, FPS, rendering quality, or client memory. Full-block rules deliberately require extra aura-name checks."
+}

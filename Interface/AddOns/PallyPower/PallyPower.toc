@@ -1,7 +1,9 @@
 ﻿## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title:|cffFF4500[职业]|r[|Cfff58cba圣骑|R] 祝福助手
 ## Title-zhCN: |cffFF4500[职业]|r[|Cfff58cba圣骑|R] 祝福助手
-## Notes-zhCN:按照预设的分配祝福。 |N命令：/pp 
+## Notes-zhCN:按照预设的分配祝福。 |N命令：/pp  | Personal edition: StoneChyi & Codex
 ## Author: Relar Fix, Wind, Sunelegy
 ## DefaultState: Enabled
 ## LoadOnDemand: 0

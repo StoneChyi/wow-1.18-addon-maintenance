@@ -1,11 +1,13 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: WIM
 ## Author: Pazza (Bronzebeard)，游侠修改
 ## Version: 20260830
-## Notes: Give whispers an instant messenger feel.
-## Notes-ruRU: Интерфейс для шепота.
+## Notes: Give whispers an instant messenger feel. | Personal edition: StoneChyi & Codex
+## Notes-ruRU: Интерфейс для шепота. | Personal edition: StoneChyi & Codex
 ## Title-zhCN: |CFF33AAFF[辅助]|R私聊窗口
-## Notes-zhCN: |CFF33AAFFWIM|R|N即时通讯风格的私聊管理器，把私聊集合到一个界面里。|N设置命令：/wim
+## Notes-zhCN: |CFF33AAFFWIM|R|N即时通讯风格的私聊管理器，把私聊集合到一个界面里。|N设置命令：/wim | Personal edition: StoneChyi & Codex
 ## X-Repple: 辅助
 ## eMail: johnlangone@gmail.com
 ## DefaultState: Enabled

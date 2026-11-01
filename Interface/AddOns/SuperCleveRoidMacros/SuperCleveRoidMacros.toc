@@ -1,9 +1,11 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Author: DWG, _brain, Torio, yani9o, Avitasia, Sunelegy, 武藤纯子酱, Crazydru, AEPAX
 ## Title: [Super]CleveRoidMacros
-## Notes: /cleveroid for settings
+## Notes: /cleveroid for settings | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|cff00ffff[宏]|R完整宏Plus
-## Notes-zhCN:可以使用几乎所有格式的宏命令，包含ClassicMacros经典宏以及RoidMacros增强宏等等大部分宏插件的功能。
+## Notes-zhCN:可以使用几乎所有格式的宏命令，包含ClassicMacros经典宏以及RoidMacros增强宏等等大部分宏插件的功能。 | Personal edition: StoneChyi & Codex
 ## Version: 2.4
 ## OptionalDeps: ClassicFocus, FocusFrame, pfUI, SuperMacro, Bongos_ActionBar, Cursive, XPerl, LunaUnitFrames, DragonflightReloaded, -Dragonflight3
 ## SavedVariables: CleveRoidMacros, CleveRoids_LearnedDurations, CleveRoids_AuraTextures, CleveRoids_ImmunityData, CleveRoids_ComboDurations, CleveRoids_SpellSchools, CleveRoids_TalentSets, CleveRoids_SpellCastInfo

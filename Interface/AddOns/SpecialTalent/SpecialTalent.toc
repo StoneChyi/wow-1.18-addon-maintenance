@@ -1,9 +1,11 @@
 # Do not delete the following line!
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: SpecialTalent
-## Notes: Improved Talent Frame with all three talent trees shown at once and built-in talent planning.
+## Notes: Improved Talent Frame with all three talent trees shown at once and built-in talent planning. | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 天赋模拟器
-## Notes-zhCN:|CFFDD66DDSpecialTalent|R这是一个由Sunelegy大幅改进和优化的天赋框架。
+## Notes-zhCN:|CFFDD66DDSpecialTalent|R这是一个由Sunelegy大幅改进和优化的天赋框架。 | Personal edition: StoneChyi & Codex
 ## Author: KrekoG, Wind, Sunelegy, 游侠
 ## Version: 1.0.0
 ## SavedVariables: SpecialTalentPlannedSaved SpecialTalentFrameSaved

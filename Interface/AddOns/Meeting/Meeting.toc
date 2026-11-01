@@ -1,8 +1,10 @@
 ﻿## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title:|CFF33AAFF[辅助]|R集合石
 ## Title-zhCN: |CFF33AAFF[辅助]|R集合石
-## Notes:|CFF33AAFFMeeting|R|N帮助你寻找队伍的小工具
-## Notes-zhCN: |CFF33AAFFMeeting|R|N帮助你寻找队伍的小工具
+## Notes:|CFF33AAFFMeeting|R|N帮助你寻找队伍的小工具 | Personal edition: StoneChyi & Codex
+## Notes-zhCN: |CFF33AAFFMeeting|R|N帮助你寻找队伍的小工具 | Personal edition: StoneChyi & Codex
 ## Version: 1.1.9
 ## Author: 龟壳, 武藤纯子酱, Wind, Sunelegy
 ## SavedVariablesPerCharacter: MEETING_DB

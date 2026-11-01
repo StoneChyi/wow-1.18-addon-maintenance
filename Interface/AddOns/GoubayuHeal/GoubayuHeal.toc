@@ -1,6 +1,8 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |cffFF4500[职业]|RGoubayuHeal一键治疗+一键驱散
-## Notes: GoubayuHeal一键治疗+一键驱散；命令：/gbyh
+## Notes: GoubayuHeal一键治疗+一键驱散；命令：/gbyh | Personal edition: StoneChyi & Codex
 ## Author: 武藤纯子酱
 ## Version: 1.0
 ## SavedVariablesPerCharacter: GoubayuHeal_Data, GoubayuHeal_DataBackup

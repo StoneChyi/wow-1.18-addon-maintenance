@@ -1,11 +1,13 @@
 
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |cffabd473Turtle|cffffffffMail
 ## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 乌龟服邮箱增强
 ## Author: shirsig/sica 游侠汉化修改 小疯子修改
 ## Version: 2026.10.9.11
-## Notes: Mailbox enhancement
-## Notes-zhCN: 日志记录默认已启用。使用/tm log命令切换开关。
+## Notes: Mailbox enhancement | Personal edition: StoneChyi & Codex
+## Notes-zhCN: 日志记录默认已启用。使用/tm log命令切换开关。 | Personal edition: StoneChyi & Codex
 ## SavedVariables: TurtleMail_AutoCompleteNames TurtleMail_PanelOffset TurtleMail_PanelOffsetPF
 ## SavedVariablesPerCharacter: TurtleMail_To TurtleMail_Point TurtleMail_Log S_MailTo_List TurtleMail_AutoCOD TurtleMail_PanelHidden
 

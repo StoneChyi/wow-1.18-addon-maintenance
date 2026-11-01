@@ -1,6 +1,8 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: 乾坤背包 |cff88ccff(独立重构试用)|r
-## Notes: 当前角色背包；独立分类与增量刷新，不接管原乾坤袋。
+## Notes: 当前角色背包；独立分类与增量刷新，不接管原乾坤袋。 | Personal edition: StoneChyi & Codex
 ## Author: Local maintenance
 ## Version: 0.1.0
 ## SavedVariablesPerCharacter: QianKunBagDB

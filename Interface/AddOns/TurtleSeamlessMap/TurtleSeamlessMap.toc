@@ -1,7 +1,9 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: Turtle Seamless Map
 ## Title-zhCN: 乌龟服无缝世界地图
-## Notes: Independent continuous world map. Mouse wheel zoom; drag to pan; /tsm.
+## Notes: Independent continuous world map. Mouse wheel zoom; drag to pan; /tsm. | Personal edition: StoneChyi & Codex
 ## Author: Personal maintenance project
 ## Version: 0.8.0
 ## OptionalDeps: ModernMapMarkers, pfQuest, pfQuest-turtle, S_WorldMap, pfUI, pfUI-addonskinner

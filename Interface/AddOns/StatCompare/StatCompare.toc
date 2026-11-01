@@ -1,8 +1,10 @@
 ﻿## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 属性统计
-## Notes: Compare your equipments bonus of all status with other players.
+## Notes: Compare your equipments bonus of all status with other players. | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] 属性统计
-## Notes-zhCN:|CFFDD66DDStatCompare|R|N显示角色装备提供的属性，并可以与其他玩家对比。|N左键点击小地图图标打开配置主窗口。|N右键点击小地图图标打开装备集窗口。|N命令：/statc
+## Notes-zhCN:|CFFDD66DDStatCompare|R|N显示角色装备提供的属性，并可以与其他玩家对比。|N左键点击小地图图标打开配置主窗口。|N右键点击小地图图标打开装备集窗口。|N命令：/statc | Personal edition: StoneChyi & Codex
 ## Author: slashboy, 九藜方舟, Dreamland, yyslash@gmail.com, lasthime, 幻物梵天, 艾森纳, 狗血编剧男, Sunelegy, 薄言织虹
 ## Version: 1.2
 ## OptionalDeps: BetterCharacterStats

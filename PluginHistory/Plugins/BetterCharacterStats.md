@@ -12,11 +12,28 @@
 
 ## 当前维护摘要
 
+2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-BetterCharacterStats-20261102-01)。
+
 接入 10 月 24 日共享装备采集，保留原始左右侧文本、套装颜色与个人属性公式；加入装备吸血、法穿、套装破甲及独立痛苦命中。浮窗新增可选属性，保留原预设、排序、标题、布局和近战急速/狂热核心。
 
 当前以最新逐次记录及现用源码为准；被替代的暂缓说明保留为历史依据。
 
 ## 逐次修改记录
+
+<a id="change-BetterCharacterStats-20261102-01"></a>
+
+### 2026-11-02｜补记个人版维护署名，保留原作者与许可
+
+- 记录编号：`BetterCharacterStats-20261102-01`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户确认以 `StoneChyi & Codex` 统一标识现有个人版与后续插件维护。
+- 修改内容：根 TOC 新增 `X-Maintained-By` 和限定个人修改范围的 `X-Maintenance-Scope`；现有 Notes／本地化 Notes 保留原文并追加可见维护署名，无 Notes 时新增。原作者、版权、许可证和早期修改归属继续按既有证据保留。本条只记录当日 metadata 维护，不代表重新实现早期功能。
+- 涉及文件：[BetterCharacterStats.toc](../../Interface/AddOns/BetterCharacterStats/BetterCharacterStats.toc)。
+- 检查结果：9 项署名字节与幂等检查通过；本插件 TOC 与操作前 Git 字节的预期增量编辑完全一致，加载文件与顺序、BOM、既有编码和行尾保留；未进行游戏内插件列表显示验收。
+- 关联说明：[统一维护署名规范](../MaintenanceAttribution.md)、[本次补记清单](../Research/插件维护署名-20261102.json)。
 
 <a id="change-BetterCharacterStats-20261025-03"></a>
 

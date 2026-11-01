@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Name: EavesDrop
 ## Title: EavesDrop |cff7fff7f战斗图形事件框v4|r
-## Notes: A simple combat log that displays events similar to SCT
-## Notes-ruRU: Простой журнал боевых действий, в котором отображаются события, похожие на SCT
+## Notes: A simple combat log that displays events similar to SCT | Personal edition: StoneChyi & Codex
+## Notes-ruRU: Простой журнал боевых действий, в котором отображаются события, похожие на SCT | Personal edition: StoneChyi & Codex
 ## Version: 1.4.3-pfUI
 ## Author: Grayhoof, Cabro, laytya
 ## SavedVariables: EavesDropDB, EavesDropCaptureDB

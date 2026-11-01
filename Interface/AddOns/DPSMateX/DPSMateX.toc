@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |CFFEE7600[DPS统计]|RDPSMateX
-## Notes: DPSMateX
+## Notes: DPSMateX | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|CFFEE7600[DPS统计]|RDPSMateX
-## Notes-zhCN:|CFFFF8080DPSMateX|R|NDPSMateX
+## Notes-zhCN:|CFFFF8080DPSMateX|R|NDPSMateX | Personal edition: StoneChyi & Codex
 ## X-Repple: 战斗
 ## Author: 
 ## Version: 1.0.7

@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: SimpleRaidTargetIcons  |cffabd473小疯子修改版|r
 ## Author: Brodrick (aka Kirov) (小疯子修改)
 ## Version: 0.4‑edit
-## Notes: ctrl+左键或双击快速标记；含可开关的标记条（/srti 打开设置面板） |cffabd473· 单人本地标记需 SuperWoW 模组支持|r
+## Notes: ctrl+左键或双击快速标记；含可开关的标记条（/srti 打开设置面板） |cffabd473· 单人本地标记需 SuperWoW 模组支持|r | Personal edition: StoneChyi & Codex
 ## SavedVariables: BANANA_CONFIG SRTI_MARKS
 IconTextures.lua
 SimpleRaidTargetIcons.lua

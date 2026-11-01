@@ -1,8 +1,10 @@
 ﻿## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |cffFF4500[C]|R[增强] |rAutomatonEx工具箱强化版
 ## Title-zhCN: |cffFF4500[C]|R[增强] |rAutomatonEx工具箱强化版
-## Notes: |CFF33AAFFAutomatonEx|R|N自动完成某一些功能。|N比如：自动更换磨刀石/赞扎、自动下马、自动站立等，/auto设置。
-## Notes-zhCN: |CFF33AAFFAutomatonEx|R|N自动完成某一些功能。|N比如：自动更换磨刀石/赞扎、自动下马、自动站立等，/auto设置。
+## Notes: |CFF33AAFFAutomatonEx|R|N自动完成某一些功能。|N比如：自动更换磨刀石/赞扎、自动下马、自动站立等，/auto设置。 | Personal edition: StoneChyi & Codex
+## Notes-zhCN: |CFF33AAFFAutomatonEx|R|N自动完成某一些功能。|N比如：自动更换磨刀石/赞扎、自动下马、自动站立等，/auto设置。 | Personal edition: StoneChyi & Codex
 ## Version: 1.1.2
 ## Author: weab,Artur91425,黑猫插件,可可慕斯，最爱
 ## X-Category: Interface Enhancements

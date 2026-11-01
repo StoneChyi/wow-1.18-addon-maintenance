@@ -1,6 +1,8 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |CFF33AAFF[辅助]|R自动标记|cffff1450[需SuperWoW+Unitxp模组]
-## Notes: Automatically mark raid mobs 缺德魔改 带图形界面
+## Notes: Automatically mark raid mobs 缺德魔改 带图形界面 | Personal edition: StoneChyi & Codex
 ## Author: Weird Vibes
 ## SavedVariables: AutoMarkerDB
 ## DefaultState: disabled

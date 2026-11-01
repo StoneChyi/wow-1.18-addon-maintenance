@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |CFF33AAFF[辅助]|R副本任务 |cffff1450[4.23]|R
 ## Title-zhCN: |CFF33AAFF[辅助]|R副本任务 |cffff1450[4.23]|R
-## Notes: |CFF33AAFFAtlasLoot |R副本任务
-## Notes-zhCN: |CFF33AAFFAtlasLoot |R副本任务
+## Notes: |CFF33AAFFAtlasLoot |R副本任务 | Personal edition: StoneChyi & Codex
+## Notes-zhCN: |CFF33AAFFAtlasLoot |R副本任务 | Personal edition: StoneChyi & Codex
 ## Author:
 ## Updated by: Shahopriest
 ## CLI by:

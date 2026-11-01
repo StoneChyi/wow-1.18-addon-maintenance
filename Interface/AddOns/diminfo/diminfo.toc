@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |cff777777dim|rinfo
-## Notes: Info Data Bar
+## Notes: Info Data Bar | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|CFF00FF00[|r|CFFDD66DD界面|r|CFF00FF00] diminfo信息条
-## Notes-zhCN:显示玩家的一些信息在屏幕上
+## Notes-zhCN:显示玩家的一些信息在屏幕上 | Personal edition: StoneChyi & Codex
 ## Author: Loshine, EK, 1.12 modify by 狗血编剧男, Sunelegy, 闲逛的痞子
 ## Version: 2.0
 ## Dependencies: !Libs

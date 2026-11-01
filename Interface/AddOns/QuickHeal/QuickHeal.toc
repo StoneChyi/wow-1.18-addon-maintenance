@@ -1,7 +1,9 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: QuickHeal
 ## Author: Thomas Thorsen, Scott Geeding and Kostas Karachalios, Crazydru
-## Notes: Quick healing of party/raid members
+## Notes: Quick healing of party/raid members | Personal edition: StoneChyi & Codex
 ## OptionalDeps: BCS,Titan Panel,myAddOns,CT_RaidAssist
 ## SavedVariables: 
 ## SavedVariablesPerCharacter: QuickHealVariables

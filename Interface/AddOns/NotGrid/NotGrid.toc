@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: NotGrid |cff7fff7f -Ace2-|r
-## Notes: It's Not Grid
+## Notes: It's Not Grid | Personal edition: StoneChyi & Codex
 ## Title-zhCN: |CFFEE7600[团队]|R NotGrid |CFFFFD700团队血条框架
-## Notes-zhCN: |CFFFFFF00 NotGrid |R|N 美化团队血条框架|N|CFFFFFFFF命令：|R/ng 或 /notgrid
+## Notes-zhCN: |CFFFFFF00 NotGrid |R|N 美化团队血条框架|N|CFFFFFFFF命令：|R/ng 或 /notgrid | Personal edition: StoneChyi & Codex
 ## DefaultState: 
 ## SavedVariablesPerCharacter: NotGridOptions
 localization.lua

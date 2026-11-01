@@ -1312,7 +1312,7 @@ local function ChannelHyx_OnClick()
         DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000未找到 hyx 一键驱散，请确认插件已加载并更新|r")
     end
 end
-CreateChatButton("hyx", "驱", "一键驱散：左键显示/隐藏驱散列表，右键打开设置", { 80 / 255, 200 / 255, 255 / 255 }, ChannelHyx_OnClick)
+CreateChatButton("hyx", "驱", "净界驱散 PureDispel：左键显示/隐藏驱散窗口，右键打开设置", { 80 / 255, 200 / 255, 255 / 255 }, ChannelHyx_OnClick)
 CreateChatButton("ReadyCheck", "位", "就位确认", { 100 / 255, 230 / 255, 100 / 255 }, ChannelReadyCheck_OnClick)
 CreateChatButton("Countdown", "倒", "倒计时（左键开始/取消，右键开始Roll点）", { 255 / 255, 200 / 255, 80 / 255 }, ChannelCountdown_OnClick)
 CreateChatButton("Tracking", "追", "追踪设置", { 60 / 255, 160 / 255, 250 / 255 }, TrackingButton_OnClick)

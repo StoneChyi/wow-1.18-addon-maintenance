@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |cff00aaff[辅助]|r Cat - Potion  药剂管理
 ## Title-zhCN: |cff00aaff[辅助]|r Cat - Potion  药剂管理
-## Notes: 独立的可点击药剂与烹饪管理窗口
-## Notes-zhCN: 独立的可点击药剂与烹饪管理窗口
+## Notes: 独立的可点击药剂与烹饪管理窗口 | Personal edition: StoneChyi & Codex
+## Notes-zhCN: 独立的可点击药剂与烹饪管理窗口 | Personal edition: StoneChyi & Codex
 ## Author: 妖姬变
 ## Version: 1.1.6
 ## SavedVariablesPerCharacter: CatPotionDB

@@ -1,9 +1,11 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |CFFEE7600[DPS统计]|RDPSMateXExtend
-## Notes: DPSMateX is an advanced combat analyzation tool, providing helpful graphs and statistics to evaluate the fight.
-## Notes-deDE: DPSMateX ist ein Analysewerkzeug, das hilfreiche Graphen und Statistiken bereitstellt, um den Kampf zu evaluieren.
+## Notes: DPSMateX is an advanced combat analyzation tool, providing helpful graphs and statistics to evaluate the fight. | Personal edition: StoneChyi & Codex
+## Notes-deDE: DPSMateX ist ein Analysewerkzeug, das hilfreiche Graphen und Statistiken bereitstellt, um den Kampf zu evaluieren. | Personal edition: StoneChyi & Codex
 ## Title-zhCN:|CFFEE7600[DPS统计]|RDPSMateX扩展模块
-## Notes-zhCN:|CFFFF8080DPSMateX|R|NDPSMateX扩展模块包含了除输出和治疗之外的其他统计数据的模块，如驱散，死亡等等。
+## Notes-zhCN:|CFFFF8080DPSMateX|R|NDPSMateX扩展模块包含了除输出和治疗之外的其他统计数据的模块，如驱散，死亡等等。 | Personal edition: StoneChyi & Codex
 ## X-Repple: 战斗
 ## Author: Shino, Kronos, Sunelegy
 ## Version: 1.0.7

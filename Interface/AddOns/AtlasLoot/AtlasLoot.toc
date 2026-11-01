@@ -1,8 +1,10 @@
 ## Interface: 11200
+## X-Maintained-By: StoneChyi & Codex
+## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
 ## Title: |CFF33AAFF[辅助]|R副本掉落 |cffff1450[3.38]|R
 ## Title-zhCN: |CFF33AAFF[辅助]|R副本掉落 |cffff1450[3.38]|R
-## Notes: 显示地下城/团队首领及其它来源的可能掉落
-## Notes-zhCN: |CFF33AAFFAtlasLoot |R显示地下城/团队首领及其它来源的可能掉落。|N命令：/atlasloot
+## Notes: 显示地下城/团队首领及其它来源的可能掉落 | Personal edition: StoneChyi & Codex
+## Notes-zhCN: |CFF33AAFFAtlasLoot |R显示地下城/团队首领及其它来源的可能掉落。|N命令：/atlasloot | Personal edition: StoneChyi & Codex
 ## Author: Otari（重制/改版、菜单修改、漏洞修复/更新）, Lexie（Turtle WoW 修复/更新）, Pepopo, MarcelineVQ（卡拉赞 40 人战利品）, Shagu, Sunelegy, 吊儿啷当
 ## LegacyAuthor: Daviesh（最初作者）, Pompa（Turtle WoW 世界首领）, Xerron（Turtle WoW 世界首领）, Gurky（Turtle WoW 1.181副本）
 ## Version: 3.3.8
