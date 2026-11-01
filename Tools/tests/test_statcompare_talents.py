@@ -294,6 +294,63 @@ OpenTarget()
 for tree=1,3 do Feed(Tab(tree));for i=1,2 do Feed(Info(tree,i)) end end
 Feed('INSTalentEND;;');assert(renders==1 and table.getn(notices)==0)
 ''')
+    case('screenshot regression: 59 TAB-prefixed packets complete all trees instead of being ignored', '''
+local counts={18,18,19}
+for tree=1,3 do
+ for i=1,counts[tree] do Turtle_TalentsData.WARRIOR[tree][i]={name='node'..i,icon='icon'} end
+end
+TWTalentFrame:SetScript('OnShow',function()
+ local state,owner=NativeState();assert(owner=='Alpha' and state.class=='WARRIOR')
+ for tree=1,3 do
+  assert(state[tree].numTalents==counts[tree])
+  local _,_,points=NativeTab(tree);assert(points==1)
+  for i=1,counts[tree] do
+   local _,_,tier,column,rank,maximum=NativeRead(tree,i)
+   assert(tier==math.floor((i-1)/4)+1 and column==(i-1)%4+1 and maximum==5)
+   assert(rank==(i==1 and 1 or 0))
+  end
+ end
+ renders=renders+1
+end)
+OpenTarget();local packets=0
+for tree=1,3 do
+ Feed(string.char(9)..Tab(tree,1,counts[tree]));packets=packets+1
+ for i=1,counts[tree] do
+  local body='INSTalentInfo;'..tree..';'..i..';node;'..(math.floor((i-1)/4)+1)..';'..((i-1)%4+1)..';'..(i==1 and 1 or 0)..';5;1;-1;-1;-1'
+  Feed(string.char(9)..body);packets=packets+1
+ end
+end
+Feed(string.char(9)..'INSTalentEND;');packets=packets+1
+local d=SCInspectTalents.diagnostics
+assert(packets==59 and d.tabs==3 and d.nodes==55 and d.ignored==0 and d.state=='complete')
+assert(renders==1 and TWTalentFrame:IsVisible() and ActiveUpdates()==0 and Requests()==1)
+for _,packet in ipairs(delivered) do assert(not string.find(packet[1],'^%s')) end
+''')
+    case('only leading framing whitespace is removed and payload whitespace remains intact', '''
+OpenTarget()
+for tree=1,3 do
+ Feed(' '..string.char(9,13,10)..'INSTalentTabInfo;'..tree..'; tree name ;3;2')
+ for i=1,2 do Feed(string.char(13,10)..Info(tree,i)) end
+end
+Feed(string.char(9)..'INSTalentEND;1;')
+assert(renders==1 and SCInspectTalents.diagnostics.ignored==0)
+assert(string.find(delivered[1][1],'; tree name ;',1,true))
+''')
+    case('TAB-prefixed peer request is delegated while non-talent messages remain unchanged', '''
+Feed(string.char(9)..'INSTalentShow;1;','Peer');assert(table.getn(sends)>0 and Requests()==0)
+local unrelated=string.char(9)..'OTHER_MESSAGE';Feed(unrelated,'Peer')
+assert(delivered[table.getn(delivered)][1]==unrelated)
+''')
+    case('framing normalization cannot bypass sender or known node validation', '''
+OpenTarget();Feed(string.char(9)..Tab(1),'Other')
+assert(SCInspectTalents.diagnostics.tabs==0 and ActiveUpdates()==1)
+Feed(string.char(9)..'INSTalentInfo;1;1;node;1;1;6;5;1;-1;-1;-1')
+assert(renders==0 and SCInspectTalents.diagnostics.state=='failed' and ActiveUpdates()==0)
+''')
+    case('framing normalization preserves the original received packet size limit', '''
+OpenTarget();Feed(string.rep(' ',2050)..Tab(1))
+assert(renders==0 and SCInspectTalents.diagnostics.state=='failed' and ActiveUpdates()==0)
+''')
     case('extension controls with or without tree-shaped fields cannot abort an active request', '''
 OpenTarget();Feed('INSTalentExtension;1;');Feed('INSTalentExtension;no-tree;')
 assert(ActiveUpdates()==1 and InspectTalentsFrame:IsShown() and table.getn(notices)==0)

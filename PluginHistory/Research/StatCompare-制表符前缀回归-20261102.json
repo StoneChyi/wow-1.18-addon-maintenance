@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-02",
+  "evidence": "User-provided local diagnostic screenshot: tree0/3, nodes0, ignored59, types prefixed with 0x09",
+  "confirmed_headers": [
+    "\\x09INSTalentTabInfo",
+    "\\x09INSTalentInfo",
+    "\\x09INSTalentEND"
+  ],
+  "cause": "Strict first-token comparison treated TAB-prefixed standard messages as extensions",
+  "fix": "Strip leading framing whitespace only; retain payload fields and original packet length for validation",
+  "validation": {
+    "talent_groups": 57,
+    "modes": [
+      "actual extracted native parser",
+      "independent contract"
+    ],
+    "new_groups": 5,
+    "tab_packet_fixture": {
+      "synthetic": true,
+      "packets": 59,
+      "trees": 3,
+      "nodes": 55,
+      "end": 1,
+      "requests": 1,
+      "ignored": 0,
+      "render": "passed"
+    },
+    "lua50_syntax": "passed"
+  },
+  "game_acceptance": "pending user retest; no game inputs performed this turn"
+}

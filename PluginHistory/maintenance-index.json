@@ -1972,7 +1972,7 @@
         "Interface/AddOns/StatCompare/TALENT_INSPECT.md"
       ],
       "tracked_files_at_reference": 25,
-      "pending": "用户反馈首/再次天赋查看只显示背景，截图确认未知消息误终止；已修正协议类型/END尾字段与收尾等待，52组双模式、36项层级及2个改动Lua真实5.0检查通过；实际未知类型与游戏显示仍待用户复测，可用/statc talentstatus诊断。",
+      "pending": "用户诊断截图确认0x09前导制表符使三种正常天赋消息被全部忽略，已规范化协议头前空白；57组双模式（含合成59条TAB包）与实际Lua5.0检查通过，实际游戏显示待用户复测。",
       "last_package_update": {
         "date": "2026-10-25",
         "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",

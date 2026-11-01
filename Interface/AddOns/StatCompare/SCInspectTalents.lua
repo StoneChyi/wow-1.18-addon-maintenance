@@ -170,6 +170,10 @@ local function Message(native, message, sender)
     if type(message) ~= "string" or not string.find(message, "INSTalent", 1, true) then
         return native(message, sender)
     end
+    local receivedLength = string.len(message)
+    -- Realm replies may prefix the protocol token with a TAB (0x09).
+    -- Strip framing whitespace only; preserve every payload field verbatim.
+    message = string.gsub(message, "^%s+", "")
     local delimiter = string.find(message, ";", 1, true)
     local kind = delimiter and string.sub(message, 1, delimiter - 1) or message
     -- Native handlers accept optional tail fields; classify the token before
@@ -195,7 +199,7 @@ local function Message(native, message, sender)
         return
     end
     S.diagnostics.lastType = kind
-    if string.len(message) > 2048 then Fail("收到无效天赋数据，请重新查询。"); return end
+    if receivedLength > 2048 then Fail("收到无效天赋数据，请重新查询。"); return end
     if kind == "INSTalentEND" then
         recent[sender] = Now() + 2
         if Ready(record) then Publish(record)

@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 346,
+  "dated_records": 347,
   "addons": [
     {
       "addon": "!Libs",
@@ -2951,10 +2951,19 @@
       "purpose": "让属性比较面板与角色/观察窗口协调。 天赋观察适配新协议、完整会话校验与切目标取消。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "修正未知消息误终止、结束包兼容与重试等待",
+      "latest_record_title": "兼容实机天赋消息头的制表符前缀",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 10,
+      "record_count": 11,
       "records": [
+        {
+          "id": "StatCompare-20261102-04",
+          "date": "2026-11-02",
+          "title": "兼容实机天赋消息头的制表符前缀",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-StatCompare-20261102-04"
+        },
         {
           "id": "StatCompare-20261102-03",
           "date": "2026-11-02",
