@@ -5,6 +5,7 @@ XinDispel = { ready = false, dirty = true, spellsDirty = true, spells = {},
     entries = { ready = {}, blocked = {} },
     metrics = { scanCycles = 0, tooltipReads = 0, rangeChecks = 0, notifications = 0 } }
 local D = XinDispel
+D.VERSION = "2.1.0"
 D.Types = {
     Magic = { name = "魔法", r = .2, g = .6, b = 1 },
     Curse = { name = "诅咒", r = .65, g = .2, b = 1 },
@@ -306,7 +307,7 @@ function D.Init()
     if type(xinDB) ~= "table" then xinDB = {} end
     if initializedDB == xinDB and D.ready then EnsureTeamOwner(true); return end
     local defaults = { maxInRange = 6, maxOutRange = 3, listsVisible = true, locked = true,
-        width = 290, rowHeight = 34, followPfUI = true, backgroundAlpha = .75,
+        width = 290, height = 0, rowHeight = 34, followPfUI = true, backgroundAlpha = .75,
         borderAlpha = .85, fontSize = 12, rightClickDispel = false }
     for key, value in pairs(defaults) do if xinDB[key] == nil then xinDB[key] = value end end
     if type(xinDB.PriorityList) ~= "table" then xinDB.PriorityList = type(PriorityList) == "table" and PriorityList or {} end

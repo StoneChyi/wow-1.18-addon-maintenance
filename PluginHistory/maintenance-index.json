@@ -2326,7 +2326,7 @@
       "addon": "hyx",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/hyx.md",
-      "purpose": "净界驱散 PureDispel 2.0.0；pfUI上下双区独立滚动、本队/长期名单、透明度及低重复刷新，保留原团本规则和旧配置。",
+      "purpose": "净界驱散 PureDispel 2.1.0；pfUI双区独立滚动、自定义高度/180–600宽度、空区留白及按需调试，保留名单、团本规则和旧配置。",
       "sources": [
         "PluginHistory/Evidence/reports/hyx-全职业驱散与滚轮列表-20261008.md",
         "PluginHistory/Evidence/CodexBackups/hyx/20261008-155425/hyx.lua",
@@ -2338,12 +2338,13 @@
       "maintenance_files": [
         "Interface/AddOns/hyx/XinDispel.lua",
         "Interface/AddOns/hyx/PureDispelUI.lua",
+        "Interface/AddOns/hyx/Debug.lua",
         "Interface/AddOns/hyx/RaidData.lua",
         "Interface/AddOns/hyx/hyx.toc",
         "Interface/AddOns/hyx/README.md"
       ],
       "tracked_files_at_reference": 3,
-      "pending": "37组严格字体/API模拟与真实Lua5.0语法检查通过；游戏内显示、滚轮、服务端施法、真实CPU/内存和本队边界待验收。同角色离线期间换队缺少可靠队伍ID，不能保证自动辨别。",
+      "pending": "45组严格字体/API模拟与4个加载文件真实Lua5.0语法检查通过；本轮高度/窄布局、真实复制和服务端操作尚未游戏验收；实际资源表现待验收，同角色离线换队识别限制保留。",
       "history_group": "modified"
     },
     {

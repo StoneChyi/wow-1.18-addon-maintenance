@@ -27,7 +27,7 @@ def world(ui=True, pfui=True, setup='', bad_font=False, chatbar=False):
         lua.execute(setup)
     files = ['XinDispel.lua', 'RaidData.lua']
     if ui:
-        files.append('PureDispelUI.lua')
+        files.extend(['PureDispelUI.lua', 'Debug.lua'])
     for name in files:
         lua.execute((ADDON / name).read_text(encoding='utf-8-sig'))
     lua.execute("FireEvent('VARIABLES_LOADED'); FireEvent('PLAYER_ENTERING_WORLD'); Tick(.3)")
@@ -147,7 +147,7 @@ assert(XinRaidManualDB['祖尔格拉布'] and XinRaidManualDB['纳克萨玛斯']
     assert (ADDON / 'RaidData.lua').read_bytes().endswith(data)
     toc = (ADDON / 'hyx.toc').read_text(encoding='utf-8-sig')
     entries = [x.strip() for x in toc.splitlines() if x.strip() and not x.startswith('#')]
-    assert entries == ['XinDispel.lua', 'RaidData.lua', 'PureDispelUI.lua']
+    assert entries == ['XinDispel.lua', 'RaidData.lua', 'PureDispelUI.lua', 'Debug.lua']
     check('full new load chain has initialized fonts with missing pfUI font', '''
 assert(XinDispel.UI)
 for _,obj in ipairs(objects) do if obj.kind=='FontString' then assert(obj.font,'FontString lacks a font') end end
@@ -177,7 +177,7 @@ local D,U=XinDispel,XinDispel.UI
 partyCount=2;AddUnit('party1','Near','Magic');AddUnit('party2','Far','Magic',45)
 D.MarkDirty();local y=U.regions.blocked.point[5]
 units.party1.auras={};D.Update(true)
-assert(U.regions.ready.empty:IsShown())
+assert(not U.regions.ready.empty and not U.regions.ready.rows[1]:IsShown())
 assert(U.regions.blocked.rows[1]:IsVisible())
 assert(U.regions.blocked.point[5]==y)
 ''')
@@ -384,6 +384,90 @@ D.SetIgnoreRule('Block',2);D.Update(true);assert(table.getn(D.entries.ready)==0)
 units.party1.auras[1].name='Safe';D.Update(true);assert(D.entries.ready[1].debuff.name=='Safe')
 units.party1.auras[1].name=nil;D.Update(true);assert(table.getn(D.entries.ready)==0)
 ''', ui=False)
+    check('explicit window height is applied and keeps fixed regions under roster changes', '''
+local D,U=XinDispel,XinDispel.UI
+xinDB.height=520;U.ApplyAppearance();assert(U.frame.height==520)
+assert(U.regions.ready.limit==6 and U.regions.blocked.limit==3)
+local y=U.regions.blocked.point[5];local a=U.regions.ready.area.height
+assert(a>6*U.regions.ready.rowHeight)
+partyCount=1;AddUnit('party1','Mate','Magic',45);D.MarkDirty()
+assert(U.frame.height==520 and U.regions.blocked.point[5]==y)
+''')
+    check('height clamps to screen and always retains both independent scrolling regions', '''
+local U=XinDispel.UI;UIParent.height=480
+xinDB.height=900;xinDB.maxInRange=10;xinDB.maxOutRange=10;U.ApplyAppearance()
+assert(U.frame.height<=450 and xinDB.height==U.frame.height)
+xinDB.height=220;U.ApplyAppearance()
+assert(U.regions.ready.limit>=1 and U.regions.blocked.limit>=1)
+assert(U.frame.height>=145+2*U.regions.ready.rowHeight)
+assert(U.frame.height==xinDB.height)
+''')
+    check('width supports 180 through 600 without overlapping narrow header or footer controls', '''
+local D,U=XinDispel,XinDispel.UI
+partyCount=2;AddUnit('party1','Nearby','Magic');AddUnit('party2','Distant','Magic',45);D.MarkDirty()
+xinDB.width=180;U.ApplyAppearance();assert(U.frame.width==180)
+assert(U.frame.title:GetStringWidth()+U.frame.close.width+U.frame.settings.width+U.frame.manage.width+U.frame.lock.width+25<180)
+assert(U.frame.footer.ignored.width+U.frame.footer.undo.width<U.frame.footer.width)
+assert(U.regions.ready.rows[1].name.width>0 and U.regions.blocked.rows[1].name.width>0)
+assert(U.regions.blocked.rows[1].reason.point[1]=='TOPRIGHT')
+xinDB.width=600;U.ApplyAppearance();assert(U.frame.width==600)
+''')
+    check('layout settings expose height and wider width range, reset height and keep page controls exclusive', '''
+local U=XinDispel.UI;U.OpenSettings()
+local sliders={};for _,s in ipairs(U.settings.sliders) do sliders[s.pdKey]=s end
+assert(sliders.width.low==180 and sliders.width.high==600)
+assert(sliders.height and sliders.height.low==220 and sliders.height.high==900)
+sliders.height:SetValue(520);assert(xinDB.height==520 and U.frame.height==520)
+U.ShowSettingsPage('appearance')
+assert(sliders.backgroundAlpha:IsShown() and not sliders.height:IsShown() and not sliders.height.pdLabel:IsShown())
+U.ShowSettingsPage('layout');sliders.maxInRange:SetValue(8)
+assert(xinDB.height==0 and U.regions.ready.limit==8)
+sliders.height:SetValue(550);invoke(U.settings.matchHeight,'OnClick','LeftButton')
+assert(xinDB.height==0)
+''')
+    check('empty combat regions have no placeholder FontString or text', '''
+local U=XinDispel.UI
+assert(not U.regions.ready.empty and not U.regions.blocked.empty)
+for _,region in pairs(U.regions) do
+ for _,obj in ipairs(objects) do
+  if obj.parent==region or obj.parent==region.area then assert(obj.text~='暂无目标') end
+ end
+ for _,row in ipairs(region.rows) do assert(not row:IsShown()) end
+end
+''')
+    check('debug report is manual and allocates no active sampling or extra scanning', '''
+local D,U,B=XinDispel,XinDispel.UI,XinDispel.Debug
+assert(B and not B.enabled and not B.frame)
+local drivers=0;for _,o in ipairs(objects) do if o.scripts.OnUpdate then drivers=drivers+1 end end
+assert(drivers==1)
+ResetCalls();local scans=D.GetMetrics().scanCycles
+local s=B.Snapshot();local text=B.Report()
+assert(s.version=='2.1.0' and string.find(text,'StoneChyi & Codex',1,true))
+assert(not calls.aura and not calls.tooltip and not calls.distance and table.getn(casts)==0)
+assert(D.GetMetrics().scanCycles==scans)
+''')
+    check('debug panel fonts, copy selection, close linkage and singleton refresh', '''
+local U,B=XinDispel.UI,XinDispel.Debug
+SlashCmdList.PUREDISPEL('debug');assert(U.debugPanel and U.debugPanel:IsShown())
+local n=table.getn(objects)
+for i=1,8 do U.OpenDebug();B.RefreshPanel() end
+assert(table.getn(objects)==n)
+invoke(B.frame.select,'OnClick','LeftButton');assert(B.frame.report.focus)
+for _,o in ipairs(objects) do if o.kind=='FontString' then assert(o.font) end end
+U.OpenSettings();invoke(U.settings.close,'OnClick','LeftButton')
+assert(not B.frame:IsShown() and not B.frame.report.focus)
+''', bad_font=True)
+    check('debug logs are bounded, memory-only and exclude names and unknown reasons', '''
+local D,B=XinDispel,XinDispel.Debug
+assert(not B.enabled);D.SetPolicy('PrivateChar','priority','team');assert(B.count==0)
+B.SetEnabled(true)
+for i=1,65 do D.SetPolicy('PrivateChar','normal','team') end
+assert(B.count==60 and table.getn(B.GetLogs())==60)
+local text=B.Report();assert(not string.find(text,'PrivateChar',1,true))
+local saved=xinDB.debugLogs;assert(saved==nil)
+B.SetEnabled(false);D.SetIgnoreRule('PrivateAura',1);assert(B.count==60)
+B.Clear();assert(B.count==0 and table.getn(B.GetLogs())==0)
+''')
     compiler = ROOT / 'PluginHistory/staging/lua503-validation/win64/luac50.exe'
     if not compiler.is_file():
         raise AssertionError('Actual Lua 5.0 compiler unavailable')

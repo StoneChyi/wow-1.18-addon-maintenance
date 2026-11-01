@@ -9,7 +9,7 @@ local ROWS = 10
 local floor, min, max = math.floor, math.min, math.max
 local classes = { "WARRIOR", "ROGUE", "PRIEST", "DRUID", "PALADIN", "HUNTER", "MAGE", "WARLOCK", "SHAMAN" }
 local classNames = { "战士", "盗贼", "牧师", "小德", "骑士", "猎人", "法师", "术士", "萨满" }
-local defaults = { width = 290, rowHeight = 34, maxInRange = 6, maxOutRange = 3, backgroundAlpha = .75, borderAlpha = .85, fontSize = 12 }
+local defaults = { width = 290, height = 0, rowHeight = 34, maxInRange = 6, maxOutRange = 3, backgroundAlpha = .75, borderAlpha = .85, fontSize = 12 }
 
 local function Config(key)
     if xinDB and xinDB[key] ~= nil then return xinDB[key] end
@@ -212,9 +212,6 @@ local function CreateRegion(key, title)
     region.area:EnableMouseWheel(true)
     region.page = Text(region, "0 / 0", 10)
     region.page:SetTextColor(.65, .65, .65)
-    region.empty = Text(region.area, "暂无目标", 11)
-    region.empty:SetPoint("CENTER", region.area, "CENTER", 0, 0)
-    region.empty:SetTextColor(.65, .65, .65)
     local function OnWheel()
         if U.menu and U.menu:IsShown() then U.menu:Hide() end
         if IsShiftKeyDown() then region.offset = arg1 > 0 and 0 or 999
@@ -245,7 +242,8 @@ local function CreateRegion(key, title)
         row.aura = Text(row, nil, 10)
         row.aura:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 35, 3)
         row.reason = Text(row, nil, 10)
-        row.reason:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        row.reason:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -2)
+        row.reason:SetWidth(54); row.reason:SetHeight(13)
         row.reason:SetTextColor(.75, .69, .58)
         row.highlight = row:CreateTexture(nil, "BACKGROUND")
         row.highlight:SetAllPoints(row); row.highlight:SetTexture(1, 1, 1, .055); row.highlight:Hide()
@@ -289,13 +287,19 @@ end)
 U.frame.footer.undo:SetPoint("RIGHT", U.frame.footer, "RIGHT", 0, 0)
 
 function U.Layout()
-    local width, rowHeight = Number("width", 250, 420), Number("rowHeight", 28, 44)
+    local width, rowHeight = Number("width", 180, 600), Number("rowHeight", 28, 44)
     local fontSize = Number("fontSize", 9, 18)
     if PfUI() and Config("followPfUI") ~= false and pfUI_config.global then fontSize = tonumber(pfUI_config.global.font_size) or fontSize end
-    rowHeight = max(rowHeight, fontSize + 17)
+    rowHeight = max(rowHeight, fontSize + 20)
     local screen = UIParent.GetHeight and UIParent:GetHeight() or 768
     if not screen or screen < 100 then screen = 768 end
-    local budget = max(2, floor((screen - 142) / rowHeight))
+    local chrome = 30 + 28 + 3 + 2 * (23 + 19)
+    local minimumHeight = chrome + 2 * rowHeight
+    local maximumHeight = max(minimumHeight, screen - 30)
+    local requestedHeight = tonumber(Config("height")) or 0
+    local customHeight = requestedHeight > 0
+    local height = customHeight and max(minimumHeight, min(maximumHeight, min(900, requestedHeight))) or maximumHeight
+    local budget = max(2, floor((height - chrome) / rowHeight))
     local a, b = floor(Number("maxInRange", 3, 10)), floor(Number("maxOutRange", 3, 10))
     local minimum = budget >= 6 and 3 or 1
     while a + b > budget do
@@ -303,28 +307,42 @@ function U.Layout()
         elseif b > minimum then b = b - 1
         elseif a > minimum then a = a - 1 else break end
     end
+    if not customHeight then height = chrome + (a + b) * rowHeight
+    elseif xinDB then xinDB.height = height end
+    local extra = max(0, height - chrome - (a + b) * rowHeight)
+    local upperExtra = floor(extra * a / (a + b))
+    local areas = { ready = a * rowHeight + upperExtra, blocked = b * rowHeight + extra - upperExtra }
     local total = 30 + 28
     frame:SetWidth(width); header:SetWidth(width); U.frame.footer:SetWidth(width - 10)
+    local narrow = width < 250
+    frame.title:SetText(narrow and "净界" or "净界驱散")
+    frame.close:SetWidth(narrow and 20 or 21)
+    frame.settings:SetWidth(narrow and 26 or 32)
+    frame.manage:SetWidth(narrow and 26 or 32)
+    frame.lock:SetWidth(narrow and 26 or 32)
+    U.frame.footer.ignored:SetWidth(narrow and 70 or 78)
+    U.frame.footer.undo:SetWidth(narrow and 86 or 98)
     for _, item in ipairs({ { "ready", a }, { "blocked", b } }) do
         local region, count = U.regions[item[1]], item[2]
         region.limit, region.rowHeight = count, rowHeight
         region:ClearAllPoints(); region:SetPoint("TOPLEFT", frame, "TOPLEFT", 3, -total + 28)
-        local h = 23 + count * rowHeight + 19
+        local h = 23 + areas[item[1]] + 19
         region:SetWidth(width - 6); region:SetHeight(h)
-        region.area:SetWidth(width - 20); region.area:SetHeight(count * rowHeight)
+        region.area:SetWidth(width - 20); region.area:SetHeight(areas[item[1]])
         region.page:ClearAllPoints(); region.page:SetPoint("TOPLEFT", region.area, "BOTTOMLEFT", 1, -2)
         region.down:ClearAllPoints(); region.down:SetPoint("BOTTOMRIGHT", region, "BOTTOMRIGHT", -3, 1)
         region.up:ClearAllPoints(); region.up:SetPoint("RIGHT", region.down, "LEFT", -3, 0)
         region.rail:ClearAllPoints(); region.rail:SetPoint("TOPRIGHT", region.area, "TOPRIGHT", 4, 0)
-        region.rail:SetWidth(2); region.rail:SetHeight(count * rowHeight)
+        region.rail:SetWidth(2); region.rail:SetHeight(areas[item[1]])
         for i, row in ipairs(region.rows) do
             row:ClearAllPoints(); row:SetPoint("TOPLEFT", region.area, "TOPLEFT", 0, -(i - 1) * rowHeight)
             row:SetWidth(width - 24); row:SetHeight(rowHeight)
-            row.name:SetWidth(width - 142); row.aura:SetWidth(width - 86)
+            row.name:SetWidth(width - 65); row.name:SetHeight(fontSize + 2)
+            row.aura:SetWidth(width - 64); row.aura:SetHeight(13)
         end
         total = total + h
     end
-    frame:SetHeight(total + 3)
+    frame:SetHeight(height)
 end
 
 function U.RenderRegion(region)
@@ -336,7 +354,6 @@ function U.RenderRegion(region)
     if region.countValue ~= countText then region.count:SetText(countText); region.countValue = countText end
     local page = total == 0 and "0 / 0" or ((region.offset + 1) .. "–" .. min(total, region.offset + count) .. " / " .. total)
     if region.pageValue ~= page then region.page:SetText(page); region.pageValue = page end
-    if total == 0 then region.empty:Show() else region.empty:Hide() end
     for i, row in ipairs(region.rows) do
         local e = i <= count and data[region.offset + i] or nil
         if e then
@@ -346,6 +363,7 @@ function U.RenderRegion(region)
             local cache = table.concat({ tostring(e.key), e.name, e.unit, e.debuff.name or "", e.debuff.type or "", tostring(e.debuff.index), tostring(e.debuff.texture), reason, policy or "normal", e.class or "" }, "\001")
             row.entry = e
             if row.displayKey ~= cache then
+                row.name:SetWidth(row:GetWidth() - 35 - (reason ~= "" and 60 or 6))
                 row.name:SetText(name)
                 local c = D.ClassColors and D.ClassColors[e.class]
                 row.name:SetTextColor(c and c.r or 1, c and c.g or 1, c and c.b or 1)
@@ -366,7 +384,7 @@ function U.RenderRegion(region)
     end
     region.topKey = data[region.offset + 1] and data[region.offset + 1].key or nil
     if total > count then
-        local height = count * region.rowHeight
+        local height = region.area:GetHeight()
         local thumbHeight = max(8, height * count / total)
         region.thumb:ClearAllPoints()
         region.thumb:SetPoint("TOPRIGHT", region.area, "TOPRIGHT", 4, -(height - thumbHeight) * region.offset / (total - count))
@@ -410,6 +428,7 @@ function U.ApplyAppearance()
     U.Layout()
     for _, region in pairs(U.regions) do for _, row in ipairs(region.rows) do row.displayKey = nil end end
     U.Render(true)
+    if U.SyncSettings then U.SyncSettings() end
 end
 
 local function Feedback(message)
@@ -499,7 +518,7 @@ local function Slider(parent, title, key, low, high, step, y, percent)
         if U.syncingSettings then return end
         local value = floor(this:GetValue() / step + .5) * step
         xinDB[key] = value
-        label:SetText(title .. ": " .. (percent and floor(value * 100 + .5) .. "%" or tostring(value)))
+        if key == "maxInRange" or key == "maxOutRange" then xinDB.height = 0 end
         U.ApplyAppearance()
     end)
     slider.pdLabel, slider.pdTitle, slider.pdKey, slider.pdPercent = label, title, key, percent
@@ -522,47 +541,94 @@ function U.OpenSettings()
     XinSettingFrame:Show()
 end
 
+function U.ShowSettingsPage(page)
+    local settings = U.settings
+    settings.page = page
+    for _, control in ipairs(settings.pageControls or {}) do
+        if control.pdSettingsPage == page then control:Show() else control:Hide() end
+    end
+    for key, button in pairs(settings.pageButtons or {}) do
+        button.label:SetTextColor(key == page and 1 or .65, key == page and 1 or .65, key == page and 1 or .65)
+    end
+end
+
+function U.SyncSettings()
+    local settings = U.settings
+    if not settings or not settings.built then return end
+    local previous = U.syncingSettings
+    U.syncingSettings = true
+    for _, s in ipairs(settings.sliders) do
+        local v = Config(s.pdKey)
+        if s.pdKey == "height" then v = frame:GetHeight() end
+        s:SetValue(v)
+        local suffix = s.pdKey == "height" and (tonumber(Config("height")) or 0) <= 0 and "（随行数）" or ""
+        s.pdLabel:SetText(s.pdTitle .. ": " .. (s.pdPercent and floor(v * 100 + .5) .. "%" or tostring(v)) .. suffix)
+    end
+    settings.follow.label:SetText((Config("followPfUI") and "[开] " or "[关] ") .. settings.follow.pdToggleTitle)
+    settings.compat.label:SetText((Config("rightClickDispel") and "[开] " or "[关] ") .. settings.compat.pdToggleTitle)
+    U.syncingSettings = previous
+end
+
 XinSettingFrame:SetScript("OnShow", function()
     if not D.ready then D.Init() end
     if not this.built then
         this.built = true
+        this.pageControls, this.pageButtons = {}, {}
+        local function OnPage(control, page)
+            control.pdSettingsPage = page
+            table.insert(XinSettingFrame.pageControls, control)
+            if control.pdLabel then
+                control.pdLabel.pdSettingsPage = page
+                table.insert(XinSettingFrame.pageControls, control.pdLabel)
+            end
+            return control
+        end
+        for i, item in ipairs({ { "layout", "布局" }, { "appearance", "外观" } }) do
+            local page = item[1]
+            local button = Button(this, item[2], 152, 23, function() U.ShowSettingsPage(page) end)
+            button:SetPoint("TOPLEFT", this, "TOPLEFT", 15 + (i - 1) * 164, -40)
+            this.pageButtons[page] = button
+        end
         this.sliders = {
-            Slider(this, "可驱散显示行数", "maxInRange", 3, 10, 1, -42),
-            Slider(this, "暂不可驱散显示行数", "maxOutRange", 3, 10, 1, -91),
-            Slider(this, "窗口宽度", "width", 250, 420, 5, -140),
-            Slider(this, "字体大小（自定义模式）", "fontSize", 9, 18, 1, -189),
-            Slider(this, "背景不透明度", "backgroundAlpha", 0, 1, .05, -238, true),
-            Slider(this, "边框不透明度", "borderAlpha", 0, 1, .05, -287, true)
+            OnPage(Slider(this, "可驱散显示行数", "maxInRange", 3, 10, 1, -81), "layout"),
+            OnPage(Slider(this, "暂不可驱散显示行数", "maxOutRange", 3, 10, 1, -130), "layout"),
+            OnPage(Slider(this, "窗口宽度", "width", 180, 600, 5, -179), "layout"),
+            OnPage(Slider(this, "窗口高度", "height", 220, 900, 5, -228), "layout"),
+            OnPage(Slider(this, "字体大小（自定义模式）", "fontSize", 9, 18, 1, -81), "appearance"),
+            OnPage(Slider(this, "背景不透明度", "backgroundAlpha", 0, 1, .05, -130, true), "appearance"),
+            OnPage(Slider(this, "边框不透明度", "borderAlpha", 0, 1, .05, -179, true), "appearance")
         }
-        this.follow = Toggle(this, "字体跟随 pfUI", "followPfUI", -337)
-        this.compat = Toggle(this, "右键也驱散（Shift+右键菜单）", "rightClickDispel", -364)
+        this.matchHeight = OnPage(Button(this, "按上下行数匹配高度", 316, 22, function()
+            xinDB.height = 0; U.ApplyAppearance()
+        end), "layout")
+        this.matchHeight:SetPoint("TOPLEFT", this, "TOPLEFT", 15, -276)
+        this.follow = OnPage(Toggle(this, "字体跟随 pfUI", "followPfUI", -228), "appearance")
+        this.compat = Toggle(this, "右键也驱散（Shift+右键菜单）", "rightClickDispel", -315)
         this.lists = Button(this, "名单管理", 98, 23, function() U.OpenManager("current") end)
-        this.lists:SetPoint("TOPLEFT", this, "TOPLEFT", 15, -397)
+        this.lists:SetPoint("TOPLEFT", this, "TOPLEFT", 15, -350)
         this.rules = Button(this, "减益规则", 98, 23, function() U.OpenRules() end)
         this.rules:SetPoint("LEFT", this.lists, "RIGHT", 10, 0)
         this.raids = Button(this, "团本手册", 98, 23, function() U.OpenRaid() end)
         this.raids:SetPoint("LEFT", this.rules, "RIGHT", 10, 0)
+        this.debug = Button(this, "调试 / 诊断", 316, 23, function()
+            if U.OpenDebug then U.OpenDebug() else D.Notify("调试模块尚未加载，请重载界面") end
+        end)
+        this.debug:SetPoint("TOPLEFT", this, "TOPLEFT", 15, -383)
         this.feedback = Text(this, "", 10)
-        this.feedback:SetPoint("TOPLEFT", this, "TOPLEFT", 15, -430); this.feedback:SetWidth(318)
+        this.feedback:SetPoint("TOPLEFT", this, "TOPLEFT", 15, -419); this.feedback:SetWidth(318)
         this.credit = Text(this, "原作：何雨欣 / hyx\n个人修改与维护：StoneChyi & Codex", 10)
         this.credit:SetPoint("BOTTOMLEFT", this, "BOTTOMLEFT", 15, 13)
         this.credit:SetTextColor(.6, .6, .6)
     end
-    U.syncingSettings = true
-    for _, s in ipairs(this.sliders) do
-        local v = Config(s.pdKey)
-        s:SetValue(v)
-        s.pdLabel:SetText(s.pdTitle .. ": " .. (s.pdPercent and floor(v * 100 + .5) .. "%" or tostring(v)))
-    end
-    this.follow.label:SetText((Config("followPfUI") and "[开] " or "[关] ") .. this.follow.pdToggleTitle)
-    this.compat.label:SetText((Config("rightClickDispel") and "[开] " or "[关] ") .. this.compat.pdToggleTitle)
-    U.syncingSettings = nil
+    U.SyncSettings()
+    U.ShowSettingsPage(this.page or "layout")
 end)
 XinSettingFrame:SetScript("OnHide", function()
     if U.menu then U.menu:Hide() end
     if U.manager then U.manager:Hide() end
     if U.rules then U.rules:Hide() end
     if U.raid then U.raid:Hide() end
+    if U.debugPanel then U.debugPanel:Hide() end
 end)
 
 local policyText = { normal = "普通", priority = "优先", ignore = "忽略" }
@@ -936,8 +1002,10 @@ SlashCmdList["PUREDISPEL"] = function(message)
     elseif message == "show" then D.SetListsVisible(true)
     elseif message == "hide" then D.SetListsVisible(false)
     elseif message == "toggle" then D.ToggleLists()
+    elseif message == "debug" then if U.OpenDebug then U.OpenDebug() end
     else U.OpenSettings() end
 end
 SlashCmdList["XINLOAD"] = SlashCmdList["PUREDISPEL"]
+U.CreatePanel, U.CreateText, U.CreateButton, U.CreateEdit, U.SetFont = Panel, Text, Button, Edit, SetFont
 U.Layout()
 if D.ready then D.OnReady() end

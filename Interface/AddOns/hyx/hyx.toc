@@ -1,13 +1,14 @@
 ## Interface: 11200
 ## Title: 净界驱散 |cFF80C8E7PureDispel|r
 ## Author: hyx
-## Version: 2.0.0
+## Version: 2.1.0
 ## SavedVariables: xinDB
 ## OptionalDeps: UnitXP_SP3_Addon, pfUI
 
 XinDispel.lua
 RaidData.lua
 PureDispelUI.lua
+Debug.lua
 ## Notes: Unified dual-region dispel UI | Personal edition: StoneChyi & Codex
 ## X-Maintained-By: StoneChyi & Codex
 ## X-Maintenance-Scope: Personal modifications; original authors and licenses retained
