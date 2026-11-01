@@ -2346,7 +2346,7 @@
       "addon": "hyx",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/hyx.md",
-      "purpose": "净界驱散 PureDispel 2.1.0；pfUI双区独立滚轮、无翻页箭头、自定义高度/180–600宽度、空区留白及按需调试，保留名单、团本规则和旧配置。",
+      "purpose": "净界驱散 PureDispel 2.2.0；动态优先/忽略预设、独立新入口天赋与最大生命职责识别、按需8秒承伤校验；保留pfUI双区、独立滚轮和原名单。",
       "sources": [
         "PluginHistory/Evidence/reports/hyx-全职业驱散与滚轮列表-20261008.md",
         "PluginHistory/Evidence/CodexBackups/hyx/20261008-155425/hyx.lua",
@@ -2361,10 +2361,15 @@
         "Interface/AddOns/hyx/Debug.lua",
         "Interface/AddOns/hyx/RaidData.lua",
         "Interface/AddOns/hyx/hyx.toc",
-        "Interface/AddOns/hyx/README.md"
+        "Interface/AddOns/hyx/README.md",
+        "Interface/AddOns/hyx/RoleTalentData.lua",
+        "Interface/AddOns/hyx/RoleTalentData-LICENSE.txt",
+        "Interface/AddOns/hyx/RoleDetection.lua",
+        "Interface/AddOns/hyx/Presets.lua",
+        "Interface/AddOns/hyx/PresetsUI.lua"
       ],
       "tracked_files_at_reference": 3,
-      "pending": "45组严格字体/API模拟、无箭头/双区独立滚动专项与4个加载文件真实Lua5.0语法检查通过；真实排版、鼠标操作、复制、服务端操作及资源表现尚待游戏验收，同角色离线换队识别限制保留。",
+      "pending": "45组原回归、21项预设、27项职责专项及8个加载文件真实Lua5.0语法检查通过；真实服务器天赋回包/身份/结构、静默观察、实际排版、承伤事件和资源表现待游戏验收；自动天赋缓存不跨重载，同角色离线换队与洗天赋需复核。",
       "history_group": "modified"
     },
     {

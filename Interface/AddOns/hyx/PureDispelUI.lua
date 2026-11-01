@@ -105,7 +105,7 @@ local function Edit(parent, name, width)
     return e
 end
 
-local function Panel(name, title, width, height)
+local function Panel(name, title, width, height, followAlpha)
     local frame = CreateFrame("Frame", name, UIParent)
     frame:SetWidth(width); frame:SetHeight(height)
     frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -114,7 +114,7 @@ local function Panel(name, title, width, height)
     if frame.SetClampedToScreen then frame:SetClampedToScreen(true) end
     frame:SetScript("OnDragStart", function() this:StartMoving() end)
     frame:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
-    Backdrop(frame, true)
+    Backdrop(frame, not followAlpha)
     frame.title = Text(frame, title, 13)
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -10)
     frame.close = Button(frame, "×", 22, 20, function() this:GetParent():Hide() end)
@@ -195,6 +195,7 @@ local function Tooltip(row)
     if Config("rightClickDispel") then GameTooltip:AddLine("右键也驱散；Shift+右键打开菜单", .7, .85, 1) end
     GameTooltip:AddLine("滚轮浏览本区；Shift+滚轮到首尾", .7, .85, 1)
     if row.entry.reason and row.entry.reason ~= "" then GameTooltip:AddLine(row.entry.reason, 1, .65, .4) end
+    if U.AddPresetTooltip then U.AddPresetTooltip(row.entry.name) end
     GameTooltip:Show()
 end
 
@@ -410,6 +411,10 @@ function U.Render(force)
     for name, state in pairs(xinDB.teamRules or {}) do
         if state == "ignore" and not unique[name] then unique[name] = true; number = number + 1 end
     end
+    if D.Presets and D.Presets.GetSummary then
+        local summary = D.Presets.GetSummary()
+        number = number + (summary and tonumber(summary.ignoredCount) or 0)
+    end
     if U.ignoredCount ~= number then frame.footer.ignored.label:SetText("已忽略 " .. number); U.ignoredCount = number end
     if U.menu and U.menu:IsShown() and not MenuTargetValid(U.menu.snapshot) then U.menu:Hide() end
     if U.manager and U.manager:IsShown() then U.RefreshManager() end
@@ -445,7 +450,7 @@ function U.OpenMenu(row)
     local snapshot = Snapshot(row.entry)
     if not MenuTargetValid(snapshot, true) then return end
     if not U.menu then
-        local menu = Panel("PureDispelTargetMenu", "", 220, 204)
+        local menu = Panel("PureDispelTargetMenu", "", 220, 236)
         menu:SetFrameStrata("TOOLTIP")
         -- One shared click-away surface; no per-row or per-frame polling.
         local blocker = CreateFrame("Button", "PureDispelMenuBlocker", UIParent)
@@ -458,7 +463,7 @@ function U.OpenMenu(row)
         menu.blocker = blocker
         menu:SetScript("OnHide", function() blocker:Hide() end)
         menu.buttons = {}
-        for i = 1, 5 do
+        for i = 1, 6 do
             local b = Button(menu, "", 204, 27)
             b:SetPoint("TOPLEFT", menu, "TOPLEFT", 8, -30 - (i - 1) * 32)
             b.label:SetJustifyH("LEFT"); b.label:ClearAllPoints(); b.label:SetPoint("LEFT", b, "LEFT", 5, 0)
@@ -475,7 +480,8 @@ function U.OpenMenu(row)
                 elseif n == 2 then ApplyPolicy(s.name, "ignore", "team")
                 elseif n == 3 then D.ClearPolicy(s.name, "team")
                 elseif n == 4 then U.OpenRules(s.aura)
-                else U.OpenManager("current", s.name) end
+                elseif n == 5 then U.OpenManager("current", s.name)
+                elseif U.OpenRoleEditor then U.OpenRoleEditor(s.name) end
                 U.Render(true)
             end)
             menu.buttons[i] = b
@@ -490,6 +496,7 @@ function U.OpenMenu(row)
     U.menu.buttons[3].label:SetText("清除本队规则")
     U.menu.buttons[4].label:SetText("当前减益规则…")
     U.menu.buttons[5].label:SetText("管理名单…")
+    U.menu.buttons[6].label:SetText("本队职责修正…")
     U.menu:ClearAllPoints(); U.menu:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -2)
     U.menu.blocker:Show()
     U.menu:Show(); GameTooltip:Hide()
@@ -625,10 +632,13 @@ XinSettingFrame:SetScript("OnHide", function()
     if U.rules then U.rules:Hide() end
     if U.raid then U.raid:Hide() end
     if U.debugPanel then U.debugPanel:Hide() end
+    if U.presets then U.presets:Hide() end
+    if U.presetPicker then U.presetPicker:Hide() end
+    if U.roleEditor then U.roleEditor:Hide() end
 end)
 
 local policyText = { normal = "普通", priority = "优先", ignore = "忽略" }
-local scopeText = { team = "本队", longterm = "长期", none = "" }
+local scopeText = { team = "本队", longterm = "长期", preset = "预设", none = "" }
 
 local function SelectedName()
     if not U.manager then return nil end
@@ -661,6 +671,7 @@ function U.RefreshManager()
         if item then
             row.name:SetText(item.name)
             row.state:SetText((policyText[item.state] or "普通") .. " · " .. (scopeText[item.scope] or "") .. (item.current == false and " · 离队" or ""))
+            row.restore.label:SetText(item.scope == "preset" and "预设" or "恢复")
             if manager.kind == "ignore" then row.restore:Show() else row.restore:Hide() end
             row:Show()
         else row:Hide() end
@@ -680,6 +691,10 @@ function U.OpenManager(kind, name)
         XinListFrame = manager
         manager.kind, manager.scopeValue = "current", "team"
         manager.tabs, manager.rows = {}, {}
+        manager.presets = Button(manager, "预设", 48, 20, function()
+            if U.OpenPresets then U.OpenPresets() else Feedback("预设模块尚未加载，请重载界面") end
+        end)
+        manager.presets:SetPoint("TOPRIGHT", manager, "TOPRIGHT", -38, -7)
         for i, item in ipairs({ { "current", "当前队伍" }, { "priority", "优先名单" }, { "ignore", "忽略名单" } }) do
             local key = item[1]
             local b = Button(manager, item[2], 124, 23, function()
@@ -698,6 +713,10 @@ function U.OpenManager(kind, name)
             row.restore = Button(row, "恢复", 47, 21, function()
                 local item = this:GetParent().item
                 if not item then return end
+                if item.scope == "preset" then
+                    if U.OpenPresets then U.OpenPresets() end
+                    return
+                end
                 local ok, reason = D.ClearPolicy(item.name, item.scope)
                 if ok then
                     local state, scope = D.GetPolicy(item.name)
@@ -708,11 +727,21 @@ function U.OpenManager(kind, name)
             row.restore:SetPoint("RIGHT", row, "RIGHT", -1, 0); row.restore:Hide()
             row:SetScript("OnClick", function()
                 if not this.item then return end
+                if arg1 == "RightButton" and U.OpenRoleEditor then U.OpenRoleEditor(this.item.name); return end
                 manager.nameEdit:SetText(this.item.name)
                 manager.scopeValue = this.item.scope == "longterm" and "longterm" or "team"
                 U.RefreshManager()
             end)
-            row:RegisterForClicks("LeftButtonUp")
+            row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+            row:SetScript("OnEnter", function()
+                if not this.item then return end
+                GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+                GameTooltip:AddLine(this.item.name, 1, 1, 1)
+                if U.AddPresetTooltip then U.AddPresetTooltip(this.item.name) end
+                GameTooltip:AddLine("右键修正本队职责", .7, .85, 1)
+                GameTooltip:Show()
+            end)
+            row:SetScript("OnLeave", function() GameTooltip:Hide() end)
             row:EnableMouseWheel(true)
             row:SetScript("OnMouseWheel", function() manager.offset = (manager.offset or 0) + (arg1 > 0 and -1 or 1); U.RefreshManager() end)
             manager.rows[i] = row
@@ -746,7 +775,7 @@ function U.OpenManager(kind, name)
         end
         manager.feedback = Text(manager, "", 10)
         manager.feedback:SetPoint("TOPLEFT", manager, "TOPLEFT", 17, -448); manager.feedback:SetWidth(386)
-        manager.help = Text(manager, "本队规则同队重载保留，确认离队后清除。\n优先不会解除忽略，也不会绕过减益禁驱规则。", 10)
+        manager.help = Text(manager, "本队规则同队重载保留，确认离队后清除。\n手工忽略与禁驱规则优先；本队优先可作为预设例外。", 10)
         manager.help:SetPoint("BOTTOMLEFT", manager, "BOTTOMLEFT", 17, 12); manager.help:SetTextColor(.6, .6, .6)
         manager:SetScript("OnShow", function() U.RefreshManager() end)
     end
@@ -999,6 +1028,7 @@ SlashCmdList["PUREDISPEL"] = function(message)
     elseif message == "hide" then D.SetListsVisible(false)
     elseif message == "toggle" then D.ToggleLists()
     elseif message == "debug" then if U.OpenDebug then U.OpenDebug() end
+    elseif message == "presets" or message == "preset" then if U.OpenPresets then U.OpenPresets() end
     else U.OpenSettings() end
 end
 SlashCmdList["XINLOAD"] = SlashCmdList["PUREDISPEL"]

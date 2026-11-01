@@ -2,7 +2,7 @@
 -- Original hyx authorship and applicable licenses are retained.
 -- Opt-in memory-only logs. No timer, file IO, network, or global error handler.
 local D, U = XinDispel, XinDispel.UI
-local B = { enabled = false, limit = 60, count = 0, cursor = 1, logs = {}, version = "2.1.0" }
+local B = { enabled = false, limit = 60, count = 0, cursor = 1, logs = {}, version = "2.2.0" }
 D.Debug = B
 local floor, min, max = math.floor, math.min, math.max
 local typeOrder = { "Magic", "Curse", "Poison", "Disease" }
@@ -139,6 +139,16 @@ function B.Snapshot()
                 slot = Number(spell.slot), book = spell.pet and "宠物" or "角色" })
         end
     end
+    local summary = D.Presets and D.Presets.GetSummary() or {}
+    snapshot.presets = { priority=summary.priorityLabel or "未启用", ignore=summary.ignoreLabel or "未启用",
+        priorityCount=Number(summary.priorityCount), ignoredCount=Number(summary.ignoredCount) }
+    local roles = D.Roles and D.Roles.GetDiagnostics() or {}
+    snapshot.roles = { enabled=Bool(roles.enabled), total=Number(roles.total), completed=Number(roles.completed),
+        unknown=Number(roles.unknown), validationActive=Bool(roles.validationActive),
+        maxHealthReads=Number(roles.maxHealthReads), queryCount=Number(roles.requests),
+        damageEvents=Number(roles.validationEvents), pending=Bool(roles.pending),
+        timeouts=Number(roles.timeouts), rejected=Number(roles.rejected), isolated=Number(roles.isolated),
+        state=({paused="已暂停",querying="查询中",ready="就绪"})[roles.state] or "未启用" }
     return snapshot
 end
 
@@ -174,6 +184,15 @@ function B.Report()
     table.insert(lines, "背景不透明度：" .. floor(s.backgroundAlpha * 100 + .5) .. "%")
     table.insert(lines, "边框不透明度：" .. floor(s.borderAlpha * 100 + .5) .. "%")
     table.insert(lines, "字体跟随 pfUI：" .. Yes(s.followPfUI) .. "；pfUI 接口存在：" .. Yes(s.pfUILoaded))
+    table.insert(lines, "")
+    table.insert(lines, "优先预设：" .. s.presets.priority .. "；忽略预设：" .. s.presets.ignore)
+    table.insert(lines, "预设优先人数：" .. s.presets.priorityCount .. "；预设忽略人数：" .. s.presets.ignoredCount)
+    table.insert(lines, "独立职责识别：" .. Yes(s.roles.enabled) .. "；队员 " .. s.roles.total .. "；完成查询 " .. s.roles.completed .. "；未知 " .. s.roles.unknown)
+    table.insert(lines, "查询状态：" .. s.roles.state .. "；等待回复：" .. Yes(s.roles.pending))
+    table.insert(lines, "超时：" .. s.roles.timeouts .. "；拒收：" .. s.roles.rejected .. "；隔离目标数：" .. s.roles.isolated)
+    table.insert(lines, "最大生命读取：" .. s.roles.maxHealthReads .. "；天赋请求：" .. s.roles.queryCount)
+    table.insert(lines, "短时承伤校验：" .. Yes(s.roles.validationActive) .. "；收到攻击事件 " .. s.roles.damageEvents)
+    table.insert(lines, "职责不读取当前血量，不读取其他插件的职责或名单；协议与事件仍需实服验收。")
     table.insert(lines, "")
     table.insert(lines, "详细日志：" .. (s.logging and "开启" or "关闭") .. "；内存记录 " .. s.logCount .. "/" .. s.logLimit)
     table.insert(lines, "日志仅含单位代号、减益类型、规则类别和状态；不含角色姓名、服务器或账号。")

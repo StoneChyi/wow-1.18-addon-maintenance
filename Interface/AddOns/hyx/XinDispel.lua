@@ -5,7 +5,7 @@ XinDispel = { ready = false, dirty = true, spellsDirty = true, spells = {},
     entries = { ready = {}, blocked = {} },
     metrics = { scanCycles = 0, tooltipReads = 0, rangeChecks = 0, notifications = 0 } }
 local D = XinDispel
-D.VERSION = "2.1.0"
+D.VERSION = "2.2.0"
 D.Types = {
     Magic = { name = "魔法", r = .2, g = .6, b = 1 },
     Curse = { name = "诅咒", r = .65, g = .2, b = 1 },
@@ -81,6 +81,7 @@ local function EnsureTeamOwner(force)
     if xinDB.teamOwner and xinDB.teamOwner ~= owner then
         -- SavedVariables is account-wide. Only temporary rules/context belong
         -- to this character; permanent lists retain the existing shared scope.
+        if D.Presets then D.Presets.ResetTeam() elseif D.Roles then D.Roles.ResetTeam() end
         Clear(xinDB.teamRules); Clear(xinDB.teamContext)
         undoRecord, awaySince, settleUntil = nil, nil, Clock() + 4
         D.spellsDirty = true
@@ -108,7 +109,7 @@ local function Identity(unit, name)
 end
 D.Identity = Identity
 
-function D.GetPolicy(name)
+function D.GetManualPolicy(name)
     local db = xinDB or {}
     local team = D.teamOwnerReady and db.teamRules and db.teamRules[name]
     if team == "ignore" then return "ignore", "team" end
@@ -116,6 +117,11 @@ function D.GetPolicy(name)
     if team == "priority" then return "priority", "team" end
     if db.PriorityList and db.PriorityList[name] then return "priority", "longterm" end
     return "normal", "none"
+end
+
+function D.GetPolicy(name)
+    if D.Presets then return D.Presets.GetPolicy(name) end
+    return D.GetManualPolicy(name)
 end
 
 local function RebuildRoster()
@@ -133,6 +139,7 @@ local function RebuildRoster()
             if not item then item = {}; rosterPool[n] = item end
             local _, class = UnitClass(unit)
             item.name, item.unit, item.class = name, unit, class
+            item.order = n
             item.key = Identity(unit, name)
             item.self = Truth(UnitIsUnit("player", unit))
             item.state, item.scope = D.GetPolicy(name)
@@ -143,6 +150,7 @@ local function RebuildRoster()
         end
     end
     TrimArray(roster, n)
+    if D.Presets then D.Presets.UpdateRoster(roster) end
     return roster
 end
 function D.GetRoster()
@@ -287,6 +295,7 @@ local function TeamState()
             -- Even an empty current table can have an undo snapshot containing
             -- the previous group's ignore. Never let Undo resurrect it later.
             undoRecord = nil
+            if D.Presets then D.Presets.ResetTeam() elseif D.Roles then D.Roles.ResetTeam() end
             if hadRules or hadUndo then
                 Clear(xinDB.teamRules)
                 D.dirty, rulesDirty = true, true
@@ -322,6 +331,7 @@ function D.Init()
     initializedDB, D.ready, D.dirty, D.spellsDirty, rulesDirty = xinDB, true, true, true, true
     settleUntil, awaySince = Clock() + 4, nil
     D.RefreshSpells()
+    if D.Roles then D.Roles.SetVisible(xinDB.listsVisible ~= false) end
     if D.OnReady then D.OnReady() end
     if D.OnVisibility then D.OnVisibility(xinDB.listsVisible ~= false) end
 end
@@ -334,6 +344,7 @@ end
 function D.SetListsVisible(visible)
     if type(xinDB) ~= "table" then xinDB = {} end
     xinDB.listsVisible = visible and true or false
+    if D.Roles then D.Roles.SetVisible(xinDB.listsVisible) end
     if D.OnVisibility then D.OnVisibility(xinDB.listsVisible) end
     if D.ready and xinDB.listsVisible then D.Update(true) end
 end
@@ -358,12 +369,14 @@ function D.Update(force)
     if next(D.spells) then
         RebuildRoster()
         local n = 0
-        for rank = 0, 2 do
-            for _, item in ipairs(roster) do
-                if item.rank == rank and item.eligible and item.state ~= "ignore" then n = n + 1; ordered[n] = item end
-            end
+        for _, item in ipairs(roster) do
+            if item.eligible and item.state ~= "ignore" then n = n + 1; ordered[n] = item end
         end
         TrimArray(ordered, n)
+        table.sort(ordered, function(a, b)
+            if a.rank ~= b.rank then return a.rank < b.rank end
+            return (a.order or 0) < (b.order or 0)
+        end)
         for _, item in ipairs(ordered) do
             local entry = entryPool[item.unit]
             if not entry then entry = { debuff = {} }; entryPool[item.unit] = entry end
@@ -408,7 +421,7 @@ function D.SetPolicy(name, state, scope)
     if scope ~= "team" and scope ~= "longterm" then return false, "未知作用范围" end
     if scope == "team" and not EnsureTeamOwner(false) then return false, "角色或服务器信息尚未就绪，请稍后再试" end
     if state == "priority" then
-        local existing = D.GetPolicy(name)
+        local existing = D.GetManualPolicy(name)
         if existing == "ignore" then return false, "请先在忽略名单恢复此人，再设为优先" end
     end
     undoRecord = { kind = "policy", name = name, team = xinDB.teamRules[name], priority = PriorityList[name], ignored = BlackList[name] }
@@ -433,16 +446,28 @@ function D.ListPolicies(kind)
     for name, enabled in pairs(BlackList) do
         if enabled and (not kind or kind == "ignore") then table.insert(list, { name = name, state = "ignore", scope = "longterm", current = rosterNames[name] ~= nil }) end
     end
+    if D.Presets then
+        for _, member in ipairs(roster) do
+            local state, scope = D.GetPolicy(member.name)
+            if scope == "preset" and (not kind or kind == state) then
+                table.insert(list, { name = member.name, state = state, scope = scope, current = true })
+            end
+        end
+    end
     table.sort(list, function(a, b) if a.name ~= b.name then return a.name < b.name end; return a.scope < b.scope end)
     return list
 end
+function D.RecordUndo(kind, value) undoRecord = { kind = kind, value = value } end
+function D.InvalidateUndo() undoRecord = nil end
 function D.Undo()
     if not undoRecord then return false, "没有可以撤销的操作" end
     local saved = undoRecord; undoRecord = nil
     if saved.kind == "policy" then
         xinDB.teamRules[saved.name] = saved.team
         PriorityList[saved.name], BlackList[saved.name] = saved.priority, saved.ignored
-    elseif saved.kind == "rule" then xinDB.IgnoreList[saved.name] = saved.level end
+    elseif saved.kind == "rule" then xinDB.IgnoreList[saved.name] = saved.level
+    elseif saved.kind == "preset" and D.Presets then D.Presets.Restore(saved.value)
+    elseif saved.kind == "role" and D.Roles then D.Roles.RestoreManual(saved.value.name, saved.value.role) end
     PolicyChanged()
     return true
 end
@@ -477,6 +502,7 @@ function D.Cast(entry)
     if not unit or UnitName(unit) ~= name or (key and Identity(unit, name) ~= key)
         or not UnitExists(unit) or not Truth(UnitIsConnected(unit)) or Truth(UnitIsDeadOrGhost(unit))
         or not Truth(UnitIsFriend("player", unit)) or Truth(UnitCanAttack("player", unit)) then return false, "目标已更新" end
+    if D.Presets and D.Presets.GetConfig().ignore == "outsideGroup" then RebuildRoster() end
     if D.GetPolicy(name) == "ignore" then return false, "此目标已忽略" end
     D.RefreshSpells(); RebuildRuleFlags()
     local aura = D.FindDebuff(unit, castAura)
@@ -522,5 +548,11 @@ driver:SetScript("OnEvent", function()
 end)
 driver:SetScript("OnUpdate", function()
     elapsed = elapsed + arg1
-    if elapsed >= .25 then elapsed = 0; if D.ready then D.Update(false) end end
+    if elapsed >= .25 then
+        elapsed = 0
+        if D.ready then
+            D.Update(false)
+            if D.Roles then D.Roles.Tick(Clock()) end
+        end
+    end
 end)
