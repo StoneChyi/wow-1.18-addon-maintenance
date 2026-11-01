@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-02",
+  "scope": [
+    "StatCompare",
+    "pfUI inspect skin"
+  ],
+  "game_validation": "pending",
+  "native_evidence": [
+    {
+      "archive": "Data/patch-9.mpq",
+      "member": "Interface/AddOns/Blizzard_InspectUI/Blizzard_InspectUI.lua",
+      "sha256": "663bc985f33470d48fe55136505741cddfc1fc974dbc91680a75316656862d5d",
+      "git_inclusion": "hash only; game source retained in ignored staging"
+    },
+    {
+      "archive": "Data/patch-9.mpq",
+      "member": "Interface/AddOns/Blizzard_InspectUI/InspectTalentsFrame.lua",
+      "sha256": "25100ed065bcf2531dd3f9001a22878a6b7e9102c58da048a36cc9886c8d54a7",
+      "git_inclusion": "hash only; game source retained in ignored staging"
+    },
+    {
+      "archive": "Data/patch-9.mpq",
+      "member": "Interface/AddOns/Blizzard_InspectUI/InspectTalentsFrame.xml",
+      "sha256": "729cd604c6deb9c7074ae189783ec4449139e3b4d905238bd18766740cfb8090",
+      "git_inclusion": "hash only; game source retained in ignored staging"
+    }
+  ],
+  "causes": [
+    "StatCompare replaces modern entry with obsolete Ins_Init/INSShowTalents and marks loaded before response",
+    "Native inspect target event re-invokes InspectUnit on target token; pfUI skin adds a repeated talent request",
+    "Native parser sets loadedFor from current target without sender check; SPEC.class changes before response completes"
+  ],
+  "changes": [
+    "New INSTalentShow request; snapshot target identity; bounded single-request buffer; complete three-tree validation before native publish",
+    "Target change closes active talent inspection; canceled/late replies cannot open UI",
+    "12-second timeout;14-second same-name request window;30-second one-target memory cache;Ctrl refresh",
+    "Preserve native four tabs, renderer, peer queries, original equipment/stat behavior;remove skin-level automatic request hook"
+  ],
+  "validation": {
+    "talent_behavior_groups": 42,
+    "native_parser_mode": "extracted client prefix including actual private SPEC/loadedFor/OnShow/HandleMessage",
+    "strict_font_contract": true,
+    "panel_layer_checks": 36,
+    "associated_regressions": "shared_stats_integration passed",
+    "lua50_modified_files": 3,
+    "lua50_bom_handling": "BOM removed only in validation copies"
+  },
+  "limitations": [
+    "No live client/server/render or performance acceptance",
+    "No wire request ID; same-name replies after quarantine are not provably attributable",
+    "Native viewer limit:20 nodes per tree;unsupported packets fail closed"
+  ]
+}

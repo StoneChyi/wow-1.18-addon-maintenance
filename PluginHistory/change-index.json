@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 342,
+  "dated_records": 344,
   "addons": [
     {
       "addon": "!Libs",
@@ -2948,13 +2948,22 @@
       "addon": "StatCompare",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/StatCompare.md",
-      "purpose": "让属性比较面板与角色/观察窗口协调。",
+      "purpose": "让属性比较面板与角色/观察窗口协调。 天赋观察适配新协议、完整会话校验与切目标取消。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "补记个人版维护署名，保留原作者与许可",
+      "latest_record_title": "天赋新入口、切目标取消与完整回复后发布",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 8,
+      "record_count": 9,
       "records": [
+        {
+          "id": "StatCompare-20261102-02",
+          "date": "2026-11-02",
+          "title": "天赋新入口、切目标取消与完整回复后发布",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-StatCompare-20261102-02"
+        },
         {
           "id": "StatCompare-20261102-01",
           "date": "2026-11-02",
@@ -3760,10 +3769,19 @@
       "purpose": "整合个人界面、监控和旧客户端兼容修改。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "补记个人版维护署名，保留原作者与许可",
+      "latest_record_title": "移除皮肤层重复天赋查询，配合StatCompare目标会话",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 43,
+      "record_count": 44,
       "records": [
+        {
+          "id": "pfUI-20261102-02",
+          "date": "2026-11-02",
+          "title": "移除皮肤层重复天赋查询，配合StatCompare目标会话",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-20261102-02"
+        },
         {
           "id": "pfUI-20261102-01",
           "date": "2026-11-02",

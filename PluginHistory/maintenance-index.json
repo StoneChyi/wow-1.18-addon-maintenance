@@ -1953,7 +1953,7 @@
       "addon": "StatCompare",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/StatCompare.md",
-      "purpose": "让属性比较面板与角色/观察窗口协调。",
+      "purpose": "让属性比较面板与角色/观察窗口协调。 天赋观察适配新协议、完整会话校验与切目标取消。",
       "sources": [
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
@@ -1967,10 +1967,12 @@
         "Interface/AddOns/StatCompare/StatCompare.toc",
         "Interface/AddOns/StatCompare/StatCompare.xml",
         "Interface/AddOns/StatCompare/StatScanner.lua",
-        "Interface/AddOns/StatCompare/StatCompareChar/CharStats.lua"
+        "Interface/AddOns/StatCompare/StatCompareChar/CharStats.lua",
+        "Interface/AddOns/StatCompare/SCInspectTalents.lua",
+        "Interface/AddOns/StatCompare/TALENT_INSPECT.md"
       ],
       "tracked_files_at_reference": 25,
-      "pending": "",
+      "pending": "42组天赋专项、36项层级及头像/共享法命回归、3改动文件真实Lua5.0检查通过；真实通信/排版/鼠标操作待游戏验收，协议无请求ID的同名迟到边界保留。",
       "last_package_update": {
         "date": "2026-10-25",
         "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
@@ -2528,7 +2530,8 @@
         "Interface/AddOns/pfUI/modules/totems.lua",
         "Interface/AddOns/pfUI/pfUI-tbc.toc",
         "Interface/AddOns/pfUI/pfUI.toc",
-        "Interface/AddOns/pfUI/modules/unitxp.lua"
+        "Interface/AddOns/pfUI/modules/unitxp.lua",
+        "Interface/AddOns/pfUI/skins/blizzard/inspect.lua"
       ],
       "tracked_files_at_reference": 277,
       "pending": "修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。",

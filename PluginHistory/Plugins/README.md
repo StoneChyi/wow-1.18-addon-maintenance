@@ -99,7 +99,7 @@
 | [OneBag](OneBag.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](OneBag.md#change-OneBag-20261102-01) |
 | [Outfitter](Outfitter.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Outfitter.md#change-Outfitter-20261102-01) |
 | [PallyPower](PallyPower.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PallyPower.md#change-PallyPower-20261102-01) |
-| [pfUI](pfUI.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI.md#change-pfUI-20261102-01) |
+| [pfUI](pfUI.md) | [2026-11-02 · 移除皮肤层重复天赋查询，配合StatCompare目标会话](pfUI.md#change-pfUI-20261102-02) |
 | [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-11-02 · 清理QuickHeal退役职责窗口的皮肤引用](pfUI-addonskinner.md#change-pfUI-addonskinner-20261102-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI-CustomMedia.md#change-pfUI-CustomMedia-20261102-01) |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261102-01) |
@@ -113,7 +113,7 @@
 | [ShaguDPS](ShaguDPS.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](ShaguDPS.md#change-ShaguDPS-20261102-01) |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261102-01) |
 | [SpecialTalent](SpecialTalent.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SpecialTalent.md#change-SpecialTalent-20261102-01) |
-| [StatCompare](StatCompare.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](StatCompare.md#change-StatCompare-20261102-01) |
+| [StatCompare](StatCompare.md) | [2026-11-02 · 天赋新入口、切目标取消与完整回复后发布](StatCompare.md#change-StatCompare-20261102-02) |
 | [STSMmayor](STSMmayor.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](STSMmayor.md#change-STSMmayor-20261102-01) |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261102-01) |
 | [SuperMacro](SuperMacro.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SuperMacro.md#change-SuperMacro-20261102-01) |

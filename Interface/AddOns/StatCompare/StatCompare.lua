@@ -578,6 +578,7 @@ function StatCompare_OnLoad()
 end
 
 function StatCompare_SetupHook(enable)
+	if SCInspectTalents then SCInspectTalents.SetEnabled(enable == 1) end
 	StatCompare_SetupDressHook();
 	StatCompare_SetupItemLinkHook();
 	if (enable == 1) then
@@ -593,33 +594,6 @@ function StatCompare_SetupHook(enable)
 		if ((InspectFrame_Show ~=SCInspectFrame_Show) and (oldInspectFrame_Show ==nil)) then
 			oldInspectFrame_Show =  InspectFrame_Show;
 			InspectFrame_Show = SCInspectFrame_Show;   
-
-			if not InspectFrameTab3 then
-					CreateFrame('Button', 'InspectFrameTab3', InspectFrame, 'CharacterFrameTabButtonTemplate')
-					InspectFrameTab3:SetPoint("LEFT", InspectFrameTab2, "RIGHT", -16, 0)
-					InspectFrameTab3:SetID(3)
-					InspectFrameTab3:SetText('天赋')
-					InspectFrameTab3:SetScript("OnEnter", function()
-						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						GameTooltip:SetText("天赋信息", 1.0,1.0,1.0 );
-					end)
-					InspectFrameTab3:SetScript("OnLeave", function()
-						GameTooltip:Hide()
-					end)
-					InspectFrameTab3:SetScript("OnClick", function()
-						InspectFrameTalentsTab_OnClick()
-					end)
-					InspectFrameTab3:Show()
-					PanelTemplates_TabResize(0, InspectFrameTab3);
-
-					INSPECTFRAME_SUBFRAMES = { "InspectPaperDollFrame", "InspectHonorFrame", "InspectTalentsFrame" };
-					UIPanelWindows["InspectFrame"] = { area = "left", pushable = 0 };
-
-					PanelTemplates_SetNumTabs(InspectFrame, 3)
-					PanelTemplates_SetTab(InspectFrame, 1)
-			end
-			
-			
 		end
 		
 		
@@ -2056,17 +2030,6 @@ function StatCompareTargetFrameSpellsButton_OnClick()
 end
 
 
-
-function InspectFrameTalentsTab_OnClick()
-	if loadedFor ~= UnitName('target') then
-		Ins_Init()
-		SendAddonMessage("TW_CHAT_MSG_WHISPER<" .. UnitName('target') ..">", "INSShowTalents", "GUILD")
-	else
-		TWInspectTalents_Show()
-	end
-	PlaySound("igCharacterInfoTab");
-	loadedFor = UnitName('target')
-end
 
 function GetDruidForm()
 	local forms = {

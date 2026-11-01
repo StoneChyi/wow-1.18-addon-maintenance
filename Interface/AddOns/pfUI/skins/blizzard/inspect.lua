@@ -347,20 +347,6 @@ pfUI:RegisterSkin("Inspect", "vanilla", function ()
       end
       -- ===============================================================
 
-    -- 修复切换目标时天赋面板不刷新的问题，同时避免“未知的单位”
-    hooksecurefunc("InspectUnit", function()
-      -- 修复：先检查被检视的单位是否有效
-      if not InspectFrame.unit or not UnitExists(InspectFrame.unit) then
-        return
-      end
-      if not UnitExists("target") or not UnitIsPlayer("target") then return end
-      local selectedTab = PanelTemplates_GetSelectedTab(InspectFrame)
-      if selectedTab == 4 then
-        if InspectTalentsFrame then
-          InspectTalentsFrame:Hide()
-          InspectFrameTalentsTab_OnClick()
-        end
-      end
-    end)
+    -- Talent queries belong to the inspect UI/controller, not its skin.
   end)
 end)
