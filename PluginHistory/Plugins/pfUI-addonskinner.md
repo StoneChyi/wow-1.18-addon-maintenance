@@ -12,6 +12,8 @@
 
 ## 当前维护摘要
 
+2026-11-02：QuickHeal旧职责窗口皮肤已清理，其他现用皮肤保持。
+
 2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-pfUI-addonskinner-20261102-01)。
 
 2026-10-30 合入 diminfo 设置窗口与 StatCompare 设置页皮肤；保留现用 diminfo 本体、个人自身/目标窗口样式协调及洗脑器/Cat/PallyPower/旧无双皮肤。 [本轮记录](#change-pfUI-addonskinner-20261030-02)。
@@ -19,6 +21,21 @@
 无双皮肤已随 WushuangLoot 回退至 10 月 24 日包更新前的个人使用版；其余已合入皮肤、加载清理与洗脑装置反馈继续保留。本次仅恢复 skins/WushuangLoot.lua，不整目录回退。
 
 ## 逐次修改记录
+
+<a id="change-pfUI-addonskinner-20261102-02"></a>
+
+### 2026-11-02｜清理QuickHeal退役职责窗口的皮肤引用
+
+- 记录编号：`pfUI-addonskinner-20261102-02`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户确认撤除三个插件的独立手工职责分工，保留治疗和仇恨，并预留统一接口。
+- 修改内容：移除QuickHeal名单框体、按钮、Tooltip的皮肤对象表与直接方法调用；保留配置页、治疗条和其他皮肤，避免旧窗口删除后nil报错。 维护署名StoneChyi & Codex、原作者和许可保留。
+- 涉及文件：[QuickHeal.lua](../../Interface/AddOns/pfUI-addonskinner/skins/QuickHeal.lua)。
+- 检查结果：14项共享/消费者联合检查、QuickHeal实际Lua5.0完整主文件场景、GoubayuHeal两组源函数场景、106组HealComm/NotGrid回归通过；本轮17个Lua文件实际Lua5.0语法、2个XML解析及编码/署名检查通过。详见[联合检查记录](../Research/独立职责撤除与统一接口-20261102.md)。
+- 未确认事项：尚未在游戏验收真实界面、按键/施法及团队通信；没有部署真实职责提供者，默认职责未知，普通治疗不因此停用。旧账号配置不重置，旧名单不再消费。
 
 <a id="change-pfUI-addonskinner-20261102-01"></a>
 

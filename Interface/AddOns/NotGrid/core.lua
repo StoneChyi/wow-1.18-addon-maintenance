@@ -3,72 +3,10 @@ local L = AceLibrary("AceLocale-2.2"):new("NotGrid")
 NotGrid = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0")
 NotGridOptions = {} -- 插件完全初始化后，WoW会自动填充其保存变量（如果有）
 
--- 职业角色图标纹理坐标（Tank/Healer/DPS）
-local ROLE_TEX_COORDS = {
-    TANK = {0, 19/64, 22/64, 41/64},      -- 坦克（盾牌）
-    HEALER = {20/64, 39/64, 1/64, 20/64}, -- 治疗（十字）
-    DAMAGER = {20/64, 39/64, 22/64, 41/64} -- DPS（剑）
-}
-
 -- 仇恨数据：当前目标仇恨 + 多目标仇恨 + 坦克标记
 NotGrid.ThreatData = {}        -- { [玩家名] = { threat, perc, tank, time } }
 NotGrid.MultiThreatData = {}   -- { [玩家名] = { [怪物名] = 仇恨百分比 } }
 NotGrid.TankNames = {}         -- { [玩家名] = true }
-
--- 兼容性包装：获取单位的LFG角色
-local function GetUnitLFGRole(unit)
-    -- 检查团队中的主坦克/主助攻设置
-    local index = NotGrid.raid_indexes and NotGrid.raid_indexes[unit]
-    if index then
-        local role = select(10, GetRaidRosterInfo(index))
-        if role == "MAINTANK" then
-            return "TANK"
-        elseif role == "MAINASSIST" then
-            return "DAMAGER"
-        end
-    end
-
-    -- 检查小队中的主坦克/主助攻
-    if GetPartyAssignment then
-        if GetPartyAssignment("MAINTANK", unit) then
-            return "TANK"
-        elseif GetPartyAssignment("MAINASSIST", unit) then
-            return "DAMAGER"
-        end
-    end
-
-    return nil
-end
-
-function NotGrid:IsLeader(playerName)
-    -- 检查是否有团队管理权限
-    if GetNumRaidMembers() > 0 then
-        for i = 1, GetNumRaidMembers() do
-            local name, rank = GetRaidRosterInfo(i)
-            if name == playerName and (rank == 2 or rank == 1) then
-                return true
-            end
-        end
-    elseif GetNumPartyMembers() > 0 then
-        if IsPartyLeader() then
-            return true
-        end
-    end
-    return false
-end
-
-function NotGrid:CanSetRole(unitid)
-    local playerName = UnitName("player")
-    local targetName = UnitName(unitid)
-
-    if playerName == targetName then
-        return true
-    end
-
-    local result = self:IsLeader(playerName)
-
-    return result
-end
 
 function NotGrid:OnInitialize()
     self.HealComm = AceLibrary("HealComm-1.0")
@@ -81,7 +19,6 @@ function NotGrid:OnInitialize()
 
     self.UnitFrames = {}
     self.PartyIndexFrames = {}
-    self.ManualRoles = {}
     self.raid_indexes = {}
     self.IdenticalUnits = {}
     self.ProximityVars = {}
@@ -369,7 +306,6 @@ function NotGrid:OnEnable()
         Clique.CastSpell = NotGrid.CastHandle
     end
     self:UpdateLeaderIcon()
-    self:UpdateDungeonRoleIcons()
     if self.Banzai then
         self:RegisterEvent("Banzai_UnitGainedAggro", "UNIT_BORDER")
         self:RegisterEvent("Banzai_UnitLostAggro", "UNIT_BORDER")
@@ -389,7 +325,6 @@ function NotGrid:OnEnable()
     self:RegisterEvent("CHAT_MSG_SYSTEM")
     self:RegisterEvent("RAID_TARGET_UPDATE", "UpdateRaidMarkers")
     self:RegisterEvent("PARTY_LEADER_CHANGED","UpdateLeaderIcon")
-    self.wasInParty = (GetNumPartyMembers() > 0) or (GetNumRaidMembers() > 0)
     table.insert(UISpecialFrames, "NotGridOptionsMenu")
     self:ScheduleRepeatingEvent("NG_CLEAN_THREAT", function()
         NotGrid:CleanThreatData()
@@ -867,95 +802,12 @@ end
 function NotGrid:UnitPopup_Initialize(dropdownMenu)
     local unit = dropdownMenu.unit
     local name = dropdownMenu.name
-    local unitName = UnitName(unit)
-    local level = UIDROPDOWNMENU_MENU_LEVEL or 1
-
     if unit == "player" then
         UnitPopup_ShowMenu(dropdownMenu, "SELF", "player")
+    elseif GetNumRaidMembers() > 0 then
+        UnitPopup_ShowMenu(dropdownMenu, "PARTY", unit, name, string.sub(unit, 5))
     else
-        if GetNumRaidMembers() > 0 then
-            UnitPopup_ShowMenu(dropdownMenu, "PARTY", unit, name, string.sub(unit, 5))
-        else
-            UnitPopup_ShowMenu(dropdownMenu, "PARTY", unit, name, string.sub(unit, 6))
-        end
-    end
-
-    if level == 1 then
-        local canSetRole = self:CanSetRole(unit)
-        if not canSetRole then return end
-
-        local info = {}
-        info.text = ""
-        info.isTitle = nil
-        info.notCheckable = 1
-        info.disabled = 1
-        UIDropDownMenu_AddButton(info, level)
-
-        if NotGrid:IsLeader(UnitName("player")) then
-            info = {}
-            info.text = "  " .. L["Initiate Role Check"]
-            info.func = function()
-                if GetNumRaidMembers() > 0 then
-                    SendAddonMessage("NotGrid", "ROLESELECT", "RAID")
-                elseif GetNumPartyMembers() > 0 then
-                    SendAddonMessage("NotGrid", "ROLESELECT", "PARTY")
-                end
-            end
-            info.notCheckable = 1
-            UIDropDownMenu_AddButton(info, level)
-        end
-
-        info = {}
-        info.text = ""
-        info.isTitle = nil
-        info.notCheckable = 1
-        info.disabled = 1
-        UIDropDownMenu_AddButton(info, level)
-
-        info = {}
-        info.text = L["Set Role"]
-        info.isTitle = 1
-        info.notCheckable = 1
-        UIDropDownMenu_AddButton(info, level)
-
-        local function SetRole(role)
-            self.ManualRoles[unitName] = role
-            self.o.manualroles[unitName] = role
-            self:UpdateDungeonRoleIcons()
-
-            local message = "ROLE:" .. unitName .. ":" .. role
-            if GetNumRaidMembers() > 0 then
-                SendAddonMessage("NotGrid", message, "RAID")
-            elseif GetNumPartyMembers() > 0 then
-                SendAddonMessage("NotGrid", message, "PARTY")
-            end
-        end
-
-        local _, class = UnitClass(unit)
-        if not class then return end
-        class = string.lower(class)
-
-        if not (class == 'priest' or class == 'mage' or class == 'warlock' or class == 'hunter' or class == 'rogue') then
-            info = {}
-            info.text = "  " .. L["Tank"]
-            info.func = function() SetRole("TANK") end
-            info.checked = (self.ManualRoles[unitName] == "TANK")
-            UIDropDownMenu_AddButton(info, level)
-        end
-
-        if not (class == 'warrior' or class == 'mage' or class == 'warlock' or class == 'hunter' or class == 'rogue') then
-            info = {}
-            info.text = " |cff00ff00" .. L["Healer"] .. "|r"
-            info.func = function() SetRole("HEALER") end
-            info.checked = (self.ManualRoles[unitName] == "HEALER")
-            UIDropDownMenu_AddButton(info, level)
-        end
-
-        info = {}
-        info.text = " |cfff40000" .. L["Damage"] .. "|r"
-        info.func = function() SetRole("DAMAGER") end
-        info.checked = (self.ManualRoles[unitName] == "DAMAGER")
-        UIDropDownMenu_AddButton(info, level)
+        UnitPopup_ShowMenu(dropdownMenu, "PARTY", unit, name, string.sub(unit, 6))
     end
 end
 
@@ -1121,7 +973,6 @@ function NotGrid:RosterLib_UnitChanged(unitid, name, class, subgroup, rank, oldn
     if rank ~= oldrank then
         self:UpdateLeaderIcon()
     end
-    self:UpdateDungeonRoleIcons()
 end
 
 ----------------------------------
@@ -1140,61 +991,10 @@ function NotGrid:PLAYER_ENTERING_WORLD()
 end
 
 function NotGrid:CHAT_MSG_ADDON()
-    if arg1 == "NotGrid" then
-        if self.o.versionchecking and tonumber(arg2) then
-            if tonumber(arg2) > self.o.version and not self.versionalreadyshown then
-                DEFAULT_CHAT_FRAME:AddMessage("|cff0ccca6NotGrid:|r A newer version may be available.")
-                self.versionalreadyshown = true
-            end
-        elseif string.find(arg2, "ROLE:") then
-            local _, _, name, role = string.find(arg2, "ROLE:(.+):(.+)")
-            if name then
-                local hasPermission = false
-
-                if arg4 == UnitName("player") then
-                    hasPermission = true
-                elseif arg4 == name then
-                    hasPermission = true
-                else
-                    if GetNumRaidMembers() > 0 then
-                        for i = 1, GetNumRaidMembers() do
-                            local raidName, rank = GetRaidRosterInfo(i)
-                            if raidName == arg4 and (rank == 2 or rank == 1) then
-                                hasPermission = true
-                                break
-                            end
-                        end
-                    elseif GetNumPartyMembers() > 0 then
-                        for i = 1, GetNumPartyMembers() do
-                            if UnitName("party"..i) == arg4 and UnitIsPartyLeader("party"..i) then
-                                hasPermission = true
-                                break
-                            end
-                        end
-                        if UnitName("player") == arg4 and IsPartyLeader() then
-                            hasPermission = true
-                        end
-                    end
-                end
-
-                if hasPermission then
-                    if role == "nil" then
-                        self.ManualRoles[name] = nil
-                        self.o.manualroles[name] = nil
-                    elseif role == "TANK" or role == "HEALER" or role == "DAMAGER" then
-                        self.ManualRoles[name] = role
-                        self.o.manualroles[name] = role
-                    end
-                    self:UpdateDungeonRoleIcons()
-                end
-            end
-        elseif string.find(arg2, "ROLESELECT") then
-            if self.o.showdungeonrole then
-                if not NotGridRoleSelectionFrame then
-                    self:CreateRoleSelectionWindow()
-                end
-                NotGridRoleSelectionFrame:ShowWithCountdown()
-            end
+    if arg1 == "NotGrid" and self.o.versionchecking and tonumber(arg2) then
+        if tonumber(arg2) > self.o.version and not self.versionalreadyshown then
+            DEFAULT_CHAT_FRAME:AddMessage("|cff0ccca6NotGrid:|r A newer version may be available.")
+            self.versionalreadyshown = true
         end
     end
 end
@@ -1216,8 +1016,6 @@ function NotGrid:BlizzFrameHandler()
         end
     end
     self:UpdateLeaderIcon()
-    self:UpdateDungeonRoleIcons()
-    self:HandlePartyChange()
     self:UpdateRaidMarkers()
 end
 
@@ -1311,52 +1109,11 @@ function NotGrid:UpdateRaidMarkers()
     end
 end
 
+-- Read-only compatibility entry point; no local role assignments are stored.
+-- Personal maintenance: StoneChyi & Codex. Unknown roles remain nil.
 function NotGrid:GetUnitRole(unitid)
-    local name = UnitName(unitid)
-
-    if name and self.ManualRoles and self.ManualRoles[name] then
-        return self.ManualRoles[name]
-    end
-
-    local lfgRole = GetUnitLFGRole(unitid)
-    if lfgRole then
-        return lfgRole
-    end
-
+    if SC_TeamRoles then return SC_TeamRoles:GetRole(unitid) end
     return nil
-end
-
-function NotGrid:UpdateDungeonRoleIcons()
-    local o = self.o
-    if not o then return end
-
-    if not o.showdungeonrole then
-        for unitid, f in pairs(self.UnitFrames) do
-            if f.dungeon_role then f.dungeon_role:Hide() end
-        end
-        return
-    end
-
-    for unitid, f in pairs(self.UnitFrames) do
-        if f and f.dungeon_role then
-            if UnitExists(unitid) then
-                local role = self:GetUnitRole(unitid)
-                if role then
-                    local coords = ROLE_TEX_COORDS[role]
-                    if coords then
-                        f.dungeon_role.icon:SetTexCoord(unpack(coords))
-                        f.dungeon_role:Show()
-                    else
-                        f.dungeon_role:Hide()
-                    end
-                else
-                    f.dungeon_role:Hide()
-                end
-            else
-                f.dungeon_role:Hide()
-            end
-        end
-    end
 end
 
 function NotGrid:EnableAutohide(frame, timeout)
@@ -1381,311 +1138,4 @@ function NotGrid:EnableAutohide(frame, timeout)
             this.activeTo = GetTime() + timeout
         end
     end)
-end
-
-function checkRoleCompatibility(role)
-    -- 该提示尚未本地化，保留英文
-    local ROLE_BAD_TOOLTIP = 'Your class may not be suitable for this role.'
-    local _, class = UnitClass("player")
-    if not class then return end
-    class = string.lower(class)
-    if role == 'TANK' and (class == 'priest' or class == 'mage' or class == 'warlock' or class == 'hunter' or class == 'rogue') then
-        GameTooltip:AddLine(ROLE_BAD_TOOLTIP, 1, 0, 0);
-    end
-    if role == 'HEALER' and (class == 'warrior' or class == 'mage' or class == 'warlock' or class == 'hunter' or class == 'rogue') then
-        GameTooltip:AddLine(ROLE_BAD_TOOLTIP, 1, 0, 0);
-    end
-end
-
--- 创建职责选择窗口
-function NotGrid:CreateRoleSelectionWindow()
-    local f = CreateFrame("Frame", "NotGridRoleSelectionFrame", UIParent)
-    f:SetWidth(300)
-    f:SetHeight(200)
-    f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    f:SetBackdrop({
-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 }
-    })
-    f:SetBackdropColor(0, 0, 0, 0.9)
-    f:SetFrameStrata("DIALOG")
-    f:EnableMouse(true)
-    f:SetMovable(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", function() this:StartMoving() end)
-    f:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
-
-    f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    f.title:SetPoint("TOP", f, "TOP", 0, -15)
-    f.title:SetText(L["Choose Your Role"])
-
-    f.countdown = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    f.countdown:SetPoint("TOP", f.title, "BOTTOM", 0, -10)
-    f.countdown:SetText(string.format(L["Time Remaining: %d sec"], 20))
-
-    f.buttonContainer = CreateFrame("Frame", nil, f)
-    f.buttonContainer:SetWidth(250)
-    f.buttonContainer:SetHeight(80)
-    f.buttonContainer:SetPoint("CENTER", f, "CENTER", 0, 0)
-
-    local roles = {
-        {text = L["Tank"], role = "TANK", texCoord = {0, 19/64, 22/64, 41/64}, path = "Interface\\AddOns\\NotGrid\\media\\tank", tooltip = L["Role: Tank."]},
-        {text = L["Healer"], role = "HEALER", texCoord = {20/64, 39/64, 1/64, 20/64}, path = "Interface\\AddOns\\NotGrid\\media\\healer", tooltip = L["Role: Healer."]},
-        {text = L["Damage"], role = "DAMAGER", texCoord = {20/64, 39/64, 22/64, 41/64}, path = "Interface\\AddOns\\NotGrid\\media\\damage", tooltip = L["Role: Damage."]}
-    }
-
-    f.roleButtons = {}
-    f.checkButtons = {}
-
-    for i, roleInfo in ipairs(roles) do
-        local container = CreateFrame("Frame", nil, f.buttonContainer)
-        container:SetWidth(70)
-        container:SetHeight(70)
-        container:SetPoint("LEFT", f.buttonContainer, "LEFT", (i-1)*80 + 5, 0)
-
-        local btn = CreateFrame("Button", nil, container)
-        btn:SetWidth(60)
-        btn:SetHeight(60)
-        btn:SetPoint("CENTER", container, "CENTER", 0, 0)
-        btn:SetID(i)
-
-        btn.icon = btn:CreateTexture(nil, "ARTWORK")
-        btn.icon:SetTexture(roleInfo.path)
-        btn.icon:SetAllPoints()
-
-        btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        btn.text:SetPoint("BOTTOM", btn, "BOTTOM", 0, -15)
-        btn.text:SetText(roleInfo.text)
-
-        btn:SetScript("OnEnter", function()
-            if f.selectedRole ~= this:GetID() then
-                GameTooltip:SetOwner(this,"ANCHOR_RIGHT")
-                GameTooltip:SetText(roles[this:GetID()].tooltip)
-                checkRoleCompatibility(roles[this:GetID()].role)
-                GameTooltip:Show()
-            end
-        end)
-
-        btn:SetScript("OnLeave", function()
-            if f.selectedRole ~= this:GetID() then
-                GameTooltip:Hide()
-            end
-        end)
-
-        btn:SetScript("OnClick", function()
-            container:SelectRole(this:GetID())
-        end)
-
-        local checkBtn = CreateFrame("CheckButton", nil, container, "UICheckButtonTemplate")
-        checkBtn:SetWidth(20)
-        checkBtn:SetHeight(20)
-        checkBtn:SetPoint("BOTTOMLEFT", container, "BOTTOMLEFT", 0, 0)
-        checkBtn:SetID(i)
-        checkBtn:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
-        checkBtn:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
-        checkBtn:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight")
-        checkBtn:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
-        checkBtn:SetDisabledCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check-Disabled")
-
-        checkBtn:SetScript("OnClick", function()
-            container:SelectRole(this:GetID())
-        end)
-
-        container.SelectRole = function(self, roleIndex)
-            f:SelectRole(roleIndex)
-        end
-
-        btn.roleIndex = i
-        checkBtn.roleIndex = i
-        container.roleIndex = i
-
-        f.roleButtons[i] = btn
-        f.checkButtons[i] = checkBtn
-    end
-
-    f.confirmBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-    f.confirmBtn:SetWidth(80)
-    f.confirmBtn:SetHeight(25)
-    f.confirmBtn:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 10, 10)
-    f.confirmBtn:SetText(L["Confirm"])
-    f.confirmBtn:SetScript("OnClick", function()
-        f:ConfirmSelection()
-    end)
-
-    f.cancelBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-    f.cancelBtn:SetWidth(80)
-    f.cancelBtn:SetHeight(25)
-    f.cancelBtn:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -10, 10)
-    f.cancelBtn:SetText(L["Cancel"])
-    f.cancelBtn:SetScript("OnClick", function()
-        f:CancelSelection()
-    end)
-
-    f.SelectRole = function(self, index)
-        f.selectedRole = index
-
-        for i, checkBtn in ipairs(f.checkButtons) do
-            if i == index then
-                checkBtn:SetChecked(true)
-            else
-                checkBtn:SetChecked(false)
-            end
-        end
-    end
-
-    f.ConfirmSelection = function(self)
-        if self.selectedRole then
-            local playerName = UnitName("player")
-            local roles = {"TANK", "HEALER", "DAMAGER"}
-            local selectedRole = roles[self.selectedRole]
-
-            local message = "ROLE:" .. playerName .. ":" .. selectedRole
-
-            if GetNumRaidMembers() > 0 then
-                SendAddonMessage("NotGrid", message, "RAID")
-            elseif GetNumPartyMembers() > 0 then
-                SendAddonMessage("NotGrid", message, "PARTY")
-            end
-
-            NotGrid.ManualRoles[playerName] = selectedRole
-            NotGrid.o.manualroles[playerName] = selectedRole
-            NotGrid:UpdateDungeonRoleIcons()
-        end
-        self:Hide()
-        NotGrid:CancelScheduledEvent("RoleSelectionCountdown")
-    end
-
-    f.CancelSelection = function(self)
-        self:Hide()
-        NotGrid:CancelScheduledEvent("RoleSelectionCountdown")
-    end
-
-    f.ShowWithCountdown = function(self)
-        self:Show()
-        self.timeLeft = 20
-        local playerName = UnitName("player")
-        local _, class = UnitClass("player")
-
-        local available = {}
-        if class == "WARRIOR" then
-            available.TANK = true
-            available.DAMAGER = true
-        elseif class == "PRIEST" then
-            available.HEALER = true
-            available.DAMAGER = true
-        elseif class == "DRUID" then
-            available.TANK = true
-            available.HEALER = true
-            available.DAMAGER = true
-        elseif class == "PALADIN" then
-            available.TANK = true
-            available.HEALER = true
-            available.DAMAGER = true
-        elseif class == "SHAMAN" then
-            available.HEALER = true
-            available.DAMAGER = true
-        elseif class == "MAGE" or class == "WARLOCK" or class == "ROGUE" or class == "HUNTER" then
-            available.DAMAGER = true
-        else
-            available.DAMAGER = true
-        end
-
-        local roles = {"TANK", "HEALER", "DAMAGER"}
-        local idxAvailable = {}
-        for i, r in ipairs(roles) do idxAvailable[i] = available[r] end
-
-        local currRole = NotGrid.ManualRoles[playerName]
-        if currRole and not available[currRole] then
-            NotGrid.ManualRoles[playerName] = nil
-            NotGrid.o.manualroles[playerName] = nil
-            local nilMsg = "ROLE:" .. playerName .. ":nil"
-            if GetNumRaidMembers() > 0 then
-                SendAddonMessage("NotGrid", nilMsg, "RAID")
-            elseif GetNumPartyMembers() > 0 then
-                SendAddonMessage("NotGrid", nilMsg, "PARTY")
-            end
-            NotGrid:UpdateDungeonRoleIcons()
-        end
-
-        self.selectedRole = nil
-        for i = 1, 3 do
-            local btn   = self.roleButtons[i]
-            local check = self.checkButtons[i]
-            if idxAvailable[i] then
-                btn.icon:SetVertexColor(1, 1, 1)
-                btn:EnableMouse(true)
-                btn:Enable()
-                check:Enable()
-                check:SetAlpha(1)
-            else
-                btn.icon:SetVertexColor(0.35, 0.35, 0.35)
-                btn:Disable()
-                check:Disable()
-                check:SetAlpha(0.4)
-                check:SetChecked(false)
-            end
-            check:SetChecked(false)
-        end
-
-        NotGrid:CancelScheduledEvent("RoleSelectionCountdown")
-        self.countdown:SetText(string.format(L["Time Remaining: %d sec"], 20))
-        NotGrid:ScheduleRepeatingEvent("RoleSelectionCountdown", function()
-            self.timeLeft = self.timeLeft - 1
-            if self.timeLeft > 0 then
-                self.countdown:SetText(string.format(L["Time Remaining: %d sec"], self.timeLeft))
-            else
-                self:CancelSelection()
-            end
-        end, 1)
-    end
-
-    f:Hide()
-    return f
-end
-
---------------------------------------------------
--- 设置职责
---------------------------------------------------
-function NotGrid:SyncRoleToRaid(name, role)
-    local message = "ROLE:" .. name .. ":" .. role
-    if GetNumRaidMembers() > 0 then
-        SendAddonMessage("NotGrid", message, "RAID")
-    elseif GetNumPartyMembers() > 0 then
-        SendAddonMessage("NotGrid", message, "PARTY")
-    end
-end
-
---------------------------------------------------
--- 清除所有手动职责
---------------------------------------------------
-function NotGrid:ClearAllManualRoles()
-    self.ManualRoles = {}
-    if self.o and self.o.manualroles then
-        self.o.manualroles = {}
-    end
-    self:UpdateDungeonRoleIcons()
-end
-
---------------------------------------------------
--- 离队触发
---------------------------------------------------
-function NotGrid:HandlePartyChange()
-    local wasInParty = self.wasInParty or false
-    local isInParty  = (GetNumPartyMembers()>0) or (GetNumRaidMembers()>0)
-
-    if wasInParty and not isInParty then
-        self:ClearAllManualRoles()
-    elseif not wasInParty and isInParty then
-        self:ScheduleEvent("ShowRoleSelection", function()
-            if self.o.showdungeonrole then
-                if not NotGridRoleSelectionFrame then
-                    self:CreateRoleSelectionWindow()
-                end
-                NotGridRoleSelectionFrame:ShowWithCountdown()
-            end
-        end, 1)
-    end
-    self.wasInParty = isInParty
 end

@@ -692,9 +692,6 @@ function UI.HideAllMenus()
             end
         end
     end
-    if GoubayuHeal_GUIRoleMenu then
-        GoubayuHeal_GUIRoleMenu:Hide()
-    end
     if GoubayuHeal_GUIHotMenu then
         GoubayuHeal_GUIHotMenu:Hide()
     end
@@ -4347,83 +4344,6 @@ invertButton:SetScript("OnClick", function()
 end)
 UI.SetTooltip(invertButton, GoubayuHeal.GUI_invert_priority, GoubayuHeal.UI.InvertTip)
 
--- 清空坦克标记
-local clearRolesButton = GoubayuHeal_UI_CreateFlatButton(raidPanel,
-    "GoubayuHeal_GUIRaidClearRolesButton", 120, 26,
-    GoubayuHeal.GUI_clear_roles)
-clearRolesButton:SetPoint("LEFT", invertButton, "RIGHT", 12, 0)
-
-clearRolesButton:SetScript("OnClick", function()
-    if not GoubayuHeal.Config then
-        return
-    end
-    if not GoubayuHeal.Config["raid_roles"] then
-        GoubayuHeal.Config["raid_roles"] = {}
-    end
-    for name in pairs(GoubayuHeal.Config["raid_roles"]) do
-        GoubayuHeal.Config["raid_roles"][name] = nil
-    end
-    GoubayuHeal.Tank = { ["Unit"] = nil, ["Name"] = nil }
-    GoubayuHeal.SetRaidChecked()
-end)
-UI.SetTooltip(clearRolesButton, GoubayuHeal.GUI_clear_roles, GoubayuHeal.UI.ClearRolesTip)
-
--- 角色标记菜单
-local roleMenu = CreateFrame("Frame", nil, UIParent)
-roleMenu:SetWidth(64)
-roleMenu:SetHeight(9 * 20 + 4)
-roleMenu:SetFrameStrata("DIALOG")
-roleMenu:SetFrameLevel(60)
-roleMenu:EnableMouse(true)
-UI.ApplyFlatBackdrop(roleMenu, 0.035, 0.035, 0.035, 1)
-roleMenu:Hide()
-GoubayuHeal_GUIRoleMenu = roleMenu
-
-local roleTarget = nil
-local roleOptions = { GoubayuHeal.Msg.RoleNone, "MT", "2T", "3T", "4T", "5T", "6T", "7T", "8T" }
-
-for i = 1, 9 do
-    local opt = roleOptions[i]
-    local b = CreateFrame("Button", nil, roleMenu)
-    b:SetWidth(62)
-    b:SetHeight(18)
-    b:SetPoint("TOPLEFT", roleMenu, "TOPLEFT", 1, -1 - (i - 1) * 20)
-
-    local hl = b:CreateTexture(nil, "BACKGROUND")
-    hl:SetAllPoints()
-    hl:SetTexture("Interface\\Buttons\\WHITE8X8")
-    hl:SetVertexColor(0.32, 0.19, 0.02, 0.55)
-    hl:Hide()
-
-    local t = GoubayuHeal_UI_MakeFontString(b, "OVERLAY", 10, 1, 1, 1)
-    t:SetPoint("LEFT", b, "LEFT", 6, 0)
-    t:SetText(opt)
-
-    if opt == "MT" then
-        t:SetTextColor(1, 0.35, 0.2)
-    elseif opt ~= GoubayuHeal.Msg.RoleNone then
-        t:SetTextColor(1, 0.7, 0.3)
-    else
-        t:SetTextColor(0.6, 0.6, 0.6)
-    end
-
-    b:SetScript("OnEnter", function()
-        hl:Show()
-    end)
-
-    b:SetScript("OnLeave", function()
-        hl:Hide()
-    end)
-
-    b:SetScript("OnClick", function()
-        if roleTarget then
-            GoubayuHeal.SetRaidRole(roleTarget, opt)
-            roleTarget = nil
-        end
-        roleMenu:Hide()
-    end)
-end
-
 -- ============================================================
 -- 防护恐惧结界优先级菜单（仅牧师）：无 / 1..10
 -- by 武藤纯子酱 2026.9.21
@@ -4523,41 +4443,12 @@ for group = 1, 8 do
         nm:SetJustifyH("LEFT")
         nm:SetText("")
 
-        -- 角色标记按钮
-        local roleBtn = CreateFrame("Button", "GoubayuHeal_GUIRaidGroup" .. group .. "Slot" .. slot
-            .. "RoleButton", slotFrame)
-        roleBtn:SetWidth(38)
-        roleBtn:SetHeight(14)
-        UI.ApplyFlatBackdrop(roleBtn, 0.055, 0.055, 0.055, 0.95)
-
-        local rt = GoubayuHeal_UI_MakeFontString(roleBtn, "OVERLAY", 9, 0.6, 0.6, 0.6)
-        rt:SetPoint("CENTER", roleBtn, "CENTER", 0, 0)
-        rt:SetText(GoubayuHeal.Msg.RoleNone)
-        roleBtn.roleText = rt
-
-        roleBtn.SetText = function(self, value)
-            self.roleText:SetText(value)
-            if value == "MT" then
-                self.roleText:SetTextColor(1, 0.35, 0.2)
-            elseif value and value ~= GoubayuHeal.Msg.RoleNone then
-                self.roleText:SetTextColor(1, 0.7, 0.3)
-            else
-                self.roleText:SetTextColor(0.6, 0.6, 0.6)
-            end
-        end
-
-        -- 左侧标记框用途提示（此前无提示，用户不知道这个下拉是做什么的）
-        -- by 武藤纯子酱 2026.9.21
-        UI.SetTooltip(roleBtn, GoubayuHeal.UI.RoleBoxTitle, GoubayuHeal.UI.RoleBoxTip)
-
-        roleBtn:SetPoint("TOPLEFT", slotFrame, "TOPLEFT", 12, 0)
-        nm:ClearAllPoints()
-        nm:SetPoint("LEFT", roleBtn, "RIGHT", 6, 0)
+        nm:SetPoint("TOPLEFT", slotFrame, "TOPLEFT", 12, 0)
 
         -- 牧师：名字右侧再加一个"防护恐惧结界优先级"下拉（无/1..10），名字相应收窄
         -- by 武藤纯子酱 2026.9.21
         if isPriestUI then
-            nm:SetWidth(84)
+            nm:SetWidth(128)
 
             local fwBtn = CreateFrame("Button", "GoubayuHeal_GUIRaidGroup" .. group .. "Slot" .. slot
                 .. "FWButton", slotFrame)
@@ -4612,35 +4503,8 @@ for group = 1, 8 do
                 fwMenu:Show()
             end)
         else
-            nm:SetWidth(118)
+            nm:SetWidth(158)
         end
-
-        roleBtn:SetScript("OnClick", function()
-            if roleMenu:IsVisible() then
-                roleMenu:Hide()
-                roleTarget = nil
-                return
-            end
-
-            local nmf = getglobal("GoubayuHeal_GUIRaidGroup" .. g2 .. "Slot" .. s2 .. "Name")
-            local memberName = nmf and nmf:GetText() or ""
-            if memberName == "" then
-                return
-            end
-
-            roleTarget = memberName
-            roleMenu:ClearAllPoints()
-            roleMenu:SetPoint("TOPRIGHT", roleBtn, "BOTTOMRIGHT", 0, -2)
-
-            local bBottom = roleBtn:GetBottom()
-            local mH = roleMenu:GetHeight()
-            if bBottom and (bBottom - mH - 2) < 0 then
-                roleMenu:ClearAllPoints()
-                roleMenu:SetPoint("BOTTOMRIGHT", roleBtn, "TOPRIGHT", 0, 2)
-            end
-
-            roleMenu:Show()
-        end)
 
         -- 个人优先级滑块
         local slider = CreateFrame("Slider",

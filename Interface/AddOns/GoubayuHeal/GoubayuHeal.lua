@@ -2838,24 +2838,10 @@ function GoubayuHeal.GetPriority(unit)
         return 0
     end
 
-    local uname = GoubayuHeal.UnitName(unit)
-    local role = uname and GoubayuHeal.Config["raid_roles"]
-        and GoubayuHeal.Config["raid_roles"][uname]
-
-    local tankBonus = 0
-    if (role == "MT") then
-        tankBonus = GoubayuHeal.Config["MT_priority"]
-    elseif (role and string.find(role, "^%d+T$")) then
-        local tier = tonumber(string.match(role, "^(%d+)T$")) or 0
-        if (tier >= 2 and tier <= 8) then
-            tankBonus = GoubayuHeal.Config["MT_priority"] * (9 - tier) / 8
-        end
-    end
-
-    if (tankBonus > 0) then
-        priority = priority + tankBonus
-    elseif (GoubayuHeal.IsMT(unit)) then
-        priority = priority + GoubayuHeal.Config["MT_priority"]
+    if GoubayuHeal.IsMT(unit) then
+        local order = SC_TeamRoles and SC_TeamRoles:GetTankOrder(unit)
+        local scale = order and math.max(1, 9 - order) / 8 or 1
+        priority = priority + (GoubayuHeal.Config["MT_priority"] or 0) * math.min(1, scale)
     end
 
     for buff, prioritychange in GoubayuHeal.Config["buff_affect_priority"] do
@@ -4729,21 +4715,6 @@ function GoubayuHeal.SetRaidChecked()
             end
         end
 
-        if (GoubayuHeal.Config["raid_roles"]) then
-            local removeList = {}
-            for storedName in pairs(GoubayuHeal.Config["raid_roles"]) do
-                if (not GoubayuHeal.raid_members[storedName]) then
-                    if (GoubayuHeal.Tank and GoubayuHeal.Tank["Name"] == storedName) then
-                        GoubayuHeal.Tank = { ["Unit"] = nil, ["Name"] = nil }
-                    end
-                    table.insert(removeList, storedName)
-                end
-            end
-            for _, storedName in ipairs(removeList) do
-                GoubayuHeal.Config["raid_roles"][storedName] = nil
-            end
-        end
-
         if (GoubayuHeal.Config["raid_hots"]) then
             local removeList = {}
             for storedName in pairs(GoubayuHeal.Config["raid_hots"]) do
@@ -4772,7 +4743,6 @@ function GoubayuHeal.SetRaidChecked()
             local nm = getglobal("GoubayuHeal_GUIRaidGroup" .. group .. "Slot" .. slot .. "Name")
             local sl = getglobal("GoubayuHeal_GUIRaidGroup" .. group .. "Slot" .. slot
                 .. "PrioritySlider")
-            local rb = getglobal("GoubayuHeal_GUIRaidGroup" .. group .. "Slot" .. slot .. "RoleButton")
 
             if nm then
                 nm:SetText(name)
@@ -4782,12 +4752,6 @@ function GoubayuHeal.SetRaidChecked()
                         RAID_CLASS_COLORS[filename].b)
                 end
             end
-
-                if rb then
-                    local role = GoubayuHeal.Config["raid_roles"] and GoubayuHeal.Config["raid_roles"][name]
-                    rb:SetText(role or GoubayuHeal.Msg.RoleNone)
-                    rb:Enable()
-                end
 
                 -- 防护恐惧结界优先级（仅牧师会创建该按钮） by 武藤纯子酱 2026.9.21
                 local fwb = getglobal("GoubayuHeal_GUIRaidGroup" .. group .. "Slot" .. slot
@@ -4856,13 +4820,6 @@ function GoubayuHeal.SetRaidChecked()
                     pct:SetText("50%")
                 end
 
-                local rb = getglobal("GoubayuHeal_GUIRaidGroup" .. group .. "Slot" .. slot
-                    .. "RoleButton")
-                if rb then
-                    rb:SetText(GoubayuHeal.Msg.RoleNone)
-                    rb:Disable()
-                end
-
                 local fwb = getglobal("GoubayuHeal_GUIRaidGroup" .. group .. "Slot" .. slot
                     .. "FWButton")
                 if fwb then
@@ -4871,45 +4828,6 @@ function GoubayuHeal.SetRaidChecked()
                 end
             end
         end
-    end
-end
-
--- ============================================================
--- 设置团队成员角色
--- ============================================================
-
-function GoubayuHeal.SetRaidRole(name, role)
-    if (not name or not GoubayuHeal.Config) then
-        return
-    end
-
-    if (not GoubayuHeal.Config["raid_roles"]) then
-        GoubayuHeal.Config["raid_roles"] = {}
-    end
-
-    if (role and role ~= GoubayuHeal.Msg.RoleNone) then
-        for otherName, otherRole in pairs(GoubayuHeal.Config["raid_roles"]) do
-            if (otherName ~= name and otherRole == role) then
-                GoubayuHeal.Config["raid_roles"][otherName] = nil
-            end
-        end
-    end
-
-    if (role == GoubayuHeal.Msg.RoleNone) then
-        GoubayuHeal.Config["raid_roles"][name] = nil
-    else
-        GoubayuHeal.Config["raid_roles"][name] = role
-    end
-
-    if (role == "MT") then
-        local unit = GoubayuHeal.GetUnitID(name)
-        GoubayuHeal.Tank = { ["Unit"] = unit, ["Name"] = name }
-    elseif (GoubayuHeal.Tank and GoubayuHeal.Tank["Name"] == name) then
-        GoubayuHeal.Tank = { ["Unit"] = nil, ["Name"] = nil }
-    end
-
-    if (GoubayuHeal.SetRaidChecked) then
-        GoubayuHeal.SetRaidChecked()
     end
 end
 
@@ -4963,7 +4881,7 @@ function GoubayuHeal.UnitIsOffline(unit)
     return (not UnitIsConnected(unit))
 end
 
--- 是否有已设置的坦克（MT/8T，含 Tank 目标）处于"救急线"以下。
+-- 是否有统一职责坦克或临时治疗目标处于"救急线"以下。
 -- 用于：救急期间暂停挂接的团刷技能（团刷会把治疗摊开/延后，坦克等不起）。
 -- 结果缓存 0.2 秒：同一次按键内多处判断不重复扫全团。by 武藤纯子酱 2026.10.23
 function GoubayuHeal.TankInRescue()
@@ -4976,20 +4894,6 @@ function GoubayuHeal.TankInRescue()
     local C = GoubayuHeal.Config
     local pct = tonumber(C and C["rescue_hp_threshold"]) or 40
     if C and pct > 0 then
-        local roles = C["raid_roles"]
-        local tankName = GoubayuHeal.Tank and GoubayuHeal.Tank["Name"]
-
-        local function isTank(n)
-            if not n then
-                return false
-            end
-            if tankName and n == tankName then
-                return true
-            end
-            local rd = roles and roles[n]
-            return rd == "MT" or rd == "8T"
-        end
-
         local function check(u)
             if not (u and UnitExists(u) and not UnitIsDeadOrGhost(u)) then
                 return false
@@ -4997,7 +4901,7 @@ function GoubayuHeal.TankInRescue()
             if GoubayuHeal.UnitIsOffline and GoubayuHeal.UnitIsOffline(u) then
                 return false
             end
-            if not isTank(GoubayuHeal.UnitName(u)) then
+            if not GoubayuHeal.IsProtectedTank(u) then
                 return false
             end
             local h, mh = GoubayuHeal.GetUnitHealth(u)
@@ -5929,7 +5833,7 @@ GoubayuHeal.per_scheme_keys = {
     "healer_count_limit", "nampower_queue_timeout",
     "player_priority", "party_priority", "raid_priority", "pet_priority", "MT_priority",
     "buff_affect_priority", "debuff_affect_priority", "class_priority",
-    "raid_refined_priority", "raid_priorities", "raid_roles",
+    "raid_refined_priority", "raid_priorities",
     "priest_fear_ward_priority",
     "raid_hots_enabled", "raid_hots", "raid_hots_priority",
     "rez_message", "rez_message_channel", "rez_priority",
@@ -6004,7 +5908,6 @@ function GoubayuHeal.SchemeGetDefaults()
 
     d["raid_refined_priority"] = 0
     d["raid_priorities"] = {}
-    d["raid_roles"] = {}
     d["priest_fear_ward_priority"] = {}
 
     d["raid_hots_enabled"] = 0
@@ -6426,7 +6329,6 @@ function GoubayuHeal.SetupSettings()
     GoubayuHeal.Config["player_priority"] = (GoubayuHeal.Config["player_priority"] or 1.0)
     GoubayuHeal.Config["raid_refined_priority"] = (GoubayuHeal.Config["raid_refined_priority"] or 0)
     GoubayuHeal.Config["raid_priorities"] = (GoubayuHeal.Config["raid_priorities"] or {})
-    GoubayuHeal.Config["raid_roles"] = (GoubayuHeal.Config["raid_roles"] or {})
     GoubayuHeal.Config["priest_fear_ward_priority"] =
         (GoubayuHeal.Config["priest_fear_ward_priority"] or {})
     GoubayuHeal.Config["raid_hots"] = (GoubayuHeal.Config["raid_hots"] or {})
@@ -6898,18 +6800,47 @@ function GoubayuHeal.UpdateSpells()
     GoubayuHeal._spell_parse_incomplete = (GoubayuHeal._spell_parse_missing > 0) or nil
 end
 
--- ============================================================
--- 判断是否为坦克（通过CT_RA/oRA）
--- ============================================================
-
+-- Shared role consumer. No local assignments, persistence or private sync.
 function GoubayuHeal.IsMT(unit)
-    for key, value in pairs(CT_RA_MainTanks or (oRA_MainTank and oRA_MainTank.MainTankTable or nil)
-        or {}) do
-        if value == GoubayuHeal.UnitName(unit) then
-            return true
+    return SC_TeamRoles and SC_TeamRoles:IsTank(unit) == true or false
+end
+
+-- A temporary healing target is independent of a person's team role.
+function GoubayuHeal.IsProtectedTank(unit)
+    if GoubayuHeal.Tank and GoubayuHeal.Tank["Name"]
+        and GoubayuHeal.Tank["Name"] == GoubayuHeal.UnitName(unit) then
+        return true
+    end
+    return GoubayuHeal.IsMT(unit)
+end
+
+function GoubayuHeal.ResolveTankTarget()
+    local pinned = GoubayuHeal.Tank and GoubayuHeal.Tank["Name"]
+    if pinned then
+        local unit = GoubayuHeal.GetUnitID(pinned)
+        if unit and UnitExists(unit) and UnitIsFriend("player", unit)
+            and not UnitIsDeadOrGhost(unit) and not GoubayuHeal.UnitIsOffline(unit) then
+            GoubayuHeal.Tank["Unit"] = unit
+            return unit
+        end
+        GoubayuHeal.Tank = { ["Name"] = nil, ["Unit"] = nil }
+    end
+    local best, bestOrder
+    local function consider(unit)
+        if GoubayuHeal.IsMT(unit) and UnitExists(unit) and UnitIsFriend("player", unit)
+            and not UnitIsDeadOrGhost(unit) and not GoubayuHeal.UnitIsOffline(unit) then
+            local order = SC_TeamRoles:GetTankOrder(unit) or 999
+            if not best or order < bestOrder then best, bestOrder = unit, order end
         end
     end
-    return
+    local n = GetNumRaidMembers()
+    if n > 0 then
+        for i = 1, n do consider("raid" .. i) end
+    else
+        consider("player")
+        for i = 1, GetNumPartyMembers() do consider("party" .. i) end
+    end
+    return best
 end
 
 -- ============================================================
@@ -8911,37 +8842,16 @@ end
 -- 坦克模式治疗：从方案临时生成 _Tank 配置（排除祷言/新星），治疗坦克与自己后立即清理
 -- 避免 _Tank 残留于 Config["classes"] 并被 SavedVariables 持久化
 function GoubayuHeal.TankHealProfile(spell)
-    if not (GoubayuHeal.Tank and GoubayuHeal.Tank["Name"]) then
+    local tankUnit = GoubayuHeal.ResolveTankTarget()
+    if not tankUnit then
+        if SC_TeamRoles then SC_TeamRoles:WarnUnavailable("GoubayuHeal") end
         return nil
     end
     if not (GoubayuHeal.Config and GoubayuHeal.Config["classes"]
         and GoubayuHeal.Config["classes"][spell]) then
         return nil
     end
-
-    local tankUnit = GoubayuHeal.Tank["Unit"]
-    local tankValid = false
-
-    if (GoubayuHeal.Tank["Name"] ~= GoubayuHeal.UnitName(tankUnit)) then
-        local aka = GoubayuHeal.GetUnitID(GoubayuHeal.Tank["Name"])
-        if (aka) then
-            GoubayuHeal.Tank["Unit"] = aka
-            tankUnit = aka
-            tankValid = true
-        else
-            GoubayuHeal.Print(string.format(GoubayuHeal.Msg.TankNotInGroup, GoubayuHeal.Tank["Name"]))
-            GoubayuHeal.Tank = {
-                ["Name"] = nil,
-                ["Unit"] = nil
-            }
-        end
-    else
-        tankValid = true
-    end
-
-    if not tankValid then
-        return nil
-    end
+    GoubayuHeal._lastTankHealName = GoubayuHeal.UnitName(tankUnit)
 
     local tankProfileName = spell .. "_Tank"
     GoubayuHeal.Config["classes"][tankProfileName] = {}
@@ -9111,7 +9021,7 @@ function GoubayuHeal.ActionHeal(spell, rank, isUserAction)
         end
 
         -- 方案含新增祷言（牧师智能团刷）保留 Unified 评分；否则统一按方案百分比档位施放
-        -- 坦克优先级由 GetPriority（raid_roles 中 MT/8T）天然处理；纯坦克模式用 /gbyh tankheal [方案]
+        -- 坦克优先级由统一职责接口提供；专治模式可使用临时目标。
         local hasAoE = false
         for _, data in pairs(GoubayuHeal.Config["classes"][useProfile]) do
             if type(data) == "table" then
@@ -10038,19 +9948,11 @@ function GoubayuHeal.Command(msg)
             or GoubayuHeal.current_class or "standard"
         if not (GoubayuHeal.Config["classes"] and GoubayuHeal.Config["classes"][profile]) then
             GoubayuHeal.Print(string.format(GoubayuHeal.Msg.TankNotExist, profile))
-        elseif not (GoubayuHeal.Tank and GoubayuHeal.Tank["Name"]) then
-            -- 仅未设置MT时反馈（5秒节流防刷屏）；MT已设置后即使满血/无可治疗目标
-            -- 也属正常待机，静默处理绝不刷屏
-            if not GoubayuHeal._tank_none_msg_time
-                or (GetTime() - GoubayuHeal._tank_none_msg_time) > 5 then
-                GoubayuHeal._tank_none_msg_time = GetTime()
-                GoubayuHeal.Print(GoubayuHeal.Msg.TankModeNone)
-            end
         else
             local result = GoubayuHeal.TankHealProfile(profile)
             if result then
                 GoubayuHeal.Print(string.format(GoubayuHeal.Msg.TankModeHeal,
-                    tostring(GoubayuHeal.Tank and GoubayuHeal.Tank["Name"])))
+                    tostring(GoubayuHeal._lastTankHealName)))
             end
             -- MT已设置：本轮满血/无可治疗目标属正常待机，静默
         end
@@ -10063,7 +9965,7 @@ function GoubayuHeal.Command(msg)
 
         if (aka) then
             if (aka ~= "target" or UnitIsUnit("player", aka)) then
-                GoubayuHeal.SetRaidRole(GoubayuHeal.UnitName(aka), "MT")
+                GoubayuHeal.Tank = { ["Unit"] = aka, ["Name"] = GoubayuHeal.UnitName(aka) }
                 GoubayuHeal.Print(string.format(GoubayuHeal.Msg.TankSet, GoubayuHeal.UnitName(aka)))
             else
                 GoubayuHeal.Print(string.format(GoubayuHeal.Msg.TankMustInGroup, GoubayuHeal.UnitName(aka)))
@@ -10075,10 +9977,8 @@ function GoubayuHeal.Command(msg)
             end
         else
             if (GoubayuHeal.Tank and GoubayuHeal.Tank["Name"]) then
-                -- 先取名字再清角色：SetRaidRole 取消分支会同步清空 Tank，
-                -- 之后 Tank["Name"] 已是 nil，format 会报错并中断宏的后续行
                 local tankName = GoubayuHeal.Tank["Name"]
-                GoubayuHeal.SetRaidRole(tankName, GoubayuHeal.Msg.RoleNone)
+                GoubayuHeal.Tank = { ["Unit"] = nil, ["Name"] = nil }
                 GoubayuHeal.Print(string.format(GoubayuHeal.Msg.TankUnset, tankName))
             else
                 GoubayuHeal.Print(GoubayuHeal.Msg.NoTank)

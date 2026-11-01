@@ -86,10 +86,6 @@ function NotGrid:CreateUnitFrame(unitid, raidindex)
     f.leader = CreateFrame("Frame", "$parentleader", f)
     f.leader.icon = f.leader:CreateTexture("leaderIcon", "OVERLAY")
 
-    -- 职责图标（坦克/治疗/输出）
-    f.dungeon_role = CreateFrame("Frame", "$parentdungeonrole", f)
-    f.dungeon_role.icon = f.dungeon_role:CreateTexture("dungeonroleIcon", "OVERLAY")
-
     -- 创建8个追踪图标（Buff/Debuff监控）
     for i = 1, 8 do
         local iconName = f.healthbar:GetName() .. "trackingicon" .. i
@@ -369,16 +365,6 @@ function NotGrid:ConfigUnitFrames()
         f.leader.icon:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
         f.leader.icon:SetAllPoints()
         f.leader:Hide()
-
-        -- 职责图标
-        f.dungeon_role:SetWidth(o.dungeonrolesize)
-        f.dungeon_role:SetHeight(o.dungeonrolesize)
-        f.dungeon_role:ClearAllPoints()
-        f.dungeon_role:SetPoint("TOPRIGHT", o.dungeonroleoffx, o.dungeonroleoffy)
-        f.dungeon_role:SetFrameLevel(f:GetFrameLevel() + 3)
-        f.dungeon_role.icon:SetTexture("Interface\\AddOns\\NotGrid\\media\\ui-lfg-icon-portraitroles")
-        f.dungeon_role.icon:SetAllPoints()
-        f.dungeon_role:Hide()
 
         -- 团队标记图标（星星、月亮等）
         f.healthbar.raidmarker:SetWidth(16)

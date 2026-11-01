@@ -160,12 +160,6 @@ local menuarray = {
     {text = L["Show Party In Raid"],     toggle = "showpartyinraid" },
     {text = L["Show Pets"],              toggle = "showpets",
      tooltip = L["pet_tooltip"] },
-    {text = L["Show Dungeon Role"],      toggle = "showdungeonrole",
-     tooltip = L["Show Dungeon Role Tooltip"] },
-    {text = L["Dungeon Role Size"],      slider = { key = "dungeonrolesize", minval = 8, maxval = 30 } },
-    {text = L["Dungeon Role Position"],  position = { xkey = "dungeonroleoffx", ykey = "dungeonroleoffy" } },
-    {text = L["Set Member Role"],        button = "OpenRoleSettings",
-     tooltip = L["Set Member Role Tooltip"] },
     {text = L["Custom Pet Color"],       toggle = "usepetcolor",
      color = { key = "petcolor" } },
     {text = L["TBC Shaman Color"],       toggle = "useshamancolor" },
@@ -262,7 +256,6 @@ function NotGrid:InitializeMenu()
         fb.fs:SetPoint("LEFT",0,0)
         --
         fb.toggle = val.toggle
-        fb.button = val.button
         fb.slider = val.slider
         fb.editbox = val.editbox
         fb.tooltip = val.tooltip
@@ -303,13 +296,6 @@ function NotGrid:InitializeMenu()
         end
 
         fb:SetScript("OnClick", function()
-            -- 处理按钮型菜单项（如打开角色设置窗口）
-            if this.button then
-                if this.button == "OpenRoleSettings" then
-                    NotGrid:OpenRoleSettingsWindow()
-                end
-                return
-            end
             if this.toggle then
                 if NotGridOptions[this.toggle] == true then
                     NotGridOptions[this.toggle] = false
@@ -721,160 +707,4 @@ function NotGridOptionChange()
     NotGrid:ClearIndexFramePoint()
     NotGrid:PositionFrames()
     NotGrid:BlizzFrameHandler()
-end
-
-
--------------------------
--- 角色设置窗口
--------------------------
-
-function NotGrid:OpenRoleSettingsWindow()
-    if not NotGridRoleSettingsFrame then
-        self:CreateRoleSettingsWindow()
-    end
-    NotGridRoleSettingsFrame:Show()
-    self:UpdateRoleSettingsList()
-end
-
-function NotGrid:CreateRoleSettingsWindow()
-    local f = CreateFrame("Frame", "NotGridRoleSettingsFrame", UIParent)
-    f:SetWidth(300)
-    f:SetHeight(400)
-    f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    f:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", edgeFile = "Interface/Tooltips/UI-Tooltip-Border", tile = true, tileSize = 16, edgeSize = 16, insets = { left = 4, right = 4, top = 4, bottom = 4 }})
-    f:SetBackdropColor(0,0,0,0.9)
-    f:SetMovable(true)
-    f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", function() this:StartMoving() end)
-    f:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
-    
-    -- 标题
-    f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    f.title:SetPoint("TOP", f, "TOP", 0, -10)
-    f.title:SetText(L["Set Member Role"])
-    
-    -- 关闭按钮
-    f.close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-    f.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, 0)
-    
-    -- 滚动区域
-    f.scroll = CreateFrame("ScrollFrame", "NotGridRoleSettingsScroll", f, "UIPanelScrollFrameTemplate")
-    f.scroll:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -40)
-    f.scroll:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -30, 10)
-    
-    f.scrollchild = CreateFrame("Frame", nil, f.scroll)
-    f.scrollchild:SetWidth(250)
-    f.scrollchild:SetHeight(1)
-    f.scroll:SetScrollChild(f.scrollchild)
-    
-    f:Hide()
-end
-
-function NotGrid:UpdateRoleSettingsList()
-    local f = NotGridRoleSettingsFrame
-    if not f then return end
-    
-    -- 清除旧按钮
-    if f.buttons then
-        for _, btn in ipairs(f.buttons) do
-            btn:Hide()
-        end
-    end
-    f.buttons = {}
-    
-    local yoffset = 0
-    local buttonHeight = 30
-    local addedNames = {}  -- 用于去重
-    
-    -- 遍历所有团队成员
-    for unitid, frame in pairs(self.UnitFrames) do
-        if UnitExists(unitid) then
-            local name = UnitName(unitid)
-            local _, class = UnitClass(unitid)
-            
-            -- 去重：避免同一玩家重复出现
-            if name and class and not addedNames[name] then
-                addedNames[name] = true
-                
-                -- 创建成员按钮行
-                local btn = CreateFrame("Frame", nil, f.scrollchild)
-                btn:SetWidth(250)
-                btn:SetHeight(buttonHeight)
-                btn:SetPoint("TOPLEFT", f.scrollchild, "TOPLEFT", 0, -yoffset)
-                
-                -- 名字
-                btn.name = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                btn.name:SetPoint("LEFT", btn, "LEFT", 5, 0)
-                btn.name:SetText(name)
-                btn.name:SetTextColor(RAID_CLASS_COLORS[class].r, RAID_CLASS_COLORS[class].g, RAID_CLASS_COLORS[class].b)
-                
-                -- 坦克按钮
-                btn.tank = CreateFrame("Button", nil, btn)
-                btn.tank:SetWidth(25)
-                btn.tank:SetHeight(25)
-                btn.tank:SetPoint("RIGHT", btn, "RIGHT", -75, 0)
-                btn.tank:SetNormalTexture("Interface\\AddOns\\NotGrid\\media\\ui-lfg-icon-portraitroles")
-                btn.tank:GetNormalTexture():SetTexCoord(0, 19/64, 22/64, 41/64)
-                btn.tank:SetScript("OnClick", function()
-                    NotGrid.ManualRoles[name] = "TANK"
-                    NotGrid.o.manualroles[name] = "TANK"
-                    NotGrid:SyncRoleToRaid(name, "TANK")
-                    NotGrid:UpdateDungeonRoleIcons()
-                    NotGrid:UpdateRoleSettingsList()
-                end)
-                
-                -- 治疗按钮
-                btn.healer = CreateFrame("Button", nil, btn)
-                btn.healer:SetWidth(25)
-                btn.healer:SetHeight(25)
-                btn.healer:SetPoint("RIGHT", btn, "RIGHT", -45, 0)
-                btn.healer:SetNormalTexture("Interface\\AddOns\\NotGrid\\media\\ui-lfg-icon-portraitroles")
-                btn.healer:GetNormalTexture():SetTexCoord(20/64, 39/64, 1/64, 20/64)
-                btn.healer:SetScript("OnClick", function()
-                    NotGrid.ManualRoles[name] = "HEALER"
-                    NotGrid.o.manualroles[name] = "HEALER"
-                    NotGrid:SyncRoleToRaid(name, "HEALER")
-                    NotGrid:UpdateDungeonRoleIcons()
-                    NotGrid:UpdateRoleSettingsList()
-                end)
-                
-                -- DPS按钮
-                btn.dps = CreateFrame("Button", nil, btn)
-                btn.dps:SetWidth(25)
-                btn.dps:SetHeight(25)
-                btn.dps:SetPoint("RIGHT", btn, "RIGHT", -15, 0)
-                btn.dps:SetNormalTexture("Interface\\AddOns\\NotGrid\\media\\ui-lfg-icon-portraitroles")
-                btn.dps:GetNormalTexture():SetTexCoord(20/64, 39/64, 22/64, 41/64)
-                btn.dps:SetScript("OnClick", function()
-                    NotGrid.ManualRoles[name] = "DAMAGER"
-                    NotGrid.o.manualroles[name] = "DAMAGER"
-                    NotGrid:SyncRoleToRaid(name, "DAMAGER")
-                    NotGrid:UpdateDungeonRoleIcons()
-                    NotGrid:UpdateRoleSettingsList()
-                end)
-                
-                -- 高亮当前选择
-                local currentRole = NotGrid.ManualRoles[name] or NotGrid:GetUnitRole(unitid)
-                if currentRole == "TANK" then
-                    btn.tank:SetAlpha(1)
-                    btn.healer:SetAlpha(0.3)
-                    btn.dps:SetAlpha(0.3)
-                elseif currentRole == "HEALER" then
-                    btn.tank:SetAlpha(0.3)
-                    btn.healer:SetAlpha(1)
-                    btn.dps:SetAlpha(0.3)
-                else
-                    btn.tank:SetAlpha(0.3)
-                    btn.healer:SetAlpha(0.3)
-                    btn.dps:SetAlpha(1)
-                end
-                
-                table.insert(f.buttons, btn)
-                yoffset = yoffset + buttonHeight
-            end
-        end
-    end
-    
-    f.scrollchild:SetHeight(yoffset)
 end

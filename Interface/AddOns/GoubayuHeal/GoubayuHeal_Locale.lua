@@ -464,7 +464,6 @@ if zhCN then
     GoubayuHeal.GUI_refined_priority = "精细化优先级"
     GoubayuHeal.GUI_reset_priority = "重置50%"
     GoubayuHeal.GUI_invert_priority = "反向"
-    GoubayuHeal.GUI_clear_roles = "清空坦克标记"
     GoubayuHeal.GUI_hot_enabled = "启用HOT维持"
     GoubayuHeal.GUI_hot_clear = "清空"
     GoubayuHeal.GUI_dispel_enabled = "启动一键驱散"
@@ -482,7 +481,6 @@ else
     GoubayuHeal.GUI_refined_priority = "Refined priority"
     GoubayuHeal.GUI_reset_priority = "Reset 50%"
     GoubayuHeal.GUI_invert_priority = "Invert"
-    GoubayuHeal.GUI_clear_roles = "Clear tank marks"
     GoubayuHeal.GUI_hot_enabled = "Enable HOT maintain"
     GoubayuHeal.GUI_hot_clear = "Clear"
     GoubayuHeal.GUI_dispel_enabled = "Enable one-key dispel"
@@ -714,8 +712,8 @@ if zhCN then
         "/gbyh totemrecall        一键回收图腾",
         "/gbyh showall            显示所有方案（含隐藏方案）",
         "/gbyh togglehidden       切换隐藏方案显示",
-        "/gbyh tank               将当前友方目标设为坦克（MT角色，团刷中坦克优先级最高）",
-        "/gbyh tankheal [方案]    纯坦克模式：只治疗坦克与自己（需先设坦克/MT）",
+        "/gbyh tank               临时锁定当前友方队员为治疗目标；不分配团队职责",
+        "/gbyh tankheal [方案]    只治疗临时目标或统一接口指定的坦克与自己",
         "/gbyh rez                一键复活",
         "/gbyh dispel             一键驱散",
         "/gbyh dispelprio         打开/关闭驱散优先级设置窗口",
@@ -794,8 +792,8 @@ else
         "/gbyh totemrecall         Recall all totems in one click",
         "/gbyh showall             Show all profiles (incl. hidden)",
         "/gbyh togglehidden        Toggle hidden profiles display",
-        "/gbyh tank                Set current friendly target as tank (MT role; highest priority in raid heal)",
-        "/gbyh tankheal [profile]  Tank-only mode: heal the tank and yourself (requires a tank/MT set first)",
+        "/gbyh tank                Temporarily focus a friendly group member; no team role assignment",
+        "/gbyh tankheal [profile]  Heal the temporary focus or a shared-role tank, and yourself",
         "/gbyh rez                 One-click resurrection",
         "/gbyh dispel              One-click dispel",
         "/gbyh dispelprio          Open/close the dispel priority window",
@@ -871,8 +869,8 @@ if zhCN then
         HiddenSchemesToggle = "隐藏方案显示: %s",
         TankNotExist = "方案 \"%s\" 不存在",
         TankModeHeal = "坦克模式: 治疗 %s",
-        TankModeNone = "坦克模式: 未设置坦克(MT)",
-        TankSet = "将只治疗坦克: %s",
+        TankModeNone = "专治模式：没有临时目标或有效的统一职责坦克",
+        TankSet = "临时锁定治疗目标: %s",
         TankMustInGroup = "坦克单位必须在你的团队或小队中：%s 不在其中",
         TankKeep = "当前坦克保持不变: %s",
         NoTank = "未设置坦克(MT)",
@@ -1395,13 +1393,10 @@ if zhCN then
         PerSchemeTip_Refined = "开启后，每个成员下方滑块的值才参与该成员的优先级计算（滑块默认50%）。关闭时所有成员按基础优先级治疗，滑块置灰不可拖动。",
         ResetTip = "将当前所有成员的优先级滑块重置为50%。",
         InvertTip = "将当前所有成员的优先级取反（1-当前值），如30%变70%，再点一次变回30%。",
-        ClearRolesTip = "将所有成员的坦克/副坦标记清空为无（含MT，同时关闭坦克模式）。",
         MemberSliderTip = "每个成员下方的滑块控制该成员的个人优先级（需先开启顶部\"精细化优先级\"开关）。",
         -- 防护恐惧结界优先级下拉（仅牧师） by 武藤纯子酱 2026.9.21
         FearWardTip = "防护恐惧结界优先级：10 最高、1 最低，默认无；同一优先级只能有一个人。牧师专用：自动为这些成员维持防护恐惧结界。",
         -- 左侧坦克/副坦标记框提示 by 武藤纯子酱 2026.9.21
-        RoleBoxTitle = "坦克/副坦标记",
-        RoleBoxTip = "点击为该成员设置 MT / 2T… / 无：MT 表示当前主坦克（影响坦克优先级与坦克模式），同一标记同一时间只能有一个人。",
         HotEnabledTip = "开启后，按下方每个成员设置的HOT及等级自动补HOT（目标BUFF栏满或已有同类HOT时不会重复上）。",
         HotClearTip = "清空所有成员设置的HOT（全部变为无）。",
         DispelEnabledTip = "开启后显示常驻的驱散小窗，并可通过点击窗口按钮或/gbyh dispel一键驱散。",
@@ -1451,8 +1446,8 @@ else
         HiddenSchemesToggle = "Hidden schemes display: %s",
         TankNotExist = "Profile \"%s\" does not exist",
         TankModeHeal = "Tank mode: healing %s",
-        TankModeNone = "Tank mode: no tank (MT) set",
-        TankSet = "Will only heal tank: %s",
+        TankModeNone = "Focused mode: no temporary target or valid shared tank",
+        TankSet = "Temporary healing focus: %s",
         TankMustInGroup = "Tank unit must be in your party/raid: %s is not",
         TankKeep = "Current tank kept: %s",
         NoTank = "No dedicated tank",
@@ -1945,13 +1940,10 @@ else
         PerSchemeTip_Refined = "When enabled, each member's slider value participates in that member's priority calculation (default 50%). When disabled, all members are healed by base priority and the sliders are grayed out.",
         ResetTip = "Resets all members' priority sliders to 50%.",
         InvertTip = "Inverts all members' priorities (1 - current value), e.g. 30% becomes 70%; clicking again reverts it.",
-        ClearRolesTip = "Clears all members' tank/off-tank marks to None (including MT, and turns off tank mode).",
         MemberSliderTip = "Each member's slider controls that member's personal priority (requires the top \"Refined priority\" switch).",
         -- Fear Ward priority dropdown (priest only) by 武藤纯子酱 2026.9.21
         FearWardTip = "Fear Ward priority: 10 = highest, 1 = lowest, default none; each priority holds only one member. Priest only: keeps Fear Ward up on these members.",
         -- Left-side tank/off-tank mark tooltip by 武藤纯子酱 2026.9.21
-        RoleBoxTitle = "Tank / off-tank mark",
-        RoleBoxTip = "Click to set MT / 2T... / None for this member. MT is the main tank (affects tank priority and tank mode); each mark can be held by one member at a time.",
         HotEnabledTip = "When enabled, automatically re-applies each member's HOT and rank (won't stack when the target's buff bar is full or a similar HOT is already active).",
         HotClearTip = "Clears all members' HOT settings (everything becomes None).",
         DispelEnabledTip = "Shows the always-on dispel window; dispel via the window button or /gbyh dispel.",

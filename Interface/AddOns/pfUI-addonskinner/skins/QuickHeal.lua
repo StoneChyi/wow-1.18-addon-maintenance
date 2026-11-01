@@ -56,8 +56,6 @@ pfUI:RegisterSkin("QuickHeal", "vanilla", function ()
         QuickHealConfig,
         QuickHeal_DownrankSlider,
         QuickHealConfig_NotificationChannelNameEditBox, -- -- skinEditBox ???
-        MTListFrame,
-        QH_Display_Tooltip,
         
       }
       
@@ -82,34 +80,10 @@ pfUI:RegisterSkin("QuickHeal", "vanilla", function ()
       local buttons = {
         QuickHealConfig_CloseButton,
         QuickHealConfig_DefaultButton,
-        QuickHeal_MTList,
-        MTListFrameClear,
-        MTListFrameClose,
-        MTListFramePopulate,
-        MTListFrameAdd,
-        MTListFrameUp,
-        MTListFrameDown,
       }
       for _, button in pairs(buttons) do
         SkinButton(button)
       end
-      MTListFrameClear:SetPoint("TOPLEFT", MTListFrameText, "TOPLEFT", 24, -12)
-      MTListFrameAdd:SetTextColor(0,1,0,1)
-      MTListFrameAdd:SetWidth(35)
-      MTListFrameAdd:GetHighlightTexture():SetTexture(0,1,0,1)
-
-      MTListFramePopulate:SetTextColor(0.41,0.8,0.94,1)
-      MTListFramePopulate:SetWidth(35)
-      MTListFramePopulate:GetHighlightTexture():SetTexture(0.41,0.8,0.94,1)
-
-      MTListFrameClear:SetTextColor(1,1,0,1)
-      MTListFrameClear:SetWidth(35)
-      MTListFrameClear:GetHighlightTexture():SetTexture(0.4,0.4,0.4,1)
-
-      MTListFrameClose:SetTextColor(1,0,0,1)
-      MTListFrameClose:SetWidth(35)
-      MTListFrameClose:GetHighlightTexture():SetTexture(1,0,0,1)
-  
       local checkboxes = {
         QuickHealConfig_CheckButtonNotificationWhisper,
         QuickHealConfig_CheckButtonNotificationChannel,

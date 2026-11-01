@@ -12,6 +12,8 @@
 
 ## 当前维护摘要
 
+2026-11-02：独立职责名单与TWA已撤除；普通治疗保留，职责限定宏无有效共享数据时不执行。
+
 2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-QuickHeal-20261102-01)。
 
 同步内置 HealComm 预估清理修复，保证库加载顺序兼容。
@@ -19,6 +21,21 @@
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-QuickHeal-20261102-02"></a>
+
+### 2026-11-02｜撤除独立职责名单与TWA，保护旧宏范围
+
+- 记录编号：`QuickHeal-20261102-02`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户确认撤除三个插件的独立手工职责分工，保留治疗和仇恨，并预留统一接口。
+- 修改内容：移除四类名单CRUD/窗口/默认字段和TWA/分工广播；tanklist/tl仅停用提示。mt/nonmt在入口、自救、目标优先、候选及执行前使用统一数据，未知不算非坦克，无数据不触发校准或取消施法；普通治疗、直接选目标和HealComm保留。配套皮肤引用同步移除。 维护署名StoneChyi & Codex、原作者和许可保留。
+- 涉及文件：[QuickHeal.lua](../../Interface/AddOns/QuickHeal/QuickHeal.lua)、[QuickHeal.toc](../../Interface/AddOns/QuickHeal/QuickHeal.toc)、[QuickHeal.xml](../../Interface/AddOns/QuickHeal/QuickHeal.xml)、[QuickHealDruid.lua](../../Interface/AddOns/QuickHeal/QuickHealDruid.lua)、[QuickHealPaladin.lua](../../Interface/AddOns/QuickHeal/QuickHealPaladin.lua)、[QuickHealPriest.lua](../../Interface/AddOns/QuickHeal/QuickHealPriest.lua)、[QuickHealShaman.lua](../../Interface/AddOns/QuickHeal/QuickHealShaman.lua)、[README.md](../../Interface/AddOns/QuickHeal/README.md)、[localization.en.lua](../../Interface/AddOns/QuickHeal/localization.en.lua)。
+- 检查结果：14项共享/消费者联合检查、QuickHeal实际Lua5.0完整主文件场景、GoubayuHeal两组源函数场景、106组HealComm/NotGrid回归通过；本轮17个Lua文件实际Lua5.0语法、2个XML解析及编码/署名检查通过。详见[联合检查记录](../Research/独立职责撤除与统一接口-20261102.md)。
+- 未确认事项：尚未在游戏验收真实界面、按键/施法及团队通信；没有部署真实职责提供者，默认职责未知，普通治疗不因此停用。旧账号配置不重置，旧名单不再消费。
 
 <a id="change-QuickHeal-20261102-01"></a>
 

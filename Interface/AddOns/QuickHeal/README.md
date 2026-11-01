@@ -1,3 +1,5 @@
+Independent role-list editors and TWA roster import have been retired in this personal edition (StoneChyi & Codex). Old saved lists are not consumed or migrated. Ordinary healing is unchanged; `mt` / `nonmt` require a ready unified role provider, and unavailable/unknown data never expands the request to the whole raid. `tanklist` / `tl` only show a retirement notice.
+
 
 # QuickHeal Turtle WOW
 
@@ -46,10 +48,9 @@ Normal HPS encomapsses ALL healing spells regardless of relative cast time.
 
 **Tank list and mt healing**
 
-`/qh tanklist`
-Toggles tanklist display.
+Legacy `/qh tanklist` and `/qh tl` no longer open a local editor.
 
-`+` adds current target into the list.  `C` clears the list.
+The retired editor has no add/clear buttons. Role filters now read the shared service only.
 
 **Other keybinds for specific healing**
 
@@ -60,8 +61,8 @@ Toggles tanklist display.
 `target` = your target<Br>
 `targettarget` = your target's target<Br>
 `party` = your party<Br>
-`mt` = main tanks (defined in the configuration panel)<Br>
-`nonmt` = everyone but the main tanks<Br>
+`mt` = confirmed tanks supplied by the unified role service<Br>
+`nonmt` = confirmed non-tanks supplied by the unified role service (unknown roles are excluded)<Br>
 `subgroup` = raid subgroups (defined in the configuration panel)<Br>
 
 `[type]`: constrains healing spell to:<Br>
@@ -75,7 +76,7 @@ Toggles tanklist display.
 <hr>
 
 
-## ChangeLog:
+## ChangeLog (upstream history; local role editors and TWA import retired):
 
 **1.14.5**<Br>
 Disabled vestigial config UI tab 'Target Filtering'

@@ -62,7 +62,7 @@
 
 | 插件 / 组件 | 最近记录 |
 | --- | --- |
-| [!Libs](!Libs.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](!Libs.md#change-!Libs-20261102-01) |
+| [!Libs](!Libs.md) | [2026-11-02 · 新增被动统一职责查询桥](!Libs.md#change-!Libs-20261102-02) |
 | [ActionBarProfiles](ActionBarProfiles.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](ActionBarProfiles.md#change-ActionBarProfiles-20261102-01) |
 | [AdvancedTradeSkillWindow2](AdvancedTradeSkillWindow2.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](AdvancedTradeSkillWindow2.md#change-AdvancedTradeSkillWindow2-20261102-01) |
 | [Atlas](Atlas.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Atlas.md#change-Atlas-20261102-01) |
@@ -90,23 +90,23 @@
 | [EavesDrop](EavesDrop.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](EavesDrop.md#change-EavesDrop-20261102-01) |
 | [EzPoison](EzPoison.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](EzPoison.md#change-EzPoison-20261102-01) |
 | [Flyout](Flyout.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Flyout.md#change-Flyout-20261102-01) |
-| [GoubayuHeal](GoubayuHeal.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](GoubayuHeal.md#change-GoubayuHeal-20261102-01) |
+| [GoubayuHeal](GoubayuHeal.md) | [2026-11-02 · 撤除团队职责分配，分离临时治疗对象](GoubayuHeal.md#change-GoubayuHeal-20261102-02) |
 | [HideOutdoorWorldState](HideOutdoorWorldState.md) | [2026-10-10 · 用户确认主动删除并停用](HideOutdoorWorldState.md#change-HideOutdoorWorldState-20261010-01) |
 | [hyx](hyx.md) | [2026-11-02 · 取消上下区翻页箭头](hyx.md#change-hyx-20261102-03) |
 | [Meeting](Meeting.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Meeting.md#change-Meeting-20261102-01) |
 | [MySlash](MySlash.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](MySlash.md#change-MySlash-20261102-01) |
-| [NotGrid](NotGrid.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](NotGrid.md#change-NotGrid-20261102-01) |
+| [NotGrid](NotGrid.md) | [2026-11-02 · 撤除独立职责分工并保留血条与仇恨](NotGrid.md#change-NotGrid-20261102-02) |
 | [OneBag](OneBag.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](OneBag.md#change-OneBag-20261102-01) |
 | [Outfitter](Outfitter.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Outfitter.md#change-Outfitter-20261102-01) |
 | [PallyPower](PallyPower.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PallyPower.md#change-PallyPower-20261102-01) |
 | [pfUI](pfUI.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI.md#change-pfUI-20261102-01) |
-| [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI-addonskinner.md#change-pfUI-addonskinner-20261102-01) |
+| [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-11-02 · 清理QuickHeal退役职责窗口的皮肤引用](pfUI-addonskinner.md#change-pfUI-addonskinner-20261102-02) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI-CustomMedia.md#change-pfUI-CustomMedia-20261102-01) |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261102-01) |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PizzaWorldBuffs.md#change-PizzaWorldBuffs-20261102-01) |
 | [PlayerLinkEnhance](PlayerLinkEnhance.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261102-01) |
 | [QianKunBag](QianKunBag.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](QianKunBag.md#change-QianKunBag-20261102-01) |
-| [QuickHeal](QuickHeal.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](QuickHeal.md#change-QuickHeal-20261102-01) |
+| [QuickHeal](QuickHeal.md) | [2026-11-02 · 撤除独立职责名单与TWA，保护旧宏范围](QuickHeal.md#change-QuickHeal-20261102-02) |
 | [RaidCheck](RaidCheck.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](RaidCheck.md#change-RaidCheck-20261102-01) |
 | [S_ChatBar](S_ChatBar.md) | [2026-11-02 · 驱散入口适配净界驱散2.0](S_ChatBar.md#change-S_ChatBar-20261102-02) |
 | [S_ItemTip](S_ItemTip.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](S_ItemTip.md#change-S_ItemTip-20261102-01) |

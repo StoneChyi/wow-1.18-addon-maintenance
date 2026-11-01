@@ -97,7 +97,7 @@
       "addon": "!Libs",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/!Libs.md",
-      "purpose": "补记共享词库差异，并修复 HealComm 群体治疗预估清理。",
+      "purpose": "共享职责接口已预留，真实提供者尚未部署；缺数据的职责限定操作停止，其他治疗照常。",
       "sources": [
         "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua.20260918125911.bak",
         "PluginHistory/Research/插件更新实施-20261012.md",
@@ -105,10 +105,13 @@
       ],
       "maintenance_files": [
         "Interface/AddOns/!Libs/Babble/Babble-Boss-2.2/Babble-Boss-2.2.lua",
-        "Interface/AddOns/!Libs/HealComm-1.0/HealComm-1.0.lua"
+        "Interface/AddOns/!Libs/HealComm-1.0/HealComm-1.0.lua",
+        "Interface/AddOns/!Libs/!Libs.toc",
+        "Interface/AddOns/!Libs/SC_TeamRoles.lua",
+        "Interface/AddOns/!Libs/SC_TeamRoles.md"
       ],
       "tracked_files_at_reference": 93,
-      "pending": "真实团队通讯与其他插件验收待补充；原词库差异归属仍待确认。",
+      "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。 既有待确认事项：真实团队通讯与其他插件验收待补充；原词库差异归属仍待确认。",
       "last_package_update": {
         "date": "2026-10-18",
         "report": "PluginHistory/Research/10月16日包合并实施-20261018.md",
@@ -1321,7 +1324,7 @@
       "addon": "GoubayuHeal",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/GoubayuHeal.md",
-      "purpose": "更新瞬发人数限制、动作占用、迅捷治愈换目标及牧师驱病顺序。",
+      "purpose": "独立MT分工与角色持久化已撤除；坦克策略接共享接口，临时治疗对象与职责分离。",
       "sources": [
         "PluginHistory/Research/插件更新实施-20261012.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
@@ -1335,10 +1338,11 @@
         "Interface/AddOns/GoubayuHeal/GoubayuHeal_Locale.lua",
         "Interface/AddOns/GoubayuHeal/GoubayuHeal_Predict.lua",
         "Interface/AddOns/GoubayuHeal/GoubayuHeal_Totem.lua",
-        "Interface/AddOns/GoubayuHeal/GoubayuHeal_UI.lua"
+        "Interface/AddOns/GoubayuHeal/GoubayuHeal_UI.lua",
+        "Interface/AddOns/GoubayuHeal/GoubayuHeal.toc"
       ],
       "tracked_files_at_reference": 12,
-      "pending": "是否曾修改、修改内容及更新时需要保留的行为。",
+      "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。 既有待确认事项：是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
         "date": "2026-10-30",
         "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
@@ -1505,13 +1509,18 @@
       "addon": "NotGrid",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/NotGrid.md",
-      "purpose": "修复治疗祷言后预估条持续残留及死亡、满血后的旧显示。",
+      "purpose": "独立职责管理已撤除；保留治疗预估、血条和实时仇恨，后续职责只读共享接口。",
       "sources": [],
       "maintenance_files": [
-        "Interface/AddOns/NotGrid/core.lua"
+        "Interface/AddOns/NotGrid/core.lua",
+        "Interface/AddOns/NotGrid/NotGrid.toc",
+        "Interface/AddOns/NotGrid/frames.lua",
+        "Interface/AddOns/NotGrid/localization.lua",
+        "Interface/AddOns/NotGrid/menus.lua",
+        "Interface/AddOns/NotGrid/options.lua"
       ],
       "tracked_files_at_reference": 22,
-      "pending": "团队实测待确认；2026-10-10 前的个人修改归属仍待补充。",
+      "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。 既有待确认事项：团队实测待确认；2026-10-10 前的个人修改归属仍待补充。",
       "history_group": "modified"
     },
     {
@@ -1658,13 +1667,22 @@
       "addon": "QuickHeal",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/QuickHeal.md",
-      "purpose": "同步内置 HealComm 预估清理修复，保证库加载顺序兼容。",
+      "purpose": "独立职责名单与TWA已撤除；普通治疗保留，职责限定宏无有效共享数据时不执行。",
       "sources": [],
       "maintenance_files": [
-        "Interface/AddOns/QuickHeal/libs/HealComm-1.0/HealComm-1.0.lua"
+        "Interface/AddOns/QuickHeal/libs/HealComm-1.0/HealComm-1.0.lua",
+        "Interface/AddOns/QuickHeal/QuickHeal.lua",
+        "Interface/AddOns/QuickHeal/QuickHeal.toc",
+        "Interface/AddOns/QuickHeal/QuickHeal.xml",
+        "Interface/AddOns/QuickHeal/QuickHealDruid.lua",
+        "Interface/AddOns/QuickHeal/QuickHealPaladin.lua",
+        "Interface/AddOns/QuickHeal/QuickHealPriest.lua",
+        "Interface/AddOns/QuickHeal/QuickHealShaman.lua",
+        "Interface/AddOns/QuickHeal/README.md",
+        "Interface/AddOns/QuickHeal/localization.en.lua"
       ],
       "tracked_files_at_reference": 25,
-      "pending": "真实团队通讯与完整选人流程待验收；此前个人修改归属待补充。",
+      "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。 既有待确认事项：真实团队通讯与完整选人流程待验收；此前个人修改归属待补充。",
       "history_group": "modified"
     },
     {
@@ -2548,7 +2566,7 @@
       "addon": "pfUI-addonskinner",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI-addonskinner.md",
-      "purpose": "维护定制插件的 pfUI 皮肤，恢复洗脑装置按钮悬停与按压反馈。",
+      "purpose": "QuickHeal旧职责窗口皮肤已清理，其他现用皮肤保持。",
       "sources": [
         "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-27.md",
         "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-28.md",
@@ -2571,10 +2589,11 @@
         "Interface/AddOns/pfUI-addonskinner/skins/Tmog.lua",
         "Interface/AddOns/pfUI-addonskinner/skins/TrainerSkills.lua",
         "Interface/AddOns/pfUI-addonskinner/pfUI-addonskinner.toc",
-        "Interface/AddOns/pfUI-addonskinner/skins/WushuangLoot.lua"
+        "Interface/AddOns/pfUI-addonskinner/skins/WushuangLoot.lua",
+        "Interface/AddOns/pfUI-addonskinner/skins/QuickHeal.lua"
       ],
       "tracked_files_at_reference": 84,
-      "pending": "",
+      "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。",
       "last_package_update": {
         "date": "2026-10-30",
         "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",

@@ -12,6 +12,8 @@
 
 ## 当前维护摘要
 
+2026-11-02：独立职责管理已撤除；保留治疗预估、血条和实时仇恨，后续职责只读共享接口。
+
 2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-NotGrid-20261102-01)。
 
 修复治疗祷言后预估条持续残留及死亡、满血后的旧显示。
@@ -19,6 +21,21 @@
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-NotGrid-20261102-02"></a>
+
+### 2026-11-02｜撤除独立职责分工并保留血条与仇恨
+
+- 记录编号：`NotGrid-20261102-02`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户确认撤除三个插件的独立手工职责分工，保留治疗和仇恨，并预留统一接口。
+- 修改内容：移除手工职责恢复/读写、分配菜单、两套窗口、进队弹窗/倒计时、图标/布局选项及ROLE私有消息；保留只读GetUnitRole接口。HealComm、施法、版本消息、TWT实时坦克标记与OT判断保留。 维护署名StoneChyi & Codex、原作者和许可保留。
+- 涉及文件：[NotGrid.toc](../../Interface/AddOns/NotGrid/NotGrid.toc)、[core.lua](../../Interface/AddOns/NotGrid/core.lua)、[frames.lua](../../Interface/AddOns/NotGrid/frames.lua)、[localization.lua](../../Interface/AddOns/NotGrid/localization.lua)、[menus.lua](../../Interface/AddOns/NotGrid/menus.lua)、[options.lua](../../Interface/AddOns/NotGrid/options.lua)。
+- 检查结果：14项共享/消费者联合检查、QuickHeal实际Lua5.0完整主文件场景、GoubayuHeal两组源函数场景、106组HealComm/NotGrid回归通过；本轮17个Lua文件实际Lua5.0语法、2个XML解析及编码/署名检查通过。详见[联合检查记录](../Research/独立职责撤除与统一接口-20261102.md)。
+- 未确认事项：尚未在游戏验收真实界面、按键/施法及团队通信；没有部署真实职责提供者，默认职责未知，普通治疗不因此停用。旧账号配置不重置，旧名单不再消费。
 
 <a id="change-NotGrid-20261102-01"></a>
 

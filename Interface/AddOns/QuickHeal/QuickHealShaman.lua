@@ -659,7 +659,7 @@ function QuickHeal_Command_Shaman(msg)
     end
 
     if cmd == "tanklist" or cmd == "tl" then
-        QH_ShowHideMTListUI();
+        QH_NoticeRoleListRemoved();
         return;
     end
 
@@ -699,7 +699,6 @@ function QuickHeal_Command_Shaman(msg)
     writeLine("/qh cfg - 打开配置面板.");
     writeLine("/qh toggle - 在迅捷治疗和一般治疗中开关切换 (健康阈值 0% 或 100%).");
     writeLine("/qh downrank | dr - 打开 QuickHeal 的低级法术治疗等级滑块.");
-    writeLine("/qh tanklist | tl - 显示坦克列表");
     writeLine("/qh [mask] [type] [mod] - 用最适合的治疗法术来治疗最需要的小队/团队队员.");
     writeLine(" [mask] 限制治疗目标:");
     writeLine("  [player] 只治疗玩家");

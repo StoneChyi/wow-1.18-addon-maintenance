@@ -227,21 +227,7 @@ end
 -- ============================================================
 
 local function IsTankUnit(unit)
-    if GoubayuHeal.Tank and GoubayuHeal.Tank["Name"] then
-        local tn = GoubayuHeal.Tank["Name"]
-        if UnitName(unit) == tn or (GoubayuHeal.UnitIsUnit and UnitIsUnit(unit, GoubayuHeal.Tank["Unit"])) then
-            return true
-        end
-    end
-    local roles = GoubayuHeal.Config and GoubayuHeal.Config["raid_roles"]
-    local name = UnitName(unit)
-    if roles and name then
-        local r = roles[name]
-        if r == "MT" or r == "8T" then
-            return true
-        end
-    end
-    return false
+    return GoubayuHeal.IsProtectedTank(unit)
 end
 
 -- 返回按优先级排序的候选列表：预估伤害大 > 坦克 > dueTime 早 > 治疗优先级 > 血量低

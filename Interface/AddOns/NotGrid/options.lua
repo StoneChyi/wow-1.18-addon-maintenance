@@ -133,11 +133,6 @@ local DefaultOptions = {
     ["draggable"] = true,                       -- 可拖动
     ["showmenuhint"] = true,                    -- 显示滚动提示
     ["requireSight"] = false,                   -- 需要视线检测
-    ["showdungeonrole"] = false,                -- 显示职责图标
-    ["manualroles"] = {},                       -- 手动设置的职责（按姓名保存）
-    ["dungeonrolesize"] = 14,                   -- 职责图标大小
-    ["dungeonroleoffx"] = -2,                   -- 职责图标X偏移
-    ["dungeonroleoffy"] = -2,                   -- 职责图标Y偏移
 }
 
 ------------------------------
@@ -175,28 +170,6 @@ function NotGrid:SetDefaultOptions()
         NotGridOptions.unithealthorientation = DefaultOptions.unithealthorientation
     end
     NotGridOptions.version = DefaultOptions.version -- 更新版本号
-
-    -- 加载并过滤手动设置的职责（只保留当前队伍中的成员）
-    if self.o.manualroles then
-        local stillInTeam = {}
-        local currNames = {}
-        for i=1,GetNumRaidMembers() do
-            local n = GetRaidRosterInfo(i)
-            if n then currNames[n]=true end
-        end
-        for i=1,GetNumPartyMembers() do
-            currNames[UnitName("party"..i)]=true
-        end
-        currNames[UnitName("player")]=true
-
-        for name,role in pairs(self.o.manualroles) do
-            if currNames[name] then
-                stillInTeam[name]=role
-            end
-        end
-        self.o.manualroles = stillInTeam
-        self.ManualRoles    = stillInTeam
-    end
 end
 
 --------------------

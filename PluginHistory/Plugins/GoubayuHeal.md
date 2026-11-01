@@ -12,6 +12,8 @@
 
 ## 当前维护摘要
 
+2026-11-02：独立MT分工与角色持久化已撤除；坦克策略接共享接口，临时治疗对象与职责分离。
+
 2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-GoubayuHeal-20261102-01)。
 
 2026-10-30 只合入驱散姓名职业色及扫描时职业持久化；个人 UI 编译修复、治疗预测和其余内容保持原字节。 [本轮记录](#change-GoubayuHeal-20261030-02)。
@@ -26,6 +28,21 @@
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-GoubayuHeal-20261102-02"></a>
+
+### 2026-11-02｜撤除团队职责分配，分离临时治疗对象
+
+- 记录编号：`GoubayuHeal-20261102-02`
+- 记录类型：修改
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户确认撤除三个插件的独立手工职责分工，保留治疗和仇恨，并预留统一接口。
+- 修改内容：删除MT/2T–8T菜单、逐人职责按钮、旧角色表消费/写入和方案保存恢复，IsMT不再读CTRA/oRA。坦克加权、预测与救急统一查询；/tank只锁临时治疗对象，tankheal缺有效目标停止，死亡/离线/非友方不作为目标。保留法术方案、治疗权重、防恐和预读；姓名区扩展，保留模板字体后备。 维护署名StoneChyi & Codex、原作者和许可保留。
+- 涉及文件：[GoubayuHeal.lua](../../Interface/AddOns/GoubayuHeal/GoubayuHeal.lua)、[GoubayuHeal.toc](../../Interface/AddOns/GoubayuHeal/GoubayuHeal.toc)、[GoubayuHeal_Locale.lua](../../Interface/AddOns/GoubayuHeal/GoubayuHeal_Locale.lua)、[GoubayuHeal_Predict.lua](../../Interface/AddOns/GoubayuHeal/GoubayuHeal_Predict.lua)、[GoubayuHeal_UI.lua](../../Interface/AddOns/GoubayuHeal/GoubayuHeal_UI.lua)。
+- 检查结果：14项共享/消费者联合检查、QuickHeal实际Lua5.0完整主文件场景、GoubayuHeal两组源函数场景、106组HealComm/NotGrid回归通过；本轮17个Lua文件实际Lua5.0语法、2个XML解析及编码/署名检查通过。详见[联合检查记录](../Research/独立职责撤除与统一接口-20261102.md)。
+- 未确认事项：尚未在游戏验收真实界面、按键/施法及团队通信；没有部署真实职责提供者，默认职责未知，普通治疗不因此停用。旧账号配置不重置，旧名单不再消费。
 
 <a id="change-GoubayuHeal-20261102-01"></a>
 

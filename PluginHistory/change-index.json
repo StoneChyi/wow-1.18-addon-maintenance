@@ -13,19 +13,28 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 337,
+  "dated_records": 342,
   "addons": [
     {
       "addon": "!Libs",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/!Libs.md",
-      "purpose": "补记共享词库差异，并修复 HealComm 群体治疗预估清理。",
+      "purpose": "共享职责接口已预留，真实提供者尚未部署；缺数据的职责限定操作停止，其他治疗照常。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "补记个人版维护署名，保留原作者与许可",
+      "latest_record_title": "新增被动统一职责查询桥",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 6,
+      "record_count": 7,
       "records": [
+        {
+          "id": "!Libs-20261102-02",
+          "date": "2026-11-02",
+          "title": "新增被动统一职责查询桥",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-!Libs-20261102-02"
+        },
         {
           "id": "!Libs-20261102-01",
           "date": "2026-11-02",
@@ -1775,13 +1784,22 @@
       "addon": "GoubayuHeal",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/GoubayuHeal.md",
-      "purpose": "更新瞬发人数限制、动作占用、迅捷治愈换目标及牧师驱病顺序。",
+      "purpose": "独立MT分工与角色持久化已撤除；坦克策略接共享接口，临时治疗对象与职责分离。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "补记个人版维护署名，保留原作者与许可",
+      "latest_record_title": "撤除团队职责分配，分离临时治疗对象",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 8,
+      "record_count": 9,
       "records": [
+        {
+          "id": "GoubayuHeal-20261102-02",
+          "date": "2026-11-02",
+          "title": "撤除团队职责分配，分离临时治疗对象",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-GoubayuHeal-20261102-02"
+        },
         {
           "id": "GoubayuHeal-20261102-01",
           "date": "2026-11-02",
@@ -2092,13 +2110,22 @@
       "addon": "NotGrid",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/NotGrid.md",
-      "purpose": "修复治疗祷言后预估条持续残留及死亡、满血后的旧显示。",
+      "purpose": "独立职责管理已撤除；保留治疗预估、血条和实时仇恨，后续职责只读共享接口。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "补记个人版维护署名，保留原作者与许可",
+      "latest_record_title": "撤除独立职责分工并保留血条与仇恨",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "record_count": 3,
       "records": [
+        {
+          "id": "NotGrid-20261102-02",
+          "date": "2026-11-02",
+          "title": "撤除独立职责分工并保留血条与仇恨",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-NotGrid-20261102-02"
+        },
         {
           "id": "NotGrid-20261102-01",
           "date": "2026-11-02",
@@ -2325,13 +2352,22 @@
       "addon": "QuickHeal",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/QuickHeal.md",
-      "purpose": "同步内置 HealComm 预估清理修复，保证库加载顺序兼容。",
+      "purpose": "独立职责名单与TWA已撤除；普通治疗保留，职责限定宏无有效共享数据时不执行。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "补记个人版维护署名，保留原作者与许可",
+      "latest_record_title": "撤除独立职责名单与TWA，保护旧宏范围",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 2,
+      "record_count": 3,
       "records": [
+        {
+          "id": "QuickHeal-20261102-02",
+          "date": "2026-11-02",
+          "title": "撤除独立职责名单与TWA，保护旧宏范围",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-QuickHeal-20261102-02"
+        },
         {
           "id": "QuickHeal-20261102-01",
           "date": "2026-11-02",
@@ -4161,13 +4197,22 @@
       "addon": "pfUI-addonskinner",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI-addonskinner.md",
-      "purpose": "维护定制插件的 pfUI 皮肤，恢复洗脑装置按钮悬停与按压反馈。",
+      "purpose": "QuickHeal旧职责窗口皮肤已清理，其他现用皮肤保持。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "补记个人版维护署名，保留原作者与许可",
+      "latest_record_title": "清理QuickHeal退役职责窗口的皮肤引用",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 7,
+      "record_count": 8,
       "records": [
+        {
+          "id": "pfUI-addonskinner-20261102-02",
+          "date": "2026-11-02",
+          "title": "清理QuickHeal退役职责窗口的皮肤引用",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-pfUI-addonskinner-20261102-02"
+        },
         {
           "id": "pfUI-addonskinner-20261102-01",
           "date": "2026-11-02",

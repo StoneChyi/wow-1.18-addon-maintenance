@@ -61,10 +61,6 @@ local DQHV = { -- Default values
     FilterRaidGroup8 = false,
     DisplayHealingBar = true,
     QuickClickEnabled = true,
-    MTList = { },
-    MeleeDPSList = { },
-    HealerList = { },
-    RangedDPSList = { },
     SkipList = { },
     Swiftmend = false,
     Swiftness = false,
@@ -87,9 +83,6 @@ local CastSpellID
 local QuickHealBusyTimeout = 0
 
 
-local me = UnitName('player')
-local TWA_Roster = { };
-local QH_RequestedTWARoster = false;
 
 --[ Monitor variables ]--
 local MassiveOverhealInProgress = false;
@@ -143,626 +136,36 @@ function TitanPanelQuickHealButton_GetTooltipText()
     return "Click to toggle configuration panel";
 end
 
--- TWA Sync
---[ TWA Sync BEGIN ]--
-
-function TWA_RequestTWARoster()
-    ChatThrottleLib:SendAddonMessage("ALERT", "QH", "RequestRoster", "RAID")
-end
-
-function TWA_handleSync(pre, t, ch, sender)
-    --jgpprint("pre:" .. pre .. " payload:" .. t .. " ch:" .. ch .. " sender:" .. sender)
-
-    QHV.MTList = { };
-
-    if string.find(t, 'Tanks=', 1, true) then
-        local roster = string.split(t,';')
-
-        -- separate tanks header
-        local tanksdemux = string.split(roster[1], '=')
-
-        -- grab tank names and feed into tanks list
-        local tanks = string.split(tanksdemux[2], ',')
-
-        for _, unit in next, tanks do
-            --jgpprint(data)
-
-            table.insert(QHV.MTList, unit);
-
-            MTListFrame.UpdateYourself = true;
-        end
-        QH_MTListSyncTrigger()
-        --jgpprint(roster[1]);
-        --jgpprint(roster[2]);
+-- Role-list retirement and unified read-only consumers: StoneChyi & Codex.
+local roleListNoticeShown = false
+function QH_NoticeRoleListRemoved()
+    if roleListNoticeShown then return end
+    roleListNoticeShown = true
+    if DEFAULT_CHAT_FRAME then
+        DEFAULT_CHAT_FRAME:AddMessage("QuickHeal：独立职责名单已移除，请使用统一职责服务。")
     end
 end
-
-function QH_RequestTWARoster()
-    QH_RequestedTWARoster = true
-    TWA_RequestTWARoster();
+local function IsRoleRequest(restrict)
+    return restrict == "mt" or restrict == "nonmt"
 end
-
---[ TWA Sync END ]--
-
--- MTList
---[ MTList BEGIN ]--
-
-function QH_ShowHideMTListUI()
-    --{{{
-    if (MTListFrame:IsVisible()) then
-        MTListFrame:Hide();
-    else
-        MTListFrame:Show();
-    end
-end --}}}
-
-function QH_ClearMTList()
-    --{{{
-    QHV.MTList = {};
-
-    MTListFrame.UpdateYourself = true;
-    QH_MTListSyncTrigger()
-end --}}}
-
-function QH_AddTargetToMTList()
-    --{{{
-    --Dcr_debug( "Adding the target to the priority list");
-    QH_AddUnitToMTList("target");
-end --}}}
-
-function QH_AddUnitToMTList(unit)
-    --{{{
-    if (UnitExists(unit)) then
-        if (UnitIsPlayer(unit)) then
-            local name = (UnitName(unit));
-            for _, pname in QHV.MTList do
-                if (name == pname) then
-                    return ;
-                end
-            end
-            table.insert(QHV.MTList, name);
-        end
-        MTListFrame.UpdateYourself = true;
-        QH_MTListSyncTrigger()
-    end
-end --}}}
-
-function QH_MTListEntryTemplate_OnClick()
-    --{{{
-    local id = this:GetID();
-    if (id) then
-        if (this.Priority) then
-            QH_RemoveIDFromMTList(id);
-        else
-            QH_RemoveIDFromSkipList(id);
-        end
-    end
-    this.UpdateYourself = true;
-
-end --}}}
-
-function QH_MTListEntryTemplate_OnUpdate()
-    --{{{
-    if (this.UpdateYourself) then
-        this.UpdateYourself = false;
-        local baseName = this:GetName();
-        local NameText = getglobal(baseName .. "Name");
-
-        local id = this:GetID();
-        if (id) then
-            local name
-            if (this.Priority) then
-                name = QHV.MTList[id];
-            else
-                name = QHV.SkipList[id];
-            end
-            if (name) then
-                NameText:SetText(id .. " - " .. name);
-                --else
-                --    NameText:SetText("Error - ID Invalid!");
-            end
-        else
-            NameText:SetText("Error - No ID!");
-        end
-    end
-end --}}}
-
-function QH_RemoveIDFromMTList(id)
-    --{{{
-    table.remove(QHV.MTList, id);
-    MTListFrame.UpdateYourself = true;
-    QH_MTListSyncTrigger();
-end --}}}
-
-function QH_MTListFrame_OnUpdate()
-    --{{{
-    if (this.UpdateYourself) then
-        this.UpdateYourself = false;
-        --Dcr_Groups_datas_are_invalid = true;
-        local baseName = this:GetName();
-        local up = getglobal(baseName .. "Up");
-        local down = getglobal(baseName .. "Down");
-
-        local size = table.getn(QHV.MTList);
-
-        if (size < 11) then
-            this.Offset = 0;
-            up:Hide();
-            down:Hide();
-        else
-            if (this.Offset <= 0) then
-                this.Offset = 0;
-                up:Hide();
-                down:Show();
-            elseif (this.Offset >= (size - 10)) then
-                this.Offset = (size - 10);
-                up:Show();
-                down:Hide();
-            else
-                up:Show();
-                down:Show();
-            end
-        end
-
-        local i;
-        for i = 1, 10 do
-            local id = "" .. i;
-            if (i < 10) then
-                id = "0" .. i;
-            end
-            local btn = getglobal(baseName .. "Index" .. id);
-
-            btn:SetID(i + this.Offset);
-            btn.UpdateYourself = true;
-
-            if (i <= size) then
-                btn:Show();
-            else
-                btn:Hide();
-            end
-        end
-    end
-
-end --}}}
-
-function QH_MTListSyncTrigger()
-    ChatThrottleLib:SendAddonMessage("ALERT", "OhHiMark", "RosterUpdated", "RAID")
+local function RoleMatches(unit, restrict)
+    if not IsRoleRequest(restrict) then return true end
+    if not SC_TeamRoles then return false end
+    local tank = SC_TeamRoles:IsTank(unit)
+    return (restrict == "mt" and tank == true) or (restrict == "nonmt" and tank == false)
 end
-
---[ MTList END ]--
-
--- MeleeDPSList
---[ MeleeDPSList BEGIN ]--
-
-function QH_ShowHideMeleeDPSListUI()
-    --{{{
-    if (MeleeDPSListFrame:IsVisible()) then
-        MeleeDPSListFrame:Hide();
-    else
-        MeleeDPSListFrame:Show();
-    end
-end --}}}
-
-function QH_ClearMeleeDPSList()
-    --{{{
-    QHV.MeleeDPSList = {};
-
-    MeleeDPSListFrame.UpdateYourself = true;
-end --}}}
-
-function QH_AddTargetToMeleeDPSList()
-    --{{{
-    --Dcr_debug( "Adding the target to the priority list");
-    QH_AddUnitToMeleeDPSList("target");
-end --}}}
-
-function QH_AddUnitToMeleeDPSList(unit)
-    --{{{
-    if (UnitExists(unit)) then
-        if (UnitIsPlayer(unit)) then
-            local name = (UnitName(unit));
-            for _, pname in QHV.MeleeDPSList do
-                if (name == pname) then
-                    return ;
-                end
-            end
-            table.insert(QHV.MeleeDPSList, name);
-        end
-        MeleeDPSListFrame.UpdateYourself = true;
-    end
-end --}}}
-
-function QH_MeleeDPSListEntryTemplate_OnClick()
-    --{{{
-    local id = this:GetID();
-    if (id) then
-        if (this.Priority) then
-            QH_RemoveIDFromMeleeDPSList(id);
-        else
-            QH_RemoveIDFromSkipList(id);
-        end
-    end
-    this.UpdateYourself = true;
-
-end --}}}
-
-function QH_MeleeDPSListEntryTemplate_OnUpdate()
-    --{{{
-    if (this.UpdateYourself) then
-        this.UpdateYourself = false;
-        local baseName = this:GetName();
-        local NameText = getglobal(baseName .. "Name");
-
-        local id = this:GetID();
-        if (id) then
-            local name
-            if (this.Priority) then
-                name = QHV.MeleeDPSList[id];
-            else
-                name = QHV.SkipList[id];
-            end
-            if (name) then
-                NameText:SetText(id .. " - " .. name);
-                --else
-                --    NameText:SetText("Error - ID Invalid!");
-            end
-        else
-            NameText:SetText("Error - No ID!");
-        end
-    end
-end --}}}
-
-function QH_RemoveIDFromMeleeDPSList(id)
-    --{{{
-    table.remove(QHV.MeleeDPSList, id);
-    MeleeDPSListFrame.UpdateYourself = true;
-end --}}}
-
-function QH_MeleeDPSListFrame_OnUpdate()
-    --{{{
-    if (this.UpdateYourself) then
-        this.UpdateYourself = false;
-        --Dcr_Groups_datas_are_invalid = true;
-        local baseName = this:GetName();
-        local up = getglobal(baseName .. "Up");
-        local down = getglobal(baseName .. "Down");
-
-        local size = table.getn(QHV.MeleeDPSList);
-
-        if (size < 11) then
-            this.Offset = 0;
-            up:Hide();
-            down:Hide();
-        else
-            if (this.Offset <= 0) then
-                this.Offset = 0;
-                up:Hide();
-                down:Show();
-            elseif (this.Offset >= (size - 10)) then
-                this.Offset = (size - 10);
-                up:Show();
-                down:Hide();
-            else
-                up:Show();
-                down:Show();
-            end
-        end
-
-        local i;
-        for i = 1, 10 do
-            local id = "" .. i;
-            if (i < 10) then
-                id = "0" .. i;
-            end
-            local btn = getglobal(baseName .. "Index" .. id);
-
-            btn:SetID(i + this.Offset);
-            btn.UpdateYourself = true;
-
-            if (i <= size) then
-                btn:Show();
-            else
-                btn:Hide();
-            end
-        end
-    end
-
-end --}}}
-
---[ MeleeDPSList END ]--
-
--- RangedDPSList
---[ RangedDPSList BEGIN ]--
-
-function QH_ShowHideRangedDPSListUI()
-    --{{{
-    if (RangedDPSListFrame:IsVisible()) then
-        RangedDPSListFrame:Hide();
-    else
-        RangedDPSListFrame:Show();
-    end
-end --}}}
-
-function QH_ClearRangedDPSList()
-    --{{{
-    QHV.RangedDPSList = {};
-
-    RangedDPSListFrame.UpdateYourself = true;
-end --}}}
-
-function QH_AddTargetToRangedDPSList()
-    --{{{
-    --Dcr_debug( "Adding the target to the priority list");
-    QH_AddUnitToRangedDPSList("target");
-end --}}}
-
-function QH_AddUnitToRangedDPSList(unit)
-    --{{{
-    if (UnitExists(unit)) then
-        if (UnitIsPlayer(unit)) then
-            local name = (UnitName(unit));
-            for _, pname in QHV.RangedDPSList do
-                if (name == pname) then
-                    return ;
-                end
-            end
-            table.insert(QHV.RangedDPSList, name);
-        end
-        RangedDPSListFrame.UpdateYourself = true;
-    end
-end --}}}
-
-function QH_RangedDPSListEntryTemplate_OnClick()
-    --{{{
-    local id = this:GetID();
-    if (id) then
-        if (this.Priority) then
-            QH_RemoveIDFromRangedDPSList(id);
-        else
-            QH_RemoveIDFromSkipList(id);
-        end
-    end
-    this.UpdateYourself = true;
-
-end --}}}
-
-function QH_RangedDPSListEntryTemplate_OnUpdate()
-    --{{{
-    if (this.UpdateYourself) then
-        this.UpdateYourself = false;
-        local baseName = this:GetName();
-        local NameText = getglobal(baseName .. "Name");
-
-        local id = this:GetID();
-        if (id) then
-            local name
-            if (this.Priority) then
-                name = QHV.RangedDPSList[id];
-            else
-                name = QHV.SkipList[id];
-            end
-            if (name) then
-                NameText:SetText(id .. " - " .. name);
-                --else
-                --    NameText:SetText("Error - ID Invalid!");
-            end
-        else
-            NameText:SetText("Error - No ID!");
-        end
-    end
-end --}}}
-
-function QH_RemoveIDFromRangedDPSList(id)
-    --{{{
-    table.remove(QHV.RangedDPSList, id);
-    RangedDPSListFrame.UpdateYourself = true;
-end --}}}
-
-function QH_RangedDPSListFrame_OnUpdate()
-    --{{{
-    if (this.UpdateYourself) then
-        this.UpdateYourself = false;
-        --Dcr_Groups_datas_are_invalid = true;
-        local baseName = this:GetName();
-        local up = getglobal(baseName .. "Up");
-        local down = getglobal(baseName .. "Down");
-
-        local size = table.getn(QHV.RangedDPSList);
-
-        if (size < 11) then
-            this.Offset = 0;
-            up:Hide();
-            down:Hide();
-        else
-            if (this.Offset <= 0) then
-                this.Offset = 0;
-                up:Hide();
-                down:Show();
-            elseif (this.Offset >= (size - 10)) then
-                this.Offset = (size - 10);
-                up:Show();
-                down:Hide();
-            else
-                up:Show();
-                down:Show();
-            end
-        end
-
-        local i;
-        for i = 1, 10 do
-            local id = "" .. i;
-            if (i < 10) then
-                id = "0" .. i;
-            end
-            local btn = getglobal(baseName .. "Index" .. id);
-
-            btn:SetID(i + this.Offset);
-            btn.UpdateYourself = true;
-
-            if (i <= size) then
-                btn:Show();
-            else
-                btn:Hide();
-            end
-        end
-    end
-
-end --}}}
-
---[ RangedDPSList END ]--
-
--- HealerList
---[ HealerList BEGIN ]--
-
-function QH_ShowHideHealerListUI()
-    --{{{
-    if (HealerListFrame:IsVisible()) then
-        HealerListFrame:Hide();
-    else
-        HealerListFrame:Show();
-    end
-end --}}}
-
-function QH_ClearHealerList()
-    --{{{
-    QHV.HealerList = {};
-
-    HealerListFrame.UpdateYourself = true;
-end --}}}
-
-function QH_AddTargetToHealerList()
-    --{{{
-    --Dcr_debug( "Adding the target to the priority list");
-    QH_AddUnitToHealerList("target");
-end --}}}
-
-function QH_AddUnitToHealerList(unit)
-    --{{{
-    if (UnitExists(unit)) then
-        if (UnitIsPlayer(unit)) then
-            local name = (UnitName(unit));
-            for _, pname in QHV.HealerList do
-                if (name == pname) then
-                    return ;
-                end
-            end
-            table.insert(QHV.HealerList, name);
-        end
-        HealerListFrame.UpdateYourself = true;
-    end
-end --}}}
-
-function QH_HealerListEntryTemplate_OnClick()
-    --{{{
-    local id = this:GetID();
-    if (id) then
-        if (this.Priority) then
-            QH_RemoveIDFromHealerList(id);
-        else
-            QH_RemoveIDFromSkipList(id);
-        end
-    end
-    this.UpdateYourself = true;
-
-end --}}}
-
-function QH_HealerListEntryTemplate_OnUpdate()
-    --{{{
-    if (this.UpdateYourself) then
-        this.UpdateYourself = false;
-        local baseName = this:GetName();
-        local NameText = getglobal(baseName .. "Name");
-
-        local id = this:GetID();
-        if (id) then
-            local name
-            if (this.Priority) then
-                name = QHV.HealerList[id];
-            else
-                name = QHV.SkipList[id];
-            end
-            if (name) then
-                NameText:SetText(id .. " - " .. name);
-                --else
-                --    NameText:SetText("Error - ID Invalid!");
-            end
-        else
-            NameText:SetText("Error - No ID!");
-        end
-    end
-end --}}}
-
-function QH_RemoveIDFromHealerList(id)
-    --{{{
-    table.remove(QHV.HealerList, id);
-    HealerListFrame.UpdateYourself = true;
-end --}}}
-
-function QH_HealerListFrame_OnUpdate()
-    --{{{
-    if (this.UpdateYourself) then
-        this.UpdateYourself = false;
-        --Dcr_Groups_datas_are_invalid = true;
-        local baseName = this:GetName();
-        local up = getglobal(baseName .. "Up");
-        local down = getglobal(baseName .. "Down");
-
-        local size = table.getn(QHV.HealerList);
-
-        if (size < 11) then
-            this.Offset = 0;
-            up:Hide();
-            down:Hide();
-        else
-            if (this.Offset <= 0) then
-                this.Offset = 0;
-                up:Hide();
-                down:Show();
-            elseif (this.Offset >= (size - 10)) then
-                this.Offset = (size - 10);
-                up:Show();
-                down:Hide();
-            else
-                up:Show();
-                down:Show();
-            end
-        end
-
-        local i;
-        for i = 1, 10 do
-            local id = "" .. i;
-            if (i < 10) then
-                id = "0" .. i;
-            end
-            local btn = getglobal(baseName .. "Index" .. id);
-
-            btn:SetID(i + this.Offset);
-            btn.UpdateYourself = true;
-
-            if (i <= size) then
-                btn:Show();
-            else
-                btn:Hide();
-            end
-        end
-    end
-
-end --}}}
-
---[ HealerList END ]--
+local function RoleRequestAllowed(target)
+    local restrict = type(target) == "string" and string.lower(target) or target
+    if not IsRoleRequest(restrict) then return true end
+    if SC_TeamRoles and SC_TeamRoles:IsReady() then return true end
+    if SC_TeamRoles then SC_TeamRoles:WarnUnavailable("QuickHeal") end
+    return false
+end
 
 function QH_RemoveIDFromSkipList(id)
     --{{{
     --table.remove( QHV.SkipList,id);
     --DecursiveSkipListFrame.UpdateYourself = true;
-end --}}}
-
-function QH_DisplayTooltip(Message, RelativeTo)
-    --{{{
-    QH_Display_Tooltip:SetOwner(RelativeTo, "ANCHOR_TOPRIGHT");
-    QH_Display_Tooltip:ClearLines();
-    QH_Display_Tooltip:SetText(Message);
-    QH_Display_Tooltip:Show();
 end --}}}
 
 function QH_Debug(a)
@@ -1442,11 +845,6 @@ function QuickHeal_OnEvent()
         if arg1 == "QuickHeal" and arg2 == "versioncheck" then
             SendAddonMessage("QuickHeal", QuickHealData.version, RAID)
         end
-        if arg1 == "TWA" and arg4 ~= me and QH_RequestedTWARoster then
-        --if arg1 == "TWA" then
-            TWA_handleSync(arg1, arg2, arg3, arg4)
-            QH_RequestedTWARoster = false;
-        end
     else
         QuickHeal_debug((event or "Unknown Event"), (arg1 or "nil"))
     end
@@ -1828,27 +1226,6 @@ end
 
 --QH_Debug("healable: " .. i);
 
--- Returns true if the unit is a MainTank defined by CTRA or oRA
--- If number is given, will only return true if the unit is that specific main tank
-local function IsMainTank(unit, number)
-    local t, y;
-    for t, y in pairs(QHV.MTList)
-    do
-        if y == UnitName(unit) then
-            return true;
-        end
-    end
-    --[[
-    local i, v;
-    for i, v in pairs(CT_RA_MainTanks or (oRA_MainTank and oRA_MainTank.MainTankTable or nil) or {}) do
-        if v == UnitName(unit) and (i == number or number == nil) then
-            return true
-        end
-    end
-    return false;
-    ]]--
-end
-
 -- Returns true if the unit is blacklisted (because it could not be healed)
 -- Note that the parameter is the name of the unit, not 'party1', 'raid1' etc.
 local function IsBlacklisted(unitname)
@@ -2200,6 +1577,7 @@ end
 ---@param extParam string 未知？
 ---@return string|boolean|nil 返回被治疗单位("raid13"|"target"等)
 local function FindWhoToHeal(Restrict, extParam)
+    if not RoleRequestAllowed(Restrict) then return nil end
     local playerIds = {};
     local petIds = {};
     local i;
@@ -2208,13 +1586,13 @@ local function FindWhoToHeal(Restrict, extParam)
 
     -- Self Preservation
     local selfPercentage = (UnitHealth('player') + HealComm:getHeal('player')) / UnitHealthMax('player');
-    if (selfPercentage < QHV.RatioForceself) and (selfPercentage < QHV.RatioFull) then
+    if RoleMatches("player", Restrict) and (selfPercentage < QHV.RatioForceself) and (selfPercentage < QHV.RatioFull) then
         QuickHeal_debug("********** Self Preservation **********");
         return 'player';
     end
 
     -- Target Priority
-    if QHV.TargetPriority and QuickHeal_UnitHasHealthInfo('target') then
+    if RoleMatches('target', Restrict) and QHV.TargetPriority and QuickHeal_UnitHasHealthInfo('target') then
         if (UnitHealth('target') / UnitHealthMax('target')) < QHV.RatioFull then
             QuickHeal_debug("********** Target Priority **********");
             return 'target';
@@ -2224,8 +1602,6 @@ local function FindWhoToHeal(Restrict, extParam)
     -- Heal party/raid etc.
     local RestrictParty = false;
     local RestrictSubgroup = false;
-    local RestrictMT = false;
-    local RestrictNonMT = false;
     if Restrict == "subgroup" then
         QuickHeal_debug("********** Heal Subgroup **********");
         RestrictSubgroup = true;
@@ -2234,10 +1610,8 @@ local function FindWhoToHeal(Restrict, extParam)
         RestrictParty = true;
     elseif Restrict == "mt" then
         QuickHeal_debug("********** Heal MT **********");
-        RestrictMT = true;
     elseif Restrict == "nonmt" then
         QuickHeal_debug("********** Heal Non MT **********");
-        RestrictNonMT = true;
     else
         QuickHeal_debug("********** Heal **********");
     end
@@ -2246,33 +1620,37 @@ local function FindWhoToHeal(Restrict, extParam)
     if (InRaid() and not RestrictParty) then
         for i = 1, GetNumRaidMembers() do
             if UnitIsHealable("raid" .. i, true) then
-                local IsMT = IsMainTank("raid" .. i);
-                if not RestrictMT and not RestrictNonMT or RestrictMT and IsMT or RestrictNonMT and not IsMT then
+                if RoleMatches("raid" .. i, Restrict) then
                     playerIds["raid" .. i] = i;  -- every one that will be considered for heal
                     --QH_Debug("healable: " .. i);
                 end
             end
             if UnitIsHealable("raidpet" .. i, true) then
-                if not RestrictMT then
+                if not IsRoleRequest(Restrict) then
                     petIds["raidpet" .. i] = i;
                 end
             end
         end
     else
-        if UnitIsHealable('player', true) then
+        if RoleMatches('player', Restrict) and UnitIsHealable('player', true) then
             playerIds["player"] = 0
         end
-        if UnitIsHealable('pet', true) then
+        if not IsRoleRequest(Restrict) and UnitIsHealable('pet', true) then
             petIds["pet"] = 0
         end
         for i = 1, GetNumPartyMembers() do
-            if UnitIsHealable("party" .. i, true) then
+            if RoleMatches("party" .. i, Restrict) and UnitIsHealable("party" .. i, true) then
                 playerIds["party" .. i] = i;
             end
-            if UnitIsHealable("partypet" .. i, true) then
+            if not IsRoleRequest(Restrict) and UnitIsHealable("partypet" .. i, true) then
                 petIds["partypet" .. i] = i;
             end
         end
+    end
+
+    if IsRoleRequest(Restrict) and not next(playerIds) then
+        if SC_TeamRoles then SC_TeamRoles:WarnUnavailable("QuickHeal") end
+        return nil
     end
 
     local healingTarget = nil;
@@ -2409,7 +1787,7 @@ local function FindWhoToHeal(Restrict, extParam)
 
     -- Examine External Target
     if AllPlayersAreFull and (AllPetsAreFull or QHV.PetPriority == 0) then
-        if not QuickHeal_UnitHasHealthInfo('target') and UnitIsHealable('target', true) then
+        if RoleMatches('target', Restrict) and not QuickHeal_UnitHasHealthInfo('target') and UnitIsHealable('target', true) then
             QuickHeal_debug(string.format("%s (%s) : %d/%d", UnitFullName('target'), 'target', UnitHealth('target'), UnitHealthMax('target')));
             local Health;
             Health = UnitHealth('target') / UnitHealthMax('target');
@@ -2423,6 +1801,7 @@ local function FindWhoToHeal(Restrict, extParam)
 end
 
 local function FindWhoToHOT(Restrict, extParam, noHpCheck)
+    if not RoleRequestAllowed(Restrict) then return nil end
     local playerIds = {};
     local petIds = {};
     local i;
@@ -2431,7 +1810,7 @@ local function FindWhoToHOT(Restrict, extParam, noHpCheck)
 
     -- Self Preservation
     local selfPercentage = (UnitHealth('player') + HealComm:getHeal('player')) / UnitHealthMax('player');
-    if (selfPercentage < QHV.RatioForceself) and (selfPercentage < QHV.RatioFull) then
+    if RoleMatches("player", Restrict) and (selfPercentage < QHV.RatioForceself) and (selfPercentage < QHV.RatioFull) then
         QuickHeal_debug("********** Self Preservation **********");
         if PlayerClass == "priest" then
             if not UnitHasRenew('player') then
@@ -2448,7 +1827,7 @@ local function FindWhoToHOT(Restrict, extParam, noHpCheck)
 
     --[[
     -- Target Priority
-    if QHV.TargetPriority and QuickHeal_UnitHasHealthInfo('target') then
+    if RoleMatches('target', Restrict) and QHV.TargetPriority and QuickHeal_UnitHasHealthInfo('target') then
         if (UnitHealth('target') / UnitHealthMax('target')) < QHV.RatioFull then
             QuickHeal_debug("********** Target Priority **********");
             if PlayerClass == "priest" then
@@ -2469,8 +1848,6 @@ local function FindWhoToHOT(Restrict, extParam, noHpCheck)
     -- Heal party/raid etc.
     local RestrictParty = false;
     local RestrictSubgroup = false;
-    local RestrictMT = false;
-    local RestrictNonMT = false;
     if Restrict == "subgroup" then
         QuickHeal_debug("********** HoT Subgroup **********");
         RestrictSubgroup = true;
@@ -2479,10 +1856,8 @@ local function FindWhoToHOT(Restrict, extParam, noHpCheck)
         RestrictParty = true;
     elseif Restrict == "mt" then
         QuickHeal_debug("********** HoT MT **********");
-        RestrictMT = true;
     elseif Restrict == "nonmt" then
         QuickHeal_debug("********** HoT Non MT **********");
-        RestrictNonMT = true;
     else
         QuickHeal_debug("********** HoT **********");
     end
@@ -2491,33 +1866,37 @@ local function FindWhoToHOT(Restrict, extParam, noHpCheck)
     if (InRaid() and not RestrictParty) then
         for i = 1, GetNumRaidMembers() do
             if UnitIsHealable("raid" .. i, true) then
-                local IsMT = IsMainTank("raid" .. i);
-                if not RestrictMT and not RestrictNonMT or RestrictMT and IsMT or RestrictNonMT and not IsMT then
+                if RoleMatches("raid" .. i, Restrict) then
                     playerIds["raid" .. i] = i;  -- every one that will be considered for heal
                     --QH_Debug("healable: " .. i);
                 end
             end
             if UnitIsHealable("raidpet" .. i, true) then
-                if not RestrictMT then
+                if not IsRoleRequest(Restrict) then
                     petIds["raidpet" .. i] = i;
                 end
             end
         end
     else
-        if UnitIsHealable('player', true) then
+        if RoleMatches('player', Restrict) and UnitIsHealable('player', true) then
             playerIds["player"] = 0
         end
-        if UnitIsHealable('pet', true) then
+        if not IsRoleRequest(Restrict) and UnitIsHealable('pet', true) then
             petIds["pet"] = 0
         end
         for i = 1, GetNumPartyMembers() do
-            if UnitIsHealable("party" .. i, true) then
+            if RoleMatches("party" .. i, Restrict) and UnitIsHealable("party" .. i, true) then
                 playerIds["party" .. i] = i;
             end
-            if UnitIsHealable("partypet" .. i, true) then
+            if not IsRoleRequest(Restrict) and UnitIsHealable("partypet" .. i, true) then
                 petIds["partypet" .. i] = i;
             end
         end
+    end
+
+    if IsRoleRequest(Restrict) and not next(playerIds) then
+        if SC_TeamRoles then SC_TeamRoles:WarnUnavailable("QuickHeal") end
+        return nil
     end
 
     local healingTarget = nil;
@@ -2694,7 +2073,7 @@ local function FindWhoToHOT(Restrict, extParam, noHpCheck)
 
     -- Examine External Target
     if AllPlayersAreFull and (AllPetsAreFull or QHV.PetPriority == 0) then
-        if not QuickHeal_UnitHasHealthInfo('target') and UnitIsHealable('target', true) then
+        if RoleMatches('target', Restrict) and not QuickHeal_UnitHasHealthInfo('target') and UnitIsHealable('target', true) then
             QuickHeal_debug(string.format("%s (%s) : %d/%d", UnitFullName('target'), 'target', UnitHealth('target'), UnitHealthMax('target')));
             local Health;
             Health = UnitHealth('target') / UnitHealthMax('target');
@@ -3038,6 +2417,7 @@ end
 -- Heals the specified Target with the specified Spell
 -- If parameters are missing they will be determined automatically
 function QuickChainHeal(Target, SpellID, extParam, forceMaxRank)
+    if not RoleRequestAllowed(Target) then return end
 
     -- Only one instance of QuickHeal allowed at a time
     if QuickHeal_Busy() then
@@ -3144,24 +2524,7 @@ function QuickChainHeal(Target, SpellID, extParam, forceMaxRank)
                 -- Means that FindWhoToHeal couldn't cast the CheckSpell (reason will be reported by UI)
             else
                 if Restrict == "mt" then
-                    local tanks = false;
-
-                    --local i, v;
-                    --for i, v in pairs(CT_RA_MainTanks or (oRA_MainTank and oRA_MainTank.MainTankTable or nil) or {}) do
-                    --    tanks = true;
-                    --    break ;
-                    --end
-                    local t, y;
-                    for t, y in pairs(QHV.MTList) do
-                        tanks = true;
-                        break ;
-                    end
-
-                    if not tanks then
-                        Message("没有任何玩家被队长指派为主力坦克", "Error", 2);
-                    else
-                        Message("没有主力坦克治疗", "Info", 2);
-                    end
+                    Message("没有已确认且需要治疗的坦克", "Info", 2);
                 elseif InParty() or InRaid() then
                     Message("无人需要治疗", "Info", 2);
                 else
@@ -3172,6 +2535,14 @@ function QuickChainHeal(Target, SpellID, extParam, forceMaxRank)
             QuickHealBusy = false;
             return ;
         end
+    end
+
+    -- Recheck shared roles immediately before spell selection.
+    if not RoleMatches(Target, Restrict) then
+        if SC_TeamRoles then SC_TeamRoles:WarnUnavailable("QuickHeal") end
+        SetCVar("autoSelfCast", AutoSelfCast);
+        QuickHealBusy = false;
+        return;
     end
 
     -- Target acquired
@@ -3232,6 +2603,7 @@ end
 -- Heals the specified Target with the specified Spell
 -- If parameters are missing they will be determined automatically
 function QuickHeal(Target, SpellID, extParam, forceMaxHPS)
+    if not RoleRequestAllowed(Target) then return end
 
     -- Only one instance of QuickHeal allowed at a time
     if QuickHeal_Busy() then
@@ -3338,24 +2710,7 @@ function QuickHeal(Target, SpellID, extParam, forceMaxHPS)
                 -- Means that FindWhoToHeal couldn't cast the CheckSpell (reason will be reported by UI)
             else
                 if Restrict == "mt" then
-                    local tanks = false;
-
-                    --local i, v;
-                    --for i, v in pairs(CT_RA_MainTanks or (oRA_MainTank and oRA_MainTank.MainTankTable or nil) or {}) do
-                    --    tanks = true;
-                    --    break ;
-                    --end
-                    local t, y;
-                    for t, y in pairs(QHV.MTList) do
-                        tanks = true;
-                        break ;
-                    end
-
-                    if not tanks then
-                        Message("没有任何玩家被队长指派为主力坦克", "Error", 2);
-                    else
-                        Message("没有主力坦克治疗", "Info", 2);
-                    end
+                    Message("没有已确认且需要治疗的坦克", "Info", 2);
                 elseif InParty() or InRaid() then
                     Message("无人需要治疗", "Info", 2);
                 else
@@ -3366,6 +2721,14 @@ function QuickHeal(Target, SpellID, extParam, forceMaxHPS)
             QuickHealBusy = false;
             return ;
         end
+    end
+
+    -- Recheck shared roles immediately before spell selection.
+    if not RoleMatches(Target, Restrict) then
+        if SC_TeamRoles then SC_TeamRoles:WarnUnavailable("QuickHeal") end
+        SetCVar("autoSelfCast", AutoSelfCast);
+        QuickHealBusy = false;
+        return;
     end
 
     -- Target acquired
@@ -3426,6 +2789,7 @@ end
 -- HOTs the specified Target with the specified Spell
 -- If parameters are missing they will be determined automatically
 function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
+    if not RoleRequestAllowed(Target) then return end
 
     -- Only one instance of QuickHeal allowed at a time
     if QuickHeal_Busy() then
@@ -3535,24 +2899,7 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
                 -- Means that FindWhoToHeal couldn't cast the CheckSpell (reason will be reported by UI)
             else
                 if Restrict == "mt" then
-                    local tanks = false;
-
-                    --local i, v;
-                    --for i, v in pairs(CT_RA_MainTanks or (oRA_MainTank and oRA_MainTank.MainTankTable or nil) or {}) do
-                    --    tanks = true;
-                    --    break ;
-                    --end
-                    local t, y;
-                    for t, y in pairs(QHV.MTList) do
-                        tanks = true;
-                        break ;
-                    end
-
-                    if not tanks then
-                        Message("没有任何玩家被队长指派为主力坦克", "Error", 2);
-                    else
-                        Message("没有主力坦克治疗", "Info", 2);
-                    end
+                    Message("没有已确认且需要治疗的坦克", "Info", 2);
                 elseif InParty() or InRaid() then
                     Message("无人需要治疗", "Info", 2);
                 else
@@ -3565,6 +2912,14 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
 	    --if WasAttack then print(PlayerFrame.inCombat) end
             return ;
         end
+    end
+
+    -- Recheck shared roles immediately before spell selection.
+    if not RoleMatches(Target, Restrict) then
+        if SC_TeamRoles then SC_TeamRoles:WarnUnavailable("QuickHeal") end
+        SetCVar("autoSelfCast", AutoSelfCast);
+        QuickHealBusy = false;
+        return;
     end
 
     -- Target acquired
@@ -3639,6 +2994,8 @@ function ToggleDownrankWindow()
 end
 
 function QH_FindWhoToHOT(Restrict)
+    if not RoleRequestAllowed(Restrict) then return nil end
+    if type(Restrict) == "string" then Restrict = string.lower(Restrict) end
 	if QuickHeal_Busy() then
 		if HealingTarget and (MassiveOverhealInProgress or SmartStopCasting()) and not OverHealSpell(CastSpellID) then
 			QuickHeal_debug("大量过量治疗中止.");
