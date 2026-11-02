@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 354,
+  "dated_records": 355,
   "addons": [
     {
       "addon": "!Libs",
@@ -2534,10 +2534,19 @@
       "purpose": "集中进入定制插件并完善 Roll 和常用工具。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "驱散入口适配净界驱散2.0",
+      "latest_record_title": "聊天栏新增“职”，直达pfUI统一职责管理",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 4,
+      "record_count": 5,
       "records": [
+        {
+          "id": "S_ChatBar-20261102-03",
+          "date": "2026-11-02",
+          "title": "聊天栏新增“职”，直达pfUI统一职责管理",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-S_ChatBar-20261102-03"
+        },
         {
           "id": "S_ChatBar-20261102-02",
           "date": "2026-11-02",

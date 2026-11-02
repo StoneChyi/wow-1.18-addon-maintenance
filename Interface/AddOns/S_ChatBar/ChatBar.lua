@@ -36,6 +36,7 @@ S_ChatBarDB = S_ChatBarDB or {
         SilverDragonRadar = false,
         CatPotion = false,
         hyx = true,
+        TeamRoles = true,
 		ReadyCheck = true,
         Countdown = true,
         Emote = true
@@ -52,7 +53,7 @@ local BUTTON_ORDER = {
     "RaidProgress", 
     "XyTracker", "AtlasLoot", 
     "SuperMacro", "ActionBarProfiles", "Outfitter", "TrinketMenu","RaidCheck","SpiritSenseRec",
-    "BetterCharacterStats","AutoMarker","SimpleRaidTargetIcons","Automatonex","Tracking","SilverDragonRadar","CatPotion","hyx","ReadyCheck","Countdown","Emote"  
+    "BetterCharacterStats","AutoMarker","SimpleRaidTargetIcons","Automatonex","Tracking","SilverDragonRadar","CatPotion","hyx","TeamRoles","ReadyCheck","Countdown","Emote"  
 }
 
 
@@ -357,6 +358,10 @@ chatbar:SetMovable(true)    -- 启用移动
 chatbar:SetUserPlaced(true) -- 允许用户放置
 
 
+local function TeamRolesAvailable()
+    return pfUI and type(pfUI.OpenTeamRoles) == "function"
+end
+
 -- 在PLAYER_LOGIN事件中修改自动加入逻辑
 chatbar:SetScript("OnEvent", function()
 print("PLAYER_LOGIN 事件开始")
@@ -367,12 +372,17 @@ print("PLAYER_LOGIN 事件开始")
     if S_ChatBarDB.buttons.hyx == nil then
         S_ChatBarDB.buttons.hyx = IsAddOnLoaded("hyx") and true or false
     end
+    if S_ChatBarDB.buttons.TeamRoles == nil then
+        S_ChatBarDB.buttons.TeamRoles = true
+    end
     -- 如果默认是显示状态,那么根据对应插件加载状态设置
     for k, btnName in ipairs(BUTTON_ORDER) do
     if k >= 15 and btnName ~= "Tracking" and btnName ~= "Emote"
        and btnName ~= "ReadyCheck" and btnName ~= "Countdown"
        and S_ChatBarDB.buttons[btnName] then
-        if btnName == "AtlasLoot" then
+        if btnName == "TeamRoles" then
+            S_ChatBarDB.buttons[btnName] = TeamRolesAvailable() and true or false
+        elseif btnName == "AtlasLoot" then
             S_ChatBarDB.buttons[btnName] = IsAddOnLoaded("AtlasLoot") or IsAddOnLoaded("InstanceJournal")
         else
             S_ChatBarDB.buttons[btnName] = IsAddOnLoaded(btnName)
@@ -408,7 +418,7 @@ local function CreateChatButton(name, text, tooltip, color, onClick)
     button.t:Hide()            -- 默认文字模式, 色块先隐藏
     button.color = color       -- 记录频道颜色, 供色块模式使用
 
-    button.text = button:CreateFontString(nil, "OVERLAY")
+    button.text = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     button.text:SetFont(STANDARD_TEXT_FONT, 15, "OUTLINE")
     button.text:SetJustifyH("CENTER")
     button.text:SetWidth(25)
@@ -1313,6 +1323,16 @@ local function ChannelHyx_OnClick()
     end
 end
 CreateChatButton("hyx", "驱", "净界驱散 PureDispel：左键显示/隐藏驱散窗口，右键打开设置", { 80 / 255, 200 / 255, 255 / 255 }, ChannelHyx_OnClick)
+local function ChannelTeamRoles_OnClick()
+    if arg1 ~= "LeftButton" then return end
+    GameTooltip:Hide()
+    if TeamRolesAvailable() then
+        pfUI:OpenTeamRoles()
+    else
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000团队职责管理未启用，请确认 pfUI 的团队职责模块已加载|r")
+    end
+end
+CreateChatButton("TeamRoles", "职", "团队职责：左键打开统一管理界面", { 120 / 255, 200 / 255, 180 / 255 }, ChannelTeamRoles_OnClick)
 CreateChatButton("ReadyCheck", "位", "就位确认", { 100 / 255, 230 / 255, 100 / 255 }, ChannelReadyCheck_OnClick)
 CreateChatButton("Countdown", "倒", "倒计时（左键开始/取消，右键开始Roll点）", { 255 / 255, 200 / 255, 80 / 255 }, ChannelCountdown_OnClick)
 CreateChatButton("Tracking", "追", "追踪设置", { 60 / 255, 160 / 255, 250 / 255 }, TrackingButton_OnClick)
@@ -1491,6 +1511,8 @@ UIDropDownMenu_Initialize(S_ChatBar_Menu, function()
                     if IsAddOnLoaded("AtlasLoot") or IsAddOnLoaded("InstanceJournal") then
                         shouldShow = true
                     end
+                elseif btnName == "TeamRoles" then
+                    shouldShow = TeamRolesAvailable()
                 elseif IsAddOnLoaded(btnName) then
                     shouldShow = true
                 end

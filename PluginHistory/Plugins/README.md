@@ -108,7 +108,7 @@
 | [QianKunBag](QianKunBag.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](QianKunBag.md#change-QianKunBag-20261102-01) |
 | [QuickHeal](QuickHeal.md) | [2026-11-02 · 接通自动统一职责服务](QuickHeal.md#change-QuickHeal-20261102-03) |
 | [RaidCheck](RaidCheck.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](RaidCheck.md#change-RaidCheck-20261102-01) |
-| [S_ChatBar](S_ChatBar.md) | [2026-11-02 · 驱散入口适配净界驱散2.0](S_ChatBar.md#change-S_ChatBar-20261102-02) |
+| [S_ChatBar](S_ChatBar.md) | [2026-11-02 · 聊天栏新增“职”，直达pfUI统一职责管理](S_ChatBar.md#change-S_ChatBar-20261102-03) |
 | [S_ItemTip](S_ItemTip.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](S_ItemTip.md#change-S_ItemTip-20261102-01) |
 | [ShaguDPS](ShaguDPS.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](ShaguDPS.md#change-ShaguDPS-20261102-01) |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261102-01) |
