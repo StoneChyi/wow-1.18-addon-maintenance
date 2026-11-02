@@ -13,7 +13,7 @@
     "modified": 64
   },
   "addon_pages": 107,
-  "dated_records": 355,
+  "dated_records": 356,
   "addons": [
     {
       "addon": "!Libs",
@@ -3738,13 +3738,22 @@
       "addon": "hyx",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/hyx.md",
-      "purpose": "净界驱散2.3.0与三个插件共用职责缓存，优先忽略规则只影响驱散。",
+      "purpose": "净界驱散 PureDispel 2.3.1；名单右侧绑定预设、共同拖动与缩放、管理透明度与层级修复；保留pfUI双区、动态优先忽略及现有职责服务。",
       "history_group": "modified",
       "latest_record_date": "2026-11-02",
-      "latest_record_title": "2.3.0：职责迁入共享服务与统一pfUI管理",
+      "latest_record_title": "2.3.1：名单右侧绑定预设与管理层级修复",
       "latest_game_acceptance": "待游戏验收",
-      "record_count": 5,
+      "record_count": 6,
       "records": [
+        {
+          "id": "hyx-20261102-06",
+          "date": "2026-11-02",
+          "title": "2.3.1：名单右侧绑定预设与管理层级修复",
+          "kind": "修改",
+          "game_acceptance": "待游戏验收",
+          "commits": [],
+          "anchor": "change-hyx-20261102-06"
+        },
         {
           "id": "hyx-20261102-05",
           "date": "2026-11-02",

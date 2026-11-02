@@ -61,6 +61,14 @@ local function Color(which)
     return .22, .22, .22, 1
 end
 
+local function IsManagement(frame)
+    while frame and frame ~= UIParent do
+        if frame.pdManagement then return true end
+        frame = frame:GetParent()
+    end
+    return false
+end
+
 local function Backdrop(frame, popup)
     if not frame.pdSkinned then
         local ok
@@ -74,9 +82,10 @@ local function Backdrop(frame, popup)
         table.insert(U.styled, frame)
     end
     local r, g, b = Color("background")
-    frame:SetBackdropColor(r, g, b, popup and .96 or Number("backgroundAlpha", 0, 1))
+    local management = IsManagement(frame)
+    frame:SetBackdropColor(r, g, b, management and .94 or popup and .96 or Number("backgroundAlpha", 0, 1))
     r, g, b = Color("border")
-    frame:SetBackdropBorderColor(r, g, b, popup and .95 or Number("borderAlpha", 0, 1))
+    frame:SetBackdropBorderColor(r, g, b, management and .85 or popup and .95 or Number("borderAlpha", 0, 1))
 end
 
 local function Button(parent, label, width, height, callback)
@@ -90,7 +99,7 @@ local function Button(parent, label, width, height, callback)
     b:SetScript("OnEnter", function()
         local _, class = UnitClass("player")
         local c = RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
-        this:SetBackdropBorderColor(c and c.r or .8, c and c.g or .6, c and c.b or .8, 1)
+        this:SetBackdropBorderColor(c and c.r or .8, c and c.g or .6, c and c.b or .8, IsManagement(this) and .85 or 1)
     end)
     b:SetScript("OnLeave", function() Backdrop(this, true) end)
     return b
@@ -105,8 +114,9 @@ local function Edit(parent, name, width)
     return e
 end
 
-local function Panel(name, title, width, height, followAlpha)
+local function Panel(name, title, width, height, followAlpha, management)
     local frame = CreateFrame("Frame", name, UIParent)
+    frame.pdManagement = management
     frame:SetWidth(width); frame:SetHeight(height)
     frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     frame:SetFrameStrata("DIALOG")
@@ -123,6 +133,145 @@ local function Panel(name, title, width, height, followAlpha)
     UISpecialFrames = UISpecialFrames or {}
     table.insert(UISpecialFrames, name)
     return frame
+end
+
+-- The management pair shares one transparent clamped rectangle. Dimensions
+-- below are design units; viewport edges are converted to pixels only once.
+function U.GetManagementViewport()
+    local scale = tonumber(UIParent:GetEffectiveScale()) or tonumber(UIParent:GetScale()) or 1
+    if scale <= 0 or scale - scale ~= 0 then scale = tonumber(UIParent:GetScale()) or 1 end
+    if scale <= 0 or scale - scale ~= 0 then scale = 1 end
+    local left, right = tonumber(UIParent:GetLeft()), tonumber(UIParent:GetRight())
+    local bottom, top = tonumber(UIParent:GetBottom()), tonumber(UIParent:GetTop())
+    if not left or not right or not bottom or not top or left - left ~= 0 or right - right ~= 0
+        or bottom - bottom ~= 0 or top - top ~= 0 or right <= left or top <= bottom then return nil end
+    return { left = left * scale, right = right * scale, bottom = bottom * scale, top = top * scale,
+        width = (right - left) * scale, height = (top - bottom) * scale, rootScale = scale, margin = 8 * scale }
+end
+U.Viewport = U.GetManagementViewport
+
+function U.SetManagementEscape(enabled)
+    -- Replacing the table keeps an Escape sweep's old iterator from seeing a
+    -- just-restored host. Keep every unrelated special window in its order.
+    local frames = {}
+    local dock = U.managerDock
+    for _, name in ipairs(UISpecialFrames or {}) do
+        if name == "XinSettingFrame" and (not enabled or dock and dock.returnSettingsEscape) then
+            if dock then dock.returnSettingsEscape = true end
+        elseif name ~= "PureDispelManagementDock" and name ~= "PureDispelManager" and name ~= "PureDispelPresets" then
+            table.insert(frames, name)
+        end
+    end
+    if enabled then
+        if dock and dock.returnSettingsEscape then table.insert(frames, "XinSettingFrame"); dock.returnSettingsEscape = nil end
+        table.insert(frames, "PureDispelManagementDock")
+    end
+    UISpecialFrames = frames
+end
+
+function U.LayoutManagerDock()
+    local dock = U.managerDock
+    if not dock or dock.busy then return end
+    local viewport = U.GetManagementViewport()
+    local oldScale = tonumber(dock:GetEffectiveScale()) or 1
+    if oldScale <= 0 or oldScale - oldScale ~= 0 then oldScale = 1 end
+    local left, top = tonumber(dock:GetLeft()), tonumber(dock:GetTop())
+    if left then left = left * oldScale end
+    if top then top = top * oldScale end
+    local width, height = dock.expanded and 838 or 420, 505
+    dock:SetWidth(width); dock:SetHeight(height)
+    if not viewport then
+        dock:SetScale(1); dock:ClearAllPoints(); dock:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        return
+    end
+    local availableWidth = math.max(1, viewport.width - viewport.margin * 2)
+    local availableHeight = math.max(1, viewport.height - viewport.margin * 2)
+    local scale = math.max(.01, math.min(1, availableWidth / (width * viewport.rootScale), availableHeight / (height * viewport.rootScale)))
+    dock:SetScale(scale)
+    local effective = viewport.rootScale * scale
+    local physicalWidth, physicalHeight = width * effective, height * effective
+    left = left or viewport.left + (viewport.width - physicalWidth) / 2
+    top = top or viewport.bottom + (viewport.height + physicalHeight) / 2
+    left = math.max(viewport.left + viewport.margin, math.min(left, viewport.right - viewport.margin - physicalWidth))
+    top = math.max(viewport.bottom + viewport.margin + physicalHeight, math.min(top, viewport.top - viewport.margin))
+    dock:ClearAllPoints()
+    dock:SetPoint("TOPLEFT", UIParent, "TOPLEFT", (left - viewport.left) / effective, (top - viewport.top) / effective)
+    if U.manager and U.manager.presets then U.manager.presets.label:SetText(dock.expanded and "收起" or "预设") end
+end
+U.LayoutDock = U.LayoutManagerDock
+
+function U.AttachManagementPane(pane, which)
+    local dock = U.managerDock
+    if not dock then return end
+    pane:SetParent(dock); pane:SetScale(1)
+    pane:SetFrameStrata("DIALOG"); pane:SetFrameLevel(dock:GetFrameLevel() + 2)
+    pane:SetWidth(which == "manager" and 420 or 410); pane:SetHeight(505)
+    if pane.SetClampedToScreen then pane:SetClampedToScreen(false) end
+    pane:ClearAllPoints(); pane:SetPoint("TOPLEFT", dock, "TOPLEFT", which == "manager" and 0 or 428, 0)
+    pane:SetMovable(false); pane:SetScript("OnDragStart", nil); pane:SetScript("OnDragStop", nil)
+    if not pane.dragBar then
+        local bar = CreateFrame("Frame", nil, pane)
+        pane.dragBar = bar
+        bar:SetPoint("TOPLEFT", pane, "TOPLEFT", 0, 0)
+        bar:SetWidth(which == "manager" and 324 or 376); bar:SetHeight(30)
+        bar:SetFrameLevel(pane:GetFrameLevel() + 1); bar:EnableMouse(true); bar:RegisterForDrag("LeftButton")
+        bar:SetScript("OnDragStart", function()
+            if U.presetPicker then U.presetPicker:Hide() end
+            if U.menu then U.menu:Hide() end
+            dock:StartMoving()
+        end)
+        -- Native clamping already includes both panes. Reading and resetting
+        -- coordinates here causes a visible jump on the 1.12 client.
+        bar:SetScript("OnDragStop", function() dock:StopMovingOrSizing() end)
+    end
+    pane.close:SetFrameLevel(pane:GetFrameLevel() + 3)
+    if pane.presets then pane.presets:SetFrameLevel(pane:GetFrameLevel() + 3) end
+end
+
+function U.CloseManager()
+    local dock = U.managerDock
+    if dock and dock.busy then return end
+    if dock then dock.busy, dock.suspended = true, nil end
+    if U.presetPicker then U.presetPicker:Hide() end
+    if U.menu then U.menu:Hide() end
+    if U.presets then U.presets:Hide() end
+    if U.manager then U.manager:Hide() end
+    if dock then dock:Hide(); dock.expanded, dock.busy = false, false end
+    if dock then U.SetManagementEscape(true) end
+end
+
+function U.EnsureManagerDock()
+    if not U.manager then return nil end
+    if not U.managerDock then
+        local dock = CreateFrame("Frame", "PureDispelManagementDock", UIParent)
+        U.managerDock, U.managementDock, U.dockHost = dock, dock, dock
+        dock.expanded, dock.busy = false, false
+        dock:SetWidth(420); dock:SetHeight(505)
+        dock:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        dock:SetMovable(true); dock:EnableMouse(false)
+        if dock.SetToplevel then dock:SetToplevel(true) end
+        dock:SetFrameStrata("DIALOG"); dock:SetFrameLevel(12)
+        if dock.SetClampedToScreen then dock:SetClampedToScreen(true) end
+        dock:SetScript("OnHide", function()
+            if U.presetPicker then U.presetPicker:Hide() end
+            if U.menu then U.menu:Hide() end
+            if not dock.busy and not dock.suspended then U.CloseManager() end
+        end)
+        dock:RegisterEvent("UI_SCALE_CHANGED")
+        dock:SetScript("OnEvent", function()
+            if not dock:IsShown() then return end
+            U.LayoutManagerDock()
+            if U.presetPicker and U.presetPicker:IsVisible() and U.PositionPresetPicker then U.PositionPresetPicker() end
+        end)
+        dock:Hide()
+        U.AttachManagementPane(U.manager, "manager")
+        U.manager.close:SetScript("OnClick", function() U.CloseManager() end)
+        U.manager:SetScript("OnHide", function()
+            if not dock.busy and not dock.suspended then U.CloseManager() end
+        end)
+        U.SetManagementEscape(true)
+    end
+    return U.managerDock
 end
 
 local frame = CreateFrame("Frame", "PureDispelFrame", UIParent)
@@ -281,7 +430,7 @@ U.frame.footer.ignored:SetPoint("LEFT", U.frame.footer, "LEFT", 0, 0)
 U.frame.footer.undo = Button(U.frame.footer, "撤销上次操作", 98, 21, function()
     local ok, reason = D.Undo()
     if ok then D.Notify("已撤销上次名单操作") elseif reason then D.Notify(reason) end
-    U.Render(true); if U.manager and U.manager:IsShown() then U.RefreshManager() end
+    U.Render(true); if U.manager and U.manager:IsVisible() then U.RefreshManager() end
 end)
 U.frame.footer.undo:SetPoint("RIGHT", U.frame.footer, "RIGHT", 0, 0)
 
@@ -417,7 +566,7 @@ function U.Render(force)
     end
     if U.ignoredCount ~= number then frame.footer.ignored.label:SetText("已忽略 " .. number); U.ignoredCount = number end
     if U.menu and U.menu:IsShown() and not MenuTargetValid(U.menu.snapshot) then U.menu:Hide() end
-    if U.manager and U.manager:IsShown() then U.RefreshManager() end
+    if U.manager and U.manager:IsVisible() then U.RefreshManager() end
 end
 
 function U.ApplyAppearance()
@@ -430,10 +579,14 @@ function U.ApplyAppearance()
     for _, region in pairs(U.regions) do for _, row in ipairs(region.rows) do row.displayKey = nil end end
     U.Render(true)
     if U.SyncSettings then U.SyncSettings() end
+    if U.managerDock then U.LayoutManagerDock() end
+    if U.presets then U.presets.pdMeasureText = nil end
+    if U.RefreshPresets then U.RefreshPresets() end
+    if U.presetPicker and U.presetPicker:IsVisible() and U.PositionPresetPicker then U.PositionPresetPicker() end
 end
 
 local function Feedback(message)
-    if U.manager and U.manager:IsShown() and U.manager.feedback then U.manager.feedback:SetText(message or "")
+    if U.manager and U.manager:IsVisible() and U.manager.feedback then U.manager.feedback:SetText(message or "")
     elseif U.settings and U.settings:IsShown() and U.settings.feedback then U.settings.feedback:SetText(message or "")
     elseif DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff78c7b5净界驱散|r " .. (message or "")) end
 end
@@ -450,12 +603,13 @@ function U.OpenMenu(row)
     local snapshot = Snapshot(row.entry)
     if not MenuTargetValid(snapshot, true) then return end
     if not U.menu then
-        local menu = Panel("PureDispelTargetMenu", "", 220, 236)
-        menu:SetFrameStrata("TOOLTIP")
+        local menu = Panel("PureDispelTargetMenu", "", 220, 236, nil, true)
+        menu:SetFrameStrata("FULLSCREEN_DIALOG"); menu:SetFrameLevel(42)
         -- One shared click-away surface; no per-row or per-frame polling.
         local blocker = CreateFrame("Button", "PureDispelMenuBlocker", UIParent)
         blocker:SetAllPoints(UIParent)
         blocker:SetFrameStrata("FULLSCREEN_DIALOG")
+        blocker:SetFrameLevel(40)
         blocker:EnableMouse(true)
         blocker:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
         blocker:SetScript("OnClick", function() menu:Hide() end)
@@ -628,7 +782,7 @@ XinSettingFrame:SetScript("OnShow", function()
 end)
 XinSettingFrame:SetScript("OnHide", function()
     if U.menu then U.menu:Hide() end
-    if U.manager then U.manager:Hide() end
+    U.CloseManager()
     if U.rules then U.rules:Hide() end
     if U.raid then U.raid:Hide() end
     if U.debugPanel then U.debugPanel:Hide() end
@@ -650,7 +804,7 @@ end
 
 function U.RefreshManager()
     local manager = U.manager
-    if not manager or not manager:IsShown() then return end
+    if not manager or not manager:IsVisible() then return end
     local data = {}
     if manager.kind == "current" then
         for _, member in ipairs(D.GetRoster()) do
@@ -683,16 +837,16 @@ function U.RefreshManager()
     manager.scope.label:SetText("作用范围：" .. (scopeText[manager.scopeValue] or "本队"))
 end
 
-function U.OpenManager(kind, name)
+function U.OpenManager(kind, name, preserve)
     if U.menu then U.menu:Hide() end
     if not U.manager then
-        local manager = Panel("PureDispelManager", "净界驱散 · 名单管理", 420, 505)
+        local manager = Panel("PureDispelManager", "净界驱散 · 名单管理", 420, 505, nil, true)
         U.manager = manager
         XinListFrame = manager
         manager.kind, manager.scopeValue = "current", "team"
         manager.tabs, manager.rows = {}, {}
         manager.presets = Button(manager, "预设", 48, 20, function()
-            if U.OpenPresets then U.OpenPresets() else Feedback("预设模块尚未加载，请重载界面") end
+            if U.TogglePresets then U.TogglePresets() else Feedback("预设模块尚未加载，请重载界面") end
         end)
         manager.presets:SetPoint("TOPRIGHT", manager, "TOPRIGHT", -38, -7)
         for i, item in ipairs({ { "current", "当前队伍" }, { "priority", "优先名单" }, { "ignore", "忽略名单" } }) do
@@ -779,9 +933,14 @@ function U.OpenManager(kind, name)
         manager.help:SetPoint("BOTTOMLEFT", manager, "BOTTOMLEFT", 17, 12); manager.help:SetTextColor(.6, .6, .6)
         manager:SetScript("OnShow", function() U.RefreshManager() end)
     end
-    U.manager.kind = kind or "current"
-    U.manager.offset = 0
+    if not preserve then U.manager.kind = kind or "current"; U.manager.offset = 0 end
     if name then U.manager.nameEdit:SetText(name) end
+    local dock = U.EnsureManagerDock()
+    if dock.suspended and U.RestoreManagerDock then
+        if dock.externalFrame and dock.externalFrame:IsShown() then dock.externalFrame:Hide() end
+        U.RestoreManagerDock()
+    end
+    dock:Show(); U.LayoutManagerDock()
     U.manager:Show(); U.RefreshManager()
 end
 
@@ -1033,5 +1192,6 @@ SlashCmdList["PUREDISPEL"] = function(message)
 end
 SlashCmdList["XINLOAD"] = SlashCmdList["PUREDISPEL"]
 U.CreatePanel, U.CreateText, U.CreateButton, U.CreateEdit, U.SetFont = Panel, Text, Button, Edit, SetFont
+U.StyleManagement = function(frame) frame.pdManagement = true; Backdrop(frame, true) end
 U.Layout()
 if D.ready then D.OnReady() end

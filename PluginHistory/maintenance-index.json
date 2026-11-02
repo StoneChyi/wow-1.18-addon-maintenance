@@ -2349,7 +2349,7 @@
       "addon": "hyx",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/hyx.md",
-      "purpose": "净界驱散2.3.0与三个插件共用职责缓存，优先忽略规则只影响驱散。",
+      "purpose": "净界驱散 PureDispel 2.3.1；名单右侧绑定预设、共同拖动与缩放、管理透明度与层级修复；保留pfUI双区、动态优先忽略及现有职责服务。",
       "sources": [
         "PluginHistory/Evidence/reports/hyx-全职业驱散与滚轮列表-20261008.md",
         "PluginHistory/Evidence/CodexBackups/hyx/20261008-155425/hyx.lua",
@@ -2372,7 +2372,7 @@
         "Interface/AddOns/hyx/PresetsUI.lua"
       ],
       "tracked_files_at_reference": 3,
-      "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：45组原回归、21项预设、27项职责专项及8个加载文件真实Lua5.0语法检查通过；真实服务器天赋回包/身份/结构、静默观察、实际排版、承伤事件和资源表现待游戏验收；自动天赋缓存不跨重载，同角色离线换队与洗天赋需复核。",
+      "pending": "45组驱散、21项预设及19项几何/交互检查与11个加载文件Lua5.0编译通过；当前客户端在角色选择页，原生拖动/夹紧、实际字体排版、Esc与鼠标命中尚待游戏验收。",
       "history_group": "modified"
     },
     {

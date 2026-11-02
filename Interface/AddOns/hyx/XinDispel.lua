@@ -5,7 +5,7 @@ XinDispel = { ready = false, dirty = true, spellsDirty = true, spells = {},
     entries = { ready = {}, blocked = {} },
     metrics = { scanCycles = 0, tooltipReads = 0, rangeChecks = 0, notifications = 0 } }
 local D = XinDispel
-D.VERSION = "2.3.0"
+D.VERSION = "2.3.1"
 D.Types = {
     Magic = { name = "魔法", r = .2, g = .6, b = 1 },
     Curse = { name = "诅咒", r = .65, g = .2, b = 1 },

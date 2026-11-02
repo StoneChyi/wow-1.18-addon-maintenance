@@ -2,7 +2,7 @@
 -- Original hyx authorship and applicable licenses are retained.
 -- Opt-in memory-only logs. No timer, file IO, network, or global error handler.
 local D, U = XinDispel, XinDispel.UI
-local B = { enabled = false, limit = 60, count = 0, cursor = 1, logs = {}, version = "2.2.0" }
+local B = { enabled = false, limit = 60, count = 0, cursor = 1, logs = {}, version = "2.3.1" }
 D.Debug = B
 local floor, min, max = math.floor, math.min, math.max
 local typeOrder = { "Magic", "Curse", "Poison", "Disease" }

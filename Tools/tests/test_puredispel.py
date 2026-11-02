@@ -444,7 +444,7 @@ local drivers=0;for _,o in ipairs(objects) do if o.scripts.OnUpdate then drivers
 assert(drivers==1)
 ResetCalls();local scans=D.GetMetrics().scanCycles
 local s=B.Snapshot();local text=B.Report()
-assert(s.version=='2.3.0' and string.find(text,'StoneChyi & Codex',1,true))
+assert(s.version=='2.3.1' and string.find(text,'StoneChyi & Codex',1,true))
 assert(not calls.aura and not calls.tooltip and not calls.distance and table.getn(casts)==0)
 assert(D.GetMetrics().scanCycles==scans)
 ''')

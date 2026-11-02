@@ -1,7 +1,7 @@
 ## Interface: 11200
 ## Title: 净界驱散 |cFF80C8E7PureDispel|r
 ## Author: hyx
-## Version: 2.3.0
+## Version: 2.3.1
 ## SavedVariables: xinDB
 ## OptionalDeps: pfUI
 

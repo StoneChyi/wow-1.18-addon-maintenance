@@ -18,6 +18,15 @@ function methods:RegisterEvent(name) self.events[name]=true end
 function methods:UnregisterEvent(name) self.events[name]=nil end
 function methods:GetName() return self.name end
 function methods:GetParent() return self.parent end
+function methods:SetParent(parent)
+ assert(parent and parent.children,'SetParent requires a frame')
+ if self.parent then
+  for i,child in ipairs(self.parent.children) do
+   if child==self then table.remove(self.parent.children,i);break end
+  end
+ end
+ self.parent=parent;table.insert(parent.children,self)
+end
 function methods:GetObjectType() return self.kind end
 function methods:SetWidth(v) assert(type(v)=='number' and v>=0);self.width=v;record('width') end
 function methods:SetHeight(v) assert(type(v)=='number' and v>=0);self.height=v;record('height') end
@@ -31,6 +40,7 @@ function methods:ClearAllPoints() self.points={};self.point=nil end
 function methods:SetAllPoints(value) self.allPoints=value end
 function methods:SetClampedToScreen(v) self.clamped=v end
 function methods:SetFrameStrata(v) self.strata=v end
+function methods:SetToplevel(v) assert(type(v)=='boolean');self.toplevel=v end
 function methods:GetFrameStrata() return self.strata or 'MEDIUM' end
 function methods:SetFrameLevel(v) assert(v>=0);self.level=v end
 function methods:GetFrameLevel() return self.level end
