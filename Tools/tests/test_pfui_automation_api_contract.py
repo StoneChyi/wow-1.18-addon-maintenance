@@ -23,6 +23,11 @@ for relative in ('Interface/AddOns/pfUI/modules/automation.lua', 'Interface/AddO
     unknown = set(re.findall(r':(\w+)\(', source)) - reviewed - declared
     assert not unknown, f'Client/helper calls need explicit API review: {relative}: {sorted(unknown)}'
     assert ':GetStringHeight(' not in source
+for entry in contract['calls']:
+    if 'definition' in entry:
+        owner = entry['definition']
+        assert owner['declaration'] in (ROOT / owner['file']).read_text(encoding='utf8')
+
 allowed = {}
 for kind in contract['classes']:
     names = set()

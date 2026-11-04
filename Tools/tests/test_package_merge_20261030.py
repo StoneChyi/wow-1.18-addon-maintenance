@@ -145,6 +145,7 @@ class PackageMerge(unittest.TestCase):
         function BigWigsVerticalBars:RefreshShownState() end
         ''')
         r.execute(function(src,'function BigWigsVerticalBars:UpdateLockState('))
+        r.execute(function(src,'function BigWigsVerticalBars:ApplyBackgroundVisibility('))
         r.execute(function(src,'function BigWigsVerticalBars:SetupFrames('))
         r.execute('''
         local b=BigWigsVerticalBars;b:SetupFrames();local f=b.frames.anchor.lockBtn.text

@@ -1,5 +1,6 @@
 """Exercise pfUI's actual monitor layout in screen pixels, without constructing text UI."""
 from pathlib import Path
+import argparse
 import itertools
 import math
 import sys
@@ -8,7 +9,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'addons_tmp/bcs-test-runtime'))
 from lupa.lua51 import LuaRuntime
 
-source = (ROOT / 'Interface/AddOns/pfUI/modules/actionbar.lua').read_text(encoding='utf-8')
+parser = argparse.ArgumentParser(); parser.add_argument('--addons', type=Path, default=ROOT/'Interface/AddOns')
+source = (parser.parse_args().addons / 'pfUI/modules/actionbar.lua').read_text(encoding='utf-8')
 lua = LuaRuntime(unpack_returned_tuples=True)
 lua.compile(source)
 start = source.index('    local function MonitorPixelSize()')
@@ -146,7 +148,7 @@ g.mon.dragButton = None
 g.now += 1
 api.update()
 assert g.mon.buttons[1].pointCalls == calls + 3 and not g.mon.dirty
-assert g.timerCalls == 5 and g.keyCalls == 5
+assert g.timerCalls == 5 and g.keyCalls == 0
 print('PASS: live scaling/resolution refresh, idle layout caching and drag refresh deferral')
 
 g.resolution = 'invalid'

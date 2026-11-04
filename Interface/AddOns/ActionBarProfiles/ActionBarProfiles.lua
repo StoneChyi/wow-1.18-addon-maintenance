@@ -22,6 +22,18 @@ local function hasElements(T)
     return 0
 end
 
+local function ABP_GetProfileNames()
+    local names = {}
+    local list = (ABP_PlayerName and ABP_Layout) and ABP_Layout[ABP_PlayerName] or nil
+    if list then
+        for profileName in pairs(list) do
+            table.insert(names, profileName)
+        end
+        table.sort(names)
+    end
+    return names
+end
+
 local function ABP_GetTooltipLine1()
     local left, right = nil, nil
     if ABP_TooltipTextLeft1 and ABP_TooltipTextLeft1:IsShown() then
@@ -704,17 +716,16 @@ function ABP_DropDownMenu_OnLoad()
             justifyH = "CENTER",
         }, UIDROPDOWNMENU_MENU_LEVEL)
 
-        local list = ABP_Layout and ABP_Layout[ABP_PlayerName] or nil
-        if list then
-            for profileName in pairs(list) do
-                UIDropDownMenu_AddButton({
-                    text = profileName,
-                    value = profileName,
-                    func = function() ABP_RemoveProfile(this:GetText()) end,
-                    notCheckable = 1,
-                    owner = this:GetParent(),
-                }, UIDROPDOWNMENU_MENU_LEVEL)
-            end
+        local names = ABP_GetProfileNames()
+        for i = 1, table.getn(names) do
+            local profileName = names[i]
+            UIDropDownMenu_AddButton({
+                text = profileName,
+                value = profileName,
+                func = function() ABP_RemoveProfile(this:GetText()) end,
+                notCheckable = 1,
+                owner = this:GetParent(),
+            }, UIDROPDOWNMENU_MENU_LEVEL)
         end
         return
     end
@@ -728,17 +739,16 @@ function ABP_DropDownMenu_OnLoad()
             justifyH = "CENTER",
         }, UIDROPDOWNMENU_MENU_LEVEL)
 
-        local list = ABP_Layout and ABP_Layout[ABP_PlayerName] or nil
-        if list then
-            for profileName in pairs(list) do
-                UIDropDownMenu_AddButton({
-                    text = profileName,
-                    value = profileName,
-                    func = function() ABP_SaveProfile(this:GetText()) end,
-                    notCheckable = 1,
-                    owner = this:GetParent(),
-                }, UIDROPDOWNMENU_MENU_LEVEL)
-            end
+        local names = ABP_GetProfileNames()
+        for i = 1, table.getn(names) do
+            local profileName = names[i]
+            UIDropDownMenu_AddButton({
+                text = profileName,
+                value = profileName,
+                func = function() ABP_SaveProfile(this:GetText()) end,
+                notCheckable = 1,
+                owner = this:GetParent(),
+            }, UIDROPDOWNMENU_MENU_LEVEL)
         end
 
         UIDropDownMenu_AddButton({
@@ -758,16 +768,15 @@ function ABP_DropDownMenu_OnLoad()
         justifyH = "CENTER",
     }, UIDROPDOWNMENU_MENU_LEVEL)
 
-    local list = ABP_Layout and ABP_Layout[ABP_PlayerName] or nil
-    if list then
-        for profileName in pairs(list) do
-            UIDropDownMenu_AddButton({
-                text = profileName,
-                func = function() ABP_LoadProfile(this:GetText()) end,
-                notCheckable = 1,
-                owner = this:GetParent(),
-            }, UIDROPDOWNMENU_MENU_LEVEL)
-        end
+    local names = ABP_GetProfileNames()
+    for i = 1, table.getn(names) do
+        local profileName = names[i]
+        UIDropDownMenu_AddButton({
+            text = profileName,
+            func = function() ABP_LoadProfile(this:GetText()) end,
+            notCheckable = 1,
+            owner = this:GetParent(),
+        }, UIDROPDOWNMENU_MENU_LEVEL)
     end
 
     UIDropDownMenu_AddButton({
@@ -790,6 +799,7 @@ function ABP_DropDownMenu_OnLoad()
         value = "Delete menu",
         notCheckable = 1,
         hasArrow = true,
+        owner = this:GetParent(),
     }, UIDROPDOWNMENU_MENU_LEVEL)
 end
 

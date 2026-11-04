@@ -2,11 +2,12 @@ ShowSellValueTooltip = ShowSellValueTooltip or 0
 
 
 function SellValue_OnLoad()
-	SellValue_InitializeDB()
-	this:RegisterEvent("MERCHANT_SHOW")
-
-	SellValue_Saved_OnTooltipAddMoney = SellValue_Tooltip:GetScript("OnTooltipAddMoney")
-	SellValue_Tooltip:SetScript("OnTooltipAddMoney", SellValue_OnTooltipAddMoney)
+	SellValue_RebuildDB()
+	-- ⚠️ 关键：SavedVariables 的还原发生在「插件文件执行完之后」（VARIABLES_LOADED 之前），
+	--   所以这里建好的内置库会被存档里的旧 SellValues 整表覆盖（存档是脏的：22505 被存成 88）。
+	--   下面两个事件里再重建一次，确保登录后用的一定是内置库。
+	this:RegisterEvent("VARIABLES_LOADED")
+	this:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 	Stubby.RegisterFunctionHook("EnhTooltip.AddTooltip", 300, tooltipHandler)
 	
@@ -49,50 +50,27 @@ function tooltipHandler(funcVars, retVal, frame, name, link, quality, count, pri
 	end
 end
 
+SellValue_DBOwned = SellValue_DBOwned or nil   -- 记住「我们自己建的那张表」的引用
+function SellValue_RebuildDB()
+	SellValues = nil
+	SellValue_InitializeDB()
+	SellValue_DBOwned = SellValues
+
+end
+
 function SellValue_OnEvent()
-    if event == "MERCHANT_SHOW" then
-        return SellValue_MerchantScan(this)
-    end
-end
-
-SellValue_Saved_GameTooltip_OnEvent = GameTooltip_OnEvent
-GameTooltip_OnEvent = function ()
-    if event ~= "CLEAR_TOOLTIP" then
-        return SellValue_Saved_GameTooltip_OnEvent()
-    end 
-end
-
-function SellValue_OnTooltipAddMoney ()
-    SellValue_Saved_OnTooltipAddMoney()
-    if InRepairMode() then return end
-    SellValue_LastItemMoney = arg1 
-end
-
-function SellValue_SaveFor(bag, slot, id, money)
-    if not (bag and slot and id and money) then return end
-		
-    local _, stackCount = GetContainerItemInfo(bag, slot)
-    if stackCount and stackCount > 0 then
-        local costOfOne = money / stackCount
-        if not SellValues then SellValues = {} end
-		if costOfOne > 0 then
-			SellValues[id] = costOfOne
-		end
-    end
-end
-
-function SellValue_MerchantScan(frame)
-    for bag=0,NUM_BAG_FRAMES do
-        for slot=1,GetContainerNumSlots(bag) do
-            local itemId = SellValue_GetItemID(bag, slot)
-            if itemId ~= "" then
-                SellValue_LastItemMoney = 0
-                SellValue_Tooltip:SetBagItem(bag, slot)
-                SellValue_SaveFor(bag, slot, itemId, SellValue_LastItemMoney)
-            end
+    if event == "VARIABLES_LOADED" or event == "PLAYER_ENTERING_WORLD" then
+        -- 只有「存档把整表换成了另一个引用」才需要重建（老版本存档里还留着 SellValues 那张脏表：
+        -- 2 万多条全小于 100 铜，22505 被存成 88 = 它的装等）。
+        -- 现在 toc 已经不再声明这个变量，正常存档进来后 SellValues 还是我们建的那张，
+        -- 引用没变就什么都不做 —— 省掉每次登录 2.2 万条赋值。
+        if SellValues ~= SellValue_DBOwned then
+            return SellValue_RebuildDB()
         end
+        return
     end
 end
+
 
 function SellValue_OnHide()
     this = this:GetParent()

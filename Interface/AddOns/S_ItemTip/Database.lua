@@ -1,6 +1,9 @@
+-- ⚠️ 内置数据库是唯一权威来源，每次登录无条件重建。
+--   旧版把 SellValues 存进 SavedVariables，又用 if not SellValues then 保护，
+--   结果商店扫描写进去的脏数据永久压住内置库：整表 2.4 万条全小于 100 铜
+--   （例：22505 瘟疫之心护腿被存成 88 = 它的装等，正确卖价 104517）。
 function SellValue_InitializeDB()
-	if not SellValues then
-		SellValues = {
+	SellValues = {
   [7]=0,
   [25]=7,
   [35]=9,
@@ -22827,6 +22830,5 @@ function SellValue_InitializeDB()
   [41993]=0,
   [41994]=0,
   [41995]=0,
-		}
-	end
+	}
 end

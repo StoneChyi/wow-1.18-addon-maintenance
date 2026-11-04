@@ -7,6 +7,8 @@
 --       团队通报（走主窗口所选频道）、补BUFF检查（密语通知加BUFF人员）、
 --       密语监控（团友密语 buff 触发检查，60秒CD，需团长/助理）
 -- 说明：分配数据为会话内保存（不写 SavedVariables），进本后点一次「自动分配」即可；
+--       换团自动重置：分配时记录当次全团名单，进新团队（名单零重合）自动清空旧分配
+--       并按当前团队重新分配；「清空分配」按钮可手动清空（任务分配不受影响）
 --       任务分配的内容通过 SavedVariables（RCBA_TaskDB）持久保存，下次打开可修改后再通报；
 --       全部分配数据（耐力/智力/爪子/诅咒/坦克/骑士祝福/坦克高级）经 RCBA_AssignDB
 --       每 2 秒自动快照，/rl 或重登后自动恢复
@@ -799,10 +801,12 @@ end
 -- 保存：隐藏帧 OnUpdate 每 2 秒对 List + tankAdvData 做一次快照写入
 --       RCBA_AssignDB（写小表开销可忽略，真正落盘由客户端在退出/重载时统一完成），
 --       不在每个下拉/图标改动点插保存调用
--- 恢复：1.12 下 SavedVariables 在插件加载完之后才注入，走 VARS_LOADED 事件恢复
+-- 恢复：1.12 下 SavedVariables 在插件加载完之后才注入，走 VARIABLES_LOADED 事件恢复
 --       （PLAYER_ENTERING_WORLD 兜底 + 打开窗口时再兜底一次）
 ------------------------------------------------------------------------
 local assignRestored = false
+local assignVariablesReady = false
+local raidChange = {}
 
 local ASSIGN_KEYS = {"Fortitude", "Intellect", "WildMark", "Curse", "Tank", "Blessing"}
 
@@ -839,12 +843,17 @@ local function RCBA_AssignSnapshot()
 		end
 		snap["tank"]["heals"][i] = { tankAdvData.heals[i][1] or "", tankAdvData.heals[i][2] or "" }
 	end
+	-- 保留「分配时记录的全团名单」（进新团队检测的比对基准），不随每 2 秒快照刷新
+	if RCBA_AssignDB and RCBA_AssignDB["roster"] then
+		snap["roster"] = RCBA_AssignDB["roster"]
+	end
 	return snap
 end
 
 local function RCBA_AssignRestore()
 	if assignRestored then return end
-	if RCBA_AssignDB == nil then return end  -- 存档还没注入，等下一个事件
+	if not assignVariablesReady then return end
+	if type(RCBA_AssignDB) ~= "table" then RCBA_AssignDB = {} end
 	assignRestored = true
 	local db = RCBA_AssignDB
 	if db["list"] then
@@ -874,18 +883,169 @@ local function RCBA_AssignRestore()
 	end
 end
 
+------------------------------------------------------------------------
+-- 新团队检测：换了团队后旧分配不再残留
+-- 规则：优先用「上次分配时记录的全团名单」与当前团员比对，
+--       一个都不重合 → 视为进了新团队，清空旧分配并按当前团队自动重新分配
+--       （只分配了 1 人、那人又离团时不会误判，因为比对基准是全团名单；
+--         旧存档无完整名单时只登记当前团队，不据零散分配自动清空）
+------------------------------------------------------------------------
+function RCBA_CurrentRaidSet()
+	local set = {}
+	for i = 1, GetNumRaidMembers() do
+		local nm = GetRaidRosterInfo(i)
+		if nm then set[nm] = true end
+	end
+	return set
+end
+
+-- 收集分配表里出现过的所有名字（含骑士祝福、坦克高级）
+function RCBA_AssignedSet()
+	local set = {}
+	for _, key in ipairs({"Fortitude", "Intellect", "WildMark"}) do
+		for g = 1, 8 do
+			local v = List[key][g]
+			if v and v ~= "" then set[v] = true end
+		end
+	end
+	for _, key in ipairs({"Curse", "Tank"}) do
+		for g = 1, 4 do
+			local v = List[key][g]
+			if v and v ~= "" then set[v] = true end
+		end
+	end
+	local bn = List["Blessing"]["Names"]
+	for p = 1, table.getn(bn) do
+		if bn[p] and bn[p] ~= "" then set[bn[p]] = true end
+	end
+	for i = 1, 8 do
+		local v = tankAdvData.names[i]
+		if v and v ~= "" then set[v] = true end
+	end
+	return set
+end
+
+-- 记录「本次分配对应的全团名单」（比对基准，随 SavedVariables 保存）
+function RCBA_MarkRoster()
+	if not assignVariablesReady then return end
+	raidChange.signature = nil
+	if RCBA_AssignDB == nil then RCBA_AssignDB = {} end
+	local r = {}
+	for i = 1, GetNumRaidMembers() do
+		local nm = GetRaidRosterInfo(i)
+		if nm then table.insert(r, nm) end
+	end
+	RCBA_AssignDB["roster"] = r
+end
+
+-- 清空全部分配数据（任务分配不在此列：任务内容是跨团队复用的）
+function RCBA_ClearAssign()
+	raidChange.signature = nil
+	ResetAll()
+	for i = 1, 8 do
+		tankAdvData.names[i] = ""
+		tankAdvData.targets[i] = ""
+		tankAdvData.heals[i][1] = ""
+		tankAdvData.heals[i][2] = ""
+	end
+	if main then
+		LoadDropdowns()
+		LoadTankAdv()
+		if blessingFrame and blessingFrame:IsVisible() then
+			RefreshBlessingFrame()
+		end
+	end
+end
+
+-- 新团队则清空 + 自动重新分配；返回 true 表示发生了重置
+function RCBA_CheckNewRaid()
+	-- The player belongs to both raids; only OTHER members establish continuity.
+	-- Require a complete, stable roster before replacing persisted assignments.
+	if not assignRestored or GetNumRaidMembers() < 2 then
+		raidChange.signature = nil
+		return false
+	end
+	local assigned = RCBA_AssignedSet()
+	if not next(assigned) then raidChange.signature = nil; return false end
+	local selfName = UnitName("player")
+	if not selfName then raidChange.signature = nil; return false end
+	local cur = RCBA_CurrentRaidSet()
+	local currentNames, total = {}, 0
+	for nm in pairs(cur) do
+		total = total + 1
+		if nm ~= selfName then table.insert(currentNames, nm) end
+	end
+	if total ~= GetNumRaidMembers() or not cur[selfName] then
+		raidChange.signature = nil
+		return false
+	end
+	local ref = RCBA_AssignDB and RCBA_AssignDB["roster"]
+	local peers, matched = 0, false
+	if type(ref) == "table" and table.getn(ref) > 0 then
+		for i = 1, table.getn(ref) do
+			local nm = ref[i]
+			if type(nm) == "string" and nm ~= "" and nm ~= selfName then
+				peers = peers + 1
+				if cur[nm] then matched = true end
+			end
+		end
+	else
+		-- A few assigned names cannot prove a group change. Establish a baseline
+		-- for legacy saves without clearing their assignments.
+		RCBA_MarkRoster()
+		return false
+	end
+	if peers == 0 or matched then raidChange.signature = nil; return false end
+	table.sort(currentNames)
+	local signature = table.concat(currentNames, "\031")
+	local now = GetTime()
+	if signature ~= raidChange.signature then
+		raidChange.signature, raidChange.since = signature, now
+		return false
+	end
+	if now - raidChange.since < 2 then return false end
+	RCBA_ClearAssign()
+	AutoClassBuff("牧师", "Fortitude")
+	AutoClassBuff("法师", "Intellect")
+	AutoClassBuff("德鲁伊", "WildMark")
+	AutoCurse()
+	AutoBlessing()
+	if main then
+		LoadDropdowns()
+		if blessingFrame and blessingFrame:IsVisible() then RefreshBlessingFrame() end
+	end
+	RCBA_MarkRoster()
+	DEFAULT_CHAT_FRAME:AddMessage("BUFF分配: 检测到新团队，已清空旧分配并按当前团队自动重新分配")
+	return true
+end
+
 local assignSaveFrame = CreateFrame("Frame", "RCBA_AssignSaveFrame", UIParent)
 local assignLastSave = 0
 assignSaveFrame:SetScript("OnEvent", function()
-	if event == "VARS_LOADED" or event == "PLAYER_ENTERING_WORLD" then
+	if event == "VARIABLES_LOADED" or event == "PLAYER_ENTERING_WORLD" then
+		assignVariablesReady = true
 		RCBA_AssignRestore()
+		RCBA_CheckNewRaid()
+	elseif event == "RAID_ROSTER_UPDATE" then
+		-- 恢复过存档后才判断，避免把刚载入的旧分配当成新团队反复重置
+		if assignRestored then
+			RCBA_CheckNewRaid()
+		end
 	end
 end)
-assignSaveFrame:RegisterEvent("VARS_LOADED")
+assignSaveFrame:RegisterEvent("VARIABLES_LOADED")
 assignSaveFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+assignSaveFrame:RegisterEvent("RAID_ROSTER_UPDATE")
 assignSaveFrame:SetScript("OnUpdate", function()
 	if GetTime() - assignLastSave < 2 then return end
 	assignLastSave = GetTime()
+	-- Do not restore or create fresh saves before the client injects SavedVariables.
+	if not assignVariablesReady then return end
+	if not assignRestored then
+		RCBA_AssignRestore()
+		if not assignRestored then return end
+	end
+	if raidChange.signature then RCBA_CheckNewRaid() end
 	RCBA_AssignDB = RCBA_AssignSnapshot()
 end)
 
@@ -1026,6 +1186,7 @@ local function CreateMain()
 		AutoBlessing()
 		LoadDropdowns()
 		RefreshBlessingFrame()
+		RCBA_MarkRoster()   -- 记下本次分配对应的全团名单，进新团队时据此判断
 	end)
 
 	local nb = MakeButton(main, "RCBA_ReportButton", 100, 30, "团队通报")
@@ -1040,9 +1201,17 @@ local function CreateMain()
 	monitorButton:SetPoint("TOPLEFT", main, "TOPLEFT", 545, -458)
 	monitorButton:SetScript("OnClick", function() RCBA_ToggleMonitor() end)
 
-	local tkb = MakeButton(main, "RCBA_TaskButton", 200, 30, "任务分配")
+	local tkb = MakeButton(main, "RCBA_TaskButton", 100, 30, "任务分配")
 	tkb:SetPoint("TOPLEFT", main, "TOPLEFT", 440, -492)
 	tkb:SetScript("OnClick", function() ToggleTaskFrame() end)
+
+	local clb = MakeButton(main, "RCBA_ClearButton", 100, 30, "清空分配")
+	clb:SetPoint("TOPLEFT", main, "TOPLEFT", 545, -492)
+	clb:SetScript("OnClick", function()
+		RCBA_ClearAssign()
+		RCBA_MarkRoster()
+		DEFAULT_CHAT_FRAME:AddMessage("BUFF分配: 已清空全部分配（任务分配保留）")
+	end)
 
 	local tip = main:CreateFontString(nil, "OVERLAY")
 	tip:SetFontObject(GameFontNormalSmall)
@@ -1469,6 +1638,7 @@ function RCBA_Toggle()
 		main:Hide()
 	else
 		RCBA_AssignRestore()  -- 兜底：存档注入晚于事件时，打开窗口前先恢复
+		RCBA_CheckNewRaid()   -- 兜底：错过 RAID_ROSTER_UPDATE 时，开窗前再判一次新团队
 		LoadDropdowns()
 		main:Show()
 		-- 两个窗口都居中，会重叠：打开分配窗口时隐藏BUFF检查主窗口

@@ -2409,6 +2409,24 @@
       "file": "Interface/AddOns/pfUI/modules/automation_options.lua",
       "method": "GetEffectiveScale",
       "classification": "native_or_helper"
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "CancelBindConfirmations",
+      "classification": "addon_method",
+      "definition": {
+        "file": "Interface/AddOns/pfUI/modules/loot.lua",
+        "declaration": "function pfUI.loot:CancelBindConfirmations("
+      }
+    },
+    {
+      "file": "Interface/AddOns/pfUI/modules/automation.lua",
+      "method": "CancelPurchases",
+      "classification": "addon_method",
+      "definition": {
+        "file": "Interface/AddOns/pfUI/modules/buyemall.lua",
+        "declaration": "function module:CancelPurchases("
+      }
     }
   ],
   "globals": {

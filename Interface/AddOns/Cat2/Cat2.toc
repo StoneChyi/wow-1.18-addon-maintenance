@@ -72,6 +72,8 @@ Cards\Logic\FlowTerminateInCombat.lua
 Cards\Logic\FlowJumpInCombat.lua
 Cards\Logic\FlowTerminateOutOfCombat.lua
 Cards\Logic\FlowJumpOutOfCombat.lua
+Cards\Logic\FlowJumpSelfHealthBelow.lua
+Cards\Logic\FlowJumpSelfHealthPercentBelow.lua
 Cards\Logic\FlowJumpTargetHealthBelow.lua
 Cards\Logic\FlowJumpTargetHealthPercentBelow.lua
 Cards\Logic\FlowJumpTargetBuff.lua
@@ -81,6 +83,7 @@ Cards\Logic\FlowJumpSelfNoBuff.lua
 Cards\Logic\FlowJumpPowerAbove.lua
 Cards\Logic\FlowJumpPowerBelow.lua
 Cards\Logic\FlowJumpStance.lua
+Cards\Logic\FlowJumpComboPoints.lua
 Cards\Logic\FlowJumpTargetBoss.lua
 Cards\Logic\FlowJumpTargetNotBoss.lua
 Cards\Logic\FlowJumpTargetCanBleed.lua

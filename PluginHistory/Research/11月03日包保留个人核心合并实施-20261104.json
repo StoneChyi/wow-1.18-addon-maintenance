@@ -1,0 +1,961 @@
+{
+  "date": "2026-11-04",
+  "before_commit": "88f40f27692e789344dd0196230f8f001583be1f",
+  "before_tag": "before/package-20261103-20261104",
+  "selected": [
+    "BigWigs",
+    "Cat2",
+    "CatPotion",
+    "pfUI",
+    "RaidCheck",
+    "pfUI-addonskinner",
+    "S_ItemTip",
+    "ActionBarProfiles"
+  ],
+  "changes": [
+    {
+      "path": "ActionBarProfiles/ActionBarProfiles.lua",
+      "before": {
+        "bytes": 34261,
+        "sha256": "88e6f122364abfc031bc6b68d489e9733b1e23abbe0eb28cb259e34120487c5a"
+      },
+      "after": {
+        "bytes": 34462,
+        "sha256": "3e7f9d715085a7fb6965e722331a2cc98fe295508a43f0a350e7252718e48062"
+      }
+    },
+    {
+      "path": "BigWigs/Plugins/VerticalBars.lua",
+      "before": {
+        "bytes": 35712,
+        "sha256": "a1e32a8d13b28d83c21ddbd9ef705e0ad34861e690e95271206d6c2b4d915710"
+      },
+      "after": {
+        "bytes": 38495,
+        "sha256": "5b031d4b9d82a91a684c5646a6336eaf627644f162f8ae7fab7ea91c221f15d1"
+      }
+    },
+    {
+      "path": "BigWigs/Raids/BWL/Ebonroc.lua",
+      "before": {
+        "bytes": 15236,
+        "sha256": "8097dd7d2120f8e834efde97be77def2e704a6ed25b59cf8334ac614f89f1841"
+      },
+      "after": {
+        "bytes": 15635,
+        "sha256": "a859baa83ebf8e5d551e8409dd8505a293a755cd537129211eae48c736a31547"
+      }
+    },
+    {
+      "path": "BigWigs/Raids/BWL/Firemaw.lua",
+      "before": {
+        "bytes": 12259,
+        "sha256": "6053b349a4c15f924517846a3f648146089dae37f4523df46d9924cf6afe2a59"
+      },
+      "after": {
+        "bytes": 12650,
+        "sha256": "46433600044dfd46e255bd44771cbfcf0bf3d976f7c6cf380f5dda96b26fa563"
+      }
+    },
+    {
+      "path": "BigWigs/Raids/BWL/Flamegor.lua",
+      "before": {
+        "bytes": 9574,
+        "sha256": "877db2ec7f874ee0e76cfd29f2758be8ea4757a75be33b5a308922e51911f079"
+      },
+      "after": {
+        "bytes": 10395,
+        "sha256": "6468a9cacc687b7e42a43dea9426859dc9c409b44bc72fe225e9166e09e8f83c"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Logic/FlowJumpComboPoints.lua",
+      "before": null,
+      "after": {
+        "bytes": 2344,
+        "sha256": "fb139cf8ca4d61c15d4175ea3e02406902afa5f72e923f3d6d5afbae35220423"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Logic/FlowJumpSelfHealthBelow.lua",
+      "before": null,
+      "after": {
+        "bytes": 1806,
+        "sha256": "eb890a871c4bdd46910d2eeb83b570087677dd73d9e60b727dd2234dba764fb4"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Logic/FlowJumpSelfHealthPercentBelow.lua",
+      "before": null,
+      "after": {
+        "bytes": 1855,
+        "sha256": "ac3e8644421c626db180c435445610571d781771dd1bfa52f04449108b9d3386"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Warlock/Corruption.lua",
+      "before": {
+        "bytes": 3037,
+        "sha256": "a56aea942c7d70c65a488cc418a184ebafa2a802fe2791bd8569e0fdb883cf78"
+      },
+      "after": {
+        "bytes": 3038,
+        "sha256": "22af334c8214dcc59729e5afed0c85b227129874639b580b9bb13e85952da1d6"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Warlock/CorruptionMultiDot.lua",
+      "before": {
+        "bytes": 2918,
+        "sha256": "9022fa12b31d59918a9ec8a1dcf43413274be53bb7a3a7b557a274d11657121d"
+      },
+      "after": {
+        "bytes": 2919,
+        "sha256": "9fc83e659be03c58a2cf4863b2b61b672acd8c60c6946087a4d5a969c6445942"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Warlock/CurseOfAgony.lua",
+      "before": {
+        "bytes": 2525,
+        "sha256": "1750d9eacbce2ba328e177748d20a1fbfd98691e4f100814b24c9284485df222"
+      },
+      "after": {
+        "bytes": 2526,
+        "sha256": "8de3b5640e78019c7c04f11bda1a50a7b627cbedc23d82202376730616e56def"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Warlock/CurseOfAgonyMultiDot.lua",
+      "before": {
+        "bytes": 2897,
+        "sha256": "79ab93254a581882742151e681627a84d644b81d9f02a99388a9ad4ede090fe2"
+      },
+      "after": {
+        "bytes": 2898,
+        "sha256": "196a86fe6d55e432dceb7fe5b0e3fe789bf663080ab648c2af37ca6de2ef3acb"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Warlock/CurseOfRecklessnessHex.lua",
+      "before": {
+        "bytes": 2742,
+        "sha256": "b20ee8d1371b37af4ed67bcecd5c650c8f0aec6035514824b4bffb2c41e233b8"
+      },
+      "after": {
+        "bytes": 2743,
+        "sha256": "57409a1406d7617a9f77bf867cf3423e297fda6f9e3f26048d6dd81f5d1cde59"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Warlock/CurseOfShadowHex.lua",
+      "before": {
+        "bytes": 2717,
+        "sha256": "0cb43430f43e76bdfd113d09ee259bd4fecd8c54b4458640ef6cf8be2e89b77d"
+      },
+      "after": {
+        "bytes": 2718,
+        "sha256": "a5c206823279dc0c21f9dcad9ac2a6a96caf8cf7a77aa4492c9e9b6dbbcb4515"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Warlock/CurseOfTheElementsHex.lua",
+      "before": {
+        "bytes": 2718,
+        "sha256": "1cd413c1d6a8d7dbf38706813563a3c0762add9fa6e9aac99eb5f181ab39b620"
+      },
+      "after": {
+        "bytes": 2719,
+        "sha256": "e565d3f9ec719a76a47c5995332ffb211145267f1044a84876e9bb08e7d893fd"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Warlock/SiphonLife.lua",
+      "before": {
+        "bytes": 2826,
+        "sha256": "5275ed465a5cd947c11567d6fa58b478d2851b822636eb77273c0a648e76edf0"
+      },
+      "after": {
+        "bytes": 2827,
+        "sha256": "a20f02b2bdc243eb6f3a8741367ebbc9a7b4af514a8c8f330677d925d14f85df"
+      }
+    },
+    {
+      "path": "Cat2/Cards/Warlock/SiphonLifeMultiDot.lua",
+      "before": {
+        "bytes": 3055,
+        "sha256": "f249b0968f2840368d50d6afa1f90180bac1b7b8df4e77613f8f5d1e76a9a7ce"
+      },
+      "after": {
+        "bytes": 3056,
+        "sha256": "28fb48477c110e86828ea8ee02ea87bb5a6404db4846e11110ea2f8d09d99e86"
+      }
+    },
+    {
+      "path": "Cat2/Cat2.toc",
+      "before": {
+        "bytes": 25122,
+        "sha256": "4e6c379787d593412b446f188eeb39fc97730ec1bdefb9096222b3b5c5a7e12b"
+      },
+      "after": {
+        "bytes": 25245,
+        "sha256": "78f854461fb9e51b0389599b27a83972e49486187ed1c4bed28082765fc281c3"
+      }
+    },
+    {
+      "path": "Cat2/Core/CardRegistry.lua",
+      "before": {
+        "bytes": 22497,
+        "sha256": "824e394753c63ca49fd48ec2af6a40bc71a2eab87b39bd10f3785b3e964f729c"
+      },
+      "after": {
+        "bytes": 25831,
+        "sha256": "280e799427bde491860d8211f86752dad35399c8274f6724d8a2b0970fb8425b"
+      }
+    },
+    {
+      "path": "Cat2/Core/Persistence.lua",
+      "before": {
+        "bytes": 20368,
+        "sha256": "f46ae145efb0331fb6fb7e2e057f35e8280c4c16774c43de166168d921e12b00"
+      },
+      "after": {
+        "bytes": 21606,
+        "sha256": "fdb8a10816c9d0ed88d2d5351c7b71d59130af723bd7fad9745febce765d5f22"
+      }
+    },
+    {
+      "path": "Cat2/UI/Notice.lua",
+      "before": {
+        "bytes": 46711,
+        "sha256": "cbe1373faec6344527608e9fd134a40d5664513cb628359eb2a8cf97328677db"
+      },
+      "after": {
+        "bytes": 53260,
+        "sha256": "8f84a1cce7ad38eb91c58af56f6c63f6636d85e93f174ee122e5fc0c4d5aee03"
+      }
+    },
+    {
+      "path": "CatPotion/Core.lua",
+      "before": {
+        "bytes": 101095,
+        "sha256": "eea5b82fc3889769e61134be2c4c059b37744d92bec8ca31b0a8b29396077266"
+      },
+      "after": {
+        "bytes": 102040,
+        "sha256": "80dfaa31f335f717a506ea8e09c46ba6cabfb2dea303f05ff9a92934fd89e1d3"
+      }
+    },
+    {
+      "path": "RaidCheck/RaidCheckBuffAssign.lua",
+      "before": {
+        "bytes": 52772,
+        "sha256": "806f7baf76a61170c076252560845032fe91588f6adc12571879e8085b758ad9"
+      },
+      "after": {
+        "bytes": 58862,
+        "sha256": "0fbd68748c3b5c3c7a0aa44b3188e44268f6f812f1f8ade03361eddaccf06d4d"
+      }
+    },
+    {
+      "path": "S_ItemTip/Database.lua",
+      "before": {
+        "bytes": 361588,
+        "sha256": "0bb4a0fafc3d500d03390e6259336051ddc3a7618b57dab7f139018567819112"
+      },
+      "after": {
+        "bytes": 361926,
+        "sha256": "57d358eb2024cea2826b19a5c582e0463074f9b0bfd72ce2f750aafa6d0b6652"
+      }
+    },
+    {
+      "path": "S_ItemTip/ItemCount.lua",
+      "before": {
+        "bytes": 5619,
+        "sha256": "d0f78a2e0d619534c9474e5a773c4cf964623844b6243c01ca552702ce5325a6"
+      },
+      "after": {
+        "bytes": 6089,
+        "sha256": "36d7ac64c54a2e0e2bc81b6852665cdc0908b08a0545e13ea36cbdc3194cd244"
+      }
+    },
+    {
+      "path": "S_ItemTip/ItemSocre.lua",
+      "before": {
+        "bytes": 27102,
+        "sha256": "482425e7d2cc15dede6201dd9677af3f16edb98354d00c52dc79d27d4b4ad1f7"
+      },
+      "after": {
+        "bytes": 27150,
+        "sha256": "16794e901947cc4c5d477c97b114790e9349b78ebeeb66dc18a2b9330c235b59"
+      }
+    },
+    {
+      "path": "S_ItemTip/S_ItemTip.toc",
+      "before": {
+        "bytes": 1054,
+        "sha256": "7700fa9bd74b4b446f2b057c743286f2d796d6588cf2e56afeef7a1d0af71766"
+      },
+      "after": {
+        "bytes": 1042,
+        "sha256": "56a1524d87bf9ae2cbff85d6a70c9876c3f45271fd530cd594ffb9e298082113"
+      }
+    },
+    {
+      "path": "S_ItemTip/SellValue.lua",
+      "before": {
+        "bytes": 3979,
+        "sha256": "d4e2b6b0c6be8ba20f0d1974e5884a6b0c8d623a0486e9d62f3ebe0761640f09"
+      },
+      "after": {
+        "bytes": 3751,
+        "sha256": "bec3eaa10160215f0e02b48d972aff1bb481ebda8e984625b5be0c8e15c7d470"
+      }
+    },
+    {
+      "path": "S_ItemTip/SellValue.xml",
+      "before": {
+        "bytes": 1099,
+        "sha256": "f6123e37f25027d3b3368930a029a10bd517b1802879018a2b413941ab4f1ce1"
+      },
+      "after": {
+        "bytes": 521,
+        "sha256": "18739a4185cec2cd84122b0ca7604a97342c9b83ea7eb3fc947de9b1b7cec9f7"
+      }
+    },
+    {
+      "path": "pfUI-addonskinner/pfUI-addonskinner.toc",
+      "before": {
+        "bytes": 2391,
+        "sha256": "26e8690020e15678bf3cff3d7a80f8b3ae8b11948f6e1516e3aa885a4dd8ec52"
+      },
+      "after": {
+        "bytes": 2420,
+        "sha256": "6e8aa591fed02ea3b7adacb9fb8e3515a5595e8ec1c675c4ea14f873c1c88ead"
+      }
+    },
+    {
+      "path": "pfUI-addonskinner/skins/ActionBarProfiles.lua",
+      "before": null,
+      "after": {
+        "bytes": 5038,
+        "sha256": "93adae66b3ba35a5912384081850dbba2bdcee5476d1d5d3a6659e42ec321abe"
+      }
+    },
+    {
+      "path": "pfUI-addonskinner/skins/RaidCheck.lua",
+      "before": {
+        "bytes": 10504,
+        "sha256": "e276e27990d0428ab9260b90fa2328e61b8b32563e4bc69282f36b651b4c6db1"
+      },
+      "after": {
+        "bytes": 11427,
+        "sha256": "c572e6c2394d9b2e7dbcf8ff00041bbe987da535ce99f5b9531f582634c89ced"
+      }
+    },
+    {
+      "path": "pfUI/Bindings.xml",
+      "before": {
+        "bytes": 4842,
+        "sha256": "59f19d068eddd4e43876fd00bed300dd8c8373c450ec88d6e8eb86ac671a9df5"
+      },
+      "after": {
+        "bytes": 8961,
+        "sha256": "41ac9f7fe6034f61762ecf57ea1fe4a5b7a3f69612247f4f22eacbad5c039f0e"
+      }
+    },
+    {
+      "path": "pfUI/api/config.lua",
+      "before": {
+        "bytes": 107623,
+        "sha256": "0e2c0ea17b1508eb8355fd9418c42a79d7b2c509bd28f18fae7f51e2c6d60659"
+      },
+      "after": {
+        "bytes": 107779,
+        "sha256": "4208226b1e9adf67a75639181f61d77d2136bcaf39e414342c5c534550dd560f"
+      }
+    },
+    {
+      "path": "pfUI/env/translations_zhCN.lua",
+      "before": {
+        "bytes": 77096,
+        "sha256": "24f32547477e434a7900c2ae69ea2d9343c390c2db74777b044c473ab74e5b50"
+      },
+      "after": {
+        "bytes": 77266,
+        "sha256": "5249d489dab16ba24c1dd3ad36e4b34bfcfdf4209d7c62761693fcd3657fca35"
+      }
+    },
+    {
+      "path": "pfUI/modules/actionbar.lua",
+      "before": {
+        "bytes": 101414,
+        "sha256": "67c61c52d730ad41b0d06d10352743d89115815cf7d69d5238b2c24ef39f9f08"
+      },
+      "after": {
+        "bytes": 98860,
+        "sha256": "7ee092a7886c351a2dafd902879e53b5f371ebe7fc165b143b7a00a5a5c1ed73"
+      }
+    },
+    {
+      "path": "pfUI/modules/buff.lua",
+      "before": {
+        "bytes": 87877,
+        "sha256": "f4093dcbe75cea8eaa7a61924d6072e049a9237c3860eaa8c14c2010455ead05"
+      },
+      "after": {
+        "bytes": 102183,
+        "sha256": "e60197754e092b0e5f20751a7ad368fb66dbad652d8551a88df90feec258ea76"
+      }
+    },
+    {
+      "path": "pfUI/modules/gui.lua",
+      "before": {
+        "bytes": 199572,
+        "sha256": "9e055eb83b94a6dee87ca7b69e191bbb5f60847cfb5ae7906acd2ff026c5ba69"
+      },
+      "after": {
+        "bytes": 199942,
+        "sha256": "34068809cb557a4c32a2f18a2de2a65158d951ff0e3cc138a33563901eeea519"
+      }
+    }
+  ],
+  "source_roots": {
+    "old": "D:\\下载\\Interface2026年10月29日-1\\Interface\\AddOns",
+    "new": "D:\\下载\\Interface2026年11月03日\\Interface\\AddOns",
+    "personal": "E:\\1.18\\Interface\\AddOns"
+  },
+  "deployed": true,
+  "deployed_inventory_digest": "d9c17c43c5b030ae46cb0a4ffb98739ec1925271f17f08188f02734f7f2d5b95",
+  "scope_details": {
+    "BigWigs": "合入黑翼三龙标点兼容与立即开龙翼冷却条、竖行背景开关和点击占位条过滤；保留个人字体后备、残条/队列与逐目标通信。",
+    "Cat2": "新增自身血量/百分比/多选连击点三张跳转卡及TOC入口、布尔草稿/互斥/迁移，九张术士卡兼容整数时长。原紧急续杯、战士互斥、个人血量条件/敌人数/持续伤害和版本标识保留。",
+    "CatPotion": "只补宁静、神性、韧性、和谐、亲源五种灵药及赞扎移速说明；保留未确认的原药剂互斥。多窗口、恢复阈值、优先级、同轮防连用、符文安全线和设置保持。",
+    "pfUI": "合入白名单判定/即时刷新及名称匹配选项，缺失键保留smart；32监控按钮改引擎绑定，按keydown只执行一次并保留显示专用/输入/绑定/拖动保护及天赋切换。个人资源条、布局、聊天、自动化融合和职责保持。",
+    "RaidCheck": "合入手动清空和名单快照；换团排除本人，要求完整名单稳定2秒，无完整旧名单只登记基准。修正VARIABLES_LOADED及注入前/首次存档保护，保留任务和原分配方式；复用原2秒驱动。",
+    "pfUI-addonskinner": "补RaidCheck新按钮、直属按钮兜底与幂等；新增ABP窗口皮肤标题先继承GameFontNormal，再尝试配置字体。当前没有导入导出窗时直接返回，不新增无效入口；其他皮肤保持。",
+    "S_ItemTip": "只取售价库重建/覆盖检测，移除SellValues持久化、商人扫描写售价和旧提示事件包装；数量/装等追加检查30行，29行优先实际数量。个人评分、头像/面板、负充能和共享扫描保持；新金币渲染器暂缓。",
+    "ActionBarProfiles": "加载/保存/删除菜单按名称排序，补删除子菜单owner；原保存/恢复、120槽边界/旧144槽迁移、战斗/光标保护、物品占位及洗脑器联动保持。导入导出与超级宏恢复重写暂缓。"
+  },
+  "verification": {
+    "lua_version": "actual Lua 5.0.3; compile-time closure limit included",
+    "compiled": [
+      {
+        "path": "ActionBarProfiles/ActionBarProfiles.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "BigWigs/Plugins/VerticalBars.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "BigWigs/Raids/BWL/Ebonroc.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "BigWigs/Raids/BWL/Firemaw.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "BigWigs/Raids/BWL/Flamegor.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpComboPoints.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpSelfHealthBelow.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Logic/FlowJumpSelfHealthPercentBelow.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Warlock/Corruption.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CorruptionMultiDot.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfAgony.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfAgonyMultiDot.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfRecklessnessHex.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfShadowHex.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfTheElementsHex.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Warlock/SiphonLife.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Cards/Warlock/SiphonLifeMultiDot.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Core/CardRegistry.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/Core/Persistence.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "Cat2/UI/Notice.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "CatPotion/Core.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "RaidCheck/RaidCheckBuffAssign.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "S_ItemTip/Database.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "S_ItemTip/ItemCount.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "S_ItemTip/ItemSocre.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "S_ItemTip/SellValue.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "pfUI-addonskinner/skins/ActionBarProfiles.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "pfUI-addonskinner/skins/RaidCheck.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "pfUI/api/config.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "pfUI/env/translations_zhCN.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "pfUI/modules/actionbar.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "pfUI/modules/buff.lua",
+        "ok": true,
+        "error": ""
+      },
+      {
+        "path": "pfUI/modules/gui.lua",
+        "ok": true,
+        "error": ""
+      }
+    ],
+    "xml": [
+      "S_ItemTip/SellValue.xml",
+      "pfUI/Bindings.xml"
+    ],
+    "format_checks": [
+      {
+        "path": "ActionBarProfiles/ActionBarProfiles.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 808
+      },
+      {
+        "path": "BigWigs/Plugins/VerticalBars.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 1066
+      },
+      {
+        "path": "BigWigs/Raids/BWL/Ebonroc.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 351
+      },
+      {
+        "path": "BigWigs/Raids/BWL/Firemaw.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 332
+      },
+      {
+        "path": "BigWigs/Raids/BWL/Flamegor.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 268
+      },
+      {
+        "path": "Cat2/Cards/Warlock/Corruption.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 102
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CorruptionMultiDot.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 79
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfAgony.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 85
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfAgonyMultiDot.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 79
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfRecklessnessHex.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 92
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfShadowHex.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 89
+      },
+      {
+        "path": "Cat2/Cards/Warlock/CurseOfTheElementsHex.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 90
+      },
+      {
+        "path": "Cat2/Cards/Warlock/SiphonLife.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 98
+      },
+      {
+        "path": "Cat2/Cards/Warlock/SiphonLifeMultiDot.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 81
+      },
+      {
+        "path": "Cat2/Cat2.toc",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 758
+      },
+      {
+        "path": "Cat2/Core/CardRegistry.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 547
+      },
+      {
+        "path": "Cat2/Core/Persistence.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 545
+      },
+      {
+        "path": "Cat2/UI/Notice.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 1013
+      },
+      {
+        "path": "CatPotion/Core.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 1610
+      },
+      {
+        "path": "RaidCheck/RaidCheckBuffAssign.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 1495
+      },
+      {
+        "path": "S_ItemTip/Database.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 22828
+      },
+      {
+        "path": "S_ItemTip/ItemCount.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 162
+      },
+      {
+        "path": "S_ItemTip/ItemSocre.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 723
+      },
+      {
+        "path": "S_ItemTip/S_ItemTip.toc",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 25
+      },
+      {
+        "path": "S_ItemTip/SellValue.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 106
+      },
+      {
+        "path": "S_ItemTip/SellValue.xml",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 20
+      },
+      {
+        "path": "pfUI-addonskinner/pfUI-addonskinner.toc",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 108
+      },
+      {
+        "path": "pfUI-addonskinner/skins/RaidCheck.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 264
+      },
+      {
+        "path": "pfUI/Bindings.xml",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 72
+      },
+      {
+        "path": "pfUI/api/config.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 1683
+      },
+      {
+        "path": "pfUI/env/translations_zhCN.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 1402
+      },
+      {
+        "path": "pfUI/modules/actionbar.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 2826
+      },
+      {
+        "path": "pfUI/modules/buff.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 1936
+      },
+      {
+        "path": "pfUI/modules/gui.lua",
+        "existing_bom_preserved": true,
+        "unchanged_lines_original_bytes": 3691
+      }
+    ],
+    "load_references": {
+      "before": {
+        "reachable_files": 1179,
+        "missing": [
+          "!Libs/SC_TeamRoleData.lua",
+          "!Libs/SC_TeamRoleService.lua",
+          "!Libs/SC_TeamRoles.lua",
+          "pfUI-addonskinner/--skins/CallOfElements.lua",
+          "pfUI-addonskinner/--skins/CooldownTimers.lua",
+          "pfUI-addonskinner/--skins/ExtraResourceBars.lua",
+          "pfUI-addonskinner/--skins/HonorSpy.lua",
+          "pfUI-addonskinner/--skins/HunterBar_FeedButton.lua",
+          "pfUI-addonskinner/--skins/JIM_CooldownPulse.lua"
+        ]
+      },
+      "candidate": {
+        "reachable_files": 1183,
+        "missing": [
+          "!Libs/SC_TeamRoleData.lua",
+          "!Libs/SC_TeamRoleService.lua",
+          "!Libs/SC_TeamRoles.lua",
+          "pfUI-addonskinner/--skins/CallOfElements.lua",
+          "pfUI-addonskinner/--skins/CooldownTimers.lua",
+          "pfUI-addonskinner/--skins/ExtraResourceBars.lua",
+          "pfUI-addonskinner/--skins/HonorSpy.lua",
+          "pfUI-addonskinner/--skins/HunterBar_FeedButton.lua",
+          "pfUI-addonskinner/--skins/JIM_CooldownPulse.lua"
+        ]
+      }
+    },
+    "new_missing_references": [],
+    "preserved_functions": {
+      "ActionBarProfiles/ActionBarProfiles.lua::function ABP_SaveProfile(": "64ce0f85d00153173e6a7b1042a40fd468535e23ed5dc2aec29a665446a462e8",
+      "ActionBarProfiles/ActionBarProfiles.lua::function ABP_LoadProfile(": "73e10f3809b705eff609a201dd80a7aa0816defc0ef65963a00694be450578b0",
+      "S_ItemTip/ItemSocre.lua::local function InstallCacheAPI(": "c4f864a1cf52f1a2e3a1932b9c50dc0ba78149c088f300c786f5a435e4f2afeb",
+      "S_ItemTip/ItemSocre.lua::local function ShowUnitScore(": "09de346b252ef9520c3226943bee458fb1e254a7e9f52ccad5cccd3bf113f89c",
+      "pfUI/modules/actionbar.lua::    local function MonitorReadTalents(": "d41f525032e9864284df7e4698b4662ce47565e028e6e5a1d295656eb99205a9",
+      "pfUI/modules/actionbar.lua::    local function MonitorSyncProfile(": "30a6a0cd829a7ba2e1c2af1250fa0ad782effbb348d4e4fe0e4a9a5a77a6ed4c"
+    },
+    "game_verified": false,
+    "behavior_regressions": {
+      "new_groups": 17,
+      "previous_groups": 20,
+      "s_itemtip": 85,
+      "monitor_layout_combinations": 2592,
+      "catpotion_suites": [
+        {
+          "test": "auto-use-settings.lua",
+          "ok": true,
+          "summary": "PASS: 114 threshold dialog, strict font, cancel/save and row interaction assertions"
+        },
+        {
+          "test": "auto-use.lua",
+          "ok": true,
+          "summary": "PASS: 478 recovery auto-use config, priority, safety, pending, hysteresis and scheduling assertions"
+        },
+        {
+          "test": "consumable-cooldowns.lua",
+          "ok": true,
+          "summary": "PASS: 63 consumable catalogue, native/shared/GCD, last-charge and macro assertions"
+        },
+        {
+          "test": "drag-preview.lua",
+          "ok": true,
+          "summary": "PASS: 54 cursor drag preview assertions"
+        },
+        {
+          "test": "engineering-wormholes.lua",
+          "ok": true,
+          "summary": "PASS: 53 engineering wormhole assertions"
+        },
+        {
+          "test": "header-layout.lua",
+          "ok": true,
+          "summary": "PASS: 39 header layout and two-column dropdown assertions"
+        },
+        {
+          "test": "header-lock.lua",
+          "ok": true,
+          "summary": "PASS: 125 compact header, per-window lock, modifier and strict font assertions"
+        },
+        {
+          "test": "instant-ground.lua",
+          "ok": true,
+          "summary": "PASS: 210 instant ground item assertions; real Core/row handlers, fallback and CVar restoration"
+        },
+        {
+          "test": "multiple-windows.lua",
+          "ok": true,
+          "summary": "PASS: dropdown switching, position transfer, target appearance and already-open combat-hidden rejection"
+        },
+        {
+          "test": "profile-layout.lua",
+          "ok": true,
+          "summary": "PASS: profile appearance migration, independence, selection and defaults"
+        },
+        {
+          "test": "profile-menu-edges.lua",
+          "ok": true,
+          "summary": "PASS: 313 dropdown edge, scale and pagination assertions"
+        },
+        {
+          "test": "shortcut-picker.lua",
+          "ok": true,
+          "summary": "PASS: 89 chat bar picker assertions"
+        },
+        {
+          "test": "weapon-charges.lua",
+          "ok": true,
+          "summary": "PASS: 55 weapon charge and food refresh assertions"
+        },
+        {
+          "test": "weapon-macro.lua",
+          "ok": true,
+          "summary": "PASS: weapon macro targeting, renewal, guards and profile isolation"
+        },
+        {
+          "test": "window-order.lua",
+          "ok": true,
+          "summary": "PASS: 52 custom window order assertions"
+        }
+      ],
+      "pfui_automation": {
+        "modules": 57,
+        "options": 400,
+        "callback_readbacks": 250,
+        "display": 55,
+        "text_routing": 44,
+        "action_routing": 56,
+        "typed_api_contract": true
+      },
+      "shared_attributes_scanning_portrait_isolation": true,
+      "teamroles_ui": 11
+    },
+    "test_inventory_correction": "The unchanged automation.lua already called CancelBindConfirmations/CancelPurchases. The stale test inventory now cites their real loot.lua/buyemall.lua definitions; native API classes unchanged.",
+    "post_deployment_full_source_inventory_matches_before_plus_38_changes": true
+  },
+  "source_packages_verified_against_zip": true,
+  "runtime_sha256": {
+    "corebridge.dll": "61381c8f6f6e63ce1c16c1cc6af024e0cabe8107db1c0db549502bc704c296c3",
+    "d3d9.dll": "3d6b529dc4f7f55639aad580e81b2939ab1489cdbb9f1550dce74e41656bbf5b",
+    "dbghelp.dll": "72877fb0af03745e2a78414ddaa05f1871703ad4c0d16d43d4ae62971ff52f0b",
+    "DivxDecoder.dll": "ed34d37b575c91a56704218eb9f6abbefda8b7de0e2ed44c96191abd0f9915a5",
+    "fmod.dll": "1e08da161cf78746304a834973971ee47a24817ee4e28df74e3f37dbbb383b22",
+    "ijl15.dll": "334aa12f7dee453d1c6cb1b661a3bb3494d3e4cc9c2ff3f9002064c78404e43a",
+    "Interact.dll": "28eafe20e59c2589eb5806361e713ff2d14909de9e4ace08e9edccd3719f1ddd",
+    "nampower.dll": "96af1722ee6b1a76cbb11e59e452fe54a83f54a3da80ae24f9c7571a0a6392fe",
+    "no1600x1200.dll": "0df2274116278e8330dd7069902b642f1a83f33fefd909807a22eda197d88652",
+    "perf_boost.dll": "dcab0cf810532df81fcdd821c6a96e9eef51228fa0115eeec1c2bc2e8c13a576",
+    "Scan.dll": "a32d76f4b3dc730258da3351d962fa76800ab9d082e1e1ce4dd066af4f0f21b0",
+    "SDL.dll": "15537c9176d7e6d5c28c607c4b147c8c2a7c45102b1b8e836b38d2f9449fc8ce",
+    "SuperWoWhook.dll": "bd214b32c878649e94ce654835946bd05e0ce7710e8f01bae10d8ab50a89351d",
+    "transmogfix.dll": "cd9e4c6ce033b0923cf045269f590f5e0b886bd03f43bd81406670d781452210",
+    "twloader.dll": "fc4adbde2d4e1aaf74f9403a59f8663dcf00b45fed22cd858d12258a17c42bea",
+    "unicows.dll": "22f23cc65698741184ec34f46e6f69717644e0b5aabf5d5bd015101f2d72e56e",
+    "UnitXP_SP3.dll": "db035489a986631e8c2aacb3d26f8312912fcd577d8bd7d19ace02e2ea83a67d",
+    "VanillaHelpers.dll": "1e74ddf6484c23482550d5f9e5f9d291085c4ac538d3b3ed9d87155521841196",
+    "VfPatcher.dll": "f283b6b5ad8042e7995eff9768c150042dd47de6e5f00ffe530d2e67743df81d",
+    "weirdperformance.dll": "ab9cf654ba18cca7ae2197864a7fc773f03ca1e31069b6d7b1eed9639e796f37",
+    "wsloot.dll": "6a36596430299171dafacbb031089717fc223e98285754d68e15a890bf217fe0",
+    "dlls.txt": "4da57d06a18981e50991bf46cffc2197f7dcb1cac9ca82c938429079352936da",
+    "dxvk.conf": "8fda9365b1fde5536e367b9064ae19065dbb8cd1229a61d4dea67a0f12f7c508"
+  },
+  "root_runtime_unchanged": true,
+  "settings_read_or_modified": false,
+  "untouched_addon_directories": 98,
+  "retained_addons": [
+    "Tmog",
+    "Automatonex",
+    "StatCompare",
+    "GoubayuHeal",
+    "aux-addon",
+    "pfUI-CustomMedia",
+    "Cooline",
+    "TankBuddyEnh"
+  ]
+}

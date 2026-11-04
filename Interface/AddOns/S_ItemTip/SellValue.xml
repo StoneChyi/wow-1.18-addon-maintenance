@@ -3,15 +3,6 @@
 	<Script file="SellValue.lua"/>
 	<Script file="Database.lua"/>
 	
-	<GameTooltip name="SellValue_Tooltip" inherits="GameTooltipTemplate" parent="UIParent" hidden="true">
-		<Layers>
-			<Layer level="ARTWORK">
-				<FontString name="$parentTextLeft1" inherits="GameTooltipHeaderText" hidden="true"/>
-				<FontString name="$parentTextRight1" inherits="GameTooltipHeaderText" hidden="true"/>
-			</Layer>
-		</Layers>
-	</GameTooltip>
-
   <Frame name="SellValue" parent="GameTooltip" hidden="false">
   	<Scripts>
 	  	<OnLoad>
@@ -24,13 +15,6 @@
   			SellValue_OnEvent();
 		</OnEvent>
     </Scripts>
-    <Frames>
-			<Frame name="$parentMoneyFrame" inherits="SmallMoneyFrameTemplate" hidden="false">
-				<Anchors>
-					<Anchor point="LEFT" relativePoint="LEFT"/>
-				</Anchors>
-			</Frame>
-		</Frames>
 	</Frame>
 
 </Ui>

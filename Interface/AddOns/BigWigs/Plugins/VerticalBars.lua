@@ -35,6 +35,10 @@ L:RegisterTranslations("enUS", function()
 		["Bar unlocked, can be dragged"] = true,
 		["Background shown"] = true,
 		["Background hidden (right-click the track to show again)"] = true,
+		["Show background"] = true,
+		["Show or hide the semi-transparent background behind the vertical track."] = true,
+		["Background enabled"] = true,
+		["Background disabled"] = true,
 		["Click to unlock, you can drag the bar"] = true,
 		["Click to lock, forbid dragging"] = true,
 		["Lock position"] = true,
@@ -74,6 +78,10 @@ L:RegisterTranslations("zhCN", function()
 		["Bar unlocked, can be dragged"] = "已解锁，可拖动竖行条",
 		["Background shown"] = "背景已显示",
 		["Background hidden (right-click the track to show again)"] = "背景已隐藏（右键轨道再次显示）",
+		["Show background"] = "显示背景",
+		["Show or hide the semi-transparent background behind the vertical track."] = "显示或隐藏竖直轨道背后的半透明底色.",
+		["Background enabled"] = "已开启竖行条背景",
+		["Background disabled"] = "已关闭竖行条背景",
 		["Click to unlock, you can drag the bar"] = "点击解锁，可拖动竖行条",
 		["Click to lock, forbid dragging"] = "点击锁定，禁止拖动",
 		["Lock position"] = "锁定位置",
@@ -222,6 +230,19 @@ BigWigsVerticalBars.consoleOptions = {
 			set = function(v)
 				BigWigsVerticalBars.db.profile.locked = v
 				BigWigsVerticalBars:UpdateLockState()
+			end,
+		},
+		bgVisible = {
+			type = "toggle",
+			name = L["Show background"],
+			desc = L["Show or hide the semi-transparent background behind the vertical track."],
+			order = 9,
+			get = function()
+				return BigWigsVerticalBars.db.profile.bgVisible
+			end,
+			set = function(v)
+				BigWigsVerticalBars.db.profile.bgVisible = v
+				BigWigsVerticalBars:ApplyBackgroundVisibility()
 			end,
 		},
 		reset = {
@@ -453,6 +474,17 @@ local TRACK_CAP = 40   -- 轨道顶对应的剩余秒数
 local FALL_AT = 10     -- 10s 以下为精确下落段（下半段）
 local QUEUE_GAP = 6    -- 等待堆叠最小间距
 local LABEL_W = 150    -- 名称文字区预留宽度（决定锚点总宽）
+
+-- 不进竖行条的「占位条」文本特征（lua pattern，统一小写后匹配）。
+-- 这类条不是真实倒计时，只是"事件期间挂一条、点一下就能选中某个 NPC"的点击锚点，
+-- 典型：AQ20 拉贾克斯的 self:Bar("Target Andorov", 3600, icon.eventStart, true, "Cyan")
+-- 时长填 3600 表示"整个事件期间一直挂着"。放进竖行条会占住长冷却区整整一小时，
+-- 让 timeline 永不空 → 锚点永不隐藏（表现：一进安其拉废墟竖行条就挂在屏幕上不消失）；
+-- 而且竖行条图标点击的行为是"播报剩余秒数"，本来也承担不了"点击选中"的职责。
+-- 横条不受影响，原版的点击选中功能照常。
+local PLACEHOLDER_BAR_PATTERNS = {
+	"^target ",   -- "Target Andorov" 之类
+}
 
 -- 剩余时间 → 图标中心相对锚点顶部的 y 偏移（向下为负）
 -- 上半段 40s→10s 占 trackH/2，下半段 10s→0 占 trackH/2
@@ -769,6 +801,19 @@ function BigWigsVerticalBars:UpdateLockState()
 	end
 end
 
+-- 背景显隐：选项里的「显示背景」开关与右键轨道共用同一条路径，
+-- 避免两处各自改 alpha 造成状态不一致（右键改了 db、选项 get 已经变了但没人刷新显示）
+function BigWigsVerticalBars:ApplyBackgroundVisibility()
+	if not self.frames or not self.frames.anchor then
+		return
+	end
+	local pathBG = self.frames.anchor.pathBG
+	if not pathBG then
+		return
+	end
+	pathBG:SetAlpha(self.db.profile.bgVisible and 1 or 0.05)
+end
+
 function BigWigsVerticalBars:SavePosition()
 	if not self.frames.anchor then
 		return
@@ -919,7 +964,7 @@ function BigWigsVerticalBars:SetupFrames()
 		if arg1 == "RightButton" then
 			local db = BigWigsVerticalBars.db.profile
 			db.bgVisible = not db.bgVisible
-			pathBG:SetAlpha(db.bgVisible and 1 or 0.05)
+			BigWigsVerticalBars:ApplyBackgroundVisibility()
 			if db.bgVisible then
 				BigWigs:Print(L["Background shown"])
 			else
@@ -934,12 +979,9 @@ function BigWigsVerticalBars:SetupFrames()
 	anchor.trackHit = trackHit
 	anchor.sepLine = sepLine
 
-	if not db.bgVisible then
-		pathBG:SetAlpha(0.05)
-	end
-
 	self:ApplyLayout()
 	self:UpdateLockState()
+	self:ApplyBackgroundVisibility()
 	self:RestorePosition()
 
 	anchor:SetScript("OnUpdate", function()
@@ -1016,6 +1058,13 @@ function BigWigsVerticalBars:BigWigs_StartBar(module, text, time, icon, otherc, 
 	if not text or type(time) ~= "number" or time <= 0 then
 		return
 	end
+	-- 点击占位条不进竖行条（见 PLACEHOLDER_BAR_PATTERNS 注释），横条照常
+	local lowerText = string.lower(text)
+	for i = 1, table.getn(PLACEHOLDER_BAR_PATTERNS) do
+		if string.find(lowerText, PLACEHOLDER_BAR_PATTERNS[i]) then
+			return
+		end
+	end
 	AddTimelineBar(text, time, icon, text, module)
 	-- 锚点隐藏时 OnUpdate 不跑，新条进来要主动唤起显示
 	self:RefreshShownState()
@@ -1049,6 +1098,18 @@ SlashCmdList["BIGWIGSVERTICAL"] = function(msg)
 	msg = string.lower(msg or "")
 	if msg == "test" then
 		BigWigsVerticalBars:RunTest()
+		return
+	end
+	-- /bwv bg | /bwv background：快速开关轨道背景（等同选项里的「显示背景」）
+	if msg == "bg" or msg == "background" then
+		local db = BigWigsVerticalBars.db.profile
+		db.bgVisible = not db.bgVisible
+		BigWigsVerticalBars:ApplyBackgroundVisibility()
+		if db.bgVisible then
+			BigWigs:Print(L["Background enabled"])
+		else
+			BigWigs:Print(L["Background disabled"])
+		end
 		return
 	end
 	-- /bwv left | /bwv right：快速切换技能名称方向（等同选项里的「名称方向」）

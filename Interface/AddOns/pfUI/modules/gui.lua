@@ -1220,6 +1220,11 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         "whitelist:" .. T["Whitelist"],
         "blacklist:" .. T["Blacklist"],
       },
+      ["buffsepmatch"] = {
+        "exact:" .. T["Exact Name"],
+        "smart:" .. T["Exact Then Partial"],
+        "fuzzy:" .. T["Partial"],
+      },
       ["buffbarsort"] = {
         "asc:" .. T["Ascending"],
         "desc:" .. T["Descending"],
@@ -2789,6 +2794,8 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
           function() return pfUI.buff:ExportSepShare("ALL") end,
           function(str) return pfUI.buff:ImportSepShare(str, "B") end)
       end)
+
+      CreateConfig(function() if pfUI.buff and pfUI.buff.SetSepMatchMode then pfUI.buff:SetSepMatchMode(C.buffs.sepmatch) end end, T["Name Matching"], C.buffs, "sepmatch", "dropdown", pfUI.gui.dropdowns.buffsepmatch)
 
       CreateConfig(nil, T["Seperate Buffs"], nil, nil, "header")
       -- 监控条（分离式Buff/Debuff + 目标版）独立的「显示持续时间在Buff里面」，

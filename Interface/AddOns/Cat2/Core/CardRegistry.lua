@@ -270,11 +270,29 @@ function Cat2.GetCardOptionDisplayValue(definition, value, card)
     if value == nil then
         return nil
     end
+    if definition and definition.type == "boolean" then
+        return value and "开启" or "关闭"
+    end
     return tostring(value)
 end
 
+-- 布尔参数默认使用勾选框；显式 select 仍保留原下拉交互。
+function Cat2.IsCardCheckboxOption(definition)
+    return type(definition) == "table" and definition.type == "boolean" and
+        (definition.control == nil or definition.control == "checkbox")
+end
+
+-- 参数级 exclusiveGroup 只在当前 step 内生效，与卡片级互斥组无关。
+function Cat2.GetCardOptionExclusiveGroup(definition)
+    if Cat2.IsCardCheckboxOption(definition) and
+       type(definition.exclusiveGroup) == "string" and definition.exclusiveGroup ~= "" then
+        return definition.exclusiveGroup
+    end
+    return nil
+end
+
 function Cat2.NormalizeCardOptionValue(definition, value, card)
-    if type(definition) ~= "table" then
+    if type(definition) ~= "table" or value == nil then
         return nil
     end
     local normalized = nil
@@ -359,25 +377,78 @@ function Cat2.CopyRawCardOptionValues(values)
     return result
 end
 
-function Cat2.ResolveStepOption(step, optionKey, parameters)
-    local definition = Cat2.GetCardOptionDefinition(step, optionKey)
-    if not definition then
-        return nil
-    end
+local function ResolveUnrestrictedStepOption(step, definition, parameters)
+    local optionKey = definition.key
     if type(step.optionValues) == "table" and step.optionValues[optionKey] ~= nil then
-        return Cat2.NormalizeCardOptionValue(definition, step.optionValues[optionKey], step)
+        return Cat2.NormalizeCardOptionValue(definition, step.optionValues[optionKey], step), 3
     end
     if type(parameters) == "table" and type(definition.inheritParameter) == "string" then
         local inherited = parameters[definition.inheritParameter]
         if inherited ~= nil then
             local normalized = Cat2.NormalizeCardOptionValue(definition, inherited, step)
             if normalized ~= nil then
-                return normalized
+                return normalized, 2
             end
         end
     end
     local defaultValue = Cat2.ResolveCardOptionDefinitionValue(definition, "default", step)
-    return Cat2.NormalizeCardOptionValue(definition, defaultValue, step)
+    return Cat2.NormalizeCardOptionValue(definition, defaultValue, step), 1
+end
+
+function Cat2.ResolveStepOption(step, optionKey, parameters)
+    local definition = Cat2.GetCardOptionDefinition(step, optionKey)
+    if not definition then
+        return nil
+    end
+    local value = ResolveUnrestrictedStepOption(step, definition, parameters)
+    local group = Cat2.GetCardOptionExclusiveGroup(definition)
+    if value ~= true or not group then
+        return value
+    end
+    -- 冲突时独立开启优先于继承开启，继承优先于默认；同优先级按 schema 顺序。
+    -- 不改写存档或卡片定义，避免临时继承值污染其他实例。
+    local winner = nil
+    local winnerPriority = 0
+    local index = 1
+    while index <= table.getn(step.optionSchema) do
+        local candidate = step.optionSchema[index]
+        if Cat2.GetCardOptionExclusiveGroup(candidate) == group then
+            local candidateValue, candidatePriority = ResolveUnrestrictedStepOption(step, candidate, parameters)
+            if candidateValue == true and candidatePriority > winnerPriority then
+                winner = candidate.key
+                winnerPriority = candidatePriority
+            end
+        end
+        index = index + 1
+    end
+    return winner == optionKey
+end
+
+-- 编辑器只修改草稿。显式开启时关闭同组其他项；恢复默认时整组解除覆写。
+-- 一组允许全部关闭；需要“必须选一个”的枚举参数继续使用 select。
+function Cat2.SetCardBooleanOption(values, card, optionKey, value)
+    local definition = Cat2.GetCardOptionDefinition(card, optionKey)
+    if type(values) ~= "table" or not definition or definition.type ~= "boolean" or
+       (value ~= nil and type(value) ~= "boolean") then
+        return false
+    end
+    local group = Cat2.GetCardOptionExclusiveGroup(definition)
+    if group and (value == true or value == nil) then
+        local index = 1
+        while index <= table.getn(card.optionSchema) do
+            local candidate = card.optionSchema[index]
+            if Cat2.GetCardOptionExclusiveGroup(candidate) == group then
+                if value == nil then
+                    values[candidate.key] = nil
+                else
+                    values[candidate.key] = false
+                end
+            end
+            index = index + 1
+        end
+    end
+    values[optionKey] = value
+    return true
 end
 
 -- 创建技能等级参数。未独立设置时始终跟随当前最高已学等级。
@@ -421,6 +492,8 @@ end
 - 被动卡：behavior = "passive"，可用 Apply 写入 context.parameters，用 Validate 阻止整轮执行。
 - 参数卡：optionSchema 描述可编辑参数；control = "select" 可声明不可编辑下拉框；
   每个流程 step 的 optionValues 只保存稳定基础值，不保存下拉选项的显示文字。
+- 布尔参数：默认使用勾选框，也可显式 control = "checkbox"；参数的 exclusiveGroup
+  相同则在当前卡片实例中最多开启一个。未设置、明确开启和明确关闭分别保存 nil/true/false。
 - 互斥卡：exclusiveGroup 相同的卡片在同一流程内最多启用一个。
 - 事件卡：events 与 OnEvent 配合；事件状态保存在 CardEventDispatcher，不进入 SavedVariables。
 - 施法能力：castProfile 只描述技能特征；是否中断由流程里的 castInterruptPolicy 被动卡决定。

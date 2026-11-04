@@ -205,15 +205,19 @@ end
 
 
 function module:Event(msg)
-	if msg == L["trigger_wingBuffet"] then
+	-- 中文客户端的「开始施放 / 获得了 / 效果消失」消息结尾都带全角句号，
+	-- 而上面的词条里没写句号，用 == 精确比较会永远不成立 —— Flamegor 之前
+	-- 三个技能全都收不到提示就是这个原因（同一份代码里 Ebonroc 的词条带了
+	-- 句号，所以它正常）。统一改成子串匹配，句号有无都能命中。
+	if string.find(msg, L["trigger_wingBuffet"]) then
 		self:Sync(syncName.wingBuffet)
 	
-	elseif msg == L["trigger_shadowFlame"] then
+	elseif string.find(msg, L["trigger_shadowFlame"]) then
 		self:Sync(syncName.shadowFlame)
 	
-	elseif msg == L["trigger_frenzy"] then
+	elseif string.find(msg, L["trigger_frenzy"]) then
 		self:Sync(syncName.frenzy)
-	elseif msg == L["trigger_frenzyFade"] then
+	elseif string.find(msg, L["trigger_frenzyFade"]) then
 		self:Sync(syncName.frenzyFade)
 	end
 end
@@ -238,8 +242,12 @@ function module:WingBuffet()
 	
 	self:Bar(L["bar_wingBuffetCast"], timer.wingBuffetCast, icon.wingBuffet, true, color.wingBuffetCast)
 	
-	self:DelayedBar(timer.wingBuffetCast, L["bar_wingBuffetCd"], timer.wingBuffetCd, icon.wingBuffet, true, color.wingBuffetCd)
-	self:DelayedMessage(timer.wingBuffetCast + timer.wingBuffetCd - 2, L["msg_wingBuffetSoon"], "Attention", false, nil, false)
+	-- 冷却条同步开出，不用 DelayedBar：延迟 1 秒再开条的定时器一旦没落地，
+	-- 冷却条就整次缺失且无法自愈（表现为第二次之后再也看不到龙翼打击）。
+	-- 与暗影烈焰一致：Firemaw 的 ShadowFlameHit 也是 RemoveBar + Bar 直接开，不走延迟。
+	-- 30 秒 = 1 秒读条 + 29 秒冷却，周期与原来完全相同，只是读数从施放瞬间起算。
+	self:Bar(L["bar_wingBuffetCd"], timer.wingBuffetFirstCd, icon.wingBuffet, true, color.wingBuffetCd)
+	self:DelayedMessage(timer.wingBuffetFirstCd - 2, L["msg_wingBuffetSoon"], "Attention", false, nil, false)
 end
 
 function module:ShadowFlame()

@@ -1,4 +1,8 @@
 pfUI_translation["zhCN"] = {
+  ["Partial"] = "模糊（子串）",
+  ["Exact Then Partial"] = "先精确再模糊",
+  ["Exact Name"] = "精确名称",
+  ["Name Matching"] = "名称匹配方式",
   -- --- chatcopy （独立复制窗口，2026-09-13 重构）---
   ["Chat Copy"] = "聊天复制",
   ["Copy All"] = "复制全部",

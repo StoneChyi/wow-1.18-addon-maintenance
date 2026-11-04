@@ -41,7 +41,7 @@ function card.RefreshRuntimeData()
 
     -- 腐蚀术持续时间
     -- 这里有个等级问题，以后再考虑
-    WarlockCorruptionDuration = tonumber(Cat2.Match(Cat2.GetSpellTooltip("腐蚀术","等级 1"), "腐蚀目标，在(%d+%.%d+)"))
+    WarlockCorruptionDuration = tonumber(Cat2.Match(Cat2.GetSpellTooltip("腐蚀术","等级 1"), "腐蚀目标，在(%d+%.?%d*)"))
     if not WarlockCorruptionDuration then WarlockCorruptionDuration=18 end
 
     Cat2.SetWarlockCorruptionDuration(WarlockCorruptionDuration)

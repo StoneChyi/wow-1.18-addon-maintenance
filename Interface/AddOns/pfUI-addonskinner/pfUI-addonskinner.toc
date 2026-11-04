@@ -106,3 +106,5 @@ skins\Tmog.lua
 
 # Create by 可可慕斯 20261027
 skins\diminfo.lua
+
+skins\ActionBarProfiles.lua

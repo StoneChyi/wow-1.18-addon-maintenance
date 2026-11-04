@@ -426,7 +426,64 @@ function ui.ShowTextInput(titleText, initialText, validator, onSubmit, submitLab
     inputBox:HighlightText()
 end
 
--- 通用卡片参数编辑器：按 optionSchema 顺序生成多行输入框，留空表示不覆写。
+-- 勾选框草稿独立于 step；关闭/取消弹窗不会写回流程。
+local function GetCardCheckboxDraft()
+    local step = cardOptionsWindow.currentStep
+    local values = Cat2.CopyRawCardOptionValues(step.optionValues)
+    local index = 1
+    while index <= table.getn(step.optionSchema) do
+        local row = cardOptionsRows[index]
+        if Cat2.IsCardCheckboxOption(row.definition) then
+            values[row.definition.key] = row.checkboxOverride
+        end
+        index = index + 1
+    end
+    local draft = {}
+    for key, value in pairs(step) do draft[key] = value end
+    draft.optionValues = values
+    return draft
+end
+
+local function RefreshCardCheckboxes()
+    local draft = GetCardCheckboxDraft()
+    local index = 1
+    while index <= table.getn(draft.optionSchema) do
+        local row = cardOptionsRows[index]
+        if Cat2.IsCardCheckboxOption(row.definition) then
+            -- 与其他参数编辑器一致，未覆写时预览定义默认值，不模拟执行中的被动参数。
+            local value = Cat2.ResolveStepOption(draft, row.definition.key, nil)
+            row.checkboxValue = value == true
+            if row.checkboxValue then row.checkboxMark:Show() else row.checkboxMark:Hide() end
+            local text = row.checkboxValue and "开启" or "关闭"
+            if row.checkboxOverride == nil then
+                text = text .. "（默认/继承）"
+                row.checkboxText:SetTextColor(0.64, 0.76, 0.88)
+            else
+                row.checkboxText:SetTextColor(1, 0.82, 0.2)
+            end
+            row.checkboxText:SetText(text)
+        end
+        index = index + 1
+    end
+end
+
+local function ChangeCardCheckbox(row, value)
+    local draft = GetCardCheckboxDraft()
+    Cat2.SetCardBooleanOption(draft.optionValues, draft, row.definition.key, value)
+    local index = 1
+    while index <= table.getn(draft.optionSchema) do
+        local current = cardOptionsRows[index]
+        if Cat2.IsCardCheckboxOption(current.definition) then
+            current.checkboxOverride = draft.optionValues[current.definition.key]
+        end
+        index = index + 1
+    end
+    HideActiveCardOptionsSelectMenu()
+    cardOptionsError:SetText("")
+    RefreshCardCheckboxes()
+end
+
+-- 通用卡片参数编辑器：按 optionSchema 顺序生成输入框、下拉框或布尔勾选框。
 function ui.ShowCardOptionEditor(step, onSubmit)
     if type(step) ~= "table" or type(step.optionSchema) ~= "table" or table.getn(step.optionSchema) == 0 then
         return
@@ -463,7 +520,8 @@ function ui.ShowCardOptionEditor(step, onSubmit)
         instruction:SetPoint("TOP", cardOptionsWindow, "TOP", 0, -36)
         instruction:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
         instruction:SetTextColor(0.58, 0.66, 0.76)
-        instruction:SetText("未设置过的参数会显示卡片默认值；输入项留空或下拉选择默认值可取消独立设置。")
+        instruction:SetWidth(390)
+        instruction:SetText("未设置项预览默认值，运行时可继承；勾选项可恢复默认，互斥组将整组恢复。")
 
         cardOptionsError = cardOptionsWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         cardOptionsError:SetPoint("BOTTOM", cardOptionsWindow, "BOTTOM", 0, 48)
@@ -542,7 +600,11 @@ function ui.ShowCardOptionEditor(step, onSubmit)
                 local row = cardOptionsRows[rowIndex]
                 if row.frame:IsVisible() then
                     local definition = row.definition
-                    if definition.control == "select" then
+                    if Cat2.IsCardCheckboxOption(definition) then
+                        if row.checkboxOverride ~= nil then
+                            optionValues[definition.key] = row.checkboxOverride
+                        end
+                    elseif definition.control == "select" then
                         -- “使用默认值”不写入 optionValues；其余选项只保存稳定 value。
                         if not row.selectUsesDefault then
                             local normalized = Cat2.NormalizeCardOptionValue(definition, row.selectValue, currentStep)
@@ -708,6 +770,63 @@ function ui.ShowCardOptionEditor(step, onSubmit)
                 updatingSelectInput = false,
             }
             table.insert(cardOptionsRows, row)
+
+            local checkbox = CreateFrame("Button", nil, rowFrame)
+            checkbox:SetFrameLevel(cardOptionsWindow:GetFrameLevel() + 10)
+            checkbox:SetWidth(165)
+            checkbox:SetHeight(26)
+            checkbox:SetPoint("LEFT", label, "RIGHT", 10, 0)
+            checkbox:RegisterForClicks("LeftButtonUp")
+            local box = CreateFrame("Frame", nil, checkbox)
+            box:SetWidth(18)
+            box:SetHeight(18)
+            box:SetPoint("LEFT", checkbox, "LEFT", 0, 0)
+            ui.ApplyFlatBackdrop(box, 0.03, 0.05, 0.08, 1)
+            local mark = box:CreateTexture(nil, "OVERLAY")
+            mark:SetTexture("Interface\\Buttons\\WHITE8X8")
+            mark:SetPoint("TOPLEFT", box, "TOPLEFT", 4, -4)
+            mark:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", -4, 4)
+            mark:SetVertexColor(0.25, 0.75, 1, 1)
+            local checkboxText = checkbox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            checkboxText:SetPoint("LEFT", box, "RIGHT", 6, 0)
+            checkboxText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+            local reset = CreateFrame("Button", nil, rowFrame)
+            reset:SetFrameLevel(cardOptionsWindow:GetFrameLevel() + 10)
+            reset:SetWidth(88)
+            reset:SetHeight(24)
+            reset:SetPoint("RIGHT", rowFrame, "RIGHT", 0, 0)
+            reset:RegisterForClicks("LeftButtonUp")
+            ui.ApplyFlatBackdrop(reset, 0.08, 0.18, 0.27, 1)
+            local resetText = reset:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            resetText:SetPoint("CENTER", reset, "CENTER", 0, 0)
+            resetText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+            resetText:SetTextColor(0.72, 0.9, 1)
+            row.checkbox = checkbox
+            row.checkboxMark = mark
+            row.checkboxText = checkboxText
+            row.checkboxReset = reset
+            row.checkboxResetText = resetText
+            checkbox:SetScript("OnClick", function()
+                ChangeCardCheckbox(row, not row.checkboxValue)
+            end)
+            checkbox:SetScript("OnEnter", function()
+                box:SetBackdropBorderColor(0.4, 0.68, 0.9, 1)
+                GameTooltip:SetOwner(checkbox, "ANCHOR_RIGHT")
+                GameTooltip:SetText(row.definition.label or row.definition.key)
+                GameTooltip:AddLine("勾选为开启，取消为明确关闭。恢复默认后可继承被动参数；此处预览卡片默认值。", 0.72, 0.8, 0.9, true)
+                if Cat2.GetCardOptionExclusiveGroup(row.definition) then
+                    GameTooltip:AddLine("互斥组：" .. row.definition.exclusiveGroup, 1, 0.82, 0.2, true)
+                    GameTooltip:AddLine("互斥选项：开启本项会关闭同组其他项；允许全部关闭。恢复组默认会清除整组设置。", 1, 0.82, 0.2, true)
+                end
+                GameTooltip:Show()
+            end)
+            checkbox:SetScript("OnLeave", function()
+                box:SetBackdropBorderColor(0.3, 0.4, 0.52, 0.9)
+                GameTooltip:Hide()
+            end)
+            reset:SetScript("OnClick", function() ChangeCardCheckbox(row, nil) end)
+            checkbox:Hide()
+            reset:Hide()
 
             row.RefreshSelectText = function()
                 local value = row.selectValue
@@ -910,6 +1029,10 @@ function ui.ShowCardOptionEditor(step, onSubmit)
         row.label:SetText((definition.label or definition.key) .. "：")
         row.unit:SetText(definition.unit or "")
         row.step = step
+        row.checkbox:Hide()
+        row.checkboxReset:Hide()
+        row.checkboxOverride = nil
+        row.unit:Show()
         local savedValue = nil
         if type(step.optionValues) == "table" then
             savedValue = step.optionValues[definition.key]
@@ -921,7 +1044,18 @@ function ui.ShowCardOptionEditor(step, onSubmit)
             displayValue = Cat2.ResolveCardOptionDefinitionValue(definition, "default", step)
         end
         displayValue = Cat2.NormalizeCardOptionValue(definition, displayValue, step)
-        if definition.control == "select" then
+        if Cat2.IsCardCheckboxOption(definition) then
+            row.checkboxOverride = Cat2.NormalizeCardOptionValue(definition, savedValue, step)
+            row.input:ClearFocus()
+            row.input:Hide()
+            row.selectButton:Hide()
+            row.selectArrowButton:Hide()
+            row.selectMenu:Hide()
+            row.unit:Hide()
+            row.checkbox:Show()
+            row.checkboxReset:Show()
+            row.checkboxResetText:SetText(Cat2.GetCardOptionExclusiveGroup(definition) and "恢复组默认" or "恢复默认")
+        elseif definition.control == "select" then
             local normalizedSavedValue = Cat2.NormalizeCardOptionValue(definition, savedValue, step)
             if savedValue ~= nil and normalizedSavedValue ~= nil then
                 row.selectUsesDefault = false
@@ -965,16 +1099,18 @@ function ui.ShowCardOptionEditor(step, onSubmit)
         rowIndex = rowIndex + 1
     end
     while rowIndex <= table.getn(cardOptionsRows) do
+        cardOptionsRows[rowIndex].input:ClearFocus()
         cardOptionsRows[rowIndex].frame:Hide()
         rowIndex = rowIndex + 1
     end
 
+    RefreshCardCheckboxes()
     ui.ShowMainWindowDim()
     cardOptionsWindow:Show()
     local focusIndex = 1
     while focusIndex <= schemaTotal do
         local focusRow = cardOptionsRows[focusIndex]
-        if focusRow and focusRow.definition and
+        if focusRow and focusRow.definition and not Cat2.IsCardCheckboxOption(focusRow.definition) and
            (focusRow.definition.control ~= "select" or focusRow.definition.allowCustom == true) then
             focusRow.input:SetFocus()
             focusRow.input:HighlightText()

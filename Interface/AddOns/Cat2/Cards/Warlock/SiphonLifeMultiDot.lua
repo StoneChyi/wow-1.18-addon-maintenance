@@ -38,7 +38,7 @@ function card.RefreshRuntimeData()
     end
 
     local WarlockSiphonLifeDuration = 30
-    WarlockSiphonLifeDuration = tonumber(Cat2.Match(Cat2.GetSpellTooltip("生命虹吸", "等级 1"), "在(%d+%.%d+)"))
+    WarlockSiphonLifeDuration = tonumber(Cat2.Match(Cat2.GetSpellTooltip("生命虹吸", "等级 1"), "在(%d+%.?%d*)"))
     if not WarlockSiphonLifeDuration then
         WarlockSiphonLifeDuration = 30
     end

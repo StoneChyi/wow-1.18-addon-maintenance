@@ -314,6 +314,7 @@ local function AddScoreLineOnce(tooltip, text)
             return
         end
     end
+    if tooltip:NumLines() >= 30 then return end
     tooltip:AddLine(text, 1, 1, 0)
     tooltip.sItemTipScoreLine = _G[tooltip:GetName() .. "TextLeft" .. tooltip:NumLines()]
     tooltip.sItemTipScoreText = text

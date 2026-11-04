@@ -133,13 +133,30 @@ pfUI.addonskinner:RegisterSkin("RaidCheck", function()
             end
             RestyleFontStrings(mainFrame)
 
-            -- 主框架按钮
+            -- 主框架按钮（按名字保底；插件后续新增的按钮由下面的子件扫描兜底）
             for _, name in ipairs({ "RCBA_CloseButton", "RCBA_BlessingButton",
                                     "RCBA_TankAdvButton", "RCBA_TaskButton",
-                                    "RCBA_AutoButton", "RCBA_ReportButton",
-                                    "RCBA_CheckButton", "RCBA_MonitorButton" }) do
+                                    "RCBA_ClearButton", "RCBA_AutoButton",
+                                    "RCBA_ReportButton", "RCBA_CheckButton",
+                                    "RCBA_MonitorButton" }) do
                 local b = _G[name]
-                if b then SkinButton(b) end
+                if b and not b.pfRCBASkinned then
+                    b.pfRCBASkinned = true
+                    SkinButton(b)
+                end
+            end
+
+            -- 直属子件扫描：主框架下所有 Button 一次性补套皮肤。
+            -- 只扫一层（GetChildren 不含孙辈），不会碰到各分组框/子窗口内部的控件，
+            -- 避免把已经精细处理过的下拉、输入框、骑士图标再次覆盖。
+            local mainChildren = { mainFrame:GetChildren() }
+            for i = 1, table.getn(mainChildren) do
+                local c = mainChildren[i]
+                if c.GetObjectType and c:GetObjectType() == "Button"
+                    and not c.pfRCBASkinned then
+                    c.pfRCBASkinned = true
+                    SkinButton(c)
+                end
             end
 
             -- 分组容器框（真言术/奥术智慧/野性印记/诅咒/坦克）

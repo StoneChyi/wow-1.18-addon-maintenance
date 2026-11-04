@@ -38,7 +38,7 @@ function card.RefreshRuntimeData()
 
     local CurseAgonyDuration = 24
 
-    CurseAgonyDuration = tonumber(Cat2.Match(Cat2.GetSpellTooltip("痛苦诅咒","等级 5"), "使其在(%d+%.%d+)"))
+    CurseAgonyDuration = tonumber(Cat2.Match(Cat2.GetSpellTooltip("痛苦诅咒","等级 5"), "使其在(%d+%.?%d*)"))
     if not CurseAgonyDuration then CurseAgonyDuration=24 end
 
     Cat2.SetCurseAgonyDuration(CurseAgonyDuration)

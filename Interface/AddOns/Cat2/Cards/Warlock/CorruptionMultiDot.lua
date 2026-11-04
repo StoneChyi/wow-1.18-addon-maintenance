@@ -36,7 +36,7 @@ function card.RefreshRuntimeData()
     end
 
     local WarlockCorruptionDuration = 18
-    WarlockCorruptionDuration = tonumber(Cat2.Match(Cat2.GetSpellTooltip("腐蚀术", "等级 1"), "腐蚀目标，在(%d+%.%d+)"))
+    WarlockCorruptionDuration = tonumber(Cat2.Match(Cat2.GetSpellTooltip("腐蚀术", "等级 1"), "腐蚀目标，在(%d+%.?%d*)"))
     if not WarlockCorruptionDuration then
         WarlockCorruptionDuration = 18
     end

@@ -12,6 +12,8 @@
 
 ## 当前维护摘要
 
+2026-11-04：新增自身血量/百分比/多选连击点三张跳转卡及TOC入口、布尔草稿/互斥/迁移，九张术士卡兼容整数时长。原紧急续杯、战士互斥、个人血量条件/敌人数/持续伤害和版本标识保留。 [本轮记录](#change-Cat2-20261104-01)。
+
 2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-Cat2-20261102-01)。
 
 2026-10-30 合入 10 张姿态/撕咬/潜行起手卡及加载入口、引导保护、扫击/撕扯紧急续杯和盗贼失败反馈；保留个人自身消耗品敌人数阈值、持续伤害/斩杀/Buff 处理。自动祝福和整版标识暂缓。 [本轮记录](#change-Cat2-20261030-02)。
@@ -26,6 +28,21 @@
 逐次记录包含曾采用的中间方案；后续修改会注明替代关系。早期摘要仅作历史依据，当前行为优先核对较晚的明确记录和现用源码。
 
 ## 逐次修改记录
+
+<a id="change-Cat2-20261104-01"></a>
+
+### 2026-11-04｜保留个人核心合入11月03日明确增量
+
+- 记录编号：`Cat2-20261104-01`
+- 记录类型：更新合并
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：用户授权合入值得更新的内容，保留个人核心与优化，先修换团/字体，不确定项先不动。
+- 修改内容：新增自身血量/百分比/多选连击点三张跳转卡及TOC入口、布尔草稿/互斥/迁移，九张术士卡兼容整数时长。原紧急续杯、战士互斥、个人血量条件/敌人数/持续伤害和版本标识保留。 原作者、许可及StoneChyi & Codex维护署名保留。
+- 涉及文件：`Cards/Logic/FlowJumpComboPoints.lua`、`Cards/Logic/FlowJumpSelfHealthBelow.lua`、`Cards/Logic/FlowJumpSelfHealthPercentBelow.lua`、`Cards/Warlock/Corruption.lua`、`Cards/Warlock/CorruptionMultiDot.lua`、`Cards/Warlock/CurseOfAgony.lua`、`Cards/Warlock/CurseOfAgonyMultiDot.lua`、`Cards/Warlock/CurseOfRecklessnessHex.lua`、`Cards/Warlock/CurseOfShadowHex.lua`、`Cards/Warlock/CurseOfTheElementsHex.lua`、`Cards/Warlock/SiphonLife.lua`、`Cards/Warlock/SiphonLifeMultiDot.lua`、`Cat2.toc`、`Core/CardRegistry.lua`、`Core/Persistence.lua`、`UI/Notice.lua`。
+- 检查结果：整批33个改动Lua真实Lua5.0.3、2个XML及加载引用通过；17组新专项、20组既有合并、S_ItemTip85项、监控2592种组合、药品15套及自动化/共享属性/头像隔离/职责窗口11项回归通过。9份TOC署名通过；BOM与未改行换行逐字节保留。 完整范围见[实施记录](../Research/11月03日包保留个人核心合并实施-20261104.md)及[指纹清单](../Research/11月03日包保留个人核心合并实施-20261104.json)。
+- 未确认事项：未运行游戏；真实事件、渲染/鼠标命中、存档和服务器行为仍待验收。其他暂缓项与个人设置保持。
 
 <a id="change-Cat2-20261102-01"></a>
 

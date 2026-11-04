@@ -105,6 +105,10 @@ S_ItemTip_Frame:SetScript("OnEvent", function (self)
     end
 end)
  
+-- 1.12 的 GameTooltip 是硬编码 30 行上限（满行后 AddLine/AddDoubleLine 静默失败，
+-- 文字还会压到背景九宫格外面）。角色多的号一个物品能列十几行，这里必须掐住。
+local TIP_LINE_LIMIT = 30
+
 local S_ItemTipCountFrame = CreateFrame("Frame", "S_ItemTipCountFrame", GameTooltip)
 
 S_ItemTipCountFrame:SetScript("OnShow", function(self)
@@ -144,18 +148,20 @@ S_ItemTipCountFrame:SetScript("OnShow", function(self)
 						for slot,_ in pairs(S_CountDB[char]) do
 							local count = S_CountDB[char][slot][itemName]
 							if count then
-								if not initLineAdded then
-									GameTooltip:AddLine(" ", 0, 0, 0, 0)
-									initLineAdded = true
+								totalCount = totalCount + count   -- 数量照常累计，保证「合计」是准的
+								if GameTooltip:NumLines() < TIP_LINE_LIMIT then
+									if not initLineAdded then
+										if GameTooltip:NumLines() < TIP_LINE_LIMIT - 1 then GameTooltip:AddLine(" ", 0, 0, 0, 0) end
+										initLineAdded = true
+									end
+									local displayName = string.sub(char, realmPrefixLen + 1)
+									GameTooltip:AddDoubleLine(displayName .. "[" .. slot .. "]", count, 0.65, 0.75, 0.85, 0.65, 0.75, 0.85)
 								end
-								totalCount = totalCount + count
-								local displayName = string.sub(char, realmPrefixLen + 1)
-								GameTooltip:AddDoubleLine(displayName .. "[" .. slot .. "]", count, 0.65, 0.75, 0.85, 0.65, 0.75, 0.85)
 							end
 						end
 					end
 				end
-				if (totalCount>1) then
+				if (totalCount>1) and GameTooltip:NumLines() < TIP_LINE_LIMIT then
 					GameTooltip:AddDoubleLine("合计", totalCount, 0, 0.8, 1, 0, 0.8, 1)
 				end
 			end

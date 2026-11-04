@@ -120,6 +120,30 @@ local function RestoreStep(savedStep)
             isMissing = true
         }
     end
+    -- 连击点跳转从单个数字改为五个独立勾选项；登录与导入共用此迁移。
+    -- 已有任意新字段时完全采用新设置，避免残留旧字段重新开启用户取消的项。
+    if cardId == "logic_flow_jump_combo_points" and type(savedOptionValues) == "table" and
+       savedOptionValues.comboPoints ~= nil then
+        local hasCheckboxValues = false
+        local index = 1
+        while index <= 5 do
+            if savedOptionValues["comboPoints" .. index] ~= nil then hasCheckboxValues = true end
+            index = index + 1
+        end
+        if not hasCheckboxValues then
+            local oldValue = Cat2.NormalizeCardOptionValue(
+                { type = "number", minimum = 0, maximum = 5 }, savedOptionValues.comboPoints, card)
+            if oldValue ~= nil then
+                savedOptionValues = Cat2.CopyRawCardOptionValues(savedOptionValues)
+                index = 1
+                while index <= 5 do
+                    -- 旧零星设置迁移为全部关闭，不擅自改成其他星级触发。
+                    savedOptionValues["comboPoints" .. index] = oldValue == index
+                    index = index + 1
+                end
+            end
+        end
+    end
     if Cat2.ResolveCardIcon then
         Cat2.ResolveCardIcon(card)
     end

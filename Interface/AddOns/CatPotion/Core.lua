@@ -42,12 +42,15 @@ addon.ItemTextures = {
     distilledWisdom = "Interface\\Icons\\INV_Potion_120",
     zanzaSpeed = "Interface\\Icons\\INV_Potion_31",
     arthasGift = "Interface\\Icons\\INV_Potion_28",
+    tranquilityElixir = "Interface\\Icons\\INV_Potion_11",
     zanzaSpirit = "Interface\\Icons\\INV_Potion_30",
     fortitude = "Interface\\Icons\\INV_Potion_43",
     medivhWine = "Interface\\Icons\\INV_Drink_Waterskin_05",
     cocktail = "Interface\\Icons\\INV_Drink_12",
     trollBlood = "Interface\\Icons\\INV_Potion_80",
     stoneshield = "Interface\\Icons\\INV_Potion_66",
+    communionElixir = "Interface\\Icons\\INV_Potion_12",
+    resilienceElixir = "Interface\\Icons\\INV_Potion_19",
     greaterArcaneProtection = "Interface\\Icons\\INV_Potion_83",
     greaterShadowProtection = "Interface\\Icons\\INV_Potion_23",
     greaterNatureProtection = "Interface\\Icons\\INV_Potion_22",
@@ -82,6 +85,8 @@ addon.ItemTextures = {
     felMana = "Interface\\Icons\\INV_Potion_45",
     medivhBlue = "Interface\\Icons\\INV_Drink_Waterskin_01",
     intellectScroll4 = "Interface\\Icons\\INV_Scroll_01",
+    harmonyElixir = "Interface\\Icons\\INV_Potion_13",
+    kinshipElixir = "Interface\\Icons\\INV_Potion_125",
     dreamMongoose = "Interface\\Icons\\INV_Blue_Gold_Elixir_2",
     arcaneGiants = "Interface\\Icons\\INV_Yellow_Purple_Elixir_2",
     dreamFirewater = "Interface\\Icons\\INV_Green_Pink_Elixir_1",
@@ -126,14 +131,17 @@ addon.ItemDetails = {
     titans = "1200生命",
     supremePower = "150法伤",
     distilledWisdom = "2000法力",
-    zanzaSpeed = "20移速",
+    zanzaSpeed = "+20%移速",
     arthasGift = "疾病",
+    tranquilityElixir = "+5%移速",
     zanzaSpirit = "50耐力",
     fortitude = "120生命",
     medivhWine = "25耐力",
     cocktail = "25耐",
     trollBlood = "20回血",
     stoneshield = "450甲",
+    communionElixir = "+35%自然抗",
+    resilienceElixir = "+10%抵抗中毒",
     mongoose = "25敏+2暴击",
     agility = "15敏",
     encrusted = "25敏捷",
@@ -163,6 +171,8 @@ addon.ItemDetails = {
     felMana = "12回蓝",
     medivhBlue = "15智力",
     intellectScroll4 = "16智力",
+    harmonyElixir = "自然+2%暴",
+    kinshipElixir = "精神+35%",
     dreamMongoose = "25敏+15法伤+2暴",
     arcaneGiants = "25力+35法伤",
     dreamFirewater = "35AP+35法伤",
@@ -280,6 +290,7 @@ AddItem("distilledWisdom", "合剂", "萃取智慧", "精炼智慧合剂", "精�
 -- 独特药剂
 AddItem("zanzaSpeed", "独特药剂", "赞扎之速", "赞扎之速", "赞扎之速")
 AddItem("arthasGift", "独特药剂", "阿尔萨斯的礼物", "阿尔萨斯的礼物", "阿尔萨斯礼物")
+AddItem("tranquilityElixir", "独特药剂", "宁静灵药", "宁静灵药", "宁静灵药")
 
 -- 生存药剂
 AddItem("zanzaSpirit", "生存药剂", "赞扎之魂", "赞扎之魂", "赞扎之魂")
@@ -288,6 +299,8 @@ AddItem("medivhWine", "生存药剂", "麦迪文的葡萄酒", "麦迪文的葡�
 AddItem("cocktail", "生存药剂", "野猪之魂", "肺片鸡尾酒", "肺片鸡尾酒")
 AddItem("trollBlood", "生存药剂", "回复", "特效巨魔之血药水", "特效巨魔之血药水")
 AddItem("stoneshield", "生存药剂", "强效护甲", "超强防御药剂", "超强防御药剂")
+AddItem("communionElixir", "生存药剂", "神性灵药", "神性灵药", "神性灵药")
+AddItem("resilienceElixir", "生存药剂", "韧性灵药", "韧性灵药", "韧性灵药")
 -- 防护药水的 Buff 名称不同于物品名；映射与本地 XRS 中文防护药水监控一致。
 AddItem("greaterArcaneProtection", "生存药剂", "奥术防护", "强效奥术防护药水", "强效奥术防护")
 AddItem("greaterShadowProtection", "生存药剂", "防护暗影", "强效暗影防护药水", "强效暗影防护")
@@ -327,6 +340,8 @@ AddItem("naturePower", "法系强化", "强效自然力量药剂", "强效自然
 AddItem("felMana", "法系强化", "法力回复", "魔血药水", "魔血药水", "Interface\\Icons\\INV_Potion_45")
 AddItem("medivhBlue", "法系强化", "麦迪文的蓝标葡萄酒", "麦迪文的蓝标葡萄酒", "麦迪文蓝标酒")
 AddItem("intellectScroll4", "法系强化", "智力", "智力卷轴 IV", "智力卷轴 IV", nil, true)
+AddItem("harmonyElixir", "法系强化", "和谐灵药", "和谐灵药", "和谐灵药")
+AddItem("kinshipElixir", "法系强化", "亲源灵药", "亲源灵药", "亲源灵药")
 
 -- 混合药剂
 AddItem("dreamMongoose", "混合药剂", "翡翠猫鼬药剂", "翡翠猫鼬药剂", "翡翠猫鼬药剂")

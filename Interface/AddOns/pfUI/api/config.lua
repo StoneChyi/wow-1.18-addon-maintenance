@@ -73,6 +73,8 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("buffs",      nil,           "separateweapons",  "0")
   pfUI:UpdateConfig("buffs",      nil,           "separatebuffs",    "0")
   pfUI:UpdateConfig("buffs",      nil,           "separatelist",     "")
+  -- Missing keys keep the existing exact-then-partial monitoring behavior.
+  pfUI:UpdateConfig("buffs",      nil,           "sepmatch",         "smart")
   pfUI:UpdateConfig("buffs",      nil,           "sepbuffsize",      "36")
   pfUI:UpdateConfig("buffs",      nil,           "sepbuffrowsize",   "8")
   pfUI:UpdateConfig("buffs",      nil,           "sepbuffglow",      "1")

@@ -2266,24 +2266,7 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
       end)
     end
 
-    -- 键盘触发：hoverbind 绑定模式把 PFMONITORBUTTON%d 绑到按键后，由此使用对应监控槽位
-    -- （1.12 的自定义绑定名没有引擎动作；本体 ACTIONBUTTON 走暴雪绑定链不受影响）
-    -- ⚠️ 不能再用 EnableKeyboard 的常驻 frame 接 OnKeyDown/OnKeyUp：本客户端该 frame 会抢
-    --    键盘焦点并吞掉全部按键（表现为键盘全失效、鼠标正常）。改成 OnUpdate 轮询 IsKeyDown，
-    --    只读取状态、不劫持输入。IsKeyDown 缺失时整段降级（不报错）。
-    local monitorkeymap = {}
-    local monitorkeyheld = {}
-    local monitorpolling = (type(IsKeyDown) == "function")
-
-    local function MonitorRebuildKeybinds()
-      for k in pairs(monitorkeymap) do monitorkeymap[k] = nil end
-      for k in pairs(monitorkeyheld) do monitorkeyheld[k] = nil end
-      for i = 1, pfUI.bars.MONITOR_COUNT do
-        local key = GetBindingKey("PFMONITORBUTTON" .. i)
-        if key then monitorkeymap[key] = i end
-      end
-    end
-
+    -- Bindings.xml dispatches monitor keys; no keyboard focus or key polling.
     local listener = CreateFrame("Frame", "pfActionMonitorKeybindListener", UIParent)
     pfUI.bars.monitorKeybindListener = listener
     listener:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -2292,7 +2275,6 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
     listener:RegisterEvent("CHARACTER_POINTS_CHANGED")
     listener:RegisterEvent("SPELLS_CHANGED")
     listener:SetScript("OnEvent", function()
-      if event == "PLAYER_ENTERING_WORLD" or event == "UPDATE_BINDINGS" then MonitorRebuildKeybinds() end
       if event ~= "UPDATE_BINDINGS" then
         this.talentAt, this.talentCandidate, this.talentRetries = GetTime() + 1, nil, 0
       end
@@ -2319,27 +2301,17 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
       end
     end)
 
-    -- 组合键：修饰键走 1.12 确定的 IsAlt/Control/ShiftKeyDown，末段才走 IsKeyDown
-    local function MonitorKeyHeld(keystr)
-      local base
-      for p in string.gmatch(keystr, "[^%-]+") do
-        if p == "ALT" then
-          if not IsAltKeyDown() then return false end
-        elseif p == "CTRL" then
-          if not IsControlKeyDown() then return false end
-        elseif p == "SHIFT" then
-          if not IsShiftKeyDown() then return false end
-        else
-          base = p
-        end
-      end
-      if not base then return false end
-      return IsKeyDown(base) and true or false
-    end
-
-    local function MonitorUseButton(idx)
-      if C.bars.monitordisplayonly == "1" then return end
+    _G.pfUIActionMonitorButton = function(idx)
+      if C.bars.monitorenable ~= "1" or C.bars.monitordisplayonly == "1" then return end
+      if (ChatFrameEditBox and ChatFrameEditBox:IsShown())
+        or (pfUI.hoverbind and pfUI.hoverbind:IsShown()) or mon.dragButton then return end
       local b = mon.buttons[idx]
+      if b and b.highlight then
+        if keystate == "down" then b.highlight:Show()
+        elseif keystate == "up" and not MouseIsOver(b) then b.highlight:Hide() end
+      end
+      if keystate and not ((C.bars.keydown == "1" and keystate == "down")
+        or (C.bars.keydown ~= "1" and keystate == "up")) then return end
       if b and b.slot and HasAction(b.slot) then
         if MacroFrame_SaveMacro then
           MacroFrame_SaveMacro()
@@ -2352,46 +2324,6 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
         if C.bars.animmode == "keypress" then
           b.animation.active = 0
           b.animation:Show()
-        end
-      end
-    end
-
-    -- 由 mon 的 OnUpdate 调用：无绑定键时 pairs 一次即出，零开销
-    local function MonitorPollKeys()
-      if not monitorpolling then return end
-      if C.bars.monitorenable ~= "1" then return end
-
-      -- 惰性重建兜底：UPDATE_BINDINGS 缺失时也能捡到新绑定（2s 限频，代价可忽略）
-      if not mon.nextRebuild or mon.nextRebuild <= GetTime() then
-        mon.nextRebuild = GetTime() + 2
-        MonitorRebuildKeybinds()
-      end
-
-      local blocked = (ChatFrameEditBox and ChatFrameEditBox:IsShown())
-        or (pfUI.hoverbind and pfUI.hoverbind:IsShown())
-        or mon.dragButton
-      for key, idx in pairs(monitorkeymap) do
-        local down = MonitorKeyHeld(key)
-        local held = monitorkeyheld[key] and true or false
-        if down ~= held then
-          monitorkeyheld[key] = down
-          -- 键盘按下/抬起的按下反馈（对齐本体 ButtonAnimate：down 亮、up 且鼠标不在按钮上时灭）
-          local mb = mon.buttons[idx]
-          if mb and mb.highlight then
-            if down then
-              mb.highlight:Show()
-            elseif not MouseIsOver(mb) then
-              mb.highlight:Hide()
-            end
-          end
-          if not blocked then
-            -- 触发时机对齐本体 keydown 配置（keydown=1 按下触发，否则抬起触发）
-            if C.bars.keydown == "1" then
-              if down then MonitorUseButton(idx) end
-            elseif not down then
-              MonitorUseButton(idx)
-            end
-          end
         end
       end
     end
@@ -2442,7 +2374,6 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
         end
       end
 
-      MonitorPollKeys()
     end)
 
     pfUI.bars.RefreshMonitor = function() MonitorRefresh() end
@@ -2687,6 +2618,11 @@ pfUI:RegisterModule("actionbar", "vanilla:tbc", function ()
     for i=1,12 do
       _G["BINDING_NAME_PF" .. name .. i] = loc .. " " .. T["Button"] .. " " .. i
     end
+  end
+
+  _G["BINDING_HEADER_PFBARMONITOR"] = T["Action Monitor"]
+  for i=1,pfUI.bars.MONITOR_COUNT do
+    _G["BINDING_NAME_PFMONITORBUTTON" .. i] = T["Action Monitor"] .. " " .. T["Button"] .. " " .. i
   end
 
   -- Map Keybinds to button clicks

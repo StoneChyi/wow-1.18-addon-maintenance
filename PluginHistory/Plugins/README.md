@@ -63,7 +63,7 @@
 | 插件 / 组件 | 最近记录 |
 | --- | --- |
 | [!Libs](!Libs.md) | [2026-11-02 · 整合唯一天赋队列、职责缓存与识别服务](!Libs.md#change-!Libs-20261102-03) |
-| [ActionBarProfiles](ActionBarProfiles.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](ActionBarProfiles.md#change-ActionBarProfiles-20261102-01) |
+| [ActionBarProfiles](ActionBarProfiles.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](ActionBarProfiles.md#change-ActionBarProfiles-20261104-01) |
 | [AdvancedTradeSkillWindow2](AdvancedTradeSkillWindow2.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](AdvancedTradeSkillWindow2.md#change-AdvancedTradeSkillWindow2-20261102-01) |
 | [Atlas](Atlas.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Atlas.md#change-Atlas-20261102-01) |
 | [AtlasLoot](AtlasLoot.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](AtlasLoot.md#change-AtlasLoot-20261102-01) |
@@ -73,13 +73,13 @@
 | [aux-addon](aux-addon.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](aux-addon.md#change-aux-addon-20261102-01) |
 | [Bagshui](Bagshui.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Bagshui.md#change-Bagshui-20261102-01) |
 | [BetterCharacterStats](BetterCharacterStats.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](BetterCharacterStats.md#change-BetterCharacterStats-20261102-01) |
-| [BigWigs](BigWigs.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](BigWigs.md#change-BigWigs-20261102-01) |
+| [BigWigs](BigWigs.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](BigWigs.md#change-BigWigs-20261104-01) |
 | [BrainwasherPro](BrainwasherPro.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](BrainwasherPro.md#change-BrainwasherPro-20261102-01) |
 | [BuffTool](BuffTool.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](BuffTool.md#change-BuffTool-20261102-01) |
 | [Capslock](Capslock.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Capslock.md#change-Capslock-20261102-01) |
 | [Cat](Cat.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Cat.md#change-Cat-20261102-01) |
-| [Cat2](Cat2.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Cat2.md#change-Cat2-20261102-01) |
-| [CatPotion](CatPotion.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](CatPotion.md#change-CatPotion-20261102-01) |
+| [Cat2](Cat2.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](Cat2.md#change-Cat2-20261104-01) |
+| [CatPotion](CatPotion.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](CatPotion.md#change-CatPotion-20261104-01) |
 | [Cooline](Cooline.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Cooline.md#change-Cooline-20261102-01) |
 | [diminfo](diminfo.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](diminfo.md#change-diminfo-20261102-01) |
 | [DPSMateX](DPSMateX.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](DPSMateX.md#change-DPSMateX-20261102-01) |
@@ -99,17 +99,17 @@
 | [OneBag](OneBag.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](OneBag.md#change-OneBag-20261102-01) |
 | [Outfitter](Outfitter.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Outfitter.md#change-Outfitter-20261102-01) |
 | [PallyPower](PallyPower.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PallyPower.md#change-PallyPower-20261102-01) |
-| [pfUI](pfUI.md) | [2026-11-02 · 增加统一团队职责管理入口](pfUI.md#change-pfUI-20261102-03) |
-| [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-11-02 · 清理QuickHeal退役职责窗口的皮肤引用](pfUI-addonskinner.md#change-pfUI-addonskinner-20261102-02) |
+| [pfUI](pfUI.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](pfUI.md#change-pfUI-20261104-01) |
+| [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](pfUI-addonskinner.md#change-pfUI-addonskinner-20261104-01) |
 | [pfUI-CustomMedia](pfUI-CustomMedia.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI-CustomMedia.md#change-pfUI-CustomMedia-20261102-01) |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261102-01) |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PizzaWorldBuffs.md#change-PizzaWorldBuffs-20261102-01) |
 | [PlayerLinkEnhance](PlayerLinkEnhance.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261102-01) |
 | [QianKunBag](QianKunBag.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](QianKunBag.md#change-QianKunBag-20261102-01) |
 | [QuickHeal](QuickHeal.md) | [2026-11-02 · 接通自动统一职责服务](QuickHeal.md#change-QuickHeal-20261102-03) |
-| [RaidCheck](RaidCheck.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](RaidCheck.md#change-RaidCheck-20261102-01) |
+| [RaidCheck](RaidCheck.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](RaidCheck.md#change-RaidCheck-20261104-01) |
 | [S_ChatBar](S_ChatBar.md) | [2026-11-02 · 聊天栏新增“职”，直达pfUI统一职责管理](S_ChatBar.md#change-S_ChatBar-20261102-03) |
-| [S_ItemTip](S_ItemTip.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](S_ItemTip.md#change-S_ItemTip-20261102-01) |
+| [S_ItemTip](S_ItemTip.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](S_ItemTip.md#change-S_ItemTip-20261104-01) |
 | [ShaguDPS](ShaguDPS.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](ShaguDPS.md#change-ShaguDPS-20261102-01) |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261102-01) |
 | [SpecialTalent](SpecialTalent.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SpecialTalent.md#change-SpecialTalent-20261102-01) |
