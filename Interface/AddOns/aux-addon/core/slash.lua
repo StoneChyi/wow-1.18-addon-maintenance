@@ -76,6 +76,23 @@ function SlashCmdList.AUX(command)
 	elseif arguments[1] == 'show' and arguments[2] == 'hidden' then
 		aux.account_data.showhidden = not aux.account_data.showhidden
 		aux.print('show hidden ' .. status(aux.account_data.showhidden))
+	elseif arguments[1] == 'throttle' then
+		aux.account_data.scan_throttle = not (aux.account_data.scan_throttle ~= false)
+		if aux.account_data.scan_throttle ~= false then
+			aux.print('查询节流 ' .. status(true) .. ' —— 等 CanSendAuctionQuery 允许再发（个人版默认）')
+		else
+			aux.print('查询节流 ' .. status(false) .. ' —— 直发查询，被吞则 0.4 秒重发（可选；超时后有限重试）')
+		end
+	elseif arguments[1] == 'sample' then
+        aux.account_data.post_sample = not (aux.account_data.post_sample == true)
+        aux.print('上架价格抽样 ' .. status(aux.account_data.post_sample) .. '；默认关闭：完整扫描。开启后只采集20种价格，不写历史。')
+	elseif arguments[1] == 'stats' then
+		aux.account_data.scan_stats = not (aux.account_data.scan_stats == true)
+		if aux.account_data.scan_stats then
+			aux.print('扫描统计 ' .. status(true))
+		else
+			aux.print('扫描统计 ' .. status(false))
+		end
 	else
 aux.print('使用方法：')
 aux.print('- scale [' .. aux.color.blue(aux.account_data.scale) .. '] 框架大小')
@@ -97,5 +114,8 @@ aux.print('- sharing [' .. status(aux.account_data.sharing) .. '] 数据共享')
 aux.print('- theme [' .. aux.color[aux.account_data.theme == 'blizzard' and 'green' or 'red']('blizzard') .. ' | ' .. 
     aux.color[aux.account_data.theme == 'modern' and 'green' or 'red']('modern') .. '] 主题')
 aux.print('- show hidden [' .. status(aux.account_data.showhidden) .. '] 显示隐藏项')
+aux.print('- throttle [' .. status(aux.account_data.scan_throttle ~= false) .. '] 查询节流（默认开；关闭后允许直发）')
+aux.print('- sample [' .. status(aux.account_data.post_sample == true) .. '] 上架价格抽样（默认关闭）')
+aux.print('- stats [' .. status(aux.account_data.scan_stats == true) .. '] 扫描耗时统计')
     end
 end

@@ -613,7 +613,7 @@ function Automaton_Tooltip:FormatItemTooltip(tooltip)
 
     --显示物品ID
     if self.db.profile.showitemid then
-        tooltip:AddDoubleLine("物品ID：", itemId)
+        tooltip:AddLine("物品ID： " .. itemId)
         showing = true
     end
 

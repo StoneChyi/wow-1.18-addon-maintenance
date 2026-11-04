@@ -5,10 +5,9 @@
   "reference_commit": "4feabd85022b2e3afbd8c6aca6d94fe7765cf124",
   "scope": "个人使用版的维护说明；不是官方原版对比",
   "counts": {
-    "documented_history": 61,
+    "documented_history": 62,
     "unconfirmed": 42,
-    "snapshot_difference": 1,
-    "related_skin_only": 1
+    "snapshot_difference": 1
   },
   "added_counts": {
     "documented_history": 2
@@ -303,7 +302,8 @@
         "Interface/AddOns/pfUI/.workbuddy/memory/2026-08-28.md",
         "Interface/AddOns/pfUI/.workbuddy/memory/2026-09-18.md",
         "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/Automatonex/Core.lua",
@@ -318,15 +318,17 @@
         "Interface/AddOns/Automatonex/Modules/AutoDB.lua",
         "Interface/AddOns/Automatonex/Modules/TSTargetMark.lua",
         "Interface/AddOns/Automatonex/Modules/Unlock.lua",
-        "Interface/AddOns/Automatonex/Plubics/CleanChat/CleanChat.lua"
+        "Interface/AddOns/Automatonex/Plubics/CleanChat/CleanChat.lua",
+        "Interface/AddOns/Automatonex/Automatonex.toc",
+        "Interface/AddOns/Automatonex/Modules/AutoCmd.lua"
       ],
       "tracked_files_at_reference": 122,
       "pending": "",
       "last_package_update": {
-        "date": "2026-10-30",
-        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
-        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
-        "files_changed": 4,
+        "date": "2026-11-04",
+        "report": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md",
+        "manifest": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.json",
+        "files_changed": 5,
         "game_verified": false
       },
       "history_group": "modified"
@@ -1348,7 +1350,8 @@
         "PluginHistory/Research/插件更新实施-20261012.md",
         "PluginHistory/Research/10月16日包合并实施-20261018.md",
         "PluginHistory/Research/10月24日包合并实施-20261025.md",
-        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md"
+        "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
+        "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/GoubayuHeal/GoubayuHeal.lua",
@@ -1363,10 +1366,10 @@
       "tracked_files_at_reference": 12,
       "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；该阶段只读桥已由本次共享provider接续。 既有待确认事项：是否曾修改、修改内容及更新时需要保留的行为。",
       "last_package_update": {
-        "date": "2026-10-30",
-        "report": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
-        "manifest": "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.json",
-        "files_changed": 1,
+        "date": "2026-11-04",
+        "report": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md",
+        "manifest": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.json",
+        "files_changed": 4,
         "game_verified": false
       },
       "history_group": "modified"
@@ -1983,7 +1986,8 @@
         "PluginHistory/Evidence/legacy-20261006/Manifest/baselines.json",
         "PluginHistory/Evidence/reports/20261006/适配指南草稿.md",
         "PluginHistory/Evidence/legacy-20261006/Docs/Files/StatCompare",
-        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md"
+        "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
+        "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/StatCompare/PanelLayout.lua",
@@ -1999,10 +2003,10 @@
       "tracked_files_at_reference": 25,
       "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：用户诊断截图确认0x09前导制表符使三种正常天赋消息被全部忽略，已规范化协议头前空白；57组双模式（含合成59条TAB包）与实际Lua5.0检查通过，实际游戏显示待用户复测。",
       "last_package_update": {
-        "date": "2026-10-25",
-        "report": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
-        "manifest": "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.json",
-        "files_changed": 4,
+        "date": "2026-11-04",
+        "report": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md",
+        "manifest": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.json",
+        "files_changed": 2,
         "game_verified": false
       },
       "history_group": "modified"
@@ -2112,16 +2116,80 @@
     },
     {
       "addon": "Tmog",
-      "status": "related_skin_only",
+      "status": "documented_history",
       "note": "PluginHistory/Plugins/Tmog.md",
       "purpose": "登记相关皮肤适配，等待确认主插件是否另有个人改动。",
       "sources": [
-        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-28.md"
+        "Interface/AddOns/pfUI-addonskinner/.workbuddy/memory/2026-09-28.md",
+        "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md"
       ],
-      "maintenance_files": [],
+      "maintenance_files": [
+        "Interface/AddOns/Tmog/Constants.lua",
+        "Interface/AddOns/Tmog/Filters.lua",
+        "Interface/AddOns/Tmog/Fullscreen.lua",
+        "Interface/AddOns/Tmog/Localization.lua",
+        "Interface/AddOns/Tmog/Outfits.lua",
+        "Interface/AddOns/Tmog/PopupDialogs.lua",
+        "Interface/AddOns/Tmog/Slashcmd.lua",
+        "Interface/AddOns/Tmog/Templates.xml",
+        "Interface/AddOns/Tmog/Textures/Character-Plus.blp",
+        "Interface/AddOns/Tmog/Textures/FirstPage-Disabled.blp",
+        "Interface/AddOns/Tmog/Textures/FirstPage-Down.blp",
+        "Interface/AddOns/Tmog/Textures/FirstPage-Up.blp",
+        "Interface/AddOns/Tmog/Textures/LastPage-Disabled.blp",
+        "Interface/AddOns/Tmog/Textures/LastPage-Down.blp",
+        "Interface/AddOns/Tmog/Textures/LastPage-Up.blp",
+        "Interface/AddOns/Tmog/Textures/UI-Panel-MaximizeMapButton-Down.blp",
+        "Interface/AddOns/Tmog/Textures/UI-Panel-MaximizeMapButton-Up.blp",
+        "Interface/AddOns/Tmog/Textures/UI-Panel-MinimizeButton-Highlight.blp",
+        "Interface/AddOns/Tmog/Textures/UI-SearchBox-Clear.blp",
+        "Interface/AddOns/Tmog/Textures/UI-TradeSkill-LinkButton.blp",
+        "Interface/AddOns/Tmog/Textures/big_plus_highlight.blp",
+        "Interface/AddOns/Tmog/Textures/big_plus_normal.blp",
+        "Interface/AddOns/Tmog/Textures/big_plus_pushed.blp",
+        "Interface/AddOns/Tmog/Textures/border_2.blp",
+        "Interface/AddOns/Tmog/Textures/border_full.blp",
+        "Interface/AddOns/Tmog/Textures/check.blp",
+        "Interface/AddOns/Tmog/Textures/item_bg_highlight.blp",
+        "Interface/AddOns/Tmog/Textures/item_bg_normal.blp",
+        "Interface/AddOns/Tmog/Textures/item_bg_selected.blp",
+        "Interface/AddOns/Tmog/Textures/preview-border-thin.blp",
+        "Interface/AddOns/Tmog/Textures/revert.blp",
+        "Interface/AddOns/Tmog/Textures/revert_highlight.blp",
+        "Interface/AddOns/Tmog/Textures/revert_pushed.blp",
+        "Interface/AddOns/Tmog/Textures/tab_active.blp",
+        "Interface/AddOns/Tmog/Textures/tab_inactive.blp",
+        "Interface/AddOns/Tmog/Textures/transmog_border.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundbloodelf.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgrounddwarf.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundgnome.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundgoblin.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundhighelf.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundhuman.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundnightelf.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundorc.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundscourge.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundtauren.blp",
+        "Interface/AddOns/Tmog/Textures/transmogbackgroundtroll.blp",
+        "Interface/AddOns/Tmog/Textures/ui-searchbox-icon.blp",
+        "Interface/AddOns/Tmog/Textures/ui1.blp",
+        "Interface/AddOns/Tmog/Textures/ui2.blp",
+        "Interface/AddOns/Tmog/Tmog.lua",
+        "Interface/AddOns/Tmog/Tmog.toc",
+        "Interface/AddOns/Tmog/Tmog.xml",
+        "Interface/AddOns/Tmog/Tooltip.lua",
+        "Interface/AddOns/Tmog/Utility.lua"
+      ],
       "tracked_files_at_reference": 53,
       "pending": "请确认本插件本体是否曾另外修改；若有，请描述变化。",
-      "history_group": "unchanged"
+      "history_group": "modified",
+      "last_package_update": {
+        "date": "2026-11-04",
+        "report": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md",
+        "manifest": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.json",
+        "files_changed": 55,
+        "game_verified": false
+      }
     },
     {
       "addon": "TrainerSkills",
@@ -2324,7 +2392,8 @@
       "sources": [
         "Interface/AddOns/aux-addon/.workbuddy/memory/2026-09-28.md",
         "Interface/AddOns/aux-addon/OPTIMIZATION_SUMMARY.md",
-        "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-23.md"
+        "Interface/AddOns/OneBag/.workbuddy/memory/2026-09-23.md",
+        "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/aux-addon/core/history.lua",
@@ -2336,11 +2405,20 @@
         "Interface/AddOns/aux-addon/tabs/post/core.lua",
         "Interface/AddOns/aux-addon/util.lua",
         "Interface/AddOns/aux-addon/util/info.lua",
-        "Interface/AddOns/aux-addon/util/temptable.lua"
+        "Interface/AddOns/aux-addon/util/temptable.lua",
+        "Interface/AddOns/aux-addon/core/slash.lua",
+        "Interface/AddOns/aux-addon/tabs/auctions/core.lua"
       ],
       "tracked_files_at_reference": 49,
       "pending": "缓存与扫描优化的真实游戏收益、异常消息根源仍待补充。",
-      "history_group": "modified"
+      "history_group": "modified",
+      "last_package_update": {
+        "date": "2026-11-04",
+        "report": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md",
+        "manifest": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.json",
+        "files_changed": 4,
+        "game_verified": false
+      }
     },
     {
       "addon": "diminfo",
@@ -2526,7 +2604,8 @@
         "PluginHistory/Research/共享属性扫描与剩余更新合并-20261025.md",
         "PluginHistory/Research/UnitXP与CoreBridge个人版恢复-20261025.md",
         "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
-        "PluginHistory/Research/11月03日包保留个人核心合并实施-20261104.md"
+        "PluginHistory/Research/11月03日包保留个人核心合并实施-20261104.md",
+        "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI/api/api.lua",
@@ -2564,15 +2643,44 @@
         "Interface/AddOns/pfUI/modules/unitxp.lua",
         "Interface/AddOns/pfUI/skins/blizzard/inspect.lua",
         "Interface/AddOns/pfUI/modules/teamroles.lua",
-        "Interface/AddOns/pfUI/Bindings.xml"
+        "Interface/AddOns/pfUI/Bindings.xml",
+        "Interface/AddOns/pfUI/img/bars/pfUI-A.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-B.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-C.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-D.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-E.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-F.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-G.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-H.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-I.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-J.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-K.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-L.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-M.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-N.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-O.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-P.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-Q.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-R.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-S.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-T.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-U.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-V.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-W.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-X.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-Y.tga",
+        "Interface/AddOns/pfUI/img/bars/pfUI-Z.tga",
+        "Interface/AddOns/pfUI/modules/automation.lua",
+        "Interface/AddOns/pfUI/modules/custommedia.lua",
+        "Interface/AddOns/pfUI/modules/energybar.lua"
       ],
       "tracked_files_at_reference": 277,
       "pending": "共享核心、界面、四消费者与观察回归及Lua5.0通过；真实排版、服务器识别和资源表现待游戏验收。 既有范围：修改跨度较大，历史笔记不覆盖每行归属；游戏内最终布局、多人仇恨、光环和新监控方案的验收请补充。",
       "last_package_update": {
         "date": "2026-11-04",
-        "report": "PluginHistory/Research/11月03日包保留个人核心合并实施-20261104.md",
-        "manifest": "PluginHistory/Research/11月03日包保留个人核心合并实施-20261104.json",
-        "files_changed": 6,
+        "report": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md",
+        "manifest": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.json",
+        "files_changed": 34,
         "game_verified": false
       },
       "history_group": "modified"
@@ -2581,11 +2689,12 @@
       "addon": "pfUI-CustomMedia",
       "status": "documented_history",
       "note": "PluginHistory/Plugins/pfUI-CustomMedia.md",
-      "purpose": "让材质可见、可预览并容易应用。",
+      "purpose": "已移除独立插件：26张材质及预览/应用入口迁入pfUI；保留原维护历史。",
       "sources": [
         "Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/2026-09-17.md",
         "Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/2026-09-18.md",
-        "Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/MEMORY.md"
+        "Interface/AddOns/pfUI-CustomMedia/.workbuddy/memory/MEMORY.md",
+        "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI-CustomMedia/bars/pfUI-Z.tga",
@@ -2596,7 +2705,16 @@
       ],
       "tracked_files_at_reference": 37,
       "pending": "26 张材质的实际预览和各应用目标刷新结果待补充。",
-      "history_group": "modified"
+      "history_group": "modified",
+      "last_package_update": {
+        "date": "2026-11-04",
+        "report": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md",
+        "manifest": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.json",
+        "files_changed": 37,
+        "game_verified": false
+      },
+      "current_state": "removed",
+      "removal_confirmed_on": "2026-11-04"
     },
     {
       "addon": "pfUI-addonskinner",
@@ -2615,7 +2733,8 @@
         "PluginHistory/Research/10月24日包合并实施-20261025.md",
         "PluginHistory/Research/wsloot与无双个人版回退-20261025.md",
         "PluginHistory/Research/10月29日包保留个人核心合并实施-20261030.md",
-        "PluginHistory/Research/11月03日包保留个人核心合并实施-20261104.md"
+        "PluginHistory/Research/11月03日包保留个人核心合并实施-20261104.md",
+        "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md"
       ],
       "maintenance_files": [
         "Interface/AddOns/pfUI-addonskinner/skins/Cat.lua",
@@ -2634,9 +2753,9 @@
       "pending": "本轮离线联合/回归、实际Lua5.0及XML检查通过；真实游戏排版、施法、通信与资源表现待验收；统一职责提供者尚未部署。",
       "last_package_update": {
         "date": "2026-11-04",
-        "report": "PluginHistory/Research/11月03日包保留个人核心合并实施-20261104.md",
-        "manifest": "PluginHistory/Research/11月03日包保留个人核心合并实施-20261104.json",
-        "files_changed": 3,
+        "report": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.md",
+        "manifest": "PluginHistory/Research/11月03日包第二阶段融合与材质归并-20261104.json",
+        "files_changed": 1,
         "game_verified": false
       },
       "history_group": "modified"

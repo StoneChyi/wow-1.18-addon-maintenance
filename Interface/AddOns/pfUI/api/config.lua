@@ -29,6 +29,11 @@ function pfUI:UpdateConfig(group, subgroup, entry, value)
 end
 
 function pfUI:LoadConfig()
+  if self.MigrateMediaPaths then
+    self:MigrateMediaPaths(pfUI_config)
+    self:MigrateMediaPaths(pfUI_profiles)
+    self:MigrateMediaPaths(pfUI_addon_profiles)
+  end
   --                MODULE        SUBGROUP       ENTRY               VALUE
   pfUI:UpdateConfig("global",     nil,           "language",         GetLocale())
   pfUI:UpdateConfig("global",     nil,           "profile",          "light")
@@ -192,7 +197,7 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("appearance", "cd",          "dynamicsize",      "1")
   pfUI:UpdateConfig("appearance", "castbar",     "castbarcolor",     ".7,.7,.9,.8")
   pfUI:UpdateConfig("appearance", "castbar",     "channelcolor",     ".9,.9,.7,.8")
-  pfUI:UpdateConfig("appearance", "castbar",     "texture",          "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("appearance", "castbar",     "texture",          "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
   -- 全局材质（外观设置）：off = 不批量修改，各处保持独立设置；选择具体材质时批量写入所有进度条材质配置
   pfUI:UpdateConfig("appearance", "texture",     "default",          "off")
   pfUI:UpdateConfig("appearance", "infight",     "screen",           "0")
@@ -273,7 +278,7 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("unitframes", nil,           "druidmanaoffx",    "0")
   pfUI:UpdateConfig("unitframes", nil,           "druidmanaoffy",    "0")
   pfUI:UpdateConfig("unitframes", nil,           "druidmanaspace",   "-3")
-  pfUI:UpdateConfig("unitframes", nil,           "druidmanatexture", "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("unitframes", nil,           "druidmanatexture", "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
 
   pfUI:UpdateConfig("unitframes", nil,           "rangechecki",      "4")
 
@@ -290,7 +295,7 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("unitframes", nil,           "combospacing",     "3")
   pfUI:UpdateConfig("unitframes", nil,           "combooffx",        "0")
   pfUI:UpdateConfig("unitframes", nil,           "combooffy",        "0")
-  pfUI:UpdateConfig("unitframes", nil,           "combotexture",     "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("unitframes", nil,           "combotexture",     "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
   pfUI:UpdateConfig("unitframes", nil,           "combocolor_low",   "1,0.3,0.3,0.75")
   pfUI:UpdateConfig("unitframes", nil,           "combocolor_mid",   "1,1,0.3,0.75")
   pfUI:UpdateConfig("unitframes", nil,           "combocolor_high",  "0.3,1,0.3,0.75")
@@ -305,7 +310,7 @@ function pfUI:LoadConfig()
 
   pfUI:UpdateConfig("unitframes", nil,           "swingtimerwidth",  "200")
   pfUI:UpdateConfig("unitframes", nil,           "swingtimerheight", "12")
-  pfUI:UpdateConfig("unitframes", nil,           "swingtimertexture", "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("unitframes", nil,           "swingtimertexture", "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
   pfUI:UpdateConfig("unitframes", nil,           "swingtimertext",   "1")
   pfUI:UpdateConfig("unitframes", nil,           "swingtimerlabel",  "1")
   pfUI:UpdateConfig("unitframes", nil,           "swingtimeroffhand","1")
@@ -323,7 +328,7 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("unitframes", nil,           "raidmarkerwidth",  "80")
   pfUI:UpdateConfig("unitframes", nil,           "raidmarkerheight", "14")
   pfUI:UpdateConfig("unitframes", nil,           "raidmarkergrow",   "down")
-  pfUI:UpdateConfig("unitframes", nil,           "raidmarkertexture", "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("unitframes", nil,           "raidmarkertexture", "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
   pfUI:UpdateConfig("unitframes", nil,           "raidmarkerfontsize","12")
   pfUI:UpdateConfig("unitframes", nil,           "raidmarkershowname","1")
   pfUI:UpdateConfig("unitframes", nil,           "raidmarkershowpct","1")
@@ -346,7 +351,7 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("unitframes", nil,           "comboenergyheight",    "12")
   pfUI:UpdateConfig("unitframes", nil,           "comboenergyoffx",      "0")
   pfUI:UpdateConfig("unitframes", nil,           "comboenergyoffy",      "278")
-  pfUI:UpdateConfig("unitframes", nil,           "comboenergytexture",   "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("unitframes", nil,           "comboenergytexture",   "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
   pfUI:UpdateConfig("unitframes", nil,           "comboenergycolor",     "0.8,0.77,0.33,1")
   pfUI:UpdateConfig("unitframes", nil,           "comboenergyshowtext",  "1")
   pfUI:UpdateConfig("unitframes", nil,           "comboenergyfontsize",  "12")
@@ -553,8 +558,8 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("unitframes", "raidpet",    "portrait",         "off")
   pfUI:UpdateConfig("unitframes", "raidpet",    "width",            "70")
   pfUI:UpdateConfig("unitframes", "raidpet",    "height",           "13")
-  pfUI:UpdateConfig("unitframes", "raidpet",    "bartexture",       "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
-  pfUI:UpdateConfig("unitframes", "raidpet",    "pbartexture",      "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("unitframes", "raidpet",    "bartexture",       "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("unitframes", "raidpet",    "pbartexture",      "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
   pfUI:UpdateConfig("unitframes", "raidpet",    "pheight",          "0")
   pfUI:UpdateConfig("unitframes", "raidpet",    "buffs",            "off")
   pfUI:UpdateConfig("unitframes", "raidpet",    "buffsize",         "16")
@@ -632,8 +637,8 @@ function pfUI:LoadConfig()
     pfUI:UpdateConfig("unitframes", unit,      "looticon",         "1")
     pfUI:UpdateConfig("unitframes", unit,      "raidiconsize",     "24")
     pfUI:UpdateConfig("unitframes", unit,      "portrait",         "bar")
-    pfUI:UpdateConfig("unitframes", unit,      "bartexture",       "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
-    pfUI:UpdateConfig("unitframes", unit,      "pbartexture",       "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+    pfUI:UpdateConfig("unitframes", unit,      "bartexture",       "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
+    pfUI:UpdateConfig("unitframes", unit,      "pbartexture",       "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
     pfUI:UpdateConfig("unitframes", unit,      "width",            "200")
     pfUI:UpdateConfig("unitframes", unit,      "height",           "46")
     pfUI:UpdateConfig("unitframes", unit,      "pheight",          "10")
@@ -905,7 +910,7 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("panel",      "xp",          "xp_text_mouse",    "0")
   pfUI:UpdateConfig("panel",      "xp",          "xp_color",         ".25,.25,1,1")
   pfUI:UpdateConfig("panel",      "xp",          "rest_color",       "1,.25,1,.5")
-  pfUI:UpdateConfig("panel",      "xp",          "texture",          "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("panel",      "xp",          "texture",          "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
 
   pfUI:UpdateConfig("panel",      "xp",          "rep_always",       "0")
   pfUI:UpdateConfig("panel",      "xp",          "rep_display",      "REP")
@@ -977,7 +982,7 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("tooltip",    "vendor",      "showalways",       "0")
   pfUI:UpdateConfig("tooltip",    "questitem",   "showquest",        "1")
   pfUI:UpdateConfig("tooltip",    "questitem",   "showcount",        "0")
-  pfUI:UpdateConfig("tooltip",    "statusbar",   "texture",          "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("tooltip",    "statusbar",   "texture",          "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
   pfUI:UpdateConfig("tooltip",     nil,          "font_tooltip",     "Interface\\AddOns\\pfUI\\fonts\\Myriad-Pro.ttf")
   pfUI:UpdateConfig("tooltip",     nil,          "font_tooltip_size", "12")
 
@@ -1141,7 +1146,7 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("nameplates", nil,           "targetzoom",       "0")
   pfUI:UpdateConfig("nameplates", nil,           "targetzoomval",    ".40")
   pfUI:UpdateConfig("nameplates", nil,           "notargalpha",      ".75")
-  pfUI:UpdateConfig("nameplates", nil,           "healthtexture",    "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga")
+  pfUI:UpdateConfig("nameplates", nil,           "healthtexture",    "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga")
   pfUI:UpdateConfig("nameplates", "name",        "fontstyle",        "OUTLINE")
   pfUI:UpdateConfig("nameplates", "health",      "offset",           "-3")
   pfUI:UpdateConfig("nameplates", "debuffs",     "filter",           "none")
@@ -1229,7 +1234,30 @@ function pfUI:LoadConfig()
   pfUI:UpdateConfig("disabled",   nil,           nil,                nil)
 end
 
+-- Retired CustomMedia paths can occur in nested presets, imported profiles and
+-- disabled features. Migrate values only; keep every user setting and table key.
+function pfUI:MigrateMediaPaths(root, seen)
+  if type(root) ~= "table" then return end
+  seen = seen or {}
+  if seen[root] then return end
+  seen[root] = true
+  local old = "interface\\addons\\pfui-custommedia\\bars\\"
+  for key, value in pairs(root) do
+    if type(value) == "table" then
+      self:MigrateMediaPaths(value, seen)
+    elseif type(value) == "string" then
+      local normalized = string.gsub(value, "/", "\\")
+      if string.sub(string.lower(normalized), 1, string.len(old)) == old then
+        root[key] = "Interface\\AddOns\\pfUI\\img\\bars\\" .. string.sub(normalized, string.len(old) + 1)
+      end
+    end
+  end
+end
+
 function pfUI:MigrateConfig()
+  self:MigrateMediaPaths(pfUI_config)
+  self:MigrateMediaPaths(pfUI_profiles)
+  self:MigrateMediaPaths(pfUI_addon_profiles)
   -- migrating to new fonts (1.5 -> 1.6)
   if checkversion(1, 6, 0) then
     -- migrate font_default

@@ -9,7 +9,7 @@ pfUI:RegisterModule("automation", "vanilla", function()
     "Superwow", "QuestAutomation", "AutoNeed", "MasterLootRemind", "CDSafe",
     "Summon", "RandomMount", "QuestItemBar", "CleanChat", "Tooltip",
     "TSTargetMark", "CancelBuff", "Lern2Spell", "Group", "Invite", "Ready",
-    "Rez", "AutoShout", "sTrade", "LootBOP", "AutoOpenBag", "Purchases",
+    "Rez", "AutoShout", "AutoCmd", "sTrade", "LootBOP", "AutoOpenBag", "Purchases",
     "ShiQu", "MailTo", "Release", "Stand", "Dismount", "follow", "Trainer", "WorldBuffs",
     "AlertCombat", "Range", "RangeController", "QuestAnnouncer", "ExpBar", "InterPlayerLink",
   }

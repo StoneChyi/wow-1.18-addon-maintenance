@@ -1,28 +1,12 @@
--- pfUI-CustomMedia-gui.lua
--- 在 pfUI 设置界面内嵌「Custom Media」分类页：
--- 左侧新增一个页签，网格展示 bars/ 下全部 26 张材质缩略图，
--- 悬停显示名称/路径，点击直接应用到上方下拉选择的目标配置。
--- 仅依赖 pfUI 官方暴露的 pfUI.gui.CreateGUIEntry / CreateConfig，不改 pfUI 文件。
-
-local addonpath
-local tocs = { "", "-master", "-tbc", "-wotlk" }
-for _, name in pairs(tocs) do
-  local current = string.format("pfUI-CustomMedia%s", name)
-  local _, title = GetAddOnInfo(current)
-  if title then
-    addonpath = "Interface\\AddOns\\" .. current
-    break
-  end
-end
-
--- gui 模块被关闭 / pfUI 未加载时静默退出
-if not pfUI or not pfUI.gui or not pfUI.gui.CreateGUIEntry then return end
-
+-- Personal media browser, integrated into pfUI; original CustomMedia retained below.
+pfUI:RegisterModule("custommedia", "vanilla:tbc", function()
+if not pfUI.gui or not pfUI.gui.CreateGUIEntry then return end
+local addonpath = "Interface\\AddOns\\pfUI"
 -- 26 张材质清单（bars/ 目录，A-Z）
 local textures = {}
 for letter in string.gmatch("ABCDEFGHIJKLMNOPQRSTUVWXYZ", ".") do
   table.insert(textures, {
-    path = addonpath .. "\\bars\\pfUI-" .. letter .. ".tga",
+    path = addonpath .. "\\img\\bars\\pfUI-" .. letter .. ".tga",
     name = "pfUI-" .. letter,
   })
 end
@@ -101,6 +85,8 @@ local targets = {
           if cfg.threattexture then cfg.threattexture = tex end
         end
       end
+      C.unitframes.combotexture = tex
+      C.unitframes.comboenergytexture = tex
       C.unitframes.druidmanatexture = tex
       C.unitframes.swingtimertexture = tex
       C.unitframes.raidmarkertexture = tex
@@ -137,7 +123,8 @@ pfUI.gui.CreateGUIEntry("自定义材质", nil, function()
     (C.appearance and C.appearance.border and C.appearance.border.color) or ""))
   dbr, dbg, dbb, dba = tonumber(dbr) or .4, tonumber(dbg) or .4, tonumber(dbb) or .4, tonumber(dba) or 1
 
-  local swatches = {}
+  content.mediaSwatches = content.mediaSwatches or {}
+  local swatches = content.mediaSwatches
   local function SetSwatchBorder(swatch, r, g, b, a)
     if swatch.backdrop and swatch.backdrop.SetBackdropBorderColor then
       swatch.backdrop:SetBackdropBorderColor(r, g, b, a)
@@ -196,19 +183,22 @@ pfUI.gui.CreateGUIEntry("自定义材质", nil, function()
     local col = math.mod(i - 1, percol)
     local row = math.floor((i - 1) / percol)
 
-    local b = CreateFrame("Button", nil, content)
+    local b = swatches[i] or CreateFrame("Button", nil, content)
+    swatches[i] = b
+    b:Show()
     b:SetWidth(sw)
     b:SetHeight(sh)
+    b:ClearAllPoints()
     b:SetPoint("TOPLEFT", content, "TOPLEFT", 10 + col * (sw + gapx), top - row * (sh + gapy))
     b.texpath = texinfo.path
 
-    b.tex = b:CreateTexture(nil, "BACKGROUND")
+    b.tex = b.tex or b:CreateTexture(nil, "BACKGROUND")
     b.tex:SetTexture(texinfo.path)
     b.tex:SetPoint("TOPLEFT", b, "TOPLEFT", 3, -3)
     b.tex:SetWidth(sw - 6)
     b.tex:SetHeight(sh - 16)
 
-    b.label = b:CreateFontString("Status", "OVERLAY", "GameFontNormalSmall")
+    b.label = b.label or b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     b.label:SetPoint("BOTTOM", b, "BOTTOM", 0, 2)
     b.label:SetText(texinfo.name)
 
@@ -232,8 +222,11 @@ pfUI.gui.CreateGUIEntry("自定义材质", nil, function()
       ApplyTexture(this.texpath)
     end)
 
-    table.insert(swatches, b)
+    b.tex:Show()
+    b.label:Show()
   end
 
   UpdateHighlights()
+end)
+
 end)

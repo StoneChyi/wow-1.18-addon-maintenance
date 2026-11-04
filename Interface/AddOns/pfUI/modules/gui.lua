@@ -991,7 +991,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         local t = {}
         for _, v in ipairs(std) do table.insert(t, v) end
         for letter in string.gmatch("ABCDEFGHIJKLMNOPQRSTUVWXYZ", ".") do
-          table.insert(t, "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-" .. letter .. ".tga:pfUI-" .. letter)
+          table.insert(t, "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-" .. letter .. ".tga:pfUI-" .. letter)
         end
         return t
       end)(),
@@ -1134,7 +1134,7 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
         }
         for _, v in ipairs(std) do table.insert(t, v) end
         for letter in string.gmatch("ABCDEFGHIJKLMNOPQRSTUVWXYZ", ".") do
-          table.insert(t, "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-" .. letter .. ".tga:pfUI-" .. letter)
+          table.insert(t, "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-" .. letter .. ".tga:pfUI-" .. letter)
         end
         return t
       end)(),
@@ -1353,14 +1353,13 @@ pfUI:RegisterModule("gui", "vanilla:tbc", function ()
     end
 
     pfUI.gui.dropdowns.loot_rarity = {}
-    -- 全局材质选择（外观设置）：off = 不批量修改；其余与单位框材质列表一致并追加 CustomMedia
-    pfUI.gui.dropdowns.global_bartexture = { "off:" .. T["Off"] .. "（各处独立设置）" }
-    for _, v in ipairs(pfUI.gui.dropdowns.uf_bartexture) do
-      table.insert(pfUI.gui.dropdowns.global_bartexture, v)
-    end
     for letter in string.gmatch("ABCDEFGHIJKLMNOPQRSTUVWXYZ", ".") do
-      table.insert(pfUI.gui.dropdowns.global_bartexture,
-        "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-" .. letter .. ".tga:pfUI-" .. letter)
+      table.insert(pfUI.gui.dropdowns.uf_bartexture,
+        "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-" .. letter .. ".tga:pfUI-" .. letter)
+    end
+    pfUI.gui.dropdowns.global_bartexture = { "off:" .. T["Off"] .. "（各处独立设置）" }
+    for _, value in ipairs(pfUI.gui.dropdowns.uf_bartexture) do
+      table.insert(pfUI.gui.dropdowns.global_bartexture, value)
     end
     for i=0, getn(_G.ITEM_QUALITY_COLORS)-2  do
       local entry = string.format("%d:%s", i, string.format("%s%s%s", _G.ITEM_QUALITY_COLORS[i].hex, _G[string.format("ITEM_QUALITY%d_DESC",i)], FONT_COLOR_CODE_CLOSE))

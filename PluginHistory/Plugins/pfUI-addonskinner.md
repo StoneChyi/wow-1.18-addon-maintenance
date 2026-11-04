@@ -12,17 +12,25 @@
 
 ## 当前维护摘要
 
-2026-11-04：补RaidCheck新按钮、直属按钮兜底与幂等；新增ABP窗口皮肤标题先继承GameFontNormal，再尝试配置字体。当前没有导入导出窗时直接返回，不新增无效入口；其他皮肤保持。 [本轮记录](#change-pfUI-addonskinner-20261104-01)。
-
-2026-11-02：QuickHeal旧职责窗口皮肤已清理，其他现用皮肤保持。
-
-2026-11-02 已补记当前个人版维护署名 `StoneChyi & Codex`；仅新增 TOC metadata 与可见说明，原有功能、原作者和许可证保留。见[本次记录](#change-pfUI-addonskinner-20261102-01)。
-
-2026-10-30 合入 diminfo 设置窗口与 StatCompare 设置页皮肤；保留现用 diminfo 本体、个人自身/目标窗口样式协调及洗脑器/Cat/PallyPower/旧无双皮肤。 [本轮记录](#change-pfUI-addonskinner-20261030-02)。
-
-无双皮肤已随 WushuangLoot 回退至 10 月 24 日包更新前的个人使用版；其余已合入皮肤、加载清理与洗脑装置反馈继续保留。本次仅恢复 skins/WushuangLoot.lua，不整目录回退。
+2026-11-04：适配Tmog 5.x预览、选中边框及标签页，保留原皮肤与旧版兼容；前一条RaidCheck及ABP皮肤修复继续生效。见[本次记录](#change-pfUI-addonskinner-20261104-02)。
 
 ## 逐次修改记录
+
+<a id="change-pfUI-addonskinner-20261104-02"></a>
+
+### 2026-11-04｜适配Tmog新版并保留个人皮肤预览与选中反馈
+
+- 记录编号：`pfUI-addonskinner-20261104-02`
+- 记录类型：更新合并
+- 游戏验收：待游戏验收
+- 对应提交：随本条记录一并提交（见本页 Git 历史）
+
+- 修改原因：Tmog 5.x将PreviewButtons/DrawPreviews更名为PreviewFrames/UpdatePreviews，旧皮肤会漏掉动态预览；标签页也已改名。
+- 修改内容：兼容新旧预览池、绘制函数及标签页；新选择方式LockHighlight/UnlockHighlight映射到原个人版白色选中边框，保留返回值且重复执行不叠加包装。补齐新筛选/导入/重置按钮的皮肤入口，不改其他皮肤。
+- 主要文件：`skins/Tmog.lua`。
+- 检查结果：实际Lua5.0编译通过；16组融合专项中执行真实皮肤，核对新标签、首次选中、取消选中、重复包装和绘制返回值；未运行游戏。
+- 关联功能：[Tmog维护记录](Tmog.md)、[本次实施报告](../Research/11月03日包第二阶段融合与材质归并-20261104.md)。
+- 未确认事项：游戏内模型、皮肤视觉、鼠标命中与新弹窗仍待验收；原作者、许可和个人维护署名保留。
 
 <a id="change-pfUI-addonskinner-20261104-01"></a>
 

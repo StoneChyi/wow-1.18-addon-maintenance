@@ -37,13 +37,14 @@ Tmog.L = {
 	["Shares appearance with"] = true,
 	["Outfits"] = true,
 	["New outfit"] = true,
-	["Create an outfit from currently selected items."] = true,
+	["Create an outfit from selected items."] = true,
 	["Enter outfit name:"] = true,
-	["Outfit with this name already exists."] = true,
+	["Outfit with this name already exists. Do you want to overwrite it?"] = true,
 	["Outfit name not valid."] = true,
-	["Delete outfit?"] = true,
+	["Delete outfit %s?"] = true,
 	["Invalid outfit code."] = true,
-	["Enter outfit code:"] = true,
+	["Enter outfit code or shift-click an outfit link from the chat window:"] = true,
+	["<Shift-Click to link outfit to chat>"] = true,
 	["toggle dressing room"] = true,
 	["reset minimap button position"] = true,
 	["lock/unlock minimap button"] = true,
@@ -71,74 +72,21 @@ Tmog.L = {
 	["Clear"] = true,
 	["Undress"] = true,
 	["Reset Position"] = true,
-	["Revert"] = true,
+	["Reset Outfit"] = true,
 	["Full Screen"] = true,
+	["Rename"] = true,
 	["Share"] = true,
 	["Import"] = true,
-	["Copy this code:"] = true,
+	["Outfit code:"] = true,
 	["Left-click to toggle dressing room\nHold Left-click and drag to move this button"] = true,
 	["Loading"] = true,
 	["Outfits: %s"] = true,
 	["Database links:"] = true,
 	["reset this character's collection"] = true,
-	["cllection has been reset"] = true,
+	["collection has been reset"] = true,
 }
 
-if GetLocale() == "zhCN" then
-	Tmog.L["Collected"] = "已有幻化"
-	Tmog.L["Not collected"] = "未收集幻化"
-	Tmog.L["Unique appearance"] = "独特外观"
-	Tmog.L["Non-unique appearance"] = "非独特外观"
-	Tmog.L["Unknown appearance"] = "未知的外观"
-	Tmog.L["Shares appearance with"] = "共享外观"
-	Tmog.L["Outfits"] = "配装"
-	Tmog.L["New outfit"] = "新配装"
-	Tmog.L["Create an outfit from currently selected items."] = "用当前选定的物品创建一套配装。"
-	Tmog.L["Enter outfit name:"] = "输入配装名称:"
-	Tmog.L["Outfit with this name already exists."] = "已存在同名配装。"
-	Tmog.L["Outfit name not valid."] = "配装名称无效。"
-	Tmog.L["Delete outfit?"] = "删除配装？"
-	Tmog.L["Invalid outfit code."] = "无效的配装代码。"
-	Tmog.L["Enter outfit code:"] = "在此输入配装代码:"
-	Tmog.L["toggle dressing room"] = "切换幻化界面"
-	Tmog.L["reset minimap button position"] = "重置小地图按钮位置"
-	Tmog.L["lock/unlock minimap button"] = "锁定/解锁小地图按钮"
-	Tmog.L["print debug messages in chat"] = "在聊天中显示调试信息"
-	Tmog.L["attempt to repair this character's cache (can fix minor bugs)"] = "尝试修复角色缓存(可解决小问题)"
-	Tmog.L["minimap button unlocked"] = "小地图按钮已解锁"
-	Tmog.L["minimap button locked"] = "小地图按钮已锁定"
-	Tmog.L["debug is on"] = "调试模式已开启"
-	Tmog.L["debug is off"] = "调试模式已关闭"
-	Tmog.L["Cache repair started."] = "缓存修复已开始。"
-	Tmog.L["bad item %d, requesting info from server, try #%d"] = "无效对象 %d，正在向服务器请求信息，尝试第 #%d次"
-	Tmog.L["Cache repair finished: bad items deleted: %d, item names restored: %d, missing shared items added: %d"] = "缓存修复已完成：已删除物品：%d，已恢复物品名称：%d，已添加相似物品：%d"
-	Tmog.L["Share outfit"] = "分享配装"
-	Tmog.L["Import outfit"] = "导入配装"
-	Tmog.L["Select outfit"] = "选择一个配装"
-	Tmog.L["Save outfit"] = "保存配装"
-	Tmog.L["Delete outfit"] = "删除配装"
-	Tmog.L["Select type"] = "选择类型"
-	Tmog.L["Only usable"] = "仅可用"
-	Tmog.L["Ignore level"] = "忽略等级"
-	Tmog.L["Check this to only show items that you can equip. Can be inaccurate for quest rewards."] = "选中此项只会显示可以装备的物品。对于任务奖励可能不准确。"
-	Tmog.L["Check this to ignore level requirements while \"Only usable\" filter is active. Can be inaccurate for quest rewards."] = "选中此选项将在 \“仅可用\”过滤器激活时忽略等级要求。对于任务奖励来说可能不准确。"
-	Tmog.L["Hide UI"] = "隐藏"
-	Tmog.L["Show UI"] = "显示"
-	Tmog.L["Clear"] = "清除"
-	Tmog.L["Undress"] = "脱光"
-	Tmog.L["Reset Position"] = "重置位置"
-	Tmog.L["Revert"] = "还原"
-	Tmog.L["Full Screen"] = "全屏显示"
-	Tmog.L["Share"] = "分享"
-	Tmog.L["Import"] = "导入"
-	Tmog.L["Copy this code:"] = "复制此代码:"
-	Tmog.L["Left-click to toggle dressing room\nHold Left-click and drag to move this button"] = "左键点击打开试衣间\n按住左键拖动可移动此按钮。"
-	Tmog.L["Loading"] = "加载中"
-	Tmog.L["Outfits: %s"] = "配装：%s"
-	Tmog.L["Database links:"] = "数据库链接："
-	Tmog.L["reset this character's collection"] = "重置此角色的收藏"
-	Tmog.L["cllection has been reset"] = "收藏已重置"
-elseif GetLocale() == "ruRU" then
+if GetLocale() == "ruRU" then
 	Tmog.L["Collected"] = "В коллекции"
 	Tmog.L["Not collected"] = "Не в коллекции"
 	Tmog.L["Unique appearance"] = "Уникальный внешний вид"
@@ -147,13 +95,13 @@ elseif GetLocale() == "ruRU" then
 	Tmog.L["Shares appearance with"] = "Общий внешний вид с"
 	Tmog.L["Outfits"] = "Наряды"
 	Tmog.L["New outfit"] = "Новый наряд"
-	Tmog.L["Create an outfit from currently selected items."] = "Создать наряд из выбранных предметов."
+	Tmog.L["Create an outfit from selected items."] = "Создать наряд из выбранных предметов."
 	Tmog.L["Enter outfit name:"] = "Введите название наряда:"
-	Tmog.L["Outfit with this name already exists."] = "Наряд с таким названием уже существует."
+	Tmog.L["Outfit with this name already exists. Do you want to overwrite it?"] = "Наряд с таким названием уже существует."
 	Tmog.L["Outfit name not valid."] = "Некорректное название."
-	Tmog.L["Delete outfit?"] = "Удалить наряд?"
+	Tmog.L["Delete outfit %s?"] = "Удалить наряд?"
 	Tmog.L["Invalid outfit code."] = "Некорректный код."
-	Tmog.L["Enter outfit code:"] = "Введите код наряда:"
+	Tmog.L["Enter outfit code or shift-click an outfit link from the chat window:"] = "Введите код наряда:"
 	Tmog.L["toggle dressing room"] = "открыть примерочную."
 	Tmog.L["reset minimap button position"] = "восстановить позицию мини-кнопки."
 	Tmog.L["lock/unlock minimap button"] = "зафиксировать/разблокировать мини-кнопкую"
@@ -181,11 +129,11 @@ elseif GetLocale() == "ruRU" then
 	Tmog.L["Clear"] = "Очистить"
 	Tmog.L["Undress"] = "Раздеть"
 	Tmog.L["Reset Position"] = "Сброс позиции"
-	Tmog.L["Revert"] = "Сброс"
+	Tmog.L["Reset Outfit"] = "Сброс"
 	Tmog.L["Full Screen"] = "Во весь экран"
 	Tmog.L["Share"] = "Экспорт"
 	Tmog.L["Import"] = "Импорт"
-	Tmog.L["Copy this code:"] = "Скопируйте код:"
+	Tmog.L["Outfit code:"] = "Скопируйте код:"
 	Tmog.L["Left-click to toggle dressing room\nHold Left-click and drag to move this button"] = "ЛКМ чтобы открыть или закрыть примерочную\nУдерживайте ЛКМ и тащите чтобы перемесить эту кнопку."
 	Tmog.L["Loading"] = "Загрузка"
 
@@ -193,13 +141,66 @@ elseif GetLocale() == "esES" then
 
 elseif GetLocale() == "ptBR" then
 
-
+elseif GetLocale() == "zhCN" then
+	Tmog.L["Collected"] = "已有幻化"
+	Tmog.L["Not collected"] = "未收集幻化"
+	Tmog.L["Unique appearance"] = "独特外观"
+	Tmog.L["Non-unique appearance"] = "非独特外观"
+	Tmog.L["Unknown appearance"] = "未知的外观"
+	Tmog.L["Shares appearance with"] = "共享外观"
+	Tmog.L["Outfits"] = "配装"
+	Tmog.L["New outfit"] = "新配装"
+	Tmog.L["Create an outfit from selected items."] = "用当前选中的物品创建一套配装。"
+	Tmog.L["Enter outfit name:"] = "输入配装名称:"
+	Tmog.L["Outfit with this name already exists. Do you want to overwrite it?"] = "已存在同名配装，是否覆盖？"
+	Tmog.L["Outfit name not valid."] = "配装名称无效。"
+	Tmog.L["Delete outfit %s?"] = "删除配装“%s”？"
+	Tmog.L["Invalid outfit code."] = "无效的配装代码。"
+	Tmog.L["Enter outfit code or shift-click an outfit link from the chat window:"] = "输入配装代码，或在聊天窗口 Shift+左键点击配装链接："
+	Tmog.L["<Shift-Click to link outfit to chat>"] = "<Shift+左键点击可将配装链接发到聊天>"
+	Tmog.L["toggle dressing room"] = "切换幻化界面"
+	Tmog.L["reset minimap button position"] = "重置小地图按钮位置"
+	Tmog.L["lock/unlock minimap button"] = "锁定/解锁小地图按钮"
+	Tmog.L["print debug messages in chat"] = "在聊天中显示调试信息"
+	Tmog.L["attempt to repair this character's cache (can fix minor bugs)"] = "尝试修复角色缓存(可解决小问题)"
+	Tmog.L["minimap button unlocked"] = "小地图按钮已解锁"
+	Tmog.L["minimap button locked"] = "小地图按钮已锁定"
+	Tmog.L["debug is on"] = "调试模式已开启"
+	Tmog.L["debug is off"] = "调试模式已关闭"
+	Tmog.L["Cache repair started."] = "缓存修复已开始。"
+	Tmog.L["bad item %d, requesting info from server, try #%d"] = "无效物品 %d，正在向服务器请求信息，尝试第 #%d 次"
+	Tmog.L["Cache repair finished: bad items deleted: %d, item names restored: %d, missing shared items added: %d"] = "缓存修复已完成：已删除物品：%d，已恢复物品名称：%d，已添加共享外观物品：%d"
+	Tmog.L["Share outfit"] = "分享配装"
+	Tmog.L["Import outfit"] = "导入配装"
+	Tmog.L["Select outfit"] = "选择一个配装"
+	Tmog.L["Save outfit"] = "保存配装"
+	Tmog.L["Delete outfit"] = "删除配装"
+	Tmog.L["Select type"] = "选择类型"
+	Tmog.L["Only usable"] = "仅可用"
+	Tmog.L["Check this to only show items that you can equip. Can be inaccurate for quest rewards."] = "选中此项只会显示可以装备的物品。对于任务奖励可能不准确。"
+	Tmog.L["Check this to ignore level requirements while \"Only usable\" filter is active. Can be inaccurate for quest rewards."] = "选中此选项将在“仅可用”过滤器激活时忽略等级要求。对于任务奖励可能不准确。"
+	Tmog.L["Ignore level"] = "忽略等级"
+	Tmog.L["Hide UI"] = "隐藏"
+	Tmog.L["Show UI"] = "显示"
+	Tmog.L["Clear"] = "清除"
+	Tmog.L["Undress"] = "脱光"
+	Tmog.L["Reset Position"] = "重置位置"
+	Tmog.L["Reset Outfit"] = "重置配装"
+	Tmog.L["Full Screen"] = "全屏显示"
+	Tmog.L["Rename"] = "重命名"
+	Tmog.L["Share"] = "分享"
+	Tmog.L["Import"] = "导入"
+	Tmog.L["Outfit code:"] = "配装代码："
+	Tmog.L["Left-click to toggle dressing room\nHold Left-click and drag to move this button"] = "左键点击打开试衣间\n按住左键拖动可移动此按钮。"
+	Tmog.L["Loading"] = "加载中"
+	Tmog.L["Outfits: %s"] = "配装：%s"
+	Tmog.L["Database links:"] = "数据库链接："
+	Tmog.L["reset this character's collection"] = "重置此角色的收藏"
+	Tmog.L["collection has been reset"] = "收藏已重置"
 elseif GetLocale() == "deDE" then
 
 end
 
 for k, v in pairs(Tmog.L) do
-	if v == true then
-		Tmog.L[k] = k
-	end
+	if v == true then Tmog.L[k] = k end
 end

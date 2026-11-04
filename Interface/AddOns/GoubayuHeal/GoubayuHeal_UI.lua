@@ -5338,6 +5338,16 @@ local function GoubayuHeal_UIDispelTab()
     end
     UI.SetTooltip(dispelHiddenCb, GoubayuHeal.GUI_dispel_hidden, GoubayuHeal.UI.DispelHiddenTip)
 
+    -- Keep these locals scoped to avoid the Lua 5.0 function-local limit.
+    do
+        local cb = GoubayuHeal_MakeSettingsCheckBox(dispelPanel,
+            "GoubayuHeal_GUIDispelFreedomFiltersCheckButton", "自由之手遵循驱散过滤",
+            'GoubayuHeal.Config["dispel_freedom_filters"]',
+            function() return GoubayuHeal.Config["dispel_freedom_filters"] == 1 end)
+        cb:SetPoint("TOPLEFT", dispelPanel, "TOPLEFT", 20, -96)
+        UI.SetTooltip(cb, "自由之手遵循驱散过滤", "启用后，自由之手需要开启一键驱散并勾选移动限制。默认关闭，保留个人版独立自由之手宏及优先级。")
+    end
+
     -- 驱散优先阈值
     local dispelPrioLabel = GoubayuHeal_UI_MakeFontString(dispelPanel, "OVERLAY", 10, 1, 1, 1)
     dispelPrioLabel:SetPoint("TOPLEFT", dispelPanel, "TOPLEFT", 20, -184)

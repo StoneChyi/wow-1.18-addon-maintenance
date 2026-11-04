@@ -9,7 +9,7 @@
 ## Version: 1.2
 ## OptionalDeps: BetterCharacterStats
 ## SavedVariables: StatCompare_SaveVar, StatCompare_Info
-## SavedVariablesPerCharacter: StatCompare_Player
+## SavedVariablesPerCharacter: StatCompare_Player, StatCompare_PortraitMode
 ..\!Libs\SC_TeamRoleData.lua
 ..\!Libs\SC_TeamRoles.lua
 ..\!Libs\SC_TeamRoleService.lua

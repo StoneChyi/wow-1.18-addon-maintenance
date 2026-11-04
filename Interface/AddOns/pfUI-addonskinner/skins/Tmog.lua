@@ -161,7 +161,9 @@ local function SkinTmog()
     pcall(api.SkinButton, _G.TmogFrameUndress)
     pcall(api.SkinButton, _G.TmogFrameResetPosition)
     pcall(api.SkinButton, _G.TmogFrameShareOutfit)
-    pcall(api.SkinButton, _G.TmogFrameImportOutfit)
+    pcall(api.SkinButton, _G.TmogFrameImportOutfitButton or _G.TmogFrameImportOutfit)
+    pcall(api.SkinButton, _G.TmogFrameResetOutfit)
+    pcall(api.SkinButton, _G.TmogFrameFiltersButton)
 
     -- 删除套装：红色 X 小按钮，重锚到保存按钮右侧
     pcall(function()
@@ -181,7 +183,7 @@ local function SkinTmog()
     -- 原 OnClick 靠 NormalTexture 路径判断激活态，清除贴图后会失效，
     -- 改为按 Tmog.currentTab 判断；贴图清除后用文字亮/暗区分激活态
     ---------------------------------------------------------------
-    local tabs = { ITEMS = _G.TmogFrameItemsButton, OUTFITS = _G.TmogFrameOutfitsButton }
+    local tabs = { ITEMS = _G.TmogFrameTab1 or _G.TmogFrameItemsButton, OUTFITS = _G.TmogFrameTab2 or _G.TmogFrameOutfitsButton }
     for _, btn in pairs(tabs) do
       if btn and not btn.pfTmogTab then
         btn.pfTmogTab = true
@@ -208,8 +210,8 @@ local function SkinTmog()
     end
 
     pcall(function()
-      local itemsBtn = _G.TmogFrameItemsButton
-      local outfitsBtn = _G.TmogFrameOutfitsButton
+      local itemsBtn = tabs.ITEMS
+      local outfitsBtn = tabs.OUTFITS
       if itemsBtn then
         itemsBtn:SetScript("OnClick", function()
           if (T.currentTab or "ITEMS") ~= "ITEMS" then
@@ -290,8 +292,9 @@ local function SkinTmog()
   -- selected -> 白色边框，normal -> 默认边框，贴图一律清空
   ---------------------------------------------------------------
   local function ReskinPreviews()
-    if not T.PreviewButtons then return end
-    for _, pframe in pairs(T.PreviewButtons) do
+    local previews = T.PreviewFrames or T.PreviewButtons
+    if not previews then return end
+    for _, pframe in pairs(previews) do
       if type(pframe) == "table" and pframe.GetObjectType then
         local pname = pframe.GetName and pframe:GetName()
         local btn = pname and _G[pname .. "Button"]
@@ -300,10 +303,34 @@ local function SkinTmog()
             pframe.pfTmogBg = true
             api.CreateBackdrop(pframe, nil, true)
           end
+          -- 5.x selects with LockHighlight rather than replacing the normal
+          -- texture. Mirror that state on the same personal preview border.
+          if T.PreviewFrames and not btn.pfTmogSelectionWrapped then
+            btn.pfTmogSelectionWrapped = true
+            local lock, unlock = btn.LockHighlight, btn.UnlockHighlight
+            local function Selection(active)
+              btn.pfTmogSelected = active
+              if active then pframe:SetBackdropBorderColor(1, 1, 1, 1)
+              else pframe:SetBackdropBorderColor(er, eg, eb, ea) end
+            end
+            btn.LockHighlight = function(self) lock(self); Selection(true) end
+            btn.UnlockHighlight = function(self) unlock(self); Selection(false) end
+            local id = btn.GetID and btn:GetID()
+            local equipped = T.currentSlot and T.CurrentGear and T.CurrentGear[T.currentSlot]
+            local group = equipped and T.ItemDisplayGroup and T.ItemDisplayGroup[equipped]
+            Selection(T.currentTab == "OUTFITS" and pframe.name == T.currentOutfit
+              or T.currentTab == "ITEMS" and (pframe.itemID == equipped or group and group == pframe.displayGroup))
+          end
           if not btn.pfTmogWrapped then
             btn.pfTmogWrapped = true
             local orig = btn.SetNormalTexture
             btn.SetNormalTexture = function(self, tex)
+              if self.pfTmogSelectionWrapped then
+                orig(self, "")
+                if self.pfTmogSelected then pframe:SetBackdropBorderColor(1, 1, 1, 1)
+                else pframe:SetBackdropBorderColor(er, eg, eb, ea) end
+                return
+              end
               local t = tostring(tex or "")
               if string.find(t, "item_bg_selected", 1, true) then
                 orig(self, "")
@@ -333,14 +360,18 @@ local function SkinTmog()
     end
   end
 
-  if not T.pfDrawWrapped and type(T.DrawPreviews) == "function" then
+  -- 5.x renamed both the preview pool and renderer; retain 4.x support.
+  local drawKey = type(T.UpdatePreviews) == "function" and "UpdatePreviews" or "DrawPreviews"
+  if not T.pfDrawWrapped and type(T[drawKey]) == "function" then
     T.pfDrawWrapped = true
-    local origDraw = T.DrawPreviews
-    T.DrawPreviews = function(noDraw)
-      origDraw(noDraw)
+    local original = T[drawKey]
+    T[drawKey] = function(...)
+      local result = original(unpack(arg))
       pcall(ReskinPreviews)
+      return result
     end
   end
+
   -- 已存在的预览按钮立即补一遍
   pcall(ReskinPreviews)
 

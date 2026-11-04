@@ -1,0 +1,1596 @@
+{
+  "before_commit": "d0557215510de435f43aba0cf1b6160de9a26c4c",
+  "tag": "before/fusion-20261103-20261104",
+  "selected": [
+    "Tmog",
+    "Automatonex",
+    "StatCompare",
+    "GoubayuHeal",
+    "aux-addon",
+    "pfUI",
+    "pfUI-CustomMedia",
+    "pfUI-addonskinner"
+  ],
+  "changes": [
+    {
+      "path": "Automatonex/Automatonex.toc",
+      "before": {
+        "bytes": 2585,
+        "sha256": "6ccab0f94d0449002a8e5474e462bdb9d7abe2cfcb31ee2ce75896571c578b31"
+      },
+      "after": {
+        "bytes": 2606,
+        "sha256": "a35e271aa018a4df5c5b90f8a01a3ce75cc6578019a7ec2d50ac6cee6e9cb05f"
+      }
+    },
+    {
+      "path": "Automatonex/Core.lua",
+      "before": {
+        "bytes": 136055,
+        "sha256": "9780e4be61879c62a9569814b532789702719349bf57a6c2b747ff0abf7497fa"
+      },
+      "after": {
+        "bytes": 136160,
+        "sha256": "73da71165f516c3e43b3aa0424b48152b9193121a33cb6c56b16236dd7ff08ee"
+      }
+    },
+    {
+      "path": "Automatonex/Modules/AutoCmd.lua",
+      "before": null,
+      "after": {
+        "bytes": 20497,
+        "sha256": "4ce7f0a217ad80c6e002beeb05f4058daae94140407804408516ce88a11d9abf"
+      }
+    },
+    {
+      "path": "Automatonex/Modules/AutoShout.lua",
+      "before": {
+        "bytes": 17512,
+        "sha256": "4e60777cd579a18754bb314c6fb4e5c9ae62d98462230b29e38476c4b091d6f7"
+      },
+      "after": {
+        "bytes": 51733,
+        "sha256": "975dbc0995f4c4af2ba3e292e614cc22fb2961d66f7121e1573bd16247ac76e8"
+      }
+    },
+    {
+      "path": "Automatonex/Modules/Tooltip.lua",
+      "before": {
+        "bytes": 28323,
+        "sha256": "527c396c4893b66dfee9849361ca3ffb934a21cb246a1ba3c1eeb43a32cf7d89"
+      },
+      "after": {
+        "bytes": 28320,
+        "sha256": "3fb0983d72b339074a31ab3c3a386e7d707829a70fa1b78ab5f583a175300bfb"
+      }
+    },
+    {
+      "path": "GoubayuHeal/GoubayuHeal.lua",
+      "before": {
+        "bytes": 410262,
+        "sha256": "bb89d2ddc7dbc97fbc13818f4ddacd1759e35defd935dde26547da1c1f264f56"
+      },
+      "after": {
+        "bytes": 410288,
+        "sha256": "c28c0824ab38ae33a8b6eb26319ccf2d8ead1d050297b86e88b6ab86b4a4877e"
+      }
+    },
+    {
+      "path": "GoubayuHeal/GoubayuHeal_Dispel.lua",
+      "before": {
+        "bytes": 91261,
+        "sha256": "3fe5221305bd1d22361d18a405d909d8e0a8da8e5fc928bb7fbbf35f06e46cc9"
+      },
+      "after": {
+        "bytes": 91542,
+        "sha256": "1c5162c2e8dbcebdf800a0a06997d3ce81256a9929ee8c5003abdabb3c931213"
+      }
+    },
+    {
+      "path": "GoubayuHeal/GoubayuHeal_Locale.lua",
+      "before": {
+        "bytes": 134680,
+        "sha256": "a14fdfcb837b62c8abaee990c4ec348d4e24426708d983a5792c8be7d0f67825"
+      },
+      "after": {
+        "bytes": 134743,
+        "sha256": "5add75e06fb96d03868f9536467bcfc41fbb6252b416d85cde4d83da9e74097a"
+      }
+    },
+    {
+      "path": "GoubayuHeal/GoubayuHeal_UI.lua",
+      "before": {
+        "bytes": 251705,
+        "sha256": "a20a4d585d4119a8c0bc6e138434cc8623123d5b8faefdf2be9545c49d112cdb"
+      },
+      "after": {
+        "bytes": 252378,
+        "sha256": "162830b8e15cc1c53f828999055b97452cd18ec22aad5fa9497a1cb2434a7270"
+      }
+    },
+    {
+      "path": "StatCompare/StatCompare.lua",
+      "before": {
+        "bytes": 88026,
+        "sha256": "d47e18124be97f2bdb1f21f824466e3979ac730a11949e6f6de9bdfb2998cd1a"
+      },
+      "after": {
+        "bytes": 89322,
+        "sha256": "7e2042b1488258ae70e124ff18b1bc67433daa12c0e86387a30c13e7a3a95fb2"
+      }
+    },
+    {
+      "path": "StatCompare/StatCompare.toc",
+      "before": {
+        "bytes": 1324,
+        "sha256": "cc06bd9ef8306bb48abae83c97b00bc77e25fc45dd6b2972eeaa507083c2bd6d"
+      },
+      "after": {
+        "bytes": 1350,
+        "sha256": "d8b4c69dfabae747cb4378704a149b224455d444b38e223c7d2e053f7646657b"
+      }
+    },
+    {
+      "path": "Tmog/Constants.lua",
+      "before": null,
+      "after": {
+        "bytes": 22954,
+        "sha256": "d4fa50441b2e10340fd2ee022cd4de0bc6cf554c0e74f79106031a1185e4192e"
+      }
+    },
+    {
+      "path": "Tmog/Filters.lua",
+      "before": null,
+      "after": {
+        "bytes": 4383,
+        "sha256": "c61f6fdcb38a5a3cd7b09b5164f29d5a6a95a71a4b2d23c28af737ada4535ff4"
+      }
+    },
+    {
+      "path": "Tmog/Fullscreen.lua",
+      "before": null,
+      "after": {
+        "bytes": 2037,
+        "sha256": "247129a03c8a3b7ce34227cd49cbb0ad011e4de3eaa9f31ef09f5a19bde897ea"
+      }
+    },
+    {
+      "path": "Tmog/Localization.lua",
+      "before": {
+        "bytes": 11219,
+        "sha256": "15313e39300e565977b35b50bd82588cdb427a00b8f92384b0ec9e9dd81412bf"
+      },
+      "after": {
+        "bytes": 11724,
+        "sha256": "9c36b216fb272af23a1e1cacbb3dab88e36e0a7c8c0a3d6889a5d9b3d7631694"
+      }
+    },
+    {
+      "path": "Tmog/Outfits.lua",
+      "before": null,
+      "after": {
+        "bytes": 13506,
+        "sha256": "deebe932c677ec2bab141daddfa7e3efae489fd2f8461b155fb31dc2c2127974"
+      }
+    },
+    {
+      "path": "Tmog/PopupDialogs.lua",
+      "before": null,
+      "after": {
+        "bytes": 4715,
+        "sha256": "2980d5961e113f08752205069aadaddd06211ce5e0ff1aa5ecc3735c20731331"
+      }
+    },
+    {
+      "path": "Tmog/Slashcmd.lua",
+      "before": null,
+      "after": {
+        "bytes": 4556,
+        "sha256": "27e9dc0970f507a8127cec0db8a76d0336ddf141edefdc051b3786c629661f7e"
+      }
+    },
+    {
+      "path": "Tmog/Templates.xml",
+      "before": null,
+      "after": {
+        "bytes": 8380,
+        "sha256": "af29338b89a56acb1decd327bdc2b2c5958a21dd5154a61d990c799e1e152350"
+      }
+    },
+    {
+      "path": "Tmog/Textures/Character-Plus.blp",
+      "before": null,
+      "after": {
+        "bytes": 5636,
+        "sha256": "c6944bdf6428e4696df20d033e90151db606dd9d779f6fdb4fcd7c705e5e594e"
+      }
+    },
+    {
+      "path": "Tmog/Textures/FirstPage-Disabled.blp",
+      "before": null,
+      "after": {
+        "bytes": 1540,
+        "sha256": "9a80c795375a71656e677dd505dc0a16fb9aa2606a85000b603008f789dcccac"
+      }
+    },
+    {
+      "path": "Tmog/Textures/FirstPage-Down.blp",
+      "before": null,
+      "after": {
+        "bytes": 1540,
+        "sha256": "3475909ca4188baf625f658212df2170233598cccf7af6cc73c110ed5c552589"
+      }
+    },
+    {
+      "path": "Tmog/Textures/FirstPage-Up.blp",
+      "before": null,
+      "after": {
+        "bytes": 1540,
+        "sha256": "24c749c8c232e4d30175465a598d2cef4038193d8cef13b2c40db648c7d5a094"
+      }
+    },
+    {
+      "path": "Tmog/Textures/LastPage-Disabled.blp",
+      "before": null,
+      "after": {
+        "bytes": 1540,
+        "sha256": "32f27279014428d52c03accd00706197d8140cdbf1be20fc7ceba4f8533f4bb6"
+      }
+    },
+    {
+      "path": "Tmog/Textures/LastPage-Down.blp",
+      "before": null,
+      "after": {
+        "bytes": 1540,
+        "sha256": "1f2f25ddf5e481add150580e3e005e6c9769fde530b46db974ac481453242e8b"
+      }
+    },
+    {
+      "path": "Tmog/Textures/LastPage-Up.blp",
+      "before": null,
+      "after": {
+        "bytes": 1540,
+        "sha256": "aec212ac36b6c7ed5b3ae44f846a14ac735d817430b043c7c0ab52beb85c6751"
+      }
+    },
+    {
+      "path": "Tmog/Textures/UI-Panel-MaximizeMapButton-Down.blp",
+      "before": {
+        "bytes": 2580,
+        "sha256": "8b7d9bc4f9a2841c7b51b381b0e8b965abacc276fbccdbc7661d4cebd757b4fd"
+      },
+      "after": {
+        "bytes": 1540,
+        "sha256": "7e9142137cf73b78fe1fdbf2f5420b063f4239eb256611448328af0642ecd26a"
+      }
+    },
+    {
+      "path": "Tmog/Textures/UI-Panel-MaximizeMapButton-Up.blp",
+      "before": {
+        "bytes": 2580,
+        "sha256": "545e2df096223b66c4955d49a63c4aa51cd37bc05b8fec23109f4558c918a636"
+      },
+      "after": {
+        "bytes": 1540,
+        "sha256": "5e67d3aadecd3de36a4553305c491bfbf56bd6c9ae599192fb50d73b79940afe"
+      }
+    },
+    {
+      "path": "Tmog/Textures/UI-Panel-MinimizeButton-Highlight.blp",
+      "before": {
+        "bytes": 1868,
+        "sha256": "f77b476fe6b9d25e52ed04ab42d18d9ab286fb81b6234978db79325ad94a6216"
+      },
+      "after": {
+        "bytes": 1540,
+        "sha256": "4c2446456683af8771f62085b588cb3ead3583b452bd8f46347465fbfa0f02ac"
+      }
+    },
+    {
+      "path": "Tmog/Textures/UI-SearchBox-Clear.blp",
+      "before": {
+        "bytes": 1556,
+        "sha256": "51356eefbad8636bcc16fa65d3522d1ccdae42093451494f40315c87d1779d36"
+      },
+      "after": {
+        "bytes": 516,
+        "sha256": "32bb9f5110e378bb388444cbde123f1d5d0a8a339c5510be0fb70be881091f3c"
+      }
+    },
+    {
+      "path": "Tmog/Textures/UI-TradeSkill-LinkButton.blp",
+      "before": null,
+      "after": {
+        "bytes": 2564,
+        "sha256": "99ddfce89f636dbcfe47cf1a3652ec03ef82502ea076585f900fe9c3650efa8a"
+      }
+    },
+    {
+      "path": "Tmog/Textures/big_plus_highlight.blp",
+      "before": {
+        "bytes": 16532,
+        "sha256": "a4a7f8d81646504dc737bb2d041f0d9b183973ada0f01039838bceac5d122cd2"
+      },
+      "after": {
+        "bytes": 22020,
+        "sha256": "bdafc0ca50856e025f0f480f9b44ccaa72fad7f55e2abe64e27b61118a34f0d3"
+      }
+    },
+    {
+      "path": "Tmog/Textures/big_plus_normal.blp",
+      "before": {
+        "bytes": 16532,
+        "sha256": "57ef7ce85651dcb5e3a9c49e19f47a6e66583dcff5f0a9d968a5c4b927e44528"
+      },
+      "after": {
+        "bytes": 22020,
+        "sha256": "1ff5c560c3745d68901303180154e63c1ef064988bd507574d2f33e5dc05b656"
+      }
+    },
+    {
+      "path": "Tmog/Textures/big_plus_pushed.blp",
+      "before": {
+        "bytes": 16532,
+        "sha256": "d4b6d8842666af4dcaf374ebf5f1c3e45cb9409df2e9859485d424552a2d52d0"
+      },
+      "after": {
+        "bytes": 22020,
+        "sha256": "dd9aeb6b561767d2222b47a43fe9cc1166161213c5401c69e7c92c4b4bf1c985"
+      }
+    },
+    {
+      "path": "Tmog/Textures/border_2.blp",
+      "before": {
+        "bytes": 6676,
+        "sha256": "dbd967761e2a91005d6ee5ab269c076a7bf297694b4e2567d56eebd58f40a3f9"
+      },
+      "after": {
+        "bytes": 5636,
+        "sha256": "d1bd489fad74fb8a5b7a39876826fd9209f0774c46f8712eb9e8cc9b0c6fae90"
+      }
+    },
+    {
+      "path": "Tmog/Textures/border_full.blp",
+      "before": {
+        "bytes": 6676,
+        "sha256": "2911f77251b3129345d4f41c9168a4c892a1d63847af8e61bb9a63e1b1367aa8"
+      },
+      "after": {
+        "bytes": 5636,
+        "sha256": "6318ea9afceb7fe79b350a705f752f781a8948f00f751e203d40969a270f4cc5"
+      }
+    },
+    {
+      "path": "Tmog/Textures/check.blp",
+      "before": {
+        "bytes": 6660,
+        "sha256": "a21e7487d51be0f518ed0fe6741d2d1c97345ad2c07bc9db6e4e8a90e9979bc8"
+      },
+      "after": {
+        "bytes": 5636,
+        "sha256": "1bdafb61e539fc54e88f99fca85f7279d4c0be535ff949695878ac0a004df174"
+      }
+    },
+    {
+      "path": "Tmog/Textures/item_bg_highlight.blp",
+      "before": {
+        "bytes": 23060,
+        "sha256": "13dc1b49f88a52c169b378c0fe23164b9c0e5938984837308f9736634091227c"
+      },
+      "after": {
+        "bytes": 22020,
+        "sha256": "9eac0e8236da3951f89cfa33cf90f3d5a9e19850d87217c91e27a30398ff7f26"
+      }
+    },
+    {
+      "path": "Tmog/Textures/item_bg_normal.blp",
+      "before": {
+        "bytes": 23060,
+        "sha256": "be434d495ea64a43bb555db1d1551debf5df3f70d4540b47b1efea3a590c88f9"
+      },
+      "after": {
+        "bytes": 22020,
+        "sha256": "05acffdd407ef65f1551ffbb2b7907fc55f54502b079e59353d42bf701f49112"
+      }
+    },
+    {
+      "path": "Tmog/Textures/item_bg_selected.blp",
+      "before": {
+        "bytes": 23060,
+        "sha256": "9a9bb2cbeba75ae15b0efe43d6215e6d86b656af2c90b7514411539247f53af5"
+      },
+      "after": {
+        "bytes": 22020,
+        "sha256": "21127e1d7211f503adc77b4ed05d830dfd190032b3e8559ae2c45939caf87222"
+      }
+    },
+    {
+      "path": "Tmog/Textures/preview-border-thin.blp",
+      "before": null,
+      "after": {
+        "bytes": 22020,
+        "sha256": "2af5a185fbe3add4eebe91d69215139918d52b15b25a5d17e295ceb0c31c9529"
+      }
+    },
+    {
+      "path": "Tmog/Textures/revert.blp",
+      "before": {
+        "bytes": 2580,
+        "sha256": "6cf9b26c07d784d2a3bc5dcf622070faf2377aa630b24c6c443f8e023e36fcd2"
+      },
+      "after": {
+        "bytes": 1540,
+        "sha256": "f1457fcb70dbf8b6b36d80ce8fda539103cf4381eb86094882b8cbaa0cc43196"
+      }
+    },
+    {
+      "path": "Tmog/Textures/revert_highlight.blp",
+      "before": null,
+      "after": {
+        "bytes": 1540,
+        "sha256": "0263e41997807830ecaa2fa29ad8b54919508d098fb13d2bf71c8a41b0e45a78"
+      }
+    },
+    {
+      "path": "Tmog/Textures/revert_pushed.blp",
+      "before": null,
+      "after": {
+        "bytes": 1540,
+        "sha256": "443f8bff23ee1b0d6934e6565a3f83e252c76b88b8737c3da24f2a247d4da57f"
+      }
+    },
+    {
+      "path": "Tmog/Textures/tab_active.blp",
+      "before": {
+        "bytes": 5268,
+        "sha256": "95207d961f0c2a120dc4509490020b3746636027bd7c23b8ccff3bc2e447def1"
+      },
+      "after": {
+        "bytes": 5668,
+        "sha256": "498597fa73434eeffe5755db4494cf52385945264d1540adad17716daff8e86a"
+      }
+    },
+    {
+      "path": "Tmog/Textures/tab_inactive.blp",
+      "before": {
+        "bytes": 5268,
+        "sha256": "941ffd245fd0159b0f467f08af1eb7f792d963b7975c908f419dbaaa083e6ce9"
+      },
+      "after": {
+        "bytes": 5668,
+        "sha256": "3d053680608f22842f93665512afaf4b1bce3c9841a8814eb6fc78ca0a884ce2"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmog_border.blp",
+      "before": {
+        "bytes": 6676,
+        "sha256": "ac1c317deac71dc285d5ef2dcd7c825585aa0810d9e5eb6c62ba86fbf2df257a"
+      },
+      "after": {
+        "bytes": 5636,
+        "sha256": "9be055c78a49433e1c452ba0fbd42f6e144a65f30dd287493b253feedcadb2a5"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundbloodelf.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "365ec5e95ec8dcf264ce74cac74022bf6ebbb72df68feb573312c8c69a155c9d"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "95f177a2671ceb80b63e032a0f558839d656a2975fd36eb63611be7de23abebe"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgrounddwarf.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "1afd0cb91ae5162646b08d603c3122223a392e4f2f08c83d0aac94e6518e6a1a"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "5b7bd5a4989bf4bc7dd64d45f9ee934a77cc6063d01859b29bf613a628b1aa91"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundgnome.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "eaed105182b5664bf15f041e340ae92b04059da236e6c4d80968325c4b1010c4"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "b2daa9771793caa54b4ee58e07dbb2a945070539fc9451b134bcede55cc0a4af"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundgoblin.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "b47927f6b855c30fa4705e19198ba1f996a0dfd267ba465dadae1f3dc1d97e13"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "d267e4ed20b7109c7565caa33659f3dc676f407521b51e8db62cf70d30eab006"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundhighelf.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "365ec5e95ec8dcf264ce74cac74022bf6ebbb72df68feb573312c8c69a155c9d"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "95f177a2671ceb80b63e032a0f558839d656a2975fd36eb63611be7de23abebe"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundhuman.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "06d8c2f6e1563680dbae21683302aa5b62a510a1e7cfd6bb10b07aa26291b3fb"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "42dbb7d5682cafd4bfacaacdb7201626bef9350e3597cf3c31f3a3b7948a41e3"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundnightelf.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "ba42be3005ab51cc038f7f84c245b67bb5af14b4a97f0ea33f8723b4e823d0f5"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "eb1ebf432e29c997edcd7d9186dde9be6c2c0d8fae45e653dc125f700968c08f"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundorc.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "975f0f52dff499a61e2351dec56dca879e2e54c793e8b3c5f01150ce06cbc690"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "7c93092921f2914654f555ace9f9bef0bdabecb1993de0082d788afb3d196d1f"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundscourge.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "dc9ddaffb18874777db25e50978bdd8baf0cea928de97f1e10813244e8a47213"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "e7581f9f3b30f03453d79f9f38c54120e8b891b7a8f413a6b6ab40cc085579f3"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundtauren.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "18dfdea613cc2dc758183ba0651264313f811b42f54ace676fb08d1553f1f022"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "2404e36b4002f1f877ed82d5cb20c3eb9bc3b55fec08d639e1c7f1619ac5c079"
+      }
+    },
+    {
+      "path": "Tmog/Textures/transmogbackgroundtroll.blp",
+      "before": {
+        "bytes": 263316,
+        "sha256": "6c6a3350c7a892770124841e7ff2134249e22ef2ef78e3d7b37abe4ba48e8c6b"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "258ed94cf330dac9980fbdd9a95df4e5b81e94b4943d2a7240c56ce9fe77ecb4"
+      }
+    },
+    {
+      "path": "Tmog/Textures/ui-searchbox-icon.blp",
+      "before": {
+        "bytes": 1540,
+        "sha256": "ae9cc763b66368e14cf4b945ada489370d08e524ff0e2fcd16e1e1bceefa91ab"
+      },
+      "after": {
+        "bytes": 516,
+        "sha256": "b57a9955b4ff6a51733015958b42d003f7b8753321869bfa345737113c423d86"
+      }
+    },
+    {
+      "path": "Tmog/Textures/ui1.blp",
+      "before": {
+        "bytes": 262292,
+        "sha256": "54cf045ec297d142be01c5bc00d2c668dacb2c8e17c0f61c914ff8372635232d"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "bec4c50f8377d86b0ddf266ae56e0cccf35bbecba4517562e24c74563dfef285"
+      }
+    },
+    {
+      "path": "Tmog/Textures/ui2.blp",
+      "before": {
+        "bytes": 262292,
+        "sha256": "df5703d6dab976cd688ab0d1dd52204796547c4efedc3e8d134e9224cf4c68fd"
+      },
+      "after": {
+        "bytes": 349700,
+        "sha256": "a5ed35b82d502d205051a14d6b56d48cc0e5ff394fb534d8e0834835a262e9bf"
+      }
+    },
+    {
+      "path": "Tmog/Tmog.lua",
+      "before": {
+        "bytes": 95176,
+        "sha256": "f51d709029ace28cab1fe46ddf0f594541d7370d716502f9abe31cb7934ef1ad"
+      },
+      "after": {
+        "bytes": 46731,
+        "sha256": "f3e8fa1829c92e479cf1304e332c69de90d9ef9741f66b05cae4320b5059abde"
+      }
+    },
+    {
+      "path": "Tmog/Tmog.toc",
+      "before": {
+        "bytes": 519,
+        "sha256": "bb6bae83219ce5012ad5ba6491ea0345c6d559a1638daae529fb91c4cdac4524"
+      },
+      "after": {
+        "bytes": 735,
+        "sha256": "e9d2f4b7cea6d4386ace203111078b2f93f3fb44ab7c6acde1a652cc870a5f87"
+      }
+    },
+    {
+      "path": "Tmog/Tmog.xml",
+      "before": {
+        "bytes": 37210,
+        "sha256": "00f1f3d6dfc9a36ddb62cbf02cdfea5b346375268010155c6f9357ae48b00e69"
+      },
+      "after": {
+        "bytes": 26775,
+        "sha256": "3aee8e5227f861d71cac3cc8f90d1ec11d49a2b7d9036de2cff35bbcaee83921"
+      }
+    },
+    {
+      "path": "Tmog/Tooltip.lua",
+      "before": null,
+      "after": {
+        "bytes": 12016,
+        "sha256": "2ca950ea83f311c8e3347f15915a5f92678794cc766fc06785df23ab321226fa"
+      }
+    },
+    {
+      "path": "Tmog/Utility.lua",
+      "before": null,
+      "after": {
+        "bytes": 7418,
+        "sha256": "43ba71c265f5d19cd6f03372ea270601647ce9f0aa0d8dac534f8ed889b98dda"
+      }
+    },
+    {
+      "path": "aux-addon/core/scan.lua",
+      "before": {
+        "bytes": 9782,
+        "sha256": "0ab2fe770743291f14e78f231344c33e1156313c28f1ef950ae30d79ce7834dc"
+      },
+      "after": {
+        "bytes": 16999,
+        "sha256": "47b1543005382cf705f6208958b1a975c04192670ab2a375093350bb571460be"
+      }
+    },
+    {
+      "path": "aux-addon/core/slash.lua",
+      "before": {
+        "bytes": 6552,
+        "sha256": "1e4a8066f71f35c7d4ac01b8ad6fe3776de7090170d2374a96c851e7c6df9341"
+      },
+      "after": {
+        "bytes": 7878,
+        "sha256": "250d41369ea9ed8914fa0c51d51e2ff73a804b301d5e4bea3ab363aea0af4936"
+      }
+    },
+    {
+      "path": "aux-addon/tabs/auctions/core.lua",
+      "before": {
+        "bytes": 2805,
+        "sha256": "fd5c3da553aee4ac5e26b1c68743ca8d750f0351a01e6bea5d69be4cec04cf82"
+      },
+      "after": {
+        "bytes": 3866,
+        "sha256": "b65cf7fc1de229a2d61de3413dfde4dbc91094145e8f9c4c55d80477385176a6"
+      }
+    },
+    {
+      "path": "aux-addon/tabs/post/core.lua",
+      "before": {
+        "bytes": 22424,
+        "sha256": "2fbd4feb5c2d299a3ca3d34ff593418e9e05e7e76227982b8f8ce5551f3e6569"
+      },
+      "after": {
+        "bytes": 23142,
+        "sha256": "0dbb3a56d145b70dfa6f075b6d00c3858891604f45d92326aa663b6580aaaf05"
+      }
+    },
+    {
+      "path": "pfUI-CustomMedia/.workbuddy/luacheck.txt",
+      "before": {
+        "bytes": 8,
+        "sha256": "d08babf88d70754c97be3f2ac83a8c7d21ed7ad811ad5a1c4a2e80a51db40eb9"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/.workbuddy/memory/2026-09-17.md",
+      "before": {
+        "bytes": 1738,
+        "sha256": "162be50395e32277d7ebe8478173f8885643ffe70f734b752d689a13b7910e5f"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/.workbuddy/memory/2026-09-18.md",
+      "before": {
+        "bytes": 1854,
+        "sha256": "ce0e59f93d5a5fc88d77a3fa05d31f34b1a12b7f4f3e999c4a6e31be9b69f353"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/.workbuddy/memory/MEMORY.md",
+      "before": {
+        "bytes": 1985,
+        "sha256": "4210f5671ae79d325f007f4b39d0fac9e72d3730d0d4f7726f62f2f6308b377a"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/.workbuddy/tgaalpha.py",
+      "before": {
+        "bytes": 1196,
+        "sha256": "4163b985e64baa3a3be5eb785d9059155d7f2497e14d717b61d51870268e45ac"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/.workbuddy/tgavalid.py",
+      "before": {
+        "bytes": 1087,
+        "sha256": "16da03c0ad940832caa9c0eec54caf0d09592672edeec6f2887a07a6127a19e2"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/README.md",
+      "before": {
+        "bytes": 828,
+        "sha256": "f1424e543957a4607d7a67b8f2f14dfcbed11aa0cb41db2c1c0818bf48e8db68"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-A.tga",
+      "before": {
+        "bytes": 24620,
+        "sha256": "89d285407b51f7029670dbeefef3fc1f5718c95da6a02fe6d9868752c1a07b23"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-B.tga",
+      "before": {
+        "bytes": 24620,
+        "sha256": "0dc71b76caa4b83c79f07feb5e0464a13d940d0115476b9aca06607aa2fd936e"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-C.tga",
+      "before": {
+        "bytes": 1114,
+        "sha256": "555f7d567a2a5bde1cf135b5e0962df3f4c88550ec045fc61eb678633625b73c"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-D.tga",
+      "before": {
+        "bytes": 364,
+        "sha256": "23b9d00ee40326094ca44db0b6183b9961ae5be2ebeafa7be31a80747a6474ea"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-E.tga",
+      "before": {
+        "bytes": 32812,
+        "sha256": "de3d97bf4001faaabf14a785ff9f64117b4f45251d79c49866dccf37676c86d9"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-F.tga",
+      "before": {
+        "bytes": 32812,
+        "sha256": "8b7cf2bf00095eb77afee0aea1524c3001c1950da3760854b923701bff9b0aa1"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-G.tga",
+      "before": {
+        "bytes": 274,
+        "sha256": "9ceeeb86b54cbb3bc26424d505a81a06ddea436eb65cb08fc28930853c97bf1e"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-H.tga",
+      "before": {
+        "bytes": 8620,
+        "sha256": "09fc8c706174cd6eda019845d7e9345f294e853b3fc2e7924eea026171b108bd"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-I.tga",
+      "before": {
+        "bytes": 33307,
+        "sha256": "20dc3842caf250de5aed0f450fc25199c9b41e6a5fa8795ce02ffcf708c87d46"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-J.tga",
+      "before": {
+        "bytes": 13065,
+        "sha256": "9fb4df9a593c51583e3cd3849cc8c76baeb0e71ae65fbd0d05dce590e03db4e4"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-K.tga",
+      "before": {
+        "bytes": 13041,
+        "sha256": "a2cd3e7bf7fbe2276b45d82ca5b87de3ca30090b5ece6fa3b547afc9215b0ec0"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-L.tga",
+      "before": {
+        "bytes": 8738,
+        "sha256": "0cc035bfad5dadccd0c9497f464443a085336d91f065f74ec4e6e2b16fcdfbe1"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-M.tga",
+      "before": {
+        "bytes": 30485,
+        "sha256": "b2c97073ac6b0e8b41b7918f3e38fa4e312a64d1da9bde5100326a2ce3240175"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-N.tga",
+      "before": {
+        "bytes": 7650,
+        "sha256": "1d8a90f750a1e2b1e04480c98bd10eebcd926295ffbcbff748198d37e0fa8345"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-O.tga",
+      "before": {
+        "bytes": 98322,
+        "sha256": "e2b85afe0d1dbdc4f52ffb8089e5dfde8ad2a78f40eb53ef9e343a79158eeee2"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-P.tga",
+      "before": {
+        "bytes": 16428,
+        "sha256": "054b7063deb4817cd9fd26355e6ff4b9ae9e00a428ac2ea7215fd114759fb00a"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-Q.tga",
+      "before": {
+        "bytes": 28116,
+        "sha256": "75bd028d69619f510bec4e8ec0fc83be607eb3fb47901e20599304f17cb039e6"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-R.tga",
+      "before": {
+        "bytes": 32812,
+        "sha256": "383bc17f01a3ef10ad2d9b5d9f1c45a4d883a186a572487ee393a2721899c82c"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-S.tga",
+      "before": {
+        "bytes": 530,
+        "sha256": "f638fd9468fbebdfc8e216ea4b0b7400e96417eba5610cb80969eb26b56883f4"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-T.tga",
+      "before": {
+        "bytes": 27640,
+        "sha256": "c04ba5d27200e6d7c4c908f644c4236ffc2a85da52f08d5810ef4fa3824f3a9a"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-U.tga",
+      "before": {
+        "bytes": 274,
+        "sha256": "4012a5980c6570ce1e6f39a000bdccd8243ebab5fa645e6e901fb9a54a2584ee"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-V.tga",
+      "before": {
+        "bytes": 98322,
+        "sha256": "944889be88e4a68a6a72adcb11aed101434a57cd993190005e3bc8796a97e842"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-W.tga",
+      "before": {
+        "bytes": 274,
+        "sha256": "5115089a9b078993c47c144bdff269ad5c208910798fa5f485a83c5a7d2f9847"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-X.tga",
+      "before": {
+        "bytes": 32812,
+        "sha256": "20f70840ccfd8c7a94ccdc57a95810a56d495e1de62ac90e4f051e44c8215205"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-Y.tga",
+      "before": {
+        "bytes": 24620,
+        "sha256": "dfbed7933bc229f6d0df8b0fef3d8792743d43b00f90ffae2beb7bdb76887355"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/bars/pfUI-Z.tga",
+      "before": {
+        "bytes": 27640,
+        "sha256": "06184cc6f4c0f381ffa4a8154c57a4c0e0e0e5764afbe52e9be3e7599e4db784"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/pfUI-CustomMedia-bars.lua",
+      "before": {
+        "bytes": 2595,
+        "sha256": "412546f2a4835cc244691b9f077978ad3fed5360d5d4eebee482224c9f45ad1e"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/pfUI-CustomMedia-gui.lua",
+      "before": {
+        "bytes": 8137,
+        "sha256": "519decaebe3607f85477c8bd68874ce652ab44bbfdc2106ca6d2d5c99159b3df"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/pfUI-CustomMedia-tbc.toc",
+      "before": {
+        "bytes": 616,
+        "sha256": "c51664e61acaf5c0efb1c87b61c386544236fa616002101e240e19bd5da16faa"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-CustomMedia/pfUI-CustomMedia.toc",
+      "before": {
+        "bytes": 622,
+        "sha256": "e0314c4c724112ea83e07bcb64cc56d1e04277cad704706a17025b9a5aff741b"
+      },
+      "after": null
+    },
+    {
+      "path": "pfUI-addonskinner/skins/Tmog.lua",
+      "before": {
+        "bytes": 13676,
+        "sha256": "c710bd0ab1c9fc8679edaed45c9d426e8d595c62ead481d796a89aa754fd59d4"
+      },
+      "after": {
+        "bytes": 15535,
+        "sha256": "9b8acbf05363e82109996e7b0e9c1d3b307a6b9246bf27bf102f94371d21823a"
+      }
+    },
+    {
+      "path": "pfUI/api/config.lua",
+      "before": {
+        "bytes": 107779,
+        "sha256": "4208226b1e9adf67a75639181f61d77d2136bcaf39e414342c5c534550dd560f"
+      },
+      "after": {
+        "bytes": 108810,
+        "sha256": "603444c5123a21ac8b60ae06ed24d61f1be8b4908ccaf10669d553f98b7ff5c7"
+      }
+    },
+    {
+      "path": "pfUI/env/profiles.lua",
+      "before": {
+        "bytes": 184207,
+        "sha256": "03d37a60df1d60339c94b2e852a32ffa11d40c2dda24c34532b2c2599fdb0b5c"
+      },
+      "after": {
+        "bytes": 183745,
+        "sha256": "e782653485b22c54e2515490b977c988a1d04d72b027120e692bb282083f5fe9"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-A.tga",
+      "before": null,
+      "after": {
+        "bytes": 24620,
+        "sha256": "89d285407b51f7029670dbeefef3fc1f5718c95da6a02fe6d9868752c1a07b23"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-B.tga",
+      "before": null,
+      "after": {
+        "bytes": 24620,
+        "sha256": "0dc71b76caa4b83c79f07feb5e0464a13d940d0115476b9aca06607aa2fd936e"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-C.tga",
+      "before": null,
+      "after": {
+        "bytes": 1114,
+        "sha256": "555f7d567a2a5bde1cf135b5e0962df3f4c88550ec045fc61eb678633625b73c"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-D.tga",
+      "before": null,
+      "after": {
+        "bytes": 364,
+        "sha256": "23b9d00ee40326094ca44db0b6183b9961ae5be2ebeafa7be31a80747a6474ea"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-E.tga",
+      "before": null,
+      "after": {
+        "bytes": 32812,
+        "sha256": "de3d97bf4001faaabf14a785ff9f64117b4f45251d79c49866dccf37676c86d9"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-F.tga",
+      "before": null,
+      "after": {
+        "bytes": 32812,
+        "sha256": "8b7cf2bf00095eb77afee0aea1524c3001c1950da3760854b923701bff9b0aa1"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-G.tga",
+      "before": null,
+      "after": {
+        "bytes": 274,
+        "sha256": "9ceeeb86b54cbb3bc26424d505a81a06ddea436eb65cb08fc28930853c97bf1e"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-H.tga",
+      "before": null,
+      "after": {
+        "bytes": 8620,
+        "sha256": "09fc8c706174cd6eda019845d7e9345f294e853b3fc2e7924eea026171b108bd"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-I.tga",
+      "before": null,
+      "after": {
+        "bytes": 33307,
+        "sha256": "20dc3842caf250de5aed0f450fc25199c9b41e6a5fa8795ce02ffcf708c87d46"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-J.tga",
+      "before": null,
+      "after": {
+        "bytes": 13065,
+        "sha256": "9fb4df9a593c51583e3cd3849cc8c76baeb0e71ae65fbd0d05dce590e03db4e4"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-K.tga",
+      "before": null,
+      "after": {
+        "bytes": 13041,
+        "sha256": "a2cd3e7bf7fbe2276b45d82ca5b87de3ca30090b5ece6fa3b547afc9215b0ec0"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-L.tga",
+      "before": null,
+      "after": {
+        "bytes": 8738,
+        "sha256": "0cc035bfad5dadccd0c9497f464443a085336d91f065f74ec4e6e2b16fcdfbe1"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-M.tga",
+      "before": null,
+      "after": {
+        "bytes": 30485,
+        "sha256": "b2c97073ac6b0e8b41b7918f3e38fa4e312a64d1da9bde5100326a2ce3240175"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-N.tga",
+      "before": null,
+      "after": {
+        "bytes": 7650,
+        "sha256": "1d8a90f750a1e2b1e04480c98bd10eebcd926295ffbcbff748198d37e0fa8345"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-O.tga",
+      "before": null,
+      "after": {
+        "bytes": 98322,
+        "sha256": "e2b85afe0d1dbdc4f52ffb8089e5dfde8ad2a78f40eb53ef9e343a79158eeee2"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-P.tga",
+      "before": null,
+      "after": {
+        "bytes": 16428,
+        "sha256": "054b7063deb4817cd9fd26355e6ff4b9ae9e00a428ac2ea7215fd114759fb00a"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-Q.tga",
+      "before": null,
+      "after": {
+        "bytes": 28116,
+        "sha256": "75bd028d69619f510bec4e8ec0fc83be607eb3fb47901e20599304f17cb039e6"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-R.tga",
+      "before": null,
+      "after": {
+        "bytes": 32812,
+        "sha256": "383bc17f01a3ef10ad2d9b5d9f1c45a4d883a186a572487ee393a2721899c82c"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-S.tga",
+      "before": null,
+      "after": {
+        "bytes": 530,
+        "sha256": "f638fd9468fbebdfc8e216ea4b0b7400e96417eba5610cb80969eb26b56883f4"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-T.tga",
+      "before": null,
+      "after": {
+        "bytes": 27640,
+        "sha256": "c04ba5d27200e6d7c4c908f644c4236ffc2a85da52f08d5810ef4fa3824f3a9a"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-U.tga",
+      "before": null,
+      "after": {
+        "bytes": 274,
+        "sha256": "4012a5980c6570ce1e6f39a000bdccd8243ebab5fa645e6e901fb9a54a2584ee"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-V.tga",
+      "before": null,
+      "after": {
+        "bytes": 98322,
+        "sha256": "944889be88e4a68a6a72adcb11aed101434a57cd993190005e3bc8796a97e842"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-W.tga",
+      "before": null,
+      "after": {
+        "bytes": 274,
+        "sha256": "5115089a9b078993c47c144bdff269ad5c208910798fa5f485a83c5a7d2f9847"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-X.tga",
+      "before": null,
+      "after": {
+        "bytes": 32812,
+        "sha256": "20f70840ccfd8c7a94ccdc57a95810a56d495e1de62ac90e4f051e44c8215205"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-Y.tga",
+      "before": null,
+      "after": {
+        "bytes": 24620,
+        "sha256": "dfbed7933bc229f6d0df8b0fef3d8792743d43b00f90ffae2beb7bdb76887355"
+      }
+    },
+    {
+      "path": "pfUI/img/bars/pfUI-Z.tga",
+      "before": null,
+      "after": {
+        "bytes": 27640,
+        "sha256": "06184cc6f4c0f381ffa4a8154c57a4c0e0e0e5764afbe52e9be3e7599e4db784"
+      }
+    },
+    {
+      "path": "pfUI/init/modules.xml",
+      "before": {
+        "bytes": 4142,
+        "sha256": "b8d06f1178f74f3eb9677c68b135d5dc0f758bb18e6273311984674d2a3ce32c"
+      },
+      "after": {
+        "bytes": 4189,
+        "sha256": "5f531eb304dfc3fcd450566b560f3c08c81aeb02223a63d085d92f485209a0b2"
+      }
+    },
+    {
+      "path": "pfUI/modules/automation.lua",
+      "before": {
+        "bytes": 30728,
+        "sha256": "f7de4eec5ab7346d708d13b4a1513cea0ee524083a52f595582995b9647c5362"
+      },
+      "after": {
+        "bytes": 30739,
+        "sha256": "ffc3309583f903fef71f9cdafd6eb6c8db81c9b152553a228189c66d63e213d0"
+      }
+    },
+    {
+      "path": "pfUI/modules/combopoints.lua",
+      "before": {
+        "bytes": 12595,
+        "sha256": "72e0fb1c11d197756fb80e9962b8c06a0fae7ede7ff760e219e298c0fdbc65f1"
+      },
+      "after": {
+        "bytes": 12581,
+        "sha256": "2da9b15b0cc19981fc96b57a50695a2d29fef87ee5ccb1817ce72d2103b1d908"
+      }
+    },
+    {
+      "path": "pfUI/modules/custommedia.lua",
+      "before": null,
+      "after": {
+        "bytes": 7876,
+        "sha256": "8f0621d8bd9d37f48100fdee02a08e20e689def9c5a4278d034e29f44a372e0b"
+      }
+    },
+    {
+      "path": "pfUI/modules/energybar.lua",
+      "before": {
+        "bytes": 16730,
+        "sha256": "be1e59c9ea1de84daf5a20b0e567bb8569581b6a94add83c6f81edc6da667a0d"
+      },
+      "after": {
+        "bytes": 16723,
+        "sha256": "922bc2b0c93fdff4f84620828db4e5d6cdccd8649e6692842f50837e8991de62"
+      }
+    },
+    {
+      "path": "pfUI/modules/gui.lua",
+      "before": {
+        "bytes": 199942,
+        "sha256": "34068809cb557a4c32a2f18a2de2a65158d951ff0e3cc138a33563901eeea519"
+      },
+      "after": {
+        "bytes": 199797,
+        "sha256": "430b37ae722841bb0876d6a762277ce9d9bcbed5b6c90b5a7c0cd8a4759f22d9"
+      }
+    }
+  ],
+  "deployed": true,
+  "deployed_inventory_digest": "058d749d51faf065eae27e5b4f0df13ac0f322810b9294ba3a0347126822610b",
+  "runtime_before": {
+    "corebridge.dll": "61381c8f6f6e63ce1c16c1cc6af024e0cabe8107db1c0db549502bc704c296c3",
+    "d3d9.dll": "3d6b529dc4f7f55639aad580e81b2939ab1489cdbb9f1550dce74e41656bbf5b",
+    "dbghelp.dll": "72877fb0af03745e2a78414ddaa05f1871703ad4c0d16d43d4ae62971ff52f0b",
+    "DivxDecoder.dll": "ed34d37b575c91a56704218eb9f6abbefda8b7de0e2ed44c96191abd0f9915a5",
+    "fmod.dll": "1e08da161cf78746304a834973971ee47a24817ee4e28df74e3f37dbbb383b22",
+    "ijl15.dll": "334aa12f7dee453d1c6cb1b661a3bb3494d3e4cc9c2ff3f9002064c78404e43a",
+    "Interact.dll": "28eafe20e59c2589eb5806361e713ff2d14909de9e4ace08e9edccd3719f1ddd",
+    "nampower.dll": "96af1722ee6b1a76cbb11e59e452fe54a83f54a3da80ae24f9c7571a0a6392fe",
+    "no1600x1200.dll": "0df2274116278e8330dd7069902b642f1a83f33fefd909807a22eda197d88652",
+    "perf_boost.dll": "dcab0cf810532df81fcdd821c6a96e9eef51228fa0115eeec1c2bc2e8c13a576",
+    "Scan.dll": "a32d76f4b3dc730258da3351d962fa76800ab9d082e1e1ce4dd066af4f0f21b0",
+    "SDL.dll": "15537c9176d7e6d5c28c607c4b147c8c2a7c45102b1b8e836b38d2f9449fc8ce",
+    "SuperWoWhook.dll": "bd214b32c878649e94ce654835946bd05e0ce7710e8f01bae10d8ab50a89351d",
+    "transmogfix.dll": "cd9e4c6ce033b0923cf045269f590f5e0b886bd03f43bd81406670d781452210",
+    "twloader.dll": "fc4adbde2d4e1aaf74f9403a59f8663dcf00b45fed22cd858d12258a17c42bea",
+    "unicows.dll": "22f23cc65698741184ec34f46e6f69717644e0b5aabf5d5bd015101f2d72e56e",
+    "UnitXP_SP3.dll": "db035489a986631e8c2aacb3d26f8312912fcd577d8bd7d19ace02e2ea83a67d",
+    "VanillaHelpers.dll": "1e74ddf6484c23482550d5f9e5f9d291085c4ac538d3b3ed9d87155521841196",
+    "VfPatcher.dll": "f283b6b5ad8042e7995eff9768c150042dd47de6e5f00ffe530d2e67743df81d",
+    "weirdperformance.dll": "ab9cf654ba18cca7ae2197864a7fc773f03ca1e31069b6d7b1eed9639e796f37",
+    "wsloot.dll": "6a36596430299171dafacbb031089717fc223e98285754d68e15a890bf217fe0",
+    "dlls.txt": "4da57d06a18981e50991bf46cffc2197f7dcb1cac9ca82c938429079352936da",
+    "dxvk.conf": "8fda9365b1fde5536e367b9064ae19065dbb8cd1229a61d4dea67a0f12f7c508"
+  },
+  "date": "2026-11-04",
+  "details": {
+    "Tmog": "融合5.0.3模块化浏览、筛选、全屏、配装分享及收藏提示；保留原有物品数据库、外观分组与旧贴图，并补齐新版贴图。首次载入后补齐配置，仅一次迁移旧锁定/位置，不反复覆盖新选择；保留收藏与旧配装并转换结构。修复T.O.L.导入、聊天配装链接解析、未缓存物品分享和同名重命名。",
+    "Automatonex": "融合最多10组喊话、10个物品位、10组回复及登录自动执行。保留其他角色旧消息/间隔表，按角色迁移；旧背包位置链接保留，新增ID来源可选。空暗号继续回复所有密语，具体暗号优先；保留战斗开关、中文光标插入和即时保存。修复设置复用钩子叠加、停用清理计时器、无C_Timer时延迟失效和失败命令重复执行。登录自动执行默认关闭、最多20条、按角色保存；原商人交接、职责、自动化桥接和AutoDB原字节保留。",
+    "StatCompare": "新增 /statc portrait events（仅模型事件）与 /statc portrait adaptive（模型事件及补刷）并保存角色选择，切换立即作用于可见面板。默认继续个人版独立头像缓存、本人/目标各自的有界递增补刷；共享职责、观察会话、面板样式及属性口径保留。",
+    "GoubayuHeal": "驱散设置新增“自由之手遵循驱散过滤”，默认关闭以保留个人版独立宏；开启后才要求一键驱散已启用且勾选移动限制。配置方案包含新键；驱散优先级、隐藏减益、共享职责与治疗核心保留。",
+    "aux-addon": "融合扫描统计、热路径缓存、浏览控件冻结/精确恢复、只读价格抽样和已拍卖超时保护，记住用户选择的上架时长。默认保持完整扫描、客户端节流、卖家完整度等待及历史记录。/aux throttle显式切换快速查询；/aux sample默认关闭，开启后只读采样至少20种有效非本人价格；跨页计数、进度封顶、有限重试与超时中止，避免强行接受旧页。保留自动购买/竞标及负充能数量归一，不引入每3页强制全量GC。",
+    "pfUI": "接管26张A–Z材质、四组下拉与原10目标预览应用页，复用缩略图控件；全局应用包含连击点与资源条。默认配置、内置方案、回能/连击点路径改为pfUI/img/bars；登录及导入配置递归转换旧路径（含嵌套/循环及大小写、斜杠形式），保留数值与其他设置。自动化入口接入登录自动执行及动态设置刷新；个人动作监控、资源条、回能、天赋预设及自动化交接保留。",
+    "pfUI-CustomMedia": "按用户要求从现用AddOns删除独立插件，26张材质和预览功能迁入pfUI；原目录及配套资料移至忽略的本地staging回退档，不上传该归档。历史记录保留，索引标记removed。",
+    "pfUI-addonskinner": "适配Tmog5.x改名的预览池/绘制函数及新标签页、筛选/导入/重置按钮；保留旧版兼容和个人选中边框反馈，重复执行不叠加包装。"
+  },
+  "verification": {
+    "compiled_lua50": [
+      "Automatonex/Core.lua",
+      "Automatonex/Modules/AutoCmd.lua",
+      "Automatonex/Modules/AutoShout.lua",
+      "Automatonex/Modules/Tooltip.lua",
+      "GoubayuHeal/GoubayuHeal.lua",
+      "GoubayuHeal/GoubayuHeal_Dispel.lua",
+      "GoubayuHeal/GoubayuHeal_Locale.lua",
+      "GoubayuHeal/GoubayuHeal_UI.lua",
+      "StatCompare/StatCompare.lua",
+      "Tmog/Constants.lua",
+      "Tmog/Filters.lua",
+      "Tmog/Fullscreen.lua",
+      "Tmog/Localization.lua",
+      "Tmog/Outfits.lua",
+      "Tmog/PopupDialogs.lua",
+      "Tmog/Slashcmd.lua",
+      "Tmog/Tmog.lua",
+      "Tmog/Tooltip.lua",
+      "Tmog/Utility.lua",
+      "aux-addon/core/scan.lua",
+      "aux-addon/core/slash.lua",
+      "aux-addon/tabs/auctions/core.lua",
+      "aux-addon/tabs/post/core.lua",
+      "pfUI-addonskinner/skins/Tmog.lua",
+      "pfUI/api/config.lua",
+      "pfUI/env/profiles.lua",
+      "pfUI/modules/automation.lua",
+      "pfUI/modules/combopoints.lua",
+      "pfUI/modules/custommedia.lua",
+      "pfUI/modules/energybar.lua",
+      "pfUI/modules/gui.lua"
+    ],
+    "xml": [
+      "Tmog/Templates.xml",
+      "Tmog/Tmog.xml",
+      "pfUI/init/modules.xml"
+    ],
+    "format_checks": [
+      {
+        "path": "Automatonex/Automatonex.toc",
+        "unchanged_lines_original_bytes": 94,
+        "bom_preserved": true
+      },
+      {
+        "path": "Automatonex/Core.lua",
+        "unchanged_lines_original_bytes": 3429,
+        "bom_preserved": true
+      },
+      {
+        "path": "Automatonex/Modules/AutoShout.lua",
+        "unchanged_lines_original_bytes": 243,
+        "bom_preserved": true
+      },
+      {
+        "path": "Automatonex/Modules/Tooltip.lua",
+        "unchanged_lines_original_bytes": 691,
+        "bom_preserved": true
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal.lua",
+        "unchanged_lines_original_bytes": 10025,
+        "bom_preserved": true
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Dispel.lua",
+        "unchanged_lines_original_bytes": 2645,
+        "bom_preserved": true
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_Locale.lua",
+        "unchanged_lines_original_bytes": 1960,
+        "bom_preserved": true
+      },
+      {
+        "path": "GoubayuHeal/GoubayuHeal_UI.lua",
+        "unchanged_lines_original_bytes": 6828,
+        "bom_preserved": true
+      },
+      {
+        "path": "StatCompare/StatCompare.lua",
+        "unchanged_lines_original_bytes": 2095,
+        "bom_preserved": true
+      },
+      {
+        "path": "StatCompare/StatCompare.toc",
+        "unchanged_lines_original_bytes": 28,
+        "bom_preserved": true
+      },
+      {
+        "path": "Tmog/Localization.lua",
+        "unchanged_lines_original_bytes": 133,
+        "bom_preserved": true
+      },
+      {
+        "path": "Tmog/Tmog.lua",
+        "unchanged_lines_original_bytes": 363,
+        "bom_preserved": true
+      },
+      {
+        "path": "Tmog/Tmog.toc",
+        "unchanged_lines_original_bytes": 5,
+        "bom_preserved": true
+      },
+      {
+        "path": "Tmog/Tmog.xml",
+        "unchanged_lines_original_bytes": 602,
+        "bom_preserved": true
+      },
+      {
+        "path": "aux-addon/core/scan.lua",
+        "unchanged_lines_original_bytes": 228,
+        "bom_preserved": true
+      },
+      {
+        "path": "aux-addon/core/slash.lua",
+        "unchanged_lines_original_bytes": 101,
+        "bom_preserved": true
+      },
+      {
+        "path": "aux-addon/tabs/auctions/core.lua",
+        "unchanged_lines_original_bytes": 100,
+        "bom_preserved": true
+      },
+      {
+        "path": "aux-addon/tabs/post/core.lua",
+        "unchanged_lines_original_bytes": 655,
+        "bom_preserved": true
+      },
+      {
+        "path": "pfUI-addonskinner/skins/Tmog.lua",
+        "unchanged_lines_original_bytes": 365,
+        "bom_preserved": true
+      },
+      {
+        "path": "pfUI/api/config.lua",
+        "unchanged_lines_original_bytes": 1672,
+        "bom_preserved": true
+      },
+      {
+        "path": "pfUI/env/profiles.lua",
+        "unchanged_lines_original_bytes": 6909,
+        "bom_preserved": true
+      },
+      {
+        "path": "pfUI/init/modules.xml",
+        "unchanged_lines_original_bytes": 93,
+        "bom_preserved": true
+      },
+      {
+        "path": "pfUI/modules/automation.lua",
+        "unchanged_lines_original_bytes": 512,
+        "bom_preserved": true
+      },
+      {
+        "path": "pfUI/modules/combopoints.lua",
+        "unchanged_lines_original_bytes": 353,
+        "bom_preserved": true
+      },
+      {
+        "path": "pfUI/modules/energybar.lua",
+        "unchanged_lines_original_bytes": 421,
+        "bom_preserved": true
+      },
+      {
+        "path": "pfUI/modules/gui.lua",
+        "unchanged_lines_original_bytes": 3689,
+        "bom_preserved": true
+      }
+    ],
+    "references": {
+      "before": {
+        "loaded_files": 382,
+        "missing": [
+          "!Libs/SC_TeamRoleData.lua",
+          "!Libs/SC_TeamRoleService.lua",
+          "!Libs/SC_TeamRoles.lua",
+          "pfUI-addonskinner/--skins/CallOfElements.lua",
+          "pfUI-addonskinner/--skins/CooldownTimers.lua",
+          "pfUI-addonskinner/--skins/ExtraResourceBars.lua",
+          "pfUI-addonskinner/--skins/HonorSpy.lua",
+          "pfUI-addonskinner/--skins/HunterBar_FeedButton.lua",
+          "pfUI-addonskinner/--skins/JIM_CooldownPulse.lua"
+        ]
+      },
+      "candidate": {
+        "loaded_files": 393,
+        "missing": [
+          "!Libs/SC_TeamRoleData.lua",
+          "!Libs/SC_TeamRoleService.lua",
+          "!Libs/SC_TeamRoles.lua",
+          "pfUI-addonskinner/--skins/CallOfElements.lua",
+          "pfUI-addonskinner/--skins/CooldownTimers.lua",
+          "pfUI-addonskinner/--skins/ExtraResourceBars.lua",
+          "pfUI-addonskinner/--skins/HonorSpy.lua",
+          "pfUI-addonskinner/--skins/HunterBar_FeedButton.lua",
+          "pfUI-addonskinner/--skins/JIM_CooldownPulse.lua"
+        ]
+      }
+    },
+    "preserved_personal_core_files": {
+      "StatCompare/SCInspectTalents.lua": true,
+      "pfUI/modules/resourcebars.lua": true,
+      "pfUI/modules/resourcebars_gui.lua": true,
+      "pfUI/modules/actionbar.lua": true,
+      "Automatonex/PfUIBridge.lua": true,
+      "Automatonex/Modules/AutoDB.lua": true,
+      "Automatonex/Modules/RandomMount.lua": true
+    },
+    "game_verified": false,
+    "fusion_tests": 16,
+    "aux_real_lua50_scenarios": 7,
+    "aux_assertions": 52,
+    "automation_catalog": {
+      "modules": 58,
+      "options": 416,
+      "callback_readbacks": 250,
+      "displays": 63,
+      "text_routes": 47,
+      "action_routes": 57
+    },
+    "typed_native_api_contract": true,
+    "shared_stats_portrait_isolation": true,
+    "statcompare_panel_checks": 36,
+    "goubayu_shared_roles": true,
+    "no_game_validation": true
+  },
+  "untouched_addon_directories": 98,
+  "unchanged_requested_exclusions": [
+    "Cooline",
+    "TankBuddyEnh"
+  ],
+  "settings_read_or_modified": false,
+  "root_runtime_unchanged": true
+}

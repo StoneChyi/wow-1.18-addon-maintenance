@@ -65,6 +65,7 @@ Modules\QuestItemBar.lua
 Modules\AutoNeed.lua
 Modules\S_ItemLinktoenUS.lua
 Modules\AutoDB.lua
+Modules\AutoCmd.lua
 Modules\ProcDoc.lua
 Modules\MasterLootRemind.lua
 Modules\InterPlayerLink.lua

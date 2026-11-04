@@ -20,7 +20,7 @@ pfUI:RegisterModule("combopoints", "vanilla:tbc", function ()
   local enabled = true
   local style = "pips"
   -- 默认材质 pfUI-F（来自 pfUI-CustomMedia 的 A-Z 材质包，与 GUI 下拉里的 pfUI-F 同一条路径）
-  local texture = "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga"
+  local texture = "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga"
   local grow = "right"                                -- 与 light 档一致（水平向右增长）
   local spacing = 3                                   -- 取自 light 档「最爱扎你」存档
   local showempty = false
@@ -221,7 +221,7 @@ pfUI:RegisterModule("combopoints", "vanilla:tbc", function ()
   function module:UpdateConfig()
     enabled    = C.unitframes.comboshow ~= "0"
     style      = C.unitframes.combostyle or "pips"
-    texture    = C.unitframes.combotexture or "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga"
+    texture    = C.unitframes.combotexture or "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga"
     grow       = C.unitframes.combogrow or "right"
     spacing    = GetNumber("combospacing", 3)
     showempty  = C.unitframes.comboempty == "1"

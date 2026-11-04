@@ -5837,7 +5837,7 @@ GoubayuHeal.per_scheme_keys = {
     "priest_fear_ward_priority",
     "raid_hots_enabled", "raid_hots", "raid_hots_priority",
     "rez_message", "rez_message_channel", "rez_priority",
-    "dispel_enabled", "dispel_queue", "dispel_interrupt", "dispel_hidden", "dispel_priority",
+    "dispel_enabled", "dispel_queue", "dispel_interrupt", "dispel_hidden", "dispel_priority", "dispel_freedom_filters",
     "dispel_filters", "dispel_pets", "dispel_wyvern_sting", "dispel_mutating_injection",
     "dispel_ignore_abolish", "dispel_shadowform", "dispel_print", "dispel_backdrop",
     "dispel_show_header", "dispel_lock", "dispel_flip", "dispel_scale", "dispel_opacity",

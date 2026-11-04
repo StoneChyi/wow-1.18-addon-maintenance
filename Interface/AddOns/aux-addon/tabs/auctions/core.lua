@@ -9,6 +9,11 @@ local tab = aux.tab '已拍卖'
 
 auction_records = T.acquire()
 
+-- 【兜底策略】扫描看门狗：若扫描超过 MAX_SCAN_SECONDS 仍未完成则强制终止，避免部分玩家卡死在扫描中
+local MAX_SCAN_SECONDS = 30
+local scan_started_at = nil
+local active_scan_id = nil
+
 function tab.OPEN()
     frame:Show()
     scan_auctions()
@@ -29,10 +34,13 @@ function M.scan_auctions()
 
     T.wipe(auction_records)
     update_listing()
-    scan.start{
+
+    scan_started_at = GetTime()
+    active_scan_id = scan.start{
         type = 'owner',
         queries = {{blizzard_query = T.acquire()}},
         on_page_loaded = function(page, total_pages)
+            scan_started_at = GetTime() -- 每页刷新计时，避免大列表被误杀
             status_bar:update_status(page / total_pages, 0)
             status_bar:set_text(format('扫描中 （第 %d/%d 页）', page, total_pages))
         end,
@@ -40,11 +48,15 @@ function M.scan_auctions()
             tinsert(auction_records, auction_record)
         end,
         on_complete = function()
+            scan_started_at = nil
+            active_scan_id = nil
             status_bar:update_status(1, 1)
             status_bar:set_text('扫描完成')
             update_listing()
         end,
         on_abort = function()
+            scan_started_at = nil
+            active_scan_id = nil
             status_bar:update_status(1, 1)
             status_bar:set_text('扫描终止')
         end,
@@ -82,6 +94,18 @@ do
     end
 
     function on_update()
+        -- 【兜底策略】扫描看门狗：超时强制终止，防止卡死
+        if scan_started_at and (GetTime() - scan_started_at) > MAX_SCAN_SECONDS then
+            if active_scan_id then
+                scan.abort(active_scan_id)
+            end
+            scan_started_at = nil
+            active_scan_id = nil
+            status_bar:update_status(1, 1)
+            status_bar:set_text('扫描超时，已终止（可点击刷新重试）')
+            aux.print('已拍卖扫描超时，已自动终止。点击刷新按钮重试。')
+        end
+
         if state == IDLE or state == SEARCHING then
             cancel_button:Disable()
         end

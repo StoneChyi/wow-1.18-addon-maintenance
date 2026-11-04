@@ -179,14 +179,20 @@ function snapshot(options)
  visit(options,'');return result
 end
 '''
-def runtime():
+def runtime(addons=None):
  lua=LuaRuntime(unpack_returned_tuples=True)
  font=lua.execute((ROOT/'Tools/tests/wow112_fontstring_mock.lua').read_text(encoding='utf-8-sig'))
  lua.execute(MOCK,font);lua.execute(SETUP)
- source=(ROOT/'Interface/AddOns/pfUI/modules/gui.lua').read_text(encoding='utf-8-sig')
+ lua.execute('''
+ local methods=getmetatable(UIParent).__index
+ function methods:RegisterEvent(event)assert(type(event)=='string');self.events=self.events or {};self.events[event]=true end
+ function methods:UnregisterEvent(event)if self.events then self.events[event]=nil end end
+ ''')
+ addons=addons or ROOT/'Interface/AddOns'
+ source=(addons/'pfUI/modules/gui.lua').read_text(encoding='utf-8-sig')
  a=source.index('    function CreateConfig(');b=source.index('    local TabFrameOnMouseDown',a)
  lua.execute('local searchDB={}\n'+source[a:b]+'\npfUI.gui.CreateConfig=CreateConfig')
- lua.execute((ROOT/'Interface/AddOns/pfUI/modules/automation_options.lua').read_text(encoding='utf-8-sig'))
+ lua.execute((addons/'pfUI/modules/automation_options.lua').read_text(encoding='utf-8-sig'))
  return lua
 
 def initialize_module(lua, name, module):
@@ -213,6 +219,7 @@ def initialize_module(lua, name, module):
 def main():
  parser=argparse.ArgumentParser(description=__doc__)
  parser.add_argument('--module-ref',help='Read only the TOC and Automaton module sources from this Git commit; GUI/renderer remain working-tree code.')
+ parser.add_argument('--addons',type=Path,default=ROOT/'Interface/AddOns',help='Isolated candidate addon directory for module/GUI validation.')
  args=parser.parse_args()
  source_ref='working-tree'
  if args.module_ref:
@@ -220,12 +227,12 @@ def main():
  def read_module(relative):
   path='Interface/AddOns/Automatonex/'+relative.replace('\\','/')
   if args.module_ref:return subprocess.check_output(['git','show',source_ref+':'+path],cwd=ROOT)
-  return (ROOT/path).read_bytes()
+  return (args.addons/'Automatonex'/relative.replace('\\','/')).read_bytes()
  report=[]
  toc=read_module('Automatonex.toc').decode('utf-8-sig')
  for rel in toc.splitlines():
   if not rel.startswith('Modules\\'):continue
-  lua=runtime();entry={'file':rel};report.append(entry)
+  lua=runtime(args.addons);entry={'file':rel};report.append(entry)
   if rel.endswith('CancelTiger.lua'):lua.execute("function UnitClass()return 'Hunter','HUNTER'end");entry['scenario']='Hunter'
   if rel.endswith('Superwow.lua'):lua.execute('SUPERWOW_VERSION=1');entry['scenario']='SuperWoW present'
   source=read_module(rel)

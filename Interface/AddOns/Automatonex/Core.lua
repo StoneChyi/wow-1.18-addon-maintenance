@@ -264,6 +264,7 @@ function Automaton.modulePrototype:RegisterOptions(options)
         set = function(v) Automaton:ToggleModuleActive(self.name, v) end,
     }
     self._options = options
+    if pfUI and pfUI.automation and pfUI.automation.QueueRefresh then pfUI.automation:QueueRefresh() end
     self._optionOrder = {}
     for k, v in pairs(options) do
         table.insert(self._optionOrder, { key = k, order = v.order or 999, data = v })

@@ -12,7 +12,7 @@ pfUI:RegisterModule("energybar", "vanilla:tbc", function()
   local SMOOTH_TIME = 0.15
   local FADE_TIME = 0.20
   local DEFAULT_WIDTH = 214.5
-  local DEFAULT_TEXTURE = "Interface\\AddOns\\pfUI-CustomMedia\\bars\\pfUI-F.tga"
+  local DEFAULT_TEXTURE = "Interface\\AddOns\\pfUI\\img\\bars\\pfUI-F.tga"
   local frame, driver
   local enabled = false
   local elapsedTotal = 0

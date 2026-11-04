@@ -346,6 +346,7 @@ function GoubayuHeal.Dispel_SetupDefaults()
     C["dispel_queue"] = C["dispel_queue"] or 0
     C["dispel_interrupt"] = C["dispel_interrupt"] or 0
     C["dispel_hidden"] = C["dispel_hidden"] or 0
+    C["dispel_freedom_filters"] = C["dispel_freedom_filters"] or 0
     C["dispel_priority"] = C["dispel_priority"] or 0.5
     C["dispel_filters"] = C["dispel_filters"] or {}
 
@@ -1397,6 +1398,10 @@ end
 -- 不管"驱散移动限制"复选框是否勾选，都对"驱散优先级"里最高优先级、且带移动限制的目标施放。
 -- 目标选择复用 DispelPrio（dispel_prio 权重）。 by 武藤纯子酱 2026.10.13
 function GoubayuHeal.Dispel_Freedom()
+    local C = GoubayuHeal.Config
+    if C and C["dispel_freedom_filters"] == 1 then
+        if C["dispel_enabled"] ~= 1 or not C["dispel_filters"] or C["dispel_filters"]["Snare"] ~= 1 then return false end
+    end
     local spell = DispelUsable.Snare
     if not (spell and spell.name) then
         return false

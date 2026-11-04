@@ -6,7 +6,7 @@
 
 ## 一、没有变化的插件
 
-共 **43 个**。这里的“没有变化”仅指现有依据未确认本插件本体的版本迭代或文件修改，不宣称从未修改或等同官方原版。仅来源补充、未实施的核对、其他插件的皮肤适配不算本体修改；取得真实变化依据后移入第二类。
+共 **42 个**。这里的“没有变化”仅指现有依据未确认本插件本体的版本迭代或文件修改，不宣称从未修改或等同官方原版。仅来源补充、未实施的核对、其他插件的皮肤适配不算本体修改；取得真实变化依据后移入第二类。
 
 | 插件 / 组件 | 最近记录 |
 | --- | --- |
@@ -47,7 +47,6 @@
 | [S_WorldMap](S_WorldMap.md) | 暂无本体变化记录 |
 | [ShaguScan](ShaguScan.md) | 暂无本体变化记录 |
 | [SpiritSenseRec](SpiritSenseRec.md) | 暂无本体变化记录 |
-| [Tmog](Tmog.md) | 暂无本体变化记录 |
 | [Turtle_General](Turtle_General.md) | 暂无本体变化记录 |
 | [Turtle_GroupUI](Turtle_GroupUI.md) | 暂无本体变化记录 |
 | [TWThreat](TWThreat.md) | [2026-10-14 · 来源补充（用户确认）](TWThreat.md#change-TWThreat-20261014-01) |
@@ -56,7 +55,7 @@
 
 ## 二、经过版本迭代或修改的插件
 
-共 **64 个**。包括版本更新、自行修改、新增、回退，以及有文件差异证据但作者未确认的历史；是否个人原创另按实际证据说明。
+共 **65 个**。包括版本更新、自行修改、新增、回退，以及有文件差异证据但作者未确认的历史；是否个人原创另按实际证据说明。
 
 每页以时间记录为主。只有确实存在的当前问题或已经提出的进一步优化方案才设相应章节；没有则不设。待游戏验收不自动等于存在故障。
 
@@ -69,8 +68,8 @@
 | [AtlasLoot](AtlasLoot.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](AtlasLoot.md#change-AtlasLoot-20261102-01) |
 | [AtlasQuest](AtlasQuest.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](AtlasQuest.md#change-AtlasQuest-20261102-01) |
 | [AutoMarker](AutoMarker.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](AutoMarker.md#change-AutoMarker-20261102-01) |
-| [Automatonex](Automatonex.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Automatonex.md#change-Automatonex-20261102-01) |
-| [aux-addon](aux-addon.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](aux-addon.md#change-aux-addon-20261102-01) |
+| [Automatonex](Automatonex.md) | [2026-11-04 · 融合11月03日包并保留个人版核心](Automatonex.md#change-Automatonex-20261104-01) |
+| [aux-addon](aux-addon.md) | [2026-11-04 · 融合11月03日包并保留个人版核心](aux-addon.md#change-aux-addon-20261104-01) |
 | [Bagshui](Bagshui.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Bagshui.md#change-Bagshui-20261102-01) |
 | [BetterCharacterStats](BetterCharacterStats.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](BetterCharacterStats.md#change-BetterCharacterStats-20261102-01) |
 | [BigWigs](BigWigs.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](BigWigs.md#change-BigWigs-20261104-01) |
@@ -90,7 +89,7 @@
 | [EavesDrop](EavesDrop.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](EavesDrop.md#change-EavesDrop-20261102-01) |
 | [EzPoison](EzPoison.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](EzPoison.md#change-EzPoison-20261102-01) |
 | [Flyout](Flyout.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Flyout.md#change-Flyout-20261102-01) |
-| [GoubayuHeal](GoubayuHeal.md) | [2026-11-02 · 接通统一职责识别与缓存](GoubayuHeal.md#change-GoubayuHeal-20261102-03) |
+| [GoubayuHeal](GoubayuHeal.md) | [2026-11-04 · 融合11月03日包并保留个人版核心](GoubayuHeal.md#change-GoubayuHeal-20261104-01) |
 | [HideOutdoorWorldState](HideOutdoorWorldState.md) | [2026-10-10 · 用户确认主动删除并停用](HideOutdoorWorldState.md#change-HideOutdoorWorldState-20261010-01) |
 | [hyx](hyx.md) | [2026-11-02 · 2.3.1：名单右侧绑定预设与管理层级修复](hyx.md#change-hyx-20261102-06) |
 | [Meeting](Meeting.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Meeting.md#change-Meeting-20261102-01) |
@@ -99,9 +98,9 @@
 | [OneBag](OneBag.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](OneBag.md#change-OneBag-20261102-01) |
 | [Outfitter](Outfitter.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](Outfitter.md#change-Outfitter-20261102-01) |
 | [PallyPower](PallyPower.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PallyPower.md#change-PallyPower-20261102-01) |
-| [pfUI](pfUI.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](pfUI.md#change-pfUI-20261104-01) |
-| [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-11-04 · 保留个人核心合入11月03日明确增量](pfUI-addonskinner.md#change-pfUI-addonskinner-20261104-01) |
-| [pfUI-CustomMedia](pfUI-CustomMedia.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI-CustomMedia.md#change-pfUI-CustomMedia-20261102-01) |
+| [pfUI](pfUI.md) | [2026-11-04 · 融合11月03日包并保留个人版核心](pfUI.md#change-pfUI-20261104-02) |
+| [pfUI-addonskinner](pfUI-addonskinner.md) | [2026-11-04 · 适配Tmog新版并保留个人皮肤预览与选中反馈](pfUI-addonskinner.md#change-pfUI-addonskinner-20261104-02) |
+| [pfUI-CustomMedia](pfUI-CustomMedia.md) | [2026-11-04 · 删除独立材质插件并迁入pfUI](pfUI-CustomMedia.md#change-pfUI-CustomMedia-20261104-01) |
 | [pfUI_ExtendedMerchant](pfUI_ExtendedMerchant.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](pfUI_ExtendedMerchant.md#change-pfUI_ExtendedMerchant-20261102-01) |
 | [PizzaWorldBuffs](PizzaWorldBuffs.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PizzaWorldBuffs.md#change-PizzaWorldBuffs-20261102-01) |
 | [PlayerLinkEnhance](PlayerLinkEnhance.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](PlayerLinkEnhance.md#change-PlayerLinkEnhance-20261102-01) |
@@ -113,12 +112,13 @@
 | [ShaguDPS](ShaguDPS.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](ShaguDPS.md#change-ShaguDPS-20261102-01) |
 | [SimpleRaidTargetIcons](SimpleRaidTargetIcons.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SimpleRaidTargetIcons.md#change-SimpleRaidTargetIcons-20261102-01) |
 | [SpecialTalent](SpecialTalent.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SpecialTalent.md#change-SpecialTalent-20261102-01) |
-| [StatCompare](StatCompare.md) | [2026-11-02 · 天赋观察改用统一队列与缓存](StatCompare.md#change-StatCompare-20261102-05) |
+| [StatCompare](StatCompare.md) | [2026-11-04 · 融合11月03日包并保留个人版核心](StatCompare.md#change-StatCompare-20261104-01) |
 | [STSMmayor](STSMmayor.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](STSMmayor.md#change-STSMmayor-20261102-01) |
 | [SuperCleveRoidMacros](SuperCleveRoidMacros.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SuperCleveRoidMacros.md#change-SuperCleveRoidMacros-20261102-01) |
 | [SuperMacro](SuperMacro.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](SuperMacro.md#change-SuperMacro-20261102-01) |
 | [TankBuddyEnh](TankBuddyEnh.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](TankBuddyEnh.md#change-TankBuddyEnh-20261102-01) |
 | [TianYan](TianYan.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](TianYan.md#change-TianYan-20261102-01) |
+| [Tmog](Tmog.md) | [2026-11-04 · 融合11月03日包并保留个人版核心](Tmog.md#change-Tmog-20261104-01) |
 | [TrainerSkills](TrainerSkills.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](TrainerSkills.md#change-TrainerSkills-20261102-01) |
 | [TurtleMail](TurtleMail.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](TurtleMail.md#change-TurtleMail-20261102-01) |
 | [TurtleSeamlessMap](TurtleSeamlessMap.md) | [2026-11-02 · 补记个人版维护署名，保留原作者与许可](TurtleSeamlessMap.md#change-TurtleSeamlessMap-20261102-01) |

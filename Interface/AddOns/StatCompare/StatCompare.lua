@@ -734,7 +734,20 @@ function STATCOMPARE_SlashCmdHandler(msg)
 	local CLOSE = FONT_COLOR_CODE_CLOSE;
 	local NORMAL = NORMAL_FONT_COLOR_CODE;
 
-	if msg == "talentstatus" then
+	if msg == "portrait events" or msg == "portrait adaptive" then
+        StatCompare_PortraitMode = msg == "portrait events" and "events" or "adaptive"
+        if StatCompareSelfFrame then
+            StatCompareSelfFrame.scPortraitDirty = true
+            if StatCompareSelfFrame.portraitUpdateFrame then StatCompareSelfFrame.portraitUpdateFrame:SetScript("OnUpdate", nil) end
+            if StatCompareSelfFrame:IsShown() then StatCompare_RefreshPortrait(StatCompareSelfFrame, "player") end
+        end
+        if StatCompareTargetFrame then
+            StatCompareTargetFrame.scPortraitDirty = true
+            if StatCompareTargetFrame.portraitUpdateFrame then StatCompareTargetFrame.portraitUpdateFrame:SetScript("OnUpdate", nil) end
+            if StatCompareTargetFrame:IsShown() then StatCompare_RefreshPortrait(StatCompareTargetFrame, InspectFrame and InspectFrame.unit or "target") end
+        end
+        DEFAULT_CHAT_FRAME:AddMessage("头像刷新：" .. (StatCompare_PortraitMode == "events" and "仅模型事件" or "模型事件及递增补刷（个人版默认）"))
+    elseif msg == "talentstatus" then
 		if SCInspectTalents then SCInspectTalents.ShowDiagnostics() end
 	elseif msg == "perf" then
 		SCProfileNextCharacterOpen()
@@ -749,6 +762,7 @@ function STATCOMPARE_SlashCmdHandler(msg)
 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc reset   "..CLOSE.." - 重置框体位置");
 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc layout auto | free"..CLOSE.." - 自动排列 / 自由拖动");
 		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc perf"..CLOSE.." - 测量下一次打开角色面板的耗时");
+		DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc portrait adaptive | events"..CLOSE.." - 头像递增补刷 / 仅模型事件");
 		if(StatCompareOptFrame) then
 			DEFAULT_CHAT_FRAME:AddMessage(GREEN.." /statc config  "..CLOSE.." - 开启/关闭 StatCompare 配置窗口");
 		end
@@ -964,6 +978,7 @@ function StatCompare_RefreshPortrait(frame, unit)
 		frame.scPortraitUnit, frame.scPortraitName, frame.scPortraitTexture = unit, name, portrait
 		frame.scPortraitDirty = nil
 		
+        if StatCompare_PortraitMode == "events" then return end
         local retry=frame.portraitUpdateFrame or CreateFrame("Frame",nil,frame)
         frame.portraitUpdateFrame=retry
         local intervals={.5,.8,1.2,1.8,2.5,3.5,5,7,10,15,20,25,30}

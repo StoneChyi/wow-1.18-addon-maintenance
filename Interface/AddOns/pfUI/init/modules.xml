@@ -90,4 +90,5 @@
   <Include file="..\modules\tooltip_extensions.lua"/>
   <Include file="..\modules\automation_navigation.lua"/>
   <Include file="..\modules\automation.lua"/>
+  <Include file="..\modules\custommedia.lua"/>
 </Ui>

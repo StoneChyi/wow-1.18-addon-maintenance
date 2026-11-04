@@ -440,7 +440,7 @@ function unit_vendor_price(item_key)
                 ClickAuctionSellItemButton()
                 ClearCursor()
                 if auction_sell_item then
-                    -- SuperWoW 下带充能物品的 count 也可能返回负的剩余充能，归一为 1，
+                    -- 【本地补丁·保留】SuperWoW 下带充能物品的 count 可能返回负的剩余充能，归一为 1，
                     -- 防止单价/保管费算成负数（count<1 的堆叠不存在）
                     local sell_count = auction_sell_item.count
                     if not sell_count or sell_count < 1 then sell_count = 1 end
@@ -489,7 +489,6 @@ function update_item(item)
 		stack_size_slider:SetValue(math.random(1,ii))
 	else
 		stack_size_slider:SetValue(aux.huge)
-		--stack_size_slider:SetValue(1)
 	end
 
     quantity_update(true)
@@ -553,16 +552,28 @@ function refresh_entries()
         set_buyout_selection()
         bid_records[item_key], buyout_records[item_key] = nil, nil
         local query = scan_util.item_query(selected_item.item_id)
+
         status_bar:update_status(0, 0)
-        status_bar:set_text('扫描拍卖...')
+        status_bar:set_text(aux.account_data.post_sample == true and '价格抽样中... 0%' or '完整扫描中...')
 
 		scan_id = scan.start{
             type = 'list',
             ignore_owner = true,
+            read_only = aux.account_data.post_sample == true,
+            max_unique_prices = aux.account_data.post_sample == true and 20 or nil,
 			queries = T.list(query),
+			on_progress = function(progress, unique_info)
+				local pct = math.floor(progress * 100)
+				status_bar:update_status(progress, 1)
+				if unique_info and unique_info ~= '' then
+					status_bar:set_text('价格抽样中... ' .. pct .. '% ' .. unique_info)
+				else
+					status_bar:set_text('价格抽样中... ' .. pct .. '%')
+				end
+			end,
 			on_page_loaded = function(page, total_pages)
-                status_bar:update_status(page / total_pages, 0) -- TODO
-                status_bar:set_text(format('扫描中 第 %d/%d 页', page, total_pages))
+                status_bar:update_status(1, 1)
+                status_bar:set_text(aux.account_data.post_sample == true and '价格抽样中...' or '完整扫描中...')
 			end,
 			on_auction = function(auction_record)
 				if auction_record.item_key == item_key then
@@ -586,7 +597,7 @@ function refresh_entries()
 				buyout_records[item_key] = buyout_records[item_key] or T.acquire()
                 refresh = true
                 status_bar:update_status(1, 1)
-                status_bar:set_text('扫描完成')
+                status_bar:set_text('扫描完成 ')
             end,
 		}
 	end
@@ -638,6 +649,8 @@ end
 function initialize_duration_dropdown()
     local function on_click()
         UIDropDownMenu_SetSelectedValue(duration_dropdown, this.value)
+        -- 【修改】将玩家选择的时长保存到全局缓存，下次上架默认使用此时长
+        aux.account_data.post_duration = this.value
         local settings = read_settings()
         settings.duration = this.value
         write_settings(settings)
